@@ -2003,6 +2003,291 @@ void LSDChiNetwork::monte_carlo_split_channel(double A_0, double m_over_n, int n
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// Monte carlo segment fitter
+// This takes a fixed m_over_n value and then samples the indivudal nodes in the full channel profile
+// to repeadetly get the best fit segments on thinned data. the m, b fitted elevation, r^2 and DW statistic are all
+// stored for every iteration on every node. These can then be queried later for mean, standard deviation and
+// standard error information
+//
+// the break nodes vector tells the algorithm where the breaks in the channel occur
+// this function is called repeatedly until the target skip equals the all of the this_skip values
+//
+// This function continues to split the channel into segments until the target skip is achieved
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over_n, int n_iterations,
+				int target_skip, int target_nodes,
+				int minimum_segment_length, double sigma,
+				vector<double> reverse_Chi, vector<double> reverse_Elevation, vector<int>& break_nodes)
+{
+	int mean_skip;
+	int skip_range;
+	vector<int> node_reference;
+
+	m_over_n_for_fitted_data = m_over_n;		// store this m_over_n value
+	A_0_for_fitted_data = A_0;
+
+	// we need to find the maximum length of the segments for skip analysis
+	// if skip > 0, then the maximum number of nodes is target_nodes*skip
+	// if skip == 0 then the maximum number of nodes is target_nodes
+	// if skip < 0 then the maximum number of nodes is target_nodes*( (-skip+2)/(-skip+1) )
+	int max_nodes_in_section;
+	if (target_skip > 0)
+	{
+		max_nodes_in_section = target_nodes*(target_skip+1);
+	}
+	else if (target_skip == 0)
+	{
+		max_nodes_in_section = target_nodes;
+	}
+	else
+	{
+		max_nodes_in_section = (target_nodes*(-target_skip+2))/(-target_skip+1);
+	}
+
+	// these data members keep track of the  breaks
+	int n_nodes = int(reverse_Chi.size());
+	list<int> breaks;
+	list<int>::iterator br_iter;
+	vector<double>::iterator vec_iter_start;
+	vector<double>::iterator vec_iter_end;
+
+	breaks.push_back(n_nodes-1);
+	int start_of_last_break = 0;
+	int length_of_break_segment;
+
+	// now we enter a recursive splitting loop that
+	// loops through the breaks, and if there is a break it
+	// returns to check if that break needs to be broken
+	br_iter = breaks.begin();
+	while(br_iter != breaks.end())
+	{
+		// get the length of this break
+		length_of_break_segment = (*br_iter)-start_of_last_break+1;
+
+		// if this break is longer than the maximum length of the
+		// break segment, start the monte carlo algorithm to break it
+		if (length_of_break_segment > max_nodes_in_section)
+		{
+			// get the skips
+			double sk = double(n_nodes)/double(target_nodes);
+
+			int rem = n_nodes%target_nodes;
+			int N;
+
+			if (sk >= 1.5)
+			{
+				N = int(sk);
+				//cout << "fourthirds is: " << fourthirds << " and sk is: " << sk << endl;
+			}
+			else
+			{
+				if (sk < 1)
+				{
+					N = 0;
+				}
+				else
+				{
+					int sk2=length_of_break_segment/rem;
+					N = -(sk2-1);
+				}
+			}
+			mean_skip = N;
+			skip_range = N*2;
+
+			// now prepare the vectors for the analysis
+			vec_iter_start = reverse_Chi.begin()+start_of_last_break;
+			vec_iter_end = reverse_Chi.begin()+length_of_break_segment+start_of_last_break;
+			vector<double> br_chi;
+			br_chi.assign(vec_iter_start,vec_iter_end);
+
+			vec_iter_start = reverse_Elevation.begin()+start_of_last_break;
+			vec_iter_end = reverse_Elevation.begin()+length_of_break_segment+start_of_last_break;
+			vector<double> br_elev;
+			br_elev.assign(vec_iter_start,vec_iter_end);
+			int n_br = br_elev.size();
+
+			// initiate the vecvecs for finding the breaks
+			vector< vector<double> > b_vecvec(n_br);
+			vector< vector<double> > m_vecvec(n_br);
+			vector< vector<double> > seg_number_vecvec(n_br);
+
+			// initiate the vectors for holding the means
+			vector<double> b_means(n_br);
+			vector<double> m_means(n_br);
+			vector<double> seg_number_means(n_br);
+
+			// now run the monte carlo algotithm thorugh N iterations
+			for (int iteration = 0; iteration < n_iterations; iteration++)
+			{
+
+				// now the vectors that will be replaced by the fitting algorithm
+				// they are from the individual channels, which are replaced each time a new channel is analyzed
+				vector<double> m_vec;
+				vector<double> b_vec;
+				vector<double> r2_vec;
+				vector<double> DW_vec;
+				int n_data_nodes;
+				int this_n_segments;
+				double this_MLE, this_AIC, this_AICc;
+				vector<int> these_segment_lengths;
+				vector<double> fitted_elev;
+				vector<int> n_segements_each_iteration;
+				int n_segments;
+
+				// now assign the m, b, r2 and DW values for segments to all the nodes in the thinned data
+				vector<double> m_per_node;
+				vector<double> b_per_node;
+				vector<double> seg_number_per_node;
+
+				// Run the monte carlo algorithm on the break segment
+
+				LSDMostLikelyPartitionsFinder channel_MLE_finder(minimum_segment_length, br_chi, br_elev);
+
+				// now thin the data, preserving the data (not interpolating)
+				channel_MLE_finder.thin_data_monte_carlo_skip(mean_skip, skip_range, node_reference);
+				n_data_nodes = node_reference.size();
+
+				// now create a single sigma value vector
+				vector<double> sigma_values;
+				sigma_values.push_back(sigma);
+
+				// compute the best fit AIC
+				channel_MLE_finder.best_fit_driver_AIC_for_linear_segments(sigma_values);
+
+				// get the segments
+				channel_MLE_finder.get_data_from_best_fit_lines(0, sigma_values, b_vec, m_vec,
+										r2_vec, DW_vec, fitted_elev,these_segment_lengths,
+										this_MLE, this_n_segments, n_data_nodes, this_AIC, this_AICc);
+
+				n_segments = int(b_vec.size());
+				for(int seg = 0; seg<n_segments; seg++)
+				{
+					for(int n = 0; n < these_segment_lengths[seg]; n++)
+					{
+						m_per_node.push_back(m_vec[seg]);
+						b_per_node.push_back(b_vec[seg]);
+						seg_number_per_node.push_back( double(seg) );
+					}
+				}
+				n_segements_each_iteration.push_back(this_n_segments);
+
+				// now assign the values of these variable to the vecvecvecs
+				for (int n = 0; n< n_data_nodes; n++)
+				{
+					int this_node = node_reference[n];
+					b_vecvec[this_node].push_back(b_per_node[n]);
+					m_vecvec[this_node].push_back(m_per_node[n]);
+					seg_number_vecvec[this_node].push_back(seg_number_per_node[n]);
+				}
+			}			// finished the monte carlo iteration
+
+			// now get the averages and look for a break
+			vector<double> b_datavec;
+			vector<double> m_datavec;
+			vector<double> seg_number_datavec;
+			vector<double> common_stats;
+
+
+			for (int br_node = 0; br_node < n_br; br_node++)
+			{
+				b_datavec = b_vecvec[br_node];
+				m_datavec = m_vecvec[br_node];
+				seg_number_datavec = seg_number_vecvec[br_node];
+
+				int n_data_points_itc = b_datavec.size();
+
+				// calcualte statistics, but only if there is data
+				if (n_data_points_itc > 0)
+				{
+					common_stats = get_common_statistics(b_datavec);
+					b_means[br_node] = common_stats[0];
+
+					common_stats = get_common_statistics(m_datavec);
+					m_means[br_node] = common_stats[0];
+
+					common_stats = get_common_statistics(seg_number_datavec);
+					seg_number_means[br_node] = common_stats[0];
+				}
+				else	// if there is no data, use the previous node. This works because there is always data in the 1st node
+				{
+					b_means[br_node] = b_means[br_node-1];
+
+					m_means[br_node] = m_means[br_node-1];
+
+					seg_number_means[br_node] = seg_number_means[br_node-1];
+				}
+			}
+
+			// now we want to split the data. We do this where the segment number is intermediate
+			// between two integers
+			double this_seg = 0;
+			vector<int> this_segment_breaks;
+			for (int br_node = 0; br_node < n_br; br_node++)
+			{
+				if( seg_number_means[br_node] > this_seg+0.5)
+				{
+					//cout << "breaking at node: " << br_node-1+start_of_last_break << endl;
+					this_seg = this_seg+1;
+					this_segment_breaks.push_back(br_node-1+start_of_last_break);
+				}
+			}
+
+			// if there is no break, break the segment in the middle
+			if(this_seg == 0)
+			{
+				int mid_break = n_br/2;
+				this_segment_breaks.push_back(mid_break+start_of_last_break);
+			}
+
+
+			// now insert these breaks in the break list
+			int n_new_breaks = this_segment_breaks.size();
+			for (int i = 0; i<n_new_breaks; i++)
+			{
+				breaks.insert(br_iter,this_segment_breaks[i]);
+			}
+
+			// now the break algorithm will have to revisit these breaks, so the iterator needs to go back
+			//cout << "iterator now: " << *br_iter;
+			for (int i = 0; i<n_new_breaks; i++)
+			{
+				br_iter--;
+			}
+			//cout << " and after: " << *br_iter << endl;
+
+		}		// finished attempting to break the segment
+
+		else	// if the section is within the allowed node limit, move on to the next segment
+		{
+			start_of_last_break = (*br_iter)+1;
+			br_iter++;
+		}
+
+	}
+
+	// put the breaks into the break_nodes vector
+	br_iter = breaks.begin();
+	vector<int> br_nds;
+	while(br_iter != breaks.end())
+	{
+		//cout << "break at: " << (*br_iter) << endl;
+		br_nds.push_back( (*br_iter) );
+		br_iter++;
+	}
+
+	break_nodes = br_nds;
+	// now that you have the splits, it is time to accumulate the data
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // This function splits all the channels and writes the data into the break_nodes_vecvec data member
@@ -2049,6 +2334,134 @@ double LSDChiNetwork::calculate_AICc_after_breaks(double A_0, double m_over_n,
 	reverse(reverse_Chi.begin(), reverse_Chi.end());
 	vector<double> reverse_Elevation = elevations[chan];
 	reverse(reverse_Elevation.begin(), reverse_Elevation.end());
+
+	// these data members keep track of the  breaks
+	//int n_nodes = int(reverse_Chi.size());
+	vector<int>::iterator br_iter;
+	vector<double>::iterator vec_iter_start;
+	vector<double>::iterator vec_iter_end;
+
+	int start_of_last_break = 0;
+	int length_of_break_segment;
+
+	// these are vectors that hold information about each segment
+	vector<double> MLE_in_this_break;
+	vector<double> nodes_in_this_break;
+	vector<double> segments_in_this_break;
+
+	//int n_breaks = break_nodes.size();
+
+	// now loop though breaks, getting the best fit.
+	br_iter = break_nodes.begin();
+	while(br_iter != break_nodes.end())
+	{
+		length_of_break_segment = (*br_iter)-start_of_last_break+1;
+
+		// get the data of this break
+		vec_iter_start = reverse_Chi.begin()+start_of_last_break;
+		vec_iter_end = reverse_Chi.begin()+length_of_break_segment+start_of_last_break;
+		vector<double> br_chi;
+		br_chi.assign(vec_iter_start,vec_iter_end);
+
+		vec_iter_start = reverse_Elevation.begin()+start_of_last_break;
+		vec_iter_end = reverse_Elevation.begin()+length_of_break_segment+start_of_last_break;
+		vector<double> br_elev;
+		br_elev.assign(vec_iter_start,vec_iter_end);
+
+		// now the vectors that will be replaced by the fitting algorithm
+		// they are from the individual channels, which are replaced each time a new channel is analyzed
+		vector<double> m_vec;
+		vector<double> b_vec;
+		vector<double> r2_vec;
+		vector<double> DW_vec;
+		int n_data_nodes;
+		int this_n_segments;
+		double this_MLE, this_AIC, this_AICc;
+		vector<int> these_segment_lengths;
+		vector<double> fitted_elev;
+		vector<int> n_segements_each_iteration;
+		vector<int> node_reference;
+
+		// Run the monte carlo algorithm on the break segment
+		LSDMostLikelyPartitionsFinder channel_MLE_finder(minimum_segment_length, br_chi, br_elev);
+
+		// now thin the data, preserving the data (not interpolating)
+		channel_MLE_finder.thin_data_skip(skip, node_reference);
+		n_data_nodes = node_reference.size();
+
+		// now create a single sigma value vector
+		vector<double> sigma_values;
+		sigma_values.push_back(sigma);
+
+		// compute the best fit AIC
+		channel_MLE_finder.best_fit_driver_AIC_for_linear_segments(sigma_values);
+
+		// get the segments
+		channel_MLE_finder.get_data_from_best_fit_lines(0, sigma_values, b_vec, m_vec,
+								r2_vec, DW_vec, fitted_elev,these_segment_lengths,
+								this_MLE, this_n_segments, n_data_nodes, this_AIC, this_AICc);
+
+		//cout << "this_n_segments: " <<  this_n_segments << endl;
+		//for(int s = 0; s<this_n_segments; s++)
+		//{
+		//	cout << "segment: " << s << " m: " << m_vec[s] << " b: " << b_vec[s] << endl;
+		//}
+
+		// store the information about this segment that will be used for AICc
+		MLE_in_this_break.push_back(this_MLE);
+		nodes_in_this_break.push_back(n_data_nodes);
+		segments_in_this_break.push_back(this_n_segments);
+
+		// reset the starting node
+		start_of_last_break = (*br_iter)+1;
+
+		br_iter++;
+	}
+
+	//now calculate the cumulative AICc
+	double thismn_AIC;
+	double thismn_AICc;
+
+	n_total_segments = 0;
+	n_total_nodes = 0;
+	cumulative_MLE = 1;
+
+	int n_total_breaks = MLE_in_this_break.size();
+
+	// get the cumulative maximum likelihood estimators
+	for (int br = 0; br<n_total_breaks; br++)
+	{
+		n_total_segments += segments_in_this_break[br];
+		n_total_nodes += nodes_in_this_break[br];
+		cumulative_MLE = MLE_in_this_break[br]*cumulative_MLE;
+
+	}
+
+	// these AIC and AICc values are cumulative for a given m_over_n
+	thismn_AIC = 4*n_total_segments-2*log(cumulative_MLE);		// the 4 comes from the fact that
+															   // for each segment there are 2 parameters
+	thismn_AICc =  thismn_AIC + 2*n_total_segments*(n_total_segments+1)/(n_total_nodes-n_total_segments-1);
+
+	return thismn_AICc;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// this calculates the AICc of a channel after it has been broken. Uses a combined colinear channel.
+// it also replaces the data members n_total_segments, int& n_total_nodes, double& cumulative_MLE
+// so that they can be used to get a cumulative AICc of multiple channels
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+double LSDChiNetwork::calculate_AICc_after_breaks_colinear(double A_0, double m_over_n,
+				int skip, int minimum_segment_length, double sigma,
+				vector<double> reverse_Chi, vector<double> reverse_Elevation,
+				vector<int> break_nodes,
+				int& n_total_segments, int& n_total_nodes, double& cumulative_MLE)
+{
 
 	// these data members keep track of the  breaks
 	//int n_nodes = int(reverse_Chi.size());
@@ -3544,6 +3957,157 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test(double A_0, 
 
 	return bf_movern;
 }
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// this function looks for the best fit values of m over n by simply testing for the least variation
+// in the tributaries
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(double A_0, int n_movern, double d_movern,
+						       double start_movern, int minimum_segment_length, double sigma,
+						       int target_nodes, int n_iterations,
+						       vector<double>& m_over_n_values, vector<double>& AICc_mean, vector<double>& AICc_sdtd)
+{
+
+	cout << "LINE 3972 starting colinearity search using breaks" << endl;
+
+  	double m_over_n;
+  	int n_channels = chis.size();
+
+	// these vectors contain all the chi and elevation values
+  	vector<double> compiled_chis;
+  	vector<double> compiled_elev;
+  	vector<double> sorted_chis;
+  	vector<double> sorted_elev;
+  	vector<double> empty_vec;
+
+  	vector<double> this_chi;
+  	vector<double> this_elev;
+
+  	// vector for storing the sorting index
+  	vector<size_t> index_map;
+
+  	// vector for holding the AICc values and the AICc variation
+  	vector<double> AICc_for_mover_n(n_movern);
+  	vector<double> AICc_std_dev(n_movern);
+  	vector<double> movn_values(n_movern);
+
+	// these are data elements used by the segment finder
+	vector<double> b_vec;
+	vector<double> m_vec;
+	vector<double> r2_vec;
+	vector<double> DW_vec;
+	vector<double> fitted_elev;
+	vector<int> these_segment_lengths;
+	double this_MLE;
+	int this_n_segments;
+	int n_data_nodes;
+	double this_AICc;
+
+	cout << "looping" << endl;
+
+
+  	// loop through m over n
+	for(int movn = 0; movn< n_movern; movn++)
+  	{
+		//cout << "i: " << movn << endl;
+		//cout << "d_movn: " << d_movern << " start: " << start_movern << endl;
+		m_over_n = double(movn)*d_movern+start_movern;
+		//cout << "yo, : " << double(movn)*d_movern+start_movern << endl;
+
+		movn_values[movn] = m_over_n;
+		cout << "m over n: " << movn_values[movn];
+
+		// reset the compiled vectors
+		compiled_chis = empty_vec;
+		compiled_elev = empty_vec;
+		sorted_chis = empty_vec;
+		sorted_elev = empty_vec;
+
+      	// get the transformed channel profiles for this m_over_n
+	  	calculate_chi(A_0, m_over_n);
+
+	  	// now load all the chis and elevations into individual vectors
+	  	for(int chan = 0; chan<n_channels; chan++)
+	  	{
+			this_chi = chis[chan];
+			this_elev = elevations[chan];
+
+			// add the cis and elevations to the compiled vectors
+			int n_nodes = int(this_chi.size());
+			for (int node = 0; node<n_nodes; node++)
+			{
+				compiled_chis.push_back(this_chi[node]);
+				compiled_elev.push_back(this_elev[node]);
+			}
+		}
+
+		// now sort the vectors
+		matlab_double_sort(compiled_chis, sorted_chis, index_map);
+		matlab_double_reorder(compiled_elev, index_map, sorted_elev);
+
+		// now we use the monte carlo sampling to look for the best fit
+		vector<int> empty_vec;
+
+		// reverse the vectors
+		vector<double> reverse_Chi = sorted_chis;
+		reverse(reverse_Chi.begin(), reverse_Chi.end());
+		vector<double> reverse_Elevation = sorted_elev;
+		reverse(reverse_Elevation.begin(), reverse_Elevation.end());
+
+		// calculate the baseline skipping for monte carlo analyis
+		int mean_skip = calculate_skip(target_nodes, reverse_Chi);
+		int skip_range = mean_skip*2;
+
+		vector<double> these_AICcs;
+		vector<int> break_nodes;
+
+		int n_total_segments;
+		int n_total_nodes;
+		double cumulative_MLE;
+
+		// now enter the iterative phase
+		monte_carlo_split_channel_colinear(A_0, m_over_n, n_iterations,
+				mean_skip, target_nodes, minimum_segment_length, sigma,
+				reverse_Chi, reverse_Elevation, break_nodes);
+
+
+		this_AICc = calculate_AICc_after_breaks_colinear(A_0, m_over_n,
+						mean_skip, minimum_segment_length, sigma,
+						reverse_Chi, reverse_Elevation, break_nodes,
+						n_total_segments, n_total_nodes, cumulative_MLE);
+
+
+		// now get the mean and standard deviation for this m_over_n
+		AICc_for_mover_n[movn] = this_AICc;
+		AICc_std_dev[movn] = this_AICc;
+
+		cout << endl;
+
+	}
+
+	// now calucalte the best fit m over n
+	double bf_movern = start_movern;
+	double bf_AICc = 100000;
+	for (int i = 0; i<n_movern; i++)
+	{
+
+		if(AICc_for_mover_n[i] < bf_AICc)
+		{
+			bf_AICc= AICc_for_mover_n[i];
+			bf_movern = movn_values[i];
+		}
+	}
+
+	m_over_n_values = movn_values;
+	AICc_mean = AICc_for_mover_n;
+	AICc_sdtd = AICc_std_dev;
+
+	return bf_movern;
+}
+
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this function calculeates best fit m/n for each channel

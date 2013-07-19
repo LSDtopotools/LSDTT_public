@@ -118,12 +118,22 @@ class LSDChiNetwork
 		double search_for_best_fit_m_over_n_seperate_ms_and_tribs(double A_0, int n_movern, double d_movern, double start_movern,
 						       int minimum_segment_length, double sigma, int target_nodes_mainstem, string fname);
 
-		// similar to above, but calculates the mainstem and the tributaries seperately.
+		// this function randomly selects data from the mainstem and the channels and creates
+		// a composite channel. This composite channel is then tested for linear segments.
+		// the algorithm therefere tries to maximize both colinearity and linearity of the channel
+		// network.
 		double search_for_best_fit_m_over_n_colinearity_test(double A_0, int n_movern, double d_movern,
 								        double start_movern, int minimum_segment_length, double sigma,
 						      			int target_nodes, int n_iterations,
 						      			vector<double>& m_over_n_values,
 						      			vector<double>& AICc_mean, vector<double>& AICc_sdtd);
+
+		// this function is similar to the one below above but allows breaks in the channel
+		double search_for_best_fit_m_over_n_colinearity_test_with_breaks(double A_0, int n_movern, double d_movern,
+						       double start_movern, int minimum_segment_length, double sigma,
+						       int target_nodes, int n_iterations,
+						       vector<double>& m_over_n_values, vector<double>& AICc_mean, vector<double>& AICc_sdtd);
+
 
 		// this gets the best fit m over n values of all the individual tributaries
 		double search_for_best_fit_m_over_n_individual_channels_with_breaks(double A_0, int n_movern, double d_movern,
@@ -163,6 +173,14 @@ class LSDChiNetwork
 				int target_skip, int target_nodes,
 				int minimum_segment_length, double sigma, int chan, vector<int>& break_nodes);
 
+		// this function uses a monte carlo sampling approach to try and split channels into
+		// so that the channel is sampled at the target skipping interval. It does it with a
+		// colinear dataset
+		void monte_carlo_split_channel_colinear(double A_0, double m_over_n, int n_iterations,
+				int target_skip, int target_nodes,
+				int minimum_segment_length, double sigma,
+				vector<double> reverse_Chi, vector<double> reverse_Elevation, vector<int>& break_nodes);
+
 		// this function splits all the channels in one go
 		void split_all_channels(double A_0, double m_over_n, int n_iterations,
 				int target_skip, int target_nodes, int minimum_segment_length, double sigma);
@@ -171,6 +189,14 @@ class LSDChiNetwork
 		double calculate_AICc_after_breaks(double A_0, double m_over_n,
 				int skip, int minimum_segment_length, double sigma, int chan, vector<int> break_nodes,
 				int& n_total_segments, int& n_total_nodes, double& cumulative_MLE);
+
+		// this function gets the AICc after breaking the channel with a colinear dataset
+		// the reverse_chi and reverse_elevation data has to be provided
+		double calculate_AICc_after_breaks_colinear(double A_0, double m_over_n,
+						int skip, int minimum_segment_length, double sigma,
+						vector<double> reverse_chi, vector<double> reverse_elevation,
+						vector<int> break_nodes,
+						int& n_total_segments, int& n_total_nodes, double& cumulative_MLE);
 
 		// this routine test to see if channels are long enough to get a decent fitting from
 		// the segment finding algorithms
