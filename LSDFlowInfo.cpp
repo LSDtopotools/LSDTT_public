@@ -10,7 +10,7 @@
 // Simon M. Mudd, University of Edinburgh
 // David Milodowski, University of Edinburgh
 // Martin D. Hurst, British Geological Survey
-// <your name here>
+// Fiona Clubb, University of Edinburgh
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
@@ -18,14 +18,8 @@
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// TODO (An ever expanding list)
-// 1. Write the flow direction algorithm as a seperate function that gets called
-//    by create
-// 2. Write the fastscape SVector building algorithm so it gets called by create
-// 3. Write a function that recalucaltes flow directions from an existing flowInfo,
-//    and if and only if flow directions change recalcualte flow area (for use with
-//    numerical solution of fluvial incision
-// 4. Write a pickle function that saves data in binary format so it can be read later
+// change log --this only starts Nov 28th 2012--
+// 28/11/2012: Added write drainage area, FC, SMM
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -34,6 +28,7 @@
 #include <iomanip>
 #include <vector>
 #include <string>
+#include <math.h>
 #include "TNT/tnt.h"
 #include "LSDFlowInfo.hpp"
 //#include "LSDIndexRaster.hpp"
@@ -49,6 +44,62 @@ void LSDFlowInfo::create()
 	cout << "You need to initialize with a LSDRaster!" << endl;
 	exit(EXIT_FAILURE);
 }
+
+void LSDFlowInfo::create(string fname)
+{
+	unpickle(fname);
+
+}
+
+
+// algorithms for searching the vectors
+void LSDFlowInfo::retrieve_receiver_information(int current_node,
+                                             int& receiver_node, int& receiver_row,
+                                             int& receiver_col)
+{
+	int rn, rr, rc;
+	rn = ReceiverVector[current_node];
+	rr = RowIndex[rn];
+	rc = ColIndex[rn];
+	receiver_node = rn;
+	receiver_row = rr;
+	receiver_col = rc;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// algorithms for searching the vectors
+void LSDFlowInfo::retrieve_current_row_and_col(int current_node,int& curr_row,
+                                             int& curr_col)
+{
+	int cr, cc;
+	cr = RowIndex[current_node];
+	cc = ColIndex[current_node];
+	curr_row = cr;
+	curr_col = cc;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// this function returns the base level node with the greatest drainage area
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+int LSDFlowInfo::retrieve_largest_base_level()
+{
+	int n_bl = BaseLevelNodeList.size();		// get the number of baselevel nodes
+	int max_bl = 0;
+	for (int i = 0; i<n_bl; i++)
+	{
+		if(NContributingNodes[ BaseLevelNodeList[i] ] > max_bl)
+		{
+			max_bl = NContributingNodes[ BaseLevelNodeList[i] ];
+		}
+	}
+	return max_bl;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -67,6 +118,7 @@ void LSDFlowInfo::create()
 //								// 8    4  2
 // one can convert nthese indices using the LSDIndexRaster object
 // note in arc the row index increases down (to the south)
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 										  LSDRaster& TopoRaster)
 {
@@ -420,14 +472,14 @@ void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 	//cout << "LINE 1015, NDataNodes: " << NDataNodes
 	//     << " and size reciever: " << ReceiverVector.size() << endl;
 
-	ofstream receiver_out;
-	receiver_out.open("receiver_out.txt");
-	cout << "LINE 414 LSDFlow info, writing receiver nodes to file" << endl;
-	for (int i =0; i<int(ReceiverVector.size()); i++)
-	{
-		receiver_out << ReceiverVector[i] << endl;
-	}
-	receiver_out.close();
+	//ofstream receiver_out;
+	//receiver_out.open("receiver_out.txt");
+	//cout << "LINE 414 LSDFlow info, writing receiver nodes to file" << endl;
+	//for (int i =0; i<int(ReceiverVector.size()); i++)
+	//{
+	//	receiver_out << ReceiverVector[i] << endl;
+	//}
+	//receiver_out.close();
 
 	// first create the number of donors vector
 	// from braun and willett eq. 5
@@ -475,20 +527,44 @@ void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 	j_index = 0;
 	for (int i = 0; i<n_base_level_nodes; i++)
 	{
-		//cout << "Base level node: " <<  BaseLevelNodeList[i] << endl;
 		k = BaseLevelNodeList[i];			// set k to the base level node
+
+		// This doesn't seem to be in Braun and Willet but to get the ordering correct you
+		// need to make sure that the base level node appears first in the donorstack
+		// of nodes contributing to the baselevel node.
+		// For example, if base level node is 4, with 4 donors
+		// and the donor stack has 3 4 8 9
+		// the code has to put the 4 first.
+		if (DonorStackVector[ DeltaVector[k] ] != k)
+		{
+			int this_index = DonorStackVector[ DeltaVector[k] ];
+			int bs_node = k;
+
+			for(int ds_node = 1; ds_node < NDonorsVector[k]; ds_node++)
+			{
+				if( DonorStackVector[ DeltaVector[k] + ds_node ] == bs_node )
+				{
+					DonorStackVector[ DeltaVector[k] ] = k;
+					DonorStackVector[ DeltaVector[k] + ds_node ] = this_index;
+				}
+			}
+		}
 
 		// now run recursive algorithm
 		begin_delta_index = DeltaVector[k];
 		end_delta_index = DeltaVector[k+1];
 
+		//cout << "base_level_node is: " << k << " begin_index: " << begin_delta_index << " end: " << end_delta_index << endl;
+
 		for (int delta_index = begin_delta_index; delta_index<end_delta_index; delta_index++)
 		{
 			l_index = DonorStackVector[delta_index];
-			//cout << "delta_index is: " << delta_index << " and l_index is: " << l_index << endl;
 			add_to_stack(l_index, j_index, k);
 		}
 	}
+
+	// now calcualte the indices
+	calculate_upslope_reference_indices();
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -528,10 +604,314 @@ void LSDFlowInfo::add_to_stack(int lm_index, int& j_index, int bl_node)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// this function pickles the data from the flowInfo object into a binary format
+// which can be read by the unpickle function later
+// the filename DOES NOT include and extension: this is added by the
+// function
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDFlowInfo::pickle(string filename)
+{
+	string ext = ".FIpickle";
+	string hdr_ext = ".FIpickle.hdr";
 
+	string hdr_fname = filename+hdr_ext;
+	string data_fname = filename+ext;
+
+	ofstream header_out;
+	header_out.open(hdr_fname.c_str());
+
+	int contributing_nodes = int(NContributingNodes.size());
+	int BLNodes = int(BaseLevelNodeList.size());
+
+	// print the header file
+	header_out <<  "ncols         		" << NCols
+			   << "\nnrows         		" << NRows
+			   << "\nxllcorner     		" << setprecision(14) << XMinimum
+			   << "\nyllcorner     		" << setprecision(14) << YMinimum
+			   << "\ncellsize      		" << DataResolution
+			   << "\nNODATA_value  		" << NoDataValue
+			   << "\nNDataNodes    		" << NDataNodes
+			   << "\nNBaseLevelNodes    " << BLNodes
+			   << "\nNContributingNodes " << contributing_nodes
+			   << "\nBoundaryConditions ";
+	for(int i = 0; i<4; i++)
+	{
+		header_out << " " << BoundaryConditions[i];
+	}
+	header_out << endl;
+	header_out.close();
+
+
+	cout << "sizes RC indices: " << RowIndex.size() << " " << ColIndex.size() << endl;
+	cout << "BLNL size: " << BaseLevelNodeList.size() << endl;
+	cout << "donors: " << NDonorsVector.size() << " Reciev: " << ReceiverVector.size() << endl;
+	cout << "delta: " << DeltaVector.size() << " S: " << SVector.size() << endl;
+	cout << "donorstack: " << DonorStackVector.size() << " BBasin: " << BLBasinVector.size() << endl;
+	cout << "SVectorIndex " << SVectorIndex.size() << " NContrib: " << NContributingNodes.size() << endl;
+
+
+	// now do the main data
+	ofstream data_ofs(data_fname.c_str(), ios::out | ios::binary);
+	int temp;
+	for (int i=0; i<NRows; ++i)
+	{
+		for (int j=0; j<NCols; ++j)
+		{
+			temp = NodeIndex[i][j];
+			data_ofs.write(reinterpret_cast<char *>(&temp),sizeof(temp));
+		}
+	}
+	for (int i=0; i<NRows; ++i)
+	{
+		for (int j=0; j<NCols; ++j)
+		{
+			temp = FlowDirection[i][j];
+			data_ofs.write(reinterpret_cast<char *>(&temp),sizeof(temp));
+		}
+	}
+	for (int i=0; i<NRows; ++i)
+	{
+		for (int j=0; j<NCols; ++j)
+		{
+			temp = FlowLengthCode[i][j];
+			data_ofs.write(reinterpret_cast<char *>(&temp),sizeof(temp));
+		}
+	}
+	for (int i = 0; i<NDataNodes; i++)
+	{
+		temp = RowIndex[i];
+		data_ofs.write(reinterpret_cast<char *>(&temp),sizeof(temp));
+	}
+	for (int i = 0; i<NDataNodes; i++)
+	{
+		temp = ColIndex[i];
+		data_ofs.write(reinterpret_cast<char *>(&temp),sizeof(temp));
+	}
+	for (int i = 0; i<BLNodes; i++)
+	{
+		temp = BaseLevelNodeList[i];
+		data_ofs.write(reinterpret_cast<char *>(&temp),sizeof(temp));
+	}
+	for (int i = 0; i<NDataNodes; i++)
+	{
+		temp = NDonorsVector[i];
+		data_ofs.write(reinterpret_cast<char *>(&temp),sizeof(temp));
+	}
+	for (int i = 0; i<NDataNodes; i++)
+	{
+		temp = ReceiverVector[i];
+		data_ofs.write(reinterpret_cast<char *>(&temp),sizeof(temp));
+	}
+	for (int i = 0; i<NDataNodes+1; i++)
+	{
+		temp = DeltaVector[i];
+		data_ofs.write(reinterpret_cast<char *>(&temp),sizeof(temp));
+	}
+	for (int i = 0; i<NDataNodes; i++)
+	{
+		temp = DonorStackVector[i];
+		data_ofs.write(reinterpret_cast<char *>(&temp),sizeof(temp));
+	}
+	for (int i = 0; i<NDataNodes; i++)
+	{
+		temp = SVector[i];
+		data_ofs.write(reinterpret_cast<char *>(&temp),sizeof(temp));
+	}
+	for (int i = 0; i<NDataNodes; i++)
+	{
+		temp = BLBasinVector[i];
+		data_ofs.write(reinterpret_cast<char *>(&temp),sizeof(temp));
+	}
+	for (int i = 0; i<NDataNodes; i++)
+	{
+		temp = SVectorIndex[i];
+		data_ofs.write(reinterpret_cast<char *>(&temp),sizeof(temp));
+	}
+	for (int i = 0; i<contributing_nodes; i++)
+	{
+		temp = NContributingNodes[i];
+		data_ofs.write(reinterpret_cast<char *>(&temp),sizeof(temp));
+	}
+
+	data_ofs.close();
+
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// this unpickles a pickled flow info object. It is folded into a create function
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDFlowInfo::unpickle(string filename)
+{
+
+	string ext = ".FIpickle";
+	string hdr_ext = ".FIpickle.hdr";
+
+	string hdr_fname = filename+hdr_ext;
+	string data_fname = filename+ext;
+
+	ifstream header_in;
+	header_in.open(hdr_fname.c_str());
+
+	string temp_str;
+	int contributing_nodes;
+	vector<string> bc(4);
+	int BLNodes;
+
+	header_in >> temp_str >> NCols >> temp_str >> NRows >> temp_str >> XMinimum
+	          >> temp_str >> YMinimum >> temp_str >> DataResolution
+			  >> temp_str >> NoDataValue >> temp_str >> NDataNodes
+			  >> temp_str >> BLNodes
+			  >> temp_str >> contributing_nodes
+			  >> temp_str >> bc[0] >> bc[1] >> bc[2] >> bc[3];
+	header_in.close();
+	BoundaryConditions = bc;
+
+
+	// now read the data, using the binary stream option
+	ifstream ifs_data(data_fname.c_str(), ios::in | ios::binary);
+	if( ifs_data.fail() )
+	{
+		cout << "\nFATAL ERROR: the data file \"" << data_fname
+		     << "\" doesn't exist" << endl;
+		exit(EXIT_FAILURE);
+	}
+	else
+	{
+		// initialze the arrays
+		Array2D<int> data_array(NRows,NCols,NoDataValue);
+		NodeIndex = data_array.copy();
+		FlowDirection = data_array.copy();
+		FlowLengthCode = data_array.copy();
+
+		vector<int> data_vector(NDataNodes,NoDataValue);
+		vector<int> BLvector(BLNodes,NoDataValue);
+		vector<int> deltaV(NDataNodes+1,NoDataValue);
+		vector<int> CNvec(contributing_nodes,NoDataValue);
+
+		int temp;
+		for (int i=0; i<NRows; ++i)
+		{
+			for (int j=0; j<NCols; ++j)
+			{
+				ifs_data.read(reinterpret_cast<char*>(&temp), sizeof(temp));
+				NodeIndex[i][j] =temp;
+			}
+		}
+		for (int i=0; i<NRows; ++i)
+		{
+			for (int j=0; j<NCols; ++j)
+			{
+				ifs_data.read(reinterpret_cast<char*>(&temp), sizeof(temp));
+				FlowDirection[i][j] =temp;
+			}
+		}
+		for (int i=0; i<NRows; ++i)
+		{
+			for (int j=0; j<NCols; ++j)
+			{
+				ifs_data.read(reinterpret_cast<char*>(&temp), sizeof(temp));
+				FlowLengthCode[i][j] =temp;
+			}
+		}
+		RowIndex = data_vector;
+		for (int i=0; i<NDataNodes; ++i)
+		{
+			ifs_data.read(reinterpret_cast<char*>(&temp), sizeof(temp));
+			RowIndex[i] =temp;
+
+		}
+		ColIndex = data_vector;
+		for (int i=0; i<NDataNodes; ++i)
+		{
+			ifs_data.read(reinterpret_cast<char*>(&temp), sizeof(temp));
+			ColIndex[i] =temp;
+
+		}
+		BaseLevelNodeList = BLvector;
+		for (int i=0; i<BLNodes; ++i)
+		{
+			ifs_data.read(reinterpret_cast<char*>(&temp), sizeof(temp));
+			BaseLevelNodeList[i] =temp;
+
+		}
+		NDonorsVector = data_vector;
+		for (int i=0; i<NDataNodes; ++i)
+		{
+			ifs_data.read(reinterpret_cast<char*>(&temp), sizeof(temp));
+			NDonorsVector[i] =temp;
+
+		}
+		ReceiverVector = data_vector;
+		for (int i=0; i<NDataNodes; ++i)
+		{
+			ifs_data.read(reinterpret_cast<char*>(&temp), sizeof(temp));
+			ReceiverVector[i] =temp;
+
+		}
+		DeltaVector = deltaV;
+		for (int i=0; i<NDataNodes+1; ++i)
+		{
+			ifs_data.read(reinterpret_cast<char*>(&temp), sizeof(temp));
+			DeltaVector[i] =temp;
+
+		}
+		DonorStackVector = data_vector;
+		for (int i=0; i<NDataNodes; ++i)
+		{
+			ifs_data.read(reinterpret_cast<char*>(&temp), sizeof(temp));
+			DonorStackVector[i] =temp;
+
+		}
+		SVector = data_vector;
+		for (int i=0; i<NDataNodes; ++i)
+		{
+			ifs_data.read(reinterpret_cast<char*>(&temp), sizeof(temp));
+			SVector[i] =temp;
+
+		}
+		BLBasinVector = data_vector;
+		for (int i=0; i<NDataNodes; ++i)
+		{
+			ifs_data.read(reinterpret_cast<char*>(&temp), sizeof(temp));
+			BLBasinVector[i] =temp;
+
+		}
+		SVectorIndex = data_vector;
+		for (int i=0; i<NDataNodes; ++i)
+		{
+			ifs_data.read(reinterpret_cast<char*>(&temp), sizeof(temp));
+			SVectorIndex[i] =temp;
+
+		}
+		NContributingNodes = CNvec;
+		for (int i=0; i<contributing_nodes; ++i)
+		{
+			ifs_data.read(reinterpret_cast<char*>(&temp), sizeof(temp));
+			NContributingNodes[i] =temp;
+
+		}
+
+
+	}
+	ifs_data.close();
+
+	cout << "sizes RC indices: " << RowIndex.size() << " " << ColIndex.size() << endl;
+	cout << "BLNL size: " << BaseLevelNodeList.size() << endl;
+	cout << "donors: " << NDonorsVector.size() << " Reciev: " << ReceiverVector.size() << endl;
+	cout << "delta: " << DeltaVector.size() << " S: " << SVector.size() << endl;
+	cout << "donorstack: " << DonorStackVector.size() << " BBasin: " << BLBasinVector.size() << endl;
+	cout << "SVectorIndex " << SVectorIndex.size() << " NContrib: " << NContributingNodes.size() << endl;
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this prints the flownet information
-// it does it in binary information
-// there is a seperate 'pickle' function that puts everyting into binary format
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::print_flow_info_vectors(string filename)
 {
 	string string_filename;
@@ -574,7 +954,7 @@ void LSDFlowInfo::print_flow_info_vectors(string filename)
 	}
 	donor_info_out << endl;
 
-	if( int(SVectorIndex.size()) != NDataNodes)
+	if( int(SVectorIndex.size()) == NDataNodes)
 	{
 		for(int i = 0; i<NDataNodes; i++)
 		{
@@ -617,7 +997,41 @@ LSDIndexRaster LSDFlowInfo::write_FlowLengthCode_to_LSDIndexRaster()
 	LSDIndexRaster temp_flc(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,FlowLengthCode);
 	return temp_flc;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// This function calcualtes the contributing pixels
+// it can be converted to contributing area by multiplying by the
+// DataResolution^2
+//
+// This function used the S vector index and NContributing nodes to calculate the area
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+LSDIndexRaster LSDFlowInfo::write_NContributingNodes_to_LSDIndexRaster()
+{
+	Array2D<int> contributing_pixels(NRows,NCols,NoDataValue);
+	int row,col;
+
+	// loop through the node vector, adding pixels to receiver nodes
+	for(int node = 0; node<NDataNodes; node++)
+	{
+		row = RowIndex[node];
+		col = ColIndex[node];
+		contributing_pixels[row][col] = NContributingNodes[node];
+	}
+
+	LSDIndexRaster temp_cp(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,contributing_pixels);
+	return temp_cp;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // writes a index raster in arc format
 // LSD format:
 // 7  0 1
@@ -628,7 +1042,8 @@ LSDIndexRaster LSDFlowInfo::write_FlowLengthCode_to_LSDIndexRaster()
 //								// 16   0  1
 //								// 8    4  2
 //
-LSDIndexRaster LSDFlowInfo::write_FlowDriection_to_LSDIndexRaster_Arcformat()
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+LSDIndexRaster LSDFlowInfo::write_FlowDirection_to_LSDIndexRaster_Arcformat()
 {
 
 	Array2D<int> FlowDirectionArc(NRows,NCols,NoDataValue);
@@ -684,6 +1099,37 @@ LSDIndexRaster LSDFlowInfo::write_FlowDriection_to_LSDIndexRaster_Arcformat()
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
+// This function writes the drainage area (number of contributing nodes
+// * DataResolution^2) to an LSDRaster object
+// Added by FC 15/11/12
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+LSDRaster LSDFlowInfo::write_DrainageArea_to_LSDRaster()
+{
+  // initialise the 2D array
+  int n_i;								// node index
+  double ndv = double(NoDataValue);
+ 	Array2D<double> DrainageArea_local(NRows,NCols,ndv);
+
+  //get the contributing nodes
+  for (int row = 0; row < NRows; row++)
+  {
+    for (int col = 0; col < NCols; col++)
+    {
+      n_i = NodeIndex[row][col];
+      DrainageArea_local[row][col] = double(NContributingNodes[n_i])*DataResolution*DataResolution;
+    }
+  }
+  // create the LSDRaster object
+  LSDRaster DrainageArea(NRows,NCols,XMinimum,YMinimum,DataResolution,ndv,DrainageArea_local);
+	return DrainageArea;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
 // This function calcualtes the contributing pixels
 // it can be converted to contributing area by multiplying by the
 // DataResolution^2
@@ -693,7 +1139,6 @@ LSDIndexRaster LSDFlowInfo::write_FlowDriection_to_LSDIndexRaster_Arcformat()
 LSDIndexRaster LSDFlowInfo::calculate_n_pixels_contributing_from_upslope()
 {
 	Array2D<int> contributing_pixels(NRows,NCols,NoDataValue);
-	//vector<int> vectorized_area(n_data_nodes,1);
 	int row,col;
 	int receive_row, receive_col;
 	int receiver_node;
@@ -740,92 +1185,10 @@ LSDIndexRaster LSDFlowInfo::calculate_n_pixels_contributing_from_upslope()
 	LSDIndexRaster temp_cp(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,contributing_pixels);
 	return temp_cp;
 }
-
-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//
-// This function calcualtes the contributing pixels
-// it can be converted to contributing area by multiplying by the
-// DataResolution^2
-//
-// In this function a pixel that has no donors contributes its own flow
-//
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-LSDIndexRaster LSDFlowInfo::calculate_n_pixels_contributing_from_upslope_include_self()
-{
-	Array2D<int> contributing_pixels(NRows,NCols,NoDataValue);
-	vector<int> vectorized_area(NDataNodes,1);
-	int row,col;
-	int receive_row, receive_col;
-	int receiver_node;
-	int donor_node;
 
-	// loop through the s vector, adding pixels to receiver nodes
-	for(int node = NDataNodes-1; node>=0; node--)
-	{
-		donor_node = SVector[node];
-		receiver_node = ReceiverVector[ donor_node ];
-
-		// assign a value of 1 initially if there
-		// is no area information
-		row = RowIndex[donor_node];
-		col = ColIndex[donor_node];
-		if (contributing_pixels[row][col] == NoDataValue)
-		{
-			contributing_pixels[row][col] = 1;
-		}
-
-		// add the upslope area (note no action is taken
-		// for base level nodes since they donate to themselves and
-		// we must avoid double counting
-		if (donor_node != receiver_node)
-		{
-			vectorized_area[ receiver_node ] +=  vectorized_area[donor_node ];
-		}
-
-		receive_row = RowIndex[ receiver_node ];
-		receive_col = ColIndex[ receiver_node ];
-		contributing_pixels[receive_row][receive_col] = vectorized_area[ receiver_node ];
-	}
-
-	LSDIndexRaster temp_cp(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,contributing_pixels);
-	return temp_cp;
-}
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//
-// This function calcualtes the contributing pixels
-// it can be converted to contributing area by multiplying by the
-// DataResolution^2
-//
-// This function used the S vector index and NContributing nodes to calculate the area
-//
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-LSDIndexRaster LSDFlowInfo::calculate_n_pixels_contributing_from_upslope_include_self_from_indices()
-{
-	Array2D<int> contributing_pixels(NRows,NCols,NoDataValue);
-	int row,col;
-
-	// loop through the node vector, adding pixels to receiver nodes
-	for(int node = 0; node<NDataNodes; node++)
-	{
-		row = RowIndex[node];
-		col = ColIndex[node];
-		contributing_pixels[row][col] = NContributingNodes[node];
-	}
-
-	LSDIndexRaster temp_cp(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,contributing_pixels);
-	return temp_cp;
-}
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -883,7 +1246,7 @@ vector<int> LSDFlowInfo::get_upslope_nodes(int node_number_outlet)
 	if(node_number_outlet < 0 || node_number_outlet > NDataNodes-1)
 	{
 		cout << "the junction number does not exist" << endl;
-		exit(0);
+		exit(EXIT_FAILURE);
 	}
 
 	int start_SVector_node = SVectorIndex[node_number_outlet];
@@ -903,9 +1266,81 @@ vector<int> LSDFlowInfo::get_upslope_nodes(int node_number_outlet)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
+// This function calculates the chi function for all the nodes upslope a given node
+// it takes a node list
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+vector<double> LSDFlowInfo::get_upslope_chi(int starting_node, double m_over_n, double A_0)
+{
+	vector<int> upslope_pixel_list = get_upslope_nodes(starting_node);
+	vector<double> chi_vec = get_upslope_chi(upslope_pixel_list, m_over_n, A_0);
+	return chi_vec;
+}
+
+vector<double> LSDFlowInfo::get_upslope_chi(vector<int>& upslope_pixel_list, double m_over_n, double A_0)
+{
+
+	int receiver_node;
+	int IndexOfReceiverInUplsopePList;
+	double root2 = 1.41421356;
+	double diag_length = root2*DataResolution;
+	double dx;
+	double pixel_area = DataResolution*DataResolution;
+	int node,row,col;
+	// get the number of nodes upslope
+	int n_nodes_upslope = upslope_pixel_list.size();
+	vector<double> chi_vec(n_nodes_upslope,0.0);
+
+	if(n_nodes_upslope != NContributingNodes[ upslope_pixel_list[0] ])
+	{
+		cout << "LSDFlowInfo::get_upslope_chi, the contributing pixels don't agree" << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	int start_SVector_node = SVectorIndex[ upslope_pixel_list[0] ];
+
+	for (int n_index = 1; n_index<n_nodes_upslope; n_index++)
+	{
+		node = upslope_pixel_list[n_index];
+		receiver_node = ReceiverVector[ node ];
+		IndexOfReceiverInUplsopePList = SVectorIndex[receiver_node]-start_SVector_node;
+		row = RowIndex[node];
+		col = ColIndex[node];
+
+		if (FlowLengthCode[row][col] == 2)
+		{
+			dx = diag_length;
+		}
+		else
+		{
+			dx = DataResolution;
+		}
+
+
+		chi_vec[n_index] = dx*(pow( (A_0/ (double(NContributingNodes[node])*pixel_area) ),m_over_n))
+		                       + chi_vec[IndexOfReceiverInUplsopePList];
+
+		cout << "node: " << upslope_pixel_list[n_index] << " receiver: " << receiver_node
+		     << " SIndexReciever: " << IndexOfReceiverInUplsopePList << " and checked: " << upslope_pixel_list[IndexOfReceiverInUplsopePList]
+		     << " and chi: " << chi_vec[n_index] << endl;
+
+
+	}
+
+	return chi_vec;
+}
+
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
 // distance from outlet function
 // this is overloaded.
-// if it isn't provided any argument, it calcualtes the distance from outlet
+// if it isn't provided any argument, it calculates the distance from outlet
 // of all the base level nodes
 // if it is given a node index number or a row and column, then
 // the distance from outlet includes all the distances upstream of that node
@@ -918,14 +1353,13 @@ LSDRaster LSDFlowInfo::distance_from_outlet()
 	double ndv = double(NoDataValue);
 	Array2D<double> flow_distance(NRows,NCols,ndv);
 
-	// get the accumulation matrix
-	LSDIndexRaster FlowPixels = calculate_n_pixels_contributing_from_upslope_include_self();
-
 	// initialize the 1/root(2)
 	double root2 = 1.41421356;
 	double diag_length = root2*DataResolution;
 
 	int row,col,bl_row,bl_col,receive_row,receive_col;
+
+	//cout << "FlowLengthCode: " << FlowLengthCode << endl;
 
 	int start_node = 0;
 	int end_node;
@@ -935,12 +1369,15 @@ LSDRaster LSDFlowInfo::distance_from_outlet()
 	int n_base_level_nodes = BaseLevelNodeList.size();
 	for(int bl = 0; bl<n_base_level_nodes; bl++)
 	{
+
 		baselevel_node = BaseLevelNodeList[bl];
 
 		bl_row = RowIndex[baselevel_node];
 		bl_col = ColIndex[baselevel_node];
 		// get the number of nodes upslope and including this node
-		nodes_in_bl_tree = FlowPixels.get_data_element(bl_row,bl_col);
+		nodes_in_bl_tree = NContributingNodes[baselevel_node];
+		//cout << "LINE 938, FlowInfo, base level: " << bl << " with " << nodes_in_bl_tree << " nodes upstream" << endl;
+
 		end_node = start_node+nodes_in_bl_tree;
 
 		// set the distance of the outlet to zero
@@ -949,10 +1386,15 @@ LSDRaster LSDFlowInfo::distance_from_outlet()
 		// now loop through stack
 		for(int s_node = start_node; s_node < end_node; s_node++)
 		{
+			//cout << "Line 953 flow info, s_node is: " << s_node << endl;
+
+			//cout << SVector.size() << " " << ReceiverVector.size() << " " << RowIndex.size() << " " << ColIndex.size() << endl;
 			row = RowIndex[ SVector[ s_node]  ];
 			col = ColIndex[ SVector[ s_node]  ];
+			//cout << "got rows and columns " << row << " " << col << endl;
 			receive_row = RowIndex[ ReceiverVector[SVector[s_node] ]];
 			receive_col = ColIndex[ ReceiverVector[SVector[s_node] ]];
+			//cout <<  "get receive " << receive_row << " " << receive_col << endl;
 
 			if ( FlowLengthCode[row][col] == 1)
 			{
@@ -963,9 +1405,12 @@ LSDRaster LSDFlowInfo::distance_from_outlet()
 				flow_distance[row][col] = flow_distance[receive_row][receive_col]
 											+ diag_length;
 			}
+			//cout << "Flow distance: " << flow_distance << endl;
 		}
-		start_node = end_node+1;
+		start_node = end_node;
 	}
+	//cout << "LINE 971 FlowInfo Flow distance complete, flow_distance is: " << endl;
+	//cout << flow_distance << endl;
 	LSDRaster FlowLength(NRows,NCols,XMinimum,YMinimum,DataResolution,ndv,flow_distance);
 	return FlowLength;
 }
