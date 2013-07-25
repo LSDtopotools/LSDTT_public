@@ -131,8 +131,9 @@ class LSDChiNetwork
 		// this function is similar to the one below above but allows breaks in the channel
 		double search_for_best_fit_m_over_n_colinearity_test_with_breaks(double A_0, int n_movern, double d_movern,
 						       double start_movern, int minimum_segment_length, double sigma,
-						       int target_nodes, int n_iterations,
-						       vector<double>& m_over_n_values, vector<double>& AICc_mean, vector<double>& AICc_sdtd);
+						       int target_skip, int target_nodes, int n_iterations,
+						       vector<double>& m_over_n_values, vector<double>& AICc_mean, vector<double>& AICc_sdtd,
+						       int Monte_Carlo_switch);
 
 
 		// this gets the best fit m over n values of all the individual tributaries
@@ -140,6 +141,16 @@ class LSDChiNetwork
 								        double start_movern, int minimum_segment_length, double sigma,
 						      			int target_skip, int target_nodes, int n_iterations,
 						      			vector<double>& m_over_n_values, vector< vector<double> >& AICc_vals);
+
+		// this gets the best fit m over n values of all the individual tributaries
+		// it uses a monte carlo appraoach so all tributaries have botht the mean and the variability
+		// of the AICc values reported
+		double search_for_best_fit_m_over_n_individual_channels_with_breaks_monte_carlo(double A_0, int n_movern,
+							   double d_movern,double start_movern, int minimum_segment_length, double sigma,
+						       int target_skip, int target_nodes, int n_iterations,
+						       vector<double>& m_over_n_values,
+						       vector< vector<double> >& AICc_means, vector< vector<double> >& AICc_stddev);
+
 
 		// this routine uses a monte carlo approach to repeatedly sampling all the data in the
 		// channel network using a reduced number of data elements and then poulating each channel node with
@@ -190,6 +201,17 @@ class LSDChiNetwork
 				int skip, int minimum_segment_length, double sigma, int chan, vector<int> break_nodes,
 				int& n_total_segments, int& n_total_nodes, double& cumulative_MLE);
 
+		// this function gets the AICc after breaking the channel
+		// it does this for n_iterations and returns a vector with all of
+		// the AICc values for each iteration reported. This can then be used
+		// to calculate the statistics of the AICc to tell if the minimum
+		// AICc is significantly different from the other AICc values for different
+		// values of m/n
+		vector<double> calculate_AICc_after_breaks_monte_carlo(double A_0, double m_over_n,
+				int target_skip, int minimum_segment_length, double sigma, int chan, vector<int> break_nodes,
+				int& n_total_segments, int& n_total_nodes, double& cumulative_MLE,
+				int n_iterations);
+
 		// this function gets the AICc after breaking the channel with a colinear dataset
 		// the reverse_chi and reverse_elevation data has to be provided
 		double calculate_AICc_after_breaks_colinear(double A_0, double m_over_n,
@@ -197,6 +219,18 @@ class LSDChiNetwork
 						vector<double> reverse_chi, vector<double> reverse_elevation,
 						vector<int> break_nodes,
 						int& n_total_segments, int& n_total_nodes, double& cumulative_MLE);
+
+		// this function gets the AICc after breaking the channel with a colinear dataset
+		// the reverse_chi and reverse_elevation data has to be provided
+		//
+		// it uses a monte carlo scheme and returns a vector with all of the AICc values calcluated
+		// from the analyses
+		vector<double> calculate_AICc_after_breaks_colinear_monte_carlo(double A_0, double m_over_n,
+				int skip, int minimum_segment_length, double sigma,
+				vector<double> reverse_Chi, vector<double> reverse_Elevation,
+				vector<int> break_nodes,
+				int& n_total_segments, int& n_total_nodes, double& cumulative_MLE,
+				int n_iterations);
 
 		// this routine test to see if channels are long enough to get a decent fitting from
 		// the segment finding algorithms

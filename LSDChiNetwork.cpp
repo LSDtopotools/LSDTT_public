@@ -1790,6 +1790,14 @@ void LSDChiNetwork::monte_carlo_split_channel(double A_0, double m_over_n, int n
 			}
 			mean_skip = N;
 			skip_range = N*2;
+			if (skip_range ==0)
+			{
+				skip_range = 2;
+			}
+			if (skip_range < 0)
+			{
+				skip_range = -skip_range;
+			}
 
 			// now prepare the vectors for the analysis
 			vec_iter_start = reverse_Chi.begin()+start_of_last_break;
@@ -2097,6 +2105,14 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 			}
 			mean_skip = N;
 			skip_range = N*2;
+			if (skip_range ==0)
+			{
+				skip_range = 2;
+			}
+			if (skip_range < 0)
+			{
+				skip_range = -skip_range;
+			}
 
 			// now prepare the vectors for the analysis
 			vec_iter_start = reverse_Chi.begin()+start_of_last_break;
@@ -2425,6 +2441,7 @@ double LSDChiNetwork::calculate_AICc_after_breaks(double A_0, double m_over_n,
 	n_total_segments = 0;
 	n_total_nodes = 0;
 	cumulative_MLE = 1;
+	double log_cum_MLE = 0;
 
 	int n_total_breaks = MLE_in_this_break.size();
 
@@ -2435,14 +2452,203 @@ double LSDChiNetwork::calculate_AICc_after_breaks(double A_0, double m_over_n,
 		n_total_nodes += nodes_in_this_break[br];
 		cumulative_MLE = MLE_in_this_break[br]*cumulative_MLE;
 
+		if(MLE_in_this_break[br] <= 0)
+		{
+			log_cum_MLE = log_cum_MLE-1000;
+		}
+		else
+		{
+			log_cum_MLE = log(MLE_in_this_break[br])+log_cum_MLE;
+		}
+
+
 	}
 
 	// these AIC and AICc values are cumulative for a given m_over_n
-	thismn_AIC = 4*n_total_segments-2*log(cumulative_MLE);		// the 4 comes from the fact that
+	//thismn_AIC = 4*n_total_segments-2*log(cumulative_MLE);		// the 4 comes from the fact that
 															   // for each segment there are 2 parameters
+	thismn_AIC = 4*n_total_segments-2*log_cum_MLE;
 	thismn_AICc =  thismn_AIC + 2*n_total_segments*(n_total_segments+1)/(n_total_nodes-n_total_segments-1);
 
 	return thismn_AICc;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// this calculates the AICc of a channel after it has been broken
+// it also replaces the data members n_total_segments, int& n_total_nodes, double& cumulative_MLE
+// so that they can be used to get a cumulative AICc of multiple channels
+//
+// this version uses a monte carlo approach and returns AICc values in a vector
+// that has the length of the number of iterations
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+vector<double> LSDChiNetwork::calculate_AICc_after_breaks_monte_carlo(double A_0, double m_over_n,
+				int target_skip, int minimum_segment_length, double sigma, int chan, vector<int> break_nodes,
+				int& n_total_segments, int& n_total_nodes, double& cumulative_MLE,
+				int n_iterations)
+
+{
+
+	calculate_chi(A_0, m_over_n);
+
+	// get the data from the channel
+	vector<double> reverse_Chi = chis[chan];
+	reverse(reverse_Chi.begin(), reverse_Chi.end());
+	vector<double> reverse_Elevation = elevations[chan];
+	reverse(reverse_Elevation.begin(), reverse_Elevation.end());
+
+	// these data members keep track of the  breaks
+	//int n_nodes = int(reverse_Chi.size());
+	vector<int>::iterator br_iter;
+	vector<double>::iterator vec_iter_start;
+	vector<double>::iterator vec_iter_end;
+
+	int start_of_last_break;
+	int length_of_break_segment;
+	int skip_range = 2*target_skip;
+	if (skip_range ==0)
+	{
+		skip_range = 2;
+	}
+	if (skip_range < 0)
+	{
+		skip_range = -skip_range;
+	}
+
+	// these are vectors that hold information about each segment
+	vector<double> MLE_in_this_break;
+	vector<double> nodes_in_this_break;
+	vector<double> segments_in_this_break;
+	vector<double> empty_vec;
+	vector<double> these_AICcs;
+
+	cout << " looping, iteration";
+	for (int iteration = 0; iteration<n_iterations; iteration++)
+	{
+
+		if (iteration %50 == 0)
+		{
+			cout << " " << iteration;
+		}
+
+		MLE_in_this_break = empty_vec;
+		nodes_in_this_break = empty_vec;
+		segments_in_this_break = empty_vec;
+		start_of_last_break = 0;
+
+		// now loop though breaks, getting the best fit.
+		br_iter = break_nodes.begin();
+		while(br_iter != break_nodes.end())
+		{
+			length_of_break_segment = (*br_iter)-start_of_last_break+1;
+
+			// get the data of this break
+			vec_iter_start = reverse_Chi.begin()+start_of_last_break;
+			vec_iter_end = reverse_Chi.begin()+length_of_break_segment+start_of_last_break;
+			vector<double> br_chi;
+			br_chi.assign(vec_iter_start,vec_iter_end);
+
+			vec_iter_start = reverse_Elevation.begin()+start_of_last_break;
+			vec_iter_end = reverse_Elevation.begin()+length_of_break_segment+start_of_last_break;
+			vector<double> br_elev;
+			br_elev.assign(vec_iter_start,vec_iter_end);
+
+			// now the vectors that will be replaced by the fitting algorithm
+			// they are from the individual channels, which are replaced each time a new channel is analyzed
+			vector<double> m_vec;
+			vector<double> b_vec;
+			vector<double> r2_vec;
+			vector<double> DW_vec;
+			int n_data_nodes;
+			int this_n_segments;
+			double this_MLE, this_AIC, this_AICc;
+			vector<int> these_segment_lengths;
+			vector<double> fitted_elev;
+			vector<int> n_segements_each_iteration;
+			vector<int> node_reference;
+
+			// Run the monte carlo algorithm on the break segment
+			LSDMostLikelyPartitionsFinder channel_MLE_finder(minimum_segment_length, br_chi, br_elev);
+
+			// now thin the data, preserving the data (not interpolating)
+			channel_MLE_finder.thin_data_monte_carlo_skip(target_skip, skip_range, node_reference);
+			n_data_nodes = node_reference.size();
+
+			// now create a single sigma value vector
+			vector<double> sigma_values;
+			sigma_values.push_back(sigma);
+
+			// compute the best fit AIC
+			channel_MLE_finder.best_fit_driver_AIC_for_linear_segments(sigma_values);
+
+			// get the segments
+			channel_MLE_finder.get_data_from_best_fit_lines(0, sigma_values, b_vec, m_vec,
+									r2_vec, DW_vec, fitted_elev,these_segment_lengths,
+									this_MLE, this_n_segments, n_data_nodes, this_AIC, this_AICc);
+
+			//cout << "this_n_segments: " <<  this_n_segments << endl;
+			//for(int s = 0; s<this_n_segments; s++)
+			//{
+			//	cout << "segment: " << s << " m: " << m_vec[s] << " b: " << b_vec[s] << endl;
+			//}
+
+			// store the information about this segment that will be used for AICc
+			MLE_in_this_break.push_back(this_MLE);
+			nodes_in_this_break.push_back(n_data_nodes);
+			segments_in_this_break.push_back(this_n_segments);
+
+			// reset the starting node
+			start_of_last_break = (*br_iter)+1;
+
+			br_iter++;
+		}
+
+		//now calculate the cumulative AICc
+		double thismn_AIC;
+		double thismn_AICc;
+
+		n_total_segments = 0;
+		n_total_nodes = 0;
+		cumulative_MLE = 1;
+		double log_cum_MLE = 0;
+
+		int n_total_breaks = MLE_in_this_break.size();
+
+		// get the cumulative maximum likelihood estimators
+		for (int br = 0; br<n_total_breaks; br++)
+		{
+			n_total_segments += segments_in_this_break[br];
+			n_total_nodes += nodes_in_this_break[br];
+			cumulative_MLE = MLE_in_this_break[br]*cumulative_MLE;
+
+			if(MLE_in_this_break[br] <= 0)
+			{
+				log_cum_MLE = log_cum_MLE-1000;
+			}
+			else
+			{
+				log_cum_MLE = log(MLE_in_this_break[br])+log_cum_MLE;
+			}
+
+		}
+
+		// these AIC and AICc values are cumulative for a given m_over_n
+		//thismn_AIC = 4*n_total_segments-2*log(cumulative_MLE);		// the 4 comes from the fact that
+																   // for each segment there are 2 parameters
+		thismn_AIC = 4*n_total_segments-2*log_cum_MLE;
+		thismn_AICc =  thismn_AIC + 2*n_total_segments*(n_total_segments+1)/(n_total_nodes-n_total_segments-1);
+
+		these_AICcs.push_back(thismn_AICc);
+	}
+	cout << endl;
+
+	return these_AICcs;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -2510,7 +2716,7 @@ double LSDChiNetwork::calculate_AICc_after_breaks_colinear(double A_0, double m_
 		vector<int> n_segements_each_iteration;
 		vector<int> node_reference;
 
-		// Run the monte carlo algorithm on the break segment
+		// Run the algorithm on the break segment
 		LSDMostLikelyPartitionsFinder channel_MLE_finder(minimum_segment_length, br_chi, br_elev);
 
 		// now thin the data, preserving the data (not interpolating)
@@ -2553,6 +2759,7 @@ double LSDChiNetwork::calculate_AICc_after_breaks_colinear(double A_0, double m_
 	n_total_segments = 0;
 	n_total_nodes = 0;
 	cumulative_MLE = 1;
+	double log_cum_MLE = 0;
 
 	int n_total_breaks = MLE_in_this_break.size();
 
@@ -2563,16 +2770,213 @@ double LSDChiNetwork::calculate_AICc_after_breaks_colinear(double A_0, double m_
 		n_total_nodes += nodes_in_this_break[br];
 		cumulative_MLE = MLE_in_this_break[br]*cumulative_MLE;
 
+		if(MLE_in_this_break[br] <= 0)
+		{
+			log_cum_MLE = log_cum_MLE-1000;
+		}
+		else
+		{
+			log_cum_MLE = log(MLE_in_this_break[br])+log_cum_MLE;
+		}
 	}
 
 	// these AIC and AICc values are cumulative for a given m_over_n
-	thismn_AIC = 4*n_total_segments-2*log(cumulative_MLE);		// the 4 comes from the fact that
+	//thismn_AIC = 4*n_total_segments-2*log(cumulative_MLE);		// the 4 comes from the fact that
 															   // for each segment there are 2 parameters
+	thismn_AIC = 4*n_total_segments-2*log_cum_MLE;
 	thismn_AICc =  thismn_AIC + 2*n_total_segments*(n_total_segments+1)/(n_total_nodes-n_total_segments-1);
 
 	return thismn_AICc;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// this calculates the AICc of a channel after it has been broken. Uses a combined colinear channel.
+// it also replaces the data members n_total_segments, int& n_total_nodes, double& cumulative_MLE
+// so that they can be used to get a cumulative AICc of multiple channels
+//
+// this is the montecarlo version, it returns a vecotr of AICc values from each iteration
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+vector<double> LSDChiNetwork::calculate_AICc_after_breaks_colinear_monte_carlo(double A_0, double m_over_n,
+				int skip, int minimum_segment_length, double sigma,
+				vector<double> reverse_Chi, vector<double> reverse_Elevation,
+				vector<int> break_nodes,
+				int& n_total_segments, int& n_total_nodes, double& cumulative_MLE,
+				int n_iterations)
+{
+
+	// these data members keep track of the  breaks
+	//int n_nodes = int(reverse_Chi.size());
+	vector<int>::iterator br_iter;
+	vector<double>::iterator vec_iter_start;
+	vector<double>::iterator vec_iter_end;
+
+	int start_of_last_break;
+	int length_of_break_segment;
+
+	// these are vectors that hold information about each segment
+	vector<double> MLE_in_this_break;
+	vector<double> nodes_in_this_break;
+	vector<double> segments_in_this_break;
+	vector<double> empty_vec;
+	vector<double> AICc_values;
+
+
+	int skip_range = 2*skip;
+	if (skip_range ==0)
+	{
+		skip_range = 2;
+	}
+	if (skip_range < 0)
+	{
+		skip_range = -skip_range;
+	}
+
+	cout << " LSDChiNetwork Line 2615, iteration ";
+	for (int iteration = 0; iteration<n_iterations; iteration++)
+	{
+		//cout << "iter: " << iteration << endl;
+		if (iteration % 50 == 0)
+		{
+			cout << " " << iteration;
+		}
+
+		start_of_last_break = 0;
+		MLE_in_this_break = empty_vec;
+		nodes_in_this_break = empty_vec;
+		segments_in_this_break = empty_vec;
+
+		// now loop though breaks, getting the best fit.
+		br_iter = break_nodes.begin();
+		int br = 0;
+		while(br_iter != break_nodes.end())
+		{
+			//cout << "break is: " << br << " and segment is: " << (*br_iter) << endl;
+			br++;
+
+			length_of_break_segment = (*br_iter)-start_of_last_break+1;
+			//cout << "length of segment is: " << length_of_break_segment << endl;
+
+			// get the data of this break
+			vec_iter_start = reverse_Chi.begin()+start_of_last_break;
+			vec_iter_end = reverse_Chi.begin()+length_of_break_segment+start_of_last_break;
+			vector<double> br_chi;
+			br_chi.assign(vec_iter_start,vec_iter_end);
+
+			vec_iter_start = reverse_Elevation.begin()+start_of_last_break;
+			vec_iter_end = reverse_Elevation.begin()+length_of_break_segment+start_of_last_break;
+			vector<double> br_elev;
+			br_elev.assign(vec_iter_start,vec_iter_end);
+
+			// now the vectors that will be replaced by the fitting algorithm
+			// they are from the individual channels, which are replaced each time a new channel is analyzed
+			vector<double> m_vec;
+			vector<double> b_vec;
+			vector<double> r2_vec;
+			vector<double> DW_vec;
+			int n_data_nodes;
+			int this_n_segments;
+			double this_MLE, this_AIC, this_AICc;
+			vector<int> these_segment_lengths;
+			vector<double> fitted_elev;
+			vector<int> n_segements_each_iteration;
+			vector<int> node_reference;
+
+			// Run the algorithm on the break segment
+			LSDMostLikelyPartitionsFinder channel_MLE_finder(minimum_segment_length, br_chi, br_elev);
+
+			// now thin the data, preserving the data (not interpolating)
+			channel_MLE_finder.thin_data_monte_carlo_skip(skip, skip_range, node_reference);
+			n_data_nodes = node_reference.size();
+
+			// now create a single sigma value vector
+			vector<double> sigma_values;
+			sigma_values.push_back(sigma);
+
+			// compute the best fit AIC
+			channel_MLE_finder.best_fit_driver_AIC_for_linear_segments(sigma_values);
+
+			// get the segments
+			channel_MLE_finder.get_data_from_best_fit_lines(0, sigma_values, b_vec, m_vec,
+									r2_vec, DW_vec, fitted_elev,these_segment_lengths,
+									this_MLE, this_n_segments, n_data_nodes, this_AIC, this_AICc);
+
+			// store the information about this segment that will be used for AICc
+			MLE_in_this_break.push_back(this_MLE);
+			nodes_in_this_break.push_back(n_data_nodes);
+			segments_in_this_break.push_back(this_n_segments);
+
+			// reset the starting node
+			start_of_last_break = (*br_iter)+1;
+
+			br_iter++;
+		}
+		//cout << "did breaks" << endl;
+
+
+		//now calculate the cumulative AICc
+		double thismn_AIC;
+		double thismn_AICc;
+
+		n_total_segments = 0;
+		n_total_nodes = 0;
+		cumulative_MLE = 1;
+
+		double log_cum_MLE = 0;
+
+		int n_total_breaks = MLE_in_this_break.size();
+
+		// get the cumulative maximum likelihood estimators
+		for (int br = 0; br<n_total_breaks; br++)
+		{
+			n_total_segments += segments_in_this_break[br];
+			n_total_nodes += nodes_in_this_break[br];
+			cumulative_MLE = MLE_in_this_break[br]*cumulative_MLE;
+
+			if(MLE_in_this_break[br] <= 0)
+			{
+				log_cum_MLE = log_cum_MLE-1000;
+			}
+			else
+			{
+				log_cum_MLE = log(MLE_in_this_break[br])+log_cum_MLE;
+			}
+
+			//cout << "break: " << br << " segs: " << segments_in_this_break[br]
+			//     << " nodes: " << nodes_in_this_break[br] << " MLE: " << MLE_in_this_break[br] << " and log: " << log(MLE_in_this_break[br])
+			//     << " and logcum: " << log_cum_MLE << endl;
+
+		}
+		//cout << "got cumulative" << endl;
+
+		// these AIC and AICc values are cumulative for a given m_over_n
+		//thismn_AIC = 4*n_total_segments-2*log(cumulative_MLE);		// the 4 comes from the fact that
+		//														   // for each segment there are 2 parameters
+
+		thismn_AIC = 4*n_total_segments-2*log_cum_MLE;
+
+		//cout << "TESTING AIC, test: " << test_AIC << " old_version: " << thismn_AIC << endl;
+
+		thismn_AICc =  thismn_AIC + 2*n_total_segments*(n_total_segments+1)/(n_total_nodes-n_total_segments-1);
+
+		AICc_values.push_back(thismn_AICc);
+		//cout << "this_AICc: " << thismn_AICc << endl;
+	}
+
+	return AICc_values;
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+
 
 
 
@@ -2898,6 +3302,14 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_after_breaks(d
 	m_over_n_for_fitted_data = m_over_n;		// store this m_over_n value
 	A_0_for_fitted_data = A_0;
 	int skip_range = 2*skip;
+	if (skip_range ==0)
+	{
+		skip_range = 2;
+	}
+	if (skip_range < 0)
+	{
+		skip_range = -skip_range;
+	}
 
 	// vecvecvecs for storing information. The top level
 	// is the channel. The second level is the node
@@ -3344,6 +3756,7 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_dchi(double A_0, int n_movern
       	int n_total_segments = 0;
       	int n_total_nodes = 0;
       	double cumulative_MLE = 1;
+      	double log_cum_MLE = 0;
 
 		// get the cumulative maximum likelihood estimators
       	for (int chan = 0; chan<n_channels; chan++)
@@ -3351,12 +3764,23 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_dchi(double A_0, int n_movern
 			n_total_segments += n_segs_thischan[chan];
 	  		n_total_nodes += n_datanodes_thischan[chan];
 	  		cumulative_MLE = MLEs_thischan[chan]*cumulative_MLE;
+
+			if(MLEs_thischan[chan] <= 0)
+			{
+				log_cum_MLE = log_cum_MLE-1000;
+			}
+			else
+			{
+				log_cum_MLE = log(MLEs_thischan[chan])+log_cum_MLE;
+			}
+
 		}
 
 
       	// these AIC and AICc values are cumulative for a given m_over_n
-      	thismn_AIC = 4*n_total_segments-2*log(cumulative_MLE);		// the 4 comes from the fact that
+      	//thismn_AIC = 4*n_total_segments-2*log(cumulative_MLE);		// the 4 comes from the fact that
 			                                                       // for each segment there are 2 parameters
+      	thismn_AIC = 4*n_total_segments-2*log_cum_MLE;
       	thismn_AICc =  thismn_AIC + 2*n_total_segments*(n_total_segments+1)/(n_total_nodes-n_total_segments-1);
       	AICc_combined_vec[movn] = thismn_AICc;
       	m_over_n_vec[movn] = m_over_n;
@@ -3625,6 +4049,7 @@ double LSDChiNetwork::search_for_best_fit_m_over_n(double A_0, int n_movern, dou
       	int n_total_segments = 0;
       	int n_total_nodes = 0;
       	double cumulative_MLE = 1;
+      	double log_cum_MLE = 0;
 
 		// get the cumulative maximum likelihood estimators
       	for (int chan = 0; chan<n_channels; chan++)
@@ -3635,6 +4060,16 @@ double LSDChiNetwork::search_for_best_fit_m_over_n(double A_0, int n_movern, dou
 				n_total_segments += n_segs_thischan[chan];
 	  			n_total_nodes += n_datanodes_thischan[chan];
 	  			cumulative_MLE = MLEs_thischan[chan]*cumulative_MLE;
+
+				if(MLEs_thischan[chan] <= 0)
+				{
+					log_cum_MLE = log_cum_MLE-1000;
+				}
+				else
+				{
+					log_cum_MLE = log(MLEs_thischan[chan])+log_cum_MLE;
+				}
+
 			}
 			//else
 			//{
@@ -3644,8 +4079,9 @@ double LSDChiNetwork::search_for_best_fit_m_over_n(double A_0, int n_movern, dou
 
 
       	// these AIC and AICc values are cumulative for a given m_over_n
-      	thismn_AIC = 4*n_total_segments-2*log(cumulative_MLE);		// the 4 comes from the fact that
+      	//thismn_AIC = 4*n_total_segments-2*log(cumulative_MLE);		// the 4 comes from the fact that
 			                                                       // for each segment there are 2 parameters
+      	thismn_AIC = 4*n_total_segments-2*log_cum_MLE;
       	thismn_AICc =  thismn_AIC + 2*n_total_segments*(n_total_segments+1)/(n_total_nodes-n_total_segments-1);
       	AICc_combined_vec[movn] = thismn_AICc;
       	m_over_n_vec[movn] = m_over_n;
@@ -3895,6 +4331,14 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test(double A_0, 
 		// calculate the baseline skipping for monte carlo analyis
 		int mean_skip = calculate_skip(target_nodes, reverse_Chi);
 		int skip_range = mean_skip*2;
+		if (skip_range ==0)
+		{
+			skip_range = 2;
+		}
+		if (skip_range < 0)
+		{
+			skip_range = -skip_range;
+		}
 
 		vector<double> these_AICcs;
 		cout << " iteration: ";
@@ -3962,11 +4406,16 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test(double A_0, 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this function looks for the best fit values of m over n by simply testing for the least variation
 // in the tributaries
+//
+// If Monte_Carlo_switch = 1, then the routine iterates on the AICc and returns mean and std_deviation
+// of the AICc. If not it simply returns the single AICc value and the std_dev vector just holds
+// a repeat of the mean value
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(double A_0, int n_movern, double d_movern,
 						       double start_movern, int minimum_segment_length, double sigma,
-						       int target_nodes, int n_iterations,
-						       vector<double>& m_over_n_values, vector<double>& AICc_mean, vector<double>& AICc_sdtd)
+						       int target_skip, int target_nodes, int n_iterations,
+						       vector<double>& m_over_n_values, vector<double>& AICc_mean, vector<double>& AICc_sdtd,
+						       int Monte_Carlo_switch)
 {
 
 	cout << "LINE 3972 starting colinearity search using breaks" << endl;
@@ -3999,9 +4448,9 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(
 	vector<double> DW_vec;
 	vector<double> fitted_elev;
 	vector<int> these_segment_lengths;
-	double this_MLE;
-	int this_n_segments;
-	int n_data_nodes;
+	//double this_MLE;
+	//int this_n_segments;
+	//int n_data_nodes;
 	double this_AICc;
 
 	cout << "looping" << endl;
@@ -4055,10 +4504,6 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(
 		vector<double> reverse_Elevation = sorted_elev;
 		reverse(reverse_Elevation.begin(), reverse_Elevation.end());
 
-		// calculate the baseline skipping for monte carlo analyis
-		int mean_skip = calculate_skip(target_nodes, reverse_Chi);
-		int skip_range = mean_skip*2;
-
 		vector<double> these_AICcs;
 		vector<int> break_nodes;
 
@@ -4068,22 +4513,40 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(
 
 		// now enter the iterative phase
 		monte_carlo_split_channel_colinear(A_0, m_over_n, n_iterations,
-				mean_skip, target_nodes, minimum_segment_length, sigma,
+				target_skip, target_nodes, minimum_segment_length, sigma,
 				reverse_Chi, reverse_Elevation, break_nodes);
 
+		//cout << "Line 4237, calcualted breaks, break nodes are" << endl;
+		//for (int i = 0; i< int(break_nodes.size()); i++)
+		//{
+		//	cout << break_nodes[i] << endl;
+		//target_}
 
-		this_AICc = calculate_AICc_after_breaks_colinear(A_0, m_over_n,
-						mean_skip, minimum_segment_length, sigma,
+
+		if(Monte_Carlo_switch ==1)				// iterate: this takes a little while
+		{
+			these_AICcs = calculate_AICc_after_breaks_colinear_monte_carlo(A_0, m_over_n,
+						target_skip, minimum_segment_length, sigma,
+						reverse_Chi, reverse_Elevation, break_nodes,
+						n_total_segments, n_total_nodes, cumulative_MLE,
+						n_iterations);
+
+
+			AICc_for_mover_n[movn] = get_mean(these_AICcs);
+			AICc_std_dev[movn] =  get_standard_deviation(these_AICcs, AICc_for_mover_n[movn]);
+		}
+		else								// no iterating on teh AICc
+		{
+			this_AICc = calculate_AICc_after_breaks_colinear(A_0, m_over_n,
+						target_skip, minimum_segment_length, sigma,
 						reverse_Chi, reverse_Elevation, break_nodes,
 						n_total_segments, n_total_nodes, cumulative_MLE);
-
-
-		// now get the mean and standard deviation for this m_over_n
-		AICc_for_mover_n[movn] = this_AICc;
-		AICc_std_dev[movn] = this_AICc;
+								// now get the mean and standard deviation for this m_over_n
+			AICc_for_mover_n[movn] = this_AICc;
+			AICc_std_dev[movn] = this_AICc;
+		}
 
 		cout << endl;
-
 	}
 
 	// now calucalte the best fit m over n
@@ -4172,6 +4635,87 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_individual_channels_with_brea
 	}
 	return bf_movern;
 }
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// this function calculeates best fit m/n for each channel
+// these channels are ones with breaks
+//
+// this function uses a monte carlo sampling approach to give some idea of the variability and uncertanty in
+// the AICc values
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+double LSDChiNetwork::search_for_best_fit_m_over_n_individual_channels_with_breaks_monte_carlo(double A_0, int n_movern, double d_movern,
+						       double start_movern, int minimum_segment_length, double sigma,
+						       int target_skip, int target_nodes, int n_iterations,
+						       vector<double>& m_over_n_values,
+						       vector< vector<double> >& AICc_means, vector< vector<double> >& AICc_stddev)
+{
+	// get the number of channels:
+	int n_chans = elevations.size();
+
+	vector< vector<double> > AICc_local(n_chans);
+	vector< vector<double> > AICc_std(n_chans);
+	vector<double> chan_AICs(n_movern);
+	vector<double> chan_std(n_movern);
+  	vector<double> m_over_n_vals(n_movern);
+
+  	// this is used to compute a cumulative MLE (which is not at the moment used
+  	int n_total_segments, n_total_nodes;
+  	double cumulative_MLE;
+
+	vector<double> these_AICcs;
+	double m_over_n;
+
+	for(int chan = 0; chan<n_chans; chan++)
+	{
+		for(int movn = 0; movn< n_movern; movn++)
+		{
+			m_over_n = double(movn)*d_movern+start_movern;
+			//cout << "start m/n: " << start_movern << " d m/m: " << d_movern << " moven: " << movn << " m/n: " << m_over_n << endl;
+
+			m_over_n_vals[movn] = m_over_n;
+
+			vector<int> break_nodes;
+
+			monte_carlo_split_channel(A_0, m_over_n, n_iterations,
+					target_skip, target_nodes, minimum_segment_length, sigma, chan, break_nodes);
+
+			cout << "LSDChiNet, m/n: " << m_over_n << " chan: " << chan;
+			these_AICcs = calculate_AICc_after_breaks_monte_carlo(A_0, m_over_n, target_skip,
+			                               minimum_segment_length, sigma, chan, break_nodes,
+					                       n_total_segments, n_total_nodes, cumulative_MLE,
+					                       n_iterations);
+
+			chan_AICs[movn] = get_mean(these_AICcs);
+			chan_std[movn] = get_standard_deviation(these_AICcs,chan_AICs[movn]);
+		}
+		AICc_local[chan] = chan_AICs;
+		AICc_std[chan] = chan_std;
+	}
+
+	AICc_means = AICc_local;
+	AICc_stddev = AICc_std;
+	m_over_n_values = m_over_n_vals;
+
+	// now get the best fit on the main stem and return this value
+	chan_AICs = AICc_local[0];
+
+	double best_AICc = 1000000;
+	double bf_movern = start_movern;
+	for(int i = 0; i<n_movern; i++)
+	{
+		if(chan_AICs[i] < best_AICc)
+		{
+			best_AICc = chan_AICs[i];
+			bf_movern = m_over_n_vals[i];
+		}
+	}
+	return bf_movern;
+}
+
+
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -4357,6 +4901,7 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_seperate_ms_and_tribs(double 
       	int n_total_segments = 0;
       	int n_total_nodes = 0;
       	double cumulative_MLE = 1;
+      	double log_cum_MLE = 0;
 
 		// get the cumulative maximum likelihood estimators
       	for (int chan = 1; chan<n_channels; chan++)
@@ -4364,13 +4909,23 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_seperate_ms_and_tribs(double 
 			n_total_segments += n_segs_thischan[chan];
 	  		n_total_nodes += n_datanodes_thischan[chan];
 	  		cumulative_MLE = MLEs_thischan[chan]*cumulative_MLE;
+
+			if(MLEs_thischan[chan] <= 0)
+			{
+				log_cum_MLE = log_cum_MLE-1000;
+			}
+			else
+			{
+				log_cum_MLE = log(MLEs_thischan[chan])+log_cum_MLE;
+			}
 	  		//cout << "LSDCN line 2591, chan: " << chan << " MLE: " << MLEs_thischan[chan] << endl;
 		}
 
 
       	// these AIC and AICc values are cumulative for a given m_over_n
-      	thismn_AIC = 4*n_total_segments-2*log(cumulative_MLE);		// the 4 comes from the fact that
+      	//thismn_AIC = 4*n_total_segments-2*log(cumulative_MLE);		// the 4 comes from the fact that
 			                                                       // for each segment there are 2 parameters
+      	thismn_AIC = 4*n_total_segments-2*log_cum_MLE;
       	thismn_AICc =  thismn_AIC + 2*n_total_segments*(n_total_segments+1)/(n_total_nodes-n_total_segments-1);
       	AICc_combined_vec[movn] = thismn_AICc;
       	m_over_n_vec[movn] = m_over_n;
