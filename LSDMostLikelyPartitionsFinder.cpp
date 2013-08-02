@@ -610,6 +610,8 @@ void LSDMostLikelyPartitionsFinder::get_data_from_best_fit_lines(int node, vecto
 								 double& this_MLE, int& this_n_segments, int& this_n_nodes,
 								 double& this_AIC, double& this_AICc)
 {
+	//cout <<"LSDMLPF line 613, getting data" << endl;
+
 	int n_sigma_values = best_fit_AICc.size();
 	if (node >= n_sigma_values)
 	{
@@ -621,8 +623,13 @@ void LSDMostLikelyPartitionsFinder::get_data_from_best_fit_lines(int node, vecto
 	// get the m, b, etc from the data
 	int n_sigma_for_printing = node;
 	int bestfit_segments_node = best_fit_AICc[n_sigma_for_printing];
+
+	//cout << "LINE 627 getting properties, bf segments node: " << bestfit_segments_node <<  endl;
 	get_properties_of_best_fit_segments(bestfit_segments_node,
 										 m_values,b_values, r2_values,DW_values);
+
+	//cout << "LINE 631 got properties" << endl;
+
 
 	vector<int> segment_length;
 	segment_length = segments_for_each_n_segments[ best_fit_AICc[n_sigma_for_printing] ];
@@ -866,7 +873,7 @@ void LSDMostLikelyPartitionsFinder::find_max_like_of_segments()
 	int max_n_segments = n_data_points/minimum_segment_length;
 
 	// initialize a vector for holding the MLE of each n_segments
-	vector<double> MLE_for_segments(max_n_segments,0.0);
+	vector<double> MLE_for_segments(max_n_segments,-0.00000000001);
 
 	// initialize a vecvec for holding the MLE segment partition
 	vector< vector <int> > most_likely_segments(max_n_segments);
@@ -1239,6 +1246,8 @@ void LSDMostLikelyPartitionsFinder::get_properties_of_best_fit_segments(int best
 	int n_segments = bestfit_segments_node+1; 		// this converts from 0-based indexing to
 													// the actual number of segments
 
+	//cout << "Line 1249, n_segments: " << n_segments << endl;
+
 	// initialize temp_vectors
 	vector<double> m(n_segments);
 	vector<double> b(n_segments);
@@ -1250,6 +1259,9 @@ void LSDMostLikelyPartitionsFinder::get_properties_of_best_fit_segments(int best
 
 	// get the segment lengths
 	vector<int> individual_partition = segments_for_each_n_segments[bestfit_segments_node];
+
+	//cout << "Line 1263 segments_for_each_n_segments.size(): "  << segments_for_each_n_segments.size() << endl;
+	//cout << "individual_partition.size(): " << individual_partition.size() << endl;
 
 	// now loop through the segments
 	start_node = 0;

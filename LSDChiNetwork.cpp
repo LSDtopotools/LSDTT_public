@@ -786,7 +786,7 @@ Array2D<double> LSDChiNetwork::data_to_array(int data_member)
 			}
 			else
 			{
-				cout << "LSDChiNetwork::data_to_array; you need to calcualte chi" << endl;
+				cout << "LSDChiNetwork::data_to_array; you need to calculate chi! Raster will have elevations." << endl;
 				data_vecvec = elevations;
 			}
 			break;
@@ -797,7 +797,7 @@ Array2D<double> LSDChiNetwork::data_to_array(int data_member)
 			}
 			else
 			{
-				cout << "LSDChiNetwork::data_to_array; you run monte carlo function" << endl;
+				cout << "LSDChiNetwork::data_to_array; something is wrong, the channels are the wrong length. Printing elevations" << endl;
 				data_vecvec = elevations;
 			}
 			break;
@@ -808,7 +808,7 @@ Array2D<double> LSDChiNetwork::data_to_array(int data_member)
 			}
 			else
 			{
-				cout << "LSDChiNetwork::data_to_array; you run monte carlo function" << endl;
+				cout << "LSDChiNetwork::data_to_array; something is wrong, the channels are the wrong length. Printing elevations" << endl;
 				data_vecvec = elevations;
 			}
 			break;
@@ -819,7 +819,7 @@ Array2D<double> LSDChiNetwork::data_to_array(int data_member)
 			}
 			else
 			{
-				cout << "LSDChiNetwork::data_to_array; you run monte carlo function" << endl;
+				cout << "LSDChiNetwork::data_to_array; something is wrong, the channels are the wrong length. Printing elevations" << endl;
 				data_vecvec = elevations;
 			}
 			break;
@@ -830,7 +830,7 @@ Array2D<double> LSDChiNetwork::data_to_array(int data_member)
 			}
 			else
 			{
-				cout << "LSDChiNetwork::data_to_array; you run monte carlo function" << endl;
+				cout << "LSDChiNetwork::data_to_array; something is wrong, the channels are the wrong length. Printing elevations" << endl;
 				data_vecvec = elevations;
 			}
 			break;
@@ -841,7 +841,7 @@ Array2D<double> LSDChiNetwork::data_to_array(int data_member)
 			}
 			else
 			{
-				cout << "LSDChiNetwork::data_to_array; you run monte carlo function" << endl;
+				cout << "LSDChiNetwork::data_to_array; something is wrong, the channels are the wrong length. Printing elevations" << endl;
 				data_vecvec = elevations;
 			}
 			break;
@@ -852,7 +852,7 @@ Array2D<double> LSDChiNetwork::data_to_array(int data_member)
 			}
 			else
 			{
-				cout << "LSDChiNetwork::data_to_array; you run monte carlo function" << endl;
+				cout << "LSDChiNetwork::data_to_array; something is wrong, the channels are the wrong length. Printing elevations" << endl;
 				data_vecvec = elevations;
 			}
 			break;
@@ -863,7 +863,7 @@ Array2D<double> LSDChiNetwork::data_to_array(int data_member)
 			}
 			else
 			{
-				cout << "LSDChiNetwork::data_to_array; you run monte carlo function" << endl;
+				cout << "LSDChiNetwork::data_to_array; something is wrong, the channels are the wrong length. Printing elevations" << endl;
 				data_vecvec = elevations;
 			}
 			break;
@@ -874,7 +874,7 @@ Array2D<double> LSDChiNetwork::data_to_array(int data_member)
 			}
 			else
 			{
-				cout << "LSDChiNetwork::data_to_array; you run monte carlo function" << endl;
+				cout << "LSDChiNetwork::data_to_array; something is wrong, the channels are the wrong length. Printing elevations" << endl;
 				data_vecvec = elevations;
 			}
 			break;
@@ -885,7 +885,7 @@ Array2D<double> LSDChiNetwork::data_to_array(int data_member)
 			}
 			else
 			{
-				cout << "LSDChiNetwork::data_to_array; you run monte carlo function" << endl;
+				cout << "LSDChiNetwork::data_to_array; something is wrong, the channels are the wrong length. Printing elevations" << endl;
 				data_vecvec = elevations;
 			}
 			break;
@@ -897,7 +897,7 @@ Array2D<double> LSDChiNetwork::data_to_array(int data_member)
 			}
 			else
 			{
-				cout << "LSDChiNetwork::data_to_array; you run monte carlo function" << endl;
+				cout << "LSDChiNetwork::data_to_array; something is wrong, the channels are the wrong length. Printing elevations" << endl;
 				data_vecvec = elevations;
 			}
 			break;
@@ -908,7 +908,7 @@ Array2D<double> LSDChiNetwork::data_to_array(int data_member)
 			}
 			else
 			{
-				cout << "LSDChiNetwork::data_to_array; you run monte carlo function" << endl;
+				cout << "LSDChiNetwork::data_to_array; something is wrong, the channels are the wrong length. Printing elevations" << endl;
 				data_vecvec = elevations;
 			}
 			break;
@@ -919,7 +919,7 @@ Array2D<double> LSDChiNetwork::data_to_array(int data_member)
 			}
 			else
 			{
-				cout << "LSDChiNetwork::data_to_array; you run monte carlo function" << endl;
+				cout << "LSDChiNetwork::data_to_array; something is wrong, the channels are the wrong length. Printing elevations" << endl;
 				data_vecvec = elevations;
 			}
 			break;
@@ -933,7 +933,7 @@ Array2D<double> LSDChiNetwork::data_to_array(int data_member)
 
 	// now loop through channels and nodes filling in the data
 	int n_channels = int(data_vecvec.size());
-	for (int chan = 0; chan < n_channels; chan++)
+	for (int chan = n_channels-1; chan >= 0; chan--)
 	{
 		int n_nodes_in_channel = int(data_vecvec[chan].size());
 		// see if the algorithm for testing if the channel is long enough
@@ -1018,7 +1018,7 @@ void LSDChiNetwork::calculate_chi(double A_0, double m_over_n)
 		{
 
 			dx = flow_distance[ChIndex]-flow_distance[ChIndex+1];
-			//cout << "dx is: " << dx << endl;
+
 
 			chi[ChIndex] = dx*(pow( (A_0/drainage_area[ChIndex] ),
 			                    m_over_n))
@@ -2031,6 +2031,8 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 				int minimum_segment_length, double sigma,
 				vector<double> reverse_Chi, vector<double> reverse_Elevation, vector<int>& break_nodes)
 {
+	//cout << "Line 2034, starting to break the channel" << endl;
+
 	int mean_skip;
 	int skip_range;
 	vector<int> node_reference;
@@ -2056,6 +2058,9 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 		max_nodes_in_section = (target_nodes*(-target_skip+2))/(-target_skip+1);
 	}
 
+	//cout << "target skip: " << target_skip << " and max nodes: " << max_nodes_in_section << endl;
+
+
 	// these data members keep track of the  breaks
 	int n_nodes = int(reverse_Chi.size());
 	list<int> breaks;
@@ -2076,12 +2081,14 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 		// get the length of this break
 		length_of_break_segment = (*br_iter)-start_of_last_break+1;
 
+		//cout << "Line 2084, length of break: " << length_of_break_segment << endl;
+
 		// if this break is longer than the maximum length of the
 		// break segment, start the monte carlo algorithm to break it
 		if (length_of_break_segment > max_nodes_in_section)
 		{
 			// get the skips
-			double sk = double(n_nodes)/double(target_nodes);
+			double sk = double(n_nodes)/double(target_nodes)+0.5;
 
 			int rem = n_nodes%target_nodes;
 			int N;
@@ -2089,7 +2096,7 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 			if (sk >= 1.5)
 			{
 				N = int(sk);
-				//cout << "fourthirds is: " << fourthirds << " and sk is: " << sk << endl;
+				//cout << "sk is: " << sk << " and N: " << N << endl;
 			}
 			else
 			{
@@ -2126,6 +2133,8 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 			br_elev.assign(vec_iter_start,vec_iter_end);
 			int n_br = br_elev.size();
 
+			//cout << "LINE 2136 assigned vectors" << endl;
+
 			// initiate the vecvecs for finding the breaks
 			vector< vector<double> > b_vecvec(n_br);
 			vector< vector<double> > m_vecvec(n_br);
@@ -2139,6 +2148,7 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 			// now run the monte carlo algotithm thorugh N iterations
 			for (int iteration = 0; iteration < n_iterations; iteration++)
 			{
+				//cout << "LINE 2151 iteration: " << iteration << endl;
 
 				// now the vectors that will be replaced by the fitting algorithm
 				// they are from the individual channels, which are replaced each time a new channel is analyzed
@@ -2167,6 +2177,14 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 				channel_MLE_finder.thin_data_monte_carlo_skip(mean_skip, skip_range, node_reference);
 				n_data_nodes = node_reference.size();
 
+				//cout << "n data Nodes: " << n_data_nodes << endl;
+				//vector<double> thinned_chi = channel_MLE_finder.get_x_data();
+				//vector<double> thinned_elev = channel_MLE_finder.get_y_data();
+				//for (int i = 0; i< n_data_nodes; i++)
+				//{
+				//	cout << "nr["<< i << "]: " << node_reference[i] << " " << thinned_chi[i] << " " << thinned_elev[i] << endl;
+				//}
+
 				// now create a single sigma value vector
 				vector<double> sigma_values;
 				sigma_values.push_back(sigma);
@@ -2174,10 +2192,14 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 				// compute the best fit AIC
 				channel_MLE_finder.best_fit_driver_AIC_for_linear_segments(sigma_values);
 
+				//cout << "line 2193, got linear segments" << endl;
+
 				// get the segments
 				channel_MLE_finder.get_data_from_best_fit_lines(0, sigma_values, b_vec, m_vec,
 										r2_vec, DW_vec, fitted_elev,these_segment_lengths,
 										this_MLE, this_n_segments, n_data_nodes, this_AIC, this_AICc);
+
+				//cout << "line 2200, got data" << endl;
 
 				n_segments = int(b_vec.size());
 				for(int seg = 0; seg<n_segments; seg++)
@@ -2190,6 +2212,9 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 					}
 				}
 				n_segements_each_iteration.push_back(this_n_segments);
+
+
+
 
 				// now assign the values of these variable to the vecvecvecs
 				for (int n = 0; n< n_data_nodes; n++)
@@ -2215,8 +2240,9 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 				seg_number_datavec = seg_number_vecvec[br_node];
 
 				int n_data_points_itc = b_datavec.size();
+				//cout << "LINE 2228 br_node: " << br_node << " and n data points: " << n_data_points_itc << endl;
 
-				// calcualte statistics, but only if there is data
+				// calculate statistics, but only if there is data
 				if (n_data_points_itc > 0)
 				{
 					common_stats = get_common_statistics(b_datavec);
@@ -4277,7 +4303,7 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test(double A_0, 
 	double this_AIC;
 	double this_AICc;
 
-	cout << "looping" << endl;
+	cout << "looping starting line 4280" << endl;
 
 
   	// loop through m over n
@@ -4439,7 +4465,7 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(
   	// vector for holding the AICc values and the AICc variation
   	vector<double> AICc_for_mover_n(n_movern);
   	vector<double> AICc_std_dev(n_movern);
-  	vector<double> movn_values(n_movern);
+  	vector<double> movn_values(n_movern, start_movern);
 
 	// these are data elements used by the segment finder
 	vector<double> b_vec;
@@ -4453,7 +4479,7 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(
 	//int n_data_nodes;
 	double this_AICc;
 
-	cout << "looping" << endl;
+	cout << "looping line 4456" << endl;
 
 
   	// loop through m over n
@@ -4464,8 +4490,15 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(
 		m_over_n = double(movn)*d_movern+start_movern;
 		//cout << "yo, : " << double(movn)*d_movern+start_movern << endl;
 
+		cout << "n_movern: " << n_movern << " sz: " << movn_values.size() << " and m_over_n: " << m_over_n <<  endl;
+
+		///for (int i = 0; i< int(movn_values.size()); i++)
+		//{
+		//	cout << "movn_values["<<i<<"]: " << movn_values[i] << endl;
+		//}
+
 		movn_values[movn] = m_over_n;
-		cout << "m over n: " << movn_values[movn];
+		//cout << "m over n: " << movn_values[movn] << endl;
 
 		// reset the compiled vectors
 		compiled_chis = empty_vec;
@@ -4473,16 +4506,22 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(
 		sorted_chis = empty_vec;
 		sorted_elev = empty_vec;
 
+		//cout << "LINE 4483 reset_vectors" << endl;
+
       	// get the transformed channel profiles for this m_over_n
 	  	calculate_chi(A_0, m_over_n);
+
+	  	//cout << "LINE 4488 calculated_chi" << endl;
 
 	  	// now load all the chis and elevations into individual vectors
 	  	for(int chan = 0; chan<n_channels; chan++)
 	  	{
+			//cout << "LINE 4493 chan: " << chan << endl;
+
 			this_chi = chis[chan];
 			this_elev = elevations[chan];
 
-			// add the cis and elevations to the compiled vectors
+			// add the chis and elevations to the compiled vectors
 			int n_nodes = int(this_chi.size());
 			for (int node = 0; node<n_nodes; node++)
 			{
@@ -4490,6 +4529,8 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(
 				compiled_elev.push_back(this_elev[node]);
 			}
 		}
+
+		//cout << "LINE 4507 sorting vectors" << endl;
 
 		// now sort the vectors
 		matlab_double_sort(compiled_chis, sorted_chis, index_map);
@@ -4504,6 +4545,8 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(
 		vector<double> reverse_Elevation = sorted_elev;
 		reverse(reverse_Elevation.begin(), reverse_Elevation.end());
 
+		//cout << "LINE 4522 reversed vectors" << endl;
+
 		vector<double> these_AICcs;
 		vector<int> break_nodes;
 
@@ -4516,13 +4559,13 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(
 				target_skip, target_nodes, minimum_segment_length, sigma,
 				reverse_Chi, reverse_Elevation, break_nodes);
 
-		//cout << "Line 4237, calcualted breaks, break nodes are" << endl;
+		//cout << "Line 4237, calculated breaks, break nodes are" << endl;
 		//for (int i = 0; i< int(break_nodes.size()); i++)
 		//{
 		//	cout << break_nodes[i] << endl;
-		//target_}
+		//}
 
-
+		//cout << "Line 4542, doing monte carlo AICc " << endl;
 		if(Monte_Carlo_switch ==1)				// iterate: this takes a little while
 		{
 			these_AICcs = calculate_AICc_after_breaks_colinear_monte_carlo(A_0, m_over_n,
@@ -4549,7 +4592,7 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(
 		cout << endl;
 	}
 
-	// now calucalte the best fit m over n
+	// now calculate the best fit m over n
 	double bf_movern = start_movern;
 	double bf_AICc = 100000;
 	for (int i = 0; i<n_movern; i++)
@@ -4561,6 +4604,7 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(
 			bf_movern = movn_values[i];
 		}
 	}
+	//cout << "LINE 4581, got best fit m/n, colinear" << endl;
 
 	m_over_n_values = movn_values;
 	AICc_mean = AICc_for_mover_n;
