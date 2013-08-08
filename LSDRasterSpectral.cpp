@@ -385,7 +385,7 @@ void LSDRasterSpectral::shift_spectrum(Array2D<double>& spectrum_real,  Array2D<
 // DE-SHIFT ORIGIN OF SPECTRUM
 // Inverse process of above to return filtered spectrum to original format
 // required for the inverse fourier transform algorithm.
-void LSDRasterSpectral::LSDRasterSpectral::shift_spectrum_inv(Array2D<double>& FilteredSpectrumReal, Array2D<double>& FilteredSpectrumImaginary, Array2D<double>& FilteredSpectrumReal_deshift, Array2D<double>& FilteredSpectrumImaginary_deshift, int Ly, int Lx)
+void LSDRasterSpectral::shift_spectrum_inv(Array2D<double>& FilteredSpectrumReal, Array2D<double>& FilteredSpectrumImaginary, Array2D<double>& FilteredSpectrumReal_deshift, Array2D<double>& FilteredSpectrumImaginary_deshift, int Ly, int Lx)
 {
   int QuadrantRows = Ly/2;
   int QuadrantCols = Lx/2;

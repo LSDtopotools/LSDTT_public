@@ -1,32 +1,18 @@
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//
-// LSDFlowInfo.hpp
-// header file for the LSDFlowInfo object
-// LSD stands for Land Surface Dynamics
-// This is a data object which generates and then
-// stores information about flow routing
-// It is the object that is used to generate
-// contributing area, etc
-//
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//
-// This object is written by
-// Simon M. Mudd, University of Edinburgh
-// David Milodowski, University of Edinburgh
-// Martin D. Hurst, British Geological Survey
-// <your name here>
-//
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//
-// Version 0.0.1		29/08/2012
-//
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//
-// TODO: add a create function that lets the user load a LSDFlowInfo object from files
-//			// then you need a binary 'pickle' function that prints all the binary information
-// 			// into one file.
-//
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+/** @file LSDFlowInfo.hpp
+@author Simon M. Mudd, University of Edinburgh
+@author David Milodowski, University of Edinburgh
+@author Martin D. Hurst, British Geological Survey
+@author Stuart W. D. Grieve, University of Edinburgh
+@author Fiona Clubb, University of Edinburgh
+
+@version Version 0.0.1
+@brief Object to perform flow routing.
+@details This is a data object which generates and then
+stores information about flow routing.
+It is the object that is used to generate contributing area, etc.
+
+@date 29/08/2012
+*/
 
 #include <string>
 #include <vector>
@@ -39,142 +25,272 @@ using namespace TNT;
 #ifndef LSDFlowInfo_H
 #define LSDFlowInfo_H
 
-
+/// @brief Object to perform flow routing.
 class LSDFlowInfo
 {
 	public:
-
+  /// @brief The create function. This is default and throws an error.
 	LSDFlowInfo()										{ create(); }
+	/// @brief Creates a FlowInfo object from a binary flowinfo data.
+	/// @param fname String of the binary flowinfo data file to be read.
 	LSDFlowInfo(string fname)							{ create(fname); }
-	LSDFlowInfo(vector<string> b_conditions, LSDRaster& TopoRaster)
-									{ create(b_conditions, TopoRaster); }
+	/// @brief Creates a FlowInfo object from topography.
+	/// @param BoundaryConditions Vector of the boundary conditions at each edge of the 
+  /// DEM file.
+	/// @param TopoRaster LSDRaster object containing the topographic data.
+	LSDFlowInfo(vector<string> BoundaryConditions, LSDRaster& TopoRaster)
+									{ create(BoundaryConditions, TopoRaster); }
 
-	// declare the channel network object to be a friend
+	/// @brief Copy of the LSDChannelNetwork description here when written.
 	friend class LSDChannelNetwork;
 
 	// some functions for retrieving information out of the data vectors
+	
+  ///@brief Gives the reciever information for a given node.
+  ///@param current_node Integer
+  ///@param reveiver_node Empty integer to be assigned the index of the reciever 
+  ///node.  
+  ///@param receiver_row Empty integer to be assigned the row index of the 
+  ///reciever node.
+  ///@param receiver_col Empty integer to be assigned the column index of the 
+  ///reciever node.
 	void retrieve_receiver_information(int current_node,int& reveiver_node, int& receiver_row,
                                              int& receiver_col);
+  
+  ///@brief Get the row and column indices of a given node.
+  ///@param current_node Integer index of a given node.
+  ///@param curr_row Empty integer to be assigned the row index of the given 
+  ///node.
+  ///@param curr_col Empty integer to be assigned the column index of the given 
+  ///node.
 	void retrieve_current_row_and_col(int current_node,int& curr_row,
                                              int& curr_col);
-
+  
+  ///@brief Get the number of pixels flowing into a node.
+  ///@param node Integer of node index value.
+  ///@return Integer of the number of contributing pixels.
 	int retrieve_contributing_pixels_of_node(int node)
 										{ return NContributingNodes[node]; }
-	int retrieve_flow_length_code_of_node(int node)
+	
+  ///@brief Get the FlowLengthCode of a given node.
+  ///@param node Integer of node index value.
+  ///@return Integer of the FlowLengthCode.
+  int retrieve_flow_length_code_of_node(int node)
 										{ return FlowLengthCode[ RowIndex[node] ][ ColIndex[node] ]; }
 
-
 	// get functions
-	// these get data elements
+	
+	/// @return Number of rows as an integer.
 	int get_NRows() const				{ return NRows; }
-	int get_NCols() const				{ return NCols; }
+	/// @return Number of columns as an integer.
+  int get_NCols() const				{ return NCols; }
+  /// @return Minimum X coordinate as an integer.
 	double get_XMinimum() const			{ return XMinimum; }
+	/// @return Minimum Y coordinate as an integer.
 	double get_YMinimum() const			{ return YMinimum; }
+	/// @return Data resolution as an integer.                            
 	double get_DataResolution() const	{ return DataResolution; }
-	int get_NoDataValue() const		{ return NoDataValue; }
+	/// @return No Data Value as an integer.
+	int get_NoDataValue() const			{ return NoDataValue; }  
+	/// @return Number of nodes with data as an integer.
 	int get_NDataNodes () const			{ return NDataNodes; }
-	vector<int> get_BaseLevelNodeList ()
+	/// @return Vector of all base level nodes.
+  vector<int> get_BaseLevelNodeList ()
 										{ return BaseLevelNodeList; }
+  /// @return FlowDirection values as a 2D Array.									
 	Array2D<int> get_FlowDirection() const { return FlowDirection; }
 
+  ///@brief Recursive add_to_stack routine, from Braun and Willett (2012)
+  ///equations 12 and 13.
+  ///@param lm_index Integer
+  ///@param j_index Integer
+  ///@param bl_node Integer
 	void add_to_stack(int lm_index, int& j_index, int bl_node);
 
 	// some functions that print out indices to rasters
+	///@brief Write NodeIndex to an LSDIndexRaster. 
+  ///@return LSDIndexRaster of node index data.
 	LSDIndexRaster write_NodeIndex_to_LSDIndexRaster();
-	LSDIndexRaster write_FlowDirection_to_LSDIndexRaster();
+	///@brief Write FlowDirection to an LSDIndexRaster.
+  ///@return LSDIndexRaster of flow directions.
+  LSDIndexRaster write_FlowDirection_to_LSDIndexRaster();
+	///@brief Write FlowLengthCode to an LSDIndexRaster.
+  ///@return LSDIndexRaster of flow lengths.
 	LSDIndexRaster write_FlowLengthCode_to_LSDIndexRaster();
-	LSDIndexRaster write_NContributingNodes_to_LSDIndexRaster();
+	///@brief Write NContributingNodes to an LSDIndexRaster.
+  ///@return LSDIndexRaster of number of contributing nodes for each cell. 
+  LSDIndexRaster write_NContributingNodes_to_LSDIndexRaster();
+	///@brief Writes flow directions to an LSDIndexRaster.
+  ///Flow direction in arcmap format is: \n\n 
+  /// 32  64  128 \n
+  /// 16   0  1    \n
+  /// 8    4  2     \n
+  ///
+  ///@return LSDIndexRaster of flow directions in arcgis format.
 	LSDIndexRaster write_FlowDirection_to_LSDIndexRaster_Arcformat();
-	LSDRaster write_DrainageArea_to_LSDRaster();		// added by FC 15/11/12
+	///@brief 
+  ///@return
+  ///@author Fiona Clubb 
+  ///@date 15/11/12	
+  LSDRaster write_DrainageArea_to_LSDRaster();
 
-	// this prints the flow information to file
+	///@brief Prints the flow information to file.
+	///@param filename String of the output file to be written.
 	void print_flow_info_vectors(string filename);
-
-	// functions for pickling (storing in binary format and reading in binary format)
-	void unpickle(string filename);
-	void pickle(string filename);
+	
+  ///@brief Unpickles flow information data from a binary file.
+	///@param filename String of the binary file to be read.
+  void unpickle(string filename);
+  ///@brief Pickles flow information data from a binary file.
+	///@param filename String of the binary file to be written.
+  void pickle(string filename);
 
 	// functions for getting flow, discharge, sediment flux, etc
-	LSDIndexRaster calculate_n_pixels_contributing_from_upslope();
+	
+	///@brief This function calculates the contributing pixels.
+	///It can be converted to contributing area by multiplying by the
+  ///DataResolution^2. In this function a pixel that has no donors has a 
+  ///contributing pixel value of 0.
+  ///@return LSDIndexRaster of upslope contributing pixels.
+  LSDIndexRaster calculate_n_pixels_contributing_from_upslope();
 
-	// this calculates area and makes an index into the s vector for efficient
-	// calculation of the basin upslope of a given node.
-	void calculate_upslope_reference_indices();
+	///@brief This calculates area and makes an index into the s vector for 
+  ///efficient calculation of the basin upslope of a given node.
+  void calculate_upslope_reference_indices();
 
 	// algorithms for basin collection
-	int retrieve_largest_base_level();
+	///@brief This function returns the base level node with the greatest 
+  ///drainage area.
+  ///@return Integer node index.
+  int retrieve_largest_base_level();
+  ///@brief This function returns an integer vector containing all the node 
+  ///indexes upslope of of the node with number node_number_outlet.
+  ///@param node_number_outlet Integer of the target node. 
+  ///@return Integer vector of upslope node indexes.
 	vector<int> get_upslope_nodes(int node_number_outlet);
-
-
+  
 	// algorithms for stream profile analysis
+	
+	///@brief This function calculates the chi function for all the nodes upslope 
+  ///of a given node.
+  ///@param starting_node Integer index of node to analyse upslope of.
+  ///@param m_over_n
+  ///@param A_0 
+  ///@return Vector of chi values.
 	vector<double> get_upslope_chi(int starting_node, double m_over_n, double A_0);
-	vector<double> get_upslope_chi(vector<int>& upslope_pixel_list, double m_over_n, double A_0);
+  ///@brief This function calculates the chi function for all the nodes upslope 
+  ///of a given list of nodes.
+  ///@param upslope_pixel_list Vector of nodes to analyse.
+  ///@param m_over_n
+  ///@param A_0
+  ///@return Vector of chi values.
+  vector<double> get_upslope_chi(vector<int>& upslope_pixel_list, double m_over_n, double A_0);
 
-	// flow length functions
+	///@brief Calculates the distance from outlet of all the base level nodes.
+	///Distance is given in spatial units, not in pixels.
+  ///@return LSDRaster of the distance to the outlet for all baselevel nodes.
 	LSDRaster distance_from_outlet();
-
-	// functions for getting sources
+	
+	///@brief A get sources version that uses the flow accumulation pixels.
+	///@param FlowPixels LSDIndexRaster of flow accumulation in pixels.
+	///@param threshold Integer flow accumulation threshold.
+  ///@return Vector of source integers.
 	vector<int> get_sources_index_threshold(LSDIndexRaster& FlowPixels, int threshold);
 
 	protected:
 
-	// data for georeferencing
-	int NRows;			// number of rows
-	int NCols;			// number of columns
-	double XMinimum;
+	///Number of rows.
+  int NRows;
+  ///Number of columns.
+	int NCols;
+	///Minimum X coordinate.
+  double XMinimum;
+	///Minimum Y coordinate.
 	double YMinimum;
 
-	// metadata
+	///Data resolution.
 	double DataResolution;
+	///No data value.
 	int NoDataValue;
 
-	// data about the flow network
+	/// The number of nodes in the raster that have data.
 	int NDataNodes;
+		
+	/// An array that says what node number is at a given row and column.
+	Array2D<int> NodeIndex;	 
+	
+  /// @brief A raster of flow direction information.
+  ///
+	/// In the format:
+	///
+	/// 7  0 1 \n
+	/// 6 -1 2 \n
+	/// 5  4 3 \n
+	///
+	/// Nodes with flow direction of -1 drain to themselvs and are base level/sink nodes.
+  Array2D<int> FlowDirection;
+  
+  /// @brief A code to denote the flow length from the node to its reciever node.
+  /// <b>Each node has one and only one receiver.</b>
+  /// \n\n
+	/// 0 == no receiver/self receiver (base level) \n
+	/// 1 == cardinal direction, flow length = DataResolution \n
+	/// 2 == diagonal, flow length = DataResolution*(1/sqrt(2)) \n
+	Array2D<int> FlowLengthCode;
+	
+	/// @brief This stores the row of a node in the vectorized
+	/// node index. It, combined with ColIndex, is the
+	/// inverse of NodeIndex.
+	vector<int> RowIndex;
+  
+  /// @brief This stores the column of a node in the vectorized
+  /// node index. It, combined with RowIndex, is the
+  /// inverse of NodeIndex.				
+	vector<int> ColIndex;
+  
+  /// A list of base level nodes.				
+	vector<int> BaseLevelNodeList;
+  
+  /// Stores the number of donors to each node.		
+	vector<int> NDonorsVector;
+  
+  /// Stores the node index of the receiving node.			
+	vector<int> ReceiverVector;			
+	
+  /// @brief Stores the delta vector which is used to index into the donor stack 
+  /// and order contributing nodes. See Braun and Willett (2012).
+  vector<int> DeltaVector;			
+	
+  /// This is a vector that stores the donor nodes of of the nodes and is 
+  /// indexed by the DeltaVector.
+  vector<int> DonorStackVector;
+  
+  /// @brief This vector is used to caluculate flow accumulation. For each base 
+  /// level node it progresses from a hilltop to a confluence and then jumps to 
+  /// the next hilltop so that by cascading down through the node indices in 
+  /// this list one can quickly calculate drainage area, discharge, sediment 
+  /// flux, etc.		
+	vector<int> SVector;
+  
+  /// This stores the base level node for all of the nodes in the DEM.				
+	vector<int> BLBasinVector;			
 
-	// the indexing data
-	Array2D<int> NodeIndex;				// an array that says what node number
-										// is at a given row and column
-	Array2D<int> FlowDirection;			// a raster of flow direction information
-										// in this format:
-										// 7  0 1
-										// 6 -1 2
-										// 5  4 3
-										// nodes with flow direction of -1 drain
-										// to themselvs and are base level/sink nodes
-	Array2D<int> FlowLengthCode;		// a code to denote the flow lengthfrom the node
-										// to its reciever node (note each node
-										// has one and only one receiver)
-										// 0 == no receiver/self receiver (base level)
-										// 1 == cardinal direction, flow length = DataResolution
-										// 2 == diagonal, flow length = DataResolution*(1/sqrt(2));
-	vector<int> RowIndex;				// This stores the row of a node in the vectorized
-										// node index. It, combined with ColIndex, is the
-										// inverse of NodeIndex
-	vector<int> ColIndex;				// This stores the column of a node in the vectorized
-										// node index. It, combined with RowIndex, is the
-										// inverse of NodeIndex
-	vector<int> BaseLevelNodeList;		// a list of base level nodes
-	vector<int> NDonorsVector;			// stores the number of donors to each node
-	vector<int> ReceiverVector;			// stores the node index of the receiving node
-	vector<int> DeltaVector;			// stores the delta vector which is used
-										// to index into the donor stack and order contributing nodes
-										// see Braun and Willett
-	vector<int> DonorStackVector;		// This is a vector that stores the donor nodes of of the nodes
-										// and is indexed by the DeltaVector
-	vector<int> SVector;				// this vector is used to caluculate flow accumulation; for each
-										// base level node it progresses from a hilltop to a confluence and then
-										// jumps to the next hilltop so that by cascading down through
-										// the node indices in this list one can quickly calcualte
-										// drainage area, discharge, sediment flux, etc.
-	vector<int> BLBasinVector;			// this stores the base level node for all of the nodes in the
-										// DEM
-
-	vector<int> SVectorIndex;			// this points to the starting point in the S vector of each node
-	vector<int> NContributingNodes;		// the number of contributing nodes !!INCULDING SELF!! to a current
-										// pixel. It is used in conjunction with the SVectorIndex to build
-										// basins upslope of any and all nodes in the node list
-	vector<string> BoundaryConditions;	// stores the boundary conditions in a vector of four strings
-										// the conditions are N[0] E[1] S[2] W[3]
+  /// This points to the starting point in the S vector of each node.
+	vector<int> SVectorIndex;
+  
+  /// @brief The number of contributing nodes <b>INCULDING SELF</b> to a current
+	/// pixel. It is used in conjunction with the SVectorIndex to build
+	/// basins upslope of any and all nodes in the node list.			
+	vector<int> NContributingNodes;		
+	
+  /// @brief Boundary conditions stored in a vector of four strings.
+	/// The conditions are North[0] East[1] South[2] West[3].
+	///
+	/// There are 3 kinds of edge boundaries: no flux, base level and periodic.
+	///
+	/// The strings can be any length, as long as the first letter corresponds to the
+	/// first letter of the boundary condition. It is not case sensitive.
+  vector<string> BoundaryConditions;	
 
 	private:
 	void create();
