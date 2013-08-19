@@ -26,6 +26,9 @@
 // 1. Peel out the partitioning so that you can save and load partition files.
 // 3. p, t and ANCOVA test to see if regressions are significant and different
 
+//-----------------------------------------------------------------
+//DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
+//-----------------------------------------------------------------
 
 #include <vector>
 #include <iostream>

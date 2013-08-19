@@ -17,6 +17,11 @@
 // but could also have more detailed channels.
 
 
+//-----------------------------------------------------------------
+//DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
+//-----------------------------------------------------------------
+
+
 #include <vector>
 #include <algorithm>
 #include "TNT/tnt.h"
