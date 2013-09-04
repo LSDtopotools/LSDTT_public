@@ -1,21 +1,10 @@
-// source code for the LSDChannelIndex object
-// this object contains the node indeces as well as the
-// row and col indices for individual channel segments
-// these could be arranged arbitrailiy accoridng to channel
-// junctions or simply nodes downstream of a given node and upstream
-// of another arbitrary node EndNode
-
-// there should also be an LSDChannel object which contains
-// the actual data of the channel including things like
-// elevation, distance downstream, area, etc.
-// however this needs to be thrugh out carefully since it
-// seems different applications will need different kinds
-// and amounts of data in the LSDChannel object. One perhaps
-// could use a list of vectors, each vector containing the
-// double data along the channel but this list is expandable
-// so one could have channels with just elevation and distance data
-// but could also have more detailed channels.
-
+// Source code for the LSDChannel object.
+// This obect is linked to a LSDIndexChannel object.
+// The LSDIndexChannel object holds the row, column and node
+// index for each channel. The LSDChannel object contains
+// additional information such as elevation, drainage area
+// and chi (the transformed coordiante for integral analysis of
+// channel profiles
 
 //-----------------------------------------------------------------
 //DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
@@ -45,6 +34,9 @@ using namespace TNT;
 // the ending node is downstream
 // In this create function the junction indices are left blank (this can
 // describe a channel between two arbitraty points
+//
+// SMM 2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDChannel::create_LSDC(LSDIndexChannel& InChann)
 {
@@ -74,6 +66,9 @@ void LSDChannel::create_LSDC(LSDIndexChannel& InChann)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this calculates all the channel areas, elevations and chi parameters based on
 // for a starting node index and ending node index
+//
+// SMM 2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDChannel::create_LSDC(int SJN, int EJN, double downslope_chi,
                              double m_over_n, double A_0, LSDFlowInfo& FlowInfo,
@@ -204,6 +199,9 @@ void LSDChannel::create_LSDC(int SJN, int EJN, double downslope_chi,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this calculates all the channel areas, elevations and chi parameters based on
 // for a given LSDChannelIndex
+//
+// SMM 2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDChannel::create_LSDC(double downslope_chi,
                              double m_over_n, double A_0, LSDIndexChannel& InChann, LSDFlowInfo& FlowInfo,
@@ -309,6 +307,9 @@ void LSDChannel::create_LSDC(double downslope_chi,
 // the ending node is downstream
 // In this create function the junction indices are left blank (this can
 // describe a channel between two arbitraty points
+//
+// SMM 2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDChannel::create_LSDC(int SJN, int EJN, LSDFlowInfo& FlowInfo)
 {
@@ -386,6 +387,9 @@ void LSDChannel::create_LSDC(int SJN, int EJN, LSDFlowInfo& FlowInfo)
 // the ending node is downstream
 // In this create function the junction indices are left blank (this can
 // describe a channel between two arbitraty points
+//
+// SMM 2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDChannel::create_LSDC(int SJ, int SJN, int EJ, int EJN, LSDFlowInfo& FlowInfo)
 {
@@ -455,6 +459,9 @@ void LSDChannel::create_LSDC(int SJ, int SJN, int EJ, int EJN, LSDFlowInfo& Flow
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this function uses a flow info object to calculate the chi values in the channel
+//
+// SMM 2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDChannel::calculate_chi(double downslope_chi, double m_over_n, double A_0, LSDFlowInfo& FlowInfo )
 {
@@ -502,6 +509,10 @@ void LSDChannel::calculate_chi(double downslope_chi, double m_over_n, double A_0
 
 
 // this function gets the most likely channel segments
+//
+// SMM 2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDChannel::find_most_likeley_segments(int minimum_segment_length, double sigma, int target_nodes,
 					     vector<double>& b_vec, vector<double>&  m_vec,
 					     vector<double>& 	r2_vec,vector<double>&  DW_vec,
@@ -568,6 +579,12 @@ void LSDChannel::find_most_likeley_segments(int minimum_segment_length, double s
 	thinned_elev = channel_MLE_finder.get_y_data();
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// this function finds the best fit m/n ratio
+//
+// SMM 2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDChannel::find_best_fit_m_over_n_with_segments(int n_movern, double d_movern,double start_movern,
 						      double downslope_chi, double A_0, LSDFlowInfo& FlowInfo,
                                           int minimum_segment_length, double sigma, double target_nodes )

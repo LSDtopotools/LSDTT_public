@@ -1,20 +1,11 @@
-// source code for the LSDChannelIndex object
-// this object contains the node indeces as well as the
+// Source code for the LSDChannelIndex object
+// this object contains the node indices as well as the
 // row and col indices for individual channel segments
-// these could be arranged arbitrailiy accoridng to channel
+// these can be arranged arbitrailiy accoridng to channel
 // junctions or simply nodes downstream of a given node and upstream
 // of another arbitrary node EndNode
 
-// there should also be an LSDChannel object which contains
-// the actual data of the channel including things like
-// elevation, distance downstream, area, etc.
-// however this needs to be thrugh out carefully since it
-// seems different applications will need different kinds
-// and amounts of data in the LSDChannel object. One perhaps
-// could use a list of vectors, each vector containing the
-// double data along the channel but this list is expandable
-// so one could have channels with just elevation and distance data
-// but could also have more detailed channels.
+
 
 
 //-----------------------------------------------------------------
@@ -32,7 +23,13 @@ using namespace TNT;
 #ifndef LSDIndexChannel_CPP
 #define LSDIndexChannel_CPP
 
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Empty create routine that throws error (you need to give it parameters)
+//
+// SMM 2012
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDIndexChannel::create()
 {
 	//cout << "LSDIndexChannel You need to initialize with some parameters" << endl;
@@ -47,6 +44,9 @@ void LSDIndexChannel::create()
 // the ending node is downstream
 // In this create function the junction indices are left blank (this can
 // describe a channel between two arbitraty points
+//
+// SMM 2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDIndexChannel::create(int SJN, int EJN, LSDFlowInfo& FlowInfo)
 {
@@ -119,6 +119,9 @@ void LSDIndexChannel::create(int SJN, int EJN, LSDFlowInfo& FlowInfo)
 // the ending node is downstream
 // In this create function the junction indices are left blank (this can
 // describe a channel between two arbitraty points
+//
+// SMM 2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDIndexChannel::create(int SJ, int SJN, int EJ, int EJN, LSDFlowInfo& FlowInfo)
 {
@@ -184,6 +187,9 @@ void LSDIndexChannel::create(int SJ, int SJN, int EJ, int EJN, LSDFlowInfo& Flow
 // gets the n contributing pixels at one before the final pixel.
 // useful for when you want to get the basin area just above the tributary
 // junction, which is usually at EndNode
+//
+// SMM 2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 int LSDIndexChannel::get_contributing_pixels_at_penultimate_node(LSDFlowInfo& FlowInfo)
 {
@@ -201,6 +207,9 @@ int LSDIndexChannel::get_contributing_pixels_at_penultimate_node(LSDFlowInfo& Fl
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // gets the n contributing pixels at the node in the channel (not the node index)
+//
+// SMM 2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 int LSDIndexChannel::get_contributing_pixels_at_node(int n_node, LSDFlowInfo& FlowInfo)
 {
@@ -221,6 +230,9 @@ int LSDIndexChannel::get_contributing_pixels_at_node(int n_node, LSDFlowInfo& Fl
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this returns the node index (from flowInfo object
 // of a node in the channel
+//
+// SMM 2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 int LSDIndexChannel::get_node_in_channel(int n_node)
 {
@@ -243,6 +255,9 @@ int LSDIndexChannel::get_node_in_channel(int n_node)
 // this returns the node index (from flowInfo object) and row and column indices
 // into an LSDRaster or IndexRaster
 // of a node in the channel
+//
+// SMM 2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDIndexChannel::get_node_row_col_in_channel(int n_node, int& node, int& row, int& col)
 {
@@ -264,6 +279,9 @@ void LSDIndexChannel::get_node_row_col_in_channel(int n_node, int& node, int& ro
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this prints the channel onto an index raster. Used to test where the channel is.
+//
+// SMM 2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexRaster LSDIndexChannel::print_index_channel_to_index_raster()
 {
