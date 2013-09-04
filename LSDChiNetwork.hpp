@@ -753,7 +753,7 @@ class LSDChiNetwork
 		/// @brief this function fits 2 segments to the chi-elevation data from first order basins and calculates
 		/// the most likely position of the channel head - added by FC 28/06/13
 		///
-		/// @param minimum_seg_length_for_channel_heads Minimum number of nodes used for segment fitting
+		/// @param min_seg_length_for_channel_heads Minimum number of nodes used for segment fitting
 		/// @return array with channel head locations
 		/// @author Fiona Clubb
 		/// @date 03/09/2013
