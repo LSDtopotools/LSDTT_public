@@ -139,7 +139,7 @@ class LSDChiNetwork
     ///  It generates several data elements, which are written to the file with name fname (passed to
     ///  function). The file format is for each row:\n\n
     ///   chan << " " << start_row << " " << mp_row << " " << end_row << " "
-    ///		<< start_col << " " << mp_row << " " << end_row << " "
+    ///		<< start_col << " " << mp_col << " " << end_col << " "
     ///		<< start_interval_elevations << " "
     ///		<< mp_interval_elevations << " " << end_interval_elevations << " "
     ///		<< start_interval_flowdistance << " " << mp_interval_flowdistance << " "
@@ -172,7 +172,7 @@ class LSDChiNetwork
     ///  It generates several data elements, which are written to the file with name fname (passed to
     ///  function). The file format is for each row:   \n\n
     ///   chan << " " << start_row << " " << mp_row << " " << end_row << " "
-    ///		<< start_col << " " << mp_row << " " << end_row << " "
+    ///		<< start_col << " " << mp_col << " " << end_col << " "
     ///		<< start_interval_elevations << " "
     ///		<< mp_interval_elevations << " " << end_interval_elevations << " "
     ///		<< start_interval_flowdistance << " " << mp_interval_flowdistance << " "

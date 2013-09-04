@@ -37,11 +37,20 @@ using namespace TNT;
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // first create routine
 //
+// SMM 01/03/2013
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDChiNetwork::create(string channel_network_fname)
 {
 	ifstream channel_data_in;
 	channel_data_in.open(channel_network_fname.c_str());
+
+	if( channel_data_in.fail() )
+	{
+		cout << "\nFATAL ERROR: the channel network file \"" << channel_network_fname
+		     << "\" doesn't exist" << endl;
+		exit(EXIT_FAILURE);
+	}
 
 	int channel_number;
 	int receiver_cnumber;
@@ -164,7 +173,9 @@ void LSDChiNetwork::create(string channel_network_fname)
 //
 // IMPORTANT: This only works if all the tributaries drain to the mainstem
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// SMM 01/03/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDChiNetwork::extend_tributaries_to_outlet()
 {
 	int n_channels = elevations.size();
@@ -196,7 +207,9 @@ void LSDChiNetwork::extend_tributaries_to_outlet()
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function prints the details of an individual channel to screen for bug checking
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// SMM 01/03/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDChiNetwork::print_channel_details_to_screen(int channel_number)
 {
   if (channel_number >= int(elevations.size()))
@@ -231,7 +244,10 @@ void LSDChiNetwork::print_channel_details_to_screen(int channel_number)
 // format is
 // A_0 m_over_n
 // channel_number node_on_receiver_channel node_index row col flow_distance chi elevation darainage_area
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// SMM 01/03/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::print_channel_details_to_file(string fname, double A_0, double m_over_n)
 {
 
@@ -271,7 +287,9 @@ void LSDChiNetwork::print_channel_details_to_file(string fname, double A_0, doub
 // A_0 m_over_n
 // channel_number node_on_receiver_channel node_index row col flow_distance chi elevation darainage_area...
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// SMM 01/03/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::print_channel_details_to_file_full_fitted(string fname)
 {
 
@@ -349,7 +367,9 @@ void LSDChiNetwork::print_channel_details_to_file_full_fitted(string fname)
 // A_0 m_over_n
 // channel_number node_on_receiver_channel node_index row col flow_distance chi elevation darainage_area...
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// SMM 01/03/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::print_channel_details_to_file_full_fitted(string fname, int target_nodes, int minimum_segment_length)
 {
 
@@ -436,7 +456,7 @@ void LSDChiNetwork::print_channel_details_to_file_full_fitted(string fname, int 
 //  It generates several data elements, which are written to the file with name fname (passed to
 //  function). The file format is for each row
 //   SA_file << chan << " " << start_row << " " << mp_row << " " << end_row << " "
-//		<< start_col << " " << mp_row << " " << end_row << " "
+//		<< start_col << " " << mp_col << " " << end_row << " "
 //		<< start_interval_elevations << " "
 //		<< mp_interval_elevations << " " << end_interval_elevations << " "
 //		<< start_interval_flowdistance << " " << mp_interval_flowdistance << " "
@@ -453,7 +473,10 @@ void LSDChiNetwork::print_channel_details_to_file_full_fitted(string fname, int 
 // So if the fraction is 1 it means that the change is area is equal to the area at the midpoint
 // a restictive value is 0.05, you will eliminate major tributaries with a 0.2, and
 // 1 will catch almost all of the data.
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// SMM 01/03/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::slope_area_extraction_vertical_intervals(double interval, double area_thin_fraction,
 															string fname)
 {
@@ -569,7 +592,7 @@ void LSDChiNetwork::slope_area_extraction_vertical_intervals(double interval, do
 				if (area_thin_frac_for_test < area_thin_fraction)
 				{
 					SA_file << chan << " " << start_row << " " << mp_row << " " << end_row << " "
-					    << start_col << " " << mp_row << " " << end_row << " "
+					    << start_col << " " << mp_col << " " << end_col << " "
 					    << start_interval_elevations << " "
 				     	<< mp_interval_elevations << " " << end_interval_elevations << " "
 				     	<< start_interval_flowdistance << " " << mp_interval_flowdistance << " "
@@ -600,7 +623,7 @@ void LSDChiNetwork::slope_area_extraction_vertical_intervals(double interval, do
 //  It generates several data elements, which are written to the file with name fname (passed to
 //  function). The file format is for each row
 //   SA_file << chan << " " << start_row << " " << mp_row << " " << end_row << " "
-//		<< start_col << " " << mp_row << " " << end_row << " "
+//		<< start_col << " " << mp_col << " " << end_row << " "
 //		<< start_interval_elevations << " "
 //		<< mp_interval_elevations << " " << end_interval_elevations << " "
 //		<< start_interval_flowdistance << " " << mp_interval_flowdistance << " "
@@ -617,7 +640,10 @@ void LSDChiNetwork::slope_area_extraction_vertical_intervals(double interval, do
 // So if the fraction is 1 it means that the change is area is equal to the area at the midpoint
 // a restictive value is 0.05, you will eliminate major tributaries with a 0.2, and
 // 1 will catch almost all of the data.
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// SMM 01/03/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::slope_area_extraction_horizontal_intervals(double interval, double area_thin_fraction,
 															string fname)
 {
@@ -733,7 +759,7 @@ void LSDChiNetwork::slope_area_extraction_horizontal_intervals(double interval, 
 				if (area_thin_frac_for_test < area_thin_fraction)
 				{
 					SA_file << chan << " " << start_row << " " << mp_row << " " << end_row << " "
-					    << start_col << " " << mp_row << " " << end_row << " "
+					    << start_col << " " << mp_col << " " << end_col << " "
 					    << start_interval_elevations << " "
 				     	<< mp_interval_elevations << " " << end_interval_elevations << " "
 				     	<< start_interval_flowdistance << " " << mp_interval_flowdistance << " "
@@ -771,7 +797,10 @@ void LSDChiNetwork::slope_area_extraction_horizontal_intervals(double interval, 
 // 12 all_fitted_DW_means
 // 13 all_fitted_DW_standard_deviations
 // 14 all_fitted_DW_standard_errors
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// SMM 01/03/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 Array2D<double> LSDChiNetwork::data_to_array(int data_member)
 {
 	// this vecvec will be used to create the array
@@ -978,7 +1007,10 @@ Array2D<double> LSDChiNetwork::data_to_array(int data_member)
 // this function calculates the chi values for the channel network using the rectangle rule
 // note: the entire network must be caluculated because the chi values of the tributaries
 // depend on the chi values of the mainstem
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// SMM 01/03/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::calculate_chi(double A_0, double m_over_n)
 {
 	double dx;				// spacing between nodes
@@ -1044,7 +1076,10 @@ void LSDChiNetwork::calculate_chi(double A_0, double m_over_n)
 // This function calucaltes the skip parameter of the main stem (the longest channel
 // The maximum length of the dataset will be in the main stem so this will determine the
 // target spacing of all the tributaries
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// SMM 01/03/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 int LSDChiNetwork::calculate_skip(int target_nodes)
 {
 	int n_nodes = chis[0].size();
@@ -1080,7 +1115,10 @@ int LSDChiNetwork::calculate_skip(int target_nodes)
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function calucaltes the skip parameter based on a vector of chi values
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// SMM 01/05/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 int LSDChiNetwork::calculate_skip(int target_nodes, vector<double>& sorted_chis)
 {
 	int n_nodes = sorted_chis.size();
@@ -1119,7 +1157,10 @@ int LSDChiNetwork::calculate_skip(int target_nodes, vector<double>& sorted_chis)
 // This function calucaltes the skip parameter of the main stem (the longest channel
 // The maximum length of the dataset will be in the main stem so this will determine the
 // target spacing of all the tributaries
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// SMM 01/03/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 int LSDChiNetwork::calculate_skip(int target_nodes, int channel_number)
 {
 
@@ -1163,7 +1204,10 @@ int LSDChiNetwork::calculate_skip(int target_nodes, int channel_number)
 // This function calucaltes the chi spacing of the main stem channel (the longest channel
 // The maximum length of the dataset will be in the main stem so this will determine the
 // target spacing of all the tributaries
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// SMM 01/03/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 double LSDChiNetwork::calculate_optimal_chi_spacing(int target_nodes)
 {
 	double dchi;
@@ -1189,7 +1233,10 @@ double LSDChiNetwork::calculate_optimal_chi_spacing(int target_nodes)
 // this function replaces the b, m, r2 and DW values of each segment into vectors
 // it also returns the fitted elevation and the index into the original channel (since this is done
 //		with thinned data)
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// SMM 01/03/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::find_most_likeley_segments(int channel,
 						 int minimum_segment_length,
 						 double sigma, int N, vector<double>& b_vec,
@@ -1245,7 +1292,10 @@ void LSDChiNetwork::find_most_likeley_segments(int channel,
 // this function replaces the b, m, r2 and DW values of each segment into vectors
 // it also returns the fitted elevation and the index into the original channel (since this is done
 //		with thinned data)
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// SMM 01/03/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::find_most_likeley_segments_dchi(int channel,
 						 int minimum_segment_length,
 						 double sigma, double dchi, vector<double>& b_vec,
@@ -1293,7 +1343,10 @@ void LSDChiNetwork::find_most_likeley_segments_dchi(int channel,
 // chi chan vary, such that minimum_dchi = dchi-variation_dchi.
 // The expectation is that this will be used repeatedly on channels to generate statistics of the
 // best fit segments by individual nodes in the channel network.
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 01/06/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::find_most_likeley_segments_monte_carlo(int channel, int minimum_segment_length,
 						 double sigma, int mean_skip, int skip_range,  vector<double>& b_vec,
 					     vector<double>& m_vec, vector<double>& r2_vec,vector<double>& DW_vec,
@@ -1346,7 +1399,10 @@ void LSDChiNetwork::find_most_likeley_segments_monte_carlo(int channel, int mini
 // chi chan vary, such that minimum_dchi = dchi-variation_dchi.
 // The expectation is that this will be used repeatedly on channels to generate statistics of the
 // best fit segments by individual nodes in the channel network.
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 01/05/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::find_most_likeley_segments_monte_carlo_dchi(int channel, int minimum_segment_length,
 						 double sigma, double mean_dchi, double variation_dchi, vector<double>& b_vec,
 					     vector<double>& m_vec, vector<double>& r2_vec,vector<double>& DW_vec,
@@ -1409,7 +1465,10 @@ void LSDChiNetwork::find_most_likeley_segments_monte_carlo_dchi(int channel, int
 //
 // Note: this is _extremely_ computationally and data intensive.
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 01/03/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit(double A_0, double m_over_n, int n_iterations,
 				int mean_skip, int skip_range,
 				int minimum_segment_length, double sigma)
@@ -1694,7 +1753,10 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit(double A_0, do
 // this function is called repeatedly until the target skip equals the all of the this_skip values
 //
 // This function continues to split the channel into segments until the target skip is achieved
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 01/04/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::monte_carlo_split_channel(double A_0, double m_over_n, int n_iterations,
 				int target_skip, int target_nodes,
 				int minimum_segment_length, double sigma, int chan, vector<int>& break_nodes)
@@ -2029,7 +2091,10 @@ void LSDChiNetwork::monte_carlo_split_channel(double A_0, double m_over_n, int n
 // this function is called repeatedly until the target skip equals the all of the this_skip values
 //
 // This function continues to split the channel into segments until the target skip is achieved
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 01/05/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over_n, int n_iterations,
 				int target_skip, int target_nodes,
 				int minimum_segment_length, double sigma,
@@ -2338,7 +2403,9 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 //
 // This function splits all the channels and writes the data into the break_nodes_vecvec data member
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// SMM 01/03/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::split_all_channels(double A_0, double m_over_n, int n_iterations,
 				int target_skip, int target_nodes, int minimum_segment_length, double sigma)
 {
@@ -2366,7 +2433,10 @@ void LSDChiNetwork::split_all_channels(double A_0, double m_over_n, int n_iterat
 // it also replaces the data members n_total_segments, int& n_total_nodes, double& cumulative_MLE
 // so that they can be used to get a cumulative AICc of multiple channels
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 01/06/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 double LSDChiNetwork::calculate_AICc_after_breaks(double A_0, double m_over_n,
 				int skip, int minimum_segment_length, double sigma, int chan, vector<int> break_nodes,
 				int& n_total_segments, int& n_total_nodes, double& cumulative_MLE)
@@ -2517,7 +2587,10 @@ double LSDChiNetwork::calculate_AICc_after_breaks(double A_0, double m_over_n,
 // this version uses a monte carlo approach and returns AICc values in a vector
 // that has the length of the number of iterations
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 01/06/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 vector<double> LSDChiNetwork::calculate_AICc_after_breaks_monte_carlo(double A_0, double m_over_n,
 				int target_skip, int minimum_segment_length, double sigma, int chan, vector<int> break_nodes,
 				int& n_total_segments, int& n_total_nodes, double& cumulative_MLE,
@@ -2691,7 +2764,10 @@ vector<double> LSDChiNetwork::calculate_AICc_after_breaks_monte_carlo(double A_0
 // it also replaces the data members n_total_segments, int& n_total_nodes, double& cumulative_MLE
 // so that they can be used to get a cumulative AICc of multiple channels
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 01/05/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 double LSDChiNetwork::calculate_AICc_after_breaks_colinear(double A_0, double m_over_n,
 				int skip, int minimum_segment_length, double sigma,
 				vector<double> reverse_Chi, vector<double> reverse_Elevation,
@@ -2833,7 +2909,10 @@ double LSDChiNetwork::calculate_AICc_after_breaks_colinear(double A_0, double m_
 //
 // this is the montecarlo version, it returns a vecotr of AICc values from each iteration
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 01/06/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 vector<double> LSDChiNetwork::calculate_AICc_after_breaks_colinear_monte_carlo(double A_0, double m_over_n,
 				int skip, int minimum_segment_length, double sigma,
 				vector<double> reverse_Chi, vector<double> reverse_Elevation,
@@ -3025,7 +3104,10 @@ vector<double> LSDChiNetwork::calculate_AICc_after_breaks_colinear_monte_carlo(d
 //
 // Note: this is _extremely_ computationally and data intensive.
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 01/05/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_dchi(double A_0, double m_over_n, int n_iterations,
 				double fraction_dchi_for_variation,
 				int minimum_segment_length, double sigma, int target_nodes_mainstem)
@@ -3312,9 +3394,12 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_dchi(double A_
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// this function samples the river network using monte carlo samplig but after breaking the channels
+// this function samples the river network using monte carlo sampling but after breaking the channels
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 15/06/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_after_breaks(double A_0, double m_over_n,
 				int n_iterations, int skip, int minimum_segment_length, double sigma)
 
@@ -3670,7 +3755,10 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_after_breaks(d
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this function uses the segment fitting tool to look for the best fit values of m over n
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 01/05/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 double LSDChiNetwork::search_for_best_fit_m_over_n_dchi(double A_0, int n_movern, double d_movern, double start_movern,
 						       int minimum_segment_length, double sigma, int target_nodes_mainstem, string fname)
 {
@@ -3964,7 +4052,10 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_dchi(double A_0, int n_movern
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this function uses the segment fitting tool to look for the best fit values of m over n
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 01/05/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 double LSDChiNetwork::search_for_best_fit_m_over_n(double A_0, int n_movern, double d_movern, double start_movern,
 						       int minimum_segment_length, double sigma, int target_nodes_mainstem, string fname)
 {
@@ -4264,7 +4355,10 @@ double LSDChiNetwork::search_for_best_fit_m_over_n(double A_0, int n_movern, dou
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this function looks for the best fit values of m over n by simply testing for the least variation
 // in the tributaries
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 01/05/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test(double A_0, int n_movern, double d_movern,
 						       double start_movern, int minimum_segment_length, double sigma,
 						       int target_nodes, int n_iterations,
@@ -4440,7 +4534,10 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test(double A_0, 
 // If Monte_Carlo_switch = 1, then the routine iterates on the AICc and returns mean and std_deviation
 // of the AICc. If not it simply returns the single AICc value and the std_dev vector just holds
 // a repeat of the mean value
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 15/06/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(double A_0, int n_movern, double d_movern,
 						       double start_movern, int minimum_segment_length, double sigma,
 						       int target_skip, int target_nodes, int n_iterations,
@@ -4623,7 +4720,10 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this function calculeates best fit m/n for each channel
 // these channels are ones with breaks
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 15/06/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 double LSDChiNetwork::search_for_best_fit_m_over_n_individual_channels_with_breaks(double A_0, int n_movern, double d_movern,
 						       double start_movern, int minimum_segment_length, double sigma,
 						       int target_skip, int target_nodes, int n_iterations,
@@ -4693,7 +4793,10 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_individual_channels_with_brea
 //
 // this function uses a monte carlo sampling approach to give some idea of the variability and uncertanty in
 // the AICc values
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 15/06/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 double LSDChiNetwork::search_for_best_fit_m_over_n_individual_channels_with_breaks_monte_carlo(double A_0, int n_movern, double d_movern,
 						       double start_movern, int minimum_segment_length, double sigma,
 						       int target_skip, int target_nodes, int n_iterations,
@@ -4768,7 +4871,10 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_individual_channels_with_brea
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this function uses the segment fitting tool to look for the best fit values of m over n
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 15/06/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 double LSDChiNetwork::search_for_best_fit_m_over_n_seperate_ms_and_tribs(double A_0, int n_movern, double d_movern,
 								double start_movern, int minimum_segment_length, double sigma,
 						        int target_nodes_mainstem, string fname)
@@ -5147,7 +5253,10 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_seperate_ms_and_tribs(double 
 // this function tests if the channels are long enough for a reasonable segment fit
 // it writes to the is_tributary_long_enough vector
 // if this equals 1, the channel is long enough. If it is zero the channel is not long enough
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 15/03/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::is_channel_long_enough_test(int minimum_segment_length,int N)
 {
 
@@ -5183,11 +5292,11 @@ void LSDChiNetwork::is_channel_long_enough_test(int minimum_segment_length,int N
 /// Calculate channel head locations using LSDChiNetwork.
 ///
 /// Fitting segments to the chi-elevation data of the main stem.  We assume that the profile
-/// is made up of 2 segments in chi-space: a linear channel segment and a non-linear hillslope 
+/// is made up of 2 segments in chi-space: a linear channel segment and a non-linear hillslope
 /// segment.  We loop through the possible combinations of segment lengths, performing a linear
-/// regression to calculate the r^2 and DW of each segment length.  We then calculate a test 
+/// regression to calculate the r^2 and DW of each segment length.  We then calculate a test
 /// value: r^2 of the channel segment - ((DW of the hillslope segment - 2)/2).  This value
-/// will vary between 0 and 1.  The maximum test_value will give the best fit channel and 
+/// will vary between 0 and 1.  The maximum test_value will give the best fit channel and
 /// hillslope segments. Need to get the best fit m_over_n value and calculate the chi profile
 /// of the main stem first.  Will output the chi and elevation values of the predicted channel
 /// head location.
@@ -5201,7 +5310,7 @@ Array2D<double> LSDChiNetwork::calculate_channel_heads(int min_seg_length_for_ch
   int n_channels = chis.size();
   int channel_id = 0;
   Array2D<double> channel_head_locations(NRows,NCols,NoDataValue);
-  
+
   for (int i = 0; i < n_channels; i++)
   {
     vector<double> chi = chis[i];
@@ -5242,40 +5351,40 @@ Array2D<double> LSDChiNetwork::calculate_channel_heads(int min_seg_length_for_ch
         vec_iter_start = chi.begin()+start_node;
 	      vec_iter_end = vec_iter_start+hill_seg_length;
 	      hillslope_chi.assign(vec_iter_start,vec_iter_end);
-		
+
 	      // assigning the elevation values of the hillslope segment
         hillslope_elev.resize(hill_seg_length);
 	      vec_iter_start = elevation.begin()+start_node;
 	      vec_iter_end = vec_iter_start+hill_seg_length;
 	      hillslope_elev.assign(vec_iter_start,vec_iter_end);
-		
+
 	      // assigning the chi values of the channel segment
         channel_chi.resize(chan_seg_length);
         vec_iter_start = chi.begin()+start_node+hill_seg_length;
 	      vec_iter_end = vec_iter_start+chan_seg_length;
 	      channel_chi.assign(vec_iter_start,vec_iter_end);
-	
+
 	      // assigning the elevation values of the channel segment
         channel_elev.resize(chan_seg_length);
 	      vec_iter_start = elevation.begin()+start_node+hill_seg_length;
 	      vec_iter_end = vec_iter_start+chan_seg_length;
 	      channel_elev.assign(vec_iter_start,vec_iter_end);
-    
+
         // performing linear regression on the channel segment
         vector<double> residuals_chan;
         vector<double> results_chan = simple_linear_regression(channel_chi,channel_elev, residuals_chan);
-    
+
         // performing linear regression on the hillslope segment
         vector<double> residuals_hill;
         vector<double> results_hill = simple_linear_regression(hillslope_chi, hillslope_elev, residuals_hill);
-    
+
         // calculating the test value
         test_value = results_chan[2] - ((results_hill[3] - 2)/2);
-        // looping through test values to find the max test value 
+        // looping through test values to find the max test value
         if (test_value > max_test_value)
         {
            max_test_value = test_value;
-           best_hill_seg = hill_seg_length; 
+           best_hill_seg = hill_seg_length;
            best_chan_seg = chan_seg_length;
            hill_gradient = results_hill[0];
            chan_gradient = results_chan[0];
@@ -5284,15 +5393,15 @@ Array2D<double> LSDChiNetwork::calculate_channel_heads(int min_seg_length_for_ch
            elev_intersection = channel_elev.front();
            chi_intersection = channel_chi.front();
         }
-      }       
-    }  
-    
+      }
+    }
+
     cout << "channel gradient " << chan_gradient << " channel intercept " << chan_intercept << " hill gradient " << hill_gradient
     << " hill intercept " << hill_intercept << endl;
-    
+
     int row_intersection;
     int col_intersection;
-    
+
     for (unsigned int i = 0; i < elevation.size(); i++)
     {
       if (elevation[i] == elev_intersection)
@@ -5302,7 +5411,7 @@ Array2D<double> LSDChiNetwork::calculate_channel_heads(int min_seg_length_for_ch
         channel_head_locations[row_intersection][col_intersection] = 1;
       }
     }
-    
+
     channel_id++;
     cout << "Chi of channel head: " << chi_intersection << " Elevation of channel head: " << elev_intersection << endl;
     // Writing text file with channel head information
