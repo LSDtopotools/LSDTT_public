@@ -13,11 +13,11 @@
 // Simon M. Mudd, University of Edinburgh
 // David Milodowski, University of Edinburgh
 // Martin D. Hurst, British Geological Survey
-// <your name here>
+//
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// Version 0.0.1		03/01/2013
+// Version 1.0		03/01/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -43,6 +43,12 @@ using namespace TNT;
 #ifndef LSDMostLikelyPartitionsFinder_CPP
 #define LSDMostLikelyPartitionsFinder_CPP
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Create function, makes an partitions finder object with some x and y data.
+//
+// SMM 01/02/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::create(int this_min_seg_length, vector<double> this_x_data, vector<double> this_y_data)
 {
 	minimum_segment_length = this_min_seg_length;
@@ -52,8 +58,14 @@ void LSDMostLikelyPartitionsFinder::create(int this_min_seg_length, vector<doubl
 	base_sigma = 100.0;			// this is arbitrary
 
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-// this resets all the derived data members
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This function resets all the derived data members.
+//
+// SMM 01/02/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::reset_derived_data_members()
 {
 
@@ -81,13 +93,20 @@ void LSDMostLikelyPartitionsFinder::reset_derived_data_members()
 	AIC_for_each_n_segments= empty_vecvec;
 	AICc_for_each_n_segments = empty_vecvec;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Various algorithms are implemented for thinning the data.
 // Several options are available.
-
+//
 // this one collects data as close as possible to some target dx, but does
 // not modify invidivual data points.
+//
+// SMM 01/02/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::thin_data_target_dx_preserve_data(double dx)
 {
 	vector<double> thinned_x;
@@ -129,8 +148,14 @@ void LSDMostLikelyPartitionsFinder::thin_data_target_dx_preserve_data(double dx)
 	y_data = thinned_y;
 	reset_derived_data_members();
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // same as above but returns an index vector into the data points that were selected
+//
+// SMM 01/02/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::thin_data_target_dx_preserve_data(double dx, vector<int>& node_ref)
 {
 	vector<double> thinned_x;
@@ -176,8 +201,14 @@ void LSDMostLikelyPartitionsFinder::thin_data_target_dx_preserve_data(double dx,
 	reset_derived_data_members();
 	node_ref = node_reference;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // same as above but spawns a new object
+//
+// SMM 01/02/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDMostLikelyPartitionsFinder LSDMostLikelyPartitionsFinder::spawn_thinned_data_target_dx_preserve_data(double dx)
 {
 	vector<double> thinned_x;
@@ -214,10 +245,16 @@ LSDMostLikelyPartitionsFinder LSDMostLikelyPartitionsFinder::spawn_thinned_data_
 	LSDMostLikelyPartitionsFinder new_object(minimum_segment_length,thinned_x,thinned_y);
 	return new_object;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this thins the data by skipping elements.
 // a positive number N means it skips N elements after each element
 // a negative number -N means that after N elements it skips one element
+//
+// SMM 01/02/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::thin_data_skip(int N, vector<int>& node_ref)
 {
 	vector<double> thinned_x;
@@ -286,19 +323,14 @@ void LSDMostLikelyPartitionsFinder::thin_data_skip(int N, vector<int>& node_ref)
 	//cout << "Did the skipping (LSDMLPF line 280), n_nodes: " << n_nodes
 	//     << " after skip: " << x_data.size() << endl;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-
-
-
-
-
-
-
-
-
-
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this one recasts data at fixed values of dx, using linear interpoloation
+//
+// SMM 01/02/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::thin_data_target_dx_linear_interpolation(double dx)
 {
 	vector<double> thinned_x;
@@ -332,9 +364,14 @@ void LSDMostLikelyPartitionsFinder::thin_data_target_dx_linear_interpolation(dou
 	y_data = thinned_y;
 	reset_derived_data_members();
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // same as above but spawns a new object.
+//
+// SMM 01/02/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDMostLikelyPartitionsFinder LSDMostLikelyPartitionsFinder::spawn_thinned_data_target_dx_linear_interpolation(double dx)
 {
 	vector<double> thinned_x;
@@ -367,10 +404,14 @@ LSDMostLikelyPartitionsFinder LSDMostLikelyPartitionsFinder::spawn_thinned_data_
 	LSDMostLikelyPartitionsFinder new_object(minimum_segment_length,thinned_x, thinned_y);
 	return new_object;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this skips nodes but using a Monte Carlo scheme that samples random points along the channel profile
+//
+// SMM 01/02/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::thin_data_monte_carlo_skip(int Mean_skip,int skip_range, vector<int>& node_ref)
 {
 
@@ -483,10 +524,14 @@ void LSDMostLikelyPartitionsFinder::thin_data_monte_carlo_skip(int Mean_skip,int
 
 
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-
-
-// thins object based on a monte carlo approach using a mean, max and minimum dchi
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Thins object based on a monte carlo approach using a mean, max and minimum dchi
+//
+// SMM 01/02/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::thin_data_monte_carlo_dchi(double mean_dchi, double variation_dchi, vector<int>& node_ref)
 {
 
@@ -551,7 +596,12 @@ void LSDMostLikelyPartitionsFinder::thin_data_monte_carlo_dchi(double mean_dchi,
 }
 
 
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// Prints the x and y data to screen (for bug checking)
+// SMM 01/02/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::print_x_y_data_to_screen()
 {
 	int n_nodes = x_data.size();
@@ -563,6 +613,13 @@ void LSDMostLikelyPartitionsFinder::print_x_y_data_to_screen()
 
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// This is a wrapper function to find the likelihood of all the segments
+// you can enter a vector of sigmas such that each node has a different sigma value
+//
+// SMM 01/02/2013
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::best_fit_driver_AIC_for_linear_segments(vector<double> sigma_values)
 {
@@ -579,6 +636,13 @@ void LSDMostLikelyPartitionsFinder::best_fit_driver_AIC_for_linear_segments(vect
 
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// This is a wrapper function to find the likelihood of all the segments
+//
+// SMM 01/02/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::best_fit_driver_AIC_for_linear_segments(double sigma)
 {
   //cout << "best_fit_driver_AIC_for_linear_segments, getting like data" <<endl;
@@ -596,7 +660,9 @@ void LSDMostLikelyPartitionsFinder::best_fit_driver_AIC_for_linear_segments(doub
 	//print_AIC_and_AICc_to_screen(sigma_values);
 
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this function returns data for a given sigma value
 // the 'node' int is the index into the sigma vector
 // this function replaces a large number of data elements.
@@ -606,6 +672,10 @@ void LSDMostLikelyPartitionsFinder::best_fit_driver_AIC_for_linear_segments(doub
 // the seg lengths are the individual segment lengths,
 // this_MLE, this_n_segments and this_n_nodes are all returned
 // so the user can combine two or more segments and get an AIC or AICc
+//
+// SMM 01/02/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::get_data_from_best_fit_lines(int node, vector<double> sigma_values,
 							      	vector<double>& b_values, vector<double>& m_values,
 							      	vector<double>& r2_values, vector<double>& DW_values,
@@ -685,6 +755,10 @@ void LSDMostLikelyPartitionsFinder::get_data_from_best_fit_lines(int node, vecto
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this replaces two vectors, which have the starting and ending position of the best fit segments
 // for a given sigma. This gets data from (most likeley) the get_data_from_best_fit_lines function
+//
+// SMM 01/02/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::get_start_and_end_x_for_segments(vector<double>& start_x,
 												vector<double>& end_x, vector<int> seg_lengths)
 {
@@ -706,7 +780,7 @@ void LSDMostLikelyPartitionsFinder::get_start_and_end_x_for_segments(vector<doub
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// this function is used to calcualte the slope, intercept, and likelihood of
+// this function is used to calculate the slope, intercept, and likelihood of
 // all possible linear segments along a series of data points.
 // the function requires the data in x and y vectors, the maximum segment length
 // and sigma, the standard deviation of the measured data. This will be approxamately
@@ -724,6 +798,9 @@ void LSDMostLikelyPartitionsFinder::get_start_and_end_x_for_segments(vector<doub
 //
 // One potential future development is to implement this using a sparse matrix from the boost mtl
 // library to reduce the memory usage.
+//
+// SMM 01/02/2013
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::calculate_segment_matrices(double sigma)
 {
@@ -760,10 +837,13 @@ void LSDMostLikelyPartitionsFinder::calculate_segment_matrices(double sigma)
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// this function popultes the matrices of liklihood, m and b values
-// it is a recursive algorithm so in fact it deosn't just get one row
-// but drills down through all the possible starting nodes to coplete the
+// This function populates the matrices of liklihood, m and b values
+// it is a recursive algorithm so in fact it doesn't just get one row
+// but drills down through all the possible starting nodes to complete the
 // matrix
+//
+// SMM 01/02/2013
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::populate_segment_matrix(int start_node, int end_node, double no_data_value,double sigma)
 {
@@ -858,8 +938,11 @@ void LSDMostLikelyPartitionsFinder::populate_segment_matrix(int start_node, int 
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// this function calcualtes the most likeley combination of segments given the liklihood
+// this function calculates the most likeley combination of segments given the liklihood
 // of individual segments calcualted by the calculate_segment_matrices function
+//
+// SMM 01/02/2013
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::find_max_like_of_segments()
 {
@@ -935,9 +1018,12 @@ void LSDMostLikelyPartitionsFinder::find_max_like_of_segments()
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// this function drives the partitioning algorithms
+// This function drives the partitioning algorithms
 // k is the number of elements in the partition
-// minimum lenght is the minimum length of the segment
+// minimum length is the minimum length of the segment
+//
+// SMM 01/02/2013
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::partition_driver_to_vecvecvec(int k)
 {
@@ -973,6 +1059,10 @@ void LSDMostLikelyPartitionsFinder::partition_driver_to_vecvecvec(int k)
 // http://www.codeguru.com/cpp/cpp/algorithms/article.php/c5123/Permutations-in-C.htm
 // http://www.cplusplus.com/reference/algorithm/next_permutation/
 // http://mdm4u1.wetpaint.com/page/4.3+Permutations+with+Some+Identical+Elements
+//
+// SMM 01/02/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::partitions_with_minimum_length(int n, int k, int t, vector<int>& p)
 {
 
@@ -988,12 +1078,14 @@ void LSDMostLikelyPartitionsFinder::partitions_with_minimum_length(int n, int k,
 		partitions_with_minimum_length(n-k,j,t+1,p);
 	}
 }
-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // a function for use with the permutations
 // this assigns values into the vecvecvec that contains all the partitioning information
+//
+// SMM 01/02/2013
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::partition_assign(int t, vector<int>& p)
 {
@@ -1009,8 +1101,13 @@ void LSDMostLikelyPartitionsFinder::partition_assign(int t, vector<int>& p)
 	partitions[t-1] = this_nsegments_vecvec;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // a function for use with the permutations
 // gets the mininum of two values
+//
+// SMM 01/02/2013
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 int LSDMostLikelyPartitionsFinder::LSDpartitions_min( int x, int y)
 {
@@ -1029,6 +1126,9 @@ int LSDMostLikelyPartitionsFinder::LSDpartitions_min( int x, int y)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this takes a likelihood array that has been calcualted with a given sigma value and
 // normalizes the sigma values as though sigma was equal to 1.
+//
+// SMM 01/02/2013
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 Array2D<double> LSDMostLikelyPartitionsFinder::normalize_like_matrix_to_sigma_one(double sigma)
 {
@@ -1052,8 +1152,14 @@ Array2D<double> LSDMostLikelyPartitionsFinder::normalize_like_matrix_to_sigma_on
 
 	return sig1_like_array;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this normalizes but with vector data, for use with MLE vector for segments
+//
+// SMM 01/02/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 vector<double> LSDMostLikelyPartitionsFinder::normalize_like_vector_to_sigma_one(double sigma, vector<double> like_vector)
 {
 	// get dimensions of the like vector
@@ -1070,9 +1176,13 @@ vector<double> LSDMostLikelyPartitionsFinder::normalize_like_vector_to_sigma_one
 
 	return sig1_like_vector;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this takes a normalize likelihood array and updates the values to a new sigma value
+//
+// SMM 01/02/2013
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::change_normalized_like_matrix_to_new_sigma(double sigma, Array2D<double>& sig1_like_array)
 {
@@ -1095,8 +1205,14 @@ void LSDMostLikelyPartitionsFinder::change_normalized_like_matrix_to_new_sigma(d
 	}
 
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this does the same as above except for vector data
+//
+// SMM 01/02/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 vector<double> LSDMostLikelyPartitionsFinder::change_normalized_like_vector_to_new_sigma(double sigma, vector<double> sig1_like_vector)
 {
 	// get dimensions of the like vector
@@ -1113,7 +1229,12 @@ vector<double> LSDMostLikelyPartitionsFinder::change_normalized_like_vector_to_n
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this does the same as above except for vector data
+//
+// SMM 01/02/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 vector<double> LSDMostLikelyPartitionsFinder::transform_like_from_sigma1_to_sigma2(double sigma1,
 													vector<double> sig1_like_vector, double sigma2)
 {
@@ -1138,6 +1259,9 @@ vector<double> LSDMostLikelyPartitionsFinder::transform_like_from_sigma1_to_sigm
 // best fit number of segments from both the AIC and the AICc measures. It also returns
 // two vector of vectors which are the AIC values for the varius values of sigma
 // passed to the function in the sigma values vector
+//
+// SMM 01/02/2013
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::get_n_segments_for_various_sigma(vector<double> sigma_values)
 {
@@ -1192,10 +1316,13 @@ void LSDMostLikelyPartitionsFinder::get_n_segments_for_various_sigma(vector<doub
 	best_fit_AICc = bf_AICc;
 
 }
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this function calculates AIC and AICc of segments taking the maximum_MLE based on a sigma of one
+//
+// SMM 01/02/2013
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::calculate_AIC_of_segments_with_variable_sigma(double sigma,
 								vector<double>& AIC_of_segments,vector<double>& AICc_of_segments)
@@ -1236,9 +1363,13 @@ void LSDMostLikelyPartitionsFinder::calculate_AIC_of_segments_with_variable_sigm
 	AICc_of_segments = AICc;
 
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this function returns the m, b, r^2 and D-W values for the best fit segments
+//
+// SMM 01/02/2013
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::get_properties_of_best_fit_segments(int bestfit_segments_node,
 										 vector<double>& m_values, vector<double>& b_values,
@@ -1294,6 +1425,9 @@ void LSDMostLikelyPartitionsFinder::get_properties_of_best_fit_segments(int best
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this function prints the most likeley segment lengths to screen
+//
+// SMM 01/02/2013
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::print_to_screen_most_likeley_segment_lengths()
 {
@@ -1318,7 +1452,15 @@ void LSDMostLikelyPartitionsFinder::print_to_screen_most_likeley_segment_lengths
 	}
 	cout << endl << "finished printing most likeley segment lengths" << endl;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// This function prints the AIC and AICc values to screen
+//
+// SMM 01/02/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::print_AIC_and_AICc_to_screen(vector<double> sigma_values)
 {
 	// get the number of sigma values
@@ -1371,5 +1513,6 @@ void LSDMostLikelyPartitionsFinder::print_AIC_and_AICc_to_screen(vector<double> 
 		cout << endl;
 	}
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 #endif
