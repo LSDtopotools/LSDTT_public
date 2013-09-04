@@ -31,14 +31,16 @@ class LSDRasterSpectral: public LSDRaster
 {
 	public:
 	//LSDRasterSpectral()										{ create(); }
-  
-  /// @brief Create an LSDRasterSpectral from a file. 
+
+  /// @brief Create an LSDRasterSpectral from a file.
   /// Uses a filename and file extension
   /// @return LSDRasterSpectral
   /// @param filename A String, the file to be loaded.
-  /// @param extension A String, the file extension to be loaded.	
+  /// @param extension A String, the file extension to be loaded.
+  /// @author SMM
+  /// @date 18/12/2012
   LSDRasterSpectral(string filename, string extension)	{ create(filename, extension); }
-	/// @brief Create an LSDRasterSpectral from memory. 
+	/// @brief Create an LSDRasterSpectral from memory.
   /// @return LSDRasterSpectral
   /// @param nrows An integer of the number of rows.
   /// @param ncols An integer of the number of columns.
@@ -46,14 +48,18 @@ class LSDRasterSpectral: public LSDRaster
   /// @param ymin A double of the minimum Y coordinate.
   /// @param cellsize A double of the cellsize.
   /// @param ndv An integer of the no data value.
-  /// @param data An Array2D of doubles in the shape nrows*ncols, 
-  ///containing the data to be written.  	
+  /// @param data An Array2D of doubles in the shape nrows*ncols,
+  ///containing the data to be written.
+  /// @author SMM
+  /// @date 18/12/2012
   LSDRasterSpectral(int nrows, int ncols, double xmin, double ymin,
 	          double cellsize, double ndv, Array2D<double> data)
 								{ create(nrows, ncols, xmin, ymin, cellsize, ndv, data); }
 	/// @brief Create an LSDRasterSpectral from an LSDRaster object.
-  /// @param An_LSDRaster LSDRaster object. 
+  /// @param An_LSDRaster LSDRaster object.
   /// @return LSDRasterSpectral
+  /// @author SMM
+  /// @date 18/12/2012
   LSDRasterSpectral(LSDRaster& An_LSDRaster) 				{ create(An_LSDRaster); }
 
 	/// Assignment operator.
@@ -62,8 +68,8 @@ class LSDRasterSpectral: public LSDRaster
 
 	  //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     // FAST FOURIER TRANSFORM MODULE
-    //------------------------------------------------------------------------------   
-    
+    //------------------------------------------------------------------------------
+
     /// @brief Computes the forward fast fourier transform of a 2D discrete dataset.
     /// @param InputArray = zeta_padded (padded DEM).
     /// @param transform_direction = -1.
@@ -71,9 +77,11 @@ class LSDRasterSpectral: public LSDRaster
     /// @param OutputArrayImaginary = Imaginary 2D spectrum.
     /// @param Ly Array y dimension.
     /// @param Lx Array x dimension.
+   	/// @author David Milodowski
+    /// @date 18/12/2012
     void dfftw2D_fwd(Array2D<double>& InputArray, Array2D<double>& OutputArrayReal, Array2D<double>& OutputArrayImaginary,
 	                 int transform_direction, int Ly, int Lx);
-  	
+
     /// @brief Computes the inverse fast fourier transform of a 2D discrete dataset.
     /// @param InputArrayReal = Real component of 2D spectrum.
     /// @param InputArrayImaginary = Imaginary component of 2D spectrum.
@@ -81,9 +89,11 @@ class LSDRasterSpectral: public LSDRaster
     /// @param transform_direction = -1.
     /// @param Ly Array y dimension.
     /// @param Lx Array x dimension.
+  	/// @author David Milodowski
+    /// @date 18/12/2012
     void dfftw2D_inv(Array2D<double>& InputArrayReal, Array2D<double>& InputArrayImaginary,
   	                 Array2D<double>& OutputArray, int transform_direction, int Ly, int Lx);
-  	
+
     /// @brief Detrend Data.
     ///
     /// @details Fit plane by least squares regression and use coefficients to determine local slope ax + by + c = z.
@@ -93,9 +103,11 @@ class LSDRasterSpectral: public LSDRaster
     /// @param nrows Number of rows.
     /// @param ncols Number of columns.
     /// @param ndv No data value.
+  	/// @author David Milodowski
+    /// @date 18/12/2012
     void detrend2D(Array2D<double>& zeta, Array2D<double>& zeta_detrend,
   	               Array2D<double>& trend_plane, int nrows, int ncols, double ndv);
-  
+
     /// @brief Hann Window Module.
     ///
     /// @details Use 2D elliptical Hann (raised cosine) window on data matrix, to reduce spectral leakage and retain good frequency resolution.
@@ -106,9 +118,11 @@ class LSDRasterSpectral: public LSDRaster
     /// @param nrows Number of rows.
     /// @param ncols Number of columns.
     /// @param ndv No data value.
+  	/// @author David Milodowski
+    /// @date 18/12/2012
     void window_data_Hann2D(Array2D<double>& zeta_detrend, Array2D<double>& zeta_Hann2D,
   	                        Array2D<double>& Hann2D, double& WSS, int nrows, int ncols, int ndv);
-  	
+
     /// @brief SHIFT ORIGIN OF SPECTRUM IN FOURIER DOMAIN.
     ///
     /// @details The output of the DFT algorithm must be rearranged to place the zero wavenumber element near the center of the array.
@@ -118,9 +132,11 @@ class LSDRasterSpectral: public LSDRaster
     /// @param spectrum_imaginary_shift
     /// @param Ly Array y dimension.
     /// @param Lx Array x dimension.
+  	/// @author David Milodowski
+    /// @date 18/12/2012
     void shift_spectrum(Array2D<double>& spectrum_real,  Array2D<double>& spectrum_imaginary,
   	                    Array2D<double>& spectrum_real_shift, Array2D<double>& spectrum_imaginary_shift, int Ly, int Lx);
-  	
+
     /// @brief DE-SHIFT ORIGIN OF SPECTRUM.
     ///
     /// @details Inverse process of shift_spectrum() to return filtered spectrum to original format required for the inverse fourier transform algorithm.
@@ -130,22 +146,26 @@ class LSDRasterSpectral: public LSDRaster
     /// @param FilteredSpectrumImaginary_deshift
     /// @param Ly Array y dimension.
     /// @param Lx Array x dimension.
+  	/// @author David Milodowski
+    /// @date 18/12/2012
     void shift_spectrum_inv(Array2D<double>& FilteredSpectrumReal, Array2D<double>& FilteredSpectrumImaginary,
   	                        Array2D<double>& FilteredSpectrumReal_deshift, Array2D<double>& FilteredSpectrumImaginary_deshift,
   	                        int Ly, int Lx);
-  	
+
     /// @brief CALCULATE THE DFT PERIODOGRAM.
     ///
     /// @details Multiply fourier analysis output by complex conjugate and normalises.
     /// @param spectrum_real_shift
     /// @param spectrum_imaginary_shift
     /// @param Ly Array y dimension.
-    /// @param Lx Array x dimension.    
+    /// @param Lx Array x dimension.
     /// @param WSS Summed square of the weighting coefficients.
     /// @return 2D array of DFT Periodogram.
+   	/// @author David Milodowski
+    /// @date 18/12/2012
     Array2D<double> calculate_2D_PSD(Array2D<double>& spectrum_real_shift, Array2D<double>& spectrum_imaginary_shift,
   	                        int Lx, int Ly, double WSS);
-  	
+
     /// @brief GET RADIAL POWER SPECTRUM.
     ///
     /// @details Collapse 2D PSD into a radial PSD.
@@ -153,23 +173,27 @@ class LSDRasterSpectral: public LSDRaster
     /// @param RadialPSD_output
     /// @param RadialFrequency_output
     /// @param Ly Array y dimension.
-    /// @param Lx Array x dimension.    
+    /// @param Lx Array x dimension.
     /// @param WSS Summed square of the weighting coefficients.
     /// @param dem_res DEM resolution.
+   	/// @author David Milodowski
+    /// @date 18/12/2012
     void calculate_radial_PSD(Array2D<double>& P_DFT, vector<double>& RadialPSD_output, vector<double>& RadialFrequency_output,
   	                        int Lx, int Ly, double WSS, double dem_res);
-    
+
     /// @brief COMPUTE DISCRETE FAST FOURIER TRANSFORM OF A REAL, 2-DIMENSIONAL DATASET.
     ///
     /// @details Computes the 2D and radial power spectra of a 2D array.
     /// @param file_id File identifier to prefix output files
     /// @param LogBinWidth Wwidth of the logarithmically spaced bins. For topography, suggest this is 0.1 to start.
+  	/// @author David Milodowski
+    /// @date 18/12/2012
   	void fftw2D_spectral_analysis(char* file_id, double LogBinWidth);
 
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   	// FUNCTIONS TO ADD WEIGHTS TO FOURIER SPECTRA (FOR USE IN SPECTRA FILTERS)
   	//------------------------------------------------------------------------------
-    
+
     /// @brief BANDPASS FILTER.
     ///
     /// @details Filter array to band between frequency bands f1 and f2.  The bandpass filter
@@ -179,14 +203,16 @@ class LSDRasterSpectral: public LSDRaster
     /// @param FilteredSpectrumReal
     /// @param FilteredSpectrumImaginary
     /// @param Ly Array y dimension.
-    /// @param Lx Array x dimension.    
-    /// @param dem_res DEM resolution.   
+    /// @param Lx Array x dimension.
+    /// @param dem_res DEM resolution.
     /// @param f1
     /// @param f2
+   	/// @author David Milodowski
+    /// @date 18/12/2012
     void bandpass_filter(Array2D<double>& RawSpectrumReal, Array2D<double>& RawSpectrumImaginary,
   	                     Array2D<double>& FilteredSpectrumReal, Array2D<double>& FilteredSpectrumImaginary,
   	                      int Lx, int Ly, double dem_res, double f1, double f2);
-  	
+
     /// @brief LOWPASS FILTER.
     ///
     /// @details Filter array to retain frequencies below f1.  The filter edge is a radial gaussian function with a SD of |f2-f1|/3.
@@ -195,14 +221,16 @@ class LSDRasterSpectral: public LSDRaster
     /// @param FilteredSpectrumReal
     /// @param FilteredSpectrumImaginary
     /// @param Ly Array y dimension.
-    /// @param Lx Array x dimension.    
-    /// @param dem_res DEM resolution.   
+    /// @param Lx Array x dimension.
+    /// @param dem_res DEM resolution.
     /// @param f1
     /// @param f2
+   	/// @author David Milodowski
+    /// @date 18/12/2012
     void lowpass_filter(Array2D<double>& RawSpectrumReal, Array2D<double>& RawSpectrumImaginary,
   	                    Array2D<double>& FilteredSpectrumReal, Array2D<double>& FilteredSpectrumImaginary,
   	                      int Lx, int Ly, double dem_res, double f1, double f2);
-  
+
     /// @brief HIGHPASS FILTER.
     ///
     /// @details Filter array to retain frequencies above f1.  The filter edge is a radial gaussian function with a SD of |f2-f1|/3.
@@ -211,14 +239,16 @@ class LSDRasterSpectral: public LSDRaster
     /// @param FilteredSpectrumReal
     /// @param FilteredSpectrumImaginary
     /// @param Ly Array y dimension.
-    /// @param Lx Array x dimension.    
-    /// @param dem_res DEM resolution.   
+    /// @param Lx Array x dimension.
+    /// @param dem_res DEM resolution.
     /// @param f1
     /// @param f2
+  	/// @author David Milodowski
+    /// @date 18/12/2012
     void highpass_filter(Array2D<double>& RawSpectrumReal, Array2D<double>& RawSpectrumImaginary,
   	                     Array2D<double>& FilteredSpectrumReal, Array2D<double>& FilteredSpectrumImaginary,
   	                      int Lx, int Ly, double dem_res, double f1, double f2);
-    
+
     /// @brief WIENER FILTER.
     ///
     /// @details The Wiener filter is a spectral filter that removes noise from an image or DEM.
@@ -229,9 +259,11 @@ class LSDRasterSpectral: public LSDRaster
     /// @param FilteredSpectrumReal
     /// @param FilteredSpectrumImaginary
     /// @param Ly Array y dimension.
-    /// @param Lx Array x dimension.    
-    /// @param dem_res DEM resolution.   
+    /// @param Lx Array x dimension.
+    /// @param dem_res DEM resolution.
     /// @param WSS Summed square of the weighting coefficients.
+   	/// @author David Milodowski
+    /// @date 18/12/2012
   	void wiener_filter(Array2D<double>& RawSpectrumReal, Array2D<double>& RawSpectrumImaginary,
   	                   Array2D<double>& FilteredSpectrumReal, Array2D<double>& FilteredSpectrumImaginary,
   	                      int Lx, int Ly, double dem_res, double WSS);
@@ -271,7 +303,7 @@ class LSDRasterSpectral: public LSDRaster
   	/// @author David Milodowski
     /// @date 18/12/2012
   	LSDRaster fftw2D_filter(int FilterType, double FLow, double FHigh);
-    	
+
   	/// @brief WIENER FILTER FOR A REAL, 2-DIMENSIONAL DATASET.
   	///
   	/// The Wiener filter is a spectral filter that removes noise from an image or
