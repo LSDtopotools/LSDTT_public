@@ -43,20 +43,42 @@ using namespace TNT;
 #ifndef LSDFlowInfo_CPP
 #define LSDFlowInfo_CPP
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Create function, this is empty, you need to include a filename
+//
+// SMM 01/06/2012
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::create()
 {
 	cout << "You need to initialize with a LSDRaster!" << endl;
 	exit(EXIT_FAILURE);
 }
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Create function, this creates from a pickled file
+// fname is the name of the pickled flow info file
+//
+// SMM 01/06/2012
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::create(string fname)
 {
 	unpickle(fname);
 
 }
 
-
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // algorithms for searching the vectors
+// This gets the reciever of current_node (its node, row, and column)
+//
+// SMM 01/06/2012
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::retrieve_receiver_information(int current_node,
                                              int& receiver_node, int& receiver_row,
                                              int& receiver_col)
@@ -72,6 +94,11 @@ void LSDFlowInfo::retrieve_receiver_information(int current_node,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // algorithms for searching the vectors
+// This gets the row and column of the current node
+//
+// SMM 01/06/2012
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::retrieve_current_row_and_col(int current_node,int& curr_row,
                                              int& curr_col)
 {
@@ -87,6 +114,8 @@ void LSDFlowInfo::retrieve_current_row_and_col(int current_node,int& curr_row,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this function returns the base level node with the greatest drainage area
+//
+// SMM 01/06/2012
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 int LSDFlowInfo::retrieve_largest_base_level()
@@ -122,6 +151,9 @@ int LSDFlowInfo::retrieve_largest_base_level()
 //								// 8    4  2
 // one can convert nthese indices using the LSDIndexRaster object
 // note in arc the row index increases down (to the south)
+//
+// SMM 01/06/2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 										  LSDRaster& TopoRaster)
@@ -262,7 +294,7 @@ void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 				col_kernal[7] = col-1;
 
 
-				// check for periodic mase level
+				// check for periodic boundary conditions
 				if( BoundaryConditions[0].find("P") == 0 || BoundaryConditions[0].find("p") == 0 )
 				{
 					if( BoundaryConditions[2].find("P") != 0 && BoundaryConditions[2].find("p") != 0 )
@@ -576,6 +608,10 @@ void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // recursive add_to_stack routine, from Braun and Willett eq. 12 and 13
+//
+// SMM 01/06/2012
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::add_to_stack(int lm_index, int& j_index, int bl_node)
 {
 	//cout << "j_index: " << j_index << " and s_vec: " << lm_index << endl;
@@ -613,6 +649,11 @@ void LSDFlowInfo::add_to_stack(int lm_index, int& j_index, int bl_node)
 // which can be read by the unpickle function later
 // the filename DOES NOT include and extension: this is added by the
 // function
+//
+// WARNING: These files are HUGE and testing indicates they don't save much time
+//
+// SMM 01/06/2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::pickle(string filename)
 {
@@ -746,6 +787,9 @@ void LSDFlowInfo::pickle(string filename)
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this unpickles a pickled flow info object. It is folded into a create function
+//
+// SMM 01/06/2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::unpickle(string filename)
 {
@@ -915,6 +959,9 @@ void LSDFlowInfo::unpickle(string filename)
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this prints the flownet information
+//
+// SMM 01/06/2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::print_flow_info_vectors(string filename)
 {
@@ -982,7 +1029,9 @@ void LSDFlowInfo::print_flow_info_vectors(string filename)
 //
 // these functions write the index arrays to index rasters
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 01/06/2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexRaster LSDFlowInfo::write_NodeIndex_to_LSDIndexRaster()
 {
@@ -1013,6 +1062,9 @@ LSDIndexRaster LSDFlowInfo::write_FlowLengthCode_to_LSDIndexRaster()
 // DataResolution^2
 //
 // This function used the S vector index and NContributing nodes to calculate the area
+//
+//
+// SMM 01/06/2012
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexRaster LSDFlowInfo::write_NContributingNodes_to_LSDIndexRaster()
@@ -1045,6 +1097,9 @@ LSDIndexRaster LSDFlowInfo::write_NContributingNodes_to_LSDIndexRaster()
 //								// 32  64  128
 //								// 16   0  1
 //								// 8    4  2
+//
+//
+// SMM 01/06/2012
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexRaster LSDFlowInfo::write_FlowDirection_to_LSDIndexRaster_Arcformat()
@@ -1139,6 +1194,9 @@ LSDRaster LSDFlowInfo::write_DrainageArea_to_LSDRaster()
 // DataResolution^2
 // In this function a pixel that has no donors has a contributing pixel value of 0
 //
+//
+// SMM 01/06/2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexRaster LSDFlowInfo::calculate_n_pixels_contributing_from_upslope()
 {
@@ -1203,6 +1261,9 @@ LSDIndexRaster LSDFlowInfo::calculate_n_pixels_contributing_from_upslope()
 //
 // In this function a pixel that has no donors contributes its own flow
 //
+//
+// SMM 01/06/2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::calculate_upslope_reference_indices()
 {
@@ -1242,6 +1303,9 @@ void LSDFlowInfo::calculate_upslope_reference_indices()
 //
 // This function returns a integer vector containing all the node numbers upslope
 // of of the node with number node_number_outlet
+//
+// SMM 01/06/2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 vector<int> LSDFlowInfo::get_upslope_nodes(int node_number_outlet)
 {
@@ -1273,7 +1337,9 @@ vector<int> LSDFlowInfo::get_upslope_nodes(int node_number_outlet)
 // This function calculates the chi function for all the nodes upslope a given node
 // it takes a node list
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 01/06/2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 vector<double> LSDFlowInfo::get_upslope_chi(int starting_node, double m_over_n, double A_0)
 {
@@ -1349,7 +1415,9 @@ vector<double> LSDFlowInfo::get_upslope_chi(vector<int>& upslope_pixel_list, dou
 // if it is given a node index number or a row and column, then
 // the distance from outlet includes all the distances upstream of that node
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// SMM 01/06/2012
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDRaster LSDFlowInfo::distance_from_outlet()
 {
@@ -1426,6 +1494,9 @@ LSDRaster LSDFlowInfo::distance_from_outlet()
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // a get sources version that uses the flow accumulation pixels
+//
+//
+// SMM 01/06/2012
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 vector<int> LSDFlowInfo::get_sources_index_threshold(LSDIndexRaster& FlowPixels, int threshold)
