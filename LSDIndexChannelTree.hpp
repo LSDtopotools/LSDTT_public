@@ -47,10 +47,11 @@ class LSDIndexChannelTree
 							{ create(FlowInfo, ChannelNetwork, starting_junction); }
 
   /// @brief Create an LSDIndexChannelTree object from a starting junction and orginisation switch.
-  /// @detals If organization switch is 0, the tree is organized based on the LSDChannelNetwork object
+  ///
+  /// @details If organization switch is 0, the tree is organized based on the LSDChannelNetwork object
   ///  that is, it is made up of links organized based on the Fastscape algorithm
   ///  If org_switch is 1, then the channel network is based on a main stem channel with
-  ///  tributaries that only flow into the main stem
+  ///  tributaries that only flow into the main stem.
   /// @param FlowInfo LSDFlowInfo object.
   /// @param ChannelNetwork LSDChannelNetwork object.
   /// @param starting_junction Starting junction.
@@ -64,7 +65,7 @@ class LSDIndexChannelTree
 
   /// @brief Create an LSDIndexChannelTree object from a starting junction, orginisation switch and pruning parameters.
   ///
-  /// @detals If organization switch is 0, the tree is organized based on the LSDChannelNetwork object
+  /// @details If organization switch is 0, the tree is organized based on the LSDChannelNetwork object
   ///  that is, it is made up of links organized based on the Fastscape algorithm
   ///  If org_switch is 1, then the channel network is based on a main stem channel with
   ///  tributaries that only flow into the main stem

@@ -466,7 +466,7 @@ class LSDChiNetwork
     /// @param n_iterations	int the number of iterations
     /// @param m_over_n_values	vector<double>& this gets written, it contains the m/n values for the run
     /// @param AICc_mean vector<double> gets written, the mean values of the AICc for each m/n
-    /// @param AICc_stdd vector<double> gets written, the standard deviation values of the AICc for each m/n
+    /// @param AICc_sdtd vector<double> gets written, the standard deviation values of the AICc for each m/n
     /// @param Monte_Carlo_switch int if 1, run the code using the iterative Monte Carlo scheme
     /// @return Best fit m over n.
  		/// @author SMM
@@ -514,14 +514,13 @@ class LSDChiNetwork
     /// @param target_nodes int the target number of nodes in a break
     /// @param n_iterations	int the number of iterations
     /// @param m_over_n_values	vector<double>& this gets written, it contains the m/n values for the run
-    /// @param AICc_mean vector<double> gets written, the mean values of the AICc for each m/n
-    /// @param AICc_stdd vector<double> gets written, the standard deviation values of the AICc for each m/n
-    /// @param Monte_Carlo_switch int if 1, run the code using the iterative Monte Carlo scheme
+    /// @param AICc_means vector<double> gets written, the mean values of the AICc for each m/n
+    /// @param AICc_stddev vector<double> gets written, the standard deviation values of the AICc for each m/n
     /// @return Best fit m over n.
-     		/// @author SMM
-  		/// @date 01/07/13
+    /// @author SMM
+  	/// @date 01/07/13
 		double search_for_best_fit_m_over_n_individual_channels_with_breaks_monte_carlo(double A_0, int n_movern,
-							   double d_movern,double start_movern, int minimum_segment_length, double sigma,
+							   double d_movern, double start_movern, int minimum_segment_length, double sigma,
 						       int target_skip, int target_nodes, int n_iterations,
 						       vector<double>& m_over_n_values,
 						       vector< vector<double> >& AICc_means, vector< vector<double> >& AICc_stddev);
