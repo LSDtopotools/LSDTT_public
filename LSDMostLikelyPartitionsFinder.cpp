@@ -440,7 +440,7 @@ void LSDMostLikelyPartitionsFinder::thin_data_monte_carlo_skip(int Mean_skip,int
 		new_N_switch = 0;
 	}
 
-	int last_node;			// the last node used
+	int last_node = 0;			// the last node used
 
 	while (node < n_nodes)
 	{
