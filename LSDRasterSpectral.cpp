@@ -1,3 +1,58 @@
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// LSDRasterSpectral
+// Land Surface Dynamics StatsTools
+//
+// An object for manipulating rasters developed for the University of Edinburgh
+//  Land Surface Dynamics group topographic toolbox. This is a derivative class
+// from LSDRaster, for use specifically with spectral analysis.
+//
+// These tools have been seperated from the LSDRaster class mainly because
+//  they require the FFTW library and are therefore less portable than
+//  the standard LSDRaster object.
+//
+// Developed by:
+//  Simon M. Mudd
+//  Martin D. Hurst
+//  David T. Milodowski
+//  Stuart W.D. Grieve
+//  Declan A. Valters
+//  Fiona Clubb
+//
+// Copyright (C) 2013 Simon M. Mudd 2013
+//
+// Developer can be contacted by simon.m.mudd _at_ ed.ac.uk
+//
+//    Simon Mudd
+//    University of Edinburgh
+//    School of GeoSciences
+//    Drummond Street
+//    Edinburgh, EH8 9XP
+//    Scotland
+//    United Kingdom
+//
+// This program is free software;
+// you can redistribute it and/or modify it under the terms of the
+// GNU General Public License as published by the Free Software Foundation;
+// either version 2 of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY;
+// without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the GNU General Public License for more details.
+//
+// You should have received a copy of the
+// GNU General Public License along with this program;
+// if not, write to:
+// Free Software Foundation, Inc.,
+// 51 Franklin Street, Fifth Floor,
+// Boston, MA 02110-1301
+// USA
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // LSDRasterSpectral.cpp
@@ -566,12 +621,12 @@ void LSDRasterSpectral::fftw2D_spectral_analysis(char* file_id, double LogBinWid
   Array2D<double> SpectrumReal_shift(Ly,Lx);
   Array2D<double> SpectrumImaginary_shift(Ly,Lx);
   shift_spectrum(SpectrumReal, SpectrumImaginary, SpectrumReal_shift, SpectrumImaginary_shift, Ly, Lx);
-  
+
   // CALCULATE THE DFT PERIODOGRAM
   // Multiply output by complex conjugate and normalise.
   // Note that for complex number z=x+iy, z*=x-iy, z.z* = x^2 + y^2
   Array2D<double> P_DFT = calculate_2D_PSD(SpectrumReal_shift, SpectrumImaginary_shift, Lx, Ly, WSS);
-  
+
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // GET RADIAL POWER SPECTRUM
   // For forward transform, return the spectral power of the topography both
@@ -704,7 +759,7 @@ void LSDRasterSpectral::bandpass_filter(Array2D<double>& RawSpectrumReal, Array2
       double x = j;
       double y = i;
       // Converting position in frequency space into an absolute frequency
-      f = sqrt((y - (Ly/2))*(y - (Ly/2))*dfy*dfy + (x - (Lx/2))*(x - (Lx/2))*dfx*dfx); 
+      f = sqrt((y - (Ly/2))*(y - (Ly/2))*dfy*dfy + (x - (Lx/2))*(x - (Lx/2))*dfx*dfx);
       weight = exp(-(f - 0.5*(f1 + f2))*(f - 0.5*(f1 + f2))/(2*sigma*sigma));
       FilteredSpectrumReal[i][j] = weight*RawSpectrumReal[i][j];
       FilteredSpectrumImaginary[i][j] = weight*RawSpectrumImaginary[i][j];
