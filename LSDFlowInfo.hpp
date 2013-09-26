@@ -156,8 +156,8 @@ class LSDFlowInfo
 	/// @return Number of rows as an integer.
 	int get_NRows() const				{ return NRows; }
 	/// @return Number of columns as an integer.
-  int get_NCols() const				{ return NCols; }
-  /// @return Minimum X coordinate as an integer.
+	int get_NCols() const				{ return NCols; }
+	/// @return Minimum X coordinate as an integer.
 	double get_XMinimum() const			{ return XMinimum; }
 	/// @return Minimum Y coordinate as an integer.
 	double get_YMinimum() const			{ return YMinimum; }
@@ -168,8 +168,11 @@ class LSDFlowInfo
 	/// @return Number of nodes with data as an integer.
 	int get_NDataNodes () const			{ return NDataNodes; }
 	/// @return Vector of all base level nodes.
-  vector<int> get_BaseLevelNodeList ()
+	vector<int> get_BaseLevelNodeList ()
 										{ return BaseLevelNodeList; }
+	
+	/// @return donor stack vector (depth first search sequence of nodes)
+	vector <int> get_donorStack( void ) { return DonorStackVector; }
   /// @return FlowDirection values as a 2D Array.
 	Array2D<int> get_FlowDirection() const { return FlowDirection; }
 
@@ -305,11 +308,11 @@ class LSDFlowInfo
 	protected:
 
 	///Number of rows.
-  int NRows;
-  ///Number of columns.
+	int NRows;
+	///Number of columns.
 	int NCols;
 	///Minimum X coordinate.
-  double XMinimum;
+	double XMinimum;
 	///Minimum Y coordinate.
 	double YMinimum;
 
