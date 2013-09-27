@@ -1106,6 +1106,57 @@ LSDIndexRaster LSDFlowInfo::write_FlowLengthCode_to_LSDIndexRaster()
 
 
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// This function writes an LSDIndesxRaster given a list of node indices
+//
+//
+// SMM 01/06/2012
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+LSDIndexRaster LSDFlowInfo::write_NodeIndexVector_to_LSDIndexRaster(vector<int>& nodeindexvec)
+{
+	int n_node_indices = nodeindexvec.size();
+	Array2D<int> chan(NRows,NCols,NoDataValue);
+
+	int curr_row, curr_col;
+
+	for(int i = 0; i<n_node_indices; i++)
+	{
+		// make sure there is no segmantation fault for bad data
+		// Note: bad data is ignored
+		if(nodeindexvec[i] <= NDataNodes)
+		{
+			retrieve_current_row_and_col(nodeindexvec[i],curr_row,
+                                             curr_col);
+
+            if(chan[curr_row][curr_col] == NoDataValue)
+            {
+            	chan[curr_row][curr_col] = 1;
+			}
+			else
+			{
+				chan[curr_row][curr_col]++;
+			}
+		}
+		else
+		{
+			cout << "WARNING: LSDFlowInfo::write_NodeIndexVector_to_LSDIndexRaster"
+			     << " node index does not exist!"<< endl;
+		}
+	}
+
+	LSDIndexRaster temp_chan(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,chan);
+	return temp_chan;
+}
+
+
+
+
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
@@ -1206,6 +1257,11 @@ LSDIndexRaster LSDFlowInfo::write_FlowDirection_to_LSDIndexRaster_Arcformat()
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -1543,6 +1599,52 @@ LSDRaster LSDFlowInfo::distance_from_outlet()
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+//
+// this finds the node that is farthest upstream from a given node
+//
+//
+// SMM 01/06/2012
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+int LSDFlowInfo::find_farthest_upslope_node(int node, LSDRaster& DistFromOutlet)
+{
+	// set the farthest node to the current node; if the node has no contributing pixels
+	// the function will just return itself
+	int farthest_upslope_node = node;
+
+	// first get the nodes that are upslope
+	vector<int> upslope_node_list = get_upslope_nodes(node);
+
+	int row, col;
+	double this_flow_distance;
+
+	// now loop through these, looking for the farthest upstream node
+	double farthest = 0.0;
+	int n_upslope_nodes = upslope_node_list.size();
+	for (int i = 0; i<n_upslope_nodes; i++)
+	{
+		// get the row and col of upslope nodes
+		row = RowIndex[ upslope_node_list[i] ];
+		col = ColIndex[ upslope_node_list[i] ];
+
+		// get the flow distance
+		this_flow_distance = DistFromOutlet.get_data_element(row, col);
+
+		// test if it is the farthest
+		if (this_flow_distance > farthest)
+		{
+			farthest = this_flow_distance;
+			farthest_upslope_node =  upslope_node_list[i];
+		}
+	}
+
+	return farthest_upslope_node;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // a get sources version that uses the flow accumulation pixels

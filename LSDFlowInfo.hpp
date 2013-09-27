@@ -156,8 +156,8 @@ class LSDFlowInfo
 	/// @return Number of rows as an integer.
 	int get_NRows() const				{ return NRows; }
 	/// @return Number of columns as an integer.
-	int get_NCols() const				{ return NCols; }
-	/// @return Minimum X coordinate as an integer.
+  	int get_NCols() const				{ return NCols; }
+  	/// @return Minimum X coordinate as an integer.
 	double get_XMinimum() const			{ return XMinimum; }
 	/// @return Minimum Y coordinate as an integer.
 	double get_YMinimum() const			{ return YMinimum; }
@@ -168,12 +168,12 @@ class LSDFlowInfo
 	/// @return Number of nodes with data as an integer.
 	int get_NDataNodes () const			{ return NDataNodes; }
 	/// @return Vector of all base level nodes.
-	vector<int> get_BaseLevelNodeList ()
+  	vector<int> get_BaseLevelNodeList ()
 										{ return BaseLevelNodeList; }
-	
-	/// @return donor stack vector (depth first search sequence of nodes)
+
+  	/// @return donor stack vector (depth first search sequence of nodes)
 	vector <int> get_donorStack( void ) { return DonorStackVector; }
-  /// @return FlowDirection values as a 2D Array.
+  	/// @return FlowDirection values as a 2D Array.
 	Array2D<int> get_FlowDirection() const { return FlowDirection; }
 
   ///@brief Recursive add_to_stack routine, from Braun and Willett (2012)
@@ -189,21 +189,38 @@ class LSDFlowInfo
   	/// @author SMM
     /// @date 01/016/12
 	LSDIndexRaster write_NodeIndex_to_LSDIndexRaster();
+
+
 	///@brief Write FlowDirection to an LSDIndexRaster.
-  ///@return LSDIndexRaster of flow directions.
+  	///@return LSDIndexRaster of flow directions.
   	/// @author SMM
     /// @date 01/016/12
-  LSDIndexRaster write_FlowDirection_to_LSDIndexRaster();
+  	LSDIndexRaster write_FlowDirection_to_LSDIndexRaster();
+
+
 	///@brief Write FlowLengthCode to an LSDIndexRaster.
-  ///@return LSDIndexRaster of flow lengths.
+  	///@return LSDIndexRaster of flow lengths.
   	/// @author SMM
     /// @date 01/016/12
 	LSDIndexRaster write_FlowLengthCode_to_LSDIndexRaster();
-	///@brief Write NContributingNodes to an LSDIndexRaster.
-  ///@return LSDIndexRaster of number of contributing nodes for each cell.
+
+
+	///@brief This function writes and LSDIndexRaster containing
+	/// the location of nodes in the nodeindexvector
+	/// @param vector<int> nodeindexvector a vector containing node indices
+	/// one use is to export the
+  	/// @return LSDIndexRaster of pixels that are in the node index vector.
   	/// @author SMM
     /// @date 01/016/12
-  LSDIndexRaster write_NContributingNodes_to_LSDIndexRaster();
+	LSDIndexRaster write_NodeIndexVector_to_LSDIndexRaster(vector<int>& nodeindexvec);
+
+	///@brief Write NContributingNodes to an LSDIndexRaster.
+  	///@return LSDIndexRaster of number of contributing nodes for each cell.
+  	/// @author SMM
+    /// @date 01/016/12
+  	LSDIndexRaster write_NContributingNodes_to_LSDIndexRaster();
+
+
 	///@brief Writes flow directions to an LSDIndexRaster.
   ///Flow direction in arcmap format is: \n\n
   /// 32  64  128 \n
@@ -263,6 +280,7 @@ class LSDFlowInfo
   ///drainage area.
   ///@return Integer node index.
   int retrieve_largest_base_level();
+
   ///@brief This function returns an integer vector containing all the node
   ///indexes upslope of of the node with number node_number_outlet.
   ///@param node_number_outlet Integer of the target node.
@@ -290,12 +308,24 @@ class LSDFlowInfo
   /// @date 01/016/12
   vector<double> get_upslope_chi(vector<int>& upslope_pixel_list, double m_over_n, double A_0);
 
-	///@brief Calculates the distance from outlet of all the base level nodes.
-	///Distance is given in spatial units, not in pixels.
-  ///@return LSDRaster of the distance to the outlet for all baselevel nodes.
+	/// @brief Calculates the distance from outlet of all the base level nodes.
+	/// Distance is given in spatial units, not in pixels.
+  /// @return LSDRaster of the distance to the outlet for all baselevel nodes.
   /// @author SMM
   /// @date 01/016/12
 	LSDRaster distance_from_outlet();
+
+	/// @brief This returns the node index of the pixel farthest upslope
+	/// from the input node
+	/// @param int node: the node from which you want to find the farthest
+	/// upslope pixel, LSDRaster DistFromOutlet: an LSDRaster containing the
+	/// distance from the outlet
+  	/// @return This returns the node index of the pixel farthest upslope
+	/// from the input node.
+  	/// @author SMM
+  	/// @date 25/19/13
+	int find_farthest_upslope_node(int node, LSDRaster& DistFromOutlet);
+
 
 	///@brief A get sources version that uses the flow accumulation pixels.
 	///@param FlowPixels LSDIndexRaster of flow accumulation in pixels.
@@ -308,11 +338,11 @@ class LSDFlowInfo
 	protected:
 
 	///Number of rows.
-	int NRows;
-	///Number of columns.
+  int NRows;
+  ///Number of columns.
 	int NCols;
 	///Minimum X coordinate.
-	double XMinimum;
+  double XMinimum;
 	///Minimum Y coordinate.
 	double YMinimum;
 
