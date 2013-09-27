@@ -187,6 +187,12 @@ class LSDIndexChannel
   /// @date 01/01/12
 	LSDIndexRaster print_index_channel_to_index_raster();
 
+	/// @brief This function appends a channel onto an existing LSDIndexRaster
+	/// @author SMM
+    /// @date 26/09/2013
+	void append_index_channel_to_index_raster(LSDIndexRaster& old_raster);
+
+
 	protected:
 
 	///Number of rows.

@@ -357,5 +357,28 @@ LSDIndexRaster LSDIndexChannel::print_index_channel_to_index_raster()
 }
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// this appends the channel onto an index raster. Used to test where the channel is.
+//
+// SMM 2012
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDIndexChannel::append_index_channel_to_index_raster(LSDIndexRaster& old_raster)
+{
+	int n_nodes_in_channel = int(NodeSequence.size());
+	cout << "NRows: " << NRows << " NCols: " << NCols << endl;
+
+	Array2D<int> Channel_array= old_raster.get_RasterData();
+	for(int i = 0; i<n_nodes_in_channel; i++)
+	{
+		//cout << "row: " << RowSequence[i] << " col: " << ColSequence[i] << endl;
+		Channel_array[RowSequence[i]][ColSequence[i]]= 1;
+	}
+
+	LSDIndexRaster Channel_loc(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Channel_array);
+	old_raster = Channel_loc;
+}
+
+
 
 #endif
