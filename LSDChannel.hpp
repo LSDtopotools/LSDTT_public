@@ -278,6 +278,16 @@ class LSDChannel: public LSDIndexChannel
 
   /// @brief This function loops through m_over_n looking for best fit segments.
   void find_best_fit_m_over_n_with_segments();
+  
+  /// @brief This functions calculates channel heads based on chi segment fitting
+  /// @param min_seg_length_for_channel_heads
+  /// @param A_0
+  /// @param m_over_n
+  /// @param FlowInfo
+  /// @author FC
+  /// @date 25/09/13
+  int calculate_channel_heads(int min_seg_length_for_channel_heads, double A_0, 
+                                            double m_over_n, LSDFlowInfo& LSDFlowInfo);
 
 	protected:
 

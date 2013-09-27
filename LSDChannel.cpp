@@ -726,12 +726,184 @@ void LSDChannel::find_best_fit_m_over_n_with_segments(int n_movern, double d_mov
   //  {
   //    cout << chi_thinned[i] << " " << elev_thinned[i] << " " << elev_fitted[i] << endl;
   //  }
-
-
-
 }
 
+///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+/// Calculate channel head locations using chi segment fitting.
+///
+/// Fitting segments to the chi-elevation data of the main stem.  We assume that the profile
+/// is made up of 2 segments in chi-space: a linear channel segment and a non-linear hillslope
+/// segment.  We loop through the possible combinations of segment lengths, performing a linear
+/// regression to calculate the r^2 and DW of each segment length.  We then calculate a test
+/// value: r^2 of the channel segment - ((DW of the hillslope segment - 2)/2).  This value
+/// will vary between 0 and 1.  The maximum test_value will give the best fit channel and
+/// hillslope segments. Need to get the best fit m_over_n value first.
+/// Parameters: min_seg_length_for_channel_heads (length used for fitting segments to the chi-
+/// elevation profile, a value of 10 is suggested), A_0, m over n, FlowInfo.
+/// Return value: integer with the node index of the channel head location.
+/// FC 25/09/2013
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+int LSDChannel::calculate_channel_heads(int min_seg_length_for_channel_heads, double A_0,
+                                            double m_over_n, LSDFlowInfo& FlowInfo)
+{
+    double downslope_chi = 0;
+    calculate_chi(downslope_chi, m_over_n, A_0, FlowInfo);
+    vector<double> channel_chi;
+    vector<double> hillslope_chi;
+    vector<double> channel_elev;
+    vector<double> hillslope_elev;
+    int end_node = Chi.size();
+    double test_value;
+    double max_test_value = 0;
+    int best_chan_seg = 0;
+    int best_hill_seg = 0;
+    int start_node = 0;
+    int node_index = 0;
+    double chan_gradient = 0;
+    double hill_gradient = 0;
+    double chan_intercept = 0;
+    double hill_intercept = 0;
+    double chi_intersection = 0;
+    double elev_intersection = 0;
+
+    vector<double>::iterator vec_iter_start;
+	  vector<double>::iterator vec_iter_end;
+/*
+    // Looping through the combinations of hillslope and channel segment lengths
+    for (int hill_seg_length = min_seg_length_for_channel_heads; hill_seg_length <= end_node-min_seg_length_for_channel_heads; hill_seg_length++)
+    {
+      for (int chan_seg_length = end_node-min_seg_length_for_channel_heads; chan_seg_length >= min_seg_length_for_channel_heads; chan_seg_length--)
+      {
+		cout << endl;
+		cout << "Size of channel: " << Chi.size() << endl;
+		cout << "Size of hillslope: " << hill_seg_length << " and chann seg length: " << chan_seg_length << endl;
+		cout << endl;
+
+        // assigning the chi values of the hillslope segment
+        hillslope_chi.resize(hill_seg_length);
+        vec_iter_start = Chi.begin()+start_node;
+	      vec_iter_end = vec_iter_start+hill_seg_length;
+	      hillslope_chi.assign(vec_iter_start,vec_iter_end);
+
+	      // assigning the elevation values of the hillslope segment
+        hillslope_elev.resize(hill_seg_length);
+	      vec_iter_start = Elevation.begin()+start_node;
+	      vec_iter_end = vec_iter_start+hill_seg_length;
+	      hillslope_elev.assign(vec_iter_start,vec_iter_end);
+
+	      // assigning the chi values of the channel segment
+        channel_chi.resize(chan_seg_length);
+        vec_iter_start = Chi.begin()+start_node+hill_seg_length;
+	      vec_iter_end = vec_iter_start+chan_seg_length;
+	      channel_chi.assign(vec_iter_start,vec_iter_end);
+
+	      // assigning the elevation values of the channel segment
+        channel_elev.resize(chan_seg_length);
+	      vec_iter_start = Elevation.begin()+start_node+hill_seg_length;
+	      vec_iter_end = vec_iter_start+chan_seg_length;
+	      channel_elev.assign(vec_iter_start,vec_iter_end);
+
+        // performing linear regression on the channel segment
+        vector<double> residuals_chan;
+        vector<double> results_chan = simple_linear_regression(channel_chi,channel_elev, residuals_chan);
+
+        // performing linear regression on the hillslope segment
+        vector<double> residuals_hill;
+        vector<double> results_hill = simple_linear_regression(hillslope_chi, hillslope_elev, residuals_hill);
+
+        // calculating the test value
+        test_value = results_chan[2] - ((results_hill[3] - 2)/2);
+        // looping through test values to find the max test value
+        if (test_value > max_test_value)
+        {
+           max_test_value = test_value;
+           best_hill_seg = hill_seg_length;
+           best_chan_seg = chan_seg_length;
+           hill_gradient = results_hill[0];
+           chan_gradient = results_chan[0];
+           hill_intercept = results_hill[1];
+           chan_intercept = results_chan[1];
+           elev_intersection = channel_elev.front();
+           chi_intersection = channel_chi.front();
+        }
+      }
+    }
+*/
+
+    // Looping through the combinations of hillslope and channel segment lengths
+	for (int hill_seg_length = min_seg_length_for_channel_heads; hill_seg_length <= end_node-min_seg_length_for_channel_heads; hill_seg_length++)
+    {
+		int chan_seg_length = end_node - hill_seg_length+1;
+
+		//cout << endl;
+		//cout << "Size of channel: " << Chi.size() << endl;
+		//cout << "Size of hillslope: " << hill_seg_length << " and chann seg length: " << chan_seg_length << " total length: " << hill_seg_length+chan_seg_length << endl;
+		//cout << endl;
+
+        // assigning the chi values of the hillslope segment
+        hillslope_chi.resize(hill_seg_length);
+        vec_iter_start = Chi.begin()+start_node;
+	    vec_iter_end = vec_iter_start+hill_seg_length;
+	    hillslope_chi.assign(vec_iter_start,vec_iter_end);
+
+	    // assigning the elevation values of the hillslope segment
+        hillslope_elev.resize(hill_seg_length);
+	    vec_iter_start = Elevation.begin()+start_node;
+	    vec_iter_end = vec_iter_start+hill_seg_length;
+	    hillslope_elev.assign(vec_iter_start,vec_iter_end);
+
+	    // assigning the chi values of the channel segment
+        channel_chi.resize(chan_seg_length);
+        vec_iter_start = Chi.begin()+start_node+hill_seg_length;
+	    vec_iter_end = vec_iter_start+chan_seg_length;
+	    channel_chi.assign(vec_iter_start,vec_iter_end);
+
+	    // assigning the elevation values of the channel segment
+        channel_elev.resize(chan_seg_length);
+	    vec_iter_start = Elevation.begin()+start_node+hill_seg_length;
+	    vec_iter_end = vec_iter_start+chan_seg_length;
+	    channel_elev.assign(vec_iter_start,vec_iter_end);
+
+        // performing linear regression on the channel segment
+        vector<double> residuals_chan;
+        vector<double> results_chan = simple_linear_regression(channel_chi,channel_elev, residuals_chan);
+
+        // performing linear regression on the hillslope segment
+        vector<double> residuals_hill;
+        vector<double> results_hill = simple_linear_regression(hillslope_chi, hillslope_elev, residuals_hill);
+
+        // calculating the test value
+        test_value = results_chan[2] - ((results_hill[3] - 2)/2);
+        // looping through test values to find the max test value
+        if (test_value > max_test_value)
+        {
+           max_test_value = test_value;
+           best_hill_seg = hill_seg_length;
+           best_chan_seg = chan_seg_length;
+           hill_gradient = results_hill[0];
+           chan_gradient = results_chan[0];
+           hill_intercept = results_hill[1];
+           chan_intercept = results_chan[1];
+           elev_intersection = channel_elev.front();
+           chi_intersection = channel_chi.front();
+        }
+
+    }
 
 
+    cout << "Channel gradient: " << chan_gradient << " Channel intercept: " << chan_intercept << " Hillslope gradient: " << hill_gradient
+    << " Hillslope intercept: " << hill_intercept << endl;
+
+    for (unsigned int i = 0; i < Elevation.size(); i++)
+    {
+      if (Elevation[i] == elev_intersection)
+      {
+        node_index =  NodeSequence[i];
+      }
+    }
+    cout << "Chi of channel head: " << chi_intersection << " Elevation of channel head: " << elev_intersection << endl;
+
+    return node_index;
+}
 
 #endif
