@@ -205,13 +205,12 @@ class LSDFlowInfo
 	LSDIndexRaster write_FlowLengthCode_to_LSDIndexRaster();
 
 
-	///@brief This function writes and LSDIndexRaster containing
-	/// the location of nodes in the nodeindexvector
-	/// @param vector<int> nodeindexvector a vector containing node indices
-	/// one use is to export the
-  	/// @return LSDIndexRaster of pixels that are in the node index vector.
-  	/// @author SMM
-    /// @date 01/016/12
+	/// @brief This function writes and LSDIndexRaster containing the location of nodes in the nodeindexvector.
+	/// @param nodeindexvec a vector containing node indices one use is to export 
+  /// the LSDIndexRaster of pixels that are in the node index vector.
+  /// @return LSDIndexRaster of pixels that are in the node index vector.
+  /// @author SMM
+  /// @date 01/016/12
 	LSDIndexRaster write_NodeIndexVector_to_LSDIndexRaster(vector<int>& nodeindexvec);
 
 	///@brief Write NContributingNodes to an LSDIndexRaster.
@@ -315,15 +314,13 @@ class LSDFlowInfo
   /// @date 01/016/12
 	LSDRaster distance_from_outlet();
 
-	/// @brief This returns the node index of the pixel farthest upslope
-	/// from the input node
-	/// @param int node: the node from which you want to find the farthest
-	/// upslope pixel, LSDRaster DistFromOutlet: an LSDRaster containing the
-	/// distance from the outlet
-  	/// @return This returns the node index of the pixel farthest upslope
+	/// @brief This returns the node index of the pixel farthest upslope from the input node.
+	/// @param node the node from which you want to find the farthest upslope pixel. 
+  /// @param DistFromOutlet an LSDRaster containing the distance from the outlet.
+  /// @return This returns the node index of the pixel farthest upslope
 	/// from the input node.
-  	/// @author SMM
-  	/// @date 25/19/13
+  /// @author SMM
+  /// @date 25/19/13
 	int find_farthest_upslope_node(int node, LSDRaster& DistFromOutlet);
 
 
