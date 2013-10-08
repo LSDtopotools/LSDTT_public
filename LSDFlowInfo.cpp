@@ -1438,6 +1438,36 @@ vector<int> LSDFlowInfo::get_upslope_nodes(int node_number_outlet)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// This function returns a integer vector containing all the node numbers upslope
+// of of the node with number node_number_outlet
+//
+// SMM 01/06/2012
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+int LSDFlowInfo::is_node_upstream(int current_node, int test_node)
+{
+  int i = 0;
+  
+  int start_SVector_node = SVectorIndex[current_node];
+	int end_SVector_node = start_SVector_node+NContributingNodes[current_node];
+	
+	int SVector_test_node = SVectorIndex[test_node];
+	
+	for(int node = start_SVector_node; node < end_SVector_node; node++)
+	{
+		if (node == SVector_test_node)
+		{
+      i = 1;
+    }
+	}
+  
+  return i;
+}
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -1499,9 +1529,9 @@ vector<double> LSDFlowInfo::get_upslope_chi(vector<int>& upslope_pixel_list, dou
 		chi_vec[n_index] = dx*(pow( (A_0/ (double(NContributingNodes[node])*pixel_area) ),m_over_n))
 		                       + chi_vec[IndexOfReceiverInUplsopePList];
 
-		cout << "node: " << upslope_pixel_list[n_index] << " receiver: " << receiver_node
-		     << " SIndexReciever: " << IndexOfReceiverInUplsopePList << " and checked: " << upslope_pixel_list[IndexOfReceiverInUplsopePList]
-		     << " and chi: " << chi_vec[n_index] << endl;
+	//	cout << "node: " << upslope_pixel_list[n_index] << " receiver: " << receiver_node
+	//	     << " SIndexReciever: " << IndexOfReceiverInUplsopePList << " and checked: " << upslope_pixel_list[IndexOfReceiverInUplsopePList]
+	//	     << " and chi: " << chi_vec[n_index] << endl;
 
 
 	}
