@@ -189,6 +189,6 @@ int main (int nNumberofArgs,char *argv[])
   //Collect mean Basin Metrics into a text file 
   FilledDEM.CollectBasinMetrics(Basins, slope, elevation, aspect, 
                               Area, drainage_density, CHT, RoutedHilltopLengths,
-                              RoutedHilltopSlopes, RoutedHilltopReliefs, RoutedHilltopAspects, critical_slope);
+                              RoutedHilltopSlopes, RoutedHilltopReliefs, RoutedHilltopAspects, critical_slope, DEM_name);
   
 }
