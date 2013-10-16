@@ -20,8 +20,9 @@
 // The HilltopData file generated is ~ 1.5x the size of the DEM file, so make 
 // sure there is enough space to store this file.  
 // 
+// Version 1.1 - now gives flowarea from boomerang plots in spatial units instead of pixels.
 //
-// Version 1.0
+// Version 1.1
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
@@ -137,8 +138,8 @@ int main (int nNumberofArgs,char *argv[])
   //elevation.calculate_polyfit_coefficient_matrices(window_radius, a, b, c, d, e, f);
   //LSDRaster smoothed_slope = FilledDEM.calculate_polyfit_slope(d,e);
     
-  //get d infinity flowarea
-  LSDRaster dinf_area = FilledDEM.D_inf();
+  //get d infinity flowarea - in spatial units
+  LSDRaster dinf_area = FilledDEM.D_inf_units();
   //LSDRaster dinf_area_smoothed = elevation.D_inf();   //could use the smoothed elevation here though? will need to test this with real data
     
   // get flow directions - D8 flowdir for drainage density calculations 
