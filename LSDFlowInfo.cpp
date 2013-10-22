@@ -66,14 +66,10 @@
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// Version 0.0.2		17/09/2012
+// Version 0.1.0		21/10/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//
-// change log --this only starts Nov 28th 2012--
-// 28/11/2012: Added write drainage area, FC, SMM
-//
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
 
 //-----------------------------------------------------------------
 //DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
@@ -1441,21 +1437,20 @@ vector<int> LSDFlowInfo::get_upslope_nodes(int node_number_outlet)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// This function returns a integer vector containing all the node numbers upslope
-// of of the node with number node_number_outlet
+// This function tests whether one node is upstream of another node
 //
-// SMM 01/06/2012
+// FC 01/06/2012
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 int LSDFlowInfo::is_node_upstream(int current_node, int test_node)
 {
   int i = 0;
-  
+
   int start_SVector_node = SVectorIndex[current_node];
 	int end_SVector_node = start_SVector_node+NContributingNodes[current_node];
-	
+
 	int SVector_test_node = SVectorIndex[test_node];
-	
+
 	for(int node = start_SVector_node; node < end_SVector_node; node++)
 	{
 		if (node == SVector_test_node)
@@ -1463,8 +1458,32 @@ int LSDFlowInfo::is_node_upstream(int current_node, int test_node)
       i = 1;
     }
 	}
-  
+
   return i;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// This function redurns a vector of node indices to all the donor
+// nodes of a particular node
+//
+// SMM 21/10/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+vector<int> LSDFlowInfo::get_donor_nodes(int current_node)
+{
+	int start_D = DeltaVector[current_node];
+	int end_D = DeltaVector[current_node+1];
+
+	vector<int> donor_nodes;
+	for(int this_node = start_D; this_node<end_D; this_node++)
+	{
+		//cout << "node " << current_node << " and donor: " << DonorStackVector[ this_node ] << endl;
+		donor_nodes.push_back( DonorStackVector[ this_node ] );
+	}
+
+	return donor_nodes;
 }
 
 

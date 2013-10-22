@@ -151,6 +151,9 @@ class LSDFlowInfo
   int retrieve_flow_length_code_of_node(int node)
 										{ return FlowLengthCode[ RowIndex[node] ][ ColIndex[node] ]; }
 
+
+
+
 	// get functions
 
 	/// @return Number of rows as an integer.
@@ -206,7 +209,7 @@ class LSDFlowInfo
 
 
 	/// @brief This function writes and LSDIndexRaster containing the location of nodes in the nodeindexvector.
-	/// @param nodeindexvec a vector containing node indices one use is to export 
+	/// @param nodeindexvec a vector containing node indices one use is to export
   /// the LSDIndexRaster of pixels that are in the node index vector.
   /// @return LSDIndexRaster of pixels that are in the node index vector.
   /// @author SMM
@@ -287,7 +290,7 @@ class LSDFlowInfo
   /// @author SMM
   /// @date 01/016/12
 	vector<int> get_upslope_nodes(int node_number_outlet);
-	
+
 	///@brief This function tests whether one node is upstream of another node
 	///@param current_node
 	///@param test_node
@@ -295,6 +298,15 @@ class LSDFlowInfo
 	///@author FC
 	///@date 08/10/13
   int is_node_upstream(int current_node, int test_node);
+
+
+	/// @brief this function gets a list of the node indices of the donors to a particular node
+	/// @param node this is the nodeindex of the node for which you want to find the donors
+	/// @return a vector of the donor nodes
+	/// @author SMM
+	/// @date 21/10/2013
+	vector<int> get_donor_nodes(int node);
+
 
 	// algorithms for stream profile analysis
 
@@ -323,7 +335,7 @@ class LSDFlowInfo
 	LSDRaster distance_from_outlet();
 
 	/// @brief This returns the node index of the pixel farthest upslope from the input node.
-	/// @param node the node from which you want to find the farthest upslope pixel. 
+	/// @param node the node from which you want to find the farthest upslope pixel.
   /// @param DistFromOutlet an LSDRaster containing the distance from the outlet.
   /// @return This returns the node index of the pixel farthest upslope
 	/// from the input node.

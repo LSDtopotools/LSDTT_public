@@ -952,7 +952,7 @@ void LSDRasterSpectral::wiener_filter(Array2D<double>& RawSpectrumReal, Array2D<
   int n_freqs_noise = 0;
   double f_highpass = pow(10,-0.7);
   double WhiteNoiseAmplitude = 0;
-  for (int i = 0; i < RadialPSD.size(); ++i)
+  for (int i = 0; i < int(RadialPSD.size()); ++i)
   {
     if(RadialFrequency[i] >= f_highpass)
     {
