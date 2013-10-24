@@ -288,7 +288,7 @@ class LSDChannel: public LSDIndexChannel
   /// @author FC
   /// @date 25/09/13
   int calculate_channel_heads(int min_seg_length_for_channel_heads, double A_0, 
-                                            double m_over_n, LSDFlowInfo& LSDFlowInfo);
+                                            double m_over_n, LSDFlowInfo& FlowInfo);
 
 	protected:
 
