@@ -78,6 +78,7 @@
 #include "TNT/tnt.h"
 #include "LSDFlowInfo.hpp"
 #include "LSDIndexChannel.hpp"
+#include "LSDMostLikelyPartitionsFinder.hpp"
 using namespace std;
 using namespace TNT;
 
