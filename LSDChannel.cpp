@@ -797,11 +797,34 @@ int LSDChannel::calculate_channel_heads(int min_seg_length_for_channel_heads, do
 	    vec_iter_end = vec_iter_start+chan_seg_length;
 	    channel_chi.assign(vec_iter_start,vec_iter_end);
 
+
+
 	    // assigning the elevation values of the channel segment
       channel_elev.resize(chan_seg_length);
 	    vec_iter_start = Elevation.begin()+start_node+hill_seg_length;
 	    vec_iter_end = vec_iter_start+chan_seg_length;
 	    channel_elev.assign(vec_iter_start,vec_iter_end);
+
+		// print channel and hillslope information to look for bugs
+		int chan_size= int(channel_chi.size());
+		int chan_size2 = int(channel_elev.size());
+		cout << "LSDChannel line 810, checking channel: " << chan_size << " " << chan_size2 << endl;
+		for (int j = 0; j<chan_size; j++)
+		{
+			cout << channel_chi[j] << " " << channel_elev[j] << endl;
+		}
+		cout << endl;
+
+		int hs_size= int(hillslope_chi.size());
+		int hs_size2= int(hillslope_elev.size());
+		cout << "LSDChannel line 818, checking hillslope: " << hs_size << " " << hs_size2 <<  endl;
+		for (int j = 0; j<hs_size; j++)
+		{
+			cout << hillslope_chi[j] << " " << hillslope_elev[j] << endl;
+		}
+		cout << endl;
+
+
 
       // performing linear regression on the channel segment
       vector<double> residuals_chan;
@@ -813,7 +836,7 @@ int LSDChannel::calculate_channel_heads(int min_seg_length_for_channel_heads, do
 
       // calculating the test value
       test_value = results_chan[2] - ((results_hill[3] - 2)/2);
-      
+
       // looping through test values to find the max test value
 
       if (test_value > max_test_value)
@@ -843,7 +866,7 @@ int LSDChannel::calculate_channel_heads(int min_seg_length_for_channel_heads, do
     }
     //cout << "Chi of channel head: " << chi_intersection << " Elevation of channel head: " << elev_intersection << endl;
     //cout << "Finished finding channel heads in LSDCHannel" << endl;
-    
+
     return node_index;
 }
 
