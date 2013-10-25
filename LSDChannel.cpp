@@ -765,14 +765,14 @@ int LSDChannel::calculate_channel_heads(int min_seg_length_for_channel_heads, do
     double hill_intercept = 0;
     double chi_intersection = 0;
     double elev_intersection = 0;
-
+    
     vector<double>::iterator vec_iter_start;
 	  vector<double>::iterator vec_iter_end;
 
     // Looping through the combinations of hillslope and channel segment lengths
 	  for (int hill_seg_length = min_seg_length_for_channel_heads; hill_seg_length <= end_node-min_seg_length_for_channel_heads; hill_seg_length++)
     {
-		  int chan_seg_length = end_node - hill_seg_length;
+		  int chan_seg_length = end_node - hill_seg_length+1;
 
 		  //cout << endl;
 		  //cout << "Size of channel: " << Chi.size() << endl;
@@ -802,28 +802,7 @@ int LSDChannel::calculate_channel_heads(int min_seg_length_for_channel_heads, do
 	    vec_iter_start = Elevation.begin()+start_node+hill_seg_length;
 	    vec_iter_end = vec_iter_start+chan_seg_length;
 	    channel_elev.assign(vec_iter_start,vec_iter_end);
-
-		// print channel and hillslope information to look for bugs
-		int chan_size= int(channel_chi.size());
-		int chan_size2 = int(channel_elev.size());
-		cout << "LSDChannel line 810, checking channel: " << chan_size << " " << chan_size2 << endl;
-		for (int j = 0; j<chan_size; j++)
-		{
-			cout << channel_chi[j] << " " << channel_elev[j] << endl;
-		}
-		cout << endl;
-
-		int hs_size= int(hillslope_chi.size());
-		int hs_size2= int(hillslope_elev.size());
-		cout << "LSDChannel line 818, checking hillslope: " << hs_size << " " << hs_size2 <<  endl;
-		for (int j = 0; j<hs_size; j++)
-		{
-			cout << hillslope_chi[j] << " " << hillslope_elev[j] << endl;
-		}
-		cout << endl;
-
-
-
+	    
       // performing linear regression on the channel segment
       vector<double> residuals_chan;
       vector<double> results_chan = simple_linear_regression(channel_chi,channel_elev, residuals_chan);
