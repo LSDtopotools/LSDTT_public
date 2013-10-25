@@ -797,8 +797,6 @@ int LSDChannel::calculate_channel_heads(int min_seg_length_for_channel_heads, do
 	    vec_iter_end = vec_iter_start+chan_seg_length;
 	    channel_chi.assign(vec_iter_start,vec_iter_end);
 
-
-
 	    // assigning the elevation values of the channel segment
       channel_elev.resize(chan_seg_length);
 	    vec_iter_start = Elevation.begin()+start_node+hill_seg_length;
