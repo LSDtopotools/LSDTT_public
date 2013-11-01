@@ -68,7 +68,7 @@ int main (int nNumberofArgs,char *argv[])
   //------------------------------------------------------------------------------------------
   //This gets the channel network and will be updated with Fiona's channel head stuff 
 	LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
-	int threshold = 2000;
+	int threshold = 800;
 	vector<int> sources;
 	sources = FlowInfo.get_sources_index_threshold(ContributingPixels, threshold);
 	LSDChannelNetwork ChanNetwork(sources, FlowInfo);
