@@ -148,6 +148,12 @@ class LSDIndexChannel
   /// @date 01/01/12
 	int get_node_in_channel(int n_node);
 
+  /// @brief This removes the final node in a channel
+  /// @details Used when channel ends in a receiver junction but user wants penultamite node
+  /// @author SMM
+  /// @date 05/11/2013
+  void truncate_final_node();
+
   /// @brief Get the number of contributing pixels at a given node in the channel.
 	/// @param n_node index of target node.
   /// @param FlowInfo LSDFlowInfo object.

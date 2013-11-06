@@ -263,6 +263,26 @@ int LSDIndexChannel::get_contributing_pixels_at_penultimate_node(LSDFlowInfo& Fl
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This function removes the final node in the index channel. This is used for
+// channels that extend to a downstream junction and the user
+// wants to truncate the channel before it encounters a junction
+//
+// SMM 05/11/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDIndexChannel::truncate_final_node()
+{
+  EndJunction = NoDataValue;
+  int n_nodes = NodeSequence.size();
+
+  EndNode = NodeSequence[n_nodes-2];
+  NodeSequence.pop_back();
+  RowSequence.pop_back();
+  ColSequence.pop_back();
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // gets the n contributing pixels at the node in the channel (not the node index)
 //
 // SMM 2012
