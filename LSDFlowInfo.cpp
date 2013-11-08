@@ -187,7 +187,7 @@ int LSDFlowInfo::retrieve_largest_base_level()
 //@date 08/11/2013
 int LSDFlowInfo::retrieve_node_from_row_and_column(int row, int column)
 {
-  int Node = NodeIndex[row][column]
+  int Node = NodeIndex[row][column];
   return Node;
 }
 
