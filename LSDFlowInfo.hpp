@@ -152,7 +152,13 @@ class LSDFlowInfo
 										{ return FlowLengthCode[ RowIndex[node] ][ ColIndex[node] ]; }
 
 
-
+  ///@brief Get the node for a cell at a given row and column
+  ///@param row index
+  ///@param col index
+  ///@return node index
+  ///@author DTM
+  ///@date 08/11/2013
+  int retrieve_node_from_row_and_column(int row, int column);
 
 	// get functions
 
