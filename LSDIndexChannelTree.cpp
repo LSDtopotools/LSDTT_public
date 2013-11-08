@@ -177,6 +177,10 @@ void LSDIndexChannelTree::create(LSDFlowInfo& FlowInfo, LSDChannelNetwork& Chann
 		// initiate the main stem
 		LSDIndexChannel main_stem = ChannelNetwork.generate_longest_index_channel_in_basin(starting_junction,
 		    					FlowInfo, DistanceFromOutlet);
+
+		// truncate the final node so the tributary algorithm does not pick up a bigger channel as a 'tributary'
+		main_stem.truncate_final_node();
+
 		nodes_in_channel = main_stem.get_n_nodes_in_channel();
 		IndexChannelVector.push_back(main_stem);
 		receiver_channel.push_back(0);
@@ -264,6 +268,10 @@ void LSDIndexChannelTree::create(LSDFlowInfo& FlowInfo, LSDChannelNetwork& Chann
 		// initiate the main stem
 		LSDIndexChannel main_stem = ChannelNetwork.generate_longest_index_channel_in_basin(starting_junction,
 																							FlowInfo, DistanceFromOutlet);
+
+		// truncate the final node so the tributary algorithm does not pick up a bigger channel as a 'tributary'
+		main_stem.truncate_final_node();
+
 		nodes_in_channel = main_stem.get_n_nodes_in_channel();
 		IndexChannelVector.push_back(main_stem);
 		receiver_channel.push_back(0);
