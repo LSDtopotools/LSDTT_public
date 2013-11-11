@@ -154,7 +154,7 @@ class LSDFlowInfo
 
   ///@brief Get the node for a cell at a given row and column
   ///@param row index
-  ///@param col index
+  ///@param column index
   ///@return node index
   ///@author DTM
   ///@date 08/11/2013
