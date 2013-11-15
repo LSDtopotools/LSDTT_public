@@ -7,8 +7,8 @@ LDFLAGS= -Wall
 SOURCES=pelletier_channel_heads_driver.cpp LSDIndexRaster.cpp LSDRaster.cpp LSDFlowInfo.cpp LSDIndexChannel.cpp LSDStatsTools.cpp LSDRasterSpectral.cpp LSDChannelNetwork.cpp LSDChannel.cpp LSDMostLikelyPartitionsFinder.cpp
 LIBS   = -lm -lstdc++ -lfftw3
 OBJECTS=$(SOURCES:.cpp=.o)
-#EXECUTABLE=Chile_test3.exe
-EXECUTABLE=wiener_filter.out
+#EXECUTABLE=pelletier_channel_heads.exe
+EXECUTABLE=pelletier_channel_heads.out
 
 all: $(SOURCES) $(EXECUTABLE)
 
