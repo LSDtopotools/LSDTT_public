@@ -154,12 +154,12 @@ int main (int nNumberofArgs,char *argv[])
   Array2D<double> d;
   Array2D<double> e;
   Array2D<double> f;
-  int NRows = topo_test.get_NRows();
-  int NCols = topo_test.get_NCols();
-  double XMinimum = topo_test.get_XMinimum();
-  double YMinimum = topo_test.get_YMinimum();
-  double DataResolution = topo_test.get_DataResolution();
-  double NoDataValue = topo_test.get_NoDataValue();
+  //int NRows = topo_test.get_NRows();
+  //int NCols = topo_test.get_NCols();
+  //double XMinimum = topo_test.get_XMinimum();
+  //double YMinimum = topo_test.get_YMinimum();
+  //double DataResolution = topo_test.get_DataResolution();
+  //double NoDataValue = topo_test.get_NoDataValue();
   double window_radius=6;
   
   topo_data_filtered.calculate_polyfit_coefficient_matrices(window_radius, a, b, c, d, e, f);
