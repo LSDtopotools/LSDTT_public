@@ -147,5 +147,6 @@ int main (int nNumberofArgs,char *argv[])
 	string Chan_for_chi_ingestion_fname = path_name+DEM_name+Chan_fname+jn_name+Chan_ext;
 	ChannelTree.print_LSDChannels_for_chi_network_ingestion(FlowInfo,
                              filled_topo_test, DistanceFromOutlet, Chan_for_chi_ingestion_fname);
+	ChannelTree.convert_chan_file_for_ArcMap_ingestion(Chan_for_chi_ingestion_fname);
 
 }
