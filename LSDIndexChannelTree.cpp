@@ -1004,6 +1004,8 @@ void LSDIndexChannelTree::print_LSDChannels_for_chi_network_ingestion(LSDFlowInf
 	ofstream channelfile_out;
 	channelfile_out.open(fname.c_str());
 
+	channelfile_out.precision(10);
+
 	double m_over_n = 0.5;
 	double A_0 = 1;
 
@@ -1047,6 +1049,72 @@ void LSDIndexChannelTree::print_LSDChannels_for_chi_network_ingestion(LSDFlowInf
 
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=---=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// this function takes the chan file and converts it to a file that can be ingested easily
+// by arcmap
+// the file format is
+// channel_number node_index row column flow_dist chi elevation drainage_area
+//
+// SMM 22/11/2013
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDIndexChannelTree::convert_chan_file_for_ArcMap_ingestion(string fname)
+{
+
+
+	// open the outfile
+	ifstream channelfile_in;
+	channelfile_in.open(fname.c_str());
+
+	unsigned dot = fname.find_last_of(".");
+
+	string prefix = fname.substr(0,dot);
+	//string suffix = str.substr(dot);
+    string insert = "_for_Arc.csv";
+    string outfname = prefix+insert;
+
+    cout << "the Arc channel filename is: " << outfname << endl;
+
+    ofstream ArcChan_out;
+    ArcChan_out.open(outfname.c_str());
+    ArcChan_out.precision(10);
+
+	// print the first line of the arcchan. This is going to be comma seperated!
+	ArcChan_out << "id,x,y,channel,reciever_channel,node_on_reciever_channel,node,row,col,flow_distance,elevation,drainage_area" << endl;
+
+	// now go throught the file, collecting the data
+	int id,ch,rc,norc,n,r,c;
+	double fd,elev,da;
+	double x,y;
+
+	double xll;
+	double yll;
+ 	double datares;
+ 	double ndv;
+ 	int nrows;
+ 	int ncols;
+
+	// read in the first lines with DEM information
+	channelfile_in >> nrows >> ncols >> xll >> yll >> datares >> ndv;
+	id = 0;
+
+	// now loop through the file, calculating x and y locations as you go
+	while(channelfile_in >> ch >> rc >> norc >> n >> r >> c >> fd >> elev >> da)
+	{
+		id++;
+		x = xll + double(c)*datares + 0.5*datares;
+		y = yll + double(nrows-r)*datares - 0.5*datares;		// this is because the DEM starts from the top corner
+
+		ArcChan_out << id << "," << x << "," << y << "," << ch << "," << rc << "," << norc
+		            << "," << n << "," << r << "," << c << "," << fd << "," << elev << "," << da << endl;
+	}
+
+
+
+	channelfile_in.close();
+	ArcChan_out.close();
+
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=---=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this function takes the channel tree and prints it to an LSDIndexRaster

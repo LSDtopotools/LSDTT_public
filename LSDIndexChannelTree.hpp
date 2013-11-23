@@ -251,6 +251,14 @@ class LSDIndexChannelTree
 	void print_LSDChannels_for_chi_network_ingestion(LSDFlowInfo& FlowInfo,
                              LSDRaster& Elevation_Raster, LSDRaster& FlowDistance, string fname);
 
+
+	/// @brief This takes a .chan file and converts it into a comma seperated file with
+	/// headers that can be read into ArcMap easily
+	/// @param the filename of the channel file. The function spits out a similarly named outfile
+	/// @author SMM
+	/// @date 22/11/2013
+	void convert_chan_file_for_ArcMap_ingestion(string fname);
+
 	// get functions
 
 	/// @return Number of rows as an integer.
