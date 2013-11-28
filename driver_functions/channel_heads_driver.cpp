@@ -57,11 +57,9 @@
 #include "LSDRaster.hpp"
 #include "LSDIndexRaster.hpp"
 #include "LSDFlowInfo.hpp"
-#include "LSDRasterSpectral.hpp"
 #include "LSDChannelNetwork.hpp"
 #include "LSDIndexChannelTree.hpp"
 #include "LSDChiNetwork.hpp"
-#include "fftw-3.3.1/api/fftw3.h"
 #include "TNT/jama_lu.h"
 #include "TNT/tnt.h"
 
@@ -107,12 +105,6 @@ int main (int nNumberofArgs,char *argv[])
 
 	// load the DEM
 	LSDRaster topo_test((path_name+DEM_name), DEM_flt_extension);
-	
-  //Filter the DEM using optimal wiener filtering
-  LSDRasterSpectral SpectralRaster(topo_test);                                    
-	LSDRaster topo_data_filtered = SpectralRaster.fftw2D_wiener();
-	// Write raster of filtered DEM
-	//topo_data_filtered.write_raster(DEM_outname,DEM_flt_extension);	
 
 	// Set the no flux boundary conditions
   vector<string> boundary_conditions(4);
@@ -162,8 +154,8 @@ int main (int nNumberofArgs,char *argv[])
   //double NoDataValue = topo_test.get_NoDataValue();
   double window_radius=6;
   
-  topo_data_filtered.calculate_polyfit_coefficient_matrices(window_radius, a, b, c, d, e, f);
-  LSDRaster tan_curvature = topo_data_filtered.calculate_polyfit_tangential_curvature(a ,b ,c ,d, e);
+  topo_test.calculate_polyfit_coefficient_matrices(window_radius, a, b, c, d, e, f);
+  LSDRaster tan_curvature = topo_test.calculate_polyfit_tangential_curvature(a ,b ,c ,d, e);
   
   // Find the valley junctions
   Array2D<double> tan_curv_array = tan_curvature.get_RasterData();
@@ -189,9 +181,10 @@ int main (int nNumberofArgs,char *argv[])
 	
 	//create a channel network based on these channel heads
 	LSDChannelNetwork NewChanNetwork(ChannelHeadNodes, FlowInfo);
-	LSDIndexRaster SOArrayNew = NewChanNetwork.StreamOrderArray_to_LSDIndexRaster();
+	//int n_junctions = NewChanNetwork.get_Number_of_Junctions();
+  LSDIndexRaster SOArrayNew = NewChanNetwork.StreamOrderArray_to_LSDIndexRaster();
 	string SO_name_new = "_SO_from_CH";
 	
 	SOArrayNew.write_raster((path_name+DEM_name+SO_name_new),DEM_flt_extension);	
-                                
+                              
 }
