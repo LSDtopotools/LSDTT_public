@@ -266,6 +266,18 @@ class LSDFlowInfo
   /// @date 01/016/12
   void pickle(string filename);
 
+  /// @brief Method to ingest the channel heads raster generated using channel_heads_driver.cpp
+  /// into a vector of source nodes so that an LSDChannelNetwork can be created easily 
+  /// from them. 
+  ///
+  /// @details Assumes the FlowInfo object has the same dimensions as the channel heads raster.
+  /// @param filename of the channel heads raster.
+  /// @param extension of the channel heads raster.
+  /// @return Vector of source nodes.
+  /// @author SWDG 
+  /// @date 05/12/12 
+  vector<int> Ingest_Channel_Heads(string filename, string extension);
+
 	// functions for getting flow, discharge, sediment flux, etc
 
 	///@brief This function calculates the contributing pixels.

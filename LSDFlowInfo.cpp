@@ -83,7 +83,7 @@
 #include <math.h>
 #include "TNT/tnt.h"
 #include "LSDFlowInfo.hpp"
-//#include "LSDIndexRaster.hpp"
+#include "LSDIndexRaster.hpp"
 //#include "LSDRaster.hpp"
 using namespace std;
 using namespace TNT;
@@ -1013,6 +1013,38 @@ void LSDFlowInfo::unpickle(string filename)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Method to ingest the channel heads raster generated using channel_heads_driver.cpp
+// into a vector of source nodes so that an LSDChannelNetwork can be created easily 
+// from them. Assumes the FlowInfo object has the same dimensions as the channel
+// heads raster.
+//
+// Takes the filename and extension of the channel heads raster.
+//
+// SWDG 05/12/12 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension){
+
+  vector<int> Sources;
+  int CH_node;
+
+  LSDIndexRaster CHeads(filename, extension);
+
+  for (int i = 0; i < NRows; ++i){
+    for (int j = 0; j < NCols; ++j){
+      if (CHeads.get_data_element(i,j) != NoDataValue){
+        CH_node = retrieve_node_from_row_and_column(i,j);
+        Sources.push_back(CH_node);  
+      }
+    }
+  }
+
+  return Sources;
+}
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this prints the flownet information
