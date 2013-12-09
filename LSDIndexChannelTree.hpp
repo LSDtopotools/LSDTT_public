@@ -128,7 +128,7 @@ class LSDIndexChannelTree
   /// pruning_switch == 2	channels are only added if the ratio between them and the area of the
   ///						mainstem _at the junction_ exceeds a certain value \n
   /// @param FlowInfo LSDFlowInfo object.
-  /// @param ChannelNetwork LSDChannelNetwork object.
+  /// @param ChannelNetwork LSDChannelNetwork object.           
   /// @param starting_junction Starting junction.
   /// @param org_switch Organization switch.
   /// @param DistanceFromOutlet LSDRaster of distances from the outlet.
@@ -254,7 +254,7 @@ class LSDIndexChannelTree
 
 	/// @brief This takes a .chan file and converts it into a comma seperated file with
 	/// headers that can be read into ArcMap easily
-	/// @param the filename of the channel file. The function spits out a similarly named outfile
+	/// @param fname the filename of the channel file. The function spits out a similarly named outfile
 	/// @author SMM
 	/// @date 22/11/2013
 	void convert_chan_file_for_ArcMap_ingestion(string fname);
