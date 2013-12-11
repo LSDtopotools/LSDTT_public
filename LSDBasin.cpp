@@ -22,22 +22,25 @@ void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDChannelNetwo
 
   //setting all of the instance variables for the given junction
 
-  NRows = ChanNet.NRows;
-	NCols = ChanNet.NCols;
-	XMinimum = ChanNet.XMinimum;
-	YMinimum = ChanNet.YMinimum;
-	DataResolution = ChanNet.DataResolution;
-	NoDataValue = ChanNet.NoDataValue;
+  NRows = ChanNet.get_NRows();
+	NCols = ChanNet.get_NCols();
+	XMinimum = ChanNet.get_XMinimum();
+	YMinimum = ChanNet.get_YMinimum();
+	DataResolution = ChanNet.get_DataResolution();
+	NoDataValue = ChanNet.get_NoDataValue();
 
   Junction = JunctionNumber;
   
-  LSDIndexChannel StreamLinkVector = LSDIndexChannel(Junction, ChanNet.JunctionVector[Junction],
-                                                     ChanNet.ReceiverVector[Junction], ChanNet.JunctionVector[ChanNet.ReceiverVector[Junction]], FlowInfo);
+  vector <int> JunctionVector = ChanNet.get_JunctionVector();
+  vector <int> ReceiverVector = ChanNet.get_ReceiverVector();
+  
+  LSDIndexChannel StreamLinkVector = LSDIndexChannel(Junction, JunctionVector[Junction],
+                                                     ReceiverVector[Junction], JunctionVector[ReceiverVector[Junction]], FlowInfo);
 
   int n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
   int basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
   BasinNodes = FlowInfo.get_upslope_nodes(basin_outlet);
-  
+                                                                                     
   NumberOfCells = BasinNodes.size();
   Area = NumberOfCells * (DataResolution*DataResolution);
   
@@ -46,7 +49,9 @@ void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDChannelNetwo
   FlowInfo.retrieve_current_row_and_col(ChanNet.get_Node_of_Junction(Junction), Outlet_i, Outlet_j);
   
   
-  BasinOrder = ChanNet.StreamOrderVector[Junction];
+  vector<int> StreamOrderVector = ChanNet.get_StreamOrderVector();
+  
+  BasinOrder = StreamOrderVector[Junction];
 
 
   int i_max = 0;
@@ -107,5 +112,35 @@ void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDChannelNetwo
 
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Calculate mean basin value.
+// SWDG 12/12/13
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+double LSDBasin::CalculateBasinMean(LSDFlowInfo& FlowInfo, LSDRaster Data){
+
+  int i;
+  int j;
+  double TotalData = 0;
+  int CountNDV = 0;
+  double BasinAverage;
+
+  for (int q = 0; q < int(BasinNodes.size()); ++q){
+    
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    
+    //exclude NDV from average
+    if (Data.get_data_element(i,j) != NoDataValue){
+      TotalData += Data.get_data_element(i,j);
+    }
+    else {
+      ++CountNDV;
+    }
+    
+  }
+
+  BasinAverage = TotalData/(NumberOfCells-CountNDV);
+
+  return BasinAverage;
+}
 
 #endif

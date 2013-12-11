@@ -22,8 +22,7 @@ class LSDBasin
   LSDBasin(int Junction, LSDFlowInfo& FlowInfo, LSDChannelNetwork& ChanNet)
 											{ create(Junction, FlowInfo, ChanNet); }
 
-  
-  
+
   /// @return Number of rows as an integer.
 	int get_NRows() const				{ return NRows; }
 	/// @return Number of columns as an integer.
@@ -114,7 +113,58 @@ class LSDBasin
   /// @return R* value.
   double get_RStar() const { return RStar; }  
   
-      
+  /// @brief Calculate the mean value of an LSDRaster which falls inside a basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @param Data Values to find the mean of.
+  /// @return Mean value.
+  /// @author SWDG
+  /// @date 11/12/13
+  double CalculateBasinMean(LSDFlowInfo& FlowInfo, LSDRaster Data);
+  
+  
+  /// @brief Set the mean slope of a basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @param Slope Values to find the mean of.
+  /// @author SWDG
+  /// @date 11/12/13
+  void set_SlopeMean(LSDFlowInfo& FlowInfo, LSDRaster Slope){ SlopeMean = CalculateBasinMean(FlowInfo, Slope); }
+
+  /// @brief Set the mean Elevation of a basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @param Elevation Values to find the mean of.
+  /// @author SWDG
+  /// @date 11/12/13
+  void set_ElevationMean(LSDFlowInfo& FlowInfo, LSDRaster Slope){ ElevationMean = CalculateBasinMean(FlowInfo, Slope); }
+
+  /// @brief Set the mean Relief of a basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @param Relief Values to find the mean of.
+  /// @author SWDG
+  /// @date 11/12/13
+  void set_ReliefMean(LSDFlowInfo& FlowInfo, LSDRaster Slope){ ReliefMean = CalculateBasinMean(FlowInfo, Slope); }
+
+  /// @brief Set the mean PlanCurve of a basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @param PlanCurve Values to find the mean of.
+  /// @author SWDG
+  /// @date 11/12/13
+  void set_PlanCurvMean(LSDFlowInfo& FlowInfo, LSDRaster Slope){ PlanCurvMean = CalculateBasinMean(FlowInfo, Slope); }
+
+  /// @brief Set the mean ProfCurv of a basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @param ProfCurv Values to find the mean of.
+  /// @author SWDG
+  /// @date 11/12/13
+  void set_ProfileCurvMean(LSDFlowInfo& FlowInfo, LSDRaster Slope){ ProfileCurvMean = CalculateBasinMean(FlowInfo, Slope); }
+
+  /// @brief Set the mean TotalCurv of a basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @param TotalCurv Values to find the mean of.
+  /// @author SWDG
+  /// @date 11/12/13
+  void set_TotalCurvMean(LSDFlowInfo& FlowInfo, LSDRaster Slope){ TotalCurvMean = CalculateBasinMean(FlowInfo, Slope); }  
+  
+     
   protected:
   
   //These instance variables are set at initialisation
