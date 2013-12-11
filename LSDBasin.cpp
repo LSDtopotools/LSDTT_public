@@ -143,4 +143,30 @@ double LSDBasin::CalculateBasinMean(LSDFlowInfo& FlowInfo, LSDRaster Data){
   return BasinAverage;
 }
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Calculate max basin value.
+// SWDG 12/12/13
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+double LSDBasin::CalculateBasinMax(LSDFlowInfo& FlowInfo, LSDRaster Data){
+
+  int i;
+  int j;
+  double MaxData = 0;
+  double CurrentData;
+
+  for (int q = 0; q < int(BasinNodes.size()); ++q){
+    
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    CurrentData = Data.get_data_element(i,j);
+    
+    //exclude NDV
+    if (CurrentData != NoDataValue && CurrentData > MaxData){
+      MaxData = CurrentData;     
+    }
+  }
+    
+  return MaxData;
+}
+
 #endif

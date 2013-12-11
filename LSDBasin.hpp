@@ -121,6 +121,13 @@ class LSDBasin
   /// @date 11/12/13
   double CalculateBasinMean(LSDFlowInfo& FlowInfo, LSDRaster Data);
   
+  /// @brief Calculate the max value of an LSDRaster which falls inside a basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @param Data Values to find the max of.
+  /// @return Max value.
+  /// @author SWDG
+  /// @date 11/12/13
+  double CalculateBasinMax(LSDFlowInfo& FlowInfo, LSDRaster Data);
   
   /// @brief Set the mean slope of a basin.
   /// @param FlowInfo Flowinfo object.
@@ -134,37 +141,69 @@ class LSDBasin
   /// @param Elevation Values to find the mean of.
   /// @author SWDG
   /// @date 11/12/13
-  void set_ElevationMean(LSDFlowInfo& FlowInfo, LSDRaster Slope){ ElevationMean = CalculateBasinMean(FlowInfo, Slope); }
+  void set_ElevationMean(LSDFlowInfo& FlowInfo, LSDRaster Elevation) { ElevationMean = CalculateBasinMean(FlowInfo, Elevation) ; }
 
   /// @brief Set the mean Relief of a basin.
   /// @param FlowInfo Flowinfo object.
   /// @param Relief Values to find the mean of.
   /// @author SWDG
   /// @date 11/12/13
-  void set_ReliefMean(LSDFlowInfo& FlowInfo, LSDRaster Slope){ ReliefMean = CalculateBasinMean(FlowInfo, Slope); }
+  void set_ReliefMean(LSDFlowInfo& FlowInfo, LSDRaster Relief) { ReliefMean = CalculateBasinMean(FlowInfo, Relief) ; }
 
   /// @brief Set the mean PlanCurve of a basin.
   /// @param FlowInfo Flowinfo object.
   /// @param PlanCurve Values to find the mean of.
   /// @author SWDG
   /// @date 11/12/13
-  void set_PlanCurvMean(LSDFlowInfo& FlowInfo, LSDRaster Slope){ PlanCurvMean = CalculateBasinMean(FlowInfo, Slope); }
+  void set_PlanCurvMean(LSDFlowInfo& FlowInfo, LSDRaster PlanCurv) { PlanCurvMean = CalculateBasinMean(FlowInfo, PlanCurv) ; }
 
   /// @brief Set the mean ProfCurv of a basin.
   /// @param FlowInfo Flowinfo object.
   /// @param ProfCurv Values to find the mean of.
   /// @author SWDG
   /// @date 11/12/13
-  void set_ProfileCurvMean(LSDFlowInfo& FlowInfo, LSDRaster Slope){ ProfileCurvMean = CalculateBasinMean(FlowInfo, Slope); }
+  void set_ProfileCurvMean(LSDFlowInfo& FlowInfo, LSDRaster ProfileCurv) { ProfileCurvMean = CalculateBasinMean(FlowInfo, ProfileCurv) ; }
 
   /// @brief Set the mean TotalCurv of a basin.
   /// @param FlowInfo Flowinfo object.
   /// @param TotalCurv Values to find the mean of.
   /// @author SWDG
   /// @date 11/12/13
-  void set_TotalCurvMean(LSDFlowInfo& FlowInfo, LSDRaster Slope){ TotalCurvMean = CalculateBasinMean(FlowInfo, Slope); }  
+  void set_TotalCurvMean(LSDFlowInfo& FlowInfo, LSDRaster TotalCurv) { TotalCurvMean = CalculateBasinMean(FlowInfo, TotalCurv) ; }
+
+  /// @brief Set the max PlanCurve of a basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @param PlanCurve Values to find the max of.
+  /// @author SWDG
+  /// @date 11/12/13
+  void set_PlanCurvMax(LSDFlowInfo& FlowInfo, LSDRaster PlanCurv) { PlanCurvMax = CalculateBasinMax(FlowInfo, PlanCurv) ; }
+
+  /// @brief Set the max ProfCurv of a basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @param ProfCurv Values to find the max of.
+  /// @author SWDG
+  /// @date 11/12/13
+  void set_ProfileCurvMax(LSDFlowInfo& FlowInfo, LSDRaster ProfileCurv) { ProfileCurvMax = CalculateBasinMax(FlowInfo, ProfileCurv) ; }
+
+  /// @brief Set the max TotalCurv of a basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @param TotalCurv Values to find the max of.
+  /// @author SWDG
+  /// @date 11/12/13
+  void set_TotalCurvMax(LSDFlowInfo& FlowInfo, LSDRaster TotalCurv) { TotalCurvMax = CalculateBasinMax(FlowInfo, TotalCurv) ; }
+ 
+  /// @brief Set the Cosmogenic erosion rate.
+  /// @param ErosionRate Erosion rate - No sanity check on this value.
+  /// @author SWDG
+  /// @date 11/12/13
+  void set_CosmoErosionRate(double ErosionRate) { CosmoErosionRate = ErosionRate; }
   
-     
+  /// @brief Set the Other erosion rate.
+  /// @param ErosionRate Erosion rate - No sanity check on this value.
+  /// @author SWDG
+  /// @date 11/12/13
+  void set_OtherErosionRate(double ErosionRate) { OtherErosionRate = ErosionRate; }
+ 
   protected:
   
   //These instance variables are set at initialisation
