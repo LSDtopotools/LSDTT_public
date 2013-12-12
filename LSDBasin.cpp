@@ -1,6 +1,8 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <iostream>
+#include <fstream>
 #include "TNT/tnt.h"
 #include "LSDFlowInfo.hpp"
 #include "LSDRaster.hpp"
@@ -270,6 +272,88 @@ void LSDBasin::set_HillslopeLengths_Boomerang(LSDRaster& Slope, LSDRaster& DinfA
 
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Generate data to create boomerang plots. 
+// SWDG 12/12/13
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDBasin::set_Plot_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, double log_bin_width, int SplineResolution, double bin_threshold, string Path){
+  
+  int j;
+  int i;
+  Array2D<double> slope(NRows, NCols, NoDataValue);
+  Array2D<double> area(NRows, NCols, NoDataValue);
+  
+  //create subset arrays for just the basin data - this should be rolled into its own method.
+  for (int q = 0; q < int(BasinNodes.size()); ++q){
+    
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    
+      slope[i][j] = Slope.get_data_element(i,j);
+      area[i][j] = DinfArea.get_data_element(i,j);
+    
+  }
 
+  //do some log binning
+  vector<double> Mean_x_out;
+  vector<double> Mean_y_out;
+  vector<double> Midpoints_out;
+  vector<double> STDDev_x_out;
+  vector<double> STDDev_y_out;
+  vector<double> STDErr_x_out;
+  vector<double> STDErr_y_out;
+  vector<int> number_observations;
+  
+  log_bin_data(area, slope, log_bin_width, Mean_x_out, Mean_y_out, Midpoints_out, STDDev_x_out, STDDev_y_out, STDErr_x_out, STDErr_y_out, number_observations, NoDataValue);  
+  
+  //remove empty bins 
+  RemoveSmallBins(Mean_x_out, Mean_y_out, Midpoints_out, STDDev_x_out, STDDev_y_out, STDErr_x_out, STDErr_y_out, number_observations, bin_threshold);
+        
+  // Fit splines through the binned data to get the LH
+  vector<double> Spline_X;
+  vector<double> Spline_Y;
+  PlotCubicSplines(Mean_x_out, Mean_y_out, SplineResolution, Spline_X, Spline_Y);
+
+  //set up a filestream object to write the binned data
+  ofstream file;
+
+  stringstream ss_bin;
+  ss_bin << Path << Junction << "_boom_binned.txt";
+  file.open(ss_bin.str().c_str());   //needs a null terminated character array, not a string. See pg 181 of accelerated c++
+    
+  for(int q = 0; q < int(Mean_x_out.size()); q++){
+    file << Mean_x_out[q] << " " << Mean_y_out[q] << " " << STDDev_x_out[q] << " " << STDDev_y_out[q] << " " << STDErr_x_out[q] << " " << STDErr_y_out[q] << endl;
+  }
+  file.close();
+      
+  //set up a filestream object to write the spline data
+  ofstream SplineFile;
+
+  stringstream ss_spline;
+  ss_spline << Path << Junction << "_boom_spline.txt";
+  SplineFile.open(ss_spline.str().c_str());   //needs a null terminated character array, not a string. See pg 181 of accelerated c++
+    
+  for(int q = 0; q < int(Spline_X.size()); q++){ //fixed bug here where I looped over the wrong vector - SWDG 7/11/13
+    SplineFile << Spline_X[q] << " " << Spline_Y[q] << endl;
+
+  }
+  SplineFile.close();
+  
+  //set up a filestream object to write the data cloud
+  ofstream cloud;
+
+  stringstream ss_cloud;
+  ss_cloud << Path << Junction << "_boom_cloud.txt";
+  cloud.open(ss_cloud.str().c_str());     //needs a null terminated character array, not a string. See pg 181 of accelerated c++
+
+  for (int i = 1; i < NRows-1; ++i){
+    for (int j = 1; j < NCols-1; ++j){
+      if(area[i][j] != NoDataValue && slope[i][j] != NoDataValue){
+        cloud << area[i][j] << " " << slope[i][j] << endl;
+      }
+    }
+  }
+  cloud.close();
+
+}
 
 #endif

@@ -252,6 +252,21 @@ class LSDBasin
   /// @author SWDG
   /// @date 12/12/13
   void set_HillslopeLength_Density() { HillslopeLength_Density = (1 / (2 * DrainageDensity)); }
+  
+  /// @brief Generate text files containing data to plot boomerangs.
+  ///
+  /// @details Writes 3 files to the output path, coded with the basin's unique
+  /// junction number which can the be read with python and plotted.
+  /// @param Slope LSDRaster of slope.
+  /// @param DinfArea D-infinity Flowarea LSDRaster.
+  /// @param FlowInfo Flowinfo object.
+  /// @param log_bin_width Width (in log space) of the bins, with respect to D_inf.
+  /// @param SplineResolution Number of values between each point for the spline curve.
+  /// @param bin_threshold Threshold fraction of values needed to keep a bin.
+  /// @param Path The output path where the data files will be written to, including the final slash. 
+  /// @author SWDG
+  /// @date 12/12/13  
+  void set_Plot_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, double log_bin_width, int SplineResolution, double bin_threshold, string Path);
     
   protected:
   
