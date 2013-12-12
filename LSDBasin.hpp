@@ -369,6 +369,7 @@ class LSDBasin
   /// @author SWDG
   /// @date 12/12/13 
   LSDIndexRaster write_Junction(LSDFlowInfo FlowInfo) { return write_integer_data_to_LSDIndexRaster(Junction, FlowInfo); }
+  
   /// @brief Write NumberOfCells values into the shape of the basin.
   /// @param FlowInfo Flowinfo object.
   /// @return LSDIndexRaster of NumberOfCells values in the shape of the basin.
@@ -376,6 +377,167 @@ class LSDBasin
   /// @date 12/12/13 
   LSDIndexRaster write_NumberOfCells(LSDFlowInfo FlowInfo) { return write_integer_data_to_LSDIndexRaster(NumberOfCells, FlowInfo); }
   
+  /// @brief Write BasinOrder values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDIndexRaster of BasinOrder values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDIndexRaster write_BasinOrder(LSDFlowInfo FlowInfo) { return write_integer_data_to_LSDIndexRaster(BasinOrder, FlowInfo); }
+  
+  /// @brief Write Area values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of Area values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_Area(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(Area, FlowInfo); }
+  
+  /// @brief Write SlopeMean values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of SlopeMean values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_SlopeMean(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(SlopeMean, FlowInfo); }
+  
+  /// @brief Write ElevationMean values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of ElevationMean values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_ElevationMean(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(ElevationMean, FlowInfo); }
+  
+  /// @brief Write AspectMean values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of AspectMean values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_AspectMean(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(AspectMean, FlowInfo); }
+  
+  /// @brief Write ReliefMean values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of ReliefMean values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_ReliefMean(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(ReliefMean, FlowInfo); }
+  
+  /// @brief Write PlanCurvMean values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of PlanCurvMean values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_PlanCurvMean(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(PlanCurvMean, FlowInfo); }
+  
+  /// @brief Write ProfileCurvMean values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of ProfileCurvMean values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_ProfileCurvMean(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(ProfileCurvMean, FlowInfo); }
+  
+  /// @brief Write TotalCurvMean values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of TotalCurvMean values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_TotalCurvMean(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(TotalCurvMean, FlowInfo); }
+  
+  /// @brief Write PlanCurvMax values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of PlanCurvMax values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_PlanCurvMax(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(PlanCurvMax, FlowInfo); }
+  
+  /// @brief Write ProfileCurvMax values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of ProfileCurvMax values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_ProfileCurvMax(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(ProfileCurvMax, FlowInfo); }
+  
+  /// @brief Write TotalCurvMax values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of TotalCurvMax values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_TotalCurvMax(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(TotalCurvMax, FlowInfo); }
+  
+  /// @brief Write HillslopeLength_HFR values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of HillslopeLength_HFR values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_HillslopeLength_HFR(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(HillslopeLength_HFR, FlowInfo); }
+  
+  /// @brief Write HillslopeLength_Binned values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of HillslopeLength_Binned values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_HillslopeLength_Binned(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(HillslopeLength_Binned, FlowInfo); }
+  
+  /// @brief Write HillslopeLength_Spline values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of HillslopeLength_Spline values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_HillslopeLength_Spline(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(HillslopeLength_Spline, FlowInfo); }
+  
+  /// @brief Write HillslopeLength_Density values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of HillslopeLength_Density values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_HillslopeLength_Density(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(HillslopeLength_Density, FlowInfo); }
+  
+  /// @brief Write FlowLength values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of FlowLength values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_FlowLength(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(FlowLength, FlowInfo); }
+  
+  /// @brief Write DrainageDensity values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of DrainageDensity values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_DrainageDensity(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(DrainageDensity, FlowInfo); }
+  
+  /// @brief Write CosmoErosionRate values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of CosmoErosionRate values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_CosmoErosionRate(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(CosmoErosionRate, FlowInfo); }
+  
+  /// @brief Write OtherErosionRate values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of OtherErosionRate values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_OtherErosionRate(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(OtherErosionRate, FlowInfo); }
+  
+  /// @brief Write CHTMean values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of CHTMean values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_CHTMean(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(CHTMean, FlowInfo); }
+  
+  /// @brief Write EStar values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of EStar values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_EStar(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(EStar, FlowInfo); }
+  
+  /// @brief Write RStar values into the shape of the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of RStar values in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_RStar(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(RStar, FlowInfo); }
+   
   protected:
   
   //These instance variables are set at initialisation
