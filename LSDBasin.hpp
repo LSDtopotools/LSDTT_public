@@ -363,13 +363,6 @@ class LSDBasin
   /// @date 12/12/13 
   LSDIndexRaster write_Junction(LSDFlowInfo FlowInfo) { return write_integer_data_to_LSDIndexRaster(Junction, FlowInfo); }
   
-  /// @brief Write Junction values into the shape of the basin.
-  /// @param FlowInfo Flowinfo object.
-  /// @return LSDIndexRaster of Junction values in the shape of the basin.
-  /// @author SWDG
-  /// @date 12/12/13 
-  LSDIndexRaster write_Junction(LSDFlowInfo FlowInfo) { return write_integer_data_to_LSDIndexRaster(Junction, FlowInfo); }
-  
   /// @brief Write NumberOfCells values into the shape of the basin.
   /// @param FlowInfo Flowinfo object.
   /// @return LSDIndexRaster of NumberOfCells values in the shape of the basin.
