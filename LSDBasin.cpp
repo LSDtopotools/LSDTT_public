@@ -81,7 +81,6 @@ void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDChannelNetwo
   Centroid_j = (j_max - j_min)/2;   //how do these handle 0.5s ??
 
 
-
   //finished setting all the instance variables
   
   
@@ -104,8 +103,9 @@ void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDChannelNetwo
   HillslopeLength_Spline = NoDataValue;
   HillslopeLength_Density = NoDataValue;
   FlowLength = NoDataValue;
-  DrainageDensity = NoDataValue;
-  Perimiter = NoDataValue;
+  DrainageDensity = NoDataValue;  
+  Perimeter_i = vector<int>(1,NoDataValue);
+  Perimeter_j =  vector<int>(1,NoDataValue);
   CosmoErosionRate = NoDataValue;
   OtherErosionRate = NoDataValue;
   CHTMean = NoDataValue;
@@ -398,6 +398,58 @@ void LSDBasin::set_AspectMean(LSDFlowInfo& FlowInfo, LSDRaster Aspect){
    
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Set the perimeter pixels using a simple edge detection algorithm. This is quite 
+// messy and will be improved soon.
+// SWDG 12/12/13
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDBasin::set_Perimeter(LSDFlowInfo& FlowInfo){
+
+  int i;
+  int j;
+  vector<int> I;
+  vector<int> J;
+  int NDVCount = 0;
+  Array2D<double> BasinData(NRows, NCols, NoDataValue);
+
+  //create subset arrays for just the basin data - this should be rolled into its own method.
+  for (int q = 0; q < int(BasinNodes.size()); ++q){
+    
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+      BasinData[i][j] = BasinNodes[q];
+    
+  }
+
+  for (int q = 0; q < int(BasinNodes.size()); ++q){
+    
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    
+      NDVCount = 0;
+     
+        //count border cells that are NDV
+        if (BasinData[i-1][j-1] == NoDataValue){ ++NDVCount; }
+        if (BasinData[i][j-1] == NoDataValue){ ++NDVCount; }
+        if (BasinData[i+1][j-1] == NoDataValue){ ++NDVCount; }
+        if (BasinData[i-1][j] == NoDataValue){ ++NDVCount; }
+        if (BasinData[i+1][j] == NoDataValue){ ++NDVCount; }
+        if (BasinData[i-1][j+1] == NoDataValue){ ++NDVCount; }
+        if (BasinData[i][j+1] == NoDataValue){ ++NDVCount; }
+        if (BasinData[i+1][j+1] == NoDataValue){ ++NDVCount; }
+        
+        if (NDVCount >= 4 && NDVCount < 8){  //increase the first value to get a simpler polygon
+          //edge pixel
+          I.push_back(i);
+          J.push_back(j);
+        }
+    
+  }
+
+  //now have 2 vectors of i and j indexes of every point
+  Perimeter_i = I;
+  Perimeter_j = J;
+
+
+}
 
 
 

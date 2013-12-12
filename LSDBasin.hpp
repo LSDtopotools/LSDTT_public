@@ -101,8 +101,10 @@ class LSDBasin
   double get_FlowLength() const { return FlowLength; }
   /// @return Drainage Density.
   double get_DrainageDensity() const { return DrainageDensity; }
-  /// @return Basin perimiter.
-  double get_Perimiter() const { return Perimiter; }
+  /// @return Basin Perimeter's i index.
+  vector<int> get_Perimeter_i() const { return Perimeter_i; }
+  /// @return Basin Perimeter's j index.
+  vector<int> get_Perimeter_j() const { return Perimeter_j; }
   /// @return Cosmo erosion rate.
   double get_CosmoErosionRate() const { return CosmoErosionRate; }
   /// @return Other eroision rate.
@@ -274,6 +276,14 @@ class LSDBasin
   /// @author SWDG
   /// @date 12/12/13
   void set_AspectMean(LSDFlowInfo& FlowInfo, LSDRaster Aspect);
+  
+  /// @brief Set the perimeter pixels using a simple edge detection algorithm. 
+  ///
+  /// @details This is quite messy and will be improved soon.
+  /// @param FlowInfo Flowinfo object.
+  /// @author SWDG
+  /// @date 12/12/13
+  void set_Perimeter(LSDFlowInfo& FlowInfo);
     
   protected:
   
@@ -347,8 +357,10 @@ class LSDBasin
   double FlowLength;
   /// Basin drainage density.
   double DrainageDensity;
-  /// Basin perimiter.
-  double Perimiter;
+  /// Basin Perimeter's j index.
+  vector<int> Perimeter_i;
+  /// Basin Perimeter's j index.
+  vector<int> Perimeter_j;
   /// Cosmo erosion rate.
   double CosmoErosionRate;
   /// Other erosion rate.
