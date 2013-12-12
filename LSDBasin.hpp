@@ -267,6 +267,13 @@ class LSDBasin
   /// @author SWDG
   /// @date 12/12/13  
   void set_Plot_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, double log_bin_width, int SplineResolution, double bin_threshold, string Path);
+  
+  /// @brief Set the mean aspect of a basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @param Aspect Values to find the mean of.
+  /// @author SWDG
+  /// @date 12/12/13
+  void set_AspectMean(LSDFlowInfo& FlowInfo, LSDRaster Aspect);
     
   protected:
   

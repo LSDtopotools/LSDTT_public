@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
+#include <math.h>
 #include "TNT/tnt.h"
 #include "LSDFlowInfo.hpp"
 #include "LSDRaster.hpp"
@@ -355,5 +356,49 @@ void LSDBasin::set_Plot_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlow
   cloud.close();
 
 }
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Set the mean basin aspect. Does not use the normal basin mean method as angles
+// need to be handled differently. 
+// SWDG 12/12/13
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDBasin::set_AspectMean(LSDFlowInfo& FlowInfo, LSDRaster Aspect){
+
+  int i;
+  int j;
+  double avg_r;
+  double angle_r;
+  double x_component = 0.0;
+  double y_component = 0.0;
+  int ndv_cell_count = 0;  
+
+  for (int q = 0; q < int(BasinNodes.size()); ++q){
+    
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    
+    if (Aspect.get_data_element(i,j) != NoDataValue){
+    
+      angle_r = rad(Aspect.get_data_element(i,j));
+      x_component += cos(angle_r);
+      y_component += sin(angle_r);
+  
+    }
+    else{
+      ++ndv_cell_count;
+    }
+  
+  }
+    
+  x_component = x_component / (BasinNodes.size() - ndv_cell_count);
+  y_component = x_component / (BasinNodes.size() - ndv_cell_count);
+  avg_r = atan2(y_component, x_component);
+  
+  AspectMean = deg(avg_r);
+   
+}
+
+
+
 
 #endif
