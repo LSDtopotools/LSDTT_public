@@ -324,6 +324,38 @@ class LSDBasin
                           int SplineResolution, double bin_threshold, double CriticalSlope, 
                           double CosmoErosionRate = -9999, double OtherErosionRate = -9999);
 
+  /// @brief Cookie cut data from an LSDIndexRaster into the shape of the basin.
+  /// @param Data LSDIndexRaster data to be written.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDIndexRaster of the data in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDIndexRaster write_raster_data_to_LSDIndexRaster(LSDIndexRaster Data, LSDFlowInfo FlowInfo);
+  
+  /// @brief Cookie cut data from an LSDRaster into the shape of the basin.
+  /// @param Data LSDRaster data to be written.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of the data in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_raster_data_to_LSDRaster(LSDRaster Data, LSDFlowInfo FlowInfo);
+  
+  /// @brief Write a real value to an LSDRaster in the shape of the basin.
+  /// @param Param real value to be written
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of the data in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDRaster write_real_data_to_LSDRaster(double Param, LSDFlowInfo FlowInfo);
+ 
+  /// @brief Write an integer value to an LSDIndexRaster in the shape of the basin.
+  /// @param Param integer value to be written
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDIndexRaster of the data in the shape of the basin.
+  /// @author SWDG
+  /// @date 12/12/13 
+  LSDIndexRaster write_integer_data_to_LSDIndexRaster(int Param, LSDFlowInfo FlowInfo);
+  
   protected:
   
   //These instance variables are set at initialisation

@@ -521,4 +521,76 @@ void LSDBasin::set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, L
 }
 
 
+LSDIndexRaster LSDBasin::write_integer_data_to_LSDIndexRaster(int Param, LSDFlowInfo FlowInfo){
+  
+  int i;
+  int j; 
+  Array2D<int> Output(NRows, NCols, NoDataValue);
+  
+  for (int q = 0; q < int(BasinNodes.size()); ++q){
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    Output[i][j] = Param;
+  }
+
+  LSDIndexRaster OutputRaster(NRows, NCols, XMinimum, YMinimum, DataResolution,
+                               NoDataValue, Output);
+
+  return OutputRaster;
+
+}                                       
+
+LSDRaster LSDBasin::write_real_data_to_LSDRaster(double Param, LSDFlowInfo FlowInfo){
+  
+  int i;
+  int j; 
+  Array2D<double> Output(NRows, NCols, NoDataValue);
+  
+  for (int q = 0; q < int(BasinNodes.size()); ++q){
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    Output[i][j] = Param;
+  }
+
+  LSDRaster OutputRaster(NRows, NCols, XMinimum, YMinimum, DataResolution,
+                               NoDataValue, Output);
+
+  return OutputRaster;
+
+}
+
+LSDRaster LSDBasin::write_raster_data_to_LSDRaster(LSDRaster Data, LSDFlowInfo FlowInfo){
+  
+  int i;
+  int j; 
+  Array2D<double> Output(NRows, NCols, NoDataValue);
+  
+  for (int q = 0; q < int(BasinNodes.size()); ++q){
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    Output[i][j] = Data.get_data_element(i,j);
+  }
+
+  LSDRaster OutputRaster(NRows, NCols, XMinimum, YMinimum, DataResolution,
+                               NoDataValue, Output);
+
+  return OutputRaster;
+
+}
+
+LSDIndexRaster LSDBasin::write_raster_data_to_LSDIndexRaster(LSDIndexRaster Data, LSDFlowInfo FlowInfo){
+  
+  int i;
+  int j; 
+  Array2D<int> Output(NRows, NCols, NoDataValue);
+  
+  for (int q = 0; q < int(BasinNodes.size()); ++q){
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    Output[i][j] = Data.get_data_element(i,j);
+  }
+
+  LSDIndexRaster OutputRaster(NRows, NCols, XMinimum, YMinimum, DataResolution,
+                               NoDataValue, Output);
+
+  return OutputRaster;
+
+}
+
 #endif
