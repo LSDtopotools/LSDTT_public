@@ -451,6 +451,24 @@ void LSDBasin::set_Perimeter(LSDFlowInfo& FlowInfo){
 
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Set the four different hillslope length measurements for the basin. 
+// SWDG 12/12/13
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDBasin::set_all_HillslopeLengths(LSDFlowInfo& FlowInfo, LSDRaster& HillslopeLengths, LSDRaster& Slope, LSDRaster& DinfArea, double log_bin_width, int SplineResolution, double bin_threshold){
 
+  set_HillslopeLength_HFR(FlowInfo, HillslopeLengths);
+  set_HillslopeLengths_Boomerang(Slope, DinfArea, FlowInfo, log_bin_width, SplineResolution, bin_threshold);
+
+  if (DrainageDensity != NoDataValue){ 
+    set_HillslopeLength_Density();
+  }
+  else{
+    cout << "\nDrainage Density has not been set, so the hillslope length cannot be set." << endl;
+  }
+
+
+
+}
 
 #endif

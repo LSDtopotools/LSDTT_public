@@ -284,7 +284,19 @@ class LSDBasin
   /// @author SWDG
   /// @date 12/12/13
   void set_Perimeter(LSDFlowInfo& FlowInfo);
-    
+  
+  /// @brief Set the four different hillslope length measurements for the basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @param HillslopeLengths LSDRaster of hillslope lengths from the hilltop flow routing method.
+  /// @param Slope LSDRaster of slope.
+  /// @param DinfArea D-infinity Flowarea LSDRaster.
+  /// @param log_bin_width Width (in log space) of the bins, with respect to D_inf.
+  /// @param SplineResolution Number of values between each point for the spline curve.
+  /// @param bin_threshold Threshold fraction of values needed to keep a bin.
+  /// @author SWDG
+  /// @date 12/12/13
+  void set_all_HillslopeLengths(LSDFlowInfo& FlowInfo, LSDRaster& HillslopeLengths, LSDRaster& Slope, LSDRaster& DinfArea, double log_bin_width, int SplineResolution, double bin_threshold);  
+
   protected:
   
   //These instance variables are set at initialisation
