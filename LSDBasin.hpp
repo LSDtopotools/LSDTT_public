@@ -268,7 +268,7 @@ class LSDBasin
   /// @param Path The output path where the data files will be written to, including the final slash. 
   /// @author SWDG
   /// @date 12/12/13  
-  void set_Plot_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, double log_bin_width, int SplineResolution, double bin_threshold, string Path);
+  void Plot_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, double log_bin_width, int SplineResolution, double bin_threshold, string Path);
   
   /// @brief Set the mean aspect of a basin.
   /// @param FlowInfo Flowinfo object.
@@ -295,7 +295,34 @@ class LSDBasin
   /// @param bin_threshold Threshold fraction of values needed to keep a bin.
   /// @author SWDG
   /// @date 12/12/13
-  void set_all_HillslopeLengths(LSDFlowInfo& FlowInfo, LSDRaster& HillslopeLengths, LSDRaster& Slope, LSDRaster& DinfArea, double log_bin_width, int SplineResolution, double bin_threshold);  
+  void set_all_HillslopeLengths(LSDFlowInfo& FlowInfo, LSDRaster& HillslopeLengths, LSDRaster& Slope, 
+                                LSDRaster& DinfArea, double log_bin_width, int SplineResolution, double bin_threshold);  
+
+  /// @brief Set all of the basin parameters with one call.
+  ///
+  /// @details Runs polyfit to get the elevation derivatives, so can be quite memory intensive. Method
+  /// calls all the setters one by one, to populate all the basin parameters. So a
+  /// basin can be created and all it's properties set with 2 calls. The erosion rates have default 
+  /// parameters of -9999 as these are rarely used variables.
+  /// @param Elevation LSDRaster of filled elevation values.
+  /// @param FlowInfo Flowinfo object.
+  /// @param CHT LSDRaster of hilltop curvatures.
+  /// @param StreamNetwork LSDIndexRaster of the stream network.
+  /// @param HillslopeLengths LSDRaster of hillslope lengths from the hilltop flow routing method.
+  /// @param Relief LSDRaster of the hilltop relief.
+  /// @param window_radius Radius in spatial units for the polyft routine.
+  /// @param log_bin_width Width (in log space) of the bins, with respect to D_inf. Default value is 0.1.
+  /// @param SplineResolution Number of values between each point for the spline curve. Default value is 10000.
+  /// @param bin_threshold Threshold fraction of values needed to keep a bin. Default value is 0.
+  /// @param CriticalSlope Slope threshold used for E* R* calculations. Default value is 0.4.
+  /// @param CosmoErosionRate Erosion rate from cosmo.
+  /// @param OtherErosionRate Erosion rate from another source.
+  /// @author SWDG
+  /// @date 12/12/13
+  void set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& CHT, LSDIndexRaster& StreamNetwork,
+                          LSDRaster& HillslopeLengths, LSDRaster& Relief, double window_radius, double log_bin_width, 
+                          int SplineResolution, double bin_threshold, double CriticalSlope, 
+                          double CosmoErosionRate = -9999, double OtherErosionRate = -9999);
 
   protected:
   

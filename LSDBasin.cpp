@@ -277,7 +277,7 @@ void LSDBasin::set_HillslopeLengths_Boomerang(LSDRaster& Slope, LSDRaster& DinfA
 // Generate data to create boomerang plots. 
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDBasin::set_Plot_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, double log_bin_width, int SplineResolution, double bin_threshold, string Path){
+void LSDBasin::Plot_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, double log_bin_width, int SplineResolution, double bin_threshold, string Path){
   
   int j;
   int i;
@@ -467,8 +467,58 @@ void LSDBasin::set_all_HillslopeLengths(LSDFlowInfo& FlowInfo, LSDRaster& Hillsl
     cout << "\nDrainage Density has not been set, so the hillslope length cannot be set." << endl;
   }
 
+}
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Set all of the basin parameters with one call.
+//
+// Runs polyfit to get the elevation derivatives, so can be quite memory intensive. Method
+// calls all the setters one by one, to populate all the basin parameters. So a
+// basin can be created and all it's properties set with 2 calls. The erosion rates have default 
+// parameters of -9999 as these are rarely used variables.
+// SWDG 12/12/13
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDBasin::set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& CHT, LSDIndexRaster& StreamNetwork,
+                                  LSDRaster& HillslopeLengths, LSDRaster& Relief, double window_radius, double log_bin_width,
+                                  int SplineResolution, double bin_threshold, double CriticalSlope, double CosmoErosionRate, 
+                                  double OtherErosionRate){
+
+  // coefficent matrices for polyfit routine
+  Array2D<double> a;
+  Array2D<double> b;
+  Array2D<double> c;
+  Array2D<double> d;
+  Array2D<double> e;
+  Array2D<double> f;
+
+  Elevation.calculate_polyfit_coefficient_matrices(window_radius, a, b, c, d, e, f);
+  LSDRaster TotalCurv = Elevation.calculate_polyfit_curvature (a,b);
+  LSDRaster ProfileCurv = Elevation.calculate_polyfit_profile_curvature (a,b,c,d,e);
+  LSDRaster PlanCurv = Elevation.calculate_polyfit_planform_curvature (a,b,c,d,e);
+  LSDRaster Aspect = Elevation.calculate_polyfit_aspect(d,e);  
+  LSDRaster Slope = Elevation.calculate_polyfit_slope(d,e);
+  LSDRaster DinfArea = Elevation.D_inf_units(); 
+  
+  set_SlopeMean(FlowInfo, Slope);
+  set_ElevationMean(FlowInfo, Elevation);
+  set_ReliefMean(FlowInfo, Relief);
+  set_PlanCurvMean(FlowInfo, PlanCurv);
+  set_ProfileCurvMean(FlowInfo, ProfileCurv);
+  set_TotalCurvMean(FlowInfo, TotalCurv);
+  set_PlanCurvMax(FlowInfo, PlanCurv);
+  set_ProfileCurvMax(FlowInfo, ProfileCurv);
+  set_TotalCurvMax(FlowInfo, TotalCurv);
+  set_CHTMean(FlowInfo, CHT);
+  set_AspectMean(FlowInfo, Aspect);
+  set_FlowLength(StreamNetwork, FlowInfo);
+  set_DrainageDensity();
+  set_all_HillslopeLengths(FlowInfo, HillslopeLengths, Slope, DinfArea, log_bin_width, SplineResolution, bin_threshold);
+  set_Perimeter(FlowInfo);
+  set_EStar_RStar(CriticalSlope);
+  set_CosmoErosionRate(CosmoErosionRate);
+  set_OtherErosionRate(OtherErosionRate);
 
 }
+
 
 #endif
