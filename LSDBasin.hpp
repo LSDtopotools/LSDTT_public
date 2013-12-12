@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <algorithm>
 #include "TNT/tnt.h"
 #include "LSDFlowInfo.hpp"
 #include "LSDRaster.hpp"
@@ -141,57 +142,64 @@ class LSDBasin
   /// @param Elevation Values to find the mean of.
   /// @author SWDG
   /// @date 11/12/13
-  void set_ElevationMean(LSDFlowInfo& FlowInfo, LSDRaster Elevation) { ElevationMean = CalculateBasinMean(FlowInfo, Elevation) ; }
+  void set_ElevationMean(LSDFlowInfo& FlowInfo, LSDRaster Elevation) { ElevationMean = CalculateBasinMean(FlowInfo, Elevation); }
 
   /// @brief Set the mean Relief of a basin.
   /// @param FlowInfo Flowinfo object.
   /// @param Relief Values to find the mean of.
   /// @author SWDG
   /// @date 11/12/13
-  void set_ReliefMean(LSDFlowInfo& FlowInfo, LSDRaster Relief) { ReliefMean = CalculateBasinMean(FlowInfo, Relief) ; }
+  void set_ReliefMean(LSDFlowInfo& FlowInfo, LSDRaster Relief) { ReliefMean = CalculateBasinMean(FlowInfo, Relief); }
 
   /// @brief Set the mean PlanCurve of a basin.
   /// @param FlowInfo Flowinfo object.
-  /// @param PlanCurve Values to find the mean of.
+  /// @param PlanCurv Values to find the mean of.
   /// @author SWDG
   /// @date 11/12/13
-  void set_PlanCurvMean(LSDFlowInfo& FlowInfo, LSDRaster PlanCurv) { PlanCurvMean = CalculateBasinMean(FlowInfo, PlanCurv) ; }
+  void set_PlanCurvMean(LSDFlowInfo& FlowInfo, LSDRaster PlanCurv) { PlanCurvMean = CalculateBasinMean(FlowInfo, PlanCurv); }
 
   /// @brief Set the mean ProfCurv of a basin.
   /// @param FlowInfo Flowinfo object.
-  /// @param ProfCurv Values to find the mean of.
+  /// @param ProfileCurv Values to find the mean of.
   /// @author SWDG
   /// @date 11/12/13
-  void set_ProfileCurvMean(LSDFlowInfo& FlowInfo, LSDRaster ProfileCurv) { ProfileCurvMean = CalculateBasinMean(FlowInfo, ProfileCurv) ; }
+  void set_ProfileCurvMean(LSDFlowInfo& FlowInfo, LSDRaster ProfileCurv) { ProfileCurvMean = CalculateBasinMean(FlowInfo, ProfileCurv); }
 
   /// @brief Set the mean TotalCurv of a basin.
   /// @param FlowInfo Flowinfo object.
   /// @param TotalCurv Values to find the mean of.
   /// @author SWDG
   /// @date 11/12/13
-  void set_TotalCurvMean(LSDFlowInfo& FlowInfo, LSDRaster TotalCurv) { TotalCurvMean = CalculateBasinMean(FlowInfo, TotalCurv) ; }
+  void set_TotalCurvMean(LSDFlowInfo& FlowInfo, LSDRaster TotalCurv) { TotalCurvMean = CalculateBasinMean(FlowInfo, TotalCurv); }
 
   /// @brief Set the max PlanCurve of a basin.
   /// @param FlowInfo Flowinfo object.
-  /// @param PlanCurve Values to find the max of.
+  /// @param PlanCurv Values to find the max of.
   /// @author SWDG
   /// @date 11/12/13
-  void set_PlanCurvMax(LSDFlowInfo& FlowInfo, LSDRaster PlanCurv) { PlanCurvMax = CalculateBasinMax(FlowInfo, PlanCurv) ; }
+  void set_PlanCurvMax(LSDFlowInfo& FlowInfo, LSDRaster PlanCurv) { PlanCurvMax = CalculateBasinMax(FlowInfo, PlanCurv); }
 
   /// @brief Set the max ProfCurv of a basin.
   /// @param FlowInfo Flowinfo object.
-  /// @param ProfCurv Values to find the max of.
+  /// @param ProfileCurv Values to find the max of.
   /// @author SWDG
   /// @date 11/12/13
-  void set_ProfileCurvMax(LSDFlowInfo& FlowInfo, LSDRaster ProfileCurv) { ProfileCurvMax = CalculateBasinMax(FlowInfo, ProfileCurv) ; }
+  void set_ProfileCurvMax(LSDFlowInfo& FlowInfo, LSDRaster ProfileCurv) { ProfileCurvMax = CalculateBasinMax(FlowInfo, ProfileCurv); }
 
   /// @brief Set the max TotalCurv of a basin.
   /// @param FlowInfo Flowinfo object.
   /// @param TotalCurv Values to find the max of.
   /// @author SWDG
   /// @date 11/12/13
-  void set_TotalCurvMax(LSDFlowInfo& FlowInfo, LSDRaster TotalCurv) { TotalCurvMax = CalculateBasinMax(FlowInfo, TotalCurv) ; }
+  void set_TotalCurvMax(LSDFlowInfo& FlowInfo, LSDRaster TotalCurv) { TotalCurvMax = CalculateBasinMax(FlowInfo, TotalCurv); }
  
+  /// @brief Set the mean hilltop curvature of a basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @param CHT Values to find the mean of.
+  /// @author SWDG
+  /// @date 12/12/13
+  void set_CHTMean(LSDFlowInfo& FlowInfo, LSDRaster CHT) { CHTMean = CalculateBasinMean(FlowInfo, CHT); }
+
   /// @brief Set the Cosmogenic erosion rate.
   /// @param ErosionRate Erosion rate - No sanity check on this value.
   /// @author SWDG
@@ -204,6 +212,47 @@ class LSDBasin
   /// @date 11/12/13
   void set_OtherErosionRate(double ErosionRate) { OtherErosionRate = ErosionRate; }
  
+  /// @brief Calculate E* and R* values for the basin, using hilltop flow routed hillslope lengths. 
+  /// @param CriticalSlope slope threshold value, typically 0.4.
+  /// @author SWDG
+  /// @date 12/12/13
+  void set_EStar_RStar(double CriticalSlope);
+ 
+  /// @brief Calculate flow length for the basin using the D8 flow directions. 
+  /// @param StreamNetwork the channel network.
+  /// @param FlowInfo Flowinfo object.
+  /// @author SWDG
+  /// @date 12/12/13
+  void set_FlowLength(LSDIndexRaster& StreamNetwork, LSDFlowInfo& FlowInfo);
+
+  /// @brief Set basin drainage density.
+  /// @author SWDG
+  /// @date 12/12/13
+  void set_DrainageDensity() { DrainageDensity = FlowLength/Area ; }
+  
+  /// @brief Set the mean HillslopeLength from hilltop flow routing.
+  /// @param FlowInfo Flowinfo object.
+  /// @param HillslopeLengths Values to find the mean of.
+  /// @author SWDG
+  /// @date 12/12/13
+  void set_HillslopeLength_HFR(LSDFlowInfo& FlowInfo, LSDRaster HillslopeLengths) { HillslopeLength_HFR = CalculateBasinMean(FlowInfo, HillslopeLengths); }
+ 
+  /// @brief Set mean HillslopeLengths from boomerang plots from both splines and binned data.
+  /// @param Slope LSDRaster of slope.
+  /// @param DinfArea D-infinity Flowarea LSDRaster.
+  /// @param FlowInfo Flowinfo object.
+  /// @param log_bin_width Width (in log space) of the bins, with respect to D_inf.
+  /// @param SplineResolution Number of values between each point for the spline curve.
+  /// @param bin_threshold Threshold fraction of values needed to keep a bin. 
+  /// @author SWDG
+  /// @date 12/12/13
+  void set_HillslopeLengths_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, double log_bin_width, int SplineResolution, double bin_threshold);
+ 
+  /// @brief Set the mean HillslopeLength from drainage density.
+  /// @author SWDG
+  /// @date 12/12/13
+  void set_HillslopeLength_Density() { HillslopeLength_Density = (1 / (2 * DrainageDensity)); }
+    
   protected:
   
   //These instance variables are set at initialisation

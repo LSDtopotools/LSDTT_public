@@ -1,5 +1,6 @@
 #include <vector>
 #include <string>
+#include <algorithm>
 #include "TNT/tnt.h"
 #include "LSDFlowInfo.hpp"
 #include "LSDRaster.hpp"
@@ -135,7 +136,6 @@ double LSDBasin::CalculateBasinMean(LSDFlowInfo& FlowInfo, LSDRaster Data){
     else {
       ++CountNDV;
     }
-    
   }
 
   BasinAverage = TotalData/(NumberOfCells-CountNDV);
@@ -149,6 +149,8 @@ double LSDBasin::CalculateBasinMean(LSDFlowInfo& FlowInfo, LSDRaster Data){
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 double LSDBasin::CalculateBasinMax(LSDFlowInfo& FlowInfo, LSDRaster Data){
+
+  //could use max_element here? how would that cope with NDVs??
 
   int i;
   int j;
@@ -168,5 +170,106 @@ double LSDBasin::CalculateBasinMax(LSDFlowInfo& FlowInfo, LSDRaster Data){
     
   return MaxData;
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Calculate E* and R* values for the basin, using hilltop flow routed hillslope 
+// lengths. 
+// SWDG 12/12/13
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDBasin::set_EStar_RStar(double CriticalSlope){
+
+    EStar = (2 * (abs(CHTMean)) * HillslopeLength_HFR) / CriticalSlope;
+    RStar = ReliefMean / (HillslopeLength_HFR * CriticalSlope);
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Calculate flow length for the basin using the D8 flow directions. 
+// SWDG 12/12/13
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDBasin::set_FlowLength(LSDIndexRaster& StreamNetwork, LSDFlowInfo& FlowInfo){
+
+  int j;
+  int i;
+  double LengthSum = 0;
+  double two_times_root2 = 2.828427;
+  Array2D<int> FlowDir = FlowInfo.get_FlowDirection();
+
+
+  //Loop over every pixel and record it's stream length and basin ID in two vectors  
+  for (int q = 0; q < int(BasinNodes.size()); ++q){
+    
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+           
+     if (StreamNetwork.get_data_element(i,j) != NoDataValue){
+       if ((FlowDir[i][j] % 2) != 0 && (FlowDir[i][j] != -1 )){ //is odd but not -1
+         LengthSum += (DataResolution * two_times_root2); //diagonal
+       }
+       else if (FlowDir[i][j] % 2 == 0){  //is even
+         LengthSum +=  DataResolution; //cardinal                   
+       }
+     }
+  }
+
+  FlowLength = LengthSum;
+ 
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Calculate hillslope lengths from boomerang plots. 
+// SWDG 12/12/13
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDBasin::set_HillslopeLengths_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, double log_bin_width, int SplineResolution, double bin_threshold){
+  
+  int j;
+  int i;
+  Array2D<double> slope(NRows, NCols, NoDataValue);
+  Array2D<double> area(NRows, NCols, NoDataValue);
+  
+  //create subset arrays for just the basin data - this should be rolled into its own method.
+  for (int q = 0; q < int(BasinNodes.size()); ++q){
+    
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    
+      slope[i][j] = Slope.get_data_element(i,j);
+      area[i][j] = DinfArea.get_data_element(i,j);
+    
+  }
+
+  //do some log binning
+  vector<double> Mean_x_out;
+  vector<double> Mean_y_out;
+  vector<double> Midpoints_out;
+  vector<double> STDDev_x_out;
+  vector<double> STDDev_y_out;
+  vector<double> STDErr_x_out;
+  vector<double> STDErr_y_out;
+  vector<int> number_observations;
+  
+  log_bin_data(area, slope, log_bin_width, Mean_x_out, Mean_y_out, Midpoints_out, STDDev_x_out, STDDev_y_out, STDErr_x_out, STDErr_y_out, number_observations, NoDataValue);  
+  
+  //remove empty bins 
+  RemoveSmallBins(Mean_x_out, Mean_y_out, Midpoints_out, STDDev_x_out, STDDev_y_out, STDErr_x_out, STDErr_y_out, number_observations, bin_threshold);
+  
+  //index value of max slope
+  int slope_max_index = distance(Mean_y_out.begin(), max_element(Mean_y_out.begin(), Mean_y_out.end()));
+
+  //hillslope length from the maximum binned values
+  HillslopeLength_Binned = Mean_x_out[slope_max_index]/DataResolution;
+      
+  // Fit splines through the binned data to get the LH
+  vector<double> Spline_X;
+  vector<double> Spline_Y;
+  PlotCubicSplines(Mean_x_out, Mean_y_out, SplineResolution, Spline_X, Spline_Y);
+
+  //index value of max spline slope
+  int slope_max_index_spline = distance(Spline_Y.begin(), max_element(Spline_Y.begin(), Spline_Y.end()));
+
+  //hillslope length from spline curve
+  HillslopeLength_Spline = Spline_X[slope_max_index_spline]/DataResolution;
+
+}
+
+
 
 #endif
