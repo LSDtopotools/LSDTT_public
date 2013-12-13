@@ -77,8 +77,8 @@ void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDChannelNetwo
     
   }
   
-  Centroid_i = (i_max - i_min)/2;
-  Centroid_j = (j_max - j_min)/2;   //how do these handle 0.5s ??
+  Centroid_i = i_min + ((i_max - i_min)/2);
+  Centroid_j = j_min + ((j_max - j_min)/2);   //how do these handle 0.5s ??
 
 
   //finished setting all the instance variables
