@@ -15,11 +15,18 @@ using namespace TNT;
 #ifndef LSDBasin_H
 #define LSDBasin_H
 
+///@brief Object to store information about drainage basins and generate basin average metrics..
 class LSDBasin
 {
 
   public:
   
+  /// @brief Default constructor method used to create a basin object.
+  /// @param Junction outlet junction of the basin to be constructed.
+  /// @param FlowInfo LSDFlowInfo object.
+  /// @param ChanNet Channel network object.
+  /// @author SWDG
+  /// @date 11/12/12
   LSDBasin(int Junction, LSDFlowInfo& FlowInfo, LSDChannelNetwork& ChanNet)
 											{ create(Junction, FlowInfo, ChanNet); }
 
@@ -530,7 +537,6 @@ class LSDBasin
   /// @author SWDG
   /// @date 12/12/13 
   LSDRaster write_RStar(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(RStar, FlowInfo); }
-  
   
   /// @brief Calculate the width of a hollow - to be moved into LSDHollow.
   /// @param FlowInfo Flowinfo object.
