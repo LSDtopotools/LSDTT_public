@@ -20,7 +20,7 @@
 #include "../LSDRaster.hpp"
 #include "../LSDIndexRaster.hpp"
 #include "../LSDFlowInfo.hpp"
-#include "../LSDChannelNetwork.hpp"
+#include "../LSDJunctionNetwork.hpp"
 #include "../LSDIndexChannelTree.hpp"
 
 
@@ -52,7 +52,7 @@ int main (int nNumberofArgs,char *argv[])
 	string DEM_name;
 	string fill_ext = "_fill";
 	file_info_in >> DEM_name;
-	double MinSlope;
+	float MinSlope;
 	int threshold;
 	file_info_in >> MinSlope >> threshold;
 	file_info_in.close();
@@ -98,7 +98,7 @@ int main (int nNumberofArgs,char *argv[])
 
 	// now get the junction network
 	cout << "Initializing Channel network" << endl;
-	LSDChannelNetwork ChanNetwork(sources, FlowInfo);
+	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 	cout << "got channel_network" << endl;
 
 	// get the stream orders and the junctions

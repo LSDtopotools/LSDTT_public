@@ -106,8 +106,8 @@ class LSDFlowInfo
 	LSDFlowInfo(vector<string> BoundaryConditions, LSDRaster& TopoRaster)
 									{ create(BoundaryConditions, TopoRaster); }
 
-	/// @brief Copy of the LSDChannelNetwork description here when written.
-	friend class LSDChannelNetwork;
+	/// @brief Copy of the LSDJunctionNetwork description here when written.
+	friend class LSDJunctionNetwork;
 
 	// some functions for retrieving information out of the data vectors
 
@@ -167,11 +167,11 @@ class LSDFlowInfo
 	/// @return Number of columns as an integer.
   	int get_NCols() const				{ return NCols; }
   	/// @return Minimum X coordinate as an integer.
-	double get_XMinimum() const			{ return XMinimum; }
+	float get_XMinimum() const			{ return XMinimum; }
 	/// @return Minimum Y coordinate as an integer.
-	double get_YMinimum() const			{ return YMinimum; }
+	float get_YMinimum() const			{ return YMinimum; }
 	/// @return Data resolution as an integer.
-	double get_DataResolution() const	{ return DataResolution; }
+	float get_DataResolution() const	{ return DataResolution; }
 	/// @return No Data Value as an integer.
 	int get_NoDataValue() const			{ return NoDataValue; }
 	/// @return Number of nodes with data as an integer.
@@ -267,7 +267,7 @@ class LSDFlowInfo
   void pickle(string filename);
 
   /// @brief Method to ingest the channel heads raster generated using channel_heads_driver.cpp
-  /// into a vector of source nodes so that an LSDChannelNetwork can be created easily 
+  /// into a vector of source nodes so that an LSDJunctionNetwork can be created easily 
   /// from them. 
   ///
   /// @details Assumes the FlowInfo object has the same dimensions as the channel heads raster.
@@ -334,7 +334,7 @@ class LSDFlowInfo
   ///@param m_over_n
   ///@param A_0
   ///@return Vector of chi values.
-	vector<double> get_upslope_chi(int starting_node, double m_over_n, double A_0);
+	vector<float> get_upslope_chi(int starting_node, float m_over_n, float A_0);
   ///@brief This function calculates the chi function for all the nodes upslope
   ///of a given list of nodes.
   ///@param upslope_pixel_list Vector of nodes to analyse.
@@ -343,7 +343,7 @@ class LSDFlowInfo
   ///@return Vector of chi values.
    /// @author SMM
   /// @date 01/016/12
-  vector<double> get_upslope_chi(vector<int>& upslope_pixel_list, double m_over_n, double A_0);
+  vector<float> get_upslope_chi(vector<int>& upslope_pixel_list, float m_over_n, float A_0);
 
 	/// @brief Calculates the distance from outlet of all the base level nodes.
 	/// Distance is given in spatial units, not in pixels.
@@ -377,12 +377,12 @@ class LSDFlowInfo
   ///Number of columns.
 	int NCols;
 	///Minimum X coordinate.
-  double XMinimum;
+  float XMinimum;
 	///Minimum Y coordinate.
-	double YMinimum;
+	float YMinimum;
 
 	///Data resolution.
-	double DataResolution;
+	float DataResolution;
 	///No data value.
 	int NoDataValue;
 

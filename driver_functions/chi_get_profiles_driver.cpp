@@ -54,21 +54,21 @@ int main (int nNumberofArgs,char *argv[])
 	string fill_ext = "_fill";
 	file_info_in >> DEM_name;
 	int junction_number;
-	double pruning_threshold;
+	float pruning_threshold;
 	int threshold;
-	double A_0;
+	float A_0;
 	int minimum_segment_length;
-	double sigma;
-	double start_movern;
-	double d_movern;
-	double Minimum_Slope;
+	float sigma;
+	float start_movern;
+	float d_movern;
+	float Minimum_Slope;
 	int n_movern;
 	int target_nodes;
 	int n_iterations;
-	double fraction_dchi_for_variation;
-	double vertical_interval;
-	double horizontal_interval;
-	double area_thin_frac;
+	float fraction_dchi_for_variation;
+	float vertical_interval;
+	float horizontal_interval;
+	float area_thin_frac;
 	int target_skip;
 
 	file_info_in >> Minimum_Slope >> threshold >> junction_number
@@ -164,7 +164,7 @@ int main (int nNumberofArgs,char *argv[])
 
     for(int i = 0; i<n_movern; i++)
 	  {
-		  double this_movern = start_movern + double(i)*d_movern;
+		  float this_movern = start_movern + float(i)*d_movern;
 
 		  cout << "This m/n is: " << this_movern << endl;
 

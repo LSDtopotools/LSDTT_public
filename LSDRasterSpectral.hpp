@@ -98,16 +98,16 @@ class LSDRasterSpectral: public LSDRaster
   /// @return LSDRasterSpectral
   /// @param nrows An integer of the number of rows.
   /// @param ncols An integer of the number of columns.
-  /// @param xmin A double of the minimum X coordinate.
-  /// @param ymin A double of the minimum Y coordinate.
-  /// @param cellsize A double of the cellsize.
+  /// @param xmin A float of the minimum X coordinate.
+  /// @param ymin A float of the minimum Y coordinate.
+  /// @param cellsize A float of the cellsize.
   /// @param ndv An integer of the no data value.
-  /// @param data An Array2D of doubles in the shape nrows*ncols,
+  /// @param data An Array2D of floats in the shape nrows*ncols,
   ///containing the data to be written.
   /// @author SMM
   /// @date 18/12/2012
-  LSDRasterSpectral(int nrows, int ncols, double xmin, double ymin,
-	          double cellsize, double ndv, Array2D<double> data)
+  LSDRasterSpectral(int nrows, int ncols, float xmin, float ymin,
+	          float cellsize, float ndv, Array2D<float> data)
 								{ create(nrows, ncols, xmin, ymin, cellsize, ndv, data); }
 	/// @brief Create an LSDRasterSpectral from an LSDRaster object.
   /// @param An_LSDRaster LSDRaster object.
@@ -133,7 +133,7 @@ class LSDRasterSpectral: public LSDRaster
     /// @param Lx Array x dimension.
    	/// @author David Milodowski
     /// @date 18/12/2012
-    void dfftw2D_fwd(Array2D<double>& InputArray, Array2D<double>& OutputArrayReal, Array2D<double>& OutputArrayImaginary,
+    void dfftw2D_fwd(Array2D<float>& InputArray, Array2D<float>& OutputArrayReal, Array2D<float>& OutputArrayImaginary,
 	                 int transform_direction, int Ly, int Lx);
 
     /// @brief Computes the inverse fast fourier transform of a 2D discrete dataset.
@@ -145,8 +145,8 @@ class LSDRasterSpectral: public LSDRaster
     /// @param Lx Array x dimension.
   	/// @author David Milodowski
     /// @date 18/12/2012
-    void dfftw2D_inv(Array2D<double>& InputArrayReal, Array2D<double>& InputArrayImaginary,
-  	                 Array2D<double>& OutputArray, int transform_direction, int Ly, int Lx);
+    void dfftw2D_inv(Array2D<float>& InputArrayReal, Array2D<float>& InputArrayImaginary,
+  	                 Array2D<float>& OutputArray, int transform_direction, int Ly, int Lx);
 
     /// @brief Detrend Data.
     ///
@@ -159,8 +159,8 @@ class LSDRasterSpectral: public LSDRaster
     /// @param ndv No data value.
   	/// @author David Milodowski
     /// @date 18/12/2012
-    void detrend2D(Array2D<double>& zeta, Array2D<double>& zeta_detrend,
-  	               Array2D<double>& trend_plane, int nrows, int ncols, double ndv);
+    void detrend2D(Array2D<float>& zeta, Array2D<float>& zeta_detrend,
+  	               Array2D<float>& trend_plane, int nrows, int ncols, float ndv);
 
     /// @brief Hann Window Module.
     ///
@@ -174,8 +174,8 @@ class LSDRasterSpectral: public LSDRaster
     /// @param ndv No data value.
   	/// @author David Milodowski
     /// @date 18/12/2012
-    void window_data_Hann2D(Array2D<double>& zeta_detrend, Array2D<double>& zeta_Hann2D,
-  	                        Array2D<double>& Hann2D, double& WSS, int nrows, int ncols, int ndv);
+    void window_data_Hann2D(Array2D<float>& zeta_detrend, Array2D<float>& zeta_Hann2D,
+  	                        Array2D<float>& Hann2D, float& WSS, int nrows, int ncols, int ndv);
 
     /// @brief SHIFT ORIGIN OF SPECTRUM IN FOURIER DOMAIN.
     ///
@@ -188,8 +188,8 @@ class LSDRasterSpectral: public LSDRaster
     /// @param Lx Array x dimension.
   	/// @author David Milodowski
     /// @date 18/12/2012
-    void shift_spectrum(Array2D<double>& spectrum_real,  Array2D<double>& spectrum_imaginary,
-  	                    Array2D<double>& spectrum_real_shift, Array2D<double>& spectrum_imaginary_shift, int Ly, int Lx);
+    void shift_spectrum(Array2D<float>& spectrum_real,  Array2D<float>& spectrum_imaginary,
+  	                    Array2D<float>& spectrum_real_shift, Array2D<float>& spectrum_imaginary_shift, int Ly, int Lx);
 
     /// @brief DE-SHIFT ORIGIN OF SPECTRUM.
     ///
@@ -202,8 +202,8 @@ class LSDRasterSpectral: public LSDRaster
     /// @param Lx Array x dimension.
   	/// @author David Milodowski
     /// @date 18/12/2012
-    void shift_spectrum_inv(Array2D<double>& FilteredSpectrumReal, Array2D<double>& FilteredSpectrumImaginary,
-  	                        Array2D<double>& FilteredSpectrumReal_deshift, Array2D<double>& FilteredSpectrumImaginary_deshift,
+    void shift_spectrum_inv(Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary,
+  	                        Array2D<float>& FilteredSpectrumReal_deshift, Array2D<float>& FilteredSpectrumImaginary_deshift,
   	                        int Ly, int Lx);
 
     /// @brief CALCULATE THE DFT PERIODOGRAM.
@@ -217,8 +217,8 @@ class LSDRasterSpectral: public LSDRaster
     /// @return 2D array of DFT Periodogram.
    	/// @author David Milodowski
     /// @date 18/12/2012
-    Array2D<double> calculate_2D_PSD(Array2D<double>& spectrum_real_shift, Array2D<double>& spectrum_imaginary_shift,
-  	                        int Lx, int Ly, double WSS);
+    Array2D<float> calculate_2D_PSD(Array2D<float>& spectrum_real_shift, Array2D<float>& spectrum_imaginary_shift,
+  	                        int Lx, int Ly, float WSS);
 
     /// @brief GET RADIAL POWER SPECTRUM.
     ///
@@ -232,8 +232,8 @@ class LSDRasterSpectral: public LSDRaster
     /// @param dem_res DEM resolution.
    	/// @author David Milodowski
     /// @date 18/12/2012
-    void calculate_radial_PSD(Array2D<double>& P_DFT, vector<double>& RadialPSD_output, vector<double>& RadialFrequency_output,
-  	                        int Lx, int Ly, double WSS, double dem_res);
+    void calculate_radial_PSD(Array2D<float>& P_DFT, vector<float>& RadialPSD_output, vector<float>& RadialFrequency_output,
+  	                        int Lx, int Ly, float WSS, float dem_res);
 
     /// @brief COMPUTE DISCRETE FAST FOURIER TRANSFORM OF A REAL, 2-DIMENSIONAL DATASET.
     ///
@@ -242,7 +242,7 @@ class LSDRasterSpectral: public LSDRaster
     /// @param LogBinWidth Wwidth of the logarithmically spaced bins. For topography, suggest this is 0.1 to start.
   	/// @author David Milodowski
     /// @date 18/12/2012
-  	void fftw2D_spectral_analysis(char* file_id, double LogBinWidth);
+  	void fftw2D_spectral_analysis(char* file_id, float LogBinWidth);
 
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   	// FUNCTIONS TO ADD WEIGHTS TO FOURIER SPECTRA (FOR USE IN SPECTRA FILTERS)
@@ -263,9 +263,9 @@ class LSDRasterSpectral: public LSDRaster
     /// @param f2
    	/// @author David Milodowski
     /// @date 18/12/2012
-    void bandpass_filter(Array2D<double>& RawSpectrumReal, Array2D<double>& RawSpectrumImaginary,
-  	                     Array2D<double>& FilteredSpectrumReal, Array2D<double>& FilteredSpectrumImaginary,
-  	                      int Lx, int Ly, double dem_res, double f1, double f2);
+    void bandpass_filter(Array2D<float>& RawSpectrumReal, Array2D<float>& RawSpectrumImaginary,
+  	                     Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary,
+  	                      int Lx, int Ly, float dem_res, float f1, float f2);
 
     /// @brief LOWPASS FILTER.
     ///
@@ -281,9 +281,9 @@ class LSDRasterSpectral: public LSDRaster
     /// @param f2
    	/// @author David Milodowski
     /// @date 18/12/2012
-    void lowpass_filter(Array2D<double>& RawSpectrumReal, Array2D<double>& RawSpectrumImaginary,
-  	                    Array2D<double>& FilteredSpectrumReal, Array2D<double>& FilteredSpectrumImaginary,
-  	                      int Lx, int Ly, double dem_res, double f1, double f2);
+    void lowpass_filter(Array2D<float>& RawSpectrumReal, Array2D<float>& RawSpectrumImaginary,
+  	                    Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary,
+  	                      int Lx, int Ly, float dem_res, float f1, float f2);
 
     /// @brief HIGHPASS FILTER.
     ///
@@ -299,9 +299,9 @@ class LSDRasterSpectral: public LSDRaster
     /// @param f2
   	/// @author David Milodowski
     /// @date 18/12/2012
-    void highpass_filter(Array2D<double>& RawSpectrumReal, Array2D<double>& RawSpectrumImaginary,
-  	                     Array2D<double>& FilteredSpectrumReal, Array2D<double>& FilteredSpectrumImaginary,
-  	                      int Lx, int Ly, double dem_res, double f1, double f2);
+    void highpass_filter(Array2D<float>& RawSpectrumReal, Array2D<float>& RawSpectrumImaginary,
+  	                     Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary,
+  	                      int Lx, int Ly, float dem_res, float f1, float f2);
 
     /// @brief WIENER FILTER.
     ///
@@ -318,9 +318,9 @@ class LSDRasterSpectral: public LSDRaster
     /// @param WSS Summed square of the weighting coefficients.
    	/// @author David Milodowski
     /// @date 18/12/2012
-  	void wiener_filter(Array2D<double>& RawSpectrumReal, Array2D<double>& RawSpectrumImaginary,
-  	                   Array2D<double>& FilteredSpectrumReal, Array2D<double>& FilteredSpectrumImaginary,
-  	                      int Lx, int Ly, double dem_res, double WSS);
+  	void wiener_filter(Array2D<float>& RawSpectrumReal, Array2D<float>& RawSpectrumImaginary,
+  	                   Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary,
+  	                      int Lx, int Ly, float dem_res, float WSS);
 
   	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   	// MAIN FUNCTIONS USING SPECTRAL FILTERS
@@ -356,7 +356,7 @@ class LSDRasterSpectral: public LSDRaster
   	/// @param FHigh
   	/// @author David Milodowski
     /// @date 18/12/2012
-  	LSDRaster fftw2D_filter(int FilterType, double FLow, double FHigh);
+  	LSDRaster fftw2D_filter(int FilterType, float FLow, float FHigh);
 
   	/// @brief WIENER FILTER FOR A REAL, 2-DIMENSIONAL DATASET.
   	///
@@ -401,8 +401,8 @@ class LSDRasterSpectral: public LSDRaster
 	private:
 	void create();
 	void create(string filename, string extension);
-	void create(int ncols, int nrows, double xmin, double ymin,
-	            double cellsize, double ndv, Array2D<double> data);
+	void create(int ncols, int nrows, float xmin, float ymin,
+	            float cellsize, float ndv, Array2D<float> data);
 	void create(LSDRaster& An_LSDRaster);
 };
 

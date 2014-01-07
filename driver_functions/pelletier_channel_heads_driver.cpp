@@ -35,7 +35,7 @@
 #include "LSDIndexRaster.hpp"
 #include "LSDFlowInfo.hpp"
 #include "LSDRasterSpectral.hpp"
-#include "LSDChannelNetwork.hpp"
+#include "LSDJunctionNetwork.hpp"
 #include "fftw-3.3.1/api/fftw3.h"
 #include "TNT/jama_lu.h"
 #include "TNT/tnt.h"
@@ -54,7 +54,7 @@ int main ()
 	
   LSDRasterSpectral SpectralRaster(topo_test);                                    
 	//char* file_id = "test_spectral";                                                
-	//double LogBinWidth = 0.1;                                                       
+	//float LogBinWidth = 0.1;                                                       
 	//SpectralRaster.fftw2D_spectral_analysis(file_id, LogBinWidth);
 
 	LSDRaster topo_data_filtered = SpectralRaster.fftw2D_wiener();
@@ -67,8 +67,8 @@ int main ()
 	boundary_conditions[2] = "no flux";
 	boundary_conditions[3] = "No flux";
 	
-	double Minimum_Slope = 0.0001;	
-	double threshold = 50;
+	float Minimum_Slope = 0.0001;	
+	float threshold = 50;
 	// get the filled file
 	cout << "Filling the DEM" << endl;
 	LSDRaster filled_topo_test = topo_test.fill(Minimum_Slope);
@@ -82,7 +82,7 @@ int main ()
 	sources = FlowInfo.get_sources_index_threshold(ContributingPixels, threshold); 
 
 	// now get the junction network
-	LSDChannelNetwork ChanNetwork(sources, FlowInfo);
+	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 
 	string tan_curvature_name = "ind_curv";
 	string chan_heads_name = "ind_chan_heads";
@@ -90,20 +90,20 @@ int main ()
 	// STEP 2: Creating a contour curvature map
 	
 	// Calculate polyfit coefficients and the tangential curvature
-  Array2D<double> a;
-  Array2D<double> b;
-  Array2D<double> c;
-  Array2D<double> d;
-  Array2D<double> e;
-  Array2D<double> f;
-  double window_radius=6;
-  double tan_curv_threshold = 0.1;
+  Array2D<float> a;
+  Array2D<float> b;
+  Array2D<float> c;
+  Array2D<float> d;
+  Array2D<float> e;
+  Array2D<float> f;
+  float window_radius=6;
+  float tan_curv_threshold = 0.1;
   
   topo_data_filtered.calculate_polyfit_coefficient_matrices(window_radius, a, b, c, d, e, f);
   LSDRaster tan_curvature = topo_data_filtered.calculate_polyfit_tangential_curvature(a ,b ,c ,d, e);
   // Write curvature raster
   tan_curvature.write_raster(tan_curvature_name, DEM_flt_extension);
-  Array2D<double> tan_curv_array = tan_curvature.get_RasterData();
+  Array2D<float> tan_curv_array = tan_curvature.get_RasterData();
   
 	// Call on the member function
   LSDIndexRaster source_nodes = topo_data_filtered.calculate_pelletier_channel_heads(window_radius, tan_curv_threshold,
@@ -133,7 +133,7 @@ int main ()
     }
   }
   
-  LSDChannelNetwork ChanNetworkPel(source_vector, FlowInfo);
+  LSDJunctionNetwork ChanNetworkPel(source_vector, FlowInfo);
   LSDIndexRaster SOArrayNew = ChanNetworkPel.StreamOrderArray_to_LSDIndexRaster();
 	string SO_name_new = "ind_17n_SO_from_PEL";	
 	SOArrayNew.write_raster(SO_name_new,DEM_flt_extension);	

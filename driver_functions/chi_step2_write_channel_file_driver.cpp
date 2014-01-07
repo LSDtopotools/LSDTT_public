@@ -19,7 +19,7 @@
 #include "../LSDRaster.hpp"
 #include "../LSDIndexRaster.hpp"
 #include "../LSDFlowInfo.hpp"
-#include "../LSDChannelNetwork.hpp"
+#include "../LSDJunctionNetwork.hpp"
 #include "../LSDIndexChannelTree.hpp"
 
 int main (int nNumberofArgs,char *argv[])
@@ -51,21 +51,21 @@ int main (int nNumberofArgs,char *argv[])
 	string fill_ext = "_fill";
 	file_info_in >> DEM_name;
 	int junction_number;
-	double pruning_threshold;
+	float pruning_threshold;
 	int threshold;
-	double A_0;
+	float A_0;
 	int minimum_segment_length;
-	double sigma;
-	double start_movern;
-	double d_movern;
-	double Minimum_Slope;
+	float sigma;
+	float start_movern;
+	float d_movern;
+	float Minimum_Slope;
 	int n_movern;
 	int target_nodes;
 	int n_iterations;
-	double fraction_dchi_for_variation;
-	double vertical_interval;
-	double horizontal_interval;
-	double area_thin_frac;
+	float fraction_dchi_for_variation;
+	float vertical_interval;
+	float horizontal_interval;
+	float area_thin_frac;
 	int target_skip;
 
 	file_info_in >> Minimum_Slope >> threshold >> junction_number
@@ -124,7 +124,7 @@ int main (int nNumberofArgs,char *argv[])
 	sources = FlowInfo.get_sources_index_threshold(ContributingPixels, threshold);
 
 	// now get the junction network
-	LSDChannelNetwork ChanNetwork(sources, FlowInfo);
+	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 
 	// now get a junction and look for the longest channel upstream
 	cout << "creating main stem" << endl;

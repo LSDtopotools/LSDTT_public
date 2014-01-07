@@ -57,7 +57,7 @@
 #include "../LSDRaster.hpp"
 #include "../LSDIndexRaster.hpp"
 #include "../LSDFlowInfo.hpp"
-#include "../LSDChannelNetwork.hpp"
+#include "../LSDJunctionNetwork.hpp"
 #include "../LSDIndexChannelTree.hpp"
 #include "../LSDChiNetwork.hpp"
 
@@ -90,9 +90,9 @@ int main (int nNumberofArgs,char *argv[])
 	string fill_ext = "_fill";
 	file_info_in >> DEM_name;
 	int threshold;
-	double Minimum_Slope;
-	double A_0;
-	double m_over_n;
+	float Minimum_Slope;
+	float A_0;
+	float m_over_n;
 	int no_connecting_nodes;
 
 	file_info_in >> Minimum_Slope >> threshold >> A_0 >> m_over_n >> no_connecting_nodes;
@@ -130,7 +130,7 @@ int main (int nNumberofArgs,char *argv[])
 	sources = FlowInfo.get_sources_index_threshold(ContributingPixels, threshold); 
 
 	// now get the junction network
-	LSDChannelNetwork ChanNetwork(sources, FlowInfo);
+	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 
 	//string tan_curvature_name = "ind_curv";
 	//string chan_heads_name = "ind_chan_heads";
@@ -138,25 +138,25 @@ int main (int nNumberofArgs,char *argv[])
 	// Get the valleys using the contour curvature
 	
 	// Calculate polyfit coefficients and the tangential curvature
-  Array2D<double> a;
-  Array2D<double> b;
-  Array2D<double> c;
-  Array2D<double> d;
-  Array2D<double> e;
-  Array2D<double> f;
+  Array2D<float> a;
+  Array2D<float> b;
+  Array2D<float> c;
+  Array2D<float> d;
+  Array2D<float> e;
+  Array2D<float> f;
   //int NRows = topo_test.get_NRows();
   //int NCols = topo_test.get_NCols();
-  //double XMinimum = topo_test.get_XMinimum();
-  //double YMinimum = topo_test.get_YMinimum();
-  //double DataResolution = topo_test.get_DataResolution();
-  //double NoDataValue = topo_test.get_NoDataValue();
-  double window_radius=6;
+  //float XMinimum = topo_test.get_XMinimum();
+  //float YMinimum = topo_test.get_YMinimum();
+  //float DataResolution = topo_test.get_DataResolution();
+  //float NoDataValue = topo_test.get_NoDataValue();
+  float window_radius=6;
   
   topo_test.calculate_polyfit_coefficient_matrices(window_radius, a, b, c, d, e, f);
   LSDRaster tan_curvature = topo_test.calculate_polyfit_tangential_curvature(a ,b ,c ,d, e);
   
   // Find the valley junctions
-  Array2D<double> tan_curv_array = tan_curvature.get_RasterData();
+  Array2D<float> tan_curv_array = tan_curvature.get_RasterData();
   cout << "got tan curvature array" << endl;
 	Array2D<int> valley_junctions = ChanNetwork.find_valleys(FlowInfo, tan_curv_array, sources, no_connecting_nodes);
 	
@@ -178,7 +178,7 @@ int main (int nNumberofArgs,char *argv[])
 	Channel_heads_raster.write_raster((path_name+DEM_name+CH_name),DEM_flt_extension);
 	
 	//create a channel network based on these channel heads
-	LSDChannelNetwork NewChanNetwork(ChannelHeadNodes, FlowInfo);
+	LSDJunctionNetwork NewChanNetwork(ChannelHeadNodes, FlowInfo);
 	//int n_junctions = NewChanNetwork.get_Number_of_Junctions();
   LSDIndexRaster SOArrayNew = NewChanNetwork.StreamOrderArray_to_LSDIndexRaster();
 	string SO_name_new = "_SO_from_CH";

@@ -100,7 +100,7 @@ using namespace TNT;
 void LSDChannel::create_LSDC(LSDIndexChannel& InChann)
 {
 
-	vector<double> empty_vec;
+	vector<float> empty_vec;
 	Elevation = empty_vec;
 	Chi = empty_vec;
 	DrainageArea = empty_vec;
@@ -129,8 +129,8 @@ void LSDChannel::create_LSDC(LSDIndexChannel& InChann)
 // SMM 2012
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDChannel::create_LSDC(int SJN, int EJN, double downslope_chi,
-                             double m_over_n, double A_0, LSDFlowInfo& FlowInfo,
+void LSDChannel::create_LSDC(int SJN, int EJN, float downslope_chi,
+                             float m_over_n, float A_0, LSDFlowInfo& FlowInfo,
                              LSDRaster& Elevation_Raster)
 {
 
@@ -141,10 +141,10 @@ void LSDChannel::create_LSDC(int SJN, int EJN, double downslope_chi,
 	DataResolution = FlowInfo.get_DataResolution();
 	NoDataValue = FlowInfo.get_NoDataValue();
 
-	double root2 = 1.41421356;
-	double diag_length = root2*DataResolution;
-	double dx;
-	double pixel_area = DataResolution*DataResolution;
+	float root2 = 1.41421356;
+	float diag_length = root2*DataResolution;
+	float dx;
+	float pixel_area = DataResolution*DataResolution;
 
 
 
@@ -200,22 +200,22 @@ void LSDChannel::create_LSDC(int SJN, int EJN, double downslope_chi,
 
 	// the bottom node is at chi of downslope_chi
 	// initiate the chi vector
-	vector<double> empty_vec;
+	vector<float> empty_vec;
 
 
-	vector<double> chi_temp(n_nodes_in_channel,downslope_chi);
+	vector<float> chi_temp(n_nodes_in_channel,downslope_chi);
 
 
-	vector<double> elev_temp(n_nodes_in_channel,double(NoDataValue));
-	vector<double> area_temp(n_nodes_in_channel,double(NoDataValue));
+	vector<float> elev_temp(n_nodes_in_channel,float(NoDataValue));
+	vector<float> area_temp(n_nodes_in_channel,float(NoDataValue));
 
 	// get the first node
-	double curr_area;
+	float curr_area;
 
 	curr_node = NodeSequence[n_nodes_in_channel-1];
 	curr_row = RowI[n_nodes_in_channel-1];
 	curr_col = ColI[n_nodes_in_channel-1];
-	curr_area = double(FlowInfo.retrieve_contributing_pixels_of_node(curr_node))*pixel_area;
+	curr_area = float(FlowInfo.retrieve_contributing_pixels_of_node(curr_node))*pixel_area;
 	area_temp[n_nodes_in_channel-1] = curr_area;
 	elev_temp[n_nodes_in_channel-1] = Elevation_Raster.get_data_element(curr_row,curr_col);
 
@@ -238,7 +238,7 @@ void LSDChannel::create_LSDC(int SJN, int EJN, double downslope_chi,
 		}
 		//cout << "dx is: " << dx << endl;
 
-		curr_area = double(FlowInfo.retrieve_contributing_pixels_of_node(curr_node))*pixel_area;
+		curr_area = float(FlowInfo.retrieve_contributing_pixels_of_node(curr_node))*pixel_area;
 		area_temp[ChIndex] = curr_area;
 		elev_temp[ChIndex] = Elevation_Raster.get_data_element(curr_row,curr_col);
 		chi_temp[ChIndex] = dx*(pow( (A_0/curr_area ),
@@ -262,8 +262,8 @@ void LSDChannel::create_LSDC(int SJN, int EJN, double downslope_chi,
 // SMM 2012
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDChannel::create_LSDC(double downslope_chi,
-                             double m_over_n, double A_0, LSDIndexChannel& InChann, LSDFlowInfo& FlowInfo,
+void LSDChannel::create_LSDC(float downslope_chi,
+                             float m_over_n, float A_0, LSDIndexChannel& InChann, LSDFlowInfo& FlowInfo,
                              LSDRaster& Elevation_Raster)
 {
 
@@ -275,10 +275,10 @@ void LSDChannel::create_LSDC(double downslope_chi,
 	DataResolution = FlowInfo.get_DataResolution();
 	NoDataValue = FlowInfo.get_NoDataValue();
 
-	double root2 = 1.41421356;
-	double diag_length = root2*DataResolution;
-	double dx;
-	double pixel_area = DataResolution*DataResolution;
+	float root2 = 1.41421356;
+	float diag_length = root2*DataResolution;
+	float dx;
+	float pixel_area = DataResolution*DataResolution;
 	//cout << "data res: " << DataResolution << endl;
 
 
@@ -302,20 +302,20 @@ void LSDChannel::create_LSDC(double downslope_chi,
 
 	// the bottom node is at chi of downslope_chi
 	// initiate the chi vector
-	vector<double> empty_vec;
-	vector<double> chi_temp(n_nodes_in_channel,downslope_chi);
-	vector<double> elev_temp(n_nodes_in_channel,double(NoDataValue));
-	vector<double> area_temp(n_nodes_in_channel,double(NoDataValue));
+	vector<float> empty_vec;
+	vector<float> chi_temp(n_nodes_in_channel,downslope_chi);
+	vector<float> elev_temp(n_nodes_in_channel,float(NoDataValue));
+	vector<float> area_temp(n_nodes_in_channel,float(NoDataValue));
 
 	// get the first node
-	double curr_area;
+	float curr_area;
 
 	//cout << "downslope_chi: " << downslope_chi << endl;
 
 	curr_node = NodeSequence[n_nodes_in_channel-1];
 	FlowInfo.retrieve_current_row_and_col(curr_node,curr_row,
                                              curr_col);
-	curr_area = double(FlowInfo.retrieve_contributing_pixels_of_node(curr_node))*pixel_area;
+	curr_area = float(FlowInfo.retrieve_contributing_pixels_of_node(curr_node))*pixel_area;
 	area_temp[n_nodes_in_channel-1] = curr_area;
 	elev_temp[n_nodes_in_channel-1] = Elevation_Raster.get_data_element(curr_row,curr_col);
 
@@ -342,7 +342,7 @@ void LSDChannel::create_LSDC(double downslope_chi,
 		}
 		//cout << "dx is: " << dx << endl;
 
-		curr_area = double(FlowInfo.retrieve_contributing_pixels_of_node(curr_node))*pixel_area;
+		curr_area = float(FlowInfo.retrieve_contributing_pixels_of_node(curr_node))*pixel_area;
 		area_temp[ChIndex] = curr_area;
 		elev_temp[ChIndex] = Elevation_Raster.get_data_element(curr_row,curr_col);
 		chi_temp[ChIndex] = dx*(pow( (A_0/curr_area ),
@@ -373,7 +373,7 @@ void LSDChannel::create_LSDC(double downslope_chi,
 void LSDChannel::create_LSDC(int SJN, int EJN, LSDFlowInfo& FlowInfo)
 {
 
-	vector<double> empty_vec;
+	vector<float> empty_vec;
 	Elevation = empty_vec;
 	Chi = empty_vec;
 	DrainageArea = empty_vec;
@@ -453,7 +453,7 @@ void LSDChannel::create_LSDC(int SJN, int EJN, LSDFlowInfo& FlowInfo)
 void LSDChannel::create_LSDC(int SJ, int SJN, int EJ, int EJN, LSDFlowInfo& FlowInfo)
 {
 
-	vector<double> empty_vec;
+	vector<float> empty_vec;
 	Elevation = empty_vec;
 	Chi = empty_vec;
 	DrainageArea = empty_vec;
@@ -522,12 +522,12 @@ void LSDChannel::create_LSDC(int SJ, int SJN, int EJ, int EJN, LSDFlowInfo& Flow
 // SMM 2012
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDChannel::calculate_chi(double downslope_chi, double m_over_n, double A_0, LSDFlowInfo& FlowInfo )
+void LSDChannel::calculate_chi(float downslope_chi, float m_over_n, float A_0, LSDFlowInfo& FlowInfo )
 {
-	double root2 = 1.41421356;
-	double diag_length = root2*DataResolution;
-	double dx;
-	double pixel_area = DataResolution*DataResolution;
+	float root2 = 1.41421356;
+	float diag_length = root2*DataResolution;
+	float dx;
+	float pixel_area = DataResolution*DataResolution;
 	int curr_node;
 
 	// get the number of nodes in the channel
@@ -535,8 +535,8 @@ void LSDChannel::calculate_chi(double downslope_chi, double m_over_n, double A_0
 
 	// the bottom node is at chi of downslope_chi
 	// initiate the chi vector
-	vector<double> empty_vec;
-	vector<double> chi_temp(n_nodes_in_channel,downslope_chi);
+	vector<float> empty_vec;
+	vector<float> chi_temp(n_nodes_in_channel,downslope_chi);
 
 	// now loop up through the channel, adding chi values
 	// note, the channel index are arranges with upstream element first, so you need to go through the channel
@@ -555,7 +555,7 @@ void LSDChannel::calculate_chi(double downslope_chi, double m_over_n, double A_0
 		}
 		//cout << "dx is: " << dx << endl;
 
-		chi_temp[ChIndex] = dx*(pow( (A_0/ (double(
+		chi_temp[ChIndex] = dx*(pow( (A_0/ (float(
 			                    FlowInfo.retrieve_contributing_pixels_of_node(curr_node))*pixel_area) ),
 			                    m_over_n))
 		                       + chi_temp[ChIndex+1];
@@ -572,23 +572,23 @@ void LSDChannel::calculate_chi(double downslope_chi, double m_over_n, double A_0
 // SMM 2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDChannel::find_most_likeley_segments(int minimum_segment_length, double sigma, int target_nodes,
-					     vector<double>& b_vec, vector<double>&  m_vec,
-					     vector<double>& 	r2_vec,vector<double>&  DW_vec,
-					     vector<double>& thinned_chi, vector<double>& thinned_elev,
-					     vector<double>& fitted_elev, vector<int>& node_ref_thinned,
+void LSDChannel::find_most_likeley_segments(int minimum_segment_length, float sigma, int target_nodes,
+					     vector<float>& b_vec, vector<float>&  m_vec,
+					     vector<float>& 	r2_vec,vector<float>&  DW_vec,
+					     vector<float>& thinned_chi, vector<float>& thinned_elev,
+					     vector<float>& fitted_elev, vector<int>& node_ref_thinned,
 					     vector<int>& these_segment_lengths,
-					     double& this_MLE, int& this_n_segments, int& n_data_nodes,
-					     double& this_AIC, double& this_AICc )
+					     float& this_MLE, int& this_n_segments, int& n_data_nodes,
+					     float& this_AIC, float& this_AICc )
 {
 	// first create a segment finder object
         //cout << "making MLEfinder object, " << endl;
 	vector<int> empty_vec;
 	node_ref_thinned = empty_vec;
 
-	vector<double> reverse_Chi = Chi;
+	vector<float> reverse_Chi = Chi;
 	reverse(reverse_Chi.begin(), reverse_Chi.end());
-	vector<double> reverse_Elevation = Elevation;
+	vector<float> reverse_Elevation = Elevation;
 	reverse(reverse_Elevation.begin(), reverse_Elevation.end());
 	vector<int> this_node_sequence = NodeSequence;
 	reverse(this_node_sequence.begin(), this_node_sequence.end());
@@ -599,12 +599,12 @@ void LSDChannel::find_most_likeley_segments(int minimum_segment_length, double s
 	//cout << "ns size: " << NodeSequence.size() << " and rns sz: " << this_node_sequence.size() << endl;
 	// this needs to be thinned. Get the maximum chi value and then determine dchi
 	int n_nodes = reverse_Chi.size();
-	double max_chi = reverse_Chi[n_nodes-1];
-	double min_chi = reverse_Chi[0];
+	float max_chi = reverse_Chi[n_nodes-1];
+	float min_chi = reverse_Chi[0];
 	//cout << "LSDChannel::find_most_likeley_segments, max_chi: " << max_chi << " and min: " << min_chi << endl;
         //cout << "n_nodes is: " <<  channel_MLE_finder.get_n_nodes() << endl;
 
-	double dchi = (max_chi-min_chi)/double(target_nodes);
+	float dchi = (max_chi-min_chi)/float(target_nodes);
 	cout << "LSDChannel 533, dchi is: " << dchi << endl;
 
 
@@ -623,7 +623,7 @@ void LSDChannel::find_most_likeley_segments(int minimum_segment_length, double s
 	//cout << "thinned, n_nodes is: " <<  channel_MLE_finder.get_n_nodes() << endl;
 
 	// now create a single sigma value vector
-	vector<double> sigma_values;
+	vector<float> sigma_values;
 	sigma_values.push_back(sigma);
 
 	// compute the best fit AIC
@@ -644,47 +644,47 @@ void LSDChannel::find_most_likeley_segments(int minimum_segment_length, double s
 // SMM 2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDChannel::find_best_fit_m_over_n_with_segments(int n_movern, double d_movern,double start_movern,
-						      double downslope_chi, double A_0, LSDFlowInfo& FlowInfo,
-                                          int minimum_segment_length, double sigma, double target_nodes )
+void LSDChannel::find_best_fit_m_over_n_with_segments(int n_movern, float d_movern,float start_movern,
+						      float downslope_chi, float A_0, LSDFlowInfo& FlowInfo,
+                                          int minimum_segment_length, float sigma, float target_nodes )
 {
   // now get the details of the best fit
-  vector<double> m_vec;
-  vector<double> b_vec;
-  vector<double> r2_vec;
-  vector<double> DW_vec;
-  vector<double> fitted_y;
+  vector<float> m_vec;
+  vector<float> b_vec;
+  vector<float> r2_vec;
+  vector<float> DW_vec;
+  vector<float> fitted_y;
   int n_data_nodes;
   int this_n_segments;
-  double this_MLE, this_AIC, this_AICc;
+  float this_MLE, this_AIC, this_AICc;
   vector<int> these_segment_lengths;
-  vector<double> chi_thinned;
-  vector<double> elev_thinned;
-  vector<double> elev_fitted;
+  vector<float> chi_thinned;
+  vector<float> elev_thinned;
+  vector<float> elev_fitted;
   vector<int> node_ref_thinned;
 
   // these are used for storing the best fits in the list of m_over_n
-  vector<double> best_m_vec;
-  vector<double> best_b_vec;
-  vector<double> best_r2_vec;
-  vector<double> best_DW_vec;
-  vector<double> best_fitted_y;
+  vector<float> best_m_vec;
+  vector<float> best_b_vec;
+  vector<float> best_r2_vec;
+  vector<float> best_DW_vec;
+  vector<float> best_fitted_y;
   int best_n_data_nodes;
   int best_this_n_segments;
-  double best_this_MLE, best_this_AIC, best_this_AICc;
+  float best_this_MLE, best_this_AIC, best_this_AICc;
   vector<int> best_these_segment_lengths;
-  vector<double> best_chi_thinned;
-  vector<double> best_elev_thinned;
-  vector<double> best_elev_fitted;
+  vector<float> best_chi_thinned;
+  vector<float> best_elev_thinned;
+  vector<float> best_elev_fitted;
   vector<int> best_node_ref_thinned;
 
-  double min_AICc = 9999;
-  double best_movern = start_movern;
-  double m_over_n;
+  float min_AICc = 9999;
+  float best_movern = start_movern;
+  float m_over_n;
   for(int i = 0; i<n_movern; i++)
   {
 
-    m_over_n = double(i)*d_movern+start_movern;
+    m_over_n = float(i)*d_movern+start_movern;
 
     // recalculate chi
     calculate_chi(downslope_chi, m_over_n,A_0, FlowInfo );
@@ -743,31 +743,31 @@ void LSDChannel::find_best_fit_m_over_n_with_segments(int n_movern, double d_mov
 /// Return value: integer with the node index of the channel head location.
 /// FC 25/09/2013
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-int LSDChannel::calculate_channel_heads(int min_seg_length_for_channel_heads, double A_0,
-                                            double m_over_n, LSDFlowInfo& FlowInfo)
+int LSDChannel::calculate_channel_heads(int min_seg_length_for_channel_heads, float A_0,
+                                            float m_over_n, LSDFlowInfo& FlowInfo)
 {
-    double downslope_chi = 0;
+    float downslope_chi = 0;
     calculate_chi(downslope_chi, m_over_n, A_0, FlowInfo);
-    vector<double> channel_chi;
-    vector<double> hillslope_chi;
-    vector<double> channel_elev;
-    vector<double> hillslope_elev;
+    vector<float> channel_chi;
+    vector<float> hillslope_chi;
+    vector<float> channel_elev;
+    vector<float> hillslope_elev;
     int end_node = Chi.size();
-    double test_value;
-    double max_test_value = 0;
+    float test_value;
+    float max_test_value = 0;
     int best_chan_seg = 0;
     int best_hill_seg = 0;
     int start_node = 0;
     int node_index = 0;
-    double chan_gradient = 0;
-    double hill_gradient = 0;
-    double chan_intercept = 0;
-    double hill_intercept = 0;
-    double chi_intersection = 0;
-    double elev_intersection = 0;
+    float chan_gradient = 0;
+    float hill_gradient = 0;
+    float chan_intercept = 0;
+    float hill_intercept = 0;
+    float chi_intersection = 0;
+    float elev_intersection = 0;
     
-    vector<double>::iterator vec_iter_start;
-	  vector<double>::iterator vec_iter_end;
+    vector<float>::iterator vec_iter_start;
+	  vector<float>::iterator vec_iter_end;
 
     // Looping through the combinations of hillslope and channel segment lengths
 	  for (int hill_seg_length = min_seg_length_for_channel_heads; hill_seg_length <= end_node-min_seg_length_for_channel_heads; hill_seg_length++)
@@ -804,12 +804,12 @@ int LSDChannel::calculate_channel_heads(int min_seg_length_for_channel_heads, do
 	    channel_elev.assign(vec_iter_start,vec_iter_end);
 	    
       // performing linear regression on the channel segment
-      vector<double> residuals_chan;
-      vector<double> results_chan = simple_linear_regression(channel_chi,channel_elev, residuals_chan);
+      vector<float> residuals_chan;
+      vector<float> results_chan = simple_linear_regression(channel_chi,channel_elev, residuals_chan);
 
       // performing linear regression on the hillslope segment
-      vector<double> residuals_hill;
-      vector<double> results_hill = simple_linear_regression(hillslope_chi, hillslope_elev, residuals_hill);
+      vector<float> residuals_hill;
+      vector<float> results_hill = simple_linear_regression(hillslope_chi, hillslope_elev, residuals_hill);
 
       // calculating the test value
       test_value = results_chan[2] - ((results_hill[3] - 2)/2);

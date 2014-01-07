@@ -56,7 +56,7 @@
 #include "../LSDIndexRaster.hpp"
 #include "../LSDFlowInfo.hpp"
 #include "../LSDRasterSpectral.hpp"
-#include "../LSDChannelNetwork.hpp"
+#include "../LSDJunctionNetwork.hpp"
 #include "../LSDIndexChannelTree.hpp"
 #include "../LSDChiNetwork.hpp"
 
@@ -89,7 +89,7 @@ int main (int nNumberofArgs,char *argv[])
   string sources_name; 
 	string fill_ext = "_fill";
 	file_info_in >> DEM_name >> sources_name;
-	double Minimum_Slope;
+	float Minimum_Slope;
 	file_info_in >> Minimum_Slope;
 
 	// get some file names
@@ -125,13 +125,13 @@ int main (int nNumberofArgs,char *argv[])
 	
 	int NRows = topo_test.get_NRows();
   int NCols = topo_test.get_NCols();
-  //double XMinimum = topo_test.get_XMinimum();
-  //double YMinimum = topo_test.get_YMinimum();
-  //double DataResolution = topo_test.get_DataResolution();
-  double NoDataValue = topo_test.get_NoDataValue();
+  //float XMinimum = topo_test.get_XMinimum();
+  //float YMinimum = topo_test.get_YMinimum();
+  //float DataResolution = topo_test.get_DataResolution();
+  float NoDataValue = topo_test.get_NoDataValue();
   
 	//get the sources from raster to vector
-	Array2D<double> sources_array = sources_raster.get_RasterData();
+	Array2D<float> sources_array = sources_raster.get_RasterData();
 	vector<int> sources;
 	for (int row = 0; row < NRows; row++)
 	{
@@ -146,7 +146,7 @@ int main (int nNumberofArgs,char *argv[])
   }
 
 	// now get the junction network
-	LSDChannelNetwork ChanNetwork(sources, FlowInfo);
+	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 	LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
 	
 	// get all the junctions of the second order basins
@@ -168,9 +168,9 @@ int main (int nNumberofArgs,char *argv[])
   ifstream coords_list;
   coords_list.open(string_filename.c_str());
   
-  double X_coord, Y_coord;
-  vector<double> X_coords;
-  vector<double> Y_coords;
+  float X_coord, Y_coord;
+  vector<float> X_coords;
+  vector<float> Y_coords;
   while (coords_list >> X_coord >> Y_coord)
   {
      //cout << "X Coord: " << X_coord << " Y Coord: " << Y_coord << endl;

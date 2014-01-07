@@ -26,7 +26,7 @@
 #include "../../LSDRaster.hpp"
 #include "../../LSDIndexRaster.hpp"
 #include "../../LSDFlowInfo.hpp"
-#include "../../LSDChannelNetwork.hpp"
+#include "../../LSDJunctionNetwork.hpp"
 #include "../../LSDIndexChannelTree.hpp"
 #include "../../LSDChiNetwork.hpp"
 #include "../../TNT/tnt.h"
@@ -64,21 +64,21 @@ int main (int nNumberofArgs,char *argv[])
   string fill_ext = "_fill";
   string sources_ext = "_CH";
 	int temp;
-	double pruning_threshold;
+	float pruning_threshold;
 	int threshold;
-	double A_0;
+	float A_0;
 	int minimum_segment_length;
-	double sigma;
-	double start_movern;
-	double d_movern;
-	double Minimum_Slope;
+	float sigma;
+	float start_movern;
+	float d_movern;
+	float Minimum_Slope;
 	int n_movern;
 	int target_nodes;
 	int n_iterations;
-	double fraction_dchi_for_variation;
-	double vertical_interval;
-	double horizontal_interval;
-	double area_thin_frac;
+	float fraction_dchi_for_variation;
+	float vertical_interval;
+	float horizontal_interval;
+	float area_thin_frac;
 	int target_skip;
                                                           // change junction_number to temp
 	file_info_in >> DEM_name >> Minimum_Slope >> threshold >> temp
@@ -135,7 +135,7 @@ int main (int nNumberofArgs,char *argv[])
 	// load the filled DEM
   LSDRaster topo_test((path_name+DEM_name), DEM_flt_extension);
 //	LSDRaster filled_topo_test((path_name+DEM_name+fill_ext), DEM_flt_extension);
-  double MinSlope = 0.0001;
+  float MinSlope = 0.0001;
   LSDRaster filled_topo_test = topo_test.fill(MinSlope);
 
 	// get a flow info object
@@ -161,7 +161,7 @@ int main (int nNumberofArgs,char *argv[])
   }
  	
 	// now get the junction network
-	LSDChannelNetwork ChanNetwork(sources, FlowInfo);
+	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 //   LSDIndexRaster JIArray = ChanNetwork.JunctionIndexArray_to_LSDIndexRaster();
 //   JIArray.write_raster("testJI","flt");
 //   LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
@@ -239,7 +239,7 @@ int main (int nNumberofArgs,char *argv[])
   
     for(int i = 0; i<n_movern; i++)
     {
-  	  double this_movern = start_movern + double(i)*d_movern;
+  	  float this_movern = start_movern + float(i)*d_movern;
   
   	  cout << "This m/n is: " << this_movern << endl;
   

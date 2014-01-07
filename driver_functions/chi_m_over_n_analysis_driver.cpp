@@ -79,21 +79,21 @@ int main (int nNumberofArgs,char *argv[])
 	string fill_ext = "_fill";
 	file_info_in >> DEM_name;
 	int junction_number;
-	double pruning_threshold;
+	float pruning_threshold;
 	int threshold;
-	double A_0;
+	float A_0;
 	int minimum_segment_length;
-	double sigma;
-	double start_movern;
-	double d_movern;
-	double Minimum_Slope;
+	float sigma;
+	float start_movern;
+	float d_movern;
+	float Minimum_Slope;
 	int n_movern;
 	int target_nodes;
 	int n_iterations;
-	double fraction_dchi_for_variation;
-	double vertical_interval;
-	double horizontal_interval;
-	double area_thin_frac;
+	float fraction_dchi_for_variation;
+	float vertical_interval;
+	float horizontal_interval;
+	float area_thin_frac;
 	int target_skip;
 
 	file_info_in >> Minimum_Slope >> threshold >> junction_number
@@ -136,7 +136,7 @@ int main (int nNumberofArgs,char *argv[])
 	ChiNetwork_extended.extend_tributaries_to_outlet();
 
 	// get the best fit m over n ratio for this basin
-	double bf_cum_movn_ms, bf_colinear_movn_breaks;
+	float bf_cum_movn_ms, bf_colinear_movn_breaks;
 	string bfchi_fname = "_BFmovern";
 	string fpt_ext = ".movern";
 
@@ -154,11 +154,11 @@ int main (int nNumberofArgs,char *argv[])
 	param_str = uscore+sigma_str+uscore+skip_str+uscore+msl_str+uscore+tn_str;
 
 
-	vector<double> m_over_n_values;
-	vector<double> AICc_mean_breaks;
-	vector<double> AICc_stdd_breaks;
-	vector< vector<double> > AICc_vals;
-	vector< vector<double> > AICc_stddev;
+	vector<float> m_over_n_values;
+	vector<float> AICc_mean_breaks;
+	vector<float> AICc_stdd_breaks;
+	vector< vector<float> > AICc_vals;
+	vector< vector<float> > AICc_stddev;
 
 	// get the best fit m over n in two different ways
 	int Monte_Carlo_switch = 1;

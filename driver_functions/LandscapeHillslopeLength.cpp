@@ -41,7 +41,7 @@
 #include "../LSDIndexRaster.hpp"
 #include "../LSDFlowInfo.hpp"
 #include "../LSDChannel.hpp"
-#include "../LSDChannelNetwork.hpp"
+#include "../LSDJunctionNetwork.hpp"
 #include "../LSDIndexChannel.hpp"
 #include "../LSDMostLikelyPartitionsFinder.hpp"
 
@@ -64,10 +64,10 @@ int main (int nNumberofArgs,char *argv[])
   //load parameters
   string DEM_name;
   string DEM_file_extension;
-  double MinSlope;
+  float MinSlope;
   int threshold;
-  double critical_slope;
-  double window_radius;
+  float critical_slope;
+  float window_radius;
   
   ifstream param_file_in;
 	param_file_in.open((InputPath+param_file_name).c_str());
@@ -84,12 +84,12 @@ int main (int nNumberofArgs,char *argv[])
   vector<string> BoundaryConditions(4, "No Flux");
 
   // coefficent matrices for polyfit routine
-  Array2D<double> a;
-  Array2D<double> b;
-  Array2D<double> c;
-  Array2D<double> d;
-  Array2D<double> e;
-  Array2D<double> f;
+  Array2D<float> a;
+  Array2D<float> b;
+  Array2D<float> c;
+  Array2D<float> d;
+  Array2D<float> e;
+  Array2D<float> f;
 
   //Start processessing topographic data here
   
@@ -103,7 +103,7 @@ int main (int nNumberofArgs,char *argv[])
   //get channel network
 	LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
 	vector<int> sources = FlowInfo.get_sources_index_threshold(ContributingPixels, threshold);
-	LSDChannelNetwork ChanNetwork(sources, FlowInfo);
+	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
   
   //Create slope, curvature, aspect and elevation rasters 
   FilledDEM.calculate_polyfit_coefficient_matrices(window_radius, a, b, c, d, e, f);  
@@ -122,10 +122,10 @@ int main (int nNumberofArgs,char *argv[])
   LSDRaster hilltops = ChanNetwork.ExtractHilltops(Ridges, slope, critical_slope);
  
   // D-infinty flowdirection for HFR 
-  Array2D<double> FlowDir_inf = FilledDEM.D_inf_FlowDir();
+  Array2D<float> FlowDir_inf = FilledDEM.D_inf_FlowDir();
   
   //hilltop flow routing
-  vector< Array2D<double> > Routed_Hilltop_Data = FilledDEM.HFR_Driver(hilltops, FlowDir_inf, StreamNetwork, Basins, (OutputPath+DEM_name));
+  vector< Array2D<float> > Routed_Hilltop_Data = FilledDEM.HFR_Driver(hilltops, FlowDir_inf, StreamNetwork, Basins, (OutputPath+DEM_name));
   
   //write routed_hilltop_data to an LSDRaster
   LSDRaster RoutedHilltops = FilledDEM.LSDRasterTemplate(Routed_Hilltop_Data[0]);

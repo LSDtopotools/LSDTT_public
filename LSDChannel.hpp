@@ -140,8 +140,8 @@ class LSDChannel: public LSDIndexChannel
 	/// @param Elevation_Raster Elevation LSDRaster object.
   /// @author SMM
   /// @date 01/01/12
-  LSDChannel(int StartNode, int EndNode, double downslope_chi,
-                             double m_over_n, double A_0, LSDFlowInfo& FlowInfo,
+  LSDChannel(int StartNode, int EndNode, float downslope_chi,
+                             float m_over_n, float A_0, LSDFlowInfo& FlowInfo,
                              LSDRaster& Elevation_Raster)
 							{ create_LSDC(StartNode, EndNode, downslope_chi,
                               m_over_n, A_0, FlowInfo, Elevation_Raster); }
@@ -158,7 +158,7 @@ class LSDChannel: public LSDIndexChannel
 	/// @param Elevation_Raster Elevation LSDRaster object.
   /// @author SMM
   /// @date 01/01/12
-  LSDChannel(double downslope_chi, double m_over_n, double A_0,
+  LSDChannel(float downslope_chi, float m_over_n, float A_0,
 							LSDIndexChannel& InChann, LSDFlowInfo& FlowInfo,
                              LSDRaster& Elevation_Raster)
 							{ create_LSDC(downslope_chi, m_over_n, A_0,
@@ -178,9 +178,9 @@ class LSDChannel: public LSDIndexChannel
 	//
 	//  int get_NRows() const				{ return NRows; }
 	//  int get_NCols() const				{ return NCols; }
-	//  double get_XMinimum() const			{ return XMinimum; }
-	//  double get_YMinimum() const			{ return YMinimum; }
-	//  double get_DataResolution() const	{ return DataResolution; }
+	//  float get_XMinimum() const			{ return XMinimum; }
+	//  float get_YMinimum() const			{ return YMinimum; }
+	//  float get_DataResolution() const	{ return DataResolution; }
 	//  int get_NoDataValue() const		{ return NoDataValue; }
 	//
 	//  vector<int> get_RowSequence() const		{ return RowSequence; }
@@ -202,9 +202,9 @@ class LSDChannel: public LSDIndexChannel
 	// these are primarily used for fitting of the profiles
 
   /// @return Vector of chi values.
-  vector<double> get_Chi()		{ return Chi; }
+  vector<float> get_Chi()		{ return Chi; }
   /// @return Vector of elevation values.
-	vector<double> get_Elevation()	{ return Elevation; }
+	vector<float> get_Elevation()	{ return Elevation; }
 
 	/// @brief This function uses a flow info object to calculate the chi values in the channel.
 	/// @param downslope_chi Downslope Chi value.
@@ -213,14 +213,14 @@ class LSDChannel: public LSDIndexChannel
 	/// @param FlowInfo LSDFlowInfo object.
   /// @author SMM
   /// @date 01/01/12
-	void calculate_chi(double downslope_chi, double m_over_n, double A_0, LSDFlowInfo& FlowInfo );
+	void calculate_chi(float downslope_chi, float m_over_n, float A_0, LSDFlowInfo& FlowInfo );
 
 	/// @brief Get chi value at channel node.
 	/// @param ch_node Integer node index.
 	/// @return chi value at channel node.
   /// @author SMM
   /// @date 01/01/12
-  double retrieve_chi_at_channel_node(int ch_node) { return Chi[ch_node]; }
+  float retrieve_chi_at_channel_node(int ch_node) { return Chi[ch_node]; }
 
 	/// @brief Get node chi value, elevation and drainage area.
 	/// @param ch_node Integer node index.
@@ -229,7 +229,7 @@ class LSDChannel: public LSDIndexChannel
 	/// @param drainarea Drainage area.
   /// @author SMM
   /// @date 01/01/12
-	void retrieve_node_information(int ch_node, double& elev, double& chi, double& drainarea)
+	void retrieve_node_information(int ch_node, float& elev, float& chi, float& drainarea)
 					{ elev = Elevation[ch_node]; chi = Chi[ch_node]; drainarea = DrainageArea[ch_node]; }
 
 	/// @brief This function looks for the most likeley segments.
@@ -252,14 +252,14 @@ class LSDChannel: public LSDIndexChannel
   /// @param this_AICc
    /// @author SMM
   /// @date 01/01/13
-  void find_most_likeley_segments(int minimum_segment_length, double sigma, int target_nodes,
-                                  vector<double>& b_vec, vector<double>&  m_vec,
-					     vector<double>& 	r2_vec,vector<double>&  DW_vec,
-					     vector<double>& thinned_chi, vector<double>& thinned_elev,
-                                             vector<double>& fitted_elev, vector<int>& node_ref_thinned,
+  void find_most_likeley_segments(int minimum_segment_length, float sigma, int target_nodes,
+                                  vector<float>& b_vec, vector<float>&  m_vec,
+					     vector<float>& 	r2_vec,vector<float>&  DW_vec,
+					     vector<float>& thinned_chi, vector<float>& thinned_elev,
+                                             vector<float>& fitted_elev, vector<int>& node_ref_thinned,
 					     vector<int>& these_segment_lengths,
-					     double& this_MLE, int& this_n_segments, int& n_data_nodes,
-					     double& this_AIC, double& this_AICc );
+					     float& this_MLE, int& this_n_segments, int& n_data_nodes,
+					     float& this_AIC, float& this_AICc );
 
   /// @brief This function looks for the best fit of a channel for a range of m_over_n values where the channel has segments.
   /// @param n_movern
@@ -273,9 +273,9 @@ class LSDChannel: public LSDIndexChannel
   /// @param target_nodes
     /// @author SMM
   /// @date 01/01/13
-  void find_best_fit_m_over_n_with_segments(int n_movern, double d_movern,double start_movern,
-						  double downslope_chi, double A_0, LSDFlowInfo& FlowInfo,
-					     int minimum_segment_length, double sigma, double target_nodes );
+  void find_best_fit_m_over_n_with_segments(int n_movern, float d_movern,float start_movern,
+						  float downslope_chi, float A_0, LSDFlowInfo& FlowInfo,
+					     int minimum_segment_length, float sigma, float target_nodes );
 
   /// @brief This function loops through m_over_n looking for best fit segments.
   void find_best_fit_m_over_n_with_segments();
@@ -287,8 +287,8 @@ class LSDChannel: public LSDIndexChannel
   /// @param FlowInfo
   /// @author FC
   /// @date 25/09/13
-  int calculate_channel_heads(int min_seg_length_for_channel_heads, double A_0, 
-                                            double m_over_n, LSDFlowInfo& FlowInfo);
+  int calculate_channel_heads(int min_seg_length_for_channel_heads, float A_0, 
+                                            float m_over_n, LSDFlowInfo& FlowInfo);
 
 	protected:
 
@@ -296,11 +296,11 @@ class LSDChannel: public LSDIndexChannel
 	// NOTE that there are DATA ELEMENTS INHERITED FROM LSDIndexChannel
 
   /// @brief Elevation vector.
-	vector<double> Elevation;
+	vector<float> Elevation;
 	/// @brief Chi vector.
-  vector<double> Chi;
+  vector<float> Chi;
 	/// @brief Drainage area vector.
-  vector<double> DrainageArea;
+  vector<float> DrainageArea;
 
 
 	private:
@@ -308,10 +308,10 @@ class LSDChannel: public LSDIndexChannel
 	void create_LSDC(int StartNode, int EndNode, LSDFlowInfo& FlowInfo);
 	void create_LSDC(int StartJunction, int StartNode,
 	            int EndJunction, int EndNode, LSDFlowInfo& FlowInfo);
-	void create_LSDC(int SJN, int EJN, double downslope_chi,
-                             double m_over_n, double A_0, LSDFlowInfo& FlowInfo,
+	void create_LSDC(int SJN, int EJN, float downslope_chi,
+                             float m_over_n, float A_0, LSDFlowInfo& FlowInfo,
                              LSDRaster& Elevation_Raster);
-	void create_LSDC(double downslope_chi, double m_over_n, double A_0,
+	void create_LSDC(float downslope_chi, float m_over_n, float A_0,
 						LSDIndexChannel& InChann, LSDFlowInfo& FlowInfo,
                         LSDRaster& Elevation_Raster);
 };

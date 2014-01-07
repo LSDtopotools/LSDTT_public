@@ -30,7 +30,7 @@
 #include "../LSDIndexRaster.hpp"
 #include "../LSDFlowInfo.hpp"
 #include "../LSDChannel.hpp"
-#include "../LSDChannelNetwork.hpp"
+#include "../LSDJunctionNetwork.hpp"
 #include "../LSDIndexChannel.hpp"
 #include "../LSDMostLikelyPartitionsFinder.hpp"
 
@@ -59,7 +59,7 @@ int main (int nNumberofArgs,char *argv[])
   
   //Load and fill the DEM
 	LSDRaster DEM(DEM_name, DEM_file_extension);
-  double MinSlope = 0.0001; 
+  float MinSlope = 0.0001; 
   LSDRaster FilledDEM = DEM.fill(MinSlope);
  	
 	// get a flow info object
@@ -71,7 +71,7 @@ int main (int nNumberofArgs,char *argv[])
 	int threshold = 800;
 	vector<int> sources;
 	sources = FlowInfo.get_sources_index_threshold(ContributingPixels, threshold);
-	LSDChannelNetwork ChanNetwork(sources, FlowInfo);
+	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 	//end of channel head stuff
   //------------------------------------------------------------------------------------------
   

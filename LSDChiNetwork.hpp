@@ -94,11 +94,11 @@ class LSDChiNetwork
   	/// @return Number of columns as an integer.
     int get_NCols() const				{ return NCols; }
     /// @return Minimum X coordinate as an integer.
-  	double get_XMinimum() const			{ return XMinimum; }
+  	float get_XMinimum() const			{ return XMinimum; }
   	/// @return Minimum Y coordinate as an integer.
-  	double get_YMinimum() const			{ return YMinimum; }
+  	float get_YMinimum() const			{ return YMinimum; }
   	/// @return Data resolution as an integer.
-  	double get_DataResolution() const	{ return DataResolution; }
+  	float get_DataResolution() const	{ return DataResolution; }
   	/// @return No Data Value as an integer.
   	int get_NoDataValue() const			{ return NoDataValue; }
 
@@ -125,7 +125,7 @@ class LSDChiNetwork
 		/// @param m_over_n  m over n ratio.
 		/// @author SMM
   		/// @date 01/04/13
-    void print_channel_details_to_file(string fname, double A_0, double m_over_n);
+    void print_channel_details_to_file(string fname, float A_0, float m_over_n);
 
 	  /// @brief This function prints the details of all channels to a file.
     ///
@@ -177,7 +177,7 @@ class LSDChiNetwork
 		/// @return Array of data.
 		/// @author SMM
   		/// @date 01/04/13
-		Array2D<double> data_to_array(int data_member);
+		Array2D<float> data_to_array(int data_member);
 
 		// routines for getting slope-area data
 		// these print to file at the moment.
@@ -212,7 +212,7 @@ class LSDChiNetwork
     /// @param fname Output filename
 		/// @author SMM
   		/// @date 01/04/13
-    void slope_area_extraction_vertical_intervals(double interval, double area_thin_fraction,
+    void slope_area_extraction_vertical_intervals(float interval, float area_thin_fraction,
 															string fname);
 
 		/// @brief Extract slope over fixed horizontal intervals.
@@ -245,7 +245,7 @@ class LSDChiNetwork
     /// @param fname Output filename
 		/// @author SMM
   		/// @date 01/04/13
-		void slope_area_extraction_horizontal_intervals(double interval, double area_thin_fraction,
+		void slope_area_extraction_horizontal_intervals(float interval, float area_thin_fraction,
 															string fname);
 
 		// routines for calculating chi and maniplating chi
@@ -258,7 +258,7 @@ class LSDChiNetwork
 		/// @param m_over_n  m over n ratio.
 		/// @author SMM
   		/// @date 01/04/13
-		void calculate_chi(double A_0, double m_over_n);
+		void calculate_chi(float A_0, float m_over_n);
 
 		/// @brief This function calucaltes the chi spacing of the main stem channel (the longest channel).
 		///
@@ -268,7 +268,7 @@ class LSDChiNetwork
     /// @return Optimal chi spacing.
 		/// @author SMM
   		/// @date 01/04/13
-		double calculate_optimal_chi_spacing(int target_nodes);
+		float calculate_optimal_chi_spacing(int target_nodes);
 
 		/// @brief This function calucaltes the skip parameter of the main stem (the longest channel).
 		///
@@ -285,7 +285,7 @@ class LSDChiNetwork
     /// @return Skip value.
 		/// @author SMM
   		/// @date 01/06/13
-    int calculate_skip(int target_nodes, vector<double>& sorted_chis);
+    int calculate_skip(int target_nodes, vector<float>& sorted_chis);
 
 		/// @brief This function calucaltes the skip parameter of a give channel.
 		///
@@ -326,13 +326,13 @@ class LSDChiNetwork
 		/// @author SMM
   		/// @date 01/04/13
 		void find_most_likeley_segments(int channel,int minimum_segment_length,
-						 double sigma, int N, vector<double>& b_vec,
-					     vector<double>& m_vec, vector<double>& r2_vec,vector<double>& DW_vec,
-					     vector<double>& thinned_chi, vector<double>& thinned_elev,
-					     vector<double>& fitted_elev, vector<int>& node_reference,
+						 float sigma, int N, vector<float>& b_vec,
+					     vector<float>& m_vec, vector<float>& r2_vec,vector<float>& DW_vec,
+					     vector<float>& thinned_chi, vector<float>& thinned_elev,
+					     vector<float>& fitted_elev, vector<int>& node_reference,
 					     vector<int>& these_segment_lengths,
-					     double& this_MLE, int& this_n_segments, int& n_data_nodes,
-					     double& this_AIC, double& this_AICc );
+					     float& this_MLE, int& this_n_segments, int& n_data_nodes,
+					     float& this_AIC, float& this_AICc );
 
     /// @brief This function gets the most likely channel segments for a particular channel.
     ///
@@ -360,13 +360,13 @@ class LSDChiNetwork
 		/// @author SMM
   		/// @date 01/04/13
   	void find_most_likeley_segments_dchi(int channel,int minimum_segment_length,
-						 double sigma, double dchi, vector<double>& b_vec,
-					     vector<double>& m_vec, vector<double>& r2_vec,vector<double>& DW_vec,
-					     vector<double>& thinned_chi, vector<double>& thinned_elev,
-					     vector<double>& fitted_elev, vector<int>& node_reference,
+						 float sigma, float dchi, vector<float>& b_vec,
+					     vector<float>& m_vec, vector<float>& r2_vec,vector<float>& DW_vec,
+					     vector<float>& thinned_chi, vector<float>& thinned_elev,
+					     vector<float>& fitted_elev, vector<int>& node_reference,
 					     vector<int>& these_segment_lengths,
-					     double& this_MLE, int& this_n_segments, int& n_data_nodes,
-					     double& this_AIC, double& this_AICc );
+					     float& this_MLE, int& this_n_segments, int& n_data_nodes,
+					     float& this_AIC, float& this_AICc );
 
     /// @brief This gets the most likely segments but uses the monte carlo data thinning method.
     ///
@@ -394,13 +394,13 @@ class LSDChiNetwork
 		/// @author SMM
   		/// @date 01/04/13
   	void find_most_likeley_segments_monte_carlo(int channel, int minimum_segment_length,
-						 double sigma, int mean_skip, int skip_range, vector<double>& b_vec,
-					     vector<double>& m_vec, vector<double>& r2_vec,vector<double>& DW_vec,
-					     vector<double>& thinned_chi, vector<double>& thinned_elev,
-					     vector<double>& fitted_elev, vector<int>& node_reference,
+						 float sigma, int mean_skip, int skip_range, vector<float>& b_vec,
+					     vector<float>& m_vec, vector<float>& r2_vec,vector<float>& DW_vec,
+					     vector<float>& thinned_chi, vector<float>& thinned_elev,
+					     vector<float>& fitted_elev, vector<int>& node_reference,
 					     vector<int>& these_segment_lengths,
-					     double& this_MLE, int& this_n_segments, int& n_data_nodes,
-					     double& this_AIC, double& this_AICc );
+					     float& this_MLE, int& this_n_segments, int& n_data_nodes,
+					     float& this_AIC, float& this_AICc );
 
     /// @brief This gets the most likely segments but uses the monte carlo data thinning method.
     ///
@@ -430,13 +430,13 @@ class LSDChiNetwork
  		/// @author SMM
   		/// @date 01/04/13
     void find_most_likeley_segments_monte_carlo_dchi(int channel, int minimum_segment_length,
-						 double sigma, double mean_dchi, double variation_dchi, vector<double>& b_vec,
-					     vector<double>& m_vec, vector<double>& r2_vec,vector<double>& DW_vec,
-					     vector<double>& thinned_chi, vector<double>& thinned_elev,
-					     vector<double>& fitted_elev, vector<int>& node_reference,
+						 float sigma, float mean_dchi, float variation_dchi, vector<float>& b_vec,
+					     vector<float>& m_vec, vector<float>& r2_vec,vector<float>& DW_vec,
+					     vector<float>& thinned_chi, vector<float>& thinned_elev,
+					     vector<float>& fitted_elev, vector<int>& node_reference,
 					     vector<int>& these_segment_lengths,
-					     double& this_MLE, int& this_n_segments, int& n_data_nodes,
-					     double& this_AIC, double& this_AICc );
+					     float& this_MLE, int& this_n_segments, int& n_data_nodes,
+					     float& this_AIC, float& this_AICc );
 
 		/// @brief The master routine for calculating the best fit m over n values for a channel network, based on a fixed value of dchi.
 		/// @param A_0
@@ -450,8 +450,8 @@ class LSDChiNetwork
     /// @return Best fit m over n.
     		/// @author SMM
   		/// @date 01/04/13
-		double search_for_best_fit_m_over_n_dchi(double A_0, int n_movern, double d_movern, double start_movern,
-						       int minimum_segment_length, double sigma, int target_nodes_mainstem, string fname);
+		float search_for_best_fit_m_over_n_dchi(float A_0, int n_movern, float d_movern, float start_movern,
+						       int minimum_segment_length, float sigma, int target_nodes_mainstem, string fname);
 
 		/// @brief The master routine for calculating the best fit m over n values for a channel network
 		/// @param A_0
@@ -465,8 +465,8 @@ class LSDChiNetwork
     /// @return Best fit m over n.
 		/// @author SMM
   		/// @date 01/04/13
-		double search_for_best_fit_m_over_n(double A_0, int n_movern, double d_movern, double start_movern,
-						       int minimum_segment_length, double sigma, int target_nodes_mainstem, string fname);
+		float search_for_best_fit_m_over_n(float A_0, int n_movern, float d_movern, float start_movern,
+						       int minimum_segment_length, float sigma, int target_nodes_mainstem, string fname);
 
 		/// @brief Routine for calculating the best fit m over n values for a channel network, but calculates the mainstem and the tributaries seperately.
 		/// @param A_0
@@ -480,8 +480,8 @@ class LSDChiNetwork
     /// @return Best fit m over n.
  		/// @author SMM
   		/// @date 01/04/13
-		double search_for_best_fit_m_over_n_seperate_ms_and_tribs(double A_0, int n_movern, double d_movern, double start_movern,
-						       int minimum_segment_length, double sigma, int target_nodes_mainstem, string fname);
+		float search_for_best_fit_m_over_n_seperate_ms_and_tribs(float A_0, int n_movern, float d_movern, float start_movern,
+						       int minimum_segment_length, float sigma, int target_nodes_mainstem, string fname);
 
 		/// @brief This function looks for the best fit values of m over n by simply testing for the least variation in the tributaries.
 		/// @param A_0
@@ -498,83 +498,83 @@ class LSDChiNetwork
     /// @return Best fit m over n.
 		/// @author SMM
   		/// @date 01/04/13
-    double search_for_best_fit_m_over_n_colinearity_test(double A_0, int n_movern, double d_movern,
-								        double start_movern, int minimum_segment_length, double sigma,
+    float search_for_best_fit_m_over_n_colinearity_test(float A_0, int n_movern, float d_movern,
+								        float start_movern, int minimum_segment_length, float sigma,
 						      			int target_nodes, int n_iterations,
-						      			vector<double>& m_over_n_values,
-						      			vector<double>& AICc_mean, vector<double>& AICc_sdtd);
+						      			vector<float>& m_over_n_values,
+						      			vector<float>& AICc_mean, vector<float>& AICc_sdtd);
 
 		/// @brief This function calculeates best fit m/n using the collinearity test \n
 		///  these channels are ones with breaks
-		/// @param A_0 double the reference area
+		/// @param A_0 float the reference area
     /// @param n_movern int the number of m over n ratios to iterate through
-    /// @param d_movern double the change in m/n in each iterations
-    /// @param start_movern double the starting value of m/n
+    /// @param d_movern float the change in m/n in each iterations
+    /// @param start_movern float the starting value of m/n
     /// @param minimum_segment_length How many nodes the mimimum segment will have.
     /// @param sigma Standard deviation of error on elevation data
     /// @param target_skip int the mean skipping value
     /// @param target_nodes int the target number of nodes in a break
     /// @param n_iterations	int the number of iterations
-    /// @param m_over_n_values	vector<double>& this gets written, it contains the m/n values for the run
-    /// @param AICc_mean vector<double> gets written, the mean values of the AICc for each m/n
-    /// @param AICc_sdtd vector<double> gets written, the standard deviation values of the AICc for each m/n
+    /// @param m_over_n_values	vector<float>& this gets written, it contains the m/n values for the run
+    /// @param AICc_mean vector<float> gets written, the mean values of the AICc for each m/n
+    /// @param AICc_sdtd vector<float> gets written, the standard deviation values of the AICc for each m/n
     /// @param Monte_Carlo_switch int if 1, run the code using the iterative Monte Carlo scheme
     /// @return Best fit m over n.
  		/// @author SMM
   		/// @date 01/07/13
-		double search_for_best_fit_m_over_n_colinearity_test_with_breaks(double A_0, int n_movern, double d_movern,
-						       double start_movern, int minimum_segment_length, double sigma,
+		float search_for_best_fit_m_over_n_colinearity_test_with_breaks(float A_0, int n_movern, float d_movern,
+						       float start_movern, int minimum_segment_length, float sigma,
 						       int target_skip, int target_nodes, int n_iterations,
-						       vector<double>& m_over_n_values, vector<double>& AICc_mean, vector<double>& AICc_sdtd,
+						       vector<float>& m_over_n_values, vector<float>& AICc_mean, vector<float>& AICc_sdtd,
 						       int Monte_Carlo_switch);
 
 		/// @brief This function calculeates best fit m/n for each channel these channels are ones with breaks
-		/// @param A_0 double the reference area
+		/// @param A_0 float the reference area
 		/// @details this does not report variability of the AICc values and so should not be used, instead
 		/// \n use the Monte Carlo version
 		/// \n retained in case you want rapid calculation of best fit m/n
     /// @param n_movern int the number of m over n ratios to iterate through
-    /// @param d_movern double the change in m/n in each iterations
-    /// @param start_movern double the starting value of m/n
+    /// @param d_movern float the change in m/n in each iterations
+    /// @param start_movern float the starting value of m/n
     /// @param minimum_segment_length How many nodes the mimimum segment will have.
     /// @param sigma Standard deviation of error on elevation data
     /// @param target_skip int the mean skipping value
     /// @param target_nodes int the target number of nodes in a break
     /// @param n_iterations	int the number of iterations
-    /// @param m_over_n_values	vector<double>& this gets written, it contains the m/n values for the run
+    /// @param m_over_n_values	vector<float>& this gets written, it contains the m/n values for the run
     /// @param AICc_vals
     /// @return Best fit m over n.
 		/// @author SMM
   		/// @date 01/04/13
-		double search_for_best_fit_m_over_n_individual_channels_with_breaks(double A_0, int n_movern, double d_movern,
-								        double start_movern, int minimum_segment_length, double sigma,
+		float search_for_best_fit_m_over_n_individual_channels_with_breaks(float A_0, int n_movern, float d_movern,
+								        float start_movern, int minimum_segment_length, float sigma,
 						      			int target_skip, int target_nodes, int n_iterations,
-						      			vector<double>& m_over_n_values, vector< vector<double> >& AICc_vals);
+						      			vector<float>& m_over_n_values, vector< vector<float> >& AICc_vals);
 
     /// @brief This gets the best fit m over n values of all the individual tributaries.
     ///
     /// @details It uses a monte carlo appraoach so all tributaries have both the mean and the variability
 		/// of the AICc values reported.
-		/// @param A_0 double the reference area
+		/// @param A_0 float the reference area
     /// @param n_movern int the number of m over n ratios to iterate through
-    /// @param d_movern double the change in m/n in each iterations
-    /// @param start_movern double the starting value of m/n
+    /// @param d_movern float the change in m/n in each iterations
+    /// @param start_movern float the starting value of m/n
     /// @param minimum_segment_length How many nodes the mimimum segment will have.
     /// @param sigma Standard deviation of error on elevation data
     /// @param target_skip int the mean skipping value
     /// @param target_nodes int the target number of nodes in a break
     /// @param n_iterations	int the number of iterations
-    /// @param m_over_n_values	vector<double>& this gets written, it contains the m/n values for the run
-    /// @param AICc_means vector<double> gets written, the mean values of the AICc for each m/n
-    /// @param AICc_stddev vector<double> gets written, the standard deviation values of the AICc for each m/n
+    /// @param m_over_n_values	vector<float>& this gets written, it contains the m/n values for the run
+    /// @param AICc_means vector<float> gets written, the mean values of the AICc for each m/n
+    /// @param AICc_stddev vector<float> gets written, the standard deviation values of the AICc for each m/n
     /// @return Best fit m over n.
     /// @author SMM
   	/// @date 01/07/13
-		double search_for_best_fit_m_over_n_individual_channels_with_breaks_monte_carlo(double A_0, int n_movern,
-							   double d_movern, double start_movern, int minimum_segment_length, double sigma,
+		float search_for_best_fit_m_over_n_individual_channels_with_breaks_monte_carlo(float A_0, int n_movern,
+							   float d_movern, float start_movern, int minimum_segment_length, float sigma,
 						       int target_skip, int target_nodes, int n_iterations,
-						       vector<double>& m_over_n_values,
-						       vector< vector<double> >& AICc_means, vector< vector<double> >& AICc_stddev);
+						       vector<float>& m_over_n_values,
+						       vector< vector<float> >& AICc_means, vector< vector<float> >& AICc_stddev);
 
 		/// @brief This routine uses a monte carlo approach to repeatedly sampling all the data in the channel network.
     ///
@@ -591,9 +591,9 @@ class LSDChiNetwork
     /// @param target_nodes_mainstem
      		/// @author SMM
   		/// @date 01/04/13
-    void monte_carlo_sample_river_network_for_best_fit_dchi(double A_0, double m_over_n, int n_iterations,
-															double fraction_dchi_for_variation,
-															int minimum_segment_length, double sigma,
+    void monte_carlo_sample_river_network_for_best_fit_dchi(float A_0, float m_over_n, int n_iterations,
+															float fraction_dchi_for_variation,
+															int minimum_segment_length, float sigma,
 															int target_nodes_mainstem);
 
 
@@ -618,9 +618,9 @@ class LSDChiNetwork
     /// @param sigma Standard deviation of error on elevation data
       		/// @author SMM
   		/// @date 01/04/13
-		void monte_carlo_sample_river_network_for_best_fit(double A_0, double m_over_n, int n_iterations,
+		void monte_carlo_sample_river_network_for_best_fit(float A_0, float m_over_n, int n_iterations,
 															int mean_skip, int skip_range,
-															int minimum_segment_length, double sigma);
+															int minimum_segment_length, float sigma);
 
 
     /// @brief This function samples the river network using monte carlo samplig but after breaking the channels.
@@ -632,8 +632,8 @@ class LSDChiNetwork
     /// @param sigma Standard deviation of error on elevation data
      		/// @author SMM
   		/// @date 01/04/13
-		void monte_carlo_sample_river_network_for_best_fit_after_breaks(double A_0, double m_over_n, int n_iterations,
-				int skip, int minimum_segment_length, double sigma);
+		void monte_carlo_sample_river_network_for_best_fit_after_breaks(float A_0, float m_over_n, int n_iterations,
+				int skip, int minimum_segment_length, float sigma);
 
     /// @brief Monte carlo segment fitter.
     ///
@@ -657,9 +657,9 @@ class LSDChiNetwork
     /// @param break_nodes
       		/// @author SMM
   		/// @date 01/04/13
-		void monte_carlo_split_channel(double A_0, double m_over_n, int n_iterations,
+		void monte_carlo_split_channel(float A_0, float m_over_n, int n_iterations,
 				int target_skip, int target_nodes,
-				int minimum_segment_length, double sigma, int chan, vector<int>& break_nodes);
+				int minimum_segment_length, float sigma, int chan, vector<int>& break_nodes);
 
 		// this function uses a monte carlo sampling approach to try and split channels into
 		// so that the channel is sampled at the target skipping interval. It does it with a
@@ -682,10 +682,10 @@ class LSDChiNetwork
     /// @param break_nodes
      		/// @author SMM
   		/// @date 01/04/13
-    void monte_carlo_split_channel_colinear(double A_0, double m_over_n, int n_iterations,
+    void monte_carlo_split_channel_colinear(float A_0, float m_over_n, int n_iterations,
 				int target_skip, int target_nodes,
-				int minimum_segment_length, double sigma,
-				vector<double> reverse_Chi, vector<double> reverse_Elevation, vector<int>& break_nodes);
+				int minimum_segment_length, float sigma,
+				vector<float> reverse_Chi, vector<float> reverse_Elevation, vector<int>& break_nodes);
 
 		/// @brief This function splits all the channels in one go.
     /// @param A_0
@@ -697,8 +697,8 @@ class LSDChiNetwork
     /// @param sigma Standard deviation of error on elevation data
       		/// @author SMM
   		/// @date 01/06/13
-		void split_all_channels(double A_0, double m_over_n, int n_iterations,
-				int target_skip, int target_nodes, int minimum_segment_length, double sigma);
+		void split_all_channels(float A_0, float m_over_n, int n_iterations,
+				int target_skip, int target_nodes, int minimum_segment_length, float sigma);
 
 		/// @brief This function gets the AICc after breaking the channel.
     /// @param A_0
@@ -714,9 +714,9 @@ class LSDChiNetwork
     /// @return AICc value
       		/// @author SMM
   		/// @date 01/06/13
-    double calculate_AICc_after_breaks(double A_0, double m_over_n,
-				int skip, int minimum_segment_length, double sigma, int chan, vector<int> break_nodes,
-				int& n_total_segments, int& n_total_nodes, double& cumulative_MLE);
+    float calculate_AICc_after_breaks(float A_0, float m_over_n,
+				int skip, int minimum_segment_length, float sigma, int chan, vector<int> break_nodes,
+				int& n_total_segments, int& n_total_nodes, float& cumulative_MLE);
 
    	/// @brief This function gets the AICc after breaking the channel.
    	///
@@ -739,9 +739,9 @@ class LSDChiNetwork
     /// @return AICc value
           		/// @author SMM
   		/// @date 01/06/13
-		vector<double> calculate_AICc_after_breaks_monte_carlo(double A_0, double m_over_n,
-				int target_skip, int minimum_segment_length, double sigma, int chan, vector<int> break_nodes,
-				int& n_total_segments, int& n_total_nodes, double& cumulative_MLE,
+		vector<float> calculate_AICc_after_breaks_monte_carlo(float A_0, float m_over_n,
+				int target_skip, int minimum_segment_length, float sigma, int chan, vector<int> break_nodes,
+				int& n_total_segments, int& n_total_nodes, float& cumulative_MLE,
 				int n_iterations);
 
 		/// @brief This function gets the AICc after breaking the channelwith a colinear dataset.
@@ -761,11 +761,11 @@ class LSDChiNetwork
     /// @return AICc value
           		/// @author SMM
   		/// @date 01/06/13
-		double calculate_AICc_after_breaks_colinear(double A_0, double m_over_n,
-						int skip, int minimum_segment_length, double sigma,
-						vector<double> reverse_chi, vector<double> reverse_elevation,
+		float calculate_AICc_after_breaks_colinear(float A_0, float m_over_n,
+						int skip, int minimum_segment_length, float sigma,
+						vector<float> reverse_chi, vector<float> reverse_elevation,
 						vector<int> break_nodes,
-						int& n_total_segments, int& n_total_nodes, double& cumulative_MLE);
+						int& n_total_segments, int& n_total_nodes, float& cumulative_MLE);
 
 		/// @brief This function gets the AICc after breaking the channelwith a colinear dataset.
     ///
@@ -786,11 +786,11 @@ class LSDChiNetwork
     /// @return AICc value
           		/// @author SMM
   		/// @date 01/06/13
-		vector<double> calculate_AICc_after_breaks_colinear_monte_carlo(double A_0, double m_over_n,
-				int skip, int minimum_segment_length, double sigma,
-				vector<double> reverse_Chi, vector<double> reverse_Elevation,
+		vector<float> calculate_AICc_after_breaks_colinear_monte_carlo(float A_0, float m_over_n,
+				int skip, int minimum_segment_length, float sigma,
+				vector<float> reverse_Chi, vector<float> reverse_Elevation,
 				vector<int> break_nodes,
-				int& n_total_segments, int& n_total_nodes, double& cumulative_MLE,
+				int& n_total_segments, int& n_total_nodes, float& cumulative_MLE,
 				int n_iterations);
 
 		/// @brief This routine tests to see if channels are long enough to get a decent fitting from the segment finding algorithms.
@@ -807,7 +807,7 @@ class LSDChiNetwork
 		/// @return array with channel head locations
 		/// @author Fiona Clubb
 		/// @date 03/09/2013
-		Array2D<double> calculate_channel_heads(int min_seg_length_for_channel_heads);
+		Array2D<float> calculate_channel_heads(int min_seg_length_for_channel_heads);
 
 	protected:
 
@@ -816,12 +816,12 @@ class LSDChiNetwork
   ///Number of columns.
 	int NCols;
 	///Minimum X coordinate.
-  double XMinimum;
+  float XMinimum;
 	///Minimum Y coordinate.
-	double YMinimum;
+	float YMinimum;
 
 	///Data resolution.
-	double DataResolution;
+	float DataResolution;
 	///No data value.
 	int NoDataValue;
 
@@ -832,13 +832,13 @@ class LSDChiNetwork
 		/// Column indices: used in conjunction with other LSD topographic tool objects and not necessary for standalone program.
     vector< vector<int> > col_indices;
     /// The elevations along the channels
-		vector< vector<double> > elevations;
+		vector< vector<float> > elevations;
 		/// Flow distances along channels. Used to integrate to arrive at chi.
-    vector< vector<double> > flow_distances;
+    vector< vector<float> > flow_distances;
     /// Drainage areas
-		vector< vector<double> > drainage_areas;
+		vector< vector<float> > drainage_areas;
     /// The chi values for the channels. This data will be overwritten as m_over_n changes.
-		vector< vector<double> > chis;
+		vector< vector<float> > chis;
     /// This is the node on the reciever channel where the tributary enters the channel. Used to find the downstream chi value of a channel.
 		vector<int> node_on_receiver_channel;
 		/// This is the channel that the tributary enters.
@@ -850,35 +850,35 @@ class LSDChiNetwork
 		// monte_carlo_sample_river_network_for_best_fit function
 
 		/// This stores the m over n value use to generate the means and standard deviations of the network properties.
-		double m_over_n_for_fitted_data;
+		float m_over_n_for_fitted_data;
 		/// This stored the A_0 value.
-    double A_0_for_fitted_data;
+    float A_0_for_fitted_data;
 		/// This vector is the same size as the number of channels and is 1 if the channel analysis n_nodes > 3* minimum_segment_length.
     vector<int> is_tributary_long_enough;
     /// Vector of chi_m means.
-    vector< vector<double> > chi_m_means;
+    vector< vector<float> > chi_m_means;
     /// Vector of chi_m standard deviations.
-		vector< vector<double> > chi_m_standard_deviations;
+		vector< vector<float> > chi_m_standard_deviations;
 		/// Vector of chi_m standard errors.
-		vector< vector<double> > chi_m_standard_errors;
+		vector< vector<float> > chi_m_standard_errors;
 		/// Vector of chi_b means.
-    vector< vector<double> > chi_b_means;
+    vector< vector<float> > chi_b_means;
     /// Vector of chi_b standard deviations.
-		vector< vector<double> > chi_b_standard_deviations;
+		vector< vector<float> > chi_b_standard_deviations;
 		/// Vector of chi_b standard errors.
-		vector< vector<double> > chi_b_standard_errors;
+		vector< vector<float> > chi_b_standard_errors;
 		/// Vector of fitted elevation means.
-    vector< vector<double> > all_fitted_elev_means;
+    vector< vector<float> > all_fitted_elev_means;
     /// Vector of fitted elevation standard deviations.
-		vector< vector<double> > all_fitted_elev_standard_deviations;
+		vector< vector<float> > all_fitted_elev_standard_deviations;
 		/// Vector of fitted elevation standard errors.
-		vector< vector<double> > all_fitted_elev_standard_errors;
+		vector< vector<float> > all_fitted_elev_standard_errors;
 		/// Vector of Durbin-Watson means.
-    vector< vector<double> > chi_DW_means;
+    vector< vector<float> > chi_DW_means;
     /// Vector of Durbin-Watson standard deviations.
-		vector< vector<double> > chi_DW_standard_deviations;
+		vector< vector<float> > chi_DW_standard_deviations;
 		/// Vector of Durbin-Watson standard errors.
-		vector< vector<double> > chi_DW_standard_errors;
+		vector< vector<float> > chi_DW_standard_errors;
     /// The parameters are generated using a monte carlo approach and not all nodes will have the same number of data points, so the number of data points is stored.
   	vector< vector<int> > n_data_points_used_in_stats;
     /// This vector holds the vectors containing the node locations of breaks in the segments.

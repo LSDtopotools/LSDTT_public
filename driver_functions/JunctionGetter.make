@@ -4,7 +4,7 @@ CC=g++
 CFLAGS=-c -Wall -O3 -pg
 OFLAGS = -Wall -O3 -pg
 LDFLAGS= -Wall
-SOURCES= JunctionGetter.cpp ../LSDIndexRaster.cpp ../LSDRaster.cpp ../LSDFlowInfo.cpp ../LSDChannelNetwork.cpp ../LSDStatsTools.cpp ../LSDIndexChannel.cpp ../LSDChannel.cpp ../LSDMostLikelyPartitionsFinder.cpp
+SOURCES= JunctionGetter.cpp ../LSDIndexRaster.cpp ../LSDRaster.cpp ../LSDFlowInfo.cpp ../LSDJunctionNetwork.cpp ../LSDStatsTools.cpp ../LSDIndexChannel.cpp ../LSDChannel.cpp ../LSDMostLikelyPartitionsFinder.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=JunctionGetter.out
 

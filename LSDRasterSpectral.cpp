@@ -130,8 +130,8 @@ void LSDRasterSpectral::create(string filename, string extension)
 }
 
 // this creates a raster filled with no data values
-void LSDRasterSpectral::create(int nrows, int ncols, double xmin, double ymin,
-            double cellsize, double ndv, Array2D<double> data)
+void LSDRasterSpectral::create(int nrows, int ncols, float xmin, float ymin,
+            float cellsize, float ndv, Array2D<float> data)
 {
 	NRows = nrows;
 	NCols = ncols;
@@ -194,7 +194,7 @@ void LSDRasterSpectral::create(LSDRaster& An_LSDRaster)
 //    - InputArray = zeta_padded (padded DEM)
 //    - transform_direction = -1
 //    - OutputArray = 2D spectrum
-void LSDRasterSpectral::dfftw2D_fwd(Array2D<double>& InputArray, Array2D<double>& OutputArrayReal, Array2D<double>& OutputArrayImaginary, int transform_direction, int Ly, int Lx)
+void LSDRasterSpectral::dfftw2D_fwd(Array2D<float>& InputArray, Array2D<float>& OutputArrayReal, Array2D<float>& OutputArrayImaginary, int transform_direction, int Ly, int Lx)
 {
   fftw_complex *input,*output;
   fftw_plan plan;
@@ -244,7 +244,7 @@ void LSDRasterSpectral::dfftw2D_fwd(Array2D<double>& InputArray, Array2D<double>
 //    - InputArrays = Real and Imaginary components of 2D spectrum
 //    - transform_direction = 1
 //    - OutputArray = reconstructed DEM
-void LSDRasterSpectral::dfftw2D_inv(Array2D<double>& InputArrayReal, Array2D<double>& InputArrayImaginary, Array2D<double>& OutputArray, int transform_direction, int Ly, int Lx)
+void LSDRasterSpectral::dfftw2D_inv(Array2D<float>& InputArrayReal, Array2D<float>& InputArrayImaginary, Array2D<float>& OutputArray, int transform_direction, int Ly, int Lx)
 {
   fftw_complex *input,*output;
   fftw_plan plan;
@@ -299,12 +299,12 @@ void LSDRasterSpectral::dfftw2D_inv(Array2D<double>& InputArrayReal, Array2D<dou
 // For 1st order surface fitting, there are 3 coefficients, therefore A is a
 // 3x3 matrix
 // Module kicks out detrended array, and an array with the trend plane
-void LSDRasterSpectral::detrend2D(Array2D<double>& zeta, Array2D<double>& zeta_detrend, Array2D<double>& trend_plane, int nrows, int ncols, double ndv)
+void LSDRasterSpectral::detrend2D(Array2D<float>& zeta, Array2D<float>& zeta_detrend, Array2D<float>& trend_plane, int nrows, int ncols, float ndv)
 {
   cout << "  Detrending the DEM by fitting a planar surface..." << endl;
-  Array2D<double> A(3,3,0.0);
-	Array1D<double> bb(3,0.0);
-	Array1D<double> coeffs(3);
+  Array2D<float> A(3,3,0.0);
+	Array1D<float> bb(3,0.0);
+	Array1D<float> coeffs(3);
 
   for (int i=0; i<nrows; ++i)
 	{
@@ -312,8 +312,8 @@ void LSDRasterSpectral::detrend2D(Array2D<double>& zeta, Array2D<double>& zeta_d
 		{
 			if(zeta[i][j] != ndv)
 			{
-        double x = j;
-			  double y = i;
+        float x = j;
+			  float y = i;
         // Generate matrix A
 			  A[0][0] += pow(x,2);
 			  A[0][1] += x*y;
@@ -333,18 +333,18 @@ void LSDRasterSpectral::detrend2D(Array2D<double>& zeta, Array2D<double>& zeta_d
 	}
   // Solve matrix equations using LU decomposition using the TNT JAMA package:
 	// A.coefs = b, where coefs is the coefficients vector.
-	LU<double> sol_A(A);  // Create LU object
+	LU<float> sol_A(A);  // Create LU object
 	coeffs = sol_A.solve(bb);
-	double a_plane = coeffs[0];
-	double b_plane = coeffs[1];
-	double c_plane = coeffs[2];
+	float a_plane = coeffs[0];
+	float b_plane = coeffs[1];
+	float c_plane = coeffs[2];
 	// Create detrended surface
   for (int i=0; i<nrows; ++i)
 	{
     for (int j=0; j<ncols; ++j)
 		{
-      double x = j;
-			double y = i;
+      float x = j;
+			float y = i;
       trend_plane[i][j] = a_plane*x + b_plane*y + c_plane;
        if(zeta[i][j] != ndv)
       {
@@ -366,30 +366,30 @@ void LSDRasterSpectral::detrend2D(Array2D<double>& zeta, Array2D<double>& zeta_d
 // weighting coefficients, WSS.
 // Another option would be to use a 2D Welch window, but functionality is very
 // similar.
-void LSDRasterSpectral::window_data_Hann2D(Array2D<double>& zeta_detrend, Array2D<double>& zeta_Hann2D, Array2D<double>& Hann2D, double& WSS, int nrows, int ncols, int ndv)
+void LSDRasterSpectral::window_data_Hann2D(Array2D<float>& zeta_detrend, Array2D<float>& zeta_Hann2D, Array2D<float>& Hann2D, float& WSS, int nrows, int ncols, int ndv)
 {
-  double PI = 3.14159265;
+  float PI = 3.14159265;
   cout << "  Windowing DEM using an elliptical 2D Hann window..." << endl;
-  double ny = nrows;
-  double nx = ncols;
+  float ny = nrows;
+  float nx = ncols;
   // Get matrix coordinates of centroid of matrix
-  double a = (nx-1)/2;
-  double b = (ny-1)/2;
+  float a = (nx-1)/2;
+  float b = (ny-1)/2;
   // Set up data window
 
-  Array2D<double> r_prime_matrix(nrows,ncols,0.0);
-  Array2D<double> id(nrows,ncols,0.0);
-  Array2D<double> theta_matrix(nrows,ncols,0.0);
-  double r; // radial polar coordinate
-  double theta; // angular polar coordinate
-  double rprime;
-  double HannCoefficient = 0;
+  Array2D<float> r_prime_matrix(nrows,ncols,0.0);
+  Array2D<float> id(nrows,ncols,0.0);
+  Array2D<float> theta_matrix(nrows,ncols,0.0);
+  float r; // radial polar coordinate
+  float theta; // angular polar coordinate
+  float rprime;
+  float HannCoefficient = 0;
   for(int i = 0; i < nrows; ++i)
   {
     for(int j = 0; j < ncols; ++j)
     {
-      double x = j;
-      double y = i;
+      float x = j;
+      float y = i;
       if(x == a)
       {
         theta = (PI/2);
@@ -420,7 +420,7 @@ void LSDRasterSpectral::window_data_Hann2D(Array2D<double>& zeta_detrend, Array2
 // exchanging the nonadjacent quadrants will place the zero wavenumber element
 // at the position (Nx/2, Ny/2) in the new array."  (Perron et al., 2008)
 
-void LSDRasterSpectral::shift_spectrum(Array2D<double>& spectrum_real,  Array2D<double>& spectrum_imaginary, Array2D<double>& spectrum_real_shift, Array2D<double>& spectrum_imaginary_shift, int Ly, int Lx)
+void LSDRasterSpectral::shift_spectrum(Array2D<float>& spectrum_real,  Array2D<float>& spectrum_imaginary, Array2D<float>& spectrum_real_shift, Array2D<float>& spectrum_imaginary_shift, int Ly, int Lx)
 {
   int QuadrantRows = Ly/2;
   int QuadrantCols = Lx/2;
@@ -444,7 +444,7 @@ void LSDRasterSpectral::shift_spectrum(Array2D<double>& spectrum_real,  Array2D<
 // DE-SHIFT ORIGIN OF SPECTRUM
 // Inverse process of above to return filtered spectrum to original format
 // required for the inverse fourier transform algorithm.
-void LSDRasterSpectral::shift_spectrum_inv(Array2D<double>& FilteredSpectrumReal, Array2D<double>& FilteredSpectrumImaginary, Array2D<double>& FilteredSpectrumReal_deshift, Array2D<double>& FilteredSpectrumImaginary_deshift, int Ly, int Lx)
+void LSDRasterSpectral::shift_spectrum_inv(Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary, Array2D<float>& FilteredSpectrumReal_deshift, Array2D<float>& FilteredSpectrumImaginary_deshift, int Ly, int Lx)
 {
   int QuadrantRows = Ly/2;
   int QuadrantCols = Lx/2;
@@ -471,9 +471,9 @@ void LSDRasterSpectral::shift_spectrum_inv(Array2D<double>& FilteredSpectrumReal
 // Multiply fourier analysis output by complex conjugate and normalise.
 // Note that for complex number z=x+iy, z*=x-iy, z.z* = x^2 + y^2
 // Returns 2D PSD as only output
-Array2D<double> LSDRasterSpectral::calculate_2D_PSD(Array2D<double>& spectrum_real_shift, Array2D<double>& spectrum_imaginary_shift, int Lx, int Ly, double WSS)
+Array2D<float> LSDRasterSpectral::calculate_2D_PSD(Array2D<float>& spectrum_real_shift, Array2D<float>& spectrum_imaginary_shift, int Lx, int Ly, float WSS)
 {
-  Array2D<double> P_DFT(Ly,Lx,0.0);
+  Array2D<float> P_DFT(Ly,Lx,0.0);
   for (int i=0; i<Ly; ++i)
   {
     for (int j=0; j<Lx; ++j)
@@ -488,26 +488,26 @@ Array2D<double> LSDRasterSpectral::calculate_2D_PSD(Array2D<double>& spectrum_re
 // GET RADIAL POWER SPECTRUM
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Collapse 2D PSD into a radial PSD
-void LSDRasterSpectral::calculate_radial_PSD(Array2D<double>& P_DFT, vector<double>& RadialPSD_output, vector<double>& RadialFrequency_output, int Lx, int Ly, double WSS, double dem_res)
+void LSDRasterSpectral::calculate_radial_PSD(Array2D<float>& P_DFT, vector<float>& RadialPSD_output, vector<float>& RadialFrequency_output, int Lx, int Ly, float WSS, float dem_res)
 {
   // CALCULATE FREQUENCY INCREMENTS - for generation of power spectrum
   // Frequency goes from zero to 1/(2*resolution), the Nyquist frequency in
   // nrows_padded/2 increments.
-  double dfx = 1/(dem_res*Lx);
-  double dfy = 1/(dem_res*Ly);
+  float dfx = 1/(dem_res*Lx);
+  float dfy = 1/(dem_res*Ly);
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-  vector<double> RadialFrequency(Ly*(Lx/2+1),0.0); // This is the distance from the origin in Frequency space.  Note that half of spectrum is redundant, since the fourier transform of a real dataset is symmetric, with a degeneracy of two.
-  vector<double> RadialPSD(Ly*(Lx/2+1),0.0);
-  double NyquistFreq = 1/(2*dem_res);
-  double RadialFreq;
+  vector<float> RadialFrequency(Ly*(Lx/2+1),0.0); // This is the distance from the origin in Frequency space.  Note that half of spectrum is redundant, since the fourier transform of a real dataset is symmetric, with a degeneracy of two.
+  vector<float> RadialPSD(Ly*(Lx/2+1),0.0);
+  float NyquistFreq = 1/(2*dem_res);
+  float RadialFreq;
   int count = 0;
   for (int i=0; i < Ly; ++i)
   {
     for (int j=0; j < (Lx/2+1); ++j)
     {
 
-      double x = j;
-      double y = i;
+      float x = j;
+      float y = i;
       RadialFreq = sqrt((y - (Ly/2))*(y - (Ly/2))*dfy*dfy + (x - (Lx/2))*(x - (Lx/2))*dfx*dfx); // distance from centre to this point. Converting position in frequency into an absolute frequency
       if (RadialFreq <= NyquistFreq)  // Ignore radial frequencies greater than the Nyquist frequency as these are aliased
         {
@@ -519,9 +519,9 @@ void LSDRasterSpectral::calculate_radial_PSD(Array2D<double>& P_DFT, vector<doub
   }
   // Sort radial frequency
   vector<size_t> index_map;
-  matlab_double_sort(RadialFrequency,RadialFrequency,index_map);
+  matlab_float_sort(RadialFrequency,RadialFrequency,index_map);
   // Reorder amplitudes to match sorted frequencies
-  matlab_double_reorder(RadialPSD,index_map,RadialPSD);
+  matlab_float_reorder(RadialPSD,index_map,RadialPSD);
 
   // Get number of discrete radial frequencies
   int n_freqs = 0;
@@ -535,8 +535,8 @@ void LSDRasterSpectral::calculate_radial_PSD(Array2D<double>& P_DFT, vector<doub
 
   // Convert to spatially averaged spectrum
   cout << "  Converting to radially averaged PSD..." << endl;
-  vector<double> RadialFrequency_grouped(n_freqs,0.0); // This is the distance from the origin in Frequency space
-  vector<double> RadialPSD_average(n_freqs,0.0);       // This will ultimately contain the radially averaged PSD
+  vector<float> RadialFrequency_grouped(n_freqs,0.0); // This is the distance from the origin in Frequency space
+  vector<float> RadialPSD_average(n_freqs,0.0);       // This will ultimately contain the radially averaged PSD
   int n_occurences = 0;           // This will keep track of the number of occurences of each radial frequency
   int pointer = 0;
   for (int i=0; i<(Ly*(Lx/2+1)); ++i)
@@ -568,23 +568,23 @@ void LSDRasterSpectral::calculate_radial_PSD(Array2D<double>& P_DFT, vector<doub
 // Input arguement is the width of the logarithmically spaced bins. For
 // topography, suggest this is 0.1
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDRasterSpectral::fftw2D_spectral_analysis(char* file_id, double LogBinWidth)
+void LSDRasterSpectral::fftw2D_spectral_analysis(char* file_id, float LogBinWidth)
 {
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // DETREND DATA
 	// FIT PLANE BY LEAST SQUARES REGRESSION AND USE COEFFICIENTS TO DETERMINE
 	// LOCAL SLOPE ax + by + c = z
-	Array2D<double> zeta_detrend(NRows,NCols);
-	Array2D<double> trend_plane(NRows,NCols);
+	Array2D<float> zeta_detrend(NRows,NCols);
+	Array2D<float> trend_plane(NRows,NCols);
   detrend2D(RasterData, zeta_detrend, trend_plane, NRows, NCols, NoDataValue);
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // USE ELLIPTICAL 2D HANN (raised cosine) WINDOW ON ZETA MATRIX.
   // RETURN WINDOWED DATA AND ALSO THE SUMMED SQUARE OF THE WEIGHTING
   // COEFFICIENTS.
-  Array2D<double> Hann2D(NRows,NCols,0.0);
-  Array2D<double> zeta_Hann2D(NRows,NCols,0.0);
-  double WSS = 0; // summed square of weighting coefficients
+  Array2D<float> Hann2D(NRows,NCols,0.0);
+  Array2D<float> zeta_Hann2D(NRows,NCols,0.0);
+  float WSS = 0; // summed square of weighting coefficients
   window_data_Hann2D(zeta_detrend, zeta_Hann2D, Hann2D, WSS, NRows, NCols, int(NoDataValue));
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -594,7 +594,7 @@ void LSDRasterSpectral::fftw2D_spectral_analysis(char* file_id, double LogBinWid
   int Ly = int(pow(2,ceil(log(NRows)/log(2))));
   int Lx = int(pow(2,ceil(log(NCols)/log(2))));
 
-  Array2D<double> zeta_padded(Ly,Lx);
+  Array2D<float> zeta_padded(Ly,Lx);
   for (int i=0;i<Ly;++i)
   {
     for (int j=0;j<Lx;++j)
@@ -612,27 +612,27 @@ void LSDRasterSpectral::fftw2D_spectral_analysis(char* file_id, double LogBinWid
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // DO 2D FORWARD FAST FOURIER TRANSFORM
   int transform_direction = -1;
-  Array2D<double> SpectrumReal(Ly,Lx);
-  Array2D<double> SpectrumImaginary(Ly,Lx);
+  Array2D<float> SpectrumReal(Ly,Lx);
+  Array2D<float> SpectrumImaginary(Ly,Lx);
   dfftw2D_fwd(zeta_padded, SpectrumReal, SpectrumImaginary, transform_direction, Ly, Lx);
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // REARRANGE SPECTRUM SO THAT ORIGIN IS AT THE CENTRE
-  Array2D<double> SpectrumReal_shift(Ly,Lx);
-  Array2D<double> SpectrumImaginary_shift(Ly,Lx);
+  Array2D<float> SpectrumReal_shift(Ly,Lx);
+  Array2D<float> SpectrumImaginary_shift(Ly,Lx);
   shift_spectrum(SpectrumReal, SpectrumImaginary, SpectrumReal_shift, SpectrumImaginary_shift, Ly, Lx);
 
   // CALCULATE THE DFT PERIODOGRAM
   // Multiply output by complex conjugate and normalise.
   // Note that for complex number z=x+iy, z*=x-iy, z.z* = x^2 + y^2
-  Array2D<double> P_DFT = calculate_2D_PSD(SpectrumReal_shift, SpectrumImaginary_shift, Lx, Ly, WSS);
+  Array2D<float> P_DFT = calculate_2D_PSD(SpectrumReal_shift, SpectrumImaginary_shift, Lx, Ly, WSS);
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // GET RADIAL POWER SPECTRUM
   // For forward transform, return the spectral power of the topography both
   // in a 2D array, and also as a one dimensional array of radial frequency
-  vector<double> RadialPSD;
-  vector<double> RadialFrequency;
+  vector<float> RadialPSD;
+  vector<float> RadialFrequency;
   calculate_radial_PSD(P_DFT, RadialPSD, RadialFrequency, Lx, Ly, WSS, DataResolution);
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -640,11 +640,11 @@ void LSDRasterSpectral::fftw2D_spectral_analysis(char* file_id, double LogBinWid
   // GET MODEL "SIGNAL" FOR WIENER FILTER
   cout << "  Binning radial PSD into logarithmically spaced bins..." << endl;
   // Initiate output vectors
-  vector<double> Bin_MeanRadialFreq;
-  vector<double> Bin_RadialPSD;
-  vector<double> BinMidpoints;
-  vector<double> StandardDeviationRadialFreq;
-  vector<double> StandardDeviationRadialPSD;
+  vector<float> Bin_MeanRadialFreq;
+  vector<float> Bin_RadialPSD;
+  vector<float> BinMidpoints;
+  vector<float> StandardDeviationRadialFreq;
+  vector<float> StandardDeviationRadialPSD;
   // Execute log binning
   log_bin_data(RadialFrequency, RadialPSD, LogBinWidth, Bin_MeanRadialFreq, Bin_RadialPSD, BinMidpoints,
   								StandardDeviationRadialFreq, StandardDeviationRadialPSD, int(NoDataValue));
@@ -738,26 +738,26 @@ void LSDRasterSpectral::fftw2D_spectral_analysis(char* file_id, double LogBinWid
 // BANDPASS FILTER
 // Filter array to band between frequency bands f1 and f2.  The bandpass filter
 // is a gaussian filter centred at (f1+f2)/2 and with a SD of |f2-f1|/6.
-void LSDRasterSpectral::bandpass_filter(Array2D<double>& RawSpectrumReal, Array2D<double>& RawSpectrumImaginary,
-                                        Array2D<double>& FilteredSpectrumReal, Array2D<double>& FilteredSpectrumImaginary,
-                                        int Lx, int Ly, double dem_res, double f1, double f2)
+void LSDRasterSpectral::bandpass_filter(Array2D<float>& RawSpectrumReal, Array2D<float>& RawSpectrumImaginary,
+                                        Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary,
+                                        int Lx, int Ly, float dem_res, float f1, float f2)
 {
   // CALCULATE FREQUENCY INCREMENTS - for generation of power spectrum
   // Frequency goes from zero to 1/(2*resolution), the Nyquist frequency in
   // nrows_padded/2 increments.
-  double dfx = 1/(dem_res*Lx);
-  double dfy = 1/(dem_res*Ly);
+  float dfx = 1/(dem_res*Lx);
+  float dfy = 1/(dem_res*Ly);
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   cout << "  Gaussian bandpass filter between f1 = " << f1 << " and f2 = " << f2 << endl;
-  double f; // radial frequency
-  double weight; // Filter weight
-  double sigma = sqrt((f2-f1)*(f2-f1))/6; // Standard Deviation of Gaussian filter
+  float f; // radial frequency
+  float weight; // Filter weight
+  float sigma = sqrt((f2-f1)*(f2-f1))/6; // Standard Deviation of Gaussian filter
   for (int i=0; i < Ly; ++i)
   {
     for (int j=0; j < Lx; ++j)
     {
-      double x = j;
-      double y = i;
+      float x = j;
+      float y = i;
       // Converting position in frequency space into an absolute frequency
       f = sqrt((y - (Ly/2))*(y - (Ly/2))*dfy*dfy + (x - (Lx/2))*(x - (Lx/2))*dfx*dfx);
       weight = exp(-(f - 0.5*(f1 + f2))*(f - 0.5*(f1 + f2))/(2*sigma*sigma));
@@ -770,26 +770,26 @@ void LSDRasterSpectral::bandpass_filter(Array2D<double>& RawSpectrumReal, Array2
 // LOWPASS FILTER
 // Filter array to retain frequencies below f1.  The filter edge is a radial
 // gaussian function with a SD of |f2-f1|/3.
-void LSDRasterSpectral::lowpass_filter(Array2D<double>& RawSpectrumReal, Array2D<double>& RawSpectrumImaginary,
-                                       Array2D<double>& FilteredSpectrumReal, Array2D<double>& FilteredSpectrumImaginary,
-                                       int Lx, int Ly, double dem_res, double f1, double f2)
+void LSDRasterSpectral::lowpass_filter(Array2D<float>& RawSpectrumReal, Array2D<float>& RawSpectrumImaginary,
+                                       Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary,
+                                       int Lx, int Ly, float dem_res, float f1, float f2)
 {
   // CALCULATE FREQUENCY INCREMENTS - for generation of power spectrum
   // Frequency goes from zero to 1/(2*resolution), the Nyquist frequency in
   // nrows_padded/2 increments.
-  double dfx = 1/(dem_res*Lx);
-  double dfy = 1/(dem_res*Ly);
+  float dfx = 1/(dem_res*Lx);
+  float dfy = 1/(dem_res*Ly);
   //----------------------------------------------------------------------------
   cout << "  Lowpass filter with edges controlled by radial Gaussian function between f1 = " << f1 << " and f2 = " << f2 << endl;
-  double f; // radial frequency
-  double weight; // Filter weight
-  double sigma;   // Standard Deviation of Gaussian edge
+  float f; // radial frequency
+  float weight; // Filter weight
+  float sigma;   // Standard Deviation of Gaussian edge
   for (int i=0; i < Ly; ++i)
   {
     for (int j=0; j < Lx; ++j)
     {
-      double x = j;
-      double y = i;
+      float x = j;
+      float y = i;
       f = sqrt((y - (Ly/2))*(y - (Ly/2))*dfy*dfy + (x - (Lx/2))*(x - (Lx/2))*dfx*dfx);
       		               // distance from centre to this point. Converting position in frequency into an absolute frequency
       if (f < f1)
@@ -821,26 +821,26 @@ void LSDRasterSpectral::lowpass_filter(Array2D<double>& RawSpectrumReal, Array2D
 // HIGHPASS FILTER
 // Filter array to retain frequencies above f1.  The filter edge is a radial
 // gaussian function with a SD of |f2-f1|/3.
-void LSDRasterSpectral::highpass_filter(Array2D<double>& RawSpectrumReal, Array2D<double>& RawSpectrumImaginary,
-                                        Array2D<double>& FilteredSpectrumReal, Array2D<double>& FilteredSpectrumImaginary,
-                                        int Lx, int Ly, double dem_res, double f1, double f2)
+void LSDRasterSpectral::highpass_filter(Array2D<float>& RawSpectrumReal, Array2D<float>& RawSpectrumImaginary,
+                                        Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary,
+                                        int Lx, int Ly, float dem_res, float f1, float f2)
 {
   // CALCULATE FREQUENCY INCREMENTS - for generation of power spectrum
   // Frequency goes from zero to 1/(2*resolution), the Nyquist frequency in
   // nrows_padded/2 increments.
-  double dfx = 1/(dem_res*Lx);
-  double dfy = 1/(dem_res*Ly);
+  float dfx = 1/(dem_res*Lx);
+  float dfy = 1/(dem_res*Ly);
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   cout << "    Highpass filter with edges controlled by radial Gaussian function between f1 = " << f1 << " and f2 = " << f2 << endl;
-  double f; // radial frequency
-  double weight; // Filter weight
-  double sigma = sqrt((f2-f1)*(f2-f1))/3; // Standard Deviation of Gaussian filter
+  float f; // radial frequency
+  float weight; // Filter weight
+  float sigma = sqrt((f2-f1)*(f2-f1))/3; // Standard Deviation of Gaussian filter
   for (int i=0; i < Ly; ++i)
   {
     for (int j=0; j < Lx; ++j)
     {
-      double x = j;
-      double y = i;
+      float x = j;
+      float y = i;
       f = sqrt((y - (Ly/2))*(y - (Ly/2))*dfy*dfy + (x - (Lx/2))*(x - (Lx/2))*dfx*dfx); // distance from centre to this point. Converting position in frequency into an absolute frequency
       if (f > f2)
       {
@@ -883,18 +883,18 @@ void LSDRasterSpectral::highpass_filter(Array2D<double>& RawSpectrumReal, Array2
 // zero.  In contrast, at low frequencies, the signal dominates and the filter
 // weight goes to 1.
 //
-void LSDRasterSpectral::wiener_filter(Array2D<double>& RawSpectrumReal, Array2D<double>& RawSpectrumImaginary, Array2D<double>& FilteredSpectrumReal, Array2D<double>& FilteredSpectrumImaginary, int Lx, int Ly, double dem_res, double WSS)
+void LSDRasterSpectral::wiener_filter(Array2D<float>& RawSpectrumReal, Array2D<float>& RawSpectrumImaginary, Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary, int Lx, int Ly, float dem_res, float WSS)
 {
-  vector<double> RadialPSD;
-  vector<double> RadialFrequency;
+  vector<float> RadialPSD;
+  vector<float> RadialFrequency;
   // CALCULATE FREQUENCY INCREMENTS - for generation of power spectrum
   // Frequency goes from zero to 1/(2*resolution), the Nyquist frequency in
   // nrows_padded/2 increments.
-  double dfx = 1/(dem_res*Lx);
-  double dfy = 1/(dem_res*Ly);
+  float dfx = 1/(dem_res*Lx);
+  float dfy = 1/(dem_res*Ly);
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // GET 2D POWER SPECTRUM
-  Array2D<double> P_DFT = calculate_2D_PSD(RawSpectrumReal, RawSpectrumImaginary, Lx, Ly, WSS);
+  Array2D<float> P_DFT = calculate_2D_PSD(RawSpectrumReal, RawSpectrumImaginary, Lx, Ly, WSS);
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // GET RADIAL POWER SPECTRUM
   // For forward transform, return the spectral power of the topography both
@@ -905,12 +905,12 @@ void LSDRasterSpectral::wiener_filter(Array2D<double>& RawSpectrumReal, Array2D<
   // RANGE EXPECTED TO FALL WITHIN WAVELENGTHS CONTROLLED BY RIDGE-VALLEY
   // TOPOGRAPHY)
   cout << "  Fitting power law to data..." << endl;
-  vector<double> LogRadialFrequency;
-  vector<double> LogRadialPSD;
+  vector<float> LogRadialFrequency;
+  vector<float> LogRadialPSD;
   int n_freqs = RadialFrequency.size();
-  double f_low = 0.001; // frequency at wavelength of 1000m
-  double f_high = 0.01; // frequency at wavelength of 100m
-  double m_model,logc_model,c_model;      // Coefficients of power law fit => logPSD = logc + m*log(freq) => PSD = c*freq^m
+  float f_low = 0.001; // frequency at wavelength of 1000m
+  float f_high = 0.01; // frequency at wavelength of 100m
+  float m_model,logc_model,c_model;      // Coefficients of power law fit => logPSD = logc + m*log(freq) => PSD = c*freq^m
   for (int i = 0; i < n_freqs; ++i)
   {
     if(RadialFrequency[i] <= f_high && RadialFrequency[i] >= f_low)
@@ -920,8 +920,8 @@ void LSDRasterSpectral::wiener_filter(Array2D<double>& RawSpectrumReal, Array2D<
     }
   }
   // Least squares regression
-  vector<double> residuals;
-  vector<double> regression_results = simple_linear_regression(LogRadialFrequency, LogRadialPSD, residuals);
+  vector<float> residuals;
+  vector<float> regression_results = simple_linear_regression(LogRadialFrequency, LogRadialPSD, residuals);
   m_model = regression_results[0];
   logc_model = regression_results[1];
 
@@ -929,7 +929,7 @@ void LSDRasterSpectral::wiener_filter(Array2D<double>& RawSpectrumReal, Array2D<
   c_model = pow(10,logc_model);
 
   // Extend relationship across entire frequency range to produce model spectrum
-  vector<double> RadialPSD_model(n_freqs,0.0);
+  vector<float> RadialPSD_model(n_freqs,0.0);
   for (int i = 0; i < n_freqs; ++i)
   {
     RadialPSD_model[i] = c_model*pow(RadialFrequency[i],m_model);
@@ -948,10 +948,10 @@ void LSDRasterSpectral::wiener_filter(Array2D<double>& RawSpectrumReal, Array2D<
 
   // i) Basically going to use a simple high-pass filter, and then average the
   // amplitude to give noise.
-  //vector<double> WhiteNoise(n_freqs,0.0);
+  //vector<float> WhiteNoise(n_freqs,0.0);
   int n_freqs_noise = 0;
-  double f_highpass = pow(10,-0.7);
-  double WhiteNoiseAmplitude = 0;
+  float f_highpass = pow(10,-0.7);
+  float WhiteNoiseAmplitude = 0;
   for (int i = 0; i < int(RadialPSD.size()); ++i)
   {
     if(RadialFrequency[i] >= f_highpass)
@@ -966,9 +966,9 @@ void LSDRasterSpectral::wiener_filter(Array2D<double>& RawSpectrumReal, Array2D<
   // frequency part of the spectrum - in particular it would be interesting to
   // see if it approximates pink noise, which is ubiquitous to natural systems
   // with self-organised criticality.
-  //double m_noise,logc_noise,c_noise;
-  //vector<double> LogRadialFrequency_highpass;
-  //vector<double> LogRadialPSD_highpass;
+  //float m_noise,logc_noise,c_noise;
+  //vector<float> LogRadialFrequency_highpass;
+  //vector<float> LogRadialPSD_highpass;
   //for (int i = 0; i < n_freqs; ++i)
   //{
   //  if(RadialFrequency[i] >= f_highpass)
@@ -988,7 +988,7 @@ void LSDRasterSpectral::wiener_filter(Array2D<double>& RawSpectrumReal, Array2D<
 
   //c_noise = pow(10,logc_noise);
   // Extend relationship across entire frequency range to produce model spectrum
-  vector<double> Noise_model(n_freqs,0.0);
+  vector<float> Noise_model(n_freqs,0.0);
   for (int i = 0; i < n_freqs; ++i)
   {
     //Noise_model[i] = c_noise*pow(RadialFrequency[i],m_noise);
@@ -1000,16 +1000,16 @@ void LSDRasterSpectral::wiener_filter(Array2D<double>& RawSpectrumReal, Array2D<
   // Determine Wiener Coefficients and apply to spectrum
   // WienerCoefficient = Signal/(Signal + Noise).  Basically acts as a lowpass
   // filter to remove noise from image.
-  double model;
-  double noise;
-  double f; // radial frequency
-  double WienerCoefficient; // Filter weight
+  float model;
+  float noise;
+  float f; // radial frequency
+  float WienerCoefficient; // Filter weight
   for (int i=0; i < Ly; ++i)
   {
     for (int j=0; j < Lx; ++j)
     {
-      double x = j;
-      double y = i;
+      float x = j;
+      float y = i;
       f = sqrt((y - (Ly/2))*(y - (Ly/2))*dfy*dfy + (x - (Lx/2))*(x - (Lx/2))*dfx*dfx); // Radial Frequency
       model = c_model*pow(f,m_model);
       //noise = c_noise*pow(f,m_noise);
@@ -1054,7 +1054,7 @@ void LSDRasterSpectral::wiener_filter(Array2D<double>& RawSpectrumReal, Array2D<
 //------------------------------------------------------------------------------
 // David Milodowski, 10/12/2012
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-LSDRaster LSDRasterSpectral::fftw2D_filter(int FilterType, double FLow, double FHigh)
+LSDRaster LSDRasterSpectral::fftw2D_filter(int FilterType, float FLow, float FHigh)
 {
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // for FORWARD TRANSFORM
@@ -1063,10 +1063,10 @@ LSDRaster LSDRasterSpectral::fftw2D_filter(int FilterType, double FLow, double F
   // DETREND DATA => DO NOT WINDOW!
 	// FIT PLANE BY LEAST SQUARES REGRESSION AND USE COEFFICIENTS TO DETERMINE
 	// LOCAL SLOPE ax + by + c = z
-	Array2D<double> zeta_detrend(NRows,NCols);
-	Array2D<double> trend_plane(NRows,NCols);
+	Array2D<float> zeta_detrend(NRows,NCols);
+	Array2D<float> trend_plane(NRows,NCols);
   detrend2D(RasterData, zeta_detrend, trend_plane, NRows, NCols, NoDataValue);
-  //double WSS = 1; // dataset is not windowed
+  //float WSS = 1; // dataset is not windowed
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // 2D DISCRETE FAST FOURIER TRANSFORM
@@ -1075,7 +1075,7 @@ LSDRaster LSDRasterSpectral::fftw2D_filter(int FilterType, double FLow, double F
   int Ly = int(pow(2,ceil(log(NRows)/log(2))));
   int Lx = int(pow(2,ceil(log(NCols)/log(2))));
 
-  Array2D<double> zeta_padded(Ly,Lx);
+  Array2D<float> zeta_padded(Ly,Lx);
   for (int i=0;i<Ly;++i)
   {
     for (int j=0;j<Lx;++j)
@@ -1093,14 +1093,14 @@ LSDRaster LSDRasterSpectral::fftw2D_filter(int FilterType, double FLow, double F
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // DO 2D FORWARD FAST FOURIER TRANSFORM
   int transform_direction = -1;
-  Array2D<double> spectrum_real(Ly,Lx);
-  Array2D<double> spectrum_imaginary(Ly,Lx);
+  Array2D<float> spectrum_real(Ly,Lx);
+  Array2D<float> spectrum_imaginary(Ly,Lx);
   dfftw2D_fwd(zeta_padded, spectrum_real, spectrum_imaginary, transform_direction, Ly, Lx);
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // REARRANGE SPECTRUM SO THAT ORIGIN IS AT THE CENTRE
-  Array2D<double> spectrum_real_shift(Ly,Lx);
-  Array2D<double> spectrum_imaginary_shift(Ly,Lx);
+  Array2D<float> spectrum_real_shift(Ly,Lx);
+  Array2D<float> spectrum_imaginary_shift(Ly,Lx);
   shift_spectrum(spectrum_real, spectrum_imaginary, spectrum_real_shift, spectrum_imaginary_shift, Ly, Lx);
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1110,8 +1110,8 @@ LSDRaster LSDRasterSpectral::fftw2D_filter(int FilterType, double FLow, double F
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // APPLY FILTER
   // First, remove the frequency ranges that are not wanted
-  Array2D<double> FilteredSpectrumReal(Ly,Lx,0.0);
-  Array2D<double> FilteredSpectrumImaginary(Ly,Lx,0.0);
+  Array2D<float> FilteredSpectrumReal(Ly,Lx,0.0);
+  Array2D<float> FilteredSpectrumImaginary(Ly,Lx,0.0);
 
   // SET FILTER PARAMETERS
   if (FilterType == 1)
@@ -1129,19 +1129,19 @@ LSDRaster LSDRasterSpectral::fftw2D_filter(int FilterType, double FLow, double F
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // DE-SHIFT ORIGIN OF SPECTRUM
   // Return filtered spectrum to original format (de-shifted)
-  Array2D<double> FilteredSpectrumReal_deshift(Ly,Lx);
-  Array2D<double> FilteredSpectrumImaginary_deshift(Ly,Lx);
+  Array2D<float> FilteredSpectrumReal_deshift(Ly,Lx);
+  Array2D<float> FilteredSpectrumImaginary_deshift(Ly,Lx);
   shift_spectrum_inv(FilteredSpectrumReal, FilteredSpectrumImaginary, FilteredSpectrumReal_deshift, FilteredSpectrumImaginary_deshift, Ly, Lx);
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // DO 2D INVERSE FAST FOURIER TRANSFORM
   transform_direction = 1;
-  Array2D<double> FilteredTopographyPadded(Ly,Lx);
+  Array2D<float> FilteredTopographyPadded(Ly,Lx);
   dfftw2D_inv(FilteredSpectrumReal_deshift, FilteredSpectrumImaginary_deshift, FilteredTopographyPadded, transform_direction, Ly, Lx);
   // Need to scale output by the number of pixels, and by the Hann window to
   // recover the topography, before adding the planar trend back to the dataset
   cout << "  Scaling output filtered topography..." << endl;
-  Array2D<double> FilteredTopography(NRows,NCols,NoDataValue);
+  Array2D<float> FilteredTopography(NRows,NCols,NoDataValue);
   for (int i=0; i < NRows; ++i)
   {
     for (int j=0; j < NCols; ++j)
@@ -1203,10 +1203,10 @@ LSDRaster LSDRasterSpectral::fftw2D_wiener()
   // DETREND DATA => DO NOT WINDOW!
 	// FIT PLANE BY LEAST SQUARES REGRESSION AND USE COEFFICIENTS TO DETERMINE
 	// LOCAL SLOPE ax + by + c = z
-	Array2D<double> zeta_detrend(NRows,NCols);
-	Array2D<double> trend_plane(NRows,NCols);
+	Array2D<float> zeta_detrend(NRows,NCols);
+	Array2D<float> trend_plane(NRows,NCols);
   detrend2D(RasterData, zeta_detrend, trend_plane, NRows, NCols, NoDataValue);
-  double WSS = 1; // dataset is not windowed
+  float WSS = 1; // dataset is not windowed
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // 2D DISCRETE FAST FOURIER TRANSFORM
@@ -1215,7 +1215,7 @@ LSDRaster LSDRasterSpectral::fftw2D_wiener()
   int Ly = int(pow(2,ceil(log(NRows)/log(2))));
   int Lx = int(pow(2,ceil(log(NCols)/log(2))));
 
-  Array2D<double> zeta_padded(Ly,Lx);
+  Array2D<float> zeta_padded(Ly,Lx);
   for (int i=0;i<Ly;++i)
   {
     for (int j=0;j<Lx;++j)
@@ -1233,14 +1233,14 @@ LSDRaster LSDRasterSpectral::fftw2D_wiener()
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // DO 2D FORWARD FAST FOURIER TRANSFORM
   int transform_direction = -1;
-  Array2D<double> spectrum_real(Ly,Lx);
-  Array2D<double> spectrum_imaginary(Ly,Lx);
+  Array2D<float> spectrum_real(Ly,Lx);
+  Array2D<float> spectrum_imaginary(Ly,Lx);
   dfftw2D_fwd(zeta_padded, spectrum_real, spectrum_imaginary, transform_direction, Ly, Lx);
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // REARRANGE SPECTRUM SO THAT ORIGIN IS AT THE CENTRE
-  Array2D<double> spectrum_real_shift(Ly,Lx);
-  Array2D<double> spectrum_imaginary_shift(Ly,Lx);
+  Array2D<float> spectrum_real_shift(Ly,Lx);
+  Array2D<float> spectrum_imaginary_shift(Ly,Lx);
   shift_spectrum(spectrum_real, spectrum_imaginary, spectrum_real_shift, spectrum_imaginary_shift, Ly, Lx);
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1250,27 +1250,27 @@ LSDRaster LSDRasterSpectral::fftw2D_wiener()
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // APPLY FILTER
   // First, remove the frequency ranges that are not wanted
-  Array2D<double> FilteredSpectrumReal(Ly,Lx,0.0);
-  Array2D<double> FilteredSpectrumImaginary(Ly,Lx,0.0);
+  Array2D<float> FilteredSpectrumReal(Ly,Lx,0.0);
+  Array2D<float> FilteredSpectrumImaginary(Ly,Lx,0.0);
   // SET FILTER PARAMETERS
   wiener_filter(spectrum_real_shift, spectrum_imaginary_shift, FilteredSpectrumReal, FilteredSpectrumImaginary, Lx, Ly, DataResolution, WSS);
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // DE-SHIFT ORIGIN OF SPECTRUM
   // Return filtered spectrum to original format (de-shifted)
-  Array2D<double> FilteredSpectrumReal_deshift(Ly,Lx);
-  Array2D<double> FilteredSpectrumImaginary_deshift(Ly,Lx);
+  Array2D<float> FilteredSpectrumReal_deshift(Ly,Lx);
+  Array2D<float> FilteredSpectrumImaginary_deshift(Ly,Lx);
   shift_spectrum_inv(FilteredSpectrumReal, FilteredSpectrumImaginary, FilteredSpectrumReal_deshift, FilteredSpectrumImaginary_deshift, Ly, Lx);
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // DO 2D INVERSE FAST FOURIER TRANSFORM
   transform_direction = 1;
-  Array2D<double> FilteredTopographyPadded(Ly,Lx);
+  Array2D<float> FilteredTopographyPadded(Ly,Lx);
   dfftw2D_inv(FilteredSpectrumReal_deshift, FilteredSpectrumImaginary_deshift, FilteredTopographyPadded, transform_direction, Ly, Lx);
   // Need to scale output by the number of pixels, and by the Hann window to
   // recover the topography, before adding the planar trend back to the dataset
   cout << "  Scaling output filtered topography..." << endl;
-  Array2D<double> FilteredTopography(NRows,NCols,NoDataValue);
+  Array2D<float> FilteredTopography(NRows,NCols,NoDataValue);
   for (int i=0; i < NRows; ++i)
   {
     for (int j=0; j < NCols; ++j)

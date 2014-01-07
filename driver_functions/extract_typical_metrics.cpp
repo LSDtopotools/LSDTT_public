@@ -49,7 +49,7 @@
 #include "../LSDRaster.hpp"
 #include "../LSDIndexRaster.hpp"
 #include "../LSDFlowInfo.hpp"
-#include "../LSDChannelNetwork.hpp"
+#include "../LSDJunctionNetwork.hpp"
 #include "../LSDIndexChannelTree.hpp"
 #include "../LSDChiNetwork.hpp"
 
@@ -85,13 +85,13 @@ int main (int nNumberofArgs,char *argv[])
 	// get the properties of the DEM
 	//int NRows = topo_test.get_NRows();
 	//int NCols = topo_test.get_NCols();
-	//double NoDataValue = topo_test.get_NoDataValue();
-	//double XMinimum = topo_test.get_XMinimum();
-	//double YMinimum = topo_test.get_YMinimum();
-	double DataResolution = topo_test.get_DataResolution();
+	//float NoDataValue = topo_test.get_NoDataValue();
+	//float XMinimum = topo_test.get_XMinimum();
+	//float YMinimum = topo_test.get_YMinimum();
+	float DataResolution = topo_test.get_DataResolution();
 
 	// get the filled file
-	double MinSlope = 0.00001;
+	float MinSlope = 0.00001;
 	cout << "Filling the DEM" << endl;
 	LSDRaster filled_topo_test = topo_test.fill(MinSlope);
 	filled_topo_test.write_raster((DEM_f_name+fill_ext),DEM_flt_extension);
@@ -111,7 +111,7 @@ int main (int nNumberofArgs,char *argv[])
 
 	// calculate parameters for drainage extraction based on DEM resolution
 	int threshold;
-	double window_radius;
+	float window_radius;
 
 	ifstream param_file;
 	string param_filename = "topo_metrics.param";
@@ -166,7 +166,7 @@ int main (int nNumberofArgs,char *argv[])
 	sources = FlowInfo.get_sources_index_threshold(ContributingPixels, threshold);
 
 	// now get the junction network
-	LSDChannelNetwork ChanNetwork(sources, FlowInfo);
+	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 
 	string curvature_name = "_curv";
 	string tan_curvature_name = "_tan_curv";
@@ -183,12 +183,12 @@ int main (int nNumberofArgs,char *argv[])
 
 
 	// Calculate polyfit coefficients
-	Array2D<double> a;
-  	Array2D<double> b;
-  	Array2D<double> c;
-  	Array2D<double> d;
-  	Array2D<double> e;
-  	Array2D<double> f;
+	Array2D<float> a;
+  	Array2D<float> b;
+  	Array2D<float> c;
+  	Array2D<float> d;
+  	Array2D<float> e;
+  	Array2D<float> f;
   	topo_test.calculate_polyfit_coefficient_matrices(window_radius, a, b, c, d, e, f);
 
 	// get various derived rasters

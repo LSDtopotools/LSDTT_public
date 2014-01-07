@@ -7,7 +7,7 @@
 #include "LSDFlowInfo.hpp"
 #include "LSDRaster.hpp"
 #include "LSDIndexRaster.hpp"
-#include "LSDChannelNetwork.hpp"
+#include "LSDJunctionNetwork.hpp"
 #include "LSDStatsTools.hpp"
 using namespace std;
 using namespace TNT;
@@ -27,7 +27,7 @@ class LSDBasin
   /// @param ChanNet Channel network object.
   /// @author SWDG
   /// @date 11/12/12
-  LSDBasin(int Junction, LSDFlowInfo& FlowInfo, LSDChannelNetwork& ChanNet)
+  LSDBasin(int Junction, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChanNet)
 											{ create(Junction, FlowInfo, ChanNet); }
 
 
@@ -36,11 +36,11 @@ class LSDBasin
 	/// @return Number of columns as an integer.
   int get_NCols() const				{ return NCols; }
   /// @return Minimum X coordinate as an integer.
-	double get_XMinimum() const			{ return XMinimum; }
+	float get_XMinimum() const			{ return XMinimum; }
 	/// @return Minimum Y coordinate as an integer.
-	double get_YMinimum() const			{ return YMinimum; }
+	float get_YMinimum() const			{ return YMinimum; }
 	/// @return Data resolution as an integer.
-	double get_DataResolution() const	{ return DataResolution; }
+	float get_DataResolution() const	{ return DataResolution; }
 	/// @return No Data Value as an integer.
 	int get_NoDataValue() const			{ return NoDataValue; }
 	
@@ -51,7 +51,7 @@ class LSDBasin
 	int get_NumberOfCells() const { return NumberOfCells; }
 	
   /// @return Area of basin in spataial units.
-  double get_Area() const { return Area; }
+  float get_Area() const { return Area; }
   
   /// @return Junction Number of the basin.
   int get_Junction() const { return Junction; }
@@ -77,51 +77,51 @@ class LSDBasin
   //Getters of basin parameters
   
   /// @return Mean slope.
-  double get_SlopeMean() const { return SlopeMean; }
+  float get_SlopeMean() const { return SlopeMean; }
   /// @return Mean elevation.
-  double get_ElevationMean() const { return ElevationMean; }
+  float get_ElevationMean() const { return ElevationMean; }
   /// @return Mean aspect.
-  double get_AspectMean() const { return AspectMean; }
+  float get_AspectMean() const { return AspectMean; }
   /// @return Mean relief.
-  double get_ReliefMean() const { return ReliefMean; }
+  float get_ReliefMean() const { return ReliefMean; }
   /// @return Mean plan curvature.
-  double get_PlanCurvMean() const { return PlanCurvMean; }
+  float get_PlanCurvMean() const { return PlanCurvMean; }
   /// @return Mean profile curvature.
-  double get_ProfileCurvMean() const { return ProfileCurvMean; }
+  float get_ProfileCurvMean() const { return ProfileCurvMean; }
   /// @return Mean total curvature.
-  double get_TotalCurvMean() const { return TotalCurvMean; }
+  float get_TotalCurvMean() const { return TotalCurvMean; }
   /// @return Max plan curvature.
-  double get_PlanCurvMax() const { return PlanCurvMax; }
+  float get_PlanCurvMax() const { return PlanCurvMax; }
   /// @return Max profile curvature.
-  double get_ProfileCurvMax() const { return ProfileCurvMax; }
+  float get_ProfileCurvMax() const { return ProfileCurvMax; }
   /// @return Max total curvature.
-  double get_TotalCurvMax() const { return TotalCurvMax; }
+  float get_TotalCurvMax() const { return TotalCurvMax; }
   /// @return Hillslope length from hilltop flow routing.
-  double get_HillslopeLength_HFR() const { return HillslopeLength_HFR; }
+  float get_HillslopeLength_HFR() const { return HillslopeLength_HFR; }
   /// @return Hillslope length from boomerang bins.
-  double get_HillslopeLength_Binned() const { return HillslopeLength_Binned; }
+  float get_HillslopeLength_Binned() const { return HillslopeLength_Binned; }
   /// @return Hillslope length from boomerang splines.
-  double get_HillslopeLength_Spline() const { return HillslopeLength_Spline; }
+  float get_HillslopeLength_Spline() const { return HillslopeLength_Spline; }
   /// @return Hillslope length from drainage density.
-  double get_HillslopeLength_Density() const { return HillslopeLength_Density; }
+  float get_HillslopeLength_Density() const { return HillslopeLength_Density; }
   /// @return Flow length.
-  double get_FlowLength() const { return FlowLength; }
+  float get_FlowLength() const { return FlowLength; }
   /// @return Drainage Density.
-  double get_DrainageDensity() const { return DrainageDensity; }
+  float get_DrainageDensity() const { return DrainageDensity; }
   /// @return Basin Perimeter's i index.
   vector<int> get_Perimeter_i() const { return Perimeter_i; }
   /// @return Basin Perimeter's j index.
   vector<int> get_Perimeter_j() const { return Perimeter_j; }
   /// @return Cosmo erosion rate.
-  double get_CosmoErosionRate() const { return CosmoErosionRate; }
+  float get_CosmoErosionRate() const { return CosmoErosionRate; }
   /// @return Other eroision rate.
-  double get_OtherErosionRate() const { return OtherErosionRate; }
+  float get_OtherErosionRate() const { return OtherErosionRate; }
   /// @return Mean hilltop curvature.
-  double get_CHTMean() const { return CHTMean; }
+  float get_CHTMean() const { return CHTMean; }
   /// @return E* value.
-  double get_EStar() const { return EStar; }
+  float get_EStar() const { return EStar; }
   /// @return R* value.
-  double get_RStar() const { return RStar; }  
+  float get_RStar() const { return RStar; }  
   
   /// @brief Calculate the mean value of an LSDRaster which falls inside a basin.
   /// @param FlowInfo Flowinfo object.
@@ -129,7 +129,7 @@ class LSDBasin
   /// @return Mean value.
   /// @author SWDG
   /// @date 11/12/13
-  double CalculateBasinMean(LSDFlowInfo& FlowInfo, LSDRaster Data);
+  float CalculateBasinMean(LSDFlowInfo& FlowInfo, LSDRaster Data);
   
   /// @brief Calculate the max value of an LSDRaster which falls inside a basin.
   /// @param FlowInfo Flowinfo object.
@@ -137,7 +137,7 @@ class LSDBasin
   /// @return Max value.
   /// @author SWDG
   /// @date 11/12/13
-  double CalculateBasinMax(LSDFlowInfo& FlowInfo, LSDRaster Data);
+  float CalculateBasinMax(LSDFlowInfo& FlowInfo, LSDRaster Data);
   
   /// @brief Set the mean slope of a basin.
   /// @param FlowInfo Flowinfo object.
@@ -213,19 +213,19 @@ class LSDBasin
   /// @param ErosionRate Erosion rate - No sanity check on this value.
   /// @author SWDG
   /// @date 11/12/13
-  void set_CosmoErosionRate(double ErosionRate) { CosmoErosionRate = ErosionRate; }
+  void set_CosmoErosionRate(float ErosionRate) { CosmoErosionRate = ErosionRate; }
   
   /// @brief Set the Other erosion rate.
   /// @param ErosionRate Erosion rate - No sanity check on this value.
   /// @author SWDG
   /// @date 11/12/13
-  void set_OtherErosionRate(double ErosionRate) { OtherErosionRate = ErosionRate; }
+  void set_OtherErosionRate(float ErosionRate) { OtherErosionRate = ErosionRate; }
  
   /// @brief Calculate E* and R* values for the basin, using hilltop flow routed hillslope lengths. 
   /// @param CriticalSlope slope threshold value, typically 0.4.
   /// @author SWDG
   /// @date 12/12/13
-  void set_EStar_RStar(double CriticalSlope);
+  void set_EStar_RStar(float CriticalSlope);
  
   /// @brief Calculate flow length for the basin using the D8 flow directions. 
   /// @param StreamNetwork the channel network.
@@ -255,7 +255,7 @@ class LSDBasin
   /// @param bin_threshold Threshold fraction of values needed to keep a bin. 
   /// @author SWDG
   /// @date 12/12/13
-  void set_HillslopeLengths_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, double log_bin_width, int SplineResolution, double bin_threshold);
+  void set_HillslopeLengths_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, float log_bin_width, int SplineResolution, float bin_threshold);
  
   /// @brief Set the mean HillslopeLength from drainage density.
   /// @author SWDG
@@ -275,7 +275,7 @@ class LSDBasin
   /// @param Path The output path where the data files will be written to, including the final slash. 
   /// @author SWDG
   /// @date 12/12/13  
-  void Plot_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, double log_bin_width, int SplineResolution, double bin_threshold, string Path);
+  void Plot_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, float log_bin_width, int SplineResolution, float bin_threshold, string Path);
   
   /// @brief Set the mean aspect of a basin.
   /// @param FlowInfo Flowinfo object.
@@ -303,7 +303,7 @@ class LSDBasin
   /// @author SWDG
   /// @date 12/12/13
   void set_all_HillslopeLengths(LSDFlowInfo& FlowInfo, LSDRaster& HillslopeLengths, LSDRaster& Slope, 
-                                LSDRaster& DinfArea, double log_bin_width, int SplineResolution, double bin_threshold);  
+                                LSDRaster& DinfArea, float log_bin_width, int SplineResolution, float bin_threshold);  
 
   /// @brief Set all of the basin parameters with one call.
   ///
@@ -327,9 +327,9 @@ class LSDBasin
   /// @author SWDG
   /// @date 12/12/13
   void set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& CHT, LSDIndexRaster& StreamNetwork,
-                          LSDRaster& HillslopeLengths, LSDRaster& Relief, double window_radius, double log_bin_width, 
-                          int SplineResolution, double bin_threshold, double CriticalSlope, 
-                          double CosmoErosionRate = -9999, double OtherErosionRate = -9999);
+                          LSDRaster& HillslopeLengths, LSDRaster& Relief, float window_radius, float log_bin_width, 
+                          int SplineResolution, float bin_threshold, float CriticalSlope, 
+                          float CosmoErosionRate = -9999, float OtherErosionRate = -9999);
 
   /// @brief Cookie cut data from an LSDIndexRaster into the shape of the basin.
   /// @param Data LSDIndexRaster data to be written.
@@ -353,7 +353,7 @@ class LSDBasin
   /// @return LSDRaster of the data in the shape of the basin.
   /// @author SWDG
   /// @date 12/12/13 
-  LSDRaster write_real_data_to_LSDRaster(double Param, LSDFlowInfo FlowInfo);
+  LSDRaster write_real_data_to_LSDRaster(float Param, LSDFlowInfo FlowInfo);
  
   /// @brief Write an integer value to an LSDIndexRaster in the shape of the basin.
   /// @param Param integer value to be written
@@ -544,7 +544,7 @@ class LSDBasin
   /// @return Basin width.
   /// @author SWDG
   /// @date 16/12/13 
-  double Width(LSDFlowInfo FlowInfo, Array2D<double> FlowDir);
+  float Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir);
    
   protected:
   
@@ -555,11 +555,11 @@ class LSDBasin
   ///Number of columns.
 	int NCols;
 	///Minimum X coordinate.
-  double XMinimum;
+  float XMinimum;
 	///Minimum Y coordinate.
-	double YMinimum;
+	float YMinimum;
 	///Data resolution.
-	double DataResolution;
+	float DataResolution;
 	///No data value.
 	int NoDataValue;  
   /// Junction Number of the basin, serves as a unique ID of a basin.
@@ -569,7 +569,7 @@ class LSDBasin
   /// Number of DEM cells. 
   int NumberOfCells;
   /// Area in spatial units of the basin.
-  double Area;
+  float Area;
   /// Boolean to show if the basin is beheaded or not.
   bool Beheaded;
   /// i index of the outlet pixel
@@ -587,54 +587,54 @@ class LSDBasin
   //These instance variables are used to store calculated basin parameters 
   
   /// Mean basin slope.
-  double SlopeMean;
+  float SlopeMean;
   /// Mean basin elevation.
-  double ElevationMean;
+  float ElevationMean;
   /// Mean basin aspect.
-  double AspectMean;
+  float AspectMean;
   /// Mean basin relief.
-  double ReliefMean;
+  float ReliefMean;
   /// Mean basin planform curvature.
-  double PlanCurvMean;
+  float PlanCurvMean;
   /// Mean basin profile curvature.
-  double ProfileCurvMean;
+  float ProfileCurvMean;
   /// Mean basin total curvature.
-  double TotalCurvMean;
+  float TotalCurvMean;
   /// Max basin planform curvature.
-  double PlanCurvMax;
+  float PlanCurvMax;
   /// Max basin profile curvature.
-  double ProfileCurvMax;
+  float ProfileCurvMax;
   /// Max basin total curvature.
-  double TotalCurvMax;
+  float TotalCurvMax;
   /// Mean hillslope length from hilltop flow routing.
-  double HillslopeLength_HFR;
+  float HillslopeLength_HFR;
   /// Mean hillslope length from binned boomerang plots.
-  double HillslopeLength_Binned;
+  float HillslopeLength_Binned;
   /// Mean hillslope length from spline curves on boomerang plots.
-  double HillslopeLength_Spline;
+  float HillslopeLength_Spline;
   /// Mean hillslope length from drainage density.
-  double HillslopeLength_Density;
+  float HillslopeLength_Density;
   /// Basin flowlength.
-  double FlowLength;
+  float FlowLength;
   /// Basin drainage density.
-  double DrainageDensity;
+  float DrainageDensity;
   /// Basin Perimeter's j index.
   vector<int> Perimeter_i;
   /// Basin Perimeter's j index.
   vector<int> Perimeter_j;
   /// Cosmo erosion rate.
-  double CosmoErosionRate;
+  float CosmoErosionRate;
   /// Other erosion rate.
-  double OtherErosionRate;
+  float OtherErosionRate;
   /// Mean basin hilltop curvature.
-  double CHTMean;
+  float CHTMean;
   /// Basin E* value.
-  double EStar;
+  float EStar;
   /// Basin R* value.
-  double RStar;
+  float RStar;
  											
   private:
-	void create(int Junction, LSDFlowInfo& FlowInfo, LSDChannelNetwork& ChanNet);
+	void create(int Junction, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChanNet);
 
 };
 

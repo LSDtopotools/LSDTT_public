@@ -102,7 +102,7 @@ using namespace TNT;
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDMostLikelyPartitionsFinder::create(int this_min_seg_length, vector<double> this_x_data, vector<double> this_y_data)
+void LSDMostLikelyPartitionsFinder::create(int this_min_seg_length, vector<float> this_x_data, vector<float> this_y_data)
 {
 	minimum_segment_length = this_min_seg_length;
 	x_data = this_x_data;
@@ -122,14 +122,14 @@ void LSDMostLikelyPartitionsFinder::create(int this_min_seg_length, vector<doubl
 void LSDMostLikelyPartitionsFinder::reset_derived_data_members()
 {
 
-	Array2D<double> empty_array;
+	Array2D<float> empty_array;
 	like_array =empty_array;
 	m_array =empty_array;
 	b_array = empty_array;
 	rsquared_array = empty_array;
 	DW_array = empty_array;
 
-	vector<double> empty_dv;
+	vector<float> empty_dv;
 	MLE_of_segments = empty_dv;
 
 	vector< vector<int> > vv_int;
@@ -142,7 +142,7 @@ void LSDMostLikelyPartitionsFinder::reset_derived_data_members()
 	best_fit_AIC = empty_vec;
 	best_fit_AICc = empty_vec;
 
-	vector< vector<double> > empty_vecvec;
+	vector< vector<float> > empty_vecvec;
 	AIC_for_each_n_segments= empty_vecvec;
 	AICc_for_each_n_segments = empty_vecvec;
 }
@@ -160,18 +160,18 @@ void LSDMostLikelyPartitionsFinder::reset_derived_data_members()
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDMostLikelyPartitionsFinder::thin_data_target_dx_preserve_data(double dx)
+void LSDMostLikelyPartitionsFinder::thin_data_target_dx_preserve_data(float dx)
 {
-	vector<double> thinned_x;
-	vector<double> thinned_y;
+	vector<float> thinned_x;
+	vector<float> thinned_y;
 
 	//cout << "x_data size: " << x_data.size() << endl;
 
 	thinned_x.push_back(x_data[0]);
 	thinned_y.push_back(y_data[0]);
 
-	double start_x =  x_data[0];
-	double next_x = start_x+dx;
+	float start_x =  x_data[0];
+	float next_x = start_x+dx;
 
 	int n_nodes = x_data.size();
 	int last_picked = 0;
@@ -209,10 +209,10 @@ void LSDMostLikelyPartitionsFinder::thin_data_target_dx_preserve_data(double dx)
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDMostLikelyPartitionsFinder::thin_data_target_dx_preserve_data(double dx, vector<int>& node_ref)
+void LSDMostLikelyPartitionsFinder::thin_data_target_dx_preserve_data(float dx, vector<int>& node_ref)
 {
-	vector<double> thinned_x;
-	vector<double> thinned_y;
+	vector<float> thinned_x;
+	vector<float> thinned_y;
 	vector<int> node_reference;
 
 	//cout << "x_data size: " << x_data.size() << endl;
@@ -221,8 +221,8 @@ void LSDMostLikelyPartitionsFinder::thin_data_target_dx_preserve_data(double dx,
 	thinned_y.push_back(y_data[0]);
 	node_reference.push_back(0);
 
-	double start_x =  x_data[0];
-	double next_x = start_x+dx;
+	float start_x =  x_data[0];
+	float next_x = start_x+dx;
 
 	int n_nodes = x_data.size();
 	int last_picked = 0;
@@ -262,16 +262,16 @@ void LSDMostLikelyPartitionsFinder::thin_data_target_dx_preserve_data(double dx,
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-LSDMostLikelyPartitionsFinder LSDMostLikelyPartitionsFinder::spawn_thinned_data_target_dx_preserve_data(double dx)
+LSDMostLikelyPartitionsFinder LSDMostLikelyPartitionsFinder::spawn_thinned_data_target_dx_preserve_data(float dx)
 {
-	vector<double> thinned_x;
-	vector<double> thinned_y;
+	vector<float> thinned_x;
+	vector<float> thinned_y;
 
 	thinned_x.push_back(x_data[0]);
 	thinned_y.push_back(y_data[0]);
 
-	double start_x =  x_data[0];
-	double next_x = start_x+dx;
+	float start_x =  x_data[0];
+	float next_x = start_x+dx;
 
 	int n_nodes = x_data.size();
 	int last_picked = 0;
@@ -310,8 +310,8 @@ LSDMostLikelyPartitionsFinder LSDMostLikelyPartitionsFinder::spawn_thinned_data_
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::thin_data_skip(int N, vector<int>& node_ref)
 {
-	vector<double> thinned_x;
-	vector<double> thinned_y;
+	vector<float> thinned_x;
+	vector<float> thinned_y;
 	vector<int> node_reference;
 	int n_nodes = x_data.size();
 
@@ -384,17 +384,17 @@ void LSDMostLikelyPartitionsFinder::thin_data_skip(int N, vector<int>& node_ref)
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDMostLikelyPartitionsFinder::thin_data_target_dx_linear_interpolation(double dx)
+void LSDMostLikelyPartitionsFinder::thin_data_target_dx_linear_interpolation(float dx)
 {
-	vector<double> thinned_x;
-	vector<double> thinned_y;
+	vector<float> thinned_x;
+	vector<float> thinned_y;
 
 	thinned_x.push_back(x_data[0]);
 	thinned_y.push_back(y_data[0]);
 
-	double start_x =  x_data[0];
-	double next_x = start_x+dx;
-	double data_slope, next_y;
+	float start_x =  x_data[0];
+	float next_x = start_x+dx;
+	float data_slope, next_y;
 
 	int n_nodes = x_data.size();
 
@@ -425,17 +425,17 @@ void LSDMostLikelyPartitionsFinder::thin_data_target_dx_linear_interpolation(dou
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-LSDMostLikelyPartitionsFinder LSDMostLikelyPartitionsFinder::spawn_thinned_data_target_dx_linear_interpolation(double dx)
+LSDMostLikelyPartitionsFinder LSDMostLikelyPartitionsFinder::spawn_thinned_data_target_dx_linear_interpolation(float dx)
 {
-	vector<double> thinned_x;
-	vector<double> thinned_y;
+	vector<float> thinned_x;
+	vector<float> thinned_y;
 
 	thinned_x.push_back(x_data[0]);
 	thinned_y.push_back(y_data[0]);
 
-	double start_x =  x_data[0];
-	double next_x = start_x+dx;
-	double data_slope, next_y;
+	float start_x =  x_data[0];
+	float next_x = start_x+dx;
+	float data_slope, next_y;
 
 	int n_nodes = x_data.size();
 
@@ -473,9 +473,9 @@ void LSDMostLikelyPartitionsFinder::thin_data_monte_carlo_skip(int Mean_skip,int
 	int minimum_skip = Mean_skip - 0.5*skip_range;
 	long seed = time(NULL);
 
-	int N = int((double(skip_range))*(ran3(&seed))+0.5)+minimum_skip;
-	vector<double> thinned_x;
-	vector<double> thinned_y;
+	int N = int((float(skip_range))*(ran3(&seed))+0.5)+minimum_skip;
+	vector<float> thinned_x;
+	vector<float> thinned_y;
 	vector<int> node_reference;
 	int n_nodes = x_data.size();
 
@@ -534,8 +534,8 @@ void LSDMostLikelyPartitionsFinder::thin_data_monte_carlo_skip(int Mean_skip,int
 
 		if (new_N_switch == 1)
 		{
-			double random_N = ran3(&seed);
-			double skippy = (double(skip_range));
+			float random_N = ran3(&seed);
+			float skippy = (float(skip_range));
 			N = int(skippy*(random_N)+0.5)+minimum_skip;
 			//cout << "N is: " << N << " and random: " << random_N << " and skppy: " << skippy
 			//     << " and skip_range: " << skip_range << " and minimum_skip: " << minimum_skip << endl;
@@ -585,13 +585,13 @@ void LSDMostLikelyPartitionsFinder::thin_data_monte_carlo_skip(int Mean_skip,int
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDMostLikelyPartitionsFinder::thin_data_monte_carlo_dchi(double mean_dchi, double variation_dchi, vector<int>& node_ref)
+void LSDMostLikelyPartitionsFinder::thin_data_monte_carlo_dchi(float mean_dchi, float variation_dchi, vector<int>& node_ref)
 {
 
 	//cout << "LSDMostLikelyPartitionsFinder, LINE 391, mean dchi: " << mean_dchi << endl;
 
-	vector<double> thinned_x;
-	vector<double> thinned_y;
+	vector<float> thinned_x;
+	vector<float> thinned_y;
 	vector<int> node_reference;
 
 	// set the max standard deviation to mean dchi so that you don't get
@@ -601,20 +601,20 @@ void LSDMostLikelyPartitionsFinder::thin_data_monte_carlo_dchi(double mean_dchi,
 		variation_dchi = mean_dchi;
 	}
 
-	double min_dchi = mean_dchi-variation_dchi;
-	double range_chi = 2*variation_dchi;
+	float min_dchi = mean_dchi-variation_dchi;
+	float range_chi = 2*variation_dchi;
 
 	long seed = time(NULL);
 
 	// get dx using a random seed
-	double dx = ran3(&seed)*range_chi+min_dchi;
+	float dx = ran3(&seed)*range_chi+min_dchi;
 
 	thinned_x.push_back(x_data[0]);
 	thinned_y.push_back(y_data[0]);
 	node_reference.push_back(0);
 
-	double start_x =  x_data[0];
-	double next_x = start_x+dx;
+	float start_x =  x_data[0];
+	float next_x = start_x+dx;
 
 	int n_nodes = x_data.size();
 	int last_picked = 0;
@@ -674,7 +674,7 @@ void LSDMostLikelyPartitionsFinder::print_x_y_data_to_screen()
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDMostLikelyPartitionsFinder::best_fit_driver_AIC_for_linear_segments(vector<double> sigma_values)
+void LSDMostLikelyPartitionsFinder::best_fit_driver_AIC_for_linear_segments(vector<float> sigma_values)
 {
 	//cout << "best_fit_driver_AIC_for_linear_segments, getting like data" <<endl;
 	calculate_segment_matrices(base_sigma);
@@ -696,7 +696,7 @@ void LSDMostLikelyPartitionsFinder::best_fit_driver_AIC_for_linear_segments(vect
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDMostLikelyPartitionsFinder::best_fit_driver_AIC_for_linear_segments(double sigma)
+void LSDMostLikelyPartitionsFinder::best_fit_driver_AIC_for_linear_segments(float sigma)
 {
   //cout << "best_fit_driver_AIC_for_linear_segments, getting like data" <<endl;
 	calculate_segment_matrices(base_sigma);
@@ -705,7 +705,7 @@ void LSDMostLikelyPartitionsFinder::best_fit_driver_AIC_for_linear_segments(doub
 	// get the maximum liklihood of segments
 	find_max_like_of_segments();
 
-	vector<double> sigma_values;
+	vector<float> sigma_values;
 	sigma_values.push_back(sigma);
 
 	get_n_segments_for_various_sigma(sigma_values);
@@ -729,12 +729,12 @@ void LSDMostLikelyPartitionsFinder::best_fit_driver_AIC_for_linear_segments(doub
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDMostLikelyPartitionsFinder::get_data_from_best_fit_lines(int node, vector<double> sigma_values,
-							      	vector<double>& b_values, vector<double>& m_values,
-							      	vector<double>& r2_values, vector<double>& DW_values,
-							       	vector<double>& fitted_y,vector<int>& seg_lengths,
-								 double& this_MLE, int& this_n_segments, int& this_n_nodes,
-								 double& this_AIC, double& this_AICc)
+void LSDMostLikelyPartitionsFinder::get_data_from_best_fit_lines(int node, vector<float> sigma_values,
+							      	vector<float>& b_values, vector<float>& m_values,
+							      	vector<float>& r2_values, vector<float>& DW_values,
+							       	vector<float>& fitted_y,vector<int>& seg_lengths,
+								 float& this_MLE, int& this_n_segments, int& this_n_nodes,
+								 float& this_AIC, float& this_AICc)
 {
 	//cout <<"LSDMLPF line 613, getting data" << endl;
 
@@ -761,11 +761,11 @@ void LSDMostLikelyPartitionsFinder::get_data_from_best_fit_lines(int node, vecto
 	segment_length = segments_for_each_n_segments[ best_fit_AICc[n_sigma_for_printing] ];
 
 
-	vector<double> new_sig_MLE = transform_like_from_sigma1_to_sigma2(base_sigma,
+	vector<float> new_sig_MLE = transform_like_from_sigma1_to_sigma2(base_sigma,
 									MLE_of_segments, sigma_values[n_sigma_for_printing]);
 
-	vector<double> AICc_values = AICc_for_each_n_segments[node];
-	double AICc_value = AICc_values[ best_fit_AICc[n_sigma_for_printing] ];
+	vector<float> AICc_values = AICc_for_each_n_segments[node];
+	float AICc_value = AICc_values[ best_fit_AICc[n_sigma_for_printing] ];
 
 	// now print this data
 	//cout << endl << endl << endl << "The data from the best fit: " << endl;
@@ -782,7 +782,7 @@ void LSDMostLikelyPartitionsFinder::get_data_from_best_fit_lines(int node, vecto
 
 	// create a vector of y values from the best fit segments
 	int n_nodes = x_data.size();
-	vector<double> fit_y(n_nodes);
+	vector<float> fit_y(n_nodes);
 	int this_node = 0;
 	for (int seg = 0; seg< best_fit_AICc[n_sigma_for_printing]+1; seg++)
 	{
@@ -800,7 +800,7 @@ void LSDMostLikelyPartitionsFinder::get_data_from_best_fit_lines(int node, vecto
 	this_n_segments =  best_fit_AICc[n_sigma_for_printing]+1;
 	this_n_nodes = n_nodes;
 	this_AICc = AICc_value;
-	vector<double> AIC_values = AIC_for_each_n_segments[node];
+	vector<float> AIC_values = AIC_for_each_n_segments[node];
 	this_AIC =  AICc_values[ best_fit_AICc[n_sigma_for_printing] ];
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -812,10 +812,10 @@ void LSDMostLikelyPartitionsFinder::get_data_from_best_fit_lines(int node, vecto
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDMostLikelyPartitionsFinder::get_start_and_end_x_for_segments(vector<double>& start_x,
-												vector<double>& end_x, vector<int> seg_lengths)
+void LSDMostLikelyPartitionsFinder::get_start_and_end_x_for_segments(vector<float>& start_x,
+												vector<float>& end_x, vector<int> seg_lengths)
 {
-	vector<double> empty_vec;
+	vector<float> empty_vec;
 	start_x = empty_vec;
 	end_x = empty_vec;
 	int n_segs = seg_lengths.size();
@@ -855,7 +855,7 @@ void LSDMostLikelyPartitionsFinder::get_start_and_end_x_for_segments(vector<doub
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDMostLikelyPartitionsFinder::calculate_segment_matrices(double sigma)
+void LSDMostLikelyPartitionsFinder::calculate_segment_matrices(float sigma)
 {
 	int n_data_points = x_data.size();
 	if (minimum_segment_length>n_data_points)
@@ -868,8 +868,8 @@ void LSDMostLikelyPartitionsFinder::calculate_segment_matrices(double sigma)
 	// set up the arrays
 	// in the future I might consider using sparse arrays but for now we'll just populate
 	// the empty spots with placeholders
-	double no_data_value = -9999;
-	Array2D<double> temp_array(n_data_points,n_data_points,no_data_value);
+	float no_data_value = -9999;
+	Array2D<float> temp_array(n_data_points,n_data_points,no_data_value);
 	like_array = temp_array.copy();
 	m_array = temp_array.copy();
 	b_array = temp_array.copy();
@@ -898,21 +898,21 @@ void LSDMostLikelyPartitionsFinder::calculate_segment_matrices(double sigma)
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDMostLikelyPartitionsFinder::populate_segment_matrix(int start_node, int end_node, double no_data_value,double sigma)
+void LSDMostLikelyPartitionsFinder::populate_segment_matrix(int start_node, int end_node, float no_data_value,float sigma)
 {
 
 	if (like_array[start_node][end_node] == no_data_value)
 	{
 		// create the two segments
-		vector<double> segment_x;
-		vector<double> segment_y;
-		vector<double> residuals;
-		vector<double> regression_results;
-		double this_MLE;
+		vector<float> segment_x;
+		vector<float> segment_y;
+		vector<float> residuals;
+		vector<float> regression_results;
+		float this_MLE;
 
 		// now create iterators to deal with these segments
-		vector<double>::iterator vec_iter_start;
-		vector<double>::iterator vec_iter_end;
+		vector<float>::iterator vec_iter_start;
+		vector<float>::iterator vec_iter_end;
 
 		// the first step is to get the segment starting on the
 		// first node and ending on the last node
@@ -1012,7 +1012,7 @@ void LSDMostLikelyPartitionsFinder::find_max_like_of_segments()
 	int max_n_segments = n_data_points/minimum_segment_length;
 
 	// initialize a vector for holding the MLE of each n_segments
-	vector<double> MLE_for_segments(max_n_segments,-0.00000000001);
+	vector<float> MLE_for_segments(max_n_segments,-0.00000000001);
 
 	// initialize a vecvec for holding the MLE segment partition
 	vector< vector <int> > most_likely_segments(max_n_segments);
@@ -1022,7 +1022,7 @@ void LSDMostLikelyPartitionsFinder::find_max_like_of_segments()
 
 	// now loop through the number of segments, calucalting the maximum likelihood each time
 	vector< vector <int> > partition_vecvec;
-	double this_MLE;
+	float this_MLE;
 	int start_node,end_node;
 	for (int n_elem = 0; n_elem< int(partitions.size()); n_elem++)
 	{
@@ -1183,14 +1183,14 @@ int LSDMostLikelyPartitionsFinder::LSDpartitions_min( int x, int y)
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-Array2D<double> LSDMostLikelyPartitionsFinder::normalize_like_matrix_to_sigma_one(double sigma)
+Array2D<float> LSDMostLikelyPartitionsFinder::normalize_like_matrix_to_sigma_one(float sigma)
 {
 	// get dimensions of the like array
 	int nRows = like_array.dim1();
 	int nCols = like_array.dim2();
-	double no_data_value = -9999;
-	double sigsquared = sigma*sigma;
-	Array2D<double> sig1_like_array = like_array.copy();
+	float no_data_value = -9999;
+	float sigsquared = sigma*sigma;
+	Array2D<float> sig1_like_array = like_array.copy();
 
 	for (int row = 0; row<nRows; row++)
 	{
@@ -1213,12 +1213,12 @@ Array2D<double> LSDMostLikelyPartitionsFinder::normalize_like_matrix_to_sigma_on
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-vector<double> LSDMostLikelyPartitionsFinder::normalize_like_vector_to_sigma_one(double sigma, vector<double> like_vector)
+vector<float> LSDMostLikelyPartitionsFinder::normalize_like_vector_to_sigma_one(float sigma, vector<float> like_vector)
 {
 	// get dimensions of the like vector
 	int ndata = like_vector.size();
-	double sigsquared = sigma*sigma;
-	vector<double> sig1_like_vector(ndata);
+	float sigsquared = sigma*sigma;
+	vector<float> sig1_like_vector(ndata);
 
 	for (int i = 0; i<ndata; i++)
 	{
@@ -1237,13 +1237,13 @@ vector<double> LSDMostLikelyPartitionsFinder::normalize_like_vector_to_sigma_one
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDMostLikelyPartitionsFinder::change_normalized_like_matrix_to_new_sigma(double sigma, Array2D<double>& sig1_like_array)
+void LSDMostLikelyPartitionsFinder::change_normalized_like_matrix_to_new_sigma(float sigma, Array2D<float>& sig1_like_array)
 {
 	// get dimensions of the like array
 	int nRows = sig1_like_array.dim1();
 	int nCols = sig1_like_array.dim2();
-	double no_data_value = -9999;
-	double one_over_sigsquared = 1/(sigma*sigma);
+	float no_data_value = -9999;
+	float one_over_sigsquared = 1/(sigma*sigma);
 	like_array = sig1_like_array.copy();
 
 	for (int row = 0; row<nRows; row++)
@@ -1266,12 +1266,12 @@ void LSDMostLikelyPartitionsFinder::change_normalized_like_matrix_to_new_sigma(d
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-vector<double> LSDMostLikelyPartitionsFinder::change_normalized_like_vector_to_new_sigma(double sigma, vector<double> sig1_like_vector)
+vector<float> LSDMostLikelyPartitionsFinder::change_normalized_like_vector_to_new_sigma(float sigma, vector<float> sig1_like_vector)
 {
 	// get dimensions of the like vector
 	int ndata = sig1_like_vector.size();
-	double one_over_sigsquared = 1/(sigma*sigma);
-	vector<double> like_vector(ndata);
+	float one_over_sigsquared = 1/(sigma*sigma);
+	vector<float> like_vector(ndata);
 
 	for (int i = 0; i<ndata; i++)
 	{
@@ -1288,13 +1288,13 @@ vector<double> LSDMostLikelyPartitionsFinder::change_normalized_like_vector_to_n
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-vector<double> LSDMostLikelyPartitionsFinder::transform_like_from_sigma1_to_sigma2(double sigma1,
-													vector<double> sig1_like_vector, double sigma2)
+vector<float> LSDMostLikelyPartitionsFinder::transform_like_from_sigma1_to_sigma2(float sigma1,
+													vector<float> sig1_like_vector, float sigma2)
 {
 	// get dimensions of the like vector
 	int ndata = sig1_like_vector.size();
-	double sigsq_transform = (sigma1*sigma1)/(sigma2*sigma2);
-	vector<double> like_vector(ndata);
+	float sigsq_transform = (sigma1*sigma1)/(sigma2*sigma2);
+	vector<float> like_vector(ndata);
 
 	for (int i = 0; i<ndata; i++)
 	{
@@ -1316,14 +1316,14 @@ vector<double> LSDMostLikelyPartitionsFinder::transform_like_from_sigma1_to_sigm
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDMostLikelyPartitionsFinder::get_n_segments_for_various_sigma(vector<double> sigma_values)
+void LSDMostLikelyPartitionsFinder::get_n_segments_for_various_sigma(vector<float> sigma_values)
 {
 	int n_sigma = sigma_values.size();
-	vector<double> empty_vec;
-	vector<double> AIC_of_segments;
-	vector<double> AICc_of_segments;
-	vector< vector<double> > AIC_for_each(n_sigma);
-	vector< vector<double> > AICc_for_each(n_sigma);
+	vector<float> empty_vec;
+	vector<float> AIC_of_segments;
+	vector<float> AICc_of_segments;
+	vector< vector<float> > AIC_for_each(n_sigma);
+	vector< vector<float> > AICc_for_each(n_sigma);
 	vector<int> bf_AIC(n_sigma);
 	vector<int> bf_AICc(n_sigma);
 
@@ -1337,9 +1337,9 @@ void LSDMostLikelyPartitionsFinder::get_n_segments_for_various_sigma(vector<doub
 		AICc_for_each[i] = AICc_of_segments;
 
 		// now find the minimum AIC and AICc
-		double minimum_AIC = 10000;
+		float minimum_AIC = 10000;
 		int min_AIC_segments = 0;
-		double minimum_AICc = 10000;
+		float minimum_AICc = 10000;
 		int min_AICc_segments = 0;
 
 		int n_AIC = AIC_of_segments.size();
@@ -1377,21 +1377,21 @@ void LSDMostLikelyPartitionsFinder::get_n_segments_for_various_sigma(vector<doub
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDMostLikelyPartitionsFinder::calculate_AIC_of_segments_with_variable_sigma(double sigma,
-								vector<double>& AIC_of_segments,vector<double>& AICc_of_segments)
+void LSDMostLikelyPartitionsFinder::calculate_AIC_of_segments_with_variable_sigma(float sigma,
+								vector<float>& AIC_of_segments,vector<float>& AICc_of_segments)
 {
 
 	// recast the MLE_vector
-	vector<double> new_sig_MLE = transform_like_from_sigma1_to_sigma2(base_sigma, MLE_of_segments, sigma);
+	vector<float> new_sig_MLE = transform_like_from_sigma1_to_sigma2(base_sigma, MLE_of_segments, sigma);
 
 	// initialize the vector holding the Aikake Information Criterion
 	// and then calcualte the AIC and the AICc
-	vector<double> AIC(MLE_of_segments.size(),0.0);
-	vector<double> AICc(MLE_of_segments.size(),0.0);
+	vector<float> AIC(MLE_of_segments.size(),0.0);
+	vector<float> AICc(MLE_of_segments.size(),0.0);
 	for (int n_elem = 0; n_elem< int(MLE_of_segments.size()); n_elem++)
 	{
-	  double AICk = (double(n_elem)+1);           // this is the number of segments
-	  double AICn = double(x_data.size());        // this is the number of data elements
+	  float AICk = (float(n_elem)+1);           // this is the number of segments
+	  float AICn = float(x_data.size());        // this is the number of data elements
 		// if the MLE is 0 or less, this will throw an error. This only happens if the fit
 		// is terrible so in this case set AIC and AICc to a large positive number
 		if(new_sig_MLE[n_elem]<= 0)
@@ -1425,8 +1425,8 @@ void LSDMostLikelyPartitionsFinder::calculate_AIC_of_segments_with_variable_sigm
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDMostLikelyPartitionsFinder::get_properties_of_best_fit_segments(int bestfit_segments_node,
-										 vector<double>& m_values, vector<double>& b_values,
-										 vector<double>& r2_values, vector<double>& DW_values)
+										 vector<float>& m_values, vector<float>& b_values,
+										 vector<float>& r2_values, vector<float>& DW_values)
 {
 
 
@@ -1436,10 +1436,10 @@ void LSDMostLikelyPartitionsFinder::get_properties_of_best_fit_segments(int best
 	//cout << "Line 1249, n_segments: " << n_segments << endl;
 
 	// initialize temp_vectors
-	vector<double> m(n_segments);
-	vector<double> b(n_segments);
-	vector<double> r2(n_segments);
-	vector<double> DW(n_segments);
+	vector<float> m(n_segments);
+	vector<float> b(n_segments);
+	vector<float> r2(n_segments);
+	vector<float> DW(n_segments);
 
 	// the start node and end node, used to index into the arrays
 	int start_node,end_node;
@@ -1514,11 +1514,11 @@ void LSDMostLikelyPartitionsFinder::print_to_screen_most_likeley_segment_lengths
 // SMM 01/02/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDMostLikelyPartitionsFinder::print_AIC_and_AICc_to_screen(vector<double> sigma_values)
+void LSDMostLikelyPartitionsFinder::print_AIC_and_AICc_to_screen(vector<float> sigma_values)
 {
 	// get the number of sigma values
 	int n_sigs = sigma_values.size();
-	vector<double> AI_values;
+	vector<float> AI_values;
 	vector<int> this_minimum;
 	int AI_sz;
 	int n_mins;

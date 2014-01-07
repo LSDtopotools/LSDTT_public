@@ -123,11 +123,11 @@ class LSDIndexChannel
 	/// @return Number of columns as an integer.
   int get_NCols() const				{ return NCols; }
   /// @return Minimum X coordinate as an integer.
-	double get_XMinimum() const			{ return XMinimum; }
+	float get_XMinimum() const			{ return XMinimum; }
 	/// @return Minimum Y coordinate as an integer.
-	double get_YMinimum() const			{ return YMinimum; }
+	float get_YMinimum() const			{ return YMinimum; }
 	/// @return Data resolution as an integer.
-	double get_DataResolution() const	{ return DataResolution; }
+	float get_DataResolution() const	{ return DataResolution; }
 	/// @return No Data Value as an integer.
 	int get_NoDataValue() const			{ return NoDataValue; }
 
@@ -206,20 +206,20 @@ class LSDIndexChannel
   ///Number of columns.
 	int NCols;
 	///Minimum X coordinate.
-  double XMinimum;
+  float XMinimum;
 	///Minimum Y coordinate.
-	double YMinimum;
+	float YMinimum;
 
 	///Data resolution.
-	double DataResolution;
+	float DataResolution;
 	///No data value.
 	int NoDataValue;
 
-  /// The starting junction (numbered within LSDChannelNetwork object).
+  /// The starting junction (numbered within LSDJunctionNetwork object).
 	int StartJunction;
 	/// The node index of the starting Junction (numbered in the FlowInfo object).
   int StartNode;
-	/// The ending junction (numbered within LSDChannelNetwork object).
+	/// The ending junction (numbered within LSDJunctionNetwork object).
   int EndJunction;
 	/// The node index of the ending Junction (numbered in the FlowInfo object).
   int EndNode;

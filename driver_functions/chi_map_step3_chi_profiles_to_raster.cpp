@@ -18,7 +18,7 @@
 #include "../../LSDRaster.hpp"
 #include "../../LSDIndexRaster.hpp"
 #include "../../LSDFlowInfo.hpp"
-#include "../../LSDChannelNetwork.hpp"
+#include "../../LSDJunctionNetwork.hpp"
 #include "../../LSDIndexChannelTree.hpp"
 #include "../../LSDChiNetwork.hpp"
 #include "../../TNT/tnt.h"
@@ -62,15 +62,15 @@ int main (int nNumberofArgs,char *argv[])
   LSDRaster DEM(DEM_name,DEM_extension);
   int NCols = DEM.get_NCols();
   int NRows = DEM.get_NRows();
-  double NoDataValue = DEM.get_NoDataValue();
-  double XMinimum = DEM.get_XMinimum();
-  double YMinimum = DEM.get_YMinimum();
-  double DataResolution = DEM.get_DataResolution();
+  float NoDataValue = DEM.get_NoDataValue();
+  float XMinimum = DEM.get_XMinimum();
+  float YMinimum = DEM.get_YMinimum();
+  float DataResolution = DEM.get_DataResolution();
   
   // Generated arrays for outputs.
-  Array2D<double> chi_array(NRows,NCols,NoDataValue);
-  Array2D<double> chi_gradient_array(NRows,NCols,NoDataValue);
-  Array2D<double> chi_gradient_sd_array(NRows,NCols,NoDataValue);
+  Array2D<float> chi_array(NRows,NCols,NoDataValue);
+  Array2D<float> chi_gradient_array(NRows,NCols,NoDataValue);
+  Array2D<float> chi_gradient_sd_array(NRows,NCols,NoDataValue);
   cout << "Reading list of channel tree files" << endl;
   // Read list of ChannelTree_files
   vector<string> ChiProfile_list;
@@ -100,11 +100,11 @@ int main (int nNumberofArgs,char *argv[])
   	}  	
     
     // read in data
-		double A_0, m_ov_n;
+		float A_0, m_ov_n;
     ChiProfile_in >> A_0 >> m_ov_n;
 		
     int node, row, col, channel_number, receiver_channel, node_on_receiver_channel, n_data_points_uic;
-		double elevation,flow_distance,drainage_area,chi,
+		float elevation,flow_distance,drainage_area,chi,
             m_mean,m_standard_deviation,m_standard_error,
             b_mean,b_standard_deviation,b_standard_error,
             DW_mean,DW_standard_deviation,DW_standard_error,

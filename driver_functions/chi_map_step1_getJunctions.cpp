@@ -19,7 +19,7 @@
 #include "../../LSDRaster.hpp"
 #include "../../LSDIndexRaster.hpp"
 #include "../../LSDFlowInfo.hpp"
-#include "../../LSDChannelNetwork.hpp"
+#include "../../LSDJunctionNetwork.hpp"
 #include "../../LSDIndexChannelTree.hpp"
 #include "../../LSDChiNetwork.hpp"
 #include "../../TNT/tnt.h"
@@ -42,13 +42,13 @@ int main (int nNumberofArgs,char *argv[])
 	LSDRaster topo_test(DEM_name, DEM_flt_extension);
 	//cout << "LINE 41" << endl;
 
-	double MinSlope = 0.0001;
+	float MinSlope = 0.0001;
 	int NRows = topo_test.get_NRows();
 	int NCols = topo_test.get_NCols();
-	double NoDataValue = topo_test.get_NoDataValue();
-	double XMinimum = topo_test.get_XMinimum();
-	double YMinimum = topo_test.get_YMinimum();
-	double DataResolution = topo_test.get_DataResolution();
+	float NoDataValue = topo_test.get_NoDataValue();
+	float XMinimum = topo_test.get_XMinimum();
+	float YMinimum = topo_test.get_YMinimum();
+	float DataResolution = topo_test.get_DataResolution();
 	
 	
   
@@ -97,7 +97,7 @@ int main (int nNumberofArgs,char *argv[])
 
   // GENERATE CHANNEL NETWORK
 	cout << "Creating channel network from sources" << endl;
-	LSDChannelNetwork ChanNetwork(sources, FlowInfo);
+	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 
 // 	LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
 //  	LSDIndexRaster JIArray = ChanNetwork.JunctionIndexArray_to_LSDIndexRaster();
@@ -109,7 +109,7 @@ int main (int nNumberofArgs,char *argv[])
 	// now get a junction and look for the longest channel upstream
 	cout << "Getting tributary junctions" << endl;
 	int pruning_switch = 0;
-	double pruning_threshold = 25000;
+	float pruning_threshold = 25000;
   vector<int> target_tributary_juncs = ChanNetwork.get_pruned_tributaries_from_main_stem(FlowInfo, ChanNetwork, TRUNK_CHANNEL_JUNCTION, DistanceFromOutlet, pruning_switch, pruning_threshold);
 //   vector<int> target_tributary_juncs, node_of_tributaries;
 //   LSDIndexChannel main_stem = ChanNetwork.generate_longest_index_channel_in_basin(TRUNK_CHANNEL_JUNCTION,FlowInfo, DistanceFromOutlet); 

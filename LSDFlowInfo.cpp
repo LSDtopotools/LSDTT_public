@@ -227,10 +227,10 @@ void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 	DataResolution = TopoRaster.DataResolution;
 
 	// Declare matrices for calculating flow routing
-	double one_ov_root2 = 0.707106781;
-	double target_elev;				// a placeholder for the elevation of the potential receiver
-	double slope;
-	double max_slope;				// the maximum slope away from a node
+	float one_ov_root2 = 0.707106781;
+	float target_elev;				// a placeholder for the elevation of the potential receiver
+	float slope;
+	float max_slope;				// the maximum slope away from a node
 	int max_slope_index;			// index into the maximum slope
 
 	int row, col;						// index for the rows and column
@@ -256,7 +256,7 @@ void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 	// row NRows-1 is the SOUTH boundary
 	// column 0 is the WEST boundary
 	// column NCols-1 is the EAST boundary
-	vector<double> slopes(8,NoDataValue);
+	vector<float> slopes(8,NoDataValue);
 	vector<int> row_kernal(8);
 	vector<int> col_kernal(8);
 	int ndv = NoDataValue;
@@ -1017,7 +1017,7 @@ void LSDFlowInfo::unpickle(string filename)
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Method to ingest the channel heads raster generated using channel_heads_driver.cpp
-// into a vector of source nodes so that an LSDChannelNetwork can be created easily 
+// into a vector of source nodes so that an LSDJunctionNetwork can be created easily 
 // from them. Assumes the FlowInfo object has the same dimensions as the channel
 // heads raster.
 //
@@ -1313,8 +1313,8 @@ LSDRaster LSDFlowInfo::write_DrainageArea_to_LSDRaster()
 {
   // initialise the 2D array
   int n_i;								// node index
-  double ndv = double(NoDataValue);
- 	Array2D<double> DrainageArea_local(NRows,NCols,ndv);
+  float ndv = float(NoDataValue);
+ 	Array2D<float> DrainageArea_local(NRows,NCols,ndv);
 
   //get the contributing nodes
   for (int row = 0; row < NRows; row++)
@@ -1322,7 +1322,7 @@ LSDRaster LSDFlowInfo::write_DrainageArea_to_LSDRaster()
     for (int col = 0; col < NCols; col++)
     {
       n_i = NodeIndex[row][col];
-      DrainageArea_local[row][col] = double(NContributingNodes[n_i])*DataResolution*DataResolution;
+      DrainageArea_local[row][col] = float(NContributingNodes[n_i])*DataResolution*DataResolution;
     }
   }
   // create the LSDRaster object
@@ -1430,7 +1430,7 @@ void LSDFlowInfo::calculate_upslope_reference_indices()
 
 		// add the upslope area (note no action is taken
 		// for base level nodes since they donate to themselves and
-		// we must avoid double counting
+		// we must avoid float counting
 		if (donor_node != receiver_node)
 		{
 			vectorized_area[ receiver_node ] +=  vectorized_area[ donor_node ];
@@ -1539,26 +1539,26 @@ vector<int> LSDFlowInfo::get_donor_nodes(int current_node)
 // SMM 01/06/2012
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-vector<double> LSDFlowInfo::get_upslope_chi(int starting_node, double m_over_n, double A_0)
+vector<float> LSDFlowInfo::get_upslope_chi(int starting_node, float m_over_n, float A_0)
 {
 	vector<int> upslope_pixel_list = get_upslope_nodes(starting_node);
-	vector<double> chi_vec = get_upslope_chi(upslope_pixel_list, m_over_n, A_0);
+	vector<float> chi_vec = get_upslope_chi(upslope_pixel_list, m_over_n, A_0);
 	return chi_vec;
 }
 
-vector<double> LSDFlowInfo::get_upslope_chi(vector<int>& upslope_pixel_list, double m_over_n, double A_0)
+vector<float> LSDFlowInfo::get_upslope_chi(vector<int>& upslope_pixel_list, float m_over_n, float A_0)
 {
 
 	int receiver_node;
 	int IndexOfReceiverInUplsopePList;
-	double root2 = 1.41421356;
-	double diag_length = root2*DataResolution;
-	double dx;
-	double pixel_area = DataResolution*DataResolution;
+	float root2 = 1.41421356;
+	float diag_length = root2*DataResolution;
+	float dx;
+	float pixel_area = DataResolution*DataResolution;
 	int node,row,col;
 	// get the number of nodes upslope
 	int n_nodes_upslope = upslope_pixel_list.size();
-	vector<double> chi_vec(n_nodes_upslope,0.0);
+	vector<float> chi_vec(n_nodes_upslope,0.0);
 
 	if(n_nodes_upslope != NContributingNodes[ upslope_pixel_list[0] ])
 	{
@@ -1586,7 +1586,7 @@ vector<double> LSDFlowInfo::get_upslope_chi(vector<int>& upslope_pixel_list, dou
 		}
 
 
-		chi_vec[n_index] = dx*(pow( (A_0/ (double(NContributingNodes[node])*pixel_area) ),m_over_n))
+		chi_vec[n_index] = dx*(pow( (A_0/ (float(NContributingNodes[node])*pixel_area) ),m_over_n))
 		                       + chi_vec[IndexOfReceiverInUplsopePList];
 
 	//	cout << "node: " << upslope_pixel_list[n_index] << " receiver: " << receiver_node
@@ -1620,12 +1620,12 @@ vector<double> LSDFlowInfo::get_upslope_chi(vector<int>& upslope_pixel_list, dou
 LSDRaster LSDFlowInfo::distance_from_outlet()
 {
 	// initialize the array2d that will become the LSDRaster
-	double ndv = double(NoDataValue);
-	Array2D<double> flow_distance(NRows,NCols,ndv);
+	float ndv = float(NoDataValue);
+	Array2D<float> flow_distance(NRows,NCols,ndv);
 
 	// initialize the 1/root(2)
-	double root2 = 1.41421356;
-	double diag_length = root2*DataResolution;
+	float root2 = 1.41421356;
+	float diag_length = root2*DataResolution;
 
 	int row,col,bl_row,bl_col,receive_row,receive_col;
 
@@ -1708,10 +1708,10 @@ int LSDFlowInfo::find_farthest_upslope_node(int node, LSDRaster& DistFromOutlet)
 	vector<int> upslope_node_list = get_upslope_nodes(node);
 
 	int row, col;
-	double this_flow_distance;
+	float this_flow_distance;
 
 	// now loop through these, looking for the farthest upstream node
-	double farthest = 0.0;
+	float farthest = 0.0;
 	int n_upslope_nodes = upslope_node_list.size();
 	for (int i = 0; i<n_upslope_nodes; i++)
 	{
@@ -1785,7 +1785,7 @@ vector<int> LSDFlowInfo::get_sources_index_threshold(LSDIndexRaster& FlowPixels,
 					donor_row = RowIndex[ donor_node ];
 					donor_col = ColIndex[ donor_node ];
 
-					// we don't double count base level nodes, which donate to themselves
+					// we don't float count base level nodes, which donate to themselves
 					if (donor_node != node)
 					{
 						// if the donor node is greater than the threshold,

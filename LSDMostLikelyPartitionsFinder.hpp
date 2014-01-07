@@ -84,22 +84,22 @@ class LSDMostLikelyPartitionsFinder
 	public:
 	  /// @brief Create LSDMostLikelyPartitionsFinder object.
 	  /// @param this_min_seg_length int Minimum segement length required.
-	  /// @param this_x_data vector<double> X data.
-	  /// @param this_y_data vector<double> Y data.
+	  /// @param this_x_data vector<float> X data.
+	  /// @param this_y_data vector<float> Y data.
 	  /// @author SMM
       /// @date 01/03/13
-		LSDMostLikelyPartitionsFinder(int this_min_seg_length, vector<double> this_x_data, vector<double> this_y_data)
+		LSDMostLikelyPartitionsFinder(int this_min_seg_length, vector<float> this_x_data, vector<float> this_y_data)
 					{ create( this_min_seg_length, this_x_data, this_y_data); }
 
 		// some get functions
 		/// @return number of nodes.
     int get_n_nodes()                    {return int(x_data.size()); }
 		/// @return Maximum Likelihood Estimator of segments.
-    vector<double> get_MLE_of_segments()	{return MLE_of_segments;}
+    vector<float> get_MLE_of_segments()	{return MLE_of_segments;}
     /// @return Vector of X data.
-    vector<double> get_x_data()             {return x_data; }
+    vector<float> get_x_data()             {return x_data; }
     /// @return Vector of Y data.
-    vector<double> get_y_data()             {return y_data; }
+    vector<float> get_y_data()             {return y_data; }
 
 		// functions for thinning the data
 
@@ -114,21 +114,21 @@ class LSDMostLikelyPartitionsFinder
     /// @param dx Target dx for thinning.
 		/// @author SMM
         /// @date 01/03/13
-		void thin_data_target_dx_preserve_data(double dx);
+		void thin_data_target_dx_preserve_data(float dx);
 
 		/// @brief Collects data as close as possible to some target dx, but does not modify invidivual data points.
 		/// @param dx Target dx for thinning.
 		/// @param node_ref An index vector of the data points that were selected.
 		/// @author SMM
         /// @date 01/03/13
-    void thin_data_target_dx_preserve_data(double dx, vector<int>& node_ref);
+    void thin_data_target_dx_preserve_data(float dx, vector<int>& node_ref);
 
     /// @brief Collects data as close as possible to some target dx, but does not modify invidivual data points.
     /// @param dx Target dx for thinning.
     /// @return New thinned LSDMostLikelyPartitionsFinder object.
 		/// @author SMM
         /// @date 01/03/13
-		LSDMostLikelyPartitionsFinder spawn_thinned_data_target_dx_preserve_data(double dx);
+		LSDMostLikelyPartitionsFinder spawn_thinned_data_target_dx_preserve_data(float dx);
 
     /// @brief This thins the data by skipping elements.
     ///
@@ -144,13 +144,13 @@ class LSDMostLikelyPartitionsFinder
     /// @param dx Target dx for thinning.
 		/// @author SMM
         /// @date 01/03/13
-		void thin_data_target_dx_linear_interpolation(double dx);
+		void thin_data_target_dx_linear_interpolation(float dx);
     /// @brief Recasts data at fixed values of dx, using linear interpoloation.
     /// @param dx Target dx for thinning.
     /// @return New thinned LSDMostLikelyPartitionsFinder object.
 		/// @author SMM
         /// @date 01/03/13
-		LSDMostLikelyPartitionsFinder spawn_thinned_data_target_dx_linear_interpolation(double dx);
+		LSDMostLikelyPartitionsFinder spawn_thinned_data_target_dx_linear_interpolation(float dx);
 
     /// @brief Skips nodes but using a Monte Carlo scheme that samples random points along the channel profile.
     /// @param Mean_skip
@@ -166,7 +166,7 @@ class LSDMostLikelyPartitionsFinder
     /// @param node_ref An index vector of the data points that were selected.
     /// @author SMM
     /// @date 01/03/13
-		void thin_data_monte_carlo_dchi(double mean_dchi, double variation_dchi, vector<int>& node_ref);
+		void thin_data_monte_carlo_dchi(float mean_dchi, float variation_dchi, vector<int>& node_ref);
 
 		/// @brief Function for looking at the x and y data.
     /// @author SMM
@@ -176,15 +176,15 @@ class LSDMostLikelyPartitionsFinder
 		// this function drives the whole shebang
 
 		/// @brief Driver function to get best fit segments.
-		/// @param sigma_values vector<double> a vector containing sigma values for each node
+		/// @param sigma_values vector<float> a vector containing sigma values for each node
     /// @author SMM
     /// @date 01/03/13
-		void best_fit_driver_AIC_for_linear_segments(vector<double> sigma_values);
+		void best_fit_driver_AIC_for_linear_segments(vector<float> sigma_values);
 		/// @brief Driver function to get best fit segments.
 		/// @param sigma_values
     /// @author SMM
     /// @date 01/03/13
-    void best_fit_driver_AIC_for_linear_segments(double sigma_values);
+    void best_fit_driver_AIC_for_linear_segments(float sigma_values);
 
 		/// @brief Function returns data for a given sigma value.
 		///
@@ -205,12 +205,12 @@ class LSDMostLikelyPartitionsFinder
 		/// @param this_AICc
     /// @author SMM
     /// @date 01/03/13
-    void get_data_from_best_fit_lines(int node, vector<double> sigma_values,
-					      	vector<double>& b_values, vector<double>& m_values,
-					      	vector<double>& r2_values, vector<double>& DW_values,
-						vector<double>& fitted_y,vector<int>& seg_lengths,
-						double& this_MLE, int& this_n_segments, int& this_n_nodes,
-                                                double& this_AIC, double& this_AICc);
+    void get_data_from_best_fit_lines(int node, vector<float> sigma_values,
+					      	vector<float>& b_values, vector<float>& m_values,
+					      	vector<float>& r2_values, vector<float>& DW_values,
+						vector<float>& fitted_y,vector<int>& seg_lengths,
+						float& this_MLE, int& this_n_segments, int& this_n_nodes,
+                                                float& this_AIC, float& this_AICc);
 
     /// @brief Replaces two vectors, which have the starting and ending position of the best fit segments for a given sigma.
     ///
@@ -220,7 +220,7 @@ class LSDMostLikelyPartitionsFinder
     /// @param seg_lengths
     /// @author SMM
     /// @date 01/03/13
-    void get_start_and_end_x_for_segments(vector<double>& start_x, vector<double>& end_x, vector<int> seg_lengths);
+    void get_start_and_end_x_for_segments(vector<float>& start_x, vector<float>& end_x, vector<int> seg_lengths);
 
 		// these functions populate the arrays used for calcualting the best fit segments
 
@@ -245,7 +245,7 @@ class LSDMostLikelyPartitionsFinder
     /// @param sigma Standard deviation of error.
     /// @author SMM
     /// @date 01/03/13
-    void calculate_segment_matrices(double sigma);
+    void calculate_segment_matrices(float sigma);
 
     /// @brief This function popultes the matrices of liklihood, m and b values.
     ///
@@ -257,7 +257,7 @@ class LSDMostLikelyPartitionsFinder
     /// @param sigma Standard deviation of error.
     /// @author SMM
     /// @date 01/03/13
-		void populate_segment_matrix(int start_node, int end_node, double no_data_value,double sigma);
+		void populate_segment_matrix(int start_node, int end_node, float no_data_value,float sigma);
 
 		/// @brief Function calculates the most likeley combination of segments given the liklihood of individual segments calcualted by the calculate_segment_matrices function.
 	/// @author SMM
@@ -316,7 +316,7 @@ class LSDMostLikelyPartitionsFinder
     /// @return Normalized sigma matrix.
      /// @author SMM
     /// @date 01/03/13
-		Array2D<double> normalize_like_matrix_to_sigma_one(double sigma);
+		Array2D<float> normalize_like_matrix_to_sigma_one(float sigma);
 
 		/// @brief Normalizes but with vector data, for use with MLE vector for segments.
 		/// @param sigma Standard deviation of error.
@@ -324,14 +324,14 @@ class LSDMostLikelyPartitionsFinder
     /// @return Normalized sigma vector.
     /// @author SMM
     /// @date 01/03/13
-    vector<double> normalize_like_vector_to_sigma_one(double sigma, vector<double> like_vector);
+    vector<float> normalize_like_vector_to_sigma_one(float sigma, vector<float> like_vector);
 
 		/// @brief Takes a normalized likelihood array and updates the values to a new sigma value.
 		/// @param sigma Standard deviation of error.
 		/// @param sig1_like_array
     /// @author SMM
     /// @date 01/03/13
-    void change_normalized_like_matrix_to_new_sigma(double sigma, Array2D<double>& sig1_like_array);
+    void change_normalized_like_matrix_to_new_sigma(float sigma, Array2D<float>& sig1_like_array);
 
     /// @brief Takes a normalized likelihood vector and updates the values to a new sigma value.
 		/// @param sigma Standard deviation of error.
@@ -339,7 +339,7 @@ class LSDMostLikelyPartitionsFinder
 		/// @return Updated sigma vector.
     /// @author SMM
     /// @date 01/03/13
-    vector<double> change_normalized_like_vector_to_new_sigma(double sigma, vector<double> sig1_like_vector);
+    vector<float> change_normalized_like_vector_to_new_sigma(float sigma, vector<float> sig1_like_vector);
 
 		/// @brief Takes a normalize likelihood vector and updates the values to a new sigma value.
 		/// @param sigma1 Standard deviation of error.
@@ -348,8 +348,8 @@ class LSDMostLikelyPartitionsFinder
 		/// @return Updated sigma vector.
     /// @author SMM
     /// @date 01/03/13
-    vector<double> transform_like_from_sigma1_to_sigma2(double sigma1,
-													vector<double> sig1_like_vector, double sigma2);
+    vector<float> transform_like_from_sigma1_to_sigma2(float sigma1,
+													vector<float> sig1_like_vector, float sigma2);
 
 		// these get the best fit number of segments for a variety of sigma values.
 		// because of the way the AIC and AICc algorithms work, the minimum AIC for different number of segments
@@ -360,7 +360,7 @@ class LSDMostLikelyPartitionsFinder
     ///
     /// @details It also returns two vector of vectors which are the AIC values for the varius values of sigma passed to the function in the sigma values vector.
     /// @param sigma_values vector of sigma values.
-		void get_n_segments_for_various_sigma(vector<double> sigma_values);
+		void get_n_segments_for_various_sigma(vector<float> sigma_values);
 
     /// @brief Function calculates AIC and AICc of segments taking the maximum_MLE based on a sigma of one.
     /// @param sigma Standard deviation of error.
@@ -368,9 +368,9 @@ class LSDMostLikelyPartitionsFinder
     /// @param AICc_of_segments
      /// @author SMM
     /// @date 01/03/13
-		void calculate_AIC_of_segments_with_variable_sigma(double sigma,
-										vector<double>& AIC_of_segments,
-										vector<double>& AICc_of_segments);
+		void calculate_AIC_of_segments_with_variable_sigma(float sigma,
+										vector<float>& AIC_of_segments,
+										vector<float>& AICc_of_segments);
 
 		/// @brief Function extracts the m, b, r^2 and DW statistic of the most likeley segments.
 		/// @param bestfit_segments_node
@@ -381,8 +381,8 @@ class LSDMostLikelyPartitionsFinder
     /// @author SMM
     /// @date 01/03/13
 		void get_properties_of_best_fit_segments(int bestfit_segments_node,
-										 vector<double>& m_values, vector<double>& b_values,
-										 vector<double>& r2_values, vector<double>& DW_values);
+										 vector<float>& m_values, vector<float>& b_values,
+										 vector<float>& r2_values, vector<float>& DW_values);
 
 		// some functions for printing results to screen
 		/// @brief Function prints the most likeley segment lengths to screen.
@@ -392,38 +392,38 @@ class LSDMostLikelyPartitionsFinder
 		/// @brief Function prints AIC and AICc values to screen.
 		/// @author SMM
     	/// @date 01/03/13
-		void print_AIC_and_AICc_to_screen(vector<double> sigma_values);
+		void print_AIC_and_AICc_to_screen(vector<float> sigma_values);
 
 	protected:
 	  ///Minimum segment length.
 		int minimum_segment_length;
 		/// X data.
-		vector<double> x_data;
+		vector<float> x_data;
 		/// Y data.
-		vector<double> y_data;
+		vector<float> y_data;
 
     /// The base sigma value from which the MLE of the segments is calcluated.
-		double base_sigma;
+		float base_sigma;
 
 		// arrays containing the properties of the segments
 		// the arrays are indexed so the row is the starting node and the column is the ending node
 
 		/// Liklihood array. Indexed so the row is the starting node and the column is the ending node.
-		Array2D<double> like_array;
+		Array2D<float> like_array;
 	  /// Slope array. Indexed so the row is the starting node and the column is the ending node.
-    Array2D<double> m_array;
+    Array2D<float> m_array;
 		/// Intercept array. Indexed so the row is the starting node and the column is the ending node.
-    Array2D<double> b_array;					//
+    Array2D<float> b_array;					//
 		/// R^2 array. Indexed so the row is the starting node and the column is the ending node.
-    Array2D<double> rsquared_array;
+    Array2D<float> rsquared_array;
     /// @brief Array of Durbin-Watson statistics to test if the residuals are autocorrelated.
     ///
     /// @details Used to determine if the segment is truly linear. Values less than 1 indicate that the segment is probably not linear
 		/// values < 1.5 should arouse suspicion. Indexed so the row is the starting node and the column is the ending node.
-    Array2D<double> DW_array;
+    Array2D<float> DW_array;
 
     /// Maximum likelihood of the different number of segments.
-		vector<double> MLE_of_segments;
+		vector<float> MLE_of_segments;
 
 		/// @brief Each element of this vector contains the most likeley segments for that number of segments.
 		///
@@ -443,12 +443,12 @@ class LSDMostLikelyPartitionsFinder
 		/// Vector of best fit AICc values.
     vector<int> best_fit_AICc;
 		/// Vector of vectors of AIC values.
-    vector< vector<double> > AIC_for_each_n_segments;
+    vector< vector<float> > AIC_for_each_n_segments;
     /// Vector of vectors of AICc values.
-		vector< vector<double> > AICc_for_each_n_segments;
+		vector< vector<float> > AICc_for_each_n_segments;
 
 	private:
-		void create(int this_min_seg_length, vector<double> this_x_data, vector<double> this_y_data);
+		void create(int this_min_seg_length, vector<float> this_x_data, vector<float> this_y_data);
 };
 
 #endif

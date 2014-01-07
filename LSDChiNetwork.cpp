@@ -112,23 +112,23 @@ void LSDChiNetwork::create(string channel_network_fname)
 	int row;
 	int col;
 
-	double flow_dist;
-	double elev;
-	double drain_area;
+	float flow_dist;
+	float elev;
+	float drain_area;
 
 	int last_cn = 0;		// this is 1 if this is the first node in a channel
 	int last_receiver_node = -1;
 	int last_receiver_channel = -1;
 
 	vector<int> empty_int;
-	vector<double> empty_double;
+	vector<float> empty_float;
 
 	vector<int> node_vec;
 	vector<int> row_vec;
 	vector<int> col_vec;
-	vector<double> flow_dist_vec;
-	vector<double> elev_vec;
-	vector<double> drain_area_vec;
+	vector<float> flow_dist_vec;
+	vector<float> elev_vec;
+	vector<float> drain_area_vec;
 
 	channel_data_in >> NRows >> NCols >> XMinimum >> YMinimum >> DataResolution >> NoDataValue;
 
@@ -164,9 +164,9 @@ void LSDChiNetwork::create(string channel_network_fname)
 			node_vec = empty_int;
 			row_vec = empty_int;
 			col_vec = empty_int;
-			flow_dist_vec = empty_double;
-			elev_vec = empty_double;
-			drain_area_vec = empty_double;
+			flow_dist_vec = empty_float;
+			elev_vec = empty_float;
+			drain_area_vec = empty_float;
 
 			// reset the receiver nodde and channel
 			last_receiver_node = recevier_cnode;
@@ -200,7 +200,7 @@ void LSDChiNetwork::create(string channel_network_fname)
 	for (int i = 0; i< n_channels; i++)
 	{
 		int n_nodes_in_channel = (node_indices[i].size());
-		vector<double> empty_chi(n_nodes_in_channel,0.0);
+		vector<float> empty_chi(n_nodes_in_channel,0.0);
 		chis.push_back(empty_chi);
 	}
 
@@ -274,10 +274,10 @@ void LSDChiNetwork::print_channel_details_to_screen(int channel_number)
 	vector<int> node = node_indices[channel_number];
 	vector<int> row = row_indices[channel_number];
 	vector<int> col = col_indices[channel_number];
-	vector<double> elevation = elevations[channel_number];
-	vector<double> flow_distance = flow_distances[channel_number];
-	vector<double> drainage_area = drainage_areas[channel_number];
-	vector<double> chi = chis[channel_number];
+	vector<float> elevation = elevations[channel_number];
+	vector<float> flow_distance = flow_distances[channel_number];
+	vector<float> drainage_area = drainage_areas[channel_number];
+	vector<float> chi = chis[channel_number];
 
 	int n_nodes = node.size();
 	for (int i = 0; i< n_nodes; i++)
@@ -300,7 +300,7 @@ void LSDChiNetwork::print_channel_details_to_screen(int channel_number)
 // SMM 01/03/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiNetwork::print_channel_details_to_file(string fname, double A_0, double m_over_n)
+void LSDChiNetwork::print_channel_details_to_file(string fname, float A_0, float m_over_n)
 {
 
 	ofstream channel_profile_out;
@@ -314,10 +314,10 @@ void LSDChiNetwork::print_channel_details_to_file(string fname, double A_0, doub
 		vector<int> node = node_indices[channel_number];
 		vector<int> row = row_indices[channel_number];
 		vector<int> col = col_indices[channel_number];
-		vector<double> elevation = elevations[channel_number];
-		vector<double> flow_distance = flow_distances[channel_number];
-		vector<double> drainage_area = drainage_areas[channel_number];
-		vector<double> chi = chis[channel_number];
+		vector<float> elevation = elevations[channel_number];
+		vector<float> flow_distance = flow_distances[channel_number];
+		vector<float> drainage_area = drainage_areas[channel_number];
+		vector<float> chi = chis[channel_number];
 
 		int n_nodes = node.size();
 		for (int i = 0; i< n_nodes; i++)
@@ -345,8 +345,8 @@ void LSDChiNetwork::print_channel_details_to_file(string fname, double A_0, doub
 void LSDChiNetwork::print_channel_details_to_file_full_fitted(string fname)
 {
 
-	double m_over_n = m_over_n_for_fitted_data;
-	double A_0 = A_0_for_fitted_data;
+	float m_over_n = m_over_n_for_fitted_data;
+	float A_0 = A_0_for_fitted_data;
 
 	ofstream channel_profile_out;
 	channel_profile_out.open(fname.c_str());
@@ -363,26 +363,26 @@ void LSDChiNetwork::print_channel_details_to_file_full_fitted(string fname)
 			vector<int> node = node_indices[channel_number];
 			vector<int> row = row_indices[channel_number];
 			vector<int> col = col_indices[channel_number];
-			vector<double> elevation = elevations[channel_number];
-			vector<double> flow_distance = flow_distances[channel_number];
-			vector<double> drainage_area = drainage_areas[channel_number];
-			vector<double> chi = chis[channel_number];
+			vector<float> elevation = elevations[channel_number];
+			vector<float> flow_distance = flow_distances[channel_number];
+			vector<float> drainage_area = drainage_areas[channel_number];
+			vector<float> chi = chis[channel_number];
 
-			vector<double> m_mean = chi_m_means[channel_number];
-			vector<double> m_standard_deviation = chi_m_standard_deviations[channel_number];
-			vector<double> m_standard_error = chi_m_standard_errors[channel_number];
+			vector<float> m_mean = chi_m_means[channel_number];
+			vector<float> m_standard_deviation = chi_m_standard_deviations[channel_number];
+			vector<float> m_standard_error = chi_m_standard_errors[channel_number];
 
-			vector<double> b_mean = chi_b_means[channel_number];
-			vector<double> b_standard_deviation = chi_b_standard_deviations[channel_number];
-			vector<double> b_standard_error = chi_b_standard_errors[channel_number];
+			vector<float> b_mean = chi_b_means[channel_number];
+			vector<float> b_standard_deviation = chi_b_standard_deviations[channel_number];
+			vector<float> b_standard_error = chi_b_standard_errors[channel_number];
 
-			vector<double> DW_mean = chi_DW_means[channel_number];
-			vector<double> DW_standard_deviation = chi_DW_standard_deviations[channel_number];
-			vector<double> DW_standard_error = chi_DW_standard_errors[channel_number];
+			vector<float> DW_mean = chi_DW_means[channel_number];
+			vector<float> DW_standard_deviation = chi_DW_standard_deviations[channel_number];
+			vector<float> DW_standard_error = chi_DW_standard_errors[channel_number];
 
-			vector<double> fitted_elev_mean = all_fitted_elev_means[channel_number];
-			vector<double> fitted_elev_standard_deviation = all_fitted_elev_standard_deviations[channel_number];
-			vector<double> fitted_elev_standard_error = all_fitted_elev_standard_errors[channel_number];
+			vector<float> fitted_elev_mean = all_fitted_elev_means[channel_number];
+			vector<float> fitted_elev_standard_deviation = all_fitted_elev_standard_deviations[channel_number];
+			vector<float> fitted_elev_standard_error = all_fitted_elev_standard_errors[channel_number];
 
 			vector<int> n_data_points_uic = n_data_points_used_in_stats[channel_number];
 
@@ -425,8 +425,8 @@ void LSDChiNetwork::print_channel_details_to_file_full_fitted(string fname)
 void LSDChiNetwork::print_channel_details_to_file_full_fitted(string fname, int target_nodes, int minimum_segment_length)
 {
 
-	double m_over_n = m_over_n_for_fitted_data;
-	double A_0 = A_0_for_fitted_data;
+	float m_over_n = m_over_n_for_fitted_data;
+	float A_0 = A_0_for_fitted_data;
 
 	ofstream channel_profile_out;
 	channel_profile_out.open(fname.c_str());
@@ -447,26 +447,26 @@ void LSDChiNetwork::print_channel_details_to_file_full_fitted(string fname, int 
 				vector<int> node = node_indices[channel_number];
 				vector<int> row = row_indices[channel_number];
 				vector<int> col = col_indices[channel_number];
-				vector<double> elevation = elevations[channel_number];
-				vector<double> flow_distance = flow_distances[channel_number];
-				vector<double> drainage_area = drainage_areas[channel_number];
-				vector<double> chi = chis[channel_number];
+				vector<float> elevation = elevations[channel_number];
+				vector<float> flow_distance = flow_distances[channel_number];
+				vector<float> drainage_area = drainage_areas[channel_number];
+				vector<float> chi = chis[channel_number];
 
-				vector<double> m_mean = chi_m_means[channel_number];
-				vector<double> m_standard_deviation = chi_m_standard_deviations[channel_number];
-				vector<double> m_standard_error = chi_m_standard_errors[channel_number];
+				vector<float> m_mean = chi_m_means[channel_number];
+				vector<float> m_standard_deviation = chi_m_standard_deviations[channel_number];
+				vector<float> m_standard_error = chi_m_standard_errors[channel_number];
 
-				vector<double> b_mean = chi_b_means[channel_number];
-				vector<double> b_standard_deviation = chi_b_standard_deviations[channel_number];
-				vector<double> b_standard_error = chi_b_standard_errors[channel_number];
+				vector<float> b_mean = chi_b_means[channel_number];
+				vector<float> b_standard_deviation = chi_b_standard_deviations[channel_number];
+				vector<float> b_standard_error = chi_b_standard_errors[channel_number];
 
-				vector<double> DW_mean = chi_DW_means[channel_number];
-				vector<double> DW_standard_deviation = chi_DW_standard_deviations[channel_number];
-				vector<double> DW_standard_error = chi_DW_standard_errors[channel_number];
+				vector<float> DW_mean = chi_DW_means[channel_number];
+				vector<float> DW_standard_deviation = chi_DW_standard_deviations[channel_number];
+				vector<float> DW_standard_error = chi_DW_standard_errors[channel_number];
 
-				vector<double> fitted_elev_mean = all_fitted_elev_means[channel_number];
-				vector<double> fitted_elev_standard_deviation = all_fitted_elev_standard_deviations[channel_number];
-				vector<double> fitted_elev_standard_error = all_fitted_elev_standard_errors[channel_number];
+				vector<float> fitted_elev_mean = all_fitted_elev_means[channel_number];
+				vector<float> fitted_elev_standard_deviation = all_fitted_elev_standard_deviations[channel_number];
+				vector<float> fitted_elev_standard_error = all_fitted_elev_standard_errors[channel_number];
 
 				vector<int> n_data_points_uic = n_data_points_used_in_stats[channel_number];
 
@@ -529,27 +529,27 @@ void LSDChiNetwork::print_channel_details_to_file_full_fitted(string fname, int 
 // SMM 01/03/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiNetwork::slope_area_extraction_vertical_intervals(double interval, double area_thin_fraction,
+void LSDChiNetwork::slope_area_extraction_vertical_intervals(float interval, float area_thin_fraction,
 															string fname)
 {
 	int n_channels = elevations.size();
-	double half_interval = interval/2;
-	double target_end_interval_elevations;
-	double target_mp_interval_elevations;
-	double start_interval_elevations;
-	double end_interval_elevations;
-	double mp_interval_elevations = -9999;
-	double start_interval_flowdistance;
-	double end_interval_flowdistance;
-	double mp_interval_flowdistance = -9999;
+	float half_interval = interval/2;
+	float target_end_interval_elevations;
+	float target_mp_interval_elevations;
+	float start_interval_elevations;
+	float end_interval_elevations;
+	float mp_interval_elevations = -9999;
+	float start_interval_flowdistance;
+	float end_interval_flowdistance;
+	float mp_interval_flowdistance = -9999;
 	int start_row, start_col;
 	int mp_row = -9999;
 	int mp_col = -9999;
 	int end_row, end_col;
-	double start_area;
-	double mp_area = -9999;
-	double end_area;
-	double area_thin_frac_for_test;
+	float start_area;
+	float mp_area = -9999;
+	float end_area;
+	float area_thin_frac_for_test;
 
 	cout << "n channels is: " << n_channels << endl;
 
@@ -630,7 +630,7 @@ void LSDChiNetwork::slope_area_extraction_vertical_intervals(double interval, do
 			// flag
 			if (end_flag == 1)
 			{
-				double slope = (start_interval_elevations-end_interval_elevations)/
+				float slope = (start_interval_elevations-end_interval_elevations)/
 				               (start_interval_flowdistance-end_interval_flowdistance);
 
 				// the data take a log of the slope so it is necessary to have this statement
@@ -696,27 +696,27 @@ void LSDChiNetwork::slope_area_extraction_vertical_intervals(double interval, do
 // SMM 01/03/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiNetwork::slope_area_extraction_horizontal_intervals(double interval, double area_thin_fraction,
+void LSDChiNetwork::slope_area_extraction_horizontal_intervals(float interval, float area_thin_fraction,
 															string fname)
 {
 	int n_channels = elevations.size();
-	double half_interval = interval/2;
-	double target_end_interval_flowdistance;
-	double target_mp_interval_flowdistance;
-	double start_interval_elevations;
-	double end_interval_elevations;
-	double mp_interval_elevations = -9999;
-	double start_interval_flowdistance;
-	double end_interval_flowdistance;
-	double mp_interval_flowdistance = -9999;
+	float half_interval = interval/2;
+	float target_end_interval_flowdistance;
+	float target_mp_interval_flowdistance;
+	float start_interval_elevations;
+	float end_interval_elevations;
+	float mp_interval_elevations = -9999;
+	float start_interval_flowdistance;
+	float end_interval_flowdistance;
+	float mp_interval_flowdistance = -9999;
 	int start_row, start_col;
 	int mp_row = -9999;
 	int mp_col = -9999;
 	int end_row, end_col;
-	double start_area;
-	double mp_area = -9999;
-	double end_area;
-	double area_thin_frac_for_test;
+	float start_area;
+	float mp_area = -9999;
+	float end_area;
+	float area_thin_frac_for_test;
 
 	cout << "n channels is: " << n_channels << endl;
 
@@ -797,7 +797,7 @@ void LSDChiNetwork::slope_area_extraction_horizontal_intervals(double interval, 
 			// flag
 			if (end_flag == 1)
 			{
-				double slope = (start_interval_elevations-end_interval_elevations)/
+				float slope = (start_interval_elevations-end_interval_elevations)/
 				               (start_interval_flowdistance-end_interval_flowdistance);
 
 				// the data take a log of the slope so it is necessary to have this statement
@@ -853,10 +853,10 @@ void LSDChiNetwork::slope_area_extraction_horizontal_intervals(double interval, 
 // SMM 01/03/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-Array2D<double> LSDChiNetwork::data_to_array(int data_member)
+Array2D<float> LSDChiNetwork::data_to_array(int data_member)
 {
 	// this vecvec will be used to create the array
-	vector< vector<double> > data_vecvec;
+	vector< vector<float> > data_vecvec;
 
 	// fill the vecvec with the appropriate data based on the switch
 	switch ( data_member )
@@ -1012,9 +1012,9 @@ Array2D<double> LSDChiNetwork::data_to_array(int data_member)
 			data_vecvec = elevations;
 	}
 	// now initialize the array with nodata
-	Array2D<double> DataArray(NRows,NCols,NoDataValue);
+	Array2D<float> DataArray(NRows,NCols,NoDataValue);
 	int row, col;
-	double this_data;
+	float this_data;
 
 	// now loop through channels and nodes filling in the data
 	int n_channels = int(data_vecvec.size());
@@ -1063,23 +1063,23 @@ Array2D<double> LSDChiNetwork::data_to_array(int data_member)
 // SMM 01/03/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiNetwork::calculate_chi(double A_0, double m_over_n)
+void LSDChiNetwork::calculate_chi(float A_0, float m_over_n)
 {
-	double dx;				// spacing between nodes
+	float dx;				// spacing between nodes
 
 	int n_channels = elevations.size();
 	for (int c = 0; c<n_channels; c++)
 	{
 		// extract the raw data
-		vector<double> elevation = elevations[c];
-		vector<double> flow_distance = flow_distances[c];
-		vector<double> drainage_area = drainage_areas[c];
+		vector<float> elevation = elevations[c];
+		vector<float> flow_distance = flow_distances[c];
+		vector<float> drainage_area = drainage_areas[c];
 
 		// get the number of nodes in channel
 		int n_nodes_in_channel = int(elevation.size());
 
 		// initiate a chi vector
-		vector<double> chi(elevation.size(),0.0);
+		vector<float> chi(elevation.size(),0.0);
 
 		// get the contributing channel and downstream chi
 		if (receiver_channel[c] > c)
@@ -1092,7 +1092,7 @@ void LSDChiNetwork::calculate_chi(double A_0, double m_over_n)
 		if (receiver_channel[c] != c)
 		{
 			// get the chi values from the receiver channel
-			vector<double> ds_chi = chis[receiver_channel[c]];
+			vector<float> ds_chi = chis[receiver_channel[c]];
 
 			// set the downstream chi value (which is in the last node on the channel since
 			// the data is organized with the furthest upstream first
@@ -1136,7 +1136,7 @@ int LSDChiNetwork::calculate_skip(int target_nodes)
 {
 	int n_nodes = chis[0].size();
 
-	double sk = double(n_nodes)/double(target_nodes);
+	float sk = float(n_nodes)/float(target_nodes);
 
 	int rem = n_nodes%target_nodes;
 	int N;
@@ -1171,11 +1171,11 @@ int LSDChiNetwork::calculate_skip(int target_nodes)
 // SMM 01/05/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-int LSDChiNetwork::calculate_skip(int target_nodes, vector<double>& sorted_chis)
+int LSDChiNetwork::calculate_skip(int target_nodes, vector<float>& sorted_chis)
 {
 	int n_nodes = sorted_chis.size();
 
-	double sk = double(n_nodes)/double(target_nodes);
+	float sk = float(n_nodes)/float(target_nodes);
 
 	int rem = n_nodes%target_nodes;
 	int N;
@@ -1223,7 +1223,7 @@ int LSDChiNetwork::calculate_skip(int target_nodes, int channel_number)
 
 	int n_nodes = chis[channel_number].size();
 
-	double sk = double(n_nodes)/double(target_nodes);
+	float sk = float(n_nodes)/float(target_nodes);
 
 	int rem = n_nodes%target_nodes;
 	int N;
@@ -1260,17 +1260,17 @@ int LSDChiNetwork::calculate_skip(int target_nodes, int channel_number)
 // SMM 01/03/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-double LSDChiNetwork::calculate_optimal_chi_spacing(int target_nodes)
+float LSDChiNetwork::calculate_optimal_chi_spacing(int target_nodes)
 {
-	double dchi;
-	vector<double>::iterator viter_begin = chis[0].begin();
-	vector<double>::iterator viter_end= chis[0].end();
+	float dchi;
+	vector<float>::iterator viter_begin = chis[0].begin();
+	vector<float>::iterator viter_end= chis[0].end();
 	viter_end--;			// this is necessary since the .end() member function
 							// gets the value of the vector one past the end
 	//cout << "LSDChiNetwork line 245 begin: " << *viter_begin << " and end: " << *viter_end << endl;
-	double chi_length = *viter_begin-*viter_end;
+	float chi_length = *viter_begin-*viter_end;
 	//cout << "LSDChiNetwork line 247 chi length is: " << chi_length << endl;
-	dchi = chi_length/(double(target_nodes));
+	dchi = chi_length/(float(target_nodes));
 
 	return dchi;
 }
@@ -1291,19 +1291,19 @@ double LSDChiNetwork::calculate_optimal_chi_spacing(int target_nodes)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::find_most_likeley_segments(int channel,
 						 int minimum_segment_length,
-						 double sigma, int N, vector<double>& b_vec,
-					     vector<double>& m_vec, vector<double>& r2_vec,vector<double>& DW_vec,
-					     vector<double>& thinned_chi, vector<double>& thinned_elev,
-					     vector<double>& fitted_elev, vector<int>& node_reference,
+						 float sigma, int N, vector<float>& b_vec,
+					     vector<float>& m_vec, vector<float>& r2_vec,vector<float>& DW_vec,
+					     vector<float>& thinned_chi, vector<float>& thinned_elev,
+					     vector<float>& fitted_elev, vector<int>& node_reference,
 					     vector<int>& these_segment_lengths,
-					     double& this_MLE, int& this_n_segments, int& n_data_nodes,
-					     double& this_AIC, double& this_AICc )
+					     float& this_MLE, int& this_n_segments, int& n_data_nodes,
+					     float& this_AIC, float& this_AICc )
 {
 	vector<int> empty_vec;
 
-	vector<double> reverse_Chi = chis[channel];
+	vector<float> reverse_Chi = chis[channel];
 	reverse(reverse_Chi.begin(), reverse_Chi.end());
-	vector<double> reverse_Elevation = elevations[channel];
+	vector<float> reverse_Elevation = elevations[channel];
 	reverse(reverse_Elevation.begin(), reverse_Elevation.end());
 	vector<int> node_ref;
 
@@ -1313,7 +1313,7 @@ void LSDChiNetwork::find_most_likeley_segments(int channel,
 	channel_MLE_finder.thin_data_skip(N, node_ref);
 
 	// now create a single sigma value vector
-	vector<double> sigma_values;
+	vector<float> sigma_values;
 	sigma_values.push_back(sigma);
 
 	// compute the best fit AIC
@@ -1350,19 +1350,19 @@ void LSDChiNetwork::find_most_likeley_segments(int channel,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::find_most_likeley_segments_dchi(int channel,
 						 int minimum_segment_length,
-						 double sigma, double dchi, vector<double>& b_vec,
-					     vector<double>& m_vec, vector<double>& r2_vec,vector<double>& DW_vec,
-					     vector<double>& thinned_chi, vector<double>& thinned_elev,
-					     vector<double>& fitted_elev, vector<int>& node_reference,
+						 float sigma, float dchi, vector<float>& b_vec,
+					     vector<float>& m_vec, vector<float>& r2_vec,vector<float>& DW_vec,
+					     vector<float>& thinned_chi, vector<float>& thinned_elev,
+					     vector<float>& fitted_elev, vector<int>& node_reference,
 					     vector<int>& these_segment_lengths,
-					     double& this_MLE, int& this_n_segments, int& n_data_nodes,
-					     double& this_AIC, double& this_AICc )
+					     float& this_MLE, int& this_n_segments, int& n_data_nodes,
+					     float& this_AIC, float& this_AICc )
 {
 	vector<int> empty_vec;
 
-	vector<double> reverse_Chi = chis[channel];
+	vector<float> reverse_Chi = chis[channel];
 	reverse(reverse_Chi.begin(), reverse_Chi.end());
-	vector<double> reverse_Elevation = elevations[channel];
+	vector<float> reverse_Elevation = elevations[channel];
 	reverse(reverse_Elevation.begin(), reverse_Elevation.end());
 
 	LSDMostLikelyPartitionsFinder channel_MLE_finder(minimum_segment_length, reverse_Chi, reverse_Elevation);
@@ -1372,7 +1372,7 @@ void LSDChiNetwork::find_most_likeley_segments_dchi(int channel,
 	n_nodes = node_reference.size();
 
 	// now create a single sigma value vector
-	vector<double> sigma_values;
+	vector<float> sigma_values;
 	sigma_values.push_back(sigma);
 
 	// compute the best fit AIC
@@ -1400,21 +1400,21 @@ void LSDChiNetwork::find_most_likeley_segments_dchi(int channel,
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::find_most_likeley_segments_monte_carlo(int channel, int minimum_segment_length,
-						 double sigma, int mean_skip, int skip_range,  vector<double>& b_vec,
-					     vector<double>& m_vec, vector<double>& r2_vec,vector<double>& DW_vec,
-					     vector<double>& thinned_chi, vector<double>& thinned_elev,
-					     vector<double>& fitted_elev, vector<int>& node_reference,
+						 float sigma, int mean_skip, int skip_range,  vector<float>& b_vec,
+					     vector<float>& m_vec, vector<float>& r2_vec,vector<float>& DW_vec,
+					     vector<float>& thinned_chi, vector<float>& thinned_elev,
+					     vector<float>& fitted_elev, vector<int>& node_reference,
 					     vector<int>& these_segment_lengths,
-					     double& this_MLE, int& this_n_segments, int& n_data_nodes,
-					     double& this_AIC, double& this_AICc )
+					     float& this_MLE, int& this_n_segments, int& n_data_nodes,
+					     float& this_AIC, float& this_AICc )
 {
 	// first create a segment finder object
         //cout << "making MLEfinder object, " << endl;
 	vector<int> empty_vec;
 
-	vector<double> reverse_Chi = chis[channel];
+	vector<float> reverse_Chi = chis[channel];
 	reverse(reverse_Chi.begin(), reverse_Chi.end());
-	vector<double> reverse_Elevation = elevations[channel];
+	vector<float> reverse_Elevation = elevations[channel];
 	reverse(reverse_Elevation.begin(), reverse_Elevation.end());
 
 
@@ -1427,7 +1427,7 @@ void LSDChiNetwork::find_most_likeley_segments_monte_carlo(int channel, int mini
 	n_nodes = node_reference.size();
 
 	// now create a single sigma value vector
-	vector<double> sigma_values;
+	vector<float> sigma_values;
 	sigma_values.push_back(sigma);
 
 	// compute the best fit AIC
@@ -1456,21 +1456,21 @@ void LSDChiNetwork::find_most_likeley_segments_monte_carlo(int channel, int mini
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::find_most_likeley_segments_monte_carlo_dchi(int channel, int minimum_segment_length,
-						 double sigma, double mean_dchi, double variation_dchi, vector<double>& b_vec,
-					     vector<double>& m_vec, vector<double>& r2_vec,vector<double>& DW_vec,
-					     vector<double>& thinned_chi, vector<double>& thinned_elev,
-					     vector<double>& fitted_elev, vector<int>& node_reference,
+						 float sigma, float mean_dchi, float variation_dchi, vector<float>& b_vec,
+					     vector<float>& m_vec, vector<float>& r2_vec,vector<float>& DW_vec,
+					     vector<float>& thinned_chi, vector<float>& thinned_elev,
+					     vector<float>& fitted_elev, vector<int>& node_reference,
 					     vector<int>& these_segment_lengths,
-					     double& this_MLE, int& this_n_segments, int& n_data_nodes,
-					     double& this_AIC, double& this_AICc )
+					     float& this_MLE, int& this_n_segments, int& n_data_nodes,
+					     float& this_AIC, float& this_AICc )
 {
 	// first create a segment finder object
         //cout << "making MLEfinder object, " << endl;
 	vector<int> empty_vec;
 
-	vector<double> reverse_Chi = chis[channel];
+	vector<float> reverse_Chi = chis[channel];
 	reverse(reverse_Chi.begin(), reverse_Chi.end());
-	vector<double> reverse_Elevation = elevations[channel];
+	vector<float> reverse_Elevation = elevations[channel];
 	reverse(reverse_Elevation.begin(), reverse_Elevation.end());
 
 
@@ -1483,7 +1483,7 @@ void LSDChiNetwork::find_most_likeley_segments_monte_carlo_dchi(int channel, int
 	n_nodes = node_reference.size();
 
 	// now create a single sigma value vector
-	vector<double> sigma_values;
+	vector<float> sigma_values;
 	sigma_values.push_back(sigma);
 
 	// compute the best fit AIC
@@ -1521,9 +1521,9 @@ void LSDChiNetwork::find_most_likeley_segments_monte_carlo_dchi(int channel, int
 // SMM 01/03/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit(double A_0, double m_over_n, int n_iterations,
+void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit(float A_0, float m_over_n, int n_iterations,
 				int mean_skip, int skip_range,
-				int minimum_segment_length, double sigma)
+				int minimum_segment_length, float sigma)
 {
 
   	int n_channels = chis.size();
@@ -1534,56 +1534,56 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit(double A_0, do
 	// vecvecvecs for storing information. The top level
 	// is the channel. The second level is the node
 	// the third level is the individual data elements
-  	vector< vector< vector<double> > > b_vecvecvec(n_channels);
-  	vector< vector< vector<double> > > m_vecvecvec(n_channels);
-  	vector< vector< vector<double> > > DW_vecvecvec(n_channels);
-  	vector< vector< vector<double> > > r2_vecvecvec(n_channels);
-  	vector< vector< vector<double> > > fitted_elev_vecvecvec(n_channels);
+  	vector< vector< vector<float> > > b_vecvecvec(n_channels);
+  	vector< vector< vector<float> > > m_vecvecvec(n_channels);
+  	vector< vector< vector<float> > > DW_vecvecvec(n_channels);
+  	vector< vector< vector<float> > > r2_vecvecvec(n_channels);
+  	vector< vector< vector<float> > > fitted_elev_vecvecvec(n_channels);
   	//vector< vector< vector<int> > > these_segment_lengths_vecvec(n_channels);
 
   	// iterators to navigate these data elements
-  	vector< vector< vector<double> > >::iterator first_level_doub_iter;
-  	vector< vector< vector<double> > >::iterator second_level_doub_iter;
+  	vector< vector< vector<float> > >::iterator first_level_doub_iter;
+  	vector< vector< vector<float> > >::iterator second_level_doub_iter;
 
 	// now expand all of these vecvecvecs to be the correct size
 	for (int cn = 0; cn<n_channels; cn++)
 	{
-		vector< vector<double> > temp_vecvec_double;
+		vector< vector<float> > temp_vecvec_float;
 		//vector< vector<int> > temp_vecvec_int;
-		vector<double> empty_double_vec;
+		vector<float> empty_float_vec;
 		//vector<int> empty_int_vec;
 
 		// expand the vecvec elements
 		int nodes_in_channel = int(chis[cn].size());
 		for (int n = 0; n<nodes_in_channel; n++)
 		{
-			temp_vecvec_double.push_back(empty_double_vec);
+			temp_vecvec_float.push_back(empty_float_vec);
 			//temp_vecvec_int.push_back(empty_int_vec);
 		}
 
 		// now add this to the vecvecvecs
-		b_vecvecvec[cn] = temp_vecvec_double;
-		m_vecvecvec[cn]= temp_vecvec_double;
-		DW_vecvecvec[cn] = temp_vecvec_double;
-		r2_vecvecvec[cn] =temp_vecvec_double;
-		fitted_elev_vecvecvec[cn] = temp_vecvec_double;
+		b_vecvecvec[cn] = temp_vecvec_float;
+		m_vecvecvec[cn]= temp_vecvec_float;
+		DW_vecvecvec[cn] = temp_vecvec_float;
+		r2_vecvecvec[cn] =temp_vecvec_float;
+		fitted_elev_vecvecvec[cn] = temp_vecvec_float;
 		//these_segment_lengths_vecvec[cn] = temp_vecvec_int;
 	}
 
 	// now the vectors that will be replaced by the fitting algorithm
   	// theyare from the individual channels, which are replaced each time a new channel is analyzed
-  	vector<double> m_vec;
-  	vector<double> b_vec;
-  	vector<double> r2_vec;
-  	vector<double> DW_vec;
-  	vector<double> fitted_y;
+  	vector<float> m_vec;
+  	vector<float> b_vec;
+  	vector<float> r2_vec;
+  	vector<float> DW_vec;
+  	vector<float> fitted_y;
   	int n_data_nodes;
   	int this_n_segments;
-  	double this_MLE, this_AIC, this_AICc;
+  	float this_MLE, this_AIC, this_AICc;
   	vector<int> these_segment_lengths;
-  	vector<double> chi_thinned;
-  	vector<double> elev_thinned;
-  	vector<double> elev_fitted;
+  	vector<float> chi_thinned;
+  	vector<float> elev_thinned;
+  	vector<float> elev_fitted;
 	vector<int> node_ref_thinned;
 	int n_segments;
 
@@ -1615,10 +1615,10 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit(double A_0, do
 			//}
 
 			// now assign the m, b, r2 and DW values for segments to all the nodes in the thinned data
-			vector<double> m_per_node;
-			vector<double> b_per_node;
-			vector<double> r2_per_node;
-			vector<double> DW_per_node;
+			vector<float> m_per_node;
+			vector<float> b_per_node;
+			vector<float> r2_per_node;
+			vector<float> DW_per_node;
 			n_segments = int(b_vec.size());
 			for(int seg = 0; seg<n_segments; seg++)
 			{
@@ -1653,7 +1653,7 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit(double A_0, do
 	}				// end iteration loop
 
 	// reset the data holding the fitted network properties
-	vector< vector<double> > empty_vecvec;
+	vector< vector<float> > empty_vecvec;
 	vector< vector<int> > empty_int_vecvec;
 	chi_m_means = empty_vecvec;
 	chi_m_standard_deviations = empty_vecvec;
@@ -1671,11 +1671,11 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit(double A_0, do
 
 	// vectors that accept the data from the vecvecvec and are passed to
 	// the get_common_statistics function
-	vector<double> b_datavec;
-	vector<double> m_datavec;
-	vector<double> DW_datavec;
-	vector<double> elev_datavec;
-	vector<double> common_stats;
+	vector<float> b_datavec;
+	vector<float> m_datavec;
+	vector<float> DW_datavec;
+	vector<float> elev_datavec;
+	vector<float> common_stats;
 
 	// now go through the channel nodes and see how many data elements there are.
 	for (int chan = 0; chan<n_channels; chan++)
@@ -1684,18 +1684,18 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit(double A_0, do
 		// monte carlo fitted network properties
 		int n_nodes_in_chan = int(chis[chan].size());
 
-		vector<double> m_means(n_nodes_in_chan);
-		vector<double> m_standard_deviations(n_nodes_in_chan);
-		vector<double> m_standard_error(n_nodes_in_chan);
-		vector<double> b_means(n_nodes_in_chan);
-		vector<double> b_standard_deviations(n_nodes_in_chan);
-		vector<double> b_standard_error(n_nodes_in_chan);
-		vector<double> DW_means(n_nodes_in_chan);
-		vector<double> DW_standard_deviations(n_nodes_in_chan);
-		vector<double> DW_standard_error(n_nodes_in_chan);
-		vector<double> fitted_elev_means(n_nodes_in_chan);
-		vector<double> fitted_elev_standard_deviations(n_nodes_in_chan);
-		vector<double> fitted_elev_standard_error(n_nodes_in_chan);
+		vector<float> m_means(n_nodes_in_chan);
+		vector<float> m_standard_deviations(n_nodes_in_chan);
+		vector<float> m_standard_error(n_nodes_in_chan);
+		vector<float> b_means(n_nodes_in_chan);
+		vector<float> b_standard_deviations(n_nodes_in_chan);
+		vector<float> b_standard_error(n_nodes_in_chan);
+		vector<float> DW_means(n_nodes_in_chan);
+		vector<float> DW_standard_deviations(n_nodes_in_chan);
+		vector<float> DW_standard_error(n_nodes_in_chan);
+		vector<float> fitted_elev_means(n_nodes_in_chan);
+		vector<float> fitted_elev_standard_deviations(n_nodes_in_chan);
+		vector<float> fitted_elev_standard_error(n_nodes_in_chan);
 		vector<int> n_data_points_in_this_channel_node(n_nodes_in_chan);
 
 		// now loop through each node, calculating how many data points there are in each
@@ -1809,9 +1809,9 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit(double A_0, do
 // SMM 01/04/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiNetwork::monte_carlo_split_channel(double A_0, double m_over_n, int n_iterations,
+void LSDChiNetwork::monte_carlo_split_channel(float A_0, float m_over_n, int n_iterations,
 				int target_skip, int target_nodes,
-				int minimum_segment_length, double sigma, int chan, vector<int>& break_nodes)
+				int minimum_segment_length, float sigma, int chan, vector<int>& break_nodes)
 {
 	int mean_skip;
 	int skip_range;
@@ -1848,17 +1848,17 @@ void LSDChiNetwork::monte_carlo_split_channel(double A_0, double m_over_n, int n
 	}
 
 	// get the data from the channel
-	vector<double> reverse_Chi = chis[chan];
+	vector<float> reverse_Chi = chis[chan];
 	reverse(reverse_Chi.begin(), reverse_Chi.end());
-	vector<double> reverse_Elevation = elevations[chan];
+	vector<float> reverse_Elevation = elevations[chan];
 	reverse(reverse_Elevation.begin(), reverse_Elevation.end());
 
 	// these data members keep track of the  breaks
 	int n_nodes = int(reverse_Chi.size());
 	list<int> breaks;
 	list<int>::iterator br_iter;
-	vector<double>::iterator vec_iter_start;
-	vector<double>::iterator vec_iter_end;
+	vector<float>::iterator vec_iter_start;
+	vector<float>::iterator vec_iter_end;
 
 	breaks.push_back(n_nodes-1);
 	int start_of_last_break = 0;
@@ -1884,7 +1884,7 @@ void LSDChiNetwork::monte_carlo_split_channel(double A_0, double m_over_n, int n
 		if (length_of_break_segment > max_nodes_in_section)
 		{
 			// get the skips
-			double sk = double(n_nodes)/double(target_nodes);
+			float sk = float(n_nodes)/float(target_nodes);
 
 			int rem = n_nodes%target_nodes;
 			int N;
@@ -1920,12 +1920,12 @@ void LSDChiNetwork::monte_carlo_split_channel(double A_0, double m_over_n, int n
 			// now prepare the vectors for the analysis
 			vec_iter_start = reverse_Chi.begin()+start_of_last_break;
 			vec_iter_end = reverse_Chi.begin()+length_of_break_segment+start_of_last_break;
-			vector<double> br_chi;
+			vector<float> br_chi;
 			br_chi.assign(vec_iter_start,vec_iter_end);
 
 			vec_iter_start = reverse_Elevation.begin()+start_of_last_break;
 			vec_iter_end = reverse_Elevation.begin()+length_of_break_segment+start_of_last_break;
-			vector<double> br_elev;
+			vector<float> br_elev;
 			br_elev.assign(vec_iter_start,vec_iter_end);
 			int n_br = br_elev.size();
 
@@ -1944,14 +1944,14 @@ void LSDChiNetwork::monte_carlo_split_channel(double A_0, double m_over_n, int n
 			//}
 
 			// initiate the vecvecs for finding the breaks
-			vector< vector<double> > b_vecvec(n_br);
-			vector< vector<double> > m_vecvec(n_br);
-			vector< vector<double> > seg_number_vecvec(n_br);
+			vector< vector<float> > b_vecvec(n_br);
+			vector< vector<float> > m_vecvec(n_br);
+			vector< vector<float> > seg_number_vecvec(n_br);
 
 			// initiate the vectors for holding the means
-			vector<double> b_means(n_br);
-			vector<double> m_means(n_br);
-			vector<double> seg_number_means(n_br);
+			vector<float> b_means(n_br);
+			vector<float> m_means(n_br);
+			vector<float> seg_number_means(n_br);
 
 			// now run the monte carlo algotithm thorugh N iterations
 			for (int iteration = 0; iteration < n_iterations; iteration++)
@@ -1960,22 +1960,22 @@ void LSDChiNetwork::monte_carlo_split_channel(double A_0, double m_over_n, int n
 
 				// now the vectors that will be replaced by the fitting algorithm
 				// they are from the individual channels, which are replaced each time a new channel is analyzed
-				vector<double> m_vec;
-				vector<double> b_vec;
-				vector<double> r2_vec;
-				vector<double> DW_vec;
+				vector<float> m_vec;
+				vector<float> b_vec;
+				vector<float> r2_vec;
+				vector<float> DW_vec;
 				int n_data_nodes;
 				int this_n_segments;
-				double this_MLE, this_AIC, this_AICc;
+				float this_MLE, this_AIC, this_AICc;
 				vector<int> these_segment_lengths;
-				vector<double> fitted_elev;
+				vector<float> fitted_elev;
 				vector<int> n_segements_each_iteration;
 				int n_segments;
 
 				// now assign the m, b, r2 and DW values for segments to all the nodes in the thinned data
-				vector<double> m_per_node;
-				vector<double> b_per_node;
-				vector<double> seg_number_per_node;
+				vector<float> m_per_node;
+				vector<float> b_per_node;
+				vector<float> seg_number_per_node;
 
 				// Run the monte carlo algorithm on the break segment
 
@@ -1986,7 +1986,7 @@ void LSDChiNetwork::monte_carlo_split_channel(double A_0, double m_over_n, int n
 				n_data_nodes = node_reference.size();
 
 				// now create a single sigma value vector
-				vector<double> sigma_values;
+				vector<float> sigma_values;
 				sigma_values.push_back(sigma);
 
 				// compute the best fit AIC
@@ -2007,7 +2007,7 @@ void LSDChiNetwork::monte_carlo_split_channel(double A_0, double m_over_n, int n
 					{
 						m_per_node.push_back(m_vec[seg]);
 						b_per_node.push_back(b_vec[seg]);
-						seg_number_per_node.push_back( double(seg) );
+						seg_number_per_node.push_back( float(seg) );
 					}
 				}
 				n_segements_each_iteration.push_back(this_n_segments);
@@ -2023,10 +2023,10 @@ void LSDChiNetwork::monte_carlo_split_channel(double A_0, double m_over_n, int n
 			}			// finished the monte carlo iteration
 
 			// now get the averages and look for a break
-			vector<double> b_datavec;
-			vector<double> m_datavec;
-			vector<double> seg_number_datavec;
-			vector<double> common_stats;
+			vector<float> b_datavec;
+			vector<float> m_datavec;
+			vector<float> seg_number_datavec;
+			vector<float> common_stats;
 
 
 			for (int br_node = 0; br_node < n_br; br_node++)
@@ -2068,7 +2068,7 @@ void LSDChiNetwork::monte_carlo_split_channel(double A_0, double m_over_n, int n
 
 			// now we want to split the data. We do this where the segment number is intermediate
 			// between two integers
-			double this_seg = 0;
+			float this_seg = 0;
 			vector<int> this_segment_breaks;
 			for (int br_node = 0; br_node < n_br; br_node++)
 			{
@@ -2147,10 +2147,10 @@ void LSDChiNetwork::monte_carlo_split_channel(double A_0, double m_over_n, int n
 // SMM 01/05/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over_n, int n_iterations,
+void LSDChiNetwork::monte_carlo_split_channel_colinear(float A_0, float m_over_n, int n_iterations,
 				int target_skip, int target_nodes,
-				int minimum_segment_length, double sigma,
-				vector<double> reverse_Chi, vector<double> reverse_Elevation, vector<int>& break_nodes)
+				int minimum_segment_length, float sigma,
+				vector<float> reverse_Chi, vector<float> reverse_Elevation, vector<int>& break_nodes)
 {
 	//cout << "Line 2034, starting to break the channel" << endl;
 
@@ -2186,8 +2186,8 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 	int n_nodes = int(reverse_Chi.size());
 	list<int> breaks;
 	list<int>::iterator br_iter;
-	vector<double>::iterator vec_iter_start;
-	vector<double>::iterator vec_iter_end;
+	vector<float>::iterator vec_iter_start;
+	vector<float>::iterator vec_iter_end;
 
 	breaks.push_back(n_nodes-1);
 	int start_of_last_break = 0;
@@ -2209,7 +2209,7 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 		if (length_of_break_segment > max_nodes_in_section)
 		{
 			// get the skips
-			double sk = double(n_nodes)/double(target_nodes)+0.5;
+			float sk = float(n_nodes)/float(target_nodes)+0.5;
 
 			int rem = n_nodes%target_nodes;
 			int N;
@@ -2245,26 +2245,26 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 			// now prepare the vectors for the analysis
 			vec_iter_start = reverse_Chi.begin()+start_of_last_break;
 			vec_iter_end = reverse_Chi.begin()+length_of_break_segment+start_of_last_break;
-			vector<double> br_chi;
+			vector<float> br_chi;
 			br_chi.assign(vec_iter_start,vec_iter_end);
 
 			vec_iter_start = reverse_Elevation.begin()+start_of_last_break;
 			vec_iter_end = reverse_Elevation.begin()+length_of_break_segment+start_of_last_break;
-			vector<double> br_elev;
+			vector<float> br_elev;
 			br_elev.assign(vec_iter_start,vec_iter_end);
 			int n_br = br_elev.size();
 
 			//cout << "LINE 2136 assigned vectors" << endl;
 
 			// initiate the vecvecs for finding the breaks
-			vector< vector<double> > b_vecvec(n_br);
-			vector< vector<double> > m_vecvec(n_br);
-			vector< vector<double> > seg_number_vecvec(n_br);
+			vector< vector<float> > b_vecvec(n_br);
+			vector< vector<float> > m_vecvec(n_br);
+			vector< vector<float> > seg_number_vecvec(n_br);
 
 			// initiate the vectors for holding the means
-			vector<double> b_means(n_br);
-			vector<double> m_means(n_br);
-			vector<double> seg_number_means(n_br);
+			vector<float> b_means(n_br);
+			vector<float> m_means(n_br);
+			vector<float> seg_number_means(n_br);
 
 			// now run the monte carlo algotithm thorugh N iterations
 			for (int iteration = 0; iteration < n_iterations; iteration++)
@@ -2273,22 +2273,22 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 
 				// now the vectors that will be replaced by the fitting algorithm
 				// they are from the individual channels, which are replaced each time a new channel is analyzed
-				vector<double> m_vec;
-				vector<double> b_vec;
-				vector<double> r2_vec;
-				vector<double> DW_vec;
+				vector<float> m_vec;
+				vector<float> b_vec;
+				vector<float> r2_vec;
+				vector<float> DW_vec;
 				int n_data_nodes;
 				int this_n_segments;
-				double this_MLE, this_AIC, this_AICc;
+				float this_MLE, this_AIC, this_AICc;
 				vector<int> these_segment_lengths;
-				vector<double> fitted_elev;
+				vector<float> fitted_elev;
 				vector<int> n_segements_each_iteration;
 				int n_segments;
 
 				// now assign the m, b, r2 and DW values for segments to all the nodes in the thinned data
-				vector<double> m_per_node;
-				vector<double> b_per_node;
-				vector<double> seg_number_per_node;
+				vector<float> m_per_node;
+				vector<float> b_per_node;
+				vector<float> seg_number_per_node;
 
 				// Run the monte carlo algorithm on the break segment
 
@@ -2299,15 +2299,15 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 				n_data_nodes = node_reference.size();
 
 				//cout << "n data Nodes: " << n_data_nodes << endl;
-				//vector<double> thinned_chi = channel_MLE_finder.get_x_data();
-				//vector<double> thinned_elev = channel_MLE_finder.get_y_data();
+				//vector<float> thinned_chi = channel_MLE_finder.get_x_data();
+				//vector<float> thinned_elev = channel_MLE_finder.get_y_data();
 				//for (int i = 0; i< n_data_nodes; i++)
 				//{
 				//	cout << "nr["<< i << "]: " << node_reference[i] << " " << thinned_chi[i] << " " << thinned_elev[i] << endl;
 				//}
 
 				// now create a single sigma value vector
-				vector<double> sigma_values;
+				vector<float> sigma_values;
 				sigma_values.push_back(sigma);
 
 				// compute the best fit AIC
@@ -2329,7 +2329,7 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 					{
 						m_per_node.push_back(m_vec[seg]);
 						b_per_node.push_back(b_vec[seg]);
-						seg_number_per_node.push_back( double(seg) );
+						seg_number_per_node.push_back( float(seg) );
 					}
 				}
 				n_segements_each_iteration.push_back(this_n_segments);
@@ -2348,10 +2348,10 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 			}			// finished the monte carlo iteration
 
 			// now get the averages and look for a break
-			vector<double> b_datavec;
-			vector<double> m_datavec;
-			vector<double> seg_number_datavec;
-			vector<double> common_stats;
+			vector<float> b_datavec;
+			vector<float> m_datavec;
+			vector<float> seg_number_datavec;
+			vector<float> common_stats;
 
 
 			for (int br_node = 0; br_node < n_br; br_node++)
@@ -2387,7 +2387,7 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 
 			// now we want to split the data. We do this where the segment number is intermediate
 			// between two integers
-			double this_seg = 0;
+			float this_seg = 0;
 			vector<int> this_segment_breaks;
 			for (int br_node = 0; br_node < n_br; br_node++)
 			{
@@ -2458,8 +2458,8 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(double A_0, double m_over
 // SMM 01/03/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiNetwork::split_all_channels(double A_0, double m_over_n, int n_iterations,
-				int target_skip, int target_nodes, int minimum_segment_length, double sigma)
+void LSDChiNetwork::split_all_channels(float A_0, float m_over_n, int n_iterations,
+				int target_skip, int target_nodes, int minimum_segment_length, float sigma)
 {
 	int n_channels = chis.size();
 	vector<int> break_nodes;
@@ -2482,40 +2482,40 @@ void LSDChiNetwork::split_all_channels(double A_0, double m_over_n, int n_iterat
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // this calculates the AICc of a channel after it has been broken
-// it also replaces the data members n_total_segments, int& n_total_nodes, double& cumulative_MLE
+// it also replaces the data members n_total_segments, int& n_total_nodes, float& cumulative_MLE
 // so that they can be used to get a cumulative AICc of multiple channels
 //
 //
 // SMM 01/06/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-double LSDChiNetwork::calculate_AICc_after_breaks(double A_0, double m_over_n,
-				int skip, int minimum_segment_length, double sigma, int chan, vector<int> break_nodes,
-				int& n_total_segments, int& n_total_nodes, double& cumulative_MLE)
+float LSDChiNetwork::calculate_AICc_after_breaks(float A_0, float m_over_n,
+				int skip, int minimum_segment_length, float sigma, int chan, vector<int> break_nodes,
+				int& n_total_segments, int& n_total_nodes, float& cumulative_MLE)
 
 {
 
 	calculate_chi(A_0, m_over_n);
 
 	// get the data from the channel
-	vector<double> reverse_Chi = chis[chan];
+	vector<float> reverse_Chi = chis[chan];
 	reverse(reverse_Chi.begin(), reverse_Chi.end());
-	vector<double> reverse_Elevation = elevations[chan];
+	vector<float> reverse_Elevation = elevations[chan];
 	reverse(reverse_Elevation.begin(), reverse_Elevation.end());
 
 	// these data members keep track of the  breaks
 	//int n_nodes = int(reverse_Chi.size());
 	vector<int>::iterator br_iter;
-	vector<double>::iterator vec_iter_start;
-	vector<double>::iterator vec_iter_end;
+	vector<float>::iterator vec_iter_start;
+	vector<float>::iterator vec_iter_end;
 
 	int start_of_last_break = 0;
 	int length_of_break_segment;
 
 	// these are vectors that hold information about each segment
-	vector<double> MLE_in_this_break;
-	vector<double> nodes_in_this_break;
-	vector<double> segments_in_this_break;
+	vector<float> MLE_in_this_break;
+	vector<float> nodes_in_this_break;
+	vector<float> segments_in_this_break;
 
 	//int n_breaks = break_nodes.size();
 
@@ -2528,25 +2528,25 @@ double LSDChiNetwork::calculate_AICc_after_breaks(double A_0, double m_over_n,
 		// get the data of this break
 		vec_iter_start = reverse_Chi.begin()+start_of_last_break;
 		vec_iter_end = reverse_Chi.begin()+length_of_break_segment+start_of_last_break;
-		vector<double> br_chi;
+		vector<float> br_chi;
 		br_chi.assign(vec_iter_start,vec_iter_end);
 
 		vec_iter_start = reverse_Elevation.begin()+start_of_last_break;
 		vec_iter_end = reverse_Elevation.begin()+length_of_break_segment+start_of_last_break;
-		vector<double> br_elev;
+		vector<float> br_elev;
 		br_elev.assign(vec_iter_start,vec_iter_end);
 
 		// now the vectors that will be replaced by the fitting algorithm
 		// they are from the individual channels, which are replaced each time a new channel is analyzed
-		vector<double> m_vec;
-		vector<double> b_vec;
-		vector<double> r2_vec;
-		vector<double> DW_vec;
+		vector<float> m_vec;
+		vector<float> b_vec;
+		vector<float> r2_vec;
+		vector<float> DW_vec;
 		int n_data_nodes;
 		int this_n_segments;
-		double this_MLE, this_AIC, this_AICc;
+		float this_MLE, this_AIC, this_AICc;
 		vector<int> these_segment_lengths;
-		vector<double> fitted_elev;
+		vector<float> fitted_elev;
 		vector<int> n_segements_each_iteration;
 		vector<int> node_reference;
 
@@ -2558,7 +2558,7 @@ double LSDChiNetwork::calculate_AICc_after_breaks(double A_0, double m_over_n,
 		n_data_nodes = node_reference.size();
 
 		// now create a single sigma value vector
-		vector<double> sigma_values;
+		vector<float> sigma_values;
 		sigma_values.push_back(sigma);
 
 		// compute the best fit AIC
@@ -2587,13 +2587,13 @@ double LSDChiNetwork::calculate_AICc_after_breaks(double A_0, double m_over_n,
 	}
 
 	//now calculate the cumulative AICc
-	double thismn_AIC;
-	double thismn_AICc;
+	float thismn_AIC;
+	float thismn_AICc;
 
 	n_total_segments = 0;
 	n_total_nodes = 0;
 	cumulative_MLE = 1;
-	double log_cum_MLE = 0;
+	float log_cum_MLE = 0;
 
 	int n_total_breaks = MLE_in_this_break.size();
 
@@ -2633,7 +2633,7 @@ double LSDChiNetwork::calculate_AICc_after_breaks(double A_0, double m_over_n,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // this calculates the AICc of a channel after it has been broken
-// it also replaces the data members n_total_segments, int& n_total_nodes, double& cumulative_MLE
+// it also replaces the data members n_total_segments, int& n_total_nodes, float& cumulative_MLE
 // so that they can be used to get a cumulative AICc of multiple channels
 //
 // this version uses a monte carlo approach and returns AICc values in a vector
@@ -2643,9 +2643,9 @@ double LSDChiNetwork::calculate_AICc_after_breaks(double A_0, double m_over_n,
 // SMM 01/06/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-vector<double> LSDChiNetwork::calculate_AICc_after_breaks_monte_carlo(double A_0, double m_over_n,
-				int target_skip, int minimum_segment_length, double sigma, int chan, vector<int> break_nodes,
-				int& n_total_segments, int& n_total_nodes, double& cumulative_MLE,
+vector<float> LSDChiNetwork::calculate_AICc_after_breaks_monte_carlo(float A_0, float m_over_n,
+				int target_skip, int minimum_segment_length, float sigma, int chan, vector<int> break_nodes,
+				int& n_total_segments, int& n_total_nodes, float& cumulative_MLE,
 				int n_iterations)
 
 {
@@ -2653,16 +2653,16 @@ vector<double> LSDChiNetwork::calculate_AICc_after_breaks_monte_carlo(double A_0
 	calculate_chi(A_0, m_over_n);
 
 	// get the data from the channel
-	vector<double> reverse_Chi = chis[chan];
+	vector<float> reverse_Chi = chis[chan];
 	reverse(reverse_Chi.begin(), reverse_Chi.end());
-	vector<double> reverse_Elevation = elevations[chan];
+	vector<float> reverse_Elevation = elevations[chan];
 	reverse(reverse_Elevation.begin(), reverse_Elevation.end());
 
 	// these data members keep track of the  breaks
 	//int n_nodes = int(reverse_Chi.size());
 	vector<int>::iterator br_iter;
-	vector<double>::iterator vec_iter_start;
-	vector<double>::iterator vec_iter_end;
+	vector<float>::iterator vec_iter_start;
+	vector<float>::iterator vec_iter_end;
 
 	int start_of_last_break;
 	int length_of_break_segment;
@@ -2677,11 +2677,11 @@ vector<double> LSDChiNetwork::calculate_AICc_after_breaks_monte_carlo(double A_0
 	}
 
 	// these are vectors that hold information about each segment
-	vector<double> MLE_in_this_break;
-	vector<double> nodes_in_this_break;
-	vector<double> segments_in_this_break;
-	vector<double> empty_vec;
-	vector<double> these_AICcs;
+	vector<float> MLE_in_this_break;
+	vector<float> nodes_in_this_break;
+	vector<float> segments_in_this_break;
+	vector<float> empty_vec;
+	vector<float> these_AICcs;
 
 	cout << " looping, iteration";
 	for (int iteration = 0; iteration<n_iterations; iteration++)
@@ -2706,25 +2706,25 @@ vector<double> LSDChiNetwork::calculate_AICc_after_breaks_monte_carlo(double A_0
 			// get the data of this break
 			vec_iter_start = reverse_Chi.begin()+start_of_last_break;
 			vec_iter_end = reverse_Chi.begin()+length_of_break_segment+start_of_last_break;
-			vector<double> br_chi;
+			vector<float> br_chi;
 			br_chi.assign(vec_iter_start,vec_iter_end);
 
 			vec_iter_start = reverse_Elevation.begin()+start_of_last_break;
 			vec_iter_end = reverse_Elevation.begin()+length_of_break_segment+start_of_last_break;
-			vector<double> br_elev;
+			vector<float> br_elev;
 			br_elev.assign(vec_iter_start,vec_iter_end);
 
 			// now the vectors that will be replaced by the fitting algorithm
 			// they are from the individual channels, which are replaced each time a new channel is analyzed
-			vector<double> m_vec;
-			vector<double> b_vec;
-			vector<double> r2_vec;
-			vector<double> DW_vec;
+			vector<float> m_vec;
+			vector<float> b_vec;
+			vector<float> r2_vec;
+			vector<float> DW_vec;
 			int n_data_nodes;
 			int this_n_segments;
-			double this_MLE, this_AIC, this_AICc;
+			float this_MLE, this_AIC, this_AICc;
 			vector<int> these_segment_lengths;
-			vector<double> fitted_elev;
+			vector<float> fitted_elev;
 			vector<int> n_segements_each_iteration;
 			vector<int> node_reference;
 
@@ -2736,7 +2736,7 @@ vector<double> LSDChiNetwork::calculate_AICc_after_breaks_monte_carlo(double A_0
 			n_data_nodes = node_reference.size();
 
 			// now create a single sigma value vector
-			vector<double> sigma_values;
+			vector<float> sigma_values;
 			sigma_values.push_back(sigma);
 
 			// compute the best fit AIC
@@ -2765,13 +2765,13 @@ vector<double> LSDChiNetwork::calculate_AICc_after_breaks_monte_carlo(double A_0
 		}
 
 		//now calculate the cumulative AICc
-		double thismn_AIC;
-		double thismn_AICc;
+		float thismn_AIC;
+		float thismn_AICc;
 
 		n_total_segments = 0;
 		n_total_nodes = 0;
 		cumulative_MLE = 1;
-		double log_cum_MLE = 0;
+		float log_cum_MLE = 0;
 
 		int n_total_breaks = MLE_in_this_break.size();
 
@@ -2813,33 +2813,33 @@ vector<double> LSDChiNetwork::calculate_AICc_after_breaks_monte_carlo(double A_0
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // this calculates the AICc of a channel after it has been broken. Uses a combined colinear channel.
-// it also replaces the data members n_total_segments, int& n_total_nodes, double& cumulative_MLE
+// it also replaces the data members n_total_segments, int& n_total_nodes, float& cumulative_MLE
 // so that they can be used to get a cumulative AICc of multiple channels
 //
 //
 // SMM 01/05/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-double LSDChiNetwork::calculate_AICc_after_breaks_colinear(double A_0, double m_over_n,
-				int skip, int minimum_segment_length, double sigma,
-				vector<double> reverse_Chi, vector<double> reverse_Elevation,
+float LSDChiNetwork::calculate_AICc_after_breaks_colinear(float A_0, float m_over_n,
+				int skip, int minimum_segment_length, float sigma,
+				vector<float> reverse_Chi, vector<float> reverse_Elevation,
 				vector<int> break_nodes,
-				int& n_total_segments, int& n_total_nodes, double& cumulative_MLE)
+				int& n_total_segments, int& n_total_nodes, float& cumulative_MLE)
 {
 
 	// these data members keep track of the  breaks
 	//int n_nodes = int(reverse_Chi.size());
 	vector<int>::iterator br_iter;
-	vector<double>::iterator vec_iter_start;
-	vector<double>::iterator vec_iter_end;
+	vector<float>::iterator vec_iter_start;
+	vector<float>::iterator vec_iter_end;
 
 	int start_of_last_break = 0;
 	int length_of_break_segment;
 
 	// these are vectors that hold information about each segment
-	vector<double> MLE_in_this_break;
-	vector<double> nodes_in_this_break;
-	vector<double> segments_in_this_break;
+	vector<float> MLE_in_this_break;
+	vector<float> nodes_in_this_break;
+	vector<float> segments_in_this_break;
 
 	//int n_breaks = break_nodes.size();
 
@@ -2852,25 +2852,25 @@ double LSDChiNetwork::calculate_AICc_after_breaks_colinear(double A_0, double m_
 		// get the data of this break
 		vec_iter_start = reverse_Chi.begin()+start_of_last_break;
 		vec_iter_end = reverse_Chi.begin()+length_of_break_segment+start_of_last_break;
-		vector<double> br_chi;
+		vector<float> br_chi;
 		br_chi.assign(vec_iter_start,vec_iter_end);
 
 		vec_iter_start = reverse_Elevation.begin()+start_of_last_break;
 		vec_iter_end = reverse_Elevation.begin()+length_of_break_segment+start_of_last_break;
-		vector<double> br_elev;
+		vector<float> br_elev;
 		br_elev.assign(vec_iter_start,vec_iter_end);
 
 		// now the vectors that will be replaced by the fitting algorithm
 		// they are from the individual channels, which are replaced each time a new channel is analyzed
-		vector<double> m_vec;
-		vector<double> b_vec;
-		vector<double> r2_vec;
-		vector<double> DW_vec;
+		vector<float> m_vec;
+		vector<float> b_vec;
+		vector<float> r2_vec;
+		vector<float> DW_vec;
 		int n_data_nodes;
 		int this_n_segments;
-		double this_MLE, this_AIC, this_AICc;
+		float this_MLE, this_AIC, this_AICc;
 		vector<int> these_segment_lengths;
-		vector<double> fitted_elev;
+		vector<float> fitted_elev;
 		vector<int> n_segements_each_iteration;
 		vector<int> node_reference;
 
@@ -2882,7 +2882,7 @@ double LSDChiNetwork::calculate_AICc_after_breaks_colinear(double A_0, double m_
 		n_data_nodes = node_reference.size();
 
 		// now create a single sigma value vector
-		vector<double> sigma_values;
+		vector<float> sigma_values;
 		sigma_values.push_back(sigma);
 
 		// compute the best fit AIC
@@ -2911,13 +2911,13 @@ double LSDChiNetwork::calculate_AICc_after_breaks_colinear(double A_0, double m_
 	}
 
 	//now calculate the cumulative AICc
-	double thismn_AIC;
-	double thismn_AICc;
+	float thismn_AIC;
+	float thismn_AICc;
 
 	n_total_segments = 0;
 	n_total_nodes = 0;
 	cumulative_MLE = 1;
-	double log_cum_MLE = 0;
+	float log_cum_MLE = 0;
 
 	int n_total_breaks = MLE_in_this_break.size();
 
@@ -2956,7 +2956,7 @@ double LSDChiNetwork::calculate_AICc_after_breaks_colinear(double A_0, double m_
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // this calculates the AICc of a channel after it has been broken. Uses a combined colinear channel.
-// it also replaces the data members n_total_segments, int& n_total_nodes, double& cumulative_MLE
+// it also replaces the data members n_total_segments, int& n_total_nodes, float& cumulative_MLE
 // so that they can be used to get a cumulative AICc of multiple channels
 //
 // this is the montecarlo version, it returns a vecotr of AICc values from each iteration
@@ -2965,29 +2965,29 @@ double LSDChiNetwork::calculate_AICc_after_breaks_colinear(double A_0, double m_
 // SMM 01/06/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-vector<double> LSDChiNetwork::calculate_AICc_after_breaks_colinear_monte_carlo(double A_0, double m_over_n,
-				int skip, int minimum_segment_length, double sigma,
-				vector<double> reverse_Chi, vector<double> reverse_Elevation,
+vector<float> LSDChiNetwork::calculate_AICc_after_breaks_colinear_monte_carlo(float A_0, float m_over_n,
+				int skip, int minimum_segment_length, float sigma,
+				vector<float> reverse_Chi, vector<float> reverse_Elevation,
 				vector<int> break_nodes,
-				int& n_total_segments, int& n_total_nodes, double& cumulative_MLE,
+				int& n_total_segments, int& n_total_nodes, float& cumulative_MLE,
 				int n_iterations)
 {
 
 	// these data members keep track of the  breaks
 	//int n_nodes = int(reverse_Chi.size());
 	vector<int>::iterator br_iter;
-	vector<double>::iterator vec_iter_start;
-	vector<double>::iterator vec_iter_end;
+	vector<float>::iterator vec_iter_start;
+	vector<float>::iterator vec_iter_end;
 
 	int start_of_last_break;
 	int length_of_break_segment;
 
 	// these are vectors that hold information about each segment
-	vector<double> MLE_in_this_break;
-	vector<double> nodes_in_this_break;
-	vector<double> segments_in_this_break;
-	vector<double> empty_vec;
-	vector<double> AICc_values;
+	vector<float> MLE_in_this_break;
+	vector<float> nodes_in_this_break;
+	vector<float> segments_in_this_break;
+	vector<float> empty_vec;
+	vector<float> AICc_values;
 
 
 	int skip_range = 2*skip;
@@ -3028,25 +3028,25 @@ vector<double> LSDChiNetwork::calculate_AICc_after_breaks_colinear_monte_carlo(d
 			// get the data of this break
 			vec_iter_start = reverse_Chi.begin()+start_of_last_break;
 			vec_iter_end = reverse_Chi.begin()+length_of_break_segment+start_of_last_break;
-			vector<double> br_chi;
+			vector<float> br_chi;
 			br_chi.assign(vec_iter_start,vec_iter_end);
 
 			vec_iter_start = reverse_Elevation.begin()+start_of_last_break;
 			vec_iter_end = reverse_Elevation.begin()+length_of_break_segment+start_of_last_break;
-			vector<double> br_elev;
+			vector<float> br_elev;
 			br_elev.assign(vec_iter_start,vec_iter_end);
 
 			// now the vectors that will be replaced by the fitting algorithm
 			// they are from the individual channels, which are replaced each time a new channel is analyzed
-			vector<double> m_vec;
-			vector<double> b_vec;
-			vector<double> r2_vec;
-			vector<double> DW_vec;
+			vector<float> m_vec;
+			vector<float> b_vec;
+			vector<float> r2_vec;
+			vector<float> DW_vec;
 			int n_data_nodes;
 			int this_n_segments;
-			double this_MLE, this_AIC, this_AICc;
+			float this_MLE, this_AIC, this_AICc;
 			vector<int> these_segment_lengths;
-			vector<double> fitted_elev;
+			vector<float> fitted_elev;
 			vector<int> n_segements_each_iteration;
 			vector<int> node_reference;
 
@@ -3058,7 +3058,7 @@ vector<double> LSDChiNetwork::calculate_AICc_after_breaks_colinear_monte_carlo(d
 			n_data_nodes = node_reference.size();
 
 			// now create a single sigma value vector
-			vector<double> sigma_values;
+			vector<float> sigma_values;
 			sigma_values.push_back(sigma);
 
 			// compute the best fit AIC
@@ -3083,14 +3083,14 @@ vector<double> LSDChiNetwork::calculate_AICc_after_breaks_colinear_monte_carlo(d
 
 
 		//now calculate the cumulative AICc
-		double thismn_AIC;
-		double thismn_AICc;
+		float thismn_AIC;
+		float thismn_AICc;
 
 		n_total_segments = 0;
 		n_total_nodes = 0;
 		cumulative_MLE = 1;
 
-		double log_cum_MLE = 0;
+		float log_cum_MLE = 0;
 
 		int n_total_breaks = MLE_in_this_break.size();
 
@@ -3160,9 +3160,9 @@ vector<double> LSDChiNetwork::calculate_AICc_after_breaks_colinear_monte_carlo(d
 // SMM 01/05/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_dchi(double A_0, double m_over_n, int n_iterations,
-				double fraction_dchi_for_variation,
-				int minimum_segment_length, double sigma, int target_nodes_mainstem)
+void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_dchi(float A_0, float m_over_n, int n_iterations,
+				float fraction_dchi_for_variation,
+				int minimum_segment_length, float sigma, int target_nodes_mainstem)
 {
 
   	int n_channels = chis.size();
@@ -3171,66 +3171,66 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_dchi(double A_
 	A_0_for_fitted_data = A_0;
 
 	// set up sacing and variation of chi for iterative thinning
-  	double mean_dchi;			// spacing of the chi vector. This is calculated to be optimal for the
+  	float mean_dchi;			// spacing of the chi vector. This is calculated to be optimal for the
   									// main stem
 	mean_dchi = calculate_optimal_chi_spacing(target_nodes_mainstem);
-	double dchi_variation = mean_dchi*fraction_dchi_for_variation;
+	float dchi_variation = mean_dchi*fraction_dchi_for_variation;
 
 	// vecvecvecs for storing information. The top level
 	// is the channel. The second level is the node
 	// the third level is the individual data elements
-  	vector< vector< vector<double> > > b_vecvecvec(n_channels);
-  	vector< vector< vector<double> > > m_vecvecvec(n_channels);
-  	vector< vector< vector<double> > > DW_vecvecvec(n_channels);
-  	vector< vector< vector<double> > > r2_vecvecvec(n_channels);
-  	vector< vector< vector<double> > > fitted_elev_vecvecvec(n_channels);
+  	vector< vector< vector<float> > > b_vecvecvec(n_channels);
+  	vector< vector< vector<float> > > m_vecvecvec(n_channels);
+  	vector< vector< vector<float> > > DW_vecvecvec(n_channels);
+  	vector< vector< vector<float> > > r2_vecvecvec(n_channels);
+  	vector< vector< vector<float> > > fitted_elev_vecvecvec(n_channels);
   	//vector< vector< vector<int> > > these_segment_lengths_vecvec(n_channels);
 
   	// iterators to navigate these data elements
-  	vector< vector< vector<double> > >::iterator first_level_doub_iter;
-  	vector< vector< vector<double> > >::iterator second_level_doub_iter;
+  	vector< vector< vector<float> > >::iterator first_level_doub_iter;
+  	vector< vector< vector<float> > >::iterator second_level_doub_iter;
   	//vector< vector< vector<int> > >::iterator first_level_int_iter;
   	//vector< vector< vector<int> > >::iterator second_level_int_iter;
 
 	// now expand all of these vecvecvecs to be the correct size
 	for (int cn = 0; cn<n_channels; cn++)
 	{
-		vector< vector<double> > temp_vecvec_double;
+		vector< vector<float> > temp_vecvec_float;
 		//vector< vector<int> > temp_vecvec_int;
-		vector<double> empty_double_vec;
+		vector<float> empty_float_vec;
 		//vector<int> empty_int_vec;
 
 		// expand the vecvec elements
 		int nodes_in_channel = int(chis[cn].size());
 		for (int n = 0; n<nodes_in_channel; n++)
 		{
-			temp_vecvec_double.push_back(empty_double_vec);
+			temp_vecvec_float.push_back(empty_float_vec);
 			//temp_vecvec_int.push_back(empty_int_vec);
 		}
 
 		// now add this to the vecvecvecs
-		b_vecvecvec[cn] = temp_vecvec_double;
-		m_vecvecvec[cn]= temp_vecvec_double;
-		DW_vecvecvec[cn] = temp_vecvec_double;
-		r2_vecvecvec[cn] =temp_vecvec_double;
-		fitted_elev_vecvecvec[cn] = temp_vecvec_double;
+		b_vecvecvec[cn] = temp_vecvec_float;
+		m_vecvecvec[cn]= temp_vecvec_float;
+		DW_vecvecvec[cn] = temp_vecvec_float;
+		r2_vecvecvec[cn] =temp_vecvec_float;
+		fitted_elev_vecvecvec[cn] = temp_vecvec_float;
 		//these_segment_lengths_vecvec[cn] = temp_vecvec_int;
 	}
 
 	// now the vectors that will be replaced by the fitting algorithm
   	// theyare from the individual channels, which are replaced each time a new channel is analyzed
-  	vector<double> m_vec;
-  	vector<double> b_vec;
-  	vector<double> r2_vec;
-  	vector<double> DW_vec;
-  	vector<double> fitted_y;
+  	vector<float> m_vec;
+  	vector<float> b_vec;
+  	vector<float> r2_vec;
+  	vector<float> DW_vec;
+  	vector<float> fitted_y;
   	int n_data_nodes;
   	int this_n_segments;
-  	double this_MLE, this_AIC, this_AICc;
+  	float this_MLE, this_AIC, this_AICc;
   	vector<int> these_segment_lengths;
-  	vector<double> chi_thinned;
-  	vector<double> elev_thinned;
-  	vector<double> elev_fitted;
+  	vector<float> chi_thinned;
+  	vector<float> elev_thinned;
+  	vector<float> elev_fitted;
 	vector<int> node_ref_thinned;
 	int n_segments;
 
@@ -3262,10 +3262,10 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_dchi(double A_
 			//}
 
 			// now assign the m, b, r2 and DW values for segments to all the nodes in the thinned data
-			vector<double> m_per_node;
-			vector<double> b_per_node;
-			vector<double> r2_per_node;
-			vector<double> DW_per_node;
+			vector<float> m_per_node;
+			vector<float> b_per_node;
+			vector<float> r2_per_node;
+			vector<float> DW_per_node;
 			n_segments = int(b_vec.size());
 			for(int seg = 0; seg<n_segments; seg++)
 			{
@@ -3300,7 +3300,7 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_dchi(double A_
 	}				// end iteration loop
 
 	// reset the data holding the fitted network properties
-	vector< vector<double> > empty_vecvec;
+	vector< vector<float> > empty_vecvec;
 	vector< vector<int> > empty_int_vecvec;
 	chi_m_means = empty_vecvec;
 	chi_m_standard_deviations = empty_vecvec;
@@ -3318,11 +3318,11 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_dchi(double A_
 
 	// vectors that accept the data from the vecvecvec and are passed to
 	// the get_common_statistics function
-	vector<double> b_datavec;
-	vector<double> m_datavec;
-	vector<double> DW_datavec;
-	vector<double> elev_datavec;
-	vector<double> common_stats;
+	vector<float> b_datavec;
+	vector<float> m_datavec;
+	vector<float> DW_datavec;
+	vector<float> elev_datavec;
+	vector<float> common_stats;
 
 	// now go through the channel nodes and see how many data elements there are.
 	for (int chan = 0; chan<n_channels; chan++)
@@ -3331,18 +3331,18 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_dchi(double A_
 		// monte carlo fitted network properties
 		int n_nodes_in_chan = int(chis[chan].size());
 
-		vector<double> m_means(n_nodes_in_chan);
-		vector<double> m_standard_deviations(n_nodes_in_chan);
-		vector<double> m_standard_error(n_nodes_in_chan);
-		vector<double> b_means(n_nodes_in_chan);
-		vector<double> b_standard_deviations(n_nodes_in_chan);
-		vector<double> b_standard_error(n_nodes_in_chan);
-		vector<double> DW_means(n_nodes_in_chan);
-		vector<double> DW_standard_deviations(n_nodes_in_chan);
-		vector<double> DW_standard_error(n_nodes_in_chan);
-		vector<double> fitted_elev_means(n_nodes_in_chan);
-		vector<double> fitted_elev_standard_deviations(n_nodes_in_chan);
-		vector<double> fitted_elev_standard_error(n_nodes_in_chan);
+		vector<float> m_means(n_nodes_in_chan);
+		vector<float> m_standard_deviations(n_nodes_in_chan);
+		vector<float> m_standard_error(n_nodes_in_chan);
+		vector<float> b_means(n_nodes_in_chan);
+		vector<float> b_standard_deviations(n_nodes_in_chan);
+		vector<float> b_standard_error(n_nodes_in_chan);
+		vector<float> DW_means(n_nodes_in_chan);
+		vector<float> DW_standard_deviations(n_nodes_in_chan);
+		vector<float> DW_standard_error(n_nodes_in_chan);
+		vector<float> fitted_elev_means(n_nodes_in_chan);
+		vector<float> fitted_elev_standard_deviations(n_nodes_in_chan);
+		vector<float> fitted_elev_standard_error(n_nodes_in_chan);
 		vector<int> n_data_points_in_this_channel_node(n_nodes_in_chan);
 
 
@@ -3452,8 +3452,8 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_dchi(double A_
 // SMM 15/06/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_after_breaks(double A_0, double m_over_n,
-				int n_iterations, int skip, int minimum_segment_length, double sigma)
+void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_after_breaks(float A_0, float m_over_n,
+				int n_iterations, int skip, int minimum_segment_length, float sigma)
 
 {
 	// get the contributing channel and downstream chi
@@ -3481,56 +3481,56 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_after_breaks(d
 	// vecvecvecs for storing information. The top level
 	// is the channel. The second level is the node
 	// the third level is the individual data elements
-  	vector< vector< vector<double> > > b_vecvecvec(n_channels);
-  	vector< vector< vector<double> > > m_vecvecvec(n_channels);
-  	vector< vector< vector<double> > > DW_vecvecvec(n_channels);
-  	vector< vector< vector<double> > > r2_vecvecvec(n_channels);
-  	vector< vector< vector<double> > > fitted_elev_vecvecvec(n_channels);
+  	vector< vector< vector<float> > > b_vecvecvec(n_channels);
+  	vector< vector< vector<float> > > m_vecvecvec(n_channels);
+  	vector< vector< vector<float> > > DW_vecvecvec(n_channels);
+  	vector< vector< vector<float> > > r2_vecvecvec(n_channels);
+  	vector< vector< vector<float> > > fitted_elev_vecvecvec(n_channels);
   	//vector< vector< vector<int> > > these_segment_lengths_vecvec(n_channels);
 
   	// iterators to navigate these data elements
-  	vector< vector< vector<double> > >::iterator first_level_doub_iter;
-  	vector< vector< vector<double> > >::iterator second_level_doub_iter;
+  	vector< vector< vector<float> > >::iterator first_level_doub_iter;
+  	vector< vector< vector<float> > >::iterator second_level_doub_iter;
 
 	// now expand all of these vecvecvecs to be the correct size
 	for (int cn = 0; cn<n_channels; cn++)
 	{
-		vector< vector<double> > temp_vecvec_double;
+		vector< vector<float> > temp_vecvec_float;
 		//vector< vector<int> > temp_vecvec_int;
-		vector<double> empty_double_vec;
+		vector<float> empty_float_vec;
 		//vector<int> empty_int_vec;
 
 		// expand the vecvec elements
 		int nodes_in_channel = int(chis[cn].size());
 		for (int n = 0; n<nodes_in_channel; n++)
 		{
-			temp_vecvec_double.push_back(empty_double_vec);
+			temp_vecvec_float.push_back(empty_float_vec);
 			//temp_vecvec_int.push_back(empty_int_vec);
 		}
 
 		// now add this to the vecvecvecs
-		b_vecvecvec[cn] = temp_vecvec_double;
-		m_vecvecvec[cn]= temp_vecvec_double;
-		DW_vecvecvec[cn] = temp_vecvec_double;
-		r2_vecvecvec[cn] =temp_vecvec_double;
-		fitted_elev_vecvecvec[cn] = temp_vecvec_double;
+		b_vecvecvec[cn] = temp_vecvec_float;
+		m_vecvecvec[cn]= temp_vecvec_float;
+		DW_vecvecvec[cn] = temp_vecvec_float;
+		r2_vecvecvec[cn] =temp_vecvec_float;
+		fitted_elev_vecvecvec[cn] = temp_vecvec_float;
 		//these_segment_lengths_vecvec[cn] = temp_vecvec_int;
 	}
 
 	// now the vectors that will be replaced by the fitting algorithm
   	// theyare from the individual channels, which are replaced each time a new channel is analyzed
-  	vector<double> m_vec;
-  	vector<double> b_vec;
-  	vector<double> r2_vec;
-  	vector<double> DW_vec;
-  	vector<double> fitted_y;
+  	vector<float> m_vec;
+  	vector<float> b_vec;
+  	vector<float> r2_vec;
+  	vector<float> DW_vec;
+  	vector<float> fitted_y;
   	int n_data_nodes;
   	int this_n_segments;
-  	double this_MLE, this_AIC, this_AICc;
+  	float this_MLE, this_AIC, this_AICc;
   	vector<int> these_segment_lengths;
-  	vector<double> chi_thinned;
-  	vector<double> elev_thinned;
-  	vector<double> elev_fitted;
+  	vector<float> chi_thinned;
+  	vector<float> elev_thinned;
+  	vector<float> elev_fitted;
 	vector<int> node_ref_thinned;
 	vector<int> node_reference;
 	int n_segments;
@@ -3559,16 +3559,16 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_after_breaks(d
 			//}
 
 			// get the data from the channel
-			vector<double> reverse_Chi = chis[chan];
+			vector<float> reverse_Chi = chis[chan];
 			reverse(reverse_Chi.begin(), reverse_Chi.end());
-			vector<double> reverse_Elevation = elevations[chan];
+			vector<float> reverse_Elevation = elevations[chan];
 			reverse(reverse_Elevation.begin(), reverse_Elevation.end());
 
 			// these data members keep track of the  breaks
 			//int n_nodes = int(reverse_Chi.size());
 			vector<int>::iterator br_iter;
-			vector<double>::iterator vec_iter_start;
-			vector<double>::iterator vec_iter_end;
+			vector<float>::iterator vec_iter_start;
+			vector<float>::iterator vec_iter_end;
 
 			int start_of_last_break = 0;
 			int length_of_break_segment;
@@ -3584,19 +3584,19 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_after_breaks(d
 				// get the data of this break
 				vec_iter_start = reverse_Chi.begin()+start_of_last_break;
 				vec_iter_end = reverse_Chi.begin()+length_of_break_segment+start_of_last_break;
-				vector<double> br_chi;
+				vector<float> br_chi;
 				br_chi.assign(vec_iter_start,vec_iter_end);
 
 				vec_iter_start = reverse_Elevation.begin()+start_of_last_break;
 				vec_iter_end = reverse_Elevation.begin()+length_of_break_segment+start_of_last_break;
-				vector<double> br_elev;
+				vector<float> br_elev;
 				br_elev.assign(vec_iter_start,vec_iter_end);
 
 				// these vectors hold the thinned data
-				vector<double> m_per_node;
-				vector<double> b_per_node;
-				vector<double> r2_per_node;
-				vector<double> DW_per_node;
+				vector<float> m_per_node;
+				vector<float> b_per_node;
+				vector<float> r2_per_node;
+				vector<float> DW_per_node;
 
 				// Run the monte carlo algorithm on the break segment
 				LSDMostLikelyPartitionsFinder channel_MLE_finder(minimum_segment_length, br_chi, br_elev);
@@ -3612,7 +3612,7 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_after_breaks(d
 				//}
 
 				// now create a single sigma value vector
-				vector<double> sigma_values;
+				vector<float> sigma_values;
 				sigma_values.push_back(sigma);
 
 				// compute the best fit AIC
@@ -3662,7 +3662,7 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_after_breaks(d
 	cout << endl;
 
 	// reset the data holding the fitted network properties
-	vector< vector<double> > empty_vecvec;
+	vector< vector<float> > empty_vecvec;
 	vector< vector<int> > empty_int_vecvec;
 	chi_m_means = empty_vecvec;
 	chi_m_standard_deviations = empty_vecvec;
@@ -3680,11 +3680,11 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_after_breaks(d
 
 	// vectors that accept the data from the vecvecvec and are passed to
 	// the get_common_statistics function
-	vector<double> b_datavec;
-	vector<double> m_datavec;
-	vector<double> DW_datavec;
-	vector<double> elev_datavec;
-	vector<double> common_stats;
+	vector<float> b_datavec;
+	vector<float> m_datavec;
+	vector<float> DW_datavec;
+	vector<float> elev_datavec;
+	vector<float> common_stats;
 
 	// now go through the channel nodes and see how many data elements there are.
 	for (int chan = 0; chan<n_channels; chan++)
@@ -3693,18 +3693,18 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_after_breaks(d
 		// monte carlo fitted network properties
 		int n_nodes_in_chan = int(chis[chan].size());
 
-		vector<double> m_means(n_nodes_in_chan);
-		vector<double> m_standard_deviations(n_nodes_in_chan);
-		vector<double> m_standard_error(n_nodes_in_chan);
-		vector<double> b_means(n_nodes_in_chan);
-		vector<double> b_standard_deviations(n_nodes_in_chan);
-		vector<double> b_standard_error(n_nodes_in_chan);
-		vector<double> DW_means(n_nodes_in_chan);
-		vector<double> DW_standard_deviations(n_nodes_in_chan);
-		vector<double> DW_standard_error(n_nodes_in_chan);
-		vector<double> fitted_elev_means(n_nodes_in_chan);
-		vector<double> fitted_elev_standard_deviations(n_nodes_in_chan);
-		vector<double> fitted_elev_standard_error(n_nodes_in_chan);
+		vector<float> m_means(n_nodes_in_chan);
+		vector<float> m_standard_deviations(n_nodes_in_chan);
+		vector<float> m_standard_error(n_nodes_in_chan);
+		vector<float> b_means(n_nodes_in_chan);
+		vector<float> b_standard_deviations(n_nodes_in_chan);
+		vector<float> b_standard_error(n_nodes_in_chan);
+		vector<float> DW_means(n_nodes_in_chan);
+		vector<float> DW_standard_deviations(n_nodes_in_chan);
+		vector<float> DW_standard_error(n_nodes_in_chan);
+		vector<float> fitted_elev_means(n_nodes_in_chan);
+		vector<float> fitted_elev_standard_deviations(n_nodes_in_chan);
+		vector<float> fitted_elev_standard_error(n_nodes_in_chan);
 		vector<int> n_data_points_in_this_channel_node(n_nodes_in_chan);
 
 		// now loop through each node, calculating how many data points there are in each
@@ -3811,73 +3811,73 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_after_breaks(d
 // SMM 01/05/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-double LSDChiNetwork::search_for_best_fit_m_over_n_dchi(double A_0, int n_movern, double d_movern, double start_movern,
-						       int minimum_segment_length, double sigma, int target_nodes_mainstem, string fname)
+float LSDChiNetwork::search_for_best_fit_m_over_n_dchi(float A_0, int n_movern, float d_movern, float start_movern,
+						       int minimum_segment_length, float sigma, int target_nodes_mainstem, string fname)
 {
-  	double m_over_n;
+  	float m_over_n;
   	int n_channels = chis.size();
-  	double dchi;					// spacing of the chi vector. This is calcuated to be optimal for the
+  	float dchi;					// spacing of the chi vector. This is calcuated to be optimal for the
   									// main stem
 
   	// data structures to hold information about segments from all channels
   	// these are the best fit data for individual channels
-  	vector< vector<double> > b_vecvec(n_channels);
-  	vector< vector<double> > m_vecvec(n_channels);
-  	vector< vector<double> > DW_vecvec(n_channels);
-  	vector< vector<double> > r2_vecvec(n_channels);
-  	vector< vector<double> > thinned_chi_vecvec(n_channels);
-  	vector< vector<double> > thinned_elev_vecvec(n_channels);
-  	vector< vector<double> > fitted_elev_vecvec(n_channels);
+  	vector< vector<float> > b_vecvec(n_channels);
+  	vector< vector<float> > m_vecvec(n_channels);
+  	vector< vector<float> > DW_vecvec(n_channels);
+  	vector< vector<float> > r2_vecvec(n_channels);
+  	vector< vector<float> > thinned_chi_vecvec(n_channels);
+  	vector< vector<float> > thinned_elev_vecvec(n_channels);
+  	vector< vector<float> > fitted_elev_vecvec(n_channels);
   	vector< vector<int> > node_ref_thinned_vecvec(n_channels);
   	vector< vector<int> > these_segment_lengths_vecvec(n_channels);
-  	vector<double> MLE_vec(n_channels);
+  	vector<float> MLE_vec(n_channels);
   	vector<int> n_segments_vec(n_channels);
   	vector<int> n_data_nodes_vec(n_channels);
-  	vector<double> AICc_vec(n_channels, 9999);
-  	vector<double> best_m_over_n(n_channels);
+  	vector<float> AICc_vec(n_channels, 9999);
+  	vector<float> best_m_over_n(n_channels);
 
   	// data structures to hold information about segments from all channels
   	// these are the best fit data for the cumulative channels
-  	vector< vector<double> > cum_b_vecvec(n_channels);
-  	vector< vector<double> > cum_m_vecvec(n_channels);
-  	vector< vector<double> > cum_DW_vecvec(n_channels);
-  	vector< vector<double> > cum_r2_vecvec(n_channels);
-  	vector< vector<double> > cum_thinned_chi_vecvec(n_channels);
-  	vector< vector<double> > cum_thinned_elev_vecvec(n_channels);
-  	vector< vector<double> > cum_fitted_elev_vecvec(n_channels);
+  	vector< vector<float> > cum_b_vecvec(n_channels);
+  	vector< vector<float> > cum_m_vecvec(n_channels);
+  	vector< vector<float> > cum_DW_vecvec(n_channels);
+  	vector< vector<float> > cum_r2_vecvec(n_channels);
+  	vector< vector<float> > cum_thinned_chi_vecvec(n_channels);
+  	vector< vector<float> > cum_thinned_elev_vecvec(n_channels);
+  	vector< vector<float> > cum_fitted_elev_vecvec(n_channels);
   	vector< vector<int> > cum_node_ref_thinned_vecvec(n_channels);
   	vector<vector<int> > cum_these_segment_lengths_vecvec(n_channels);
 
   	// these data are for the cumulative AICs
-  	vector<double> AICc_combined_vec(n_movern);
-  	vector<double> m_over_n_vec(n_movern);
+  	vector<float> AICc_combined_vec(n_movern);
+  	vector<float> m_over_n_vec(n_movern);
 
   	// these are from the individual channels, which are replaced each time a new channel is analyzed
-  	vector<double> m_vec;
-  	vector<double> b_vec;
-  	vector<double> r2_vec;
-  	vector<double> DW_vec;
-  	vector<double> fitted_y;
+  	vector<float> m_vec;
+  	vector<float> b_vec;
+  	vector<float> r2_vec;
+  	vector<float> DW_vec;
+  	vector<float> fitted_y;
   	int n_data_nodes;
   	int this_n_segments;
-  	double this_MLE, this_AIC, this_AICc;
+  	float this_MLE, this_AIC, this_AICc;
   	vector<int> these_segment_lengths;
-  	vector<double> chi_thinned;
-  	vector<double> elev_thinned;
-  	vector<double> elev_fitted;
+  	vector<float> chi_thinned;
+  	vector<float> elev_thinned;
+  	vector<float> elev_fitted;
 	vector<int> node_ref_thinned;
 
   	// loop through m_over_n values
 	for(int movn = 0; movn< n_movern; movn++)
   	{
-		m_over_n = double(movn)*d_movern+start_movern;
+		m_over_n = float(movn)*d_movern+start_movern;
 	  	cout << "m/n: " << m_over_n << endl;
 
       	// get the transformed channel profiles for this m_over_n
 	  	calculate_chi(A_0, m_over_n);
   		dchi = calculate_optimal_chi_spacing(target_nodes_mainstem);
 
-   		vector<double> MLEs_thischan(n_channels);
+   		vector<float> MLEs_thischan(n_channels);
 		vector<int> n_segs_thischan(n_channels);
       	vector<int> n_datanodes_thischan(n_channels);
 
@@ -3920,13 +3920,13 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_dchi(double A_0, int n_movern
 		}
 
       	//now calculate the cumulative AICc for this m over n
-      	double thismn_AIC;
-      	double thismn_AICc;
+      	float thismn_AIC;
+      	float thismn_AICc;
 
       	int n_total_segments = 0;
       	int n_total_nodes = 0;
-      	double cumulative_MLE = 1;
-      	double log_cum_MLE = 0;
+      	float cumulative_MLE = 1;
+      	float log_cum_MLE = 0;
 
 		// get the cumulative maximum likelihood estimators
       	for (int chan = 0; chan<n_channels; chan++)
@@ -3961,8 +3961,8 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_dchi(double A_0, int n_movern
     }
 
     cout << "and the cumulative m_over n values"<< endl;
-    double min_cum_AICc = 9999;
-    double bf_cum_movn = start_movern;
+    float min_cum_AICc = 9999;
+    float bf_cum_movn = start_movern;
     for (int mn = 0; mn< int(m_over_n_vec.size()); mn++)
     {
 		cout << "m over n: " << m_over_n_vec[mn] << " and AICc: " << AICc_combined_vec[mn] << endl;
@@ -4025,10 +4025,10 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_dchi(double A_0, int n_movern
 	for (int chan = 0; chan<n_channels; chan++)
 	{
 		vector<int> seglength = cum_these_segment_lengths_vecvec[chan];
-		vector<double> m_val = cum_m_vecvec[chan];
-		vector<double> b_val = cum_b_vecvec[chan];
-		vector<double> DW_val = cum_DW_vecvec[chan];
-		vector<double> r2_val = cum_r2_vecvec[chan];
+		vector<float> m_val = cum_m_vecvec[chan];
+		vector<float> b_val = cum_b_vecvec[chan];
+		vector<float> DW_val = cum_DW_vecvec[chan];
+		vector<float> r2_val = cum_r2_vecvec[chan];
 		int n_segs_this_channel = seglength.size();
 
 		best_fit_info << "Channel " << chan << " segment_length";
@@ -4108,58 +4108,58 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_dchi(double A_0, int n_movern
 // SMM 01/05/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-double LSDChiNetwork::search_for_best_fit_m_over_n(double A_0, int n_movern, double d_movern, double start_movern,
-						       int minimum_segment_length, double sigma, int target_nodes_mainstem, string fname)
+float LSDChiNetwork::search_for_best_fit_m_over_n(float A_0, int n_movern, float d_movern, float start_movern,
+						       int minimum_segment_length, float sigma, int target_nodes_mainstem, string fname)
 {
-  	double m_over_n;
+  	float m_over_n;
   	int n_channels = chis.size();
 
   	// data structures to hold information about segments from all channels
   	// these are the best fit data for individual channels
-  	vector< vector<double> > b_vecvec(n_channels);
-  	vector< vector<double> > m_vecvec(n_channels);
-  	vector< vector<double> > DW_vecvec(n_channels);
-  	vector< vector<double> > r2_vecvec(n_channels);
-  	vector< vector<double> > thinned_chi_vecvec(n_channels);
-  	vector< vector<double> > thinned_elev_vecvec(n_channels);
-  	vector< vector<double> > fitted_elev_vecvec(n_channels);
+  	vector< vector<float> > b_vecvec(n_channels);
+  	vector< vector<float> > m_vecvec(n_channels);
+  	vector< vector<float> > DW_vecvec(n_channels);
+  	vector< vector<float> > r2_vecvec(n_channels);
+  	vector< vector<float> > thinned_chi_vecvec(n_channels);
+  	vector< vector<float> > thinned_elev_vecvec(n_channels);
+  	vector< vector<float> > fitted_elev_vecvec(n_channels);
   	vector< vector<int> > node_ref_thinned_vecvec(n_channels);
   	vector< vector<int> > these_segment_lengths_vecvec(n_channels);
-  	vector<double> MLE_vec(n_channels);
+  	vector<float> MLE_vec(n_channels);
   	vector<int> n_segments_vec(n_channels);
   	vector<int> n_data_nodes_vec(n_channels);
-  	vector<double> AICc_vec(n_channels, 9999);
-  	vector<double> best_m_over_n(n_channels);
+  	vector<float> AICc_vec(n_channels, 9999);
+  	vector<float> best_m_over_n(n_channels);
 
   	// data structures to hold information about segments from all channels
   	// these are the best fit data for the cumulative channels
-  	vector< vector<double> > cum_b_vecvec(n_channels);
-  	vector< vector<double> > cum_m_vecvec(n_channels);
-  	vector< vector<double> > cum_DW_vecvec(n_channels);
-  	vector< vector<double> > cum_r2_vecvec(n_channels);
-  	vector< vector<double> > cum_thinned_chi_vecvec(n_channels);
-  	vector< vector<double> > cum_thinned_elev_vecvec(n_channels);
-  	vector< vector<double> > cum_fitted_elev_vecvec(n_channels);
+  	vector< vector<float> > cum_b_vecvec(n_channels);
+  	vector< vector<float> > cum_m_vecvec(n_channels);
+  	vector< vector<float> > cum_DW_vecvec(n_channels);
+  	vector< vector<float> > cum_r2_vecvec(n_channels);
+  	vector< vector<float> > cum_thinned_chi_vecvec(n_channels);
+  	vector< vector<float> > cum_thinned_elev_vecvec(n_channels);
+  	vector< vector<float> > cum_fitted_elev_vecvec(n_channels);
   	vector< vector<int> > cum_node_ref_thinned_vecvec(n_channels);
   	vector<vector<int> > cum_these_segment_lengths_vecvec(n_channels);
 
   	// these data are for the cumulative AICs
-  	vector<double> AICc_combined_vec(n_movern);
-  	vector<double> m_over_n_vec(n_movern);
+  	vector<float> AICc_combined_vec(n_movern);
+  	vector<float> m_over_n_vec(n_movern);
 
   	// these are from the individual channels, which are replaced each time a new channel is analyzed
-  	vector<double> m_vec;
-  	vector<double> b_vec;
-  	vector<double> r2_vec;
-  	vector<double> DW_vec;
-  	vector<double> fitted_y;
+  	vector<float> m_vec;
+  	vector<float> b_vec;
+  	vector<float> r2_vec;
+  	vector<float> DW_vec;
+  	vector<float> fitted_y;
   	int n_data_nodes;
   	int this_n_segments;
-  	double this_MLE, this_AIC, this_AICc;
+  	float this_MLE, this_AIC, this_AICc;
   	vector<int> these_segment_lengths;
-  	vector<double> chi_thinned;
-  	vector<double> elev_thinned;
-  	vector<double> elev_fitted;
+  	vector<float> chi_thinned;
+  	vector<float> elev_thinned;
+  	vector<float> elev_fitted;
 	vector<int> node_ref_thinned;
 
 	int N = calculate_skip(target_nodes_mainstem);
@@ -4167,13 +4167,13 @@ double LSDChiNetwork::search_for_best_fit_m_over_n(double A_0, int n_movern, dou
   	// loop through m_over_n values
 	for(int movn = 0; movn< n_movern; movn++)
   	{
-		m_over_n = double(movn)*d_movern+start_movern;
+		m_over_n = float(movn)*d_movern+start_movern;
 	  	cout << "m/n: " << m_over_n << endl;
 
       	// get the transformed channel profiles for this m_over_n
 	  	calculate_chi(A_0, m_over_n);
 
-   		vector<double> MLEs_thischan(n_channels);
+   		vector<float> MLEs_thischan(n_channels);
 		vector<int> n_segs_thischan(n_channels);
       	vector<int> n_datanodes_thischan(n_channels);
 
@@ -4216,13 +4216,13 @@ double LSDChiNetwork::search_for_best_fit_m_over_n(double A_0, int n_movern, dou
 		}
 
       	//now calculate the cumulative AICc for this m over n
-      	double thismn_AIC;
-      	double thismn_AICc;
+      	float thismn_AIC;
+      	float thismn_AICc;
 
       	int n_total_segments = 0;
       	int n_total_nodes = 0;
-      	double cumulative_MLE = 1;
-      	double log_cum_MLE = 0;
+      	float cumulative_MLE = 1;
+      	float log_cum_MLE = 0;
 
 		// get the cumulative maximum likelihood estimators
       	for (int chan = 0; chan<n_channels; chan++)
@@ -4265,8 +4265,8 @@ double LSDChiNetwork::search_for_best_fit_m_over_n(double A_0, int n_movern, dou
     }
 
     cout << "and the cumulative m_over n values"<< endl;
-    double min_cum_AICc = 9999;
-    double bf_cum_movn = start_movern;
+    float min_cum_AICc = 9999;
+    float bf_cum_movn = start_movern;
     for (int mn = 0; mn< int(m_over_n_vec.size()); mn++)
     {
 		cout << "m over n: " << m_over_n_vec[mn] << " and AICc: " << AICc_combined_vec[mn] << endl;
@@ -4327,10 +4327,10 @@ double LSDChiNetwork::search_for_best_fit_m_over_n(double A_0, int n_movern, dou
 	for (int chan = 0; chan<n_channels; chan++)
 	{
 		vector<int> seglength = cum_these_segment_lengths_vecvec[chan];
-		vector<double> m_val = cum_m_vecvec[chan];
-		vector<double> b_val = cum_b_vecvec[chan];
-		vector<double> DW_val = cum_DW_vecvec[chan];
-		vector<double> r2_val = cum_r2_vecvec[chan];
+		vector<float> m_val = cum_m_vecvec[chan];
+		vector<float> b_val = cum_b_vecvec[chan];
+		vector<float> DW_val = cum_DW_vecvec[chan];
+		vector<float> r2_val = cum_r2_vecvec[chan];
 		int n_segs_this_channel = seglength.size();
 
 		best_fit_info << "Channel " << chan << " segment_length";
@@ -4411,47 +4411,47 @@ double LSDChiNetwork::search_for_best_fit_m_over_n(double A_0, int n_movern, dou
 // SMM 01/05/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test(double A_0, int n_movern, double d_movern,
-						       double start_movern, int minimum_segment_length, double sigma,
+float LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test(float A_0, int n_movern, float d_movern,
+						       float start_movern, int minimum_segment_length, float sigma,
 						       int target_nodes, int n_iterations,
-						       vector<double>& m_over_n_values, vector<double>& AICc_mean, vector<double>& AICc_sdtd)
+						       vector<float>& m_over_n_values, vector<float>& AICc_mean, vector<float>& AICc_sdtd)
 {
 
 	cout << "starting colinearity search" << endl;
 
-  	double m_over_n;
+  	float m_over_n;
   	int n_channels = chis.size();
 
 	// these vectors contain all the chi and elevation values
-  	vector<double> compiled_chis;
-  	vector<double> compiled_elev;
-  	vector<double> sorted_chis;
-  	vector<double> sorted_elev;
-  	vector<double> empty_vec;
+  	vector<float> compiled_chis;
+  	vector<float> compiled_elev;
+  	vector<float> sorted_chis;
+  	vector<float> sorted_elev;
+  	vector<float> empty_vec;
 
-  	vector<double> this_chi;
-  	vector<double> this_elev;
+  	vector<float> this_chi;
+  	vector<float> this_elev;
 
   	// vector for storing the sorting index
   	vector<size_t> index_map;
 
   	// vector for holding the AICc values and the AICc variation
-  	vector<double> AICc_for_mover_n(n_movern);
-  	vector<double> AICc_std_dev(n_movern);
-  	vector<double> movn_values(n_movern);
+  	vector<float> AICc_for_mover_n(n_movern);
+  	vector<float> AICc_std_dev(n_movern);
+  	vector<float> movn_values(n_movern);
 
 	// these are data elements used by the segment finder
-	vector<double> b_vec;
-	vector<double> m_vec;
-	vector<double> r2_vec;
-	vector<double> DW_vec;
-	vector<double> fitted_elev;
+	vector<float> b_vec;
+	vector<float> m_vec;
+	vector<float> r2_vec;
+	vector<float> DW_vec;
+	vector<float> fitted_elev;
 	vector<int> these_segment_lengths;
-	double this_MLE;
+	float this_MLE;
 	int this_n_segments;
 	int n_data_nodes;
-	double this_AIC;
-	double this_AICc;
+	float this_AIC;
+	float this_AICc;
 
 	cout << "looping starting line 4280" << endl;
 
@@ -4461,8 +4461,8 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test(double A_0, 
   	{
 		//cout << "i: " << movn << endl;
 		//cout << "d_movn: " << d_movern << " start: " << start_movern << endl;
-		m_over_n = double(movn)*d_movern+start_movern;
-		//cout << "yo, : " << double(movn)*d_movern+start_movern << endl;
+		m_over_n = float(movn)*d_movern+start_movern;
+		//cout << "yo, : " << float(movn)*d_movern+start_movern << endl;
 
 		movn_values[movn] = m_over_n;
 		cout << "m over n: " << movn_values[movn];
@@ -4492,16 +4492,16 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test(double A_0, 
 		}
 
 		// now sort the vectors
-		matlab_double_sort(compiled_chis, sorted_chis, index_map);
-		matlab_double_reorder(compiled_elev, index_map, sorted_elev);
+		matlab_float_sort(compiled_chis, sorted_chis, index_map);
+		matlab_float_reorder(compiled_elev, index_map, sorted_elev);
 
 		// now we use the monte carlo sampling to look for the best fit
 		vector<int> empty_vec;
 
 		// reverse the vectors
-		vector<double> reverse_Chi = sorted_chis;
+		vector<float> reverse_Chi = sorted_chis;
 		reverse(reverse_Chi.begin(), reverse_Chi.end());
-		vector<double> reverse_Elevation = sorted_elev;
+		vector<float> reverse_Elevation = sorted_elev;
 		reverse(reverse_Elevation.begin(), reverse_Elevation.end());
 
 		// calculate the baseline skipping for monte carlo analyis
@@ -4516,7 +4516,7 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test(double A_0, 
 			skip_range = -skip_range;
 		}
 
-		vector<double> these_AICcs;
+		vector<float> these_AICcs;
 		cout << " iteration: ";
 		// now enter the iterative phase
 		for (int iter = 0; iter<n_iterations; iter++)
@@ -4535,7 +4535,7 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test(double A_0, 
 			//cout << "The thinned number of nodes is: " << node_reference.size() << " and overall nodes: " << reverse_Chi.size() << endl;
 
 			// now create a single sigma value vector
-			vector<double> sigma_values;
+			vector<float> sigma_values;
 			sigma_values.push_back(sigma);
 
 			// compute the best fit AIC
@@ -4559,8 +4559,8 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test(double A_0, 
 	}
 
 	// now calucalte the best fit m over n
-	double bf_movern = start_movern;
-	double bf_AICc = 100000;
+	float bf_movern = start_movern;
+	float bf_AICc = 100000;
 	for (int i = 0; i<n_movern; i++)
 	{
 
@@ -4590,47 +4590,47 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test(double A_0, 
 // SMM 15/06/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(double A_0, int n_movern, double d_movern,
-						       double start_movern, int minimum_segment_length, double sigma,
+float LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(float A_0, int n_movern, float d_movern,
+						       float start_movern, int minimum_segment_length, float sigma,
 						       int target_skip, int target_nodes, int n_iterations,
-						       vector<double>& m_over_n_values, vector<double>& AICc_mean, vector<double>& AICc_sdtd,
+						       vector<float>& m_over_n_values, vector<float>& AICc_mean, vector<float>& AICc_sdtd,
 						       int Monte_Carlo_switch)
 {
 
 	cout << "LINE 3972 starting colinearity search using breaks" << endl;
 
-  	double m_over_n;
+  	float m_over_n;
   	int n_channels = chis.size();
 
 	// these vectors contain all the chi and elevation values
-  	vector<double> compiled_chis;
-  	vector<double> compiled_elev;
-  	vector<double> sorted_chis;
-  	vector<double> sorted_elev;
-  	vector<double> empty_vec;
+  	vector<float> compiled_chis;
+  	vector<float> compiled_elev;
+  	vector<float> sorted_chis;
+  	vector<float> sorted_elev;
+  	vector<float> empty_vec;
 
-  	vector<double> this_chi;
-  	vector<double> this_elev;
+  	vector<float> this_chi;
+  	vector<float> this_elev;
 
   	// vector for storing the sorting index
   	vector<size_t> index_map;
 
   	// vector for holding the AICc values and the AICc variation
-  	vector<double> AICc_for_mover_n(n_movern);
-  	vector<double> AICc_std_dev(n_movern);
-  	vector<double> movn_values(n_movern, start_movern);
+  	vector<float> AICc_for_mover_n(n_movern);
+  	vector<float> AICc_std_dev(n_movern);
+  	vector<float> movn_values(n_movern, start_movern);
 
 	// these are data elements used by the segment finder
-	vector<double> b_vec;
-	vector<double> m_vec;
-	vector<double> r2_vec;
-	vector<double> DW_vec;
-	vector<double> fitted_elev;
+	vector<float> b_vec;
+	vector<float> m_vec;
+	vector<float> r2_vec;
+	vector<float> DW_vec;
+	vector<float> fitted_elev;
 	vector<int> these_segment_lengths;
-	//double this_MLE;
+	//float this_MLE;
 	//int this_n_segments;
 	//int n_data_nodes;
-	double this_AICc;
+	float this_AICc;
 
 	cout << "looping line 4456" << endl;
 
@@ -4640,8 +4640,8 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(
   	{
 		//cout << "i: " << movn << endl;
 		//cout << "d_movn: " << d_movern << " start: " << start_movern << endl;
-		m_over_n = double(movn)*d_movern+start_movern;
-		//cout << "yo, : " << double(movn)*d_movern+start_movern << endl;
+		m_over_n = float(movn)*d_movern+start_movern;
+		//cout << "yo, : " << float(movn)*d_movern+start_movern << endl;
 
 		cout << "n_movern: " << n_movern << " sz: " << movn_values.size() << " and m_over_n: " << m_over_n <<  endl;
 
@@ -4686,26 +4686,26 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(
 		//cout << "LINE 4507 sorting vectors" << endl;
 
 		// now sort the vectors
-		matlab_double_sort(compiled_chis, sorted_chis, index_map);
-		matlab_double_reorder(compiled_elev, index_map, sorted_elev);
+		matlab_float_sort(compiled_chis, sorted_chis, index_map);
+		matlab_float_reorder(compiled_elev, index_map, sorted_elev);
 
 		// now we use the monte carlo sampling to look for the best fit
 		vector<int> empty_vec;
 
 		// reverse the vectors
-		vector<double> reverse_Chi = sorted_chis;
+		vector<float> reverse_Chi = sorted_chis;
 		reverse(reverse_Chi.begin(), reverse_Chi.end());
-		vector<double> reverse_Elevation = sorted_elev;
+		vector<float> reverse_Elevation = sorted_elev;
 		reverse(reverse_Elevation.begin(), reverse_Elevation.end());
 
 		//cout << "LINE 4522 reversed vectors" << endl;
 
-		vector<double> these_AICcs;
+		vector<float> these_AICcs;
 		vector<int> break_nodes;
 
 		int n_total_segments;
 		int n_total_nodes;
-		double cumulative_MLE;
+		float cumulative_MLE;
 
 		// now enter the iterative phase
 		monte_carlo_split_channel_colinear(A_0, m_over_n, n_iterations,
@@ -4746,8 +4746,8 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(
 	}
 
 	// now calculate the best fit m over n
-	double bf_movern = start_movern;
-	double bf_AICc = 100000;
+	float bf_movern = start_movern;
+	float bf_AICc = 100000;
 	for (int i = 0; i<n_movern; i++)
 	{
 
@@ -4776,30 +4776,30 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_colinearity_test_with_breaks(
 // SMM 15/06/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-double LSDChiNetwork::search_for_best_fit_m_over_n_individual_channels_with_breaks(double A_0, int n_movern, double d_movern,
-						       double start_movern, int minimum_segment_length, double sigma,
+float LSDChiNetwork::search_for_best_fit_m_over_n_individual_channels_with_breaks(float A_0, int n_movern, float d_movern,
+						       float start_movern, int minimum_segment_length, float sigma,
 						       int target_skip, int target_nodes, int n_iterations,
-						       vector<double>& m_over_n_values, vector< vector<double> >& AICc_vals)
+						       vector<float>& m_over_n_values, vector< vector<float> >& AICc_vals)
 {
 	// get the number of channels:
 	int n_chans = elevations.size();
 
-	vector< vector<double> > AICc_local(n_chans);
-	vector<double> chan_AICs(n_movern);
-  	vector<double> m_over_n_vals(n_movern);
+	vector< vector<float> > AICc_local(n_chans);
+	vector<float> chan_AICs(n_movern);
+  	vector<float> m_over_n_vals(n_movern);
 
   	// this is used to compute a cumulative MLE (which is not at the moment used
   	int n_total_segments, n_total_nodes;
-  	double cumulative_MLE;
+  	float cumulative_MLE;
 
-	double AICc;
-	double m_over_n;
+	float AICc;
+	float m_over_n;
 
 	for(int chan = 0; chan<n_chans; chan++)
 	{
 		for(int movn = 0; movn< n_movern; movn++)
 		{
-			m_over_n = double(movn)*d_movern+start_movern;
+			m_over_n = float(movn)*d_movern+start_movern;
 			//cout << "start m/n: " << start_movern << " d m/m: " << d_movern << " moven: " << movn << " m/n: " << m_over_n << endl;
 
 			m_over_n_vals[movn] = m_over_n;
@@ -4823,8 +4823,8 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_individual_channels_with_brea
 	// now get the best fit on the main stem and return this value
 	chan_AICs = AICc_local[0];
 
-	double best_AICc = 1000000;
-	double bf_movern = start_movern;
+	float best_AICc = 1000000;
+	float bf_movern = start_movern;
 	for(int i = 0; i<n_movern; i++)
 	{
 		if(chan_AICs[i] < best_AICc)
@@ -4849,33 +4849,33 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_individual_channels_with_brea
 // SMM 15/06/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-double LSDChiNetwork::search_for_best_fit_m_over_n_individual_channels_with_breaks_monte_carlo(double A_0, int n_movern, double d_movern,
-						       double start_movern, int minimum_segment_length, double sigma,
+float LSDChiNetwork::search_for_best_fit_m_over_n_individual_channels_with_breaks_monte_carlo(float A_0, int n_movern, float d_movern,
+						       float start_movern, int minimum_segment_length, float sigma,
 						       int target_skip, int target_nodes, int n_iterations,
-						       vector<double>& m_over_n_values,
-						       vector< vector<double> >& AICc_means, vector< vector<double> >& AICc_stddev)
+						       vector<float>& m_over_n_values,
+						       vector< vector<float> >& AICc_means, vector< vector<float> >& AICc_stddev)
 {
 	// get the number of channels:
 	int n_chans = elevations.size();
 
-	vector< vector<double> > AICc_local(n_chans);
-	vector< vector<double> > AICc_std(n_chans);
-	vector<double> chan_AICs(n_movern);
-	vector<double> chan_std(n_movern);
-  	vector<double> m_over_n_vals(n_movern);
+	vector< vector<float> > AICc_local(n_chans);
+	vector< vector<float> > AICc_std(n_chans);
+	vector<float> chan_AICs(n_movern);
+	vector<float> chan_std(n_movern);
+  	vector<float> m_over_n_vals(n_movern);
 
   	// this is used to compute a cumulative MLE (which is not at the moment used
   	int n_total_segments, n_total_nodes;
-  	double cumulative_MLE;
+  	float cumulative_MLE;
 
-	vector<double> these_AICcs;
-	double m_over_n;
+	vector<float> these_AICcs;
+	float m_over_n;
 
 	for(int chan = 0; chan<n_chans; chan++)
 	{
 		for(int movn = 0; movn< n_movern; movn++)
 		{
-			m_over_n = double(movn)*d_movern+start_movern;
+			m_over_n = float(movn)*d_movern+start_movern;
 			//cout << "start m/n: " << start_movern << " d m/m: " << d_movern << " moven: " << movn << " m/n: " << m_over_n << endl;
 
 			m_over_n_vals[movn] = m_over_n;
@@ -4905,8 +4905,8 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_individual_channels_with_brea
 	// now get the best fit on the main stem and return this value
 	chan_AICs = AICc_local[0];
 
-	double best_AICc = 1000000;
-	double bf_movern = start_movern;
+	float best_AICc = 1000000;
+	float bf_movern = start_movern;
 	for(int i = 0; i<n_movern; i++)
 	{
 		if(chan_AICs[i] < best_AICc)
@@ -4927,60 +4927,60 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_individual_channels_with_brea
 // SMM 15/06/2013
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-double LSDChiNetwork::search_for_best_fit_m_over_n_seperate_ms_and_tribs(double A_0, int n_movern, double d_movern,
-								double start_movern, int minimum_segment_length, double sigma,
+float LSDChiNetwork::search_for_best_fit_m_over_n_seperate_ms_and_tribs(float A_0, int n_movern, float d_movern,
+								float start_movern, int minimum_segment_length, float sigma,
 						        int target_nodes_mainstem, string fname)
 {
-  	double m_over_n;
+  	float m_over_n;
   	int n_channels = chis.size();
 
   	// data structures to hold information about segments from all channels
   	// these are the best fit data for individual channels
-  	vector< vector<double> > b_vecvec(n_channels);
-  	vector< vector<double> > m_vecvec(n_channels);
-  	vector< vector<double> > DW_vecvec(n_channels);
-  	vector< vector<double> > r2_vecvec(n_channels);
-  	vector< vector<double> > thinned_chi_vecvec(n_channels);
-  	vector< vector<double> > thinned_elev_vecvec(n_channels);
-  	vector< vector<double> > fitted_elev_vecvec(n_channels);
+  	vector< vector<float> > b_vecvec(n_channels);
+  	vector< vector<float> > m_vecvec(n_channels);
+  	vector< vector<float> > DW_vecvec(n_channels);
+  	vector< vector<float> > r2_vecvec(n_channels);
+  	vector< vector<float> > thinned_chi_vecvec(n_channels);
+  	vector< vector<float> > thinned_elev_vecvec(n_channels);
+  	vector< vector<float> > fitted_elev_vecvec(n_channels);
   	vector< vector<int> > node_ref_thinned_vecvec(n_channels);
   	vector< vector<int> > these_segment_lengths_vecvec(n_channels);
-  	vector<double> MLE_vec(n_channels);
+  	vector<float> MLE_vec(n_channels);
   	vector<int> n_segments_vec(n_channels);
   	vector<int> n_data_nodes_vec(n_channels);
-  	vector<double> AICc_vec(n_channels, 9999);
-  	vector<double> best_m_over_n(n_channels);
+  	vector<float> AICc_vec(n_channels, 9999);
+  	vector<float> best_m_over_n(n_channels);
 
   	// data structures to hold information about segments from all channels
   	// these are the best fit data for the cumulative channels
-  	vector< vector<double> > cum_b_vecvec(n_channels);
-  	vector< vector<double> > cum_m_vecvec(n_channels);
-  	vector< vector<double> > cum_DW_vecvec(n_channels);
-  	vector< vector<double> > cum_r2_vecvec(n_channels);
-  	vector< vector<double> > cum_thinned_chi_vecvec(n_channels);
-  	vector< vector<double> > cum_thinned_elev_vecvec(n_channels);
-  	vector< vector<double> > cum_fitted_elev_vecvec(n_channels);
+  	vector< vector<float> > cum_b_vecvec(n_channels);
+  	vector< vector<float> > cum_m_vecvec(n_channels);
+  	vector< vector<float> > cum_DW_vecvec(n_channels);
+  	vector< vector<float> > cum_r2_vecvec(n_channels);
+  	vector< vector<float> > cum_thinned_chi_vecvec(n_channels);
+  	vector< vector<float> > cum_thinned_elev_vecvec(n_channels);
+  	vector< vector<float> > cum_fitted_elev_vecvec(n_channels);
   	vector< vector<int> > cum_node_ref_thinned_vecvec(n_channels);
   	vector<vector<int> > cum_these_segment_lengths_vecvec(n_channels);
 
   	// these data are for the cumulative AICs
-  	vector<double> AICc_combined_vec(n_movern);
-  	vector<double> AICc_mainstem_vec(n_movern);
-  	vector<double> m_over_n_vec(n_movern);
+  	vector<float> AICc_combined_vec(n_movern);
+  	vector<float> AICc_mainstem_vec(n_movern);
+  	vector<float> m_over_n_vec(n_movern);
 
   	// these are from the individual channels, which are replaced each time a new channel is analyzed
-  	vector<double> m_vec;
-  	vector<double> b_vec;
-  	vector<double> r2_vec;
-  	vector<double> DW_vec;
-  	vector<double> fitted_y;
+  	vector<float> m_vec;
+  	vector<float> b_vec;
+  	vector<float> r2_vec;
+  	vector<float> DW_vec;
+  	vector<float> fitted_y;
   	int n_data_nodes;
   	int this_n_segments;
-  	double this_MLE, this_AIC, this_AICc;
+  	float this_MLE, this_AIC, this_AICc;
   	vector<int> these_segment_lengths;
-  	vector<double> chi_thinned;
-  	vector<double> elev_thinned;
-  	vector<double> elev_fitted;
+  	vector<float> chi_thinned;
+  	vector<float> elev_thinned;
+  	vector<float> elev_fitted;
 	vector<int> node_ref_thinned;
 
   	// loop through m_over_n values for the mainstem
@@ -4989,7 +4989,7 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_seperate_ms_and_tribs(double 
 	cout << "LSDCN line 2470, ms N is: " << N << endl;
 	for(int movn = 0; movn< n_movern; movn++)
   	{
-		m_over_n = double(movn)*d_movern+start_movern;
+		m_over_n = float(movn)*d_movern+start_movern;
 
 
       	// get the transformed channel profiles for this m_over_n
@@ -5052,13 +5052,13 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_seperate_ms_and_tribs(double 
   	// loop through m_over_n values
 	for(int movn = 0; movn< n_movern; movn++)
   	{
-		m_over_n = double(movn)*d_movern+start_movern;
+		m_over_n = float(movn)*d_movern+start_movern;
 	  	cout << "m/n: " << m_over_n << endl;
 
       	// get the transformed channel profiles for this m_over_n
 	  	calculate_chi(A_0, m_over_n);
 
-   		vector<double> MLEs_thischan(n_channels);
+   		vector<float> MLEs_thischan(n_channels);
 		vector<int> n_segs_thischan(n_channels);
       	vector<int> n_datanodes_thischan(n_channels);
 
@@ -5101,13 +5101,13 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_seperate_ms_and_tribs(double 
 		}
 
       	//now calculate the cumulative AICc for this m over n
-      	double thismn_AIC;
-      	double thismn_AICc;
+      	float thismn_AIC;
+      	float thismn_AICc;
 
       	int n_total_segments = 0;
       	int n_total_nodes = 0;
-      	double cumulative_MLE = 1;
-      	double log_cum_MLE = 0;
+      	float cumulative_MLE = 1;
+      	float log_cum_MLE = 0;
 
 		// get the cumulative maximum likelihood estimators
       	for (int chan = 1; chan<n_channels; chan++)
@@ -5142,8 +5142,8 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_seperate_ms_and_tribs(double 
     }
 
     cout << "and the mainstem m_over n values"<< endl;
-    double min_cum_AICc = 9999;
-    double bf_cum_movn = start_movern;
+    float min_cum_AICc = 9999;
+    float bf_cum_movn = start_movern;
     for (int mn = 0; mn< int(m_over_n_vec.size()); mn++)
     {
 		cout << "m over n: " << m_over_n_vec[mn] << " and AICc: " << AICc_mainstem_vec[mn] << endl;
@@ -5158,7 +5158,7 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_seperate_ms_and_tribs(double 
 
     cout << "and the tributary m_over n values"<< endl;
     min_cum_AICc = 9999;
-    double trib_bf_cum_movn = start_movern;
+    float trib_bf_cum_movn = start_movern;
     for (int mn = 0; mn< int(m_over_n_vec.size()); mn++)
     {
 		cout << "m over n: " << m_over_n_vec[mn] << " and AICc: " << AICc_combined_vec[mn] << endl;
@@ -5225,10 +5225,10 @@ double LSDChiNetwork::search_for_best_fit_m_over_n_seperate_ms_and_tribs(double 
 	for (int chan = 0; chan<n_channels; chan++)
 	{
 		vector<int> seglength = cum_these_segment_lengths_vecvec[chan];
-		vector<double> m_val = cum_m_vecvec[chan];
-		vector<double> b_val = cum_b_vecvec[chan];
-		vector<double> DW_val = cum_DW_vecvec[chan];
-		vector<double> r2_val = cum_r2_vecvec[chan];
+		vector<float> m_val = cum_m_vecvec[chan];
+		vector<float> b_val = cum_b_vecvec[chan];
+		vector<float> DW_val = cum_DW_vecvec[chan];
+		vector<float> r2_val = cum_r2_vecvec[chan];
 		int n_segs_this_channel = seglength.size();
 
 		best_fit_info << "Channel " << chan << " segment_length";
@@ -5316,9 +5316,9 @@ void LSDChiNetwork::is_channel_long_enough_test(int minimum_segment_length,int N
 	vector<int> chan_is_long(n_channels,0);
 	for(int chan = 0; chan< n_channels; chan++)
 	{
-		vector<double> reverse_Chi = chis[chan];
+		vector<float> reverse_Chi = chis[chan];
 		reverse(reverse_Chi.begin(), reverse_Chi.end());
-		vector<double> reverse_Elevation = elevations[chan];
+		vector<float> reverse_Elevation = elevations[chan];
 		reverse(reverse_Elevation.begin(), reverse_Elevation.end());
 		vector<int> node_ref;
 
@@ -5357,41 +5357,41 @@ void LSDChiNetwork::is_channel_long_enough_test(int minimum_segment_length,int N
 /// Return value: Array with channel head locations
 /// FC 03/09/2013
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-Array2D<double> LSDChiNetwork::calculate_channel_heads(int min_seg_length_for_channel_heads)
+Array2D<float> LSDChiNetwork::calculate_channel_heads(int min_seg_length_for_channel_heads)
 {
   int n_channels = chis.size();
   int channel_id = 0;
-  Array2D<double> channel_head_locations(NRows,NCols,NoDataValue);
+  Array2D<float> channel_head_locations(NRows,NCols,NoDataValue);
 
   for (int i = 0; i < n_channels; i++)
   {
-    vector<double> chi = chis[i];
-    vector<double> elevation = elevations[i];
+    vector<float> chi = chis[i];
+    vector<float> elevation = elevations[i];
     vector<int> nodes = node_indices[i];
     vector<int> rows = row_indices[i];
     vector<int> cols = col_indices[i];
-    vector<double> flow_distance = flow_distances[i];
-    vector<double> channel_chi;
-    vector<double> hillslope_chi;
-    vector<double> channel_elev;
-    vector<double> hillslope_elev;
+    vector<float> flow_distance = flow_distances[i];
+    vector<float> channel_chi;
+    vector<float> hillslope_chi;
+    vector<float> channel_elev;
+    vector<float> hillslope_elev;
     int end_node = chi.size();
     cout << "end node: " << end_node << endl;
-    //double sigma = 0.2;
-    double test_value;
-    double max_test_value = 0;
+    //float sigma = 0.2;
+    float test_value;
+    float max_test_value = 0;
     int best_chan_seg = 0;
     int best_hill_seg = 0;
     int start_node = 0;
-    double chan_gradient = 0;
-    double hill_gradient = 0;
-    double chan_intercept = 0;
-    double hill_intercept = 0;
-    double chi_intersection = 0;
-    double elev_intersection = 0;
+    float chan_gradient = 0;
+    float hill_gradient = 0;
+    float chan_intercept = 0;
+    float hill_intercept = 0;
+    float chi_intersection = 0;
+    float elev_intersection = 0;
 
-    vector<double>::iterator vec_iter_start;
-	  vector<double>::iterator vec_iter_end;
+    vector<float>::iterator vec_iter_start;
+	  vector<float>::iterator vec_iter_end;
 
     // Looping through the combinations of hillslope and channel segment lengths
     for (int hill_seg_length = min_seg_length_for_channel_heads; hill_seg_length <= end_node-min_seg_length_for_channel_heads; hill_seg_length++)
@@ -5423,12 +5423,12 @@ Array2D<double> LSDChiNetwork::calculate_channel_heads(int min_seg_length_for_ch
 	      channel_elev.assign(vec_iter_start,vec_iter_end);
 
         // performing linear regression on the channel segment
-        vector<double> residuals_chan;
-        vector<double> results_chan = simple_linear_regression(channel_chi,channel_elev, residuals_chan);
+        vector<float> residuals_chan;
+        vector<float> results_chan = simple_linear_regression(channel_chi,channel_elev, residuals_chan);
 
         // performing linear regression on the hillslope segment
-        vector<double> residuals_hill;
-        vector<double> results_hill = simple_linear_regression(hillslope_chi, hillslope_elev, residuals_hill);
+        vector<float> residuals_hill;
+        vector<float> results_hill = simple_linear_regression(hillslope_chi, hillslope_elev, residuals_hill);
 
         // calculating the test value
         test_value = results_chan[2] - ((results_hill[3] - 2)/2);

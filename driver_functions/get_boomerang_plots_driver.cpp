@@ -58,7 +58,7 @@
 #include "../LSDIndexRaster.hpp"
 #include "../LSDFlowInfo.hpp"
 #include "../LSDRasterSpectral.hpp"
-#include "../LSDChannelNetwork.hpp"
+#include "../LSDJunctionNetwork.hpp"
 #include "../LSDIndexChannelTree.hpp"
 #include "../LSDBasin.hpp"
 #include "../LSDChiNetwork.hpp"
@@ -92,7 +92,7 @@ int main (int nNumberofArgs,char *argv[])
   string sources_name; 
 	string fill_ext = "_fill";
 	file_info_in >> DEM_name >> sources_name;
-	double Minimum_Slope;
+	float Minimum_Slope;
 	file_info_in >> Minimum_Slope;
 
 	// get some file names
@@ -128,13 +128,13 @@ int main (int nNumberofArgs,char *argv[])
 	
 	int NRows = topo_test.get_NRows();
   int NCols = topo_test.get_NCols();
-  //double XMinimum = topo_test.get_XMinimum();
-  //double YMinimum = topo_test.get_YMinimum();
-  //double DataResolution = topo_test.get_DataResolution();
-  double NoDataValue = topo_test.get_NoDataValue();
+  //float XMinimum = topo_test.get_XMinimum();
+  //float YMinimum = topo_test.get_YMinimum();
+  //float DataResolution = topo_test.get_DataResolution();
+  float NoDataValue = topo_test.get_NoDataValue();
   
 	//get the sources from raster to vector
-	Array2D<double> sources_array = sources_raster.get_RasterData();
+	Array2D<float> sources_array = sources_raster.get_RasterData();
 	vector<int> sources;
 	for (int row = 0; row < NRows; row++)
 	{
@@ -149,22 +149,22 @@ int main (int nNumberofArgs,char *argv[])
   }
 
 	// now get the junction network
-	LSDChannelNetwork ChanNetwork(sources, FlowInfo);
+	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 	LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
 	
 	// get the slope and the dinf area for boomerang plots
 		// Calculate polyfit coefficients and the tangential curvature
-  Array2D<double> a;
-  Array2D<double> b;
-  Array2D<double> c;
-  Array2D<double> d;
-  Array2D<double> e;
-  Array2D<double> f;
-  double window_radius = 6;
+  Array2D<float> a;
+  Array2D<float> b;
+  Array2D<float> c;
+  Array2D<float> d;
+  Array2D<float> e;
+  Array2D<float> f;
+  float window_radius = 6;
   topo_test.calculate_polyfit_coefficient_matrices(window_radius, a, b, c, d, e, f);
   
   LSDRaster Slope = topo_test.calculate_polyfit_slope(d, e);
-  Array2D<double> FlowDir = topo_test.D_inf_FlowDir();
+  Array2D<float> FlowDir = topo_test.D_inf_FlowDir();
   LSDRaster DinfArea = topo_test.D_inf_FlowArea(FlowDir);
 	
 	cout << "Getting the junctions of the basins" << endl;
@@ -201,9 +201,9 @@ int main (int nNumberofArgs,char *argv[])
 	
 	cout << "Creating files for boomerang plotting" << endl;
   // get the boomerang plot from each basin
-	double log_bin_width = 0.1;
+	float log_bin_width = 0.1;
 	int SplineResolution = 10000;
-	double bin_threshold =  0;
+	float bin_threshold =  0;
 	
   for (int i = 0; i < no_junctions; i++)
 	{

@@ -9,7 +9,7 @@
 #include "LSDRaster.hpp"
 #include "LSDIndexRaster.hpp"
 #include "LSDIndexChannel.hpp"
-#include "LSDChannelNetwork.hpp"
+#include "LSDJunctionNetwork.hpp"
 #include "LSDStatsTools.hpp"
 #include "LSDBasin.hpp"
 
@@ -20,7 +20,7 @@ using namespace TNT;
 #define LSDBasin_CPP
 
 
-void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDChannelNetwork& ChanNet){
+void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChanNet){
 
   //NO BOUNDS CHECKING ON JunctionNumber
 
@@ -123,13 +123,13 @@ void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDChannelNetwo
 // Calculate mean basin value.
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-double LSDBasin::CalculateBasinMean(LSDFlowInfo& FlowInfo, LSDRaster Data){
+float LSDBasin::CalculateBasinMean(LSDFlowInfo& FlowInfo, LSDRaster Data){
 
   int i;
   int j;
-  double TotalData = 0;
+  float TotalData = 0;
   int CountNDV = 0;
-  double BasinAverage;
+  float BasinAverage;
 
   for (int q = 0; q < int(BasinNodes.size()); ++q){
     
@@ -154,14 +154,14 @@ double LSDBasin::CalculateBasinMean(LSDFlowInfo& FlowInfo, LSDRaster Data){
 // Calculate max basin value.
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-double LSDBasin::CalculateBasinMax(LSDFlowInfo& FlowInfo, LSDRaster Data){
+float LSDBasin::CalculateBasinMax(LSDFlowInfo& FlowInfo, LSDRaster Data){
 
   //could use max_element here? how would that cope with NDVs??
 
   int i;
   int j;
-  double MaxData = 0;
-  double CurrentData;
+  float MaxData = 0;
+  float CurrentData;
 
   for (int q = 0; q < int(BasinNodes.size()); ++q){
     
@@ -182,7 +182,7 @@ double LSDBasin::CalculateBasinMax(LSDFlowInfo& FlowInfo, LSDRaster Data){
 // lengths. 
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDBasin::set_EStar_RStar(double CriticalSlope){
+void LSDBasin::set_EStar_RStar(float CriticalSlope){
 
     EStar = (2 * (abs(CHTMean)) * HillslopeLength_HFR) / CriticalSlope;
     RStar = ReliefMean / (HillslopeLength_HFR * CriticalSlope);
@@ -197,8 +197,8 @@ void LSDBasin::set_FlowLength(LSDIndexRaster& StreamNetwork, LSDFlowInfo& FlowIn
 
   int j;
   int i;
-  double LengthSum = 0;
-  double two_times_root2 = 2.828427;
+  float LengthSum = 0;
+  float two_times_root2 = 2.828427;
   Array2D<int> FlowDir = FlowInfo.get_FlowDirection();
 
 
@@ -225,12 +225,12 @@ void LSDBasin::set_FlowLength(LSDIndexRaster& StreamNetwork, LSDFlowInfo& FlowIn
 // Calculate hillslope lengths from boomerang plots. 
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDBasin::set_HillslopeLengths_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, double log_bin_width, int SplineResolution, double bin_threshold){
+void LSDBasin::set_HillslopeLengths_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, float log_bin_width, int SplineResolution, float bin_threshold){
   
   int j;
   int i;
-  Array2D<double> slope(NRows, NCols, NoDataValue);
-  Array2D<double> area(NRows, NCols, NoDataValue);
+  Array2D<float> slope(NRows, NCols, NoDataValue);
+  Array2D<float> area(NRows, NCols, NoDataValue);
   
   //create subset arrays for just the basin data - this should be rolled into its own method.
   for (int q = 0; q < int(BasinNodes.size()); ++q){
@@ -243,13 +243,13 @@ void LSDBasin::set_HillslopeLengths_Boomerang(LSDRaster& Slope, LSDRaster& DinfA
   }
 
   //do some log binning
-  vector<double> Mean_x_out;
-  vector<double> Mean_y_out;
-  vector<double> Midpoints_out;
-  vector<double> STDDev_x_out;
-  vector<double> STDDev_y_out;
-  vector<double> STDErr_x_out;
-  vector<double> STDErr_y_out;
+  vector<float> Mean_x_out;
+  vector<float> Mean_y_out;
+  vector<float> Midpoints_out;
+  vector<float> STDDev_x_out;
+  vector<float> STDDev_y_out;
+  vector<float> STDErr_x_out;
+  vector<float> STDErr_y_out;
   vector<int> number_observations;
   
   log_bin_data(area, slope, log_bin_width, Mean_x_out, Mean_y_out, Midpoints_out, STDDev_x_out, STDDev_y_out, STDErr_x_out, STDErr_y_out, number_observations, NoDataValue);  
@@ -264,8 +264,8 @@ void LSDBasin::set_HillslopeLengths_Boomerang(LSDRaster& Slope, LSDRaster& DinfA
   HillslopeLength_Binned = Mean_x_out[slope_max_index]/DataResolution;
       
   // Fit splines through the binned data to get the LH
-  vector<double> Spline_X;
-  vector<double> Spline_Y;
+  vector<float> Spline_X;
+  vector<float> Spline_Y;
   PlotCubicSplines(Mean_x_out, Mean_y_out, SplineResolution, Spline_X, Spline_Y);
 
   //index value of max spline slope
@@ -280,12 +280,12 @@ void LSDBasin::set_HillslopeLengths_Boomerang(LSDRaster& Slope, LSDRaster& DinfA
 // Generate data to create boomerang plots. 
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDBasin::Plot_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, double log_bin_width, int SplineResolution, double bin_threshold, string Path){
+void LSDBasin::Plot_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, float log_bin_width, int SplineResolution, float bin_threshold, string Path){
   
   int j;
   int i;
-  Array2D<double> slope(NRows, NCols, NoDataValue);
-  Array2D<double> area(NRows, NCols, NoDataValue);
+  Array2D<float> slope(NRows, NCols, NoDataValue);
+  Array2D<float> area(NRows, NCols, NoDataValue);
   
   //create subset arrays for just the basin data - this should be rolled into its own method.
   for (int q = 0; q < int(BasinNodes.size()); ++q){
@@ -298,13 +298,13 @@ void LSDBasin::Plot_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo
   }
 
   //do some log binning
-  vector<double> Mean_x_out;
-  vector<double> Mean_y_out;
-  vector<double> Midpoints_out;
-  vector<double> STDDev_x_out;
-  vector<double> STDDev_y_out;
-  vector<double> STDErr_x_out;
-  vector<double> STDErr_y_out;
+  vector<float> Mean_x_out;
+  vector<float> Mean_y_out;
+  vector<float> Midpoints_out;
+  vector<float> STDDev_x_out;
+  vector<float> STDDev_y_out;
+  vector<float> STDErr_x_out;
+  vector<float> STDErr_y_out;
   vector<int> number_observations;
   
   log_bin_data(area, slope, log_bin_width, Mean_x_out, Mean_y_out, Midpoints_out, STDDev_x_out, STDDev_y_out, STDErr_x_out, STDErr_y_out, number_observations, NoDataValue);  
@@ -313,8 +313,8 @@ void LSDBasin::Plot_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo
   RemoveSmallBins(Mean_x_out, Mean_y_out, Midpoints_out, STDDev_x_out, STDDev_y_out, STDErr_x_out, STDErr_y_out, number_observations, bin_threshold);
         
   // Fit splines through the binned data to get the LH
-  vector<double> Spline_X;
-  vector<double> Spline_Y;
+  vector<float> Spline_X;
+  vector<float> Spline_Y;
   PlotCubicSplines(Mean_x_out, Mean_y_out, SplineResolution, Spline_X, Spline_Y);
 
   //set up a filestream object to write the binned data
@@ -370,10 +370,10 @@ void LSDBasin::set_AspectMean(LSDFlowInfo& FlowInfo, LSDRaster Aspect){
 
   int i;
   int j;
-  double avg_r;
-  double angle_r;
-  double x_component = 0.0;
-  double y_component = 0.0;
+  float avg_r;
+  float angle_r;
+  float x_component = 0.0;
+  float y_component = 0.0;
   int ndv_cell_count = 0;  
 
   for (int q = 0; q < int(BasinNodes.size()); ++q){
@@ -413,7 +413,7 @@ void LSDBasin::set_Perimeter(LSDFlowInfo& FlowInfo){
   vector<int> I;
   vector<int> J;
   int NDVCount = 0;
-  Array2D<double> BasinData(NRows, NCols, NoDataValue);
+  Array2D<float> BasinData(NRows, NCols, NoDataValue);
 
   //create subset arrays for just the basin data - this should be rolled into its own method.
   for (int q = 0; q < int(BasinNodes.size()); ++q){
@@ -458,7 +458,7 @@ void LSDBasin::set_Perimeter(LSDFlowInfo& FlowInfo){
 // Set the four different hillslope length measurements for the basin. 
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDBasin::set_all_HillslopeLengths(LSDFlowInfo& FlowInfo, LSDRaster& HillslopeLengths, LSDRaster& Slope, LSDRaster& DinfArea, double log_bin_width, int SplineResolution, double bin_threshold){
+void LSDBasin::set_all_HillslopeLengths(LSDFlowInfo& FlowInfo, LSDRaster& HillslopeLengths, LSDRaster& Slope, LSDRaster& DinfArea, float log_bin_width, int SplineResolution, float bin_threshold){
 
   set_HillslopeLength_HFR(FlowInfo, HillslopeLengths);
   set_HillslopeLengths_Boomerang(Slope, DinfArea, FlowInfo, log_bin_width, SplineResolution, bin_threshold);
@@ -482,17 +482,17 @@ void LSDBasin::set_all_HillslopeLengths(LSDFlowInfo& FlowInfo, LSDRaster& Hillsl
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDBasin::set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& CHT, LSDIndexRaster& StreamNetwork,
-                                  LSDRaster& HillslopeLengths, LSDRaster& Relief, double window_radius, double log_bin_width,
-                                  int SplineResolution, double bin_threshold, double CriticalSlope, double CosmoErosionRate, 
-                                  double OtherErosionRate){
+                                  LSDRaster& HillslopeLengths, LSDRaster& Relief, float window_radius, float log_bin_width,
+                                  int SplineResolution, float bin_threshold, float CriticalSlope, float CosmoErosionRate, 
+                                  float OtherErosionRate){
 
   // coefficent matrices for polyfit routine
-  Array2D<double> a;
-  Array2D<double> b;
-  Array2D<double> c;
-  Array2D<double> d;
-  Array2D<double> e;
-  Array2D<double> f;
+  Array2D<float> a;
+  Array2D<float> b;
+  Array2D<float> c;
+  Array2D<float> d;
+  Array2D<float> e;
+  Array2D<float> f;
 
   Elevation.calculate_polyfit_coefficient_matrices(window_radius, a, b, c, d, e, f);
   LSDRaster TotalCurv = Elevation.calculate_polyfit_curvature (a,b);
@@ -549,11 +549,11 @@ LSDIndexRaster LSDBasin::write_integer_data_to_LSDIndexRaster(int Param, LSDFlow
 // Write real basin parameters into the shape of the basin.
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-LSDRaster LSDBasin::write_real_data_to_LSDRaster(double Param, LSDFlowInfo FlowInfo){
+LSDRaster LSDBasin::write_real_data_to_LSDRaster(float Param, LSDFlowInfo FlowInfo){
   
   int i;
   int j; 
-  Array2D<double> Output(NRows, NCols, NoDataValue);
+  Array2D<float> Output(NRows, NCols, NoDataValue);
   
   for (int q = 0; q < int(BasinNodes.size()); ++q){
     FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
@@ -575,7 +575,7 @@ LSDRaster LSDBasin::write_raster_data_to_LSDRaster(LSDRaster Data, LSDFlowInfo F
   
   int i;
   int j; 
-  Array2D<double> Output(NRows, NCols, NoDataValue);
+  Array2D<float> Output(NRows, NCols, NoDataValue);
   
   for (int q = 0; q < int(BasinNodes.size()); ++q){
     FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
@@ -613,7 +613,7 @@ LSDIndexRaster LSDBasin::write_raster_data_to_LSDIndexRaster(LSDIndexRaster Data
 
 
 //this is to be transplanted into the LSDHollow object when that gets written.
-double LSDBasin::Width(LSDFlowInfo FlowInfo, Array2D<double> FlowDir){
+float LSDBasin::Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir){
          
   LSDIndexRaster basin = write_Junction(FlowInfo);
   
@@ -623,9 +623,9 @@ double LSDBasin::Width(LSDFlowInfo FlowInfo, Array2D<double> FlowDir){
   //Need to test the flowdirection averaging properly before using it.  
   
   /* 
-  double x_component = 0;
-  double y_component = 0;
-  double angle_r = 0;
+  float x_component = 0;
+  float y_component = 0;
+  float angle_r = 0;
   int ndv_count = 0;
   
   int dX[] = {0, 1, 1, 1, 0, -1, -1, -1, 0};
@@ -646,19 +646,19 @@ double LSDBasin::Width(LSDFlowInfo FlowInfo, Array2D<double> FlowDir){
     
   x_component = x_component / (9 - ndv_count);
   y_component = x_component / (9 - ndv_count);
-  double avg_r = atan2(y_component, x_component);
+  float avg_r = atan2(y_component, x_component);
   
-  double centre_flowdir = deg(avg_r);
+  float centre_flowdir = deg(avg_r);
   
   */
   
  
-  double centre_flowdir = FlowDir[Centroid_i][Centroid_j];
+  float centre_flowdir = FlowDir[Centroid_i][Centroid_j];
 
   //cout << centre_flowdir << " : " << FlowDir[Centroid_i][Centroid_j] << endl;
   
-  double x2;
-  double y2;
+  float x2;
+  float y2;
   vector<int> i_list;
   vector<int> j_list;
   
@@ -668,8 +668,8 @@ double LSDBasin::Width(LSDFlowInfo FlowInfo, Array2D<double> FlowDir){
   i_list.push_back(i_new);
   j_list.push_back(j_new);
   
-  double x1 = i_new + 0.5;
-  double y1 = j_new - 0.5;
+  float x1 = i_new + 0.5;
+  float y1 = j_new - 0.5;
    
   int x_top = 0;
   int y_top = 0;
@@ -677,8 +677,8 @@ double LSDBasin::Width(LSDFlowInfo FlowInfo, Array2D<double> FlowDir){
 
   
   //get perpendicular flowdirs
-  double perp_angle_1 = centre_flowdir - 90;
-  double perp_angle_2 = centre_flowdir + 90;
+  float perp_angle_1 = centre_flowdir - 90;
+  float perp_angle_2 = centre_flowdir + 90;
   
   if (perp_angle_1 < 0) {perp_angle_1 = perp_angle_1 + 360;}
    
@@ -740,7 +740,7 @@ double LSDBasin::Width(LSDFlowInfo FlowInfo, Array2D<double> FlowDir){
   
  
   
-  double len = sqrt( ((x_top - x_bottom) * (x_top - x_bottom)) + ((y_top - y_bottom) * (y_top - y_bottom)) );
+  float len = sqrt( ((x_top - x_bottom) * (x_top - x_bottom)) + ((y_top - y_bottom) * (y_top - y_bottom)) );
   
   return len;
   
