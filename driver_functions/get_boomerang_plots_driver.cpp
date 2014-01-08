@@ -161,11 +161,9 @@ int main (int nNumberofArgs,char *argv[])
   Array2D<float> e;
   Array2D<float> f;
   float window_radius = 6;
-  topo_test.calculate_polyfit_coefficient_matrices(window_radius, a, b, c, d, e, f);
-  
-  LSDRaster Slope = topo_test.calculate_polyfit_slope(d, e);
-  Array2D<float> FlowDir = topo_test.D_inf_FlowDir();
-  LSDRaster DinfArea = topo_test.D_inf_FlowArea(FlowDir);
+  filled_topo_test.calculate_polyfit_coefficient_matrices(window_radius, a, b, c, d, e, f);
+  LSDRaster curv = filled_topo_test.calculate_polyfit_curvature(a,b);
+  LSDRaster Slope = filled_topo_test.calculate_polyfit_slope(d, e);
 	
 	cout << "Getting the junctions of the basins" << endl;
   // get all the junctions of the second order basins
@@ -197,9 +195,34 @@ int main (int nNumberofArgs,char *argv[])
   //get drainage density
   LSDRaster drainage_density = filled_topo_test.DrainageDensity(SOArray, Basins, FlowDir_array);          
   string DD_name = "_DD";
-  drainage_density.write_raster((path_name+DEM_name+DD_name),DEM_flt_extension);     
-	
-	cout << "Creating files for boomerang plotting" << endl;
+  drainage_density.write_raster((path_name+DEM_name+DD_name),DEM_flt_extension); 
+  
+  cout << "Calculating mean CHT of basins" << endl;
+  // D-infinty flowdirection for HFR   
+  Array2D<float> FlowDir = filled_topo_test.D_inf_FlowDir();
+  LSDRaster DinfArea = filled_topo_test.D_inf_FlowArea(FlowDir);
+  
+  //hilltop flow routing
+  float critical_slope = 0.4;
+  LSDRaster Ridges = ChanNetwork.ExtractRidges(FlowInfo);
+  LSDRaster hilltops = ChanNetwork.ExtractHilltops(Ridges, Slope, critical_slope);
+  vector< Array2D<float> > Routed_Hilltop_Data = filled_topo_test.HFR_Driver(hilltops, FlowDir, SOArray, Basins, DEM_name);  
+  //write routed_hilltop_data to a series of LSDRasters
+  LSDRaster RoutedHilltops = filled_topo_test.LSDRasterTemplate(Routed_Hilltop_Data[0]);
+  
+  //calculate CHT and mean slope of basins
+  LSDRaster CHT = filled_topo_test.get_hilltop_curvature(curv, RoutedHilltops); // this is the routed hilltops 
+  LSDRaster mean_CHT = CHT.BasinAverager(Basins);
+  LSDRaster mean_slope = Slope.BasinAverager(Basins);
+  
+  //write some rasters
+  string CHT_name = "_CHT";
+  mean_CHT.write_raster((path_name+DEM_name+CHT_name),DEM_flt_extension);
+  
+  string slope_name = "_slope";
+  mean_slope.write_raster((path_name+DEM_name+slope_name),DEM_flt_extension);
+  	
+	/*cout << "Creating files for boomerang plotting" << endl;
   // get the boomerang plot from each basin
 	float log_bin_width = 0.1;
 	int SplineResolution = 10000;
@@ -211,5 +234,5 @@ int main (int nNumberofArgs,char *argv[])
     int junction_number = second_order_junctions[i];
     LSDBasin Basin(junction_number, FlowInfo, ChanNetwork);
     Basin.Plot_Boomerang(Slope, DinfArea, FlowInfo, log_bin_width, SplineResolution, bin_threshold, path_name);
-  }
+  }  */
 }
