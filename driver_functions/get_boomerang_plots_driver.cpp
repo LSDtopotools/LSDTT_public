@@ -206,12 +206,12 @@ int main (int nNumberofArgs,char *argv[])
   float critical_slope = 0.4;
   LSDRaster Ridges = ChanNetwork.ExtractRidges(FlowInfo);
   LSDRaster hilltops = ChanNetwork.ExtractHilltops(Ridges, Slope, critical_slope);
-  vector< Array2D<float> > Routed_Hilltop_Data = filled_topo_test.HFR_Driver(hilltops, FlowDir, SOArray, Basins, DEM_name);  
+  //vector< Array2D<float> > Routed_Hilltop_Data = filled_topo_test.HFR_Driver(hilltops, FlowDir, SOArray, Basins, DEM_name);  
   //write routed_hilltop_data to a series of LSDRasters
-  LSDRaster RoutedHilltops = filled_topo_test.LSDRasterTemplate(Routed_Hilltop_Data[0]);
+  //LSDRaster RoutedHilltops = filled_topo_test.LSDRasterTemplate(Routed_Hilltop_Data[0]);
   
   //calculate CHT and mean slope of basins
-  LSDRaster CHT_temp = filled_topo_test.get_hilltop_curvature(curv, RoutedHilltops); // this is the routed hilltops 
+  LSDRaster CHT_temp = filled_topo_test.get_hilltop_curvature(curv, hilltops);
   
   //removing pixels where CHT is positive (noise)
   Array2D<float> CHT_array(NRows,NCols,NoDataValue);
