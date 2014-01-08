@@ -128,9 +128,9 @@ int main (int nNumberofArgs,char *argv[])
 	
 	int NRows = topo_test.get_NRows();
   int NCols = topo_test.get_NCols();
-  //float XMinimum = topo_test.get_XMinimum();
-  //float YMinimum = topo_test.get_YMinimum();
-  //float DataResolution = topo_test.get_DataResolution();
+  float XMinimum = topo_test.get_XMinimum();
+  float YMinimum = topo_test.get_YMinimum();
+  float DataResolution = topo_test.get_DataResolution();
   float NoDataValue = topo_test.get_NoDataValue();
   
 	//get the sources from raster to vector
@@ -211,7 +211,22 @@ int main (int nNumberofArgs,char *argv[])
   LSDRaster RoutedHilltops = filled_topo_test.LSDRasterTemplate(Routed_Hilltop_Data[0]);
   
   //calculate CHT and mean slope of basins
-  LSDRaster CHT = filled_topo_test.get_hilltop_curvature(curv, RoutedHilltops); // this is the routed hilltops 
+  LSDRaster CHT_temp = filled_topo_test.get_hilltop_curvature(curv, RoutedHilltops); // this is the routed hilltops 
+  
+  //removing pixels where CHT is positive (noise)
+  Array2D<float> CHT_array(NRows,NCols,NoDataValue);
+  for (int row = 0; row < NRows; row++)
+  {
+    for (int col = 0; col < NCols; col++)
+    {
+      float curvature = CHT_temp.get_data_element(row,col);
+      if (curvature < 0)
+      {
+        CHT_array[row][col] = curvature; 
+      }
+    }
+  }
+  LSDRaster CHT(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, CHT_array);
   LSDRaster mean_CHT = CHT.BasinAverager(Basins);
   LSDRaster mean_slope = Slope.BasinAverager(Basins);
   
