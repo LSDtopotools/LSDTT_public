@@ -1679,15 +1679,16 @@ Array2D<int> LSDJunctionNetwork::GetChannelHeadsChiMethodAllPixels(int JunctionN
   vector<float> mean_chi;
   vector<float> mean_elev;
   vector<float> midpoints;
+  vector<float> medianY;
   vector<float> st_dev_chi;
   vector<float> st_dev_elev;
   vector<float> range_min;
   vector<float> range_max;
 
-  int NoDataValue = FlowInfo.get_NoDataValue();
+  float NoDataValue = FlowInfo.get_NoDataValue();
 
   //bin the data to find the range of the 95th percentile
-  bin_data(upslope_chi, elevation, bin_width, mean_chi, mean_elev, midpoints,
+  bin_data(upslope_chi, elevation, bin_width, mean_chi, mean_elev, midpoints, medianY,
            st_dev_chi, st_dev_elev, range_min, range_max, lower_limit, NoDataValue);
 
   //find the most linear channel segment (highest r2 value)
@@ -1845,15 +1846,16 @@ vector<int> LSDJunctionNetwork::GetSourceNodesChiMethodAllPixels(int JunctionNum
   vector<float> mean_chi;
   vector<float> mean_elev;
   vector<float> midpoints;
+  vector<float> medianY;
   vector<float> st_dev_chi;
   vector<float> st_dev_elev;
   vector<float> range_min;
   vector<float> range_max;
 
-  int NoDataValue = FlowInfo.get_NoDataValue();
+  float NoDataValue = FlowInfo.get_NoDataValue();
 
   //bin the data to find the range of the 95th percentile
-  bin_data(upslope_chi, elevation, bin_width, mean_chi, mean_elev, midpoints,
+  bin_data(upslope_chi, elevation, bin_width, mean_chi, mean_elev, midpoints, medianY,
            st_dev_chi, st_dev_elev, range_min, range_max, lower_limit, NoDataValue);
 
   //find the most linear channel segment (highest r2 value)
