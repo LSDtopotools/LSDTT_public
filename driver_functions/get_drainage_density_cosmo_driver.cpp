@@ -59,6 +59,7 @@
 #include "../LSDJunctionNetwork.hpp"
 #include "../LSDIndexChannelTree.hpp"
 #include "../LSDChiNetwork.hpp"
+#include "../LSDBasin.hpp"
 
 int main (int nNumberofArgs,char *argv[])
 {
@@ -168,14 +169,16 @@ int main (int nNumberofArgs,char *argv[])
   ifstream coords_list;
   coords_list.open(string_filename.c_str());
   
-  float X_coord, Y_coord;
+  float X_coord, Y_coord, ErosionRate;
   vector<float> X_coords;
   vector<float> Y_coords;
-  while (coords_list >> X_coord >> Y_coord)
+  vector<float> ErosionRates;
+  while (coords_list >> X_coord >> Y_coord >> ErosionRate)
   {
      //cout << "X Coord: " << X_coord << " Y Coord: " << Y_coord << endl;
      X_coords.push_back(X_coord);
      Y_coords.push_back(Y_coord);
+     ErosionRates.push_back(ErosionRate);
   }
   
  
@@ -204,5 +207,48 @@ int main (int nNumberofArgs,char *argv[])
   //get drainage density
   LSDRaster drainage_density = filled_topo_test.DrainageDensity(SOArray, Basins, FlowDir_array);          
   string DD_name = "_DD";
-  drainage_density.write_raster((path_name+DEM_name+DD_name),DEM_flt_extension);              
+  drainage_density.write_raster((path_name+DEM_name+DD_name),DEM_flt_extension);   
+  
+  //getting the slope raster
+  // Calculate polyfit coefficients
+  Array2D<float> a;
+  Array2D<float> b;
+  Array2D<float> c;
+  Array2D<float> d;
+  Array2D<float> e;
+  Array2D<float> f;
+  float window_radius = 6;
+  filled_topo_test.calculate_polyfit_coefficient_matrices(window_radius, a, b, c, d, e, f);
+  LSDRaster Slope = filled_topo_test.calculate_polyfit_slope(d, e);
+  
+  int no_junctions = junction_vector.size();  
+  
+  string string_filename2;
+  string filename2 = "drainage_density_cosmo";
+  string_filename2 = filename2+dot+extension;
+  ofstream DD_cosmo;
+  DD_cosmo.open(string_filename2.c_str());
+  
+  //get mean DD of each basin for plotting
+  for (int i = 0; i < no_junctions; i++)
+	{
+    cout << flush << "Junction = " << i+1 << " of " << no_junctions << "\r";
+    int junction_number = junction_vector[i];
+    float BasinErosionRate = ErosionRates[i];
+    
+    // set basin parameters
+    LSDBasin Basin(junction_number, FlowInfo, ChanNetwork);
+    Basin.set_FlowLength(SOArray, FlowInfo);
+    Basin.set_DrainageDensity();
+    Basin.set_SlopeMean(FlowInfo, Slope);
+    
+    // return basin parameters
+    float drainage_density = Basin.get_DrainageDensity();
+    float basin_slope = Basin.get_SlopeMean();
+
+    if (drainage_density != NoDataValue)
+    {
+      DD_cosmo << drainage_density << " " << basin_slope << " " << BasinErosionRate << endl;
+    } 
+  }        
 }
