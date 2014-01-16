@@ -1151,6 +1151,27 @@ vector<int> LSDJunctionNetwork::extract_basin_nodes_by_drainage_area(float Drain
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+// This function extracts basin junctions from a vector of the basin outlet nodes.
+// Added by FJC 15/01/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+vector<int> LSDJunctionNetwork::extract_basin_junctions_from_nodes(vector<int> basin_nodes, LSDFlowInfo& FlowInfo)
+{
+  vector<int> basin_junctions;
+  
+  for (unsigned int i =0; i < basin_nodes.size(); i++)
+  {
+    int node = basin_nodes[i];
+    int junction = find_upstream_junction_from_channel_nodeindex(node, FlowInfo);
+    //cout << junction << endl;
+    basin_junctions.push_back(junction);
+  }
+  
+  return basin_junctions;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 // This function extracts the junctions of a given basin order that are the lowermost

@@ -333,6 +333,14 @@ class LSDJunctionNetwork
   /// @author DTM
   /// @date 07/05/2013
 	vector<int> extract_basin_nodes_by_drainage_area(float DrainageAreaThreshold, LSDFlowInfo& FlowInfo);
+	
+	/// @brief This function extracts basin junctions from a list of basin outlet nodes.
+	/// @param basin_nodes list of basin outlet nodes
+  /// @param FlowInfo LSDFlowInfo object
+  /// @return vector of basin junctions
+  /// @author FJC
+  /// @date 15/01/2014 
+	vector<int> extract_basin_junctions_from_nodes(vector<int> basin_nodes, LSDFlowInfo& FlowInfo);
 
 	/// @brief This function gets the node indices of outlets of basins of a certain order
   ///
