@@ -3,8 +3,11 @@
 // A driver function for use with the Land Surace Dynamics Topo Toolbox
 // This program gets the drainage density of basins from the X and Y coordinates
 // of cosmogenic radionuclide sample points to compare drainage density with erosion
-// rate.  It gets draiange density based on a channel network methodology described by
-// Clubb et al. (in review)
+// rate. It also outputs files to plot a boomerang for each basin with a cosmogenic
+// erosion rate.  It gets drainage density based on a channel network methodology 
+// described by Clubb et al. (in review)
+// It takes an input file with the format: 
+// X_coordinate Y_coordinate Cosmo_Erosion_Rate Cosmo_Point_Error
 //
 // Developed by:
 //  Fiona J. Clubb
@@ -111,8 +114,10 @@ int main (int nNumberofArgs,char *argv[])
 	boundary_conditions[3] = "No flux";
 	
 		// get the filled file
-	cout << "Filling the DEM" << endl;
-	LSDRaster filled_topo_test = topo_test.fill(Minimum_Slope);
+	//cout << "Filling the DEM" << endl;
+	//LSDRaster filled_topo_test = topo_test.fill(Minimum_Slope);
+		// load the filled DEM
+	LSDRaster filled_topo_test((path_name+DEM_name+fill_ext), DEM_flt_extension);
 	//filled_topo_test.write_raster((DEM_f_name),DEM_flt_extension);
   
   //get a FlowInfo object
@@ -169,16 +174,18 @@ int main (int nNumberofArgs,char *argv[])
   ifstream coords_list;
   coords_list.open(string_filename.c_str());
   
-  float X_coord, Y_coord, ErosionRate;
+  float X_coord, Y_coord, ErosionRate, Error;
   vector<float> X_coords;
   vector<float> Y_coords;
   vector<float> ErosionRates;
-  while (coords_list >> X_coord >> Y_coord >> ErosionRate)
+  vector<float> Errors;
+  while (coords_list >> X_coord >> Y_coord >> ErosionRate >> Error)
   {
-     //cout << "X Coord: " << X_coord << " Y Coord: " << Y_coord << endl;
+     cout << "X Coord: " << X_coord << " Y Coord: " << Y_coord << " Erosion Rate: " << ErosionRate << "Error on cosmo point: " << Error << endl;
      X_coords.push_back(X_coord);
      Y_coords.push_back(Y_coord);
      ErosionRates.push_back(ErosionRate);
+     Errors.push_back(Error);
   }
   
  
@@ -193,6 +200,7 @@ int main (int nNumberofArgs,char *argv[])
                                                                 search_radius, threshold_SO, FlowInfo);
   
     int JunctionCosmo = ChanNetwork.find_upstream_junction_from_channel_nodeindex(NICosmo, FlowInfo);
+    cout << "Junction of cosmo point: " << JunctionCosmo << endl;
     junction_vector.push_back(JunctionCosmo);  
   }                                                     
     
@@ -205,9 +213,9 @@ int main (int nNumberofArgs,char *argv[])
   
   cout << "Calculating drainage density" << endl;
   //get drainage density
-  LSDRaster drainage_density = filled_topo_test.DrainageDensity(SOArray, Basins, FlowDir_array);          
-  string DD_name = "_DD";
-  drainage_density.write_raster((path_name+DEM_name+DD_name),DEM_flt_extension);   
+  //LSDRaster drainage_density = filled_topo_test.DrainageDensity(SOArray, Basins, FlowDir_array);          
+  //string DD_name = "_DD";
+  //drainage_density.write_raster((path_name+DEM_name+DD_name),DEM_flt_extension);   
   
   //getting the slope raster
   // Calculate polyfit coefficients
@@ -220,35 +228,51 @@ int main (int nNumberofArgs,char *argv[])
   float window_radius = 6;
   filled_topo_test.calculate_polyfit_coefficient_matrices(window_radius, a, b, c, d, e, f);
   LSDRaster Slope = filled_topo_test.calculate_polyfit_slope(d, e);
-  
+            
   int no_junctions = junction_vector.size();  
-  
+  cout << "Number of basins: " << no_junctions << endl;
   string string_filename2;
   string filename2 = "drainage_density_cosmo";
   string_filename2 = filename2+dot+extension;
   ofstream DD_cosmo;
   DD_cosmo.open(string_filename2.c_str());
   
+  cout << "Created the drainage density file" << endl;
+  
+  cout << "Calculating DINF area for boomerang plotting" << endl;
+  
+  // D-infinty flowdirection for HFR   
+  Array2D<float> FlowDir = filled_topo_test.D_inf_FlowDir();
+  LSDRaster DinfArea = filled_topo_test.D_inf_FlowArea(FlowDir);
+  
+  //declaring variables for boomerang plotting
+  float log_bin_width = 0.1;
+	int SplineResolution = 10000;
+	float bin_threshold =  0;
+	
   //get mean DD of each basin for plotting
   for (int i = 0; i < no_junctions; i++)
 	{
     cout << flush << "Junction = " << i+1 << " of " << no_junctions << "\r";
     int junction_number = junction_vector[i];
     float BasinErosionRate = ErosionRates[i];
+    float BasinError = Errors[i];
     
     // set basin parameters
     LSDBasin Basin(junction_number, FlowInfo, ChanNetwork);
     Basin.set_FlowLength(SOArray, FlowInfo);
     Basin.set_DrainageDensity();
     Basin.set_SlopeMean(FlowInfo, Slope);
+    Basin.Plot_Boomerang(Slope, DinfArea, FlowInfo, log_bin_width, SplineResolution, bin_threshold, path_name);
     
     // return basin parameters
     float drainage_density = Basin.get_DrainageDensity();
+    cout << "Drainage density: " << drainage_density << endl;
     float basin_slope = Basin.get_SlopeMean();
 
     if (drainage_density != NoDataValue)
     {
-      DD_cosmo << drainage_density << " " << basin_slope << " " << BasinErosionRate << endl;
+      DD_cosmo << drainage_density << " " << basin_slope << " " << BasinErosionRate << " " << BasinError << endl;
     } 
   }        
 }
