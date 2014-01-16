@@ -43,9 +43,9 @@ void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNetw
 
   
 
-  //int n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
-  //int basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
-  int basin_outlet = StreamLinkVector.get_node_in_channel(0);
+  int n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
+  int basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
+  //int basin_outlet = StreamLinkVector.get_node_in_channel(0); // get hollow
   BasinNodes = FlowInfo.get_upslope_nodes(basin_outlet);
   
 
