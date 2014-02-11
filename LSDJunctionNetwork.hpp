@@ -721,15 +721,6 @@ class LSDJunctionNetwork
   /// @date 21/10/2013
   int get_nodeindex_of_nearest_channel_for_specified_coordinates(float X_coordinate,
                             float Y_coordinate, int threshold_stream_order, int search_radius_nodes, LSDFlowInfo& FlowInfo);
-                            
-  /// @brief Function to get the node index for a point using its X and Y coordinates
-  /// @param X_coordinate X_coord of point
-  /// @param Y_coordinate Y_coord of point
-  /// @param FlowInfo LSDFlowInfo object
-  /// @return int with node index of point
-  /// @author FJC
-  /// @date 11/02/14   
-  int get_node_index_of_coordinate_point(float X_coordinate, float Y_coordinate, LSDFlowInfo& FlowInfo);
 
 	/// @brief This function takes a node index, checks to see if it is on a channel,
 	/// and then works its way up the channel to find the upstream junction

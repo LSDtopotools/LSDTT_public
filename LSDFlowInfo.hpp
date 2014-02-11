@@ -360,7 +360,14 @@ class LSDFlowInfo
   /// @author SMM
   /// @date 25/19/13
 	int find_farthest_upslope_node(int node, LSDRaster& DistFromOutlet);
-
+	
+	/// @brief Function to get the node index for a point using its X and Y coordinates
+  /// @param X_coordinate X_coord of point
+  /// @param Y_coordinate Y_coord of point
+  /// @return int with node index of point
+  /// @author FJC
+  /// @date 11/02/14   
+  int get_node_index_of_coordinate_point(float X_coordinate, float Y_coordinate);
 
 	///@brief A get sources version that uses the flow accumulation pixels.
 	///@param FlowPixels LSDIndexRaster of flow accumulation in pixels.
