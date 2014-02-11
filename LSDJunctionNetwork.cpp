@@ -3734,6 +3734,33 @@ int LSDJunctionNetwork::get_nodeindex_of_nearest_channel_for_specified_coordinat
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// get node index of point from X and Y coordinates
+// this is different from the above function in that it does not snap to the nearest channel
+//
+// FJC 11/02/14
+// 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+int LSDJunctionNetwork::get_node_index_of_coordinate_point(float X_coordinate, float Y_coordinate, LSDFlowInfo& FlowInfo)
+{
+  // Shift origin to that of dataset
+  float X_coordinate_shifted_origin = X_coordinate - XMinimum;
+  float Y_coordinate_shifted_origin = Y_coordinate - YMinimum;
+
+  // Get row and column of point
+  int col_point = int(X_coordinate_shifted_origin/DataResolution);
+  int row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/DataResolution));
+  
+  // Get node of point
+  int CurrentNode = FlowInfo.NodeIndex[row_point][col_point];
+  
+  return CurrentNode;  
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Find upstream junction from channel nodeindex
 //
 // This function takes a nodeindex, checks to see if it is a channel, and if so
