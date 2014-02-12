@@ -385,6 +385,21 @@ class LSDFlowInfo
   /// @date 01/016/12
 	vector<int> get_sources_index_threshold(LSDIndexRaster& FlowPixels, int threshold);
 
+  /// @brief Perform a downslope trace using D8 from a given point source (i,j).
+  ///
+  /// @details Overwrites input parameters to return a raster of the path, the length of the
+  /// trace and the final pixel coordinates of the trace.
+	/// @param i Row index of starting point for trace. 
+	/// @param j Column index of starting point for trace.
+	/// @param StreamNetwork An LSDIndexRaster of the stream network.
+	/// @param length Length of trace in spatial units.
+	/// @param receiver_row Row index of ending point for trace. 
+	/// @param receiver_col Column index of ending point for trace.
+	/// @param Path Empty raster to store the final trace path.
+  /// @author SWDG
+  /// @date 20/1/14
+  void D8_Trace(int i, int j, LSDIndexRaster StreamNetwork, float& length, int& receiver_row, int& receiver_col, Array2D<int>& Path);
+
 	protected:
 
 	///Number of rows.

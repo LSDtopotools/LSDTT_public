@@ -1835,6 +1835,49 @@ vector<int> LSDFlowInfo::get_sources_index_threshold(LSDIndexRaster& FlowPixels,
 	}
 	return sources;
 }
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Perform a downslope trace using D8 from a given point source (i,j).
+//Overwrites input parameters to return a raster of the path, the length of the
+//trace and the final pixel coordinates of the trace.
+// SWDG 20/1/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDFlowInfo::D8_Trace(int i, int j, LSDIndexRaster StreamNetwork, float& length, int& receiver_row, int& receiver_col, Array2D<int>& Path){ 
+  
+  float root_2 = 1.4142135623;
+
+  Array2D<int> stnet = StreamNetwork.get_RasterData();
+
+  length = 0;
+  
+  int node;
+  
+  int reveiver_node = retrieve_node_from_row_and_column(i, j);
+  receiver_row = i;
+  receiver_col = j;
+  
+  Path[receiver_row][receiver_col] = 1;
+  
+  while (StreamNetwork.get_data_element(receiver_row, receiver_col) == NoDataValue){  // need to do edge checking 
+  
+    retrieve_receiver_information(reveiver_node, node, receiver_row, receiver_col);
+  
+    Path[receiver_row][receiver_col] = 1;
+  
+    //update length
+    if (retrieve_flow_length_code_of_node(reveiver_node) == 1){ length += DataResolution; }
+    else if (retrieve_flow_length_code_of_node(reveiver_node) == 1){ length += (DataResolution * root_2); }
+      
+    reveiver_node = node;
+   
+  }
+  
+}
+
+
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 
