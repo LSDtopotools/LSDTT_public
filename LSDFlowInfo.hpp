@@ -385,6 +385,15 @@ class LSDFlowInfo
    /// @author SMM
   /// @date 01/016/12
 	vector<int> get_sources_index_threshold(LSDIndexRaster& FlowPixels, int threshold);
+	
+	/// @brief A get sources version that uses AS^2 (area and slope).
+	/// @param FlowPixels LSDIndexRaster of flow accumulation in pixels.
+	/// @param Slope LSDRaster of slope values
+	/// @param threshold Integer AS^2 threshold
+  /// @return Vector of source integers.
+  /// @author FJC
+  /// @date 11/02/14
+	vector<int> get_sources_slope_area(LSDIndexRaster& FlowPixels, LSDRaster& Slope, int threshold);
 
   /// @brief Perform a downslope trace using D8 from a given point source (i,j).
   ///

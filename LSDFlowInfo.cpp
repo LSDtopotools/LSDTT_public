@@ -1838,6 +1838,87 @@ vector<int> LSDFlowInfo::get_sources_index_threshold(LSDIndexRaster& FlowPixels,
 	return sources;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// a get sources version that uses a threshold of drainage area * slope^2
+//
+//
+// FJC 11/02/14
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+vector<int> LSDFlowInfo::get_sources_slope_area(LSDIndexRaster& FlowPixels, LSDRaster& Slope, int threshold)
+{
+	vector<int> sources;
+	int row,col;
+	//int n_donors;
+	int donor_row,donor_col;
+	int thresh_switch;
+	int donor_node;
+
+	// drop down through the stack
+	// if the node is greater than or equal to the threshold
+	// check all the donors
+	// if there are no donors, then the node is a source
+	// if none of the donors are greater than the threshold, then it also is a source
+	for (int node = 0; node<NDataNodes; node++)
+	{
+		row = RowIndex[node];
+		col = ColIndex[node];
+		
+		float area = FlowPixels.get_data_element(row,col);
+		float slope = Slope.get_data_element(row,col);
+    float SA_product = area * (slope*slope);
+		// see if node is greater than threshold
+		if(SA_product >= threshold)
+		{
+			//cout << "node " << node << " is a potential source, it has a value of "
+			//     << SA_product
+			//     << "and it has " << NDonorsVector[node] <<" donors " << endl;
+
+			// if it doesn't have donors, it is a source
+			if(NDonorsVector[node] == 0)
+			{
+				sources.push_back(node);
+			}
+			else
+			{
+				thresh_switch = 1;
+				// figure out where the donor nodes are, and if
+				// the donor node is greater than the threshold
+				for(int dnode = 0; dnode<NDonorsVector[node]; dnode++)
+				{
+					donor_node = DonorStackVector[ DeltaVector[node]+dnode];
+					donor_row = RowIndex[ donor_node ];
+					donor_col = ColIndex[ donor_node ];
+
+					// we don't float count base level nodes, which donate to themselves
+					if (donor_node != node)
+					{
+						// if the donor node is greater than the threshold,
+						// then this node is not a threhold
+						float area_donor = FlowPixels.get_data_element(donor_row,donor_col);
+						float slope_donor = Slope.get_data_element(donor_row,donor_col);
+						float SA_product_donor = area_donor * (slope_donor*slope_donor);
+						if(SA_product_donor >= threshold)
+						{
+							thresh_switch = 0;
+						}
+					}
+
+					//cout << "thresh_switch is: " << thresh_switch << endl;
+				}
+				// if all of the donors are below the threhold, this is a source
+				if (thresh_switch == 1)
+				{
+					sources.push_back(node);
+				}
+			}
+		}
+	}
+	return sources;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Perform a downslope trace using D8 from a given point source (i,j).
