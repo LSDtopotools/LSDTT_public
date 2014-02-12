@@ -151,6 +151,14 @@ class LSDFlowInfo
   int retrieve_flow_length_code_of_node(int node)
 										{ return FlowLengthCode[ RowIndex[node] ][ ColIndex[node] ]; }
 
+  ///@brief Get the FlowDirection of a row and column pair.
+  ///@param row Integer of row index.
+  ///@param col Integer of col index.
+  ///@return Integer of the flow direction.
+  ///@author SWDG
+  ///@date 04/02/14
+  int get_LocalFlowDirection(int row, int col)
+										{ return FlowDirection[row][col]; }
 
   ///@brief Get the node for a cell at a given row and column
   ///@param row index
