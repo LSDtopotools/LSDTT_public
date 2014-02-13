@@ -442,6 +442,8 @@ class LSDFlowInfo
   /// [2] Slope \n
   /// [3] Relief \n
   ///
+  /// @param Elevation LSDRaster of elevation values.
+  /// @param Slope LSDRaster of slope values.
   /// @param Hilltops LSDRaster of hilltops.
   /// @param StreamNetwork LSDIndexRaster of the stream network.
   /// @param D_inf_Flowdir LSDRaster of flow directions.
