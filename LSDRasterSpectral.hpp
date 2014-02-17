@@ -129,24 +129,20 @@ class LSDRasterSpectral: public LSDRaster
     /// @param transform_direction = -1.
     /// @param OutputArrayReal = Real 2D spectrum.
     /// @param OutputArrayImaginary = Imaginary 2D spectrum.
-    /// @param Ly Array y dimension.
-    /// @param Lx Array x dimension.
    	/// @author David Milodowski
     /// @date 18/12/2012
     void dfftw2D_fwd(Array2D<float>& InputArray, Array2D<float>& OutputArrayReal, Array2D<float>& OutputArrayImaginary,
-	                 int transform_direction, int Ly, int Lx);
+	                 int transform_direction);
 
     /// @brief Computes the inverse fast fourier transform of a 2D discrete dataset.
     /// @param InputArrayReal = Real component of 2D spectrum.
     /// @param InputArrayImaginary = Imaginary component of 2D spectrum.
     /// @param OutputArray = reconstructed DEM.
     /// @param transform_direction = -1.
-    /// @param Ly Array y dimension.
-    /// @param Lx Array x dimension.
   	/// @author David Milodowski
     /// @date 18/12/2012
     void dfftw2D_inv(Array2D<float>& InputArrayReal, Array2D<float>& InputArrayImaginary,
-  	                 Array2D<float>& OutputArray, int transform_direction, int Ly, int Lx);
+  	                 Array2D<float>& OutputArray, int transform_direction);
 
     /// @brief Detrend Data.
     ///
@@ -154,13 +150,9 @@ class LSDRasterSpectral: public LSDRaster
     /// @param zeta Input elevation data.
     /// @param zeta_detrend Output detrended elevation data.
     /// @param trend_plane Output array of trend plane.
-    /// @param nrows Number of rows.
-    /// @param ncols Number of columns.
-    /// @param ndv No data value.
   	/// @author David Milodowski
     /// @date 18/12/2012
-    void detrend2D(Array2D<float>& zeta, Array2D<float>& zeta_detrend,
-  	               Array2D<float>& trend_plane, int nrows, int ncols, float ndv);
+    void detrend2D(Array2D<float>& zeta, Array2D<float>& zeta_detrend, Array2D<float>& trend_plane);
 
     /// @brief Hann Window Module.
     ///
@@ -168,14 +160,9 @@ class LSDRasterSpectral: public LSDRaster
     /// @param zeta_detrend Detrended elevation data
     /// @param zeta_Hann2D Output windowed data.
     /// @param Hann2D Output Hann window.
-    /// @param WSS Summed square of the weighting coefficients.
-    /// @param nrows Number of rows.
-    /// @param ncols Number of columns.
-    /// @param ndv No data value.
   	/// @author David Milodowski
     /// @date 18/12/2012
-    void window_data_Hann2D(Array2D<float>& zeta_detrend, Array2D<float>& zeta_Hann2D,
-  	                        Array2D<float>& Hann2D, float& WSS, int nrows, int ncols, int ndv);
+    void window_data_Hann2D(Array2D<float>& zeta_detrend, Array2D<float>& zeta_Hann2D, Array2D<float>& Hann2D);
 
     /// @brief SHIFT ORIGIN OF SPECTRUM IN FOURIER DOMAIN.
     ///
@@ -184,12 +171,10 @@ class LSDRasterSpectral: public LSDRaster
     /// @param spectrum_imaginary
     /// @param spectrum_real_shift
     /// @param spectrum_imaginary_shift
-    /// @param Ly Array y dimension.
-    /// @param Lx Array x dimension.
   	/// @author David Milodowski
     /// @date 18/12/2012
     void shift_spectrum(Array2D<float>& spectrum_real,  Array2D<float>& spectrum_imaginary,
-  	                    Array2D<float>& spectrum_real_shift, Array2D<float>& spectrum_imaginary_shift, int Ly, int Lx);
+  	                    Array2D<float>& spectrum_real_shift, Array2D<float>& spectrum_imaginary_shift);
 
     /// @brief DE-SHIFT ORIGIN OF SPECTRUM.
     ///
@@ -198,48 +183,32 @@ class LSDRasterSpectral: public LSDRaster
     /// @param FilteredSpectrumImaginary
     /// @param FilteredSpectrumReal_deshift
     /// @param FilteredSpectrumImaginary_deshift
-    /// @param Ly Array y dimension.
-    /// @param Lx Array x dimension.
   	/// @author David Milodowski
     /// @date 18/12/2012
     void shift_spectrum_inv(Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary,
-  	                        Array2D<float>& FilteredSpectrumReal_deshift, Array2D<float>& FilteredSpectrumImaginary_deshift,
-  	                        int Ly, int Lx);
+  	                        Array2D<float>& FilteredSpectrumReal_deshift, Array2D<float>& FilteredSpectrumImaginary_deshift);
 
     /// @brief CALCULATE THE DFT PERIODOGRAM.
     ///
     /// @details Multiply fourier analysis output by complex conjugate and normalises.
     /// @param spectrum_real_shift
     /// @param spectrum_imaginary_shift
-    /// @param Ly Array y dimension.
-    /// @param Lx Array x dimension.
-    /// @param WSS Summed square of the weighting coefficients.
-    /// @return 2D array of DFT Periodogram.
    	/// @author David Milodowski
     /// @date 18/12/2012
-    Array2D<float> calculate_2D_PSD(Array2D<float>& spectrum_real_shift, Array2D<float>& spectrum_imaginary_shift,
-  	                        int Lx, int Ly, float WSS);
+    void calculate_2D_PSD(Array2D<float>& spectrum_real_shift, Array2D<float>& spectrum_imaginary_shift);
 
     /// @brief GET RADIAL POWER SPECTRUM.
     ///
     /// @details Collapse 2D PSD into a radial PSD.
-    /// @param P_DFT
-    /// @param RadialPSD_output
-    /// @param RadialFrequency_output
-    /// @param Ly Array y dimension.
-    /// @param Lx Array x dimension.
-    /// @param WSS Summed square of the weighting coefficients.
-    /// @param dem_res DEM resolution.
    	/// @author David Milodowski
     /// @date 18/12/2012
-    void calculate_radial_PSD(Array2D<float>& P_DFT, vector<float>& RadialPSD_output, vector<float>& RadialFrequency_output,
-  	                        int Lx, int Ly, float WSS, float dem_res);
+    void calculate_radial_PSD();
 
     /// @brief COMPUTE DISCRETE FAST FOURIER TRANSFORM OF A REAL, 2-DIMENSIONAL DATASET.
     ///
     /// @details Computes the 2D and radial power spectra of a 2D array.
     /// @param file_id File identifier to prefix output files
-    /// @param LogBinWidth Wwidth of the logarithmically spaced bins. For topography, suggest this is 0.1 to start.
+    /// @param LogBinWidth Width of the logarithmically spaced bins. For topography, suggest this is 0.1 to start.
   	/// @author David Milodowski
     /// @date 18/12/2012
   	void fftw2D_spectral_analysis(char* file_id, float LogBinWidth);
@@ -255,17 +224,13 @@ class LSDRasterSpectral: public LSDRaster
     /// @param RawSpectrumReal
     /// @param RawSpectrumImaginary
     /// @param FilteredSpectrumReal
-    /// @param FilteredSpectrumImaginary
-    /// @param Ly Array y dimension.
-    /// @param Lx Array x dimension.
-    /// @param dem_res DEM resolution.
     /// @param f1
     /// @param f2
    	/// @author David Milodowski
     /// @date 18/12/2012
     void bandpass_filter(Array2D<float>& RawSpectrumReal, Array2D<float>& RawSpectrumImaginary,
   	                     Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary,
-  	                      int Lx, int Ly, float dem_res, float f1, float f2);
+  	                     float f1, float f2);
 
     /// @brief LOWPASS FILTER.
     ///
@@ -274,16 +239,13 @@ class LSDRasterSpectral: public LSDRaster
     /// @param RawSpectrumImaginary
     /// @param FilteredSpectrumReal
     /// @param FilteredSpectrumImaginary
-    /// @param Ly Array y dimension.
-    /// @param Lx Array x dimension.
-    /// @param dem_res DEM resolution.
     /// @param f1
     /// @param f2
    	/// @author David Milodowski
     /// @date 18/12/2012
     void lowpass_filter(Array2D<float>& RawSpectrumReal, Array2D<float>& RawSpectrumImaginary,
   	                    Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary,
-  	                      int Lx, int Ly, float dem_res, float f1, float f2);
+  	                    float f1, float f2);
 
     /// @brief HIGHPASS FILTER.
     ///
@@ -292,16 +254,13 @@ class LSDRasterSpectral: public LSDRaster
     /// @param RawSpectrumImaginary
     /// @param FilteredSpectrumReal
     /// @param FilteredSpectrumImaginary
-    /// @param Ly Array y dimension.
-    /// @param Lx Array x dimension.
-    /// @param dem_res DEM resolution.
     /// @param f1
     /// @param f2
   	/// @author David Milodowski
     /// @date 18/12/2012
     void highpass_filter(Array2D<float>& RawSpectrumReal, Array2D<float>& RawSpectrumImaginary,
   	                     Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary,
-  	                      int Lx, int Ly, float dem_res, float f1, float f2);
+  	                     float f1, float f2);
 
     /// @brief WIENER FILTER.
     ///
@@ -312,15 +271,11 @@ class LSDRasterSpectral: public LSDRaster
     /// @param RawSpectrumImaginary
     /// @param FilteredSpectrumReal
     /// @param FilteredSpectrumImaginary
-    /// @param Ly Array y dimension.
-    /// @param Lx Array x dimension.
-    /// @param dem_res DEM resolution.
     /// @param WSS Summed square of the weighting coefficients.
    	/// @author David Milodowski
     /// @date 18/12/2012
   	void wiener_filter(Array2D<float>& RawSpectrumReal, Array2D<float>& RawSpectrumImaginary,
-  	                   Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary,
-  	                      int Lx, int Ly, float dem_res, float WSS);
+  	                   Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary);
 
   	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   	// MAIN FUNCTIONS USING SPECTRAL FILTERS
@@ -398,6 +353,19 @@ class LSDRasterSpectral: public LSDRaster
     /// @date 18/12/2012
   	LSDRaster fftw2D_wiener();
 
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  	// FUNCTIONS TO PRINT RADIAL SPECTRA
+  	//------------------------------------------------------------------------------
+    void print_radial_spectrum(float bin_width, string file_id);
+
+    
+  protected:
+  int Lx;
+  int Ly;
+  float WSS;
+  Array2D<float> P_DFT;
+  vector<float> RadialFrequency;
+  vector<float> RadiallyAveragedPSD;
 	private:
 	void create();
 	void create(string filename, string extension);
