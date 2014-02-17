@@ -1290,26 +1290,31 @@ LSDIndexRaster LSDJunctionNetwork::ExtractBasinsOrder(int BasinOrder, LSDFlowInf
       // receiver junction should be of higher order.
       if (receiver_junc_SO > BasinOrder)
       {
-        // First, get channel pixels draining from the current junction.
-        LSDIndexChannel StreamLinkVector = LSDIndexChannel(current_junc, JunctionVector[current_junc],
-                                                           receiver_junc, JunctionVector[receiver_junc], FlowInfo);
-        // Find final nth order channel pixel, which is the penultimate pixel
-        // in channel.
-        n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
-        // ======================
-        // gets crazy again here.
-        basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
-        // Get all contributing pixels and label with BasinID
-        vector<int> BasinNodeVector = FlowInfo.get_upslope_nodes(basin_outlet);
-        // Loop through basin to label basin pixels with basin ID
-        for (int BasinIndex = 0; BasinIndex < int(BasinNodeVector.size()); ++BasinIndex)
+        bool IsTruncated = node_tester(FlowInfo,current_junc);
+    
+        if(IsTruncated == false)
         {
-          node = BasinNodeVector[BasinIndex];
-          FlowInfo.retrieve_current_row_and_col(node,row,col);
-          basins[row][col] = BasinID;
+          // First, get channel pixels draining from the current junction.
+          LSDIndexChannel StreamLinkVector = LSDIndexChannel(current_junc, JunctionVector[current_junc],
+                                                             receiver_junc, JunctionVector[receiver_junc], FlowInfo);
+          // Find final nth order channel pixel, which is the penultimate pixel
+          // in channel.
+          n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
+          // ======================
+          // gets crazy again here.
+          basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
+          // Get all contributing pixels and label with BasinID
+          vector<int> BasinNodeVector = FlowInfo.get_upslope_nodes(basin_outlet);
+          // Loop through basin to label basin pixels with basin ID
+          for (int BasinIndex = 0; BasinIndex < int(BasinNodeVector.size()); ++BasinIndex)
+          {
+            node = BasinNodeVector[BasinIndex];
+            FlowInfo.retrieve_current_row_and_col(node,row,col);
+            basins[row][col] = BasinID;
+          }
+          // Increment BasinID to ensure that each basin is distinct.
+          ++BasinID;
         }
-        // Increment BasinID to ensure that each basin is distinct.
-        ++BasinID;
       } // end of while logic - have searched through junction catchment
     }
   }
@@ -2811,6 +2816,7 @@ LSDIndexRaster LSDJunctionNetwork::SplitHillslopes(LSDFlowInfo& FlowInfo, LSDInd
   // loop through the raster finding hillslope pixels
   for(int i = 0; i < NRows; ++i)
   {
+    cout << flush << i+1 << "/" << NRows << "\r";
     for(int j = 0; j < NCols; ++j)
     {
       // Has node been visited before?
@@ -3501,9 +3507,10 @@ bool LSDJunctionNetwork::node_tester(LSDFlowInfo& FlowInfo, int input_junction)
   // get the penultimate node in the channel. Eg one pixel upstream from the outlet node of a basin.
   // -2 is used due to zero indexing.
   int basin_outlet;
-  if(n_nodes_in_channel == 1) basin_outlet = StreamLinkVector.get_node_in_channel(0); // test for 1 pixel tributary
-  else basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);     
-  
+//   if(n_nodes_in_channel == 1) basin_outlet = StreamLinkVector.get_node_in_channel(0); // test for 1 pixel tributary
+//   else basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);     
+  basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);     
+
   //Get all cells upslope of a junction - eg every cell of the drainage basin of interest
   vector<int> upslope_nodes = FlowInfo.get_upslope_nodes(basin_outlet);
 
