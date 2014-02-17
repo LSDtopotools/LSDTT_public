@@ -1919,6 +1919,29 @@ vector<int> LSDFlowInfo::get_sources_slope_area(LSDIndexRaster& FlowPixels, LSDR
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// a get sources version that uses the X and Y coordinates of mapped channel heads
+//
+//
+// FJC 17/02/14
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+vector<int> LSDFlowInfo::get_sources_from_mapped_channel_heads(vector<float>& X_coords, vector<float>& Y_coords)
+{
+  vector<int> SourceNodes;
+  cout << "N of channel heads: " << X_coords.size() << endl;  
+  for (unsigned int i = 0; i < X_coords.size(); i++)
+  {
+    int NI = get_node_index_of_coordinate_point(X_coords[i], Y_coords[i]);
+    SourceNodes.push_back(NI);
+  }
+  
+  return SourceNodes;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Perform a downslope trace using D8 from a given point source (i,j).

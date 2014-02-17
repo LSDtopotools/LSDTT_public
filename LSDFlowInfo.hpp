@@ -394,6 +394,16 @@ class LSDFlowInfo
   /// @author FJC
   /// @date 11/02/14
 	vector<int> get_sources_slope_area(LSDIndexRaster& FlowPixels, LSDRaster& Slope, int threshold);
+	
+	/// @brief Gets a vector of source nodes based on the X and Y coordinates of mapped channel
+	/// heads.  Can be used if all the channel heads in a basin were mapped to get the stream 
+	/// network and calculate the drainage density
+	/// @param X_coords X coordinates of channel heads
+	/// @param Y_coords Y coordinates of channel heads
+  /// @return Vector of source nodes
+  /// @author FJC
+  /// @date 17/02/14  
+  vector<int> get_sources_from_mapped_channel_heads(vector<float>& X_coords, vector<float>& Y_coords);
 
   /// @brief Perform a downslope trace using D8 from a given point source (i,j).
   ///
