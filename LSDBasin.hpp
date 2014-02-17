@@ -163,6 +163,14 @@ class LSDBasin
   /// @date 17/2/14  
   float CalculateBasinStdDev(LSDFlowInfo& FlowInfo, LSDRaster Data);
   
+  /// @brief Calculate the Standard error of values of an LSDRaster which falls inside a basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @param Data Values to find the standard error of.
+  /// @return Standard error value.
+  /// @author SWDG
+  /// @date 17/2/14  
+  float CalculateBasinStdError(LSDFlowInfo& FlowInfo, LSDRaster Data);
+  
   /// @brief Set the mean slope of a basin.
   /// @param FlowInfo Flowinfo object.
   /// @param Slope Values to find the mean of.
