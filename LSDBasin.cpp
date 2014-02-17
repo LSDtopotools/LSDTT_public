@@ -180,7 +180,7 @@ float LSDBasin::CalculateBasinMax(LSDFlowInfo& FlowInfo, LSDRaster Data){
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Calculate min basin value.
-// SWDG 12/12/13
+// SWDG 17/2/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float LSDBasin::CalculateBasinMin(LSDFlowInfo& FlowInfo, LSDRaster Data){
 
@@ -201,6 +201,44 @@ float LSDBasin::CalculateBasinMin(LSDFlowInfo& FlowInfo, LSDRaster Data){
   }
     
   return MinData;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Calculate median basin value.
+// SWDG 17/2/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDBasin::CalculateBasinMedian(LSDFlowInfo& FlowInfo, LSDRaster Data){
+
+  int i;
+  int j;
+  vector<float> UnsortedData;
+  vector<float> SortedData;
+  vector<size_t> index_map;
+  float Median;
+
+  for (int q = 0; q < int(BasinNodes.size()); ++q){
+    
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    //exclude NDV
+    if (Data.get_data_element(i,j) != NoDataValue){
+      UnsortedData.push_back(Data.get_data_element(i,j));     
+    }
+  }
+  
+  //get size of dataset
+  size_t n = UnsortedData.size() / 2;
+  
+  //sort all non NDV values
+  matlab_float_sort(UnsortedData, SortedData, index_map);
+  
+  if (n % 2 != 0){
+    Median = (SortedData[n] + SortedData[n+1])/2;
+  }
+  else{
+    Median = SortedData[n];
+  }
+    
+  return Median;
 }
 
 

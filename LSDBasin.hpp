@@ -147,6 +147,14 @@ class LSDBasin
   /// @date 17/2/14
   float CalculateBasinMin(LSDFlowInfo& FlowInfo, LSDRaster Data);  
   
+  /// @brief Calculate the median value of an LSDRaster which falls inside a basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @param Data Values to find the median of.
+  /// @return Median value.
+  /// @author SWDG
+  /// @date 17/2/14
+  float CalculateBasinMedian(LSDFlowInfo& FlowInfo, LSDRaster Data);
+  
   /// @brief Set the mean slope of a basin.
   /// @param FlowInfo Flowinfo object.
   /// @param Slope Values to find the mean of.
