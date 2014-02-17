@@ -177,6 +177,33 @@ float LSDBasin::CalculateBasinMax(LSDFlowInfo& FlowInfo, LSDRaster Data){
   return MaxData;
 }
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Calculate min basin value.
+// SWDG 12/12/13
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDBasin::CalculateBasinMin(LSDFlowInfo& FlowInfo, LSDRaster Data){
+
+  int i;
+  int j;
+  float MinData = 100000000; // a large number
+  float CurrentData;
+
+  for (int q = 0; q < int(BasinNodes.size()); ++q){
+    
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    CurrentData = Data.get_data_element(i,j);
+    
+    //exclude NDV
+    if (CurrentData != NoDataValue && CurrentData < MinData){
+      MinData = CurrentData;     
+    }
+  }
+    
+  return MinData;
+}
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Calculate E* and R* values for the basin, using hilltop flow routed hillslope 
 // lengths. 

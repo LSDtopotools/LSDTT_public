@@ -139,6 +139,14 @@ class LSDBasin
   /// @date 11/12/13
   float CalculateBasinMax(LSDFlowInfo& FlowInfo, LSDRaster Data);
   
+  /// @brief Calculate the min value of an LSDRaster which falls inside a basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @param Data Values to find the minimum of.
+  /// @return Min value.
+  /// @author SWDG
+  /// @date 17/2/14
+  float CalculateBasinMin(LSDFlowInfo& FlowInfo, LSDRaster Data);  
+  
   /// @brief Set the mean slope of a basin.
   /// @param FlowInfo Flowinfo object.
   /// @param Slope Values to find the mean of.
