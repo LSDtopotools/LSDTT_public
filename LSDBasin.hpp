@@ -171,6 +171,14 @@ class LSDBasin
   /// @date 17/2/14  
   float CalculateBasinStdError(LSDFlowInfo& FlowInfo, LSDRaster Data);
   
+  /// @brief Calculate the range of values of an LSDRaster which falls inside a basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @param Data Values to find the range of.
+  /// @return Range value.
+  /// @author SWDG
+  /// @date 17/2/14
+  float CalculateBasinRange(LSDFlowInfo& FlowInfo, LSDRaster Data);
+  
   /// @brief Set the mean slope of a basin.
   /// @param FlowInfo Flowinfo object.
   /// @param Slope Values to find the mean of.

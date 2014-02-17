@@ -177,7 +177,6 @@ float LSDBasin::CalculateBasinMax(LSDFlowInfo& FlowInfo, LSDRaster Data){
   return MaxData;
 }
 
-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Calculate min basin value.
 // SWDG 17/2/14
@@ -292,7 +291,34 @@ float LSDBasin::CalculateBasinStdError(LSDFlowInfo& FlowInfo, LSDRaster Data){
   return StdError;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Calculate basin range.
+// SWDG 17/2/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDBasin::CalculateBasinRange(LSDFlowInfo& FlowInfo, LSDRaster Data){
 
+  int i;
+  int j;
+  float MinData = 100000000; // a large number
+  float MaxData = -100000000; // a small number
+  float CurrentData;
+
+  for (int q = 0; q < int(BasinNodes.size()); ++q){
+    
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    CurrentData = Data.get_data_element(i,j);
+    
+    //exclude NDV
+    if (CurrentData != NoDataValue && CurrentData < MinData){
+      MinData = CurrentData;     
+    }
+    if (CurrentData != NoDataValue && CurrentData > MaxData){
+      MaxData = CurrentData;     
+    }
+  }
+  float Range = MaxData - MinData;     
+  return Range;
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Calculate E* and R* values for the basin, using hilltop flow routed hillslope 
