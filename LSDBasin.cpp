@@ -243,6 +243,35 @@ float LSDBasin::CalculateBasinMedian(LSDFlowInfo& FlowInfo, LSDRaster Data){
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Calculate Standard devaition of the basin values.
+// SWDG 17/2/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDBasin::CalculateBasinStdDev(LSDFlowInfo& FlowInfo, LSDRaster Data){
+
+  int i;
+  int j;
+  vector<float> DataValues;
+
+  for (int q = 0; q < int(BasinNodes.size()); ++q){
+    
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    //exclude NDV
+    if (Data.get_data_element(i,j) != NoDataValue){
+      DataValues.push_back(Data.get_data_element(i,j));     
+    }
+  }
+  
+  float mean = get_mean(DataValues);
+  float StdDev = get_standard_deviation(DataValues, mean);
+    
+  return StdDev;
+}
+
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Calculate E* and R* values for the basin, using hilltop flow routed hillslope 
 // lengths. 
 // SWDG 12/12/13
