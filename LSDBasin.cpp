@@ -364,7 +364,8 @@ void LSDBasin::Plot_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Set the mean basin aspect. Does not use the normal basin mean method as angles
 // need to be handled differently. 
-// SWDG 12/12/13
+// Bug fixed in the average calculation when values wrapped around 0
+// SWDG 17/2/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDBasin::set_AspectMean(LSDFlowInfo& FlowInfo, LSDRaster Aspect){
 
@@ -393,11 +394,12 @@ void LSDBasin::set_AspectMean(LSDFlowInfo& FlowInfo, LSDRaster Aspect){
   
   }
     
-  x_component = x_component / (BasinNodes.size() - ndv_cell_count);
-  y_component = x_component / (BasinNodes.size() - ndv_cell_count);
   avg_r = atan2(y_component, x_component);
-  
   AspectMean = deg(avg_r);
+  
+  if (AspectMean < 0){
+    AspectMean = 360 + AspectMean;
+  }
    
 }
 

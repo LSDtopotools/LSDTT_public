@@ -281,7 +281,7 @@ class LSDBasin
   /// @param FlowInfo Flowinfo object.
   /// @param Aspect Values to find the mean of.
   /// @author SWDG
-  /// @date 12/12/13
+  /// @date 17/2/14
   void set_AspectMean(LSDFlowInfo& FlowInfo, LSDRaster Aspect);
   
   /// @brief Set the perimeter pixels using a simple edge detection algorithm. 
