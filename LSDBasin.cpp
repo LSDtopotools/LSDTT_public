@@ -321,6 +321,29 @@ float LSDBasin::CalculateBasinRange(LSDFlowInfo& FlowInfo, LSDRaster Data){
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Calculate basin range.
+// SWDG 17/2/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+int LSDBasin::CalculateNumDataPoints(LSDFlowInfo& FlowInfo, LSDRaster Data){
+
+  int i;
+  int j;
+  int count = 0;
+  
+  for (int q = 0; q < int(BasinNodes.size()); ++q){
+    
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+        
+    //exclude NDV
+    if (Data.get_data_element(i,j) != NoDataValue){
+      ++count;     
+    }
+  }
+      
+  return count;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Calculate E* and R* values for the basin, using hilltop flow routed hillslope 
 // lengths. 
 // SWDG 12/12/13

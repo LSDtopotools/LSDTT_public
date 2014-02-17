@@ -179,6 +179,16 @@ class LSDBasin
   /// @date 17/2/14
   float CalculateBasinRange(LSDFlowInfo& FlowInfo, LSDRaster Data);
   
+  /// @brief Calculate the number of data points of an LSDRaster which fall inside a basin.
+  ///
+  /// @details Useful for checking that an average value is not just taken from a single data point.
+  /// @param FlowInfo Flowinfo object.
+  /// @param Data Values to count.
+  /// @return Number of data points.
+  /// @author SWDG
+  /// @date 17/2/14
+  int CalculateNumDataPoints(LSDFlowInfo& FlowInfo, LSDRaster Data);
+  
   /// @brief Set the mean slope of a basin.
   /// @param FlowInfo Flowinfo object.
   /// @param Slope Values to find the mean of.
