@@ -160,7 +160,7 @@ float LSDBasin::CalculateBasinMax(LSDFlowInfo& FlowInfo, LSDRaster Data){
 
   int i;
   int j;
-  float MaxData = 0;
+  float MaxData = -10000000;   //a very small number
   float CurrentData;
 
   for (int q = 0; q < int(BasinNodes.size()); ++q){
