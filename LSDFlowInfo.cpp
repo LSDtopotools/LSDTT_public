@@ -2104,7 +2104,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 
 	// cycle through study area, find hilltops and trace downstream
 	for (i=1; i<NRows-1; ++i) { 
-    cout << "Row: " << i << " of " << NRows-1 << endl; //do a flush here??	          
+    cout << flush <<  "\tRow: " << i << " of = " << NRows-1 << "              \r";	          
     for (j=1; j<NCols-1; ++j) {                        
 		                                    
 			// ignore edge cells and non-hilltop cells
@@ -2715,6 +2715,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
   OutputArrays.push_back(Relief_Array);
 
   //Print debugging info to screen
+  cout << endl; //push output onto new line
   cout << "Hilltop count: " << ht_count << endl;
   cout << "Stream count: " << s_count << endl;
   cout << "Fail count: " << ns_count << endl; 
