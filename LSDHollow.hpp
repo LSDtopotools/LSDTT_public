@@ -26,7 +26,7 @@ class LSDHollow
   /// @param FlowInfo LSDFlowInfo object.
   /// @param ChanNet Channel network object.
   /// @author SWDG
-  /// @date 11/12/12
+  /// @date 19/2/14
   LSDHollow(int Junction, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChanNet)
 											{ create(Junction, FlowInfo, ChanNet); }
 
@@ -187,14 +187,14 @@ class LSDHollow
   /// @param FlowInfo Flowinfo object.
   /// @param CHT Values to find the mean of.
   /// @author SWDG
-  /// @date 12/12/13
+  /// @date 19/2/14
   void set_CHTMean(LSDFlowInfo& FlowInfo, LSDRaster CHT) { CHTMean = CalculateHollowMean(FlowInfo, CHT); }
  
   /// @brief Set the mean aspect of a hollow.
   /// @param FlowInfo Flowinfo object.
   /// @param Aspect Values to find the mean of.
   /// @author SWDG
-  /// @date 12/12/13
+  /// @date 19/2/14
   void set_AspectMean(LSDFlowInfo& FlowInfo, LSDRaster Aspect);
   
   /// @brief Set the perimeter pixels using a simple edge detection algorithm. 
@@ -202,7 +202,7 @@ class LSDHollow
   /// @details This is quite messy and will be improved soon.
   /// @param FlowInfo Flowinfo object.
   /// @author SWDG
-  /// @date 12/12/13
+  /// @date 19/2/14
   void set_Perimeter(LSDFlowInfo& FlowInfo);
   
   /// @brief Set the Soil production rate.
@@ -237,7 +237,7 @@ class LSDHollow
   /// @param CosmoErosionRate Erosion rate from cosmo.
   /// @param OtherErosionRate Erosion rate from another source.
   /// @author SWDG
-  /// @date 12/12/13
+  /// @date 19/2/14
   void set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& CHT, LSDIndexRaster& StreamNetwork,
                           LSDRaster& HillslopeLengths, LSDRaster& Relief, float window_radius, float log_bin_width, 
                           int SplineResolution, float bin_threshold, float CriticalSlope, 

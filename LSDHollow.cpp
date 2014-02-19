@@ -44,8 +44,6 @@ void LSDHollow::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNet
   
   int hollow_outlet = StreamLinkVector.get_node_in_channel(0); // get hollow
   HollowNodes = FlowInfo.get_upslope_nodes(hollow_outlet);
-  
-
                                                                                      
   NumberOfCells = int(HollowNodes.size());
   Area = NumberOfCells * (DataResolution*DataResolution);
@@ -53,11 +51,6 @@ void LSDHollow::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNet
   Beheaded = ChanNet.node_tester(FlowInfo, Junction);
 
   FlowInfo.retrieve_current_row_and_col(ChanNet.get_Node_of_Junction(Junction), Outlet_i, Outlet_j);
-    
-  vector<int> StreamOrderVector = ChanNet.get_StreamOrderVector();
-  
-  HollowOrder = StreamOrderVector[Junction];
-
 
   int i_max = 0;
   int i_min = 9999999; //a very large number
@@ -111,7 +104,7 @@ void LSDHollow::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNet
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Calculate mean hollow value.
-// SWDG 12/12/13
+// SWDG 19/2/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float LSDHollow::CalculateHollowMean(LSDFlowInfo& FlowInfo, LSDRaster Data){
 
@@ -142,7 +135,7 @@ float LSDHollow::CalculateHollowMean(LSDFlowInfo& FlowInfo, LSDRaster Data){
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Calculate max hollow value.
-// SWDG 12/12/13
+// SWDG 19/2/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float LSDHollow::CalculateHollowMax(LSDFlowInfo& FlowInfo, LSDRaster Data){
 
@@ -168,193 +161,9 @@ float LSDHollow::CalculateHollowMax(LSDFlowInfo& FlowInfo, LSDRaster Data){
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Calculate E* and R* values for the hollow, using hilltop flow routed hillslope 
-// lengths. 
-// SWDG 12/12/13
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDHollow::set_EStar_RStar(float CriticalSlope){
-
-    EStar = (2 * (abs(CHTMean)) * HillslopeLength_HFR) / CriticalSlope;
-    RStar = ReliefMean / (HillslopeLength_HFR * CriticalSlope);
-
-}
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Calculate flow length for the hollow using the D8 flow directions. 
-// SWDG 12/12/13
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDHollow::set_FlowLength(LSDIndexRaster& StreamNetwork, LSDFlowInfo& FlowInfo){
-
-  int j;
-  int i;
-  float LengthSum = 0;
-  float two_times_root2 = 2.828427;
-  Array2D<int> FlowDir = FlowInfo.get_FlowDirection();
-
-
-  //Loop over every pixel and record it's stream length and hollow ID in two vectors  
-  for (int q = 0; q < int(HollowNodes.size()); ++q){
-    
-    FlowInfo.retrieve_current_row_and_col(HollowNodes[q], i, j);
-           
-     if (StreamNetwork.get_data_element(i,j) != NoDataValue){
-       if ((FlowDir[i][j] % 2) != 0 && (FlowDir[i][j] != -1 )){ //is odd but not -1
-         LengthSum += (DataResolution * two_times_root2); //diagonal
-       }
-       else if (FlowDir[i][j] % 2 == 0){  //is even
-         LengthSum +=  DataResolution; //cardinal                   
-       }
-     }
-  }
-
-  FlowLength = LengthSum;
- 
-}
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Calculate hillslope lengths from boomerang plots. 
-// SWDG 12/12/13
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDHollow::set_HillslopeLengths_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, float log_bin_width, int SplineResolution, float bin_threshold){
-  
-  int j;
-  int i;
-  Array2D<float> slope(NRows, NCols, NoDataValue);
-  Array2D<float> area(NRows, NCols, NoDataValue);
-  
-  //create subset arrays for just the hollow data - this should be rolled into its own method.
-  for (int q = 0; q < int(HollowNodes.size()); ++q){
-    
-    FlowInfo.retrieve_current_row_and_col(HollowNodes[q], i, j);
-    
-      slope[i][j] = Slope.get_data_element(i,j);
-      area[i][j] = DinfArea.get_data_element(i,j);
-    
-  }
-
-  //do some log binning
-  vector<float> Mean_x_out;
-  vector<float> Mean_y_out;
-  vector<float> Midpoints_out;
-  vector<float> STDDev_x_out;
-  vector<float> STDDev_y_out;
-  vector<float> STDErr_x_out;
-  vector<float> STDErr_y_out;
-  vector<int> number_observations;
-  
-  log_bin_data(area, slope, log_bin_width, Mean_x_out, Mean_y_out, Midpoints_out, STDDev_x_out, STDDev_y_out, STDErr_x_out, STDErr_y_out, number_observations, NoDataValue);  
-  
-  //remove empty bins 
-  RemoveSmallBins(Mean_x_out, Mean_y_out, Midpoints_out, STDDev_x_out, STDDev_y_out, STDErr_x_out, STDErr_y_out, number_observations, bin_threshold);
-  
-  //index value of max slope
-  int slope_max_index = distance(Mean_y_out.begin(), max_element(Mean_y_out.begin(), Mean_y_out.end()));
-
-  //hillslope length from the maximum binned values
-  HillslopeLength_Binned = Mean_x_out[slope_max_index]/DataResolution;
-      
-  // Fit splines through the binned data to get the LH
-  vector<float> Spline_X;
-  vector<float> Spline_Y;
-  PlotCubicSplines(Mean_x_out, Mean_y_out, SplineResolution, Spline_X, Spline_Y);
-
-  //index value of max spline slope
-  int slope_max_index_spline = distance(Spline_Y.begin(), max_element(Spline_Y.begin(), Spline_Y.end()));
-
-  //hillslope length from spline curve
-  HillslopeLength_Spline = Spline_X[slope_max_index_spline]/DataResolution;
-
-}
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Generate data to create boomerang plots. 
-// SWDG 12/12/13
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDHollow::Plot_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, float log_bin_width, int SplineResolution, float bin_threshold, string Path){
-  
-  int j;
-  int i;
-  Array2D<float> slope(NRows, NCols, NoDataValue);
-  Array2D<float> area(NRows, NCols, NoDataValue);
-  
-  //create subset arrays for just the hollow data - this should be rolled into its own method.
-  for (int q = 0; q < int(HollowNodes.size()); ++q){
-    
-    FlowInfo.retrieve_current_row_and_col(HollowNodes[q], i, j);
-    
-      slope[i][j] = Slope.get_data_element(i,j);
-      area[i][j] = DinfArea.get_data_element(i,j);
-    
-  }
-
-  //do some log binning
-  vector<float> Mean_x_out;
-  vector<float> Mean_y_out;
-  vector<float> Midpoints_out;
-  vector<float> STDDev_x_out;
-  vector<float> STDDev_y_out;
-  vector<float> STDErr_x_out;
-  vector<float> STDErr_y_out;
-  vector<int> number_observations;
-  
-  log_bin_data(area, slope, log_bin_width, Mean_x_out, Mean_y_out, Midpoints_out, STDDev_x_out, STDDev_y_out, STDErr_x_out, STDErr_y_out, number_observations, NoDataValue);  
-  
-  //remove empty bins 
-  RemoveSmallBins(Mean_x_out, Mean_y_out, Midpoints_out, STDDev_x_out, STDDev_y_out, STDErr_x_out, STDErr_y_out, number_observations, bin_threshold);
-        
-  // Fit splines through the binned data to get the LH
-  vector<float> Spline_X;
-  vector<float> Spline_Y;
-  PlotCubicSplines(Mean_x_out, Mean_y_out, SplineResolution, Spline_X, Spline_Y);
-
-  //set up a filestream object to write the binned data
-  ofstream file;
-
-  stringstream ss_bin;
-  ss_bin << Path << Junction << "_boom_binned.txt";
-  file.open(ss_bin.str().c_str());   //needs a null terminated character array, not a string. See pg 181 of accelerated c++
-    
-  for(int q = 0; q < int(Mean_x_out.size()); q++){
-    file << Mean_x_out[q] << " " << Mean_y_out[q] << " " << STDDev_x_out[q] << " " << STDDev_y_out[q] << " " << STDErr_x_out[q] << " " << STDErr_y_out[q] << endl;
-  }
-  file.close();
-      
-  //set up a filestream object to write the spline data
-  ofstream SplineFile;
-
-  stringstream ss_spline;
-  ss_spline << Path << Junction << "_boom_spline.txt";
-  SplineFile.open(ss_spline.str().c_str());   //needs a null terminated character array, not a string. See pg 181 of accelerated c++
-    
-  for(int q = 0; q < int(Spline_X.size()); q++){ //fixed bug here where I looped over the wrong vector - SWDG 7/11/13
-    SplineFile << Spline_X[q] << " " << Spline_Y[q] << endl;
-
-  }
-  SplineFile.close();
-  
-  //set up a filestream object to write the data cloud
-  ofstream cloud;
-
-  stringstream ss_cloud;
-  ss_cloud << Path << Junction << "_boom_cloud.txt";
-  cloud.open(ss_cloud.str().c_str());     //needs a null terminated character array, not a string. See pg 181 of accelerated c++
-
-  for (int i = 1; i < NRows-1; ++i){
-    for (int j = 1; j < NCols-1; ++j){
-      if(area[i][j] != NoDataValue && slope[i][j] != NoDataValue){
-        cloud << area[i][j] << " " << slope[i][j] << endl;
-      }
-    }
-  }
-  cloud.close();
-
-}
-
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Set the mean hollow aspect. Does not use the normal hollow mean method as angles
 // need to be handled differently. 
-// SWDG 12/12/13
+// SWDG 19/2/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDHollow::set_AspectMean(LSDFlowInfo& FlowInfo, LSDRaster Aspect){
 
@@ -394,7 +203,7 @@ void LSDHollow::set_AspectMean(LSDFlowInfo& FlowInfo, LSDRaster Aspect){
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Set the perimeter pixels using a simple edge detection algorithm. This is quite 
 // messy and will be improved soon.
-// SWDG 12/12/13
+// SWDG 19/2/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDHollow::set_Perimeter(LSDFlowInfo& FlowInfo){
 
@@ -445,31 +254,13 @@ void LSDHollow::set_Perimeter(LSDFlowInfo& FlowInfo){
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Set the four different hillslope length measurements for the hollow. 
-// SWDG 12/12/13
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDHollow::set_all_HillslopeLengths(LSDFlowInfo& FlowInfo, LSDRaster& HillslopeLengths, LSDRaster& Slope, LSDRaster& DinfArea, float log_bin_width, int SplineResolution, float bin_threshold){
-
-  set_HillslopeLength_HFR(FlowInfo, HillslopeLengths);
-  set_HillslopeLengths_Boomerang(Slope, DinfArea, FlowInfo, log_bin_width, SplineResolution, bin_threshold);
-
-  if (DrainageDensity != NoDataValue){ 
-    set_HillslopeLength_Density();
-  }
-  else{
-    cout << "\nDrainage Density has not been set, so the hillslope length cannot be set." << endl;
-  }
-
-}
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Set all of the hollow parameters with one call.
 //
 // Runs polyfit to get the elevation derivatives, so can be quite memory intensive. Method
 // calls all the setters one by one, to populate all the hollow parameters. So a
 // hollow can be created and all it's properties set with 2 calls. The erosion rates have default 
 // parameters of -9999 as these are rarely used variables.
-// SWDG 12/12/13
+// SWDG 19/2/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDHollow::set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& CHT, LSDIndexRaster& StreamNetwork,
                                   LSDRaster& HillslopeLengths, LSDRaster& Relief, float window_radius, float log_bin_width,
@@ -515,7 +306,7 @@ void LSDHollow::set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Write integer hollow parameters into the shape of the hollow.
-// SWDG 12/12/13
+// SWDG 19/2/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 LSDIndexRaster LSDHollow::write_integer_data_to_LSDIndexRaster(int Param, LSDFlowInfo FlowInfo){
   
@@ -537,7 +328,7 @@ LSDIndexRaster LSDHollow::write_integer_data_to_LSDIndexRaster(int Param, LSDFlo
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Write real hollow parameters into the shape of the hollow.
-// SWDG 12/12/13
+// SWDG 19/2/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 LSDRaster LSDHollow::write_real_data_to_LSDRaster(float Param, LSDFlowInfo FlowInfo){
   
@@ -559,7 +350,7 @@ LSDRaster LSDHollow::write_real_data_to_LSDRaster(float Param, LSDFlowInfo FlowI
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Cookie cut data from an LSDRaster into the shape of the hollow.
-// SWDG 12/12/13
+// SWDG 19/2/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 LSDRaster LSDHollow::write_raster_data_to_LSDRaster(LSDRaster Data, LSDFlowInfo FlowInfo){
   
@@ -581,7 +372,7 @@ LSDRaster LSDHollow::write_raster_data_to_LSDRaster(LSDRaster Data, LSDFlowInfo 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Cookie cut data from an LSDIndexRaster into the shape of the hollow.
-// SWDG 12/12/13
+// SWDG 19/2/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 LSDIndexRaster LSDHollow::write_raster_data_to_LSDIndexRaster(LSDIndexRaster Data, LSDFlowInfo FlowInfo){
   
@@ -602,7 +393,7 @@ LSDIndexRaster LSDHollow::write_raster_data_to_LSDIndexRaster(LSDIndexRaster Dat
 }
 
 
-//this is to be transplanted into the LSDHollow object when that gets written.
+//NEEDS DOCUMENTED
 float LSDHollow::set_Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir){
          
   LSDIndexRaster hollow = write_Junction(FlowInfo);
@@ -662,8 +453,6 @@ float LSDHollow::set_Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir){
    
   int x_top = 0;
   int y_top = 0;
-  
-
   
   //get perpendicular flowdirs
   float perp_angle_1 = centre_flowdir - 90;
