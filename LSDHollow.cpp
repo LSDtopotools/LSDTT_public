@@ -11,16 +11,16 @@
 #include "LSDIndexChannel.hpp"
 #include "LSDJunctionNetwork.hpp"
 #include "LSDStatsTools.hpp"
-#include "LSDBasin.hpp"
+#include "LSDHollow.hpp"
 
 using namespace std;
 using namespace TNT;
 
-#ifndef LSDBasin_CPP
-#define LSDBasin_CPP
+#ifndef LSDHollow_CPP
+#define LSDHollow_CPP
 
 
-void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChanNet){
+void LSDHollow::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChanNet){
 
   //NO BOUNDS CHECKING ON JunctionNumber
 
@@ -42,15 +42,12 @@ void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNetw
                                                      ReceiverVector[Junction], JunctionVector[ReceiverVector[Junction]], FlowInfo);
 
   
-
-  int n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
-  int basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
-  //int basin_outlet = StreamLinkVector.get_node_in_channel(0); // get hollow
-  BasinNodes = FlowInfo.get_upslope_nodes(basin_outlet);
+  int hollow_outlet = StreamLinkVector.get_node_in_channel(0); // get hollow
+  HollowNodes = FlowInfo.get_upslope_nodes(hollow_outlet);
   
 
                                                                                      
-  NumberOfCells = int(BasinNodes.size());
+  NumberOfCells = int(HollowNodes.size());
   Area = NumberOfCells * (DataResolution*DataResolution);
   
   Beheaded = ChanNet.node_tester(FlowInfo, Junction);
@@ -59,7 +56,7 @@ void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNetw
     
   vector<int> StreamOrderVector = ChanNet.get_StreamOrderVector();
   
-  BasinOrder = StreamOrderVector[Junction];
+  HollowOrder = StreamOrderVector[Junction];
 
 
   int i_max = 0;
@@ -70,9 +67,9 @@ void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNetw
   int i = 0;
   int j = 0;
 
-  for (int q = 0; q < int(BasinNodes.size()); ++q){
+  for (int q = 0; q < int(HollowNodes.size()); ++q){
     
-    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    FlowInfo.retrieve_current_row_and_col(HollowNodes[q], i, j);
     
     if (i > i_max){i_max = i;}
     else if (i < i_min){i_min = i;}
@@ -88,8 +85,8 @@ void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNetw
   //finished setting all the instance variables
   
   
-  // now we set up empty variables to store properties of the basin
-  // these are populated as they are required using the set methods in LSDBasin
+  // now we set up empty variables to store properties of the hollow
+  // these are populated as they are required using the set methods in LSDHollow
     
   SlopeMean = NoDataValue;
   ElevationMean = NoDataValue;
@@ -100,40 +97,33 @@ void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNetw
   TotalCurvMean = NoDataValue;
   PlanCurvMax = NoDataValue;
   ProfileCurvMax = NoDataValue;
-  TotalCurvMax = NoDataValue;
-  HillslopeLength_HFR = NoDataValue;
-  HillslopeLength_Binned = NoDataValue;
-  HillslopeLength_Spline = NoDataValue;
-  HillslopeLength_Density = NoDataValue;
-  FlowLength = NoDataValue;
-  DrainageDensity = NoDataValue;  
+  TotalCurvMax = NoDataValue;  
   Perimeter_i = vector<int>(1,NoDataValue);
   Perimeter_j =  vector<int>(1,NoDataValue);
-  CosmoErosionRate = NoDataValue;
-  OtherErosionRate = NoDataValue;
+  BasalAge = NoDataValue;
+  SoilProduction = NoDataValue;
   CHTMean = NoDataValue;
-  EStar = NoDataValue;
-  RStar = NoDataValue;
+  Width = NoDataValue;
    
   //finished creating empty variables 
 
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Calculate mean basin value.
+// Calculate mean hollow value.
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-float LSDBasin::CalculateBasinMean(LSDFlowInfo& FlowInfo, LSDRaster Data){
+float LSDHollow::CalculateHollowMean(LSDFlowInfo& FlowInfo, LSDRaster Data){
 
   int i;
   int j;
   float TotalData = 0;
   int CountNDV = 0;
-  float BasinAverage;
+  float HollowAverage;
 
-  for (int q = 0; q < int(BasinNodes.size()); ++q){
+  for (int q = 0; q < int(HollowNodes.size()); ++q){
     
-    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    FlowInfo.retrieve_current_row_and_col(HollowNodes[q], i, j);
     
     //exclude NDV from average
     if (Data.get_data_element(i,j) != NoDataValue){
@@ -144,17 +134,17 @@ float LSDBasin::CalculateBasinMean(LSDFlowInfo& FlowInfo, LSDRaster Data){
     }
   }
 
-  BasinAverage = TotalData/(NumberOfCells-CountNDV);
+  HollowAverage = TotalData/(NumberOfCells-CountNDV);
 
-  return BasinAverage;
+  return HollowAverage;
 }
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Calculate max basin value.
+// Calculate max hollow value.
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-float LSDBasin::CalculateBasinMax(LSDFlowInfo& FlowInfo, LSDRaster Data){
+float LSDHollow::CalculateHollowMax(LSDFlowInfo& FlowInfo, LSDRaster Data){
 
   //could use max_element here? how would that cope with NDVs??
 
@@ -163,9 +153,9 @@ float LSDBasin::CalculateBasinMax(LSDFlowInfo& FlowInfo, LSDRaster Data){
   float MaxData = 0;
   float CurrentData;
 
-  for (int q = 0; q < int(BasinNodes.size()); ++q){
+  for (int q = 0; q < int(HollowNodes.size()); ++q){
     
-    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    FlowInfo.retrieve_current_row_and_col(HollowNodes[q], i, j);
     CurrentData = Data.get_data_element(i,j);
     
     //exclude NDV
@@ -178,11 +168,11 @@ float LSDBasin::CalculateBasinMax(LSDFlowInfo& FlowInfo, LSDRaster Data){
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Calculate E* and R* values for the basin, using hilltop flow routed hillslope 
+// Calculate E* and R* values for the hollow, using hilltop flow routed hillslope 
 // lengths. 
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDBasin::set_EStar_RStar(float CriticalSlope){
+void LSDHollow::set_EStar_RStar(float CriticalSlope){
 
     EStar = (2 * (abs(CHTMean)) * HillslopeLength_HFR) / CriticalSlope;
     RStar = ReliefMean / (HillslopeLength_HFR * CriticalSlope);
@@ -190,10 +180,10 @@ void LSDBasin::set_EStar_RStar(float CriticalSlope){
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Calculate flow length for the basin using the D8 flow directions. 
+// Calculate flow length for the hollow using the D8 flow directions. 
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDBasin::set_FlowLength(LSDIndexRaster& StreamNetwork, LSDFlowInfo& FlowInfo){
+void LSDHollow::set_FlowLength(LSDIndexRaster& StreamNetwork, LSDFlowInfo& FlowInfo){
 
   int j;
   int i;
@@ -202,10 +192,10 @@ void LSDBasin::set_FlowLength(LSDIndexRaster& StreamNetwork, LSDFlowInfo& FlowIn
   Array2D<int> FlowDir = FlowInfo.get_FlowDirection();
 
 
-  //Loop over every pixel and record it's stream length and basin ID in two vectors  
-  for (int q = 0; q < int(BasinNodes.size()); ++q){
+  //Loop over every pixel and record it's stream length and hollow ID in two vectors  
+  for (int q = 0; q < int(HollowNodes.size()); ++q){
     
-    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    FlowInfo.retrieve_current_row_and_col(HollowNodes[q], i, j);
            
      if (StreamNetwork.get_data_element(i,j) != NoDataValue){
        if ((FlowDir[i][j] % 2) != 0 && (FlowDir[i][j] != -1 )){ //is odd but not -1
@@ -225,17 +215,17 @@ void LSDBasin::set_FlowLength(LSDIndexRaster& StreamNetwork, LSDFlowInfo& FlowIn
 // Calculate hillslope lengths from boomerang plots. 
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDBasin::set_HillslopeLengths_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, float log_bin_width, int SplineResolution, float bin_threshold){
+void LSDHollow::set_HillslopeLengths_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, float log_bin_width, int SplineResolution, float bin_threshold){
   
   int j;
   int i;
   Array2D<float> slope(NRows, NCols, NoDataValue);
   Array2D<float> area(NRows, NCols, NoDataValue);
   
-  //create subset arrays for just the basin data - this should be rolled into its own method.
-  for (int q = 0; q < int(BasinNodes.size()); ++q){
+  //create subset arrays for just the hollow data - this should be rolled into its own method.
+  for (int q = 0; q < int(HollowNodes.size()); ++q){
     
-    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    FlowInfo.retrieve_current_row_and_col(HollowNodes[q], i, j);
     
       slope[i][j] = Slope.get_data_element(i,j);
       area[i][j] = DinfArea.get_data_element(i,j);
@@ -280,17 +270,17 @@ void LSDBasin::set_HillslopeLengths_Boomerang(LSDRaster& Slope, LSDRaster& DinfA
 // Generate data to create boomerang plots. 
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDBasin::Plot_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, float log_bin_width, int SplineResolution, float bin_threshold, string Path){
+void LSDHollow::Plot_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo& FlowInfo, float log_bin_width, int SplineResolution, float bin_threshold, string Path){
   
   int j;
   int i;
   Array2D<float> slope(NRows, NCols, NoDataValue);
   Array2D<float> area(NRows, NCols, NoDataValue);
   
-  //create subset arrays for just the basin data - this should be rolled into its own method.
-  for (int q = 0; q < int(BasinNodes.size()); ++q){
+  //create subset arrays for just the hollow data - this should be rolled into its own method.
+  for (int q = 0; q < int(HollowNodes.size()); ++q){
     
-    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    FlowInfo.retrieve_current_row_and_col(HollowNodes[q], i, j);
     
       slope[i][j] = Slope.get_data_element(i,j);
       area[i][j] = DinfArea.get_data_element(i,j);
@@ -362,11 +352,11 @@ void LSDBasin::Plot_Boomerang(LSDRaster& Slope, LSDRaster& DinfArea, LSDFlowInfo
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Set the mean basin aspect. Does not use the normal basin mean method as angles
+// Set the mean hollow aspect. Does not use the normal hollow mean method as angles
 // need to be handled differently. 
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDBasin::set_AspectMean(LSDFlowInfo& FlowInfo, LSDRaster Aspect){
+void LSDHollow::set_AspectMean(LSDFlowInfo& FlowInfo, LSDRaster Aspect){
 
   int i;
   int j;
@@ -376,9 +366,9 @@ void LSDBasin::set_AspectMean(LSDFlowInfo& FlowInfo, LSDRaster Aspect){
   float y_component = 0.0;
   int ndv_cell_count = 0;  
 
-  for (int q = 0; q < int(BasinNodes.size()); ++q){
+  for (int q = 0; q < int(HollowNodes.size()); ++q){
     
-    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    FlowInfo.retrieve_current_row_and_col(HollowNodes[q], i, j);
     
     if (Aspect.get_data_element(i,j) != NoDataValue){
     
@@ -393,8 +383,8 @@ void LSDBasin::set_AspectMean(LSDFlowInfo& FlowInfo, LSDRaster Aspect){
   
   }
     
-  x_component = x_component / (BasinNodes.size() - ndv_cell_count);
-  y_component = x_component / (BasinNodes.size() - ndv_cell_count);
+  x_component = x_component / (HollowNodes.size() - ndv_cell_count);
+  y_component = x_component / (HollowNodes.size() - ndv_cell_count);
   avg_r = atan2(y_component, x_component);
   
   AspectMean = deg(avg_r);
@@ -406,38 +396,38 @@ void LSDBasin::set_AspectMean(LSDFlowInfo& FlowInfo, LSDRaster Aspect){
 // messy and will be improved soon.
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDBasin::set_Perimeter(LSDFlowInfo& FlowInfo){
+void LSDHollow::set_Perimeter(LSDFlowInfo& FlowInfo){
 
   int i;
   int j;
   vector<int> I;
   vector<int> J;
   int NDVCount = 0;
-  Array2D<float> BasinData(NRows, NCols, NoDataValue);
+  Array2D<float> HollowData(NRows, NCols, NoDataValue);
 
-  //create subset arrays for just the basin data - this should be rolled into its own method.
-  for (int q = 0; q < int(BasinNodes.size()); ++q){
+  //create subset arrays for just the hollow data - this should be rolled into its own method.
+  for (int q = 0; q < int(HollowNodes.size()); ++q){
     
-    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
-      BasinData[i][j] = BasinNodes[q];
+    FlowInfo.retrieve_current_row_and_col(HollowNodes[q], i, j);
+      HollowData[i][j] = HollowNodes[q];
     
   }
 
-  for (int q = 0; q < int(BasinNodes.size()); ++q){
+  for (int q = 0; q < int(HollowNodes.size()); ++q){
     
-    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    FlowInfo.retrieve_current_row_and_col(HollowNodes[q], i, j);
     
       NDVCount = 0;
      
         //count border cells that are NDV
-        if (BasinData[i-1][j-1] == NoDataValue){ ++NDVCount; }
-        if (BasinData[i][j-1] == NoDataValue){ ++NDVCount; }
-        if (BasinData[i+1][j-1] == NoDataValue){ ++NDVCount; }
-        if (BasinData[i-1][j] == NoDataValue){ ++NDVCount; }
-        if (BasinData[i+1][j] == NoDataValue){ ++NDVCount; }
-        if (BasinData[i-1][j+1] == NoDataValue){ ++NDVCount; }
-        if (BasinData[i][j+1] == NoDataValue){ ++NDVCount; }
-        if (BasinData[i+1][j+1] == NoDataValue){ ++NDVCount; }
+        if (HollowData[i-1][j-1] == NoDataValue){ ++NDVCount; }
+        if (HollowData[i][j-1] == NoDataValue){ ++NDVCount; }
+        if (HollowData[i+1][j-1] == NoDataValue){ ++NDVCount; }
+        if (HollowData[i-1][j] == NoDataValue){ ++NDVCount; }
+        if (HollowData[i+1][j] == NoDataValue){ ++NDVCount; }
+        if (HollowData[i-1][j+1] == NoDataValue){ ++NDVCount; }
+        if (HollowData[i][j+1] == NoDataValue){ ++NDVCount; }
+        if (HollowData[i+1][j+1] == NoDataValue){ ++NDVCount; }
         
         if (NDVCount >= 4 && NDVCount < 8){  //increase the first value to get a simpler polygon
           //edge pixel
@@ -455,10 +445,10 @@ void LSDBasin::set_Perimeter(LSDFlowInfo& FlowInfo){
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Set the four different hillslope length measurements for the basin. 
+// Set the four different hillslope length measurements for the hollow. 
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDBasin::set_all_HillslopeLengths(LSDFlowInfo& FlowInfo, LSDRaster& HillslopeLengths, LSDRaster& Slope, LSDRaster& DinfArea, float log_bin_width, int SplineResolution, float bin_threshold){
+void LSDHollow::set_all_HillslopeLengths(LSDFlowInfo& FlowInfo, LSDRaster& HillslopeLengths, LSDRaster& Slope, LSDRaster& DinfArea, float log_bin_width, int SplineResolution, float bin_threshold){
 
   set_HillslopeLength_HFR(FlowInfo, HillslopeLengths);
   set_HillslopeLengths_Boomerang(Slope, DinfArea, FlowInfo, log_bin_width, SplineResolution, bin_threshold);
@@ -473,15 +463,15 @@ void LSDBasin::set_all_HillslopeLengths(LSDFlowInfo& FlowInfo, LSDRaster& Hillsl
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Set all of the basin parameters with one call.
+// Set all of the hollow parameters with one call.
 //
 // Runs polyfit to get the elevation derivatives, so can be quite memory intensive. Method
-// calls all the setters one by one, to populate all the basin parameters. So a
-// basin can be created and all it's properties set with 2 calls. The erosion rates have default 
+// calls all the setters one by one, to populate all the hollow parameters. So a
+// hollow can be created and all it's properties set with 2 calls. The erosion rates have default 
 // parameters of -9999 as these are rarely used variables.
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDBasin::set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& CHT, LSDIndexRaster& StreamNetwork,
+void LSDHollow::set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& CHT, LSDIndexRaster& StreamNetwork,
                                   LSDRaster& HillslopeLengths, LSDRaster& Relief, float window_radius, float log_bin_width,
                                   int SplineResolution, float bin_threshold, float CriticalSlope, float CosmoErosionRate, 
                                   float OtherErosionRate){
@@ -524,17 +514,17 @@ void LSDBasin::set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, L
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Write integer basin parameters into the shape of the basin.
+// Write integer hollow parameters into the shape of the hollow.
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-LSDIndexRaster LSDBasin::write_integer_data_to_LSDIndexRaster(int Param, LSDFlowInfo FlowInfo){
+LSDIndexRaster LSDHollow::write_integer_data_to_LSDIndexRaster(int Param, LSDFlowInfo FlowInfo){
   
   int i;
   int j; 
   Array2D<int> Output(NRows, NCols, NoDataValue);
   
-  for (int q = 0; q < int(BasinNodes.size()); ++q){
-    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+  for (int q = 0; q < int(HollowNodes.size()); ++q){
+    FlowInfo.retrieve_current_row_and_col(HollowNodes[q], i, j);
     Output[i][j] = Param;
   }
 
@@ -546,17 +536,17 @@ LSDIndexRaster LSDBasin::write_integer_data_to_LSDIndexRaster(int Param, LSDFlow
 }                                       
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Write real basin parameters into the shape of the basin.
+// Write real hollow parameters into the shape of the hollow.
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-LSDRaster LSDBasin::write_real_data_to_LSDRaster(float Param, LSDFlowInfo FlowInfo){
+LSDRaster LSDHollow::write_real_data_to_LSDRaster(float Param, LSDFlowInfo FlowInfo){
   
   int i;
   int j; 
   Array2D<float> Output(NRows, NCols, NoDataValue);
   
-  for (int q = 0; q < int(BasinNodes.size()); ++q){
-    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+  for (int q = 0; q < int(HollowNodes.size()); ++q){
+    FlowInfo.retrieve_current_row_and_col(HollowNodes[q], i, j);
     Output[i][j] = Param;
   }
 
@@ -568,17 +558,17 @@ LSDRaster LSDBasin::write_real_data_to_LSDRaster(float Param, LSDFlowInfo FlowIn
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Cookie cut data from an LSDRaster into the shape of the basin.
+// Cookie cut data from an LSDRaster into the shape of the hollow.
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-LSDRaster LSDBasin::write_raster_data_to_LSDRaster(LSDRaster Data, LSDFlowInfo FlowInfo){
+LSDRaster LSDHollow::write_raster_data_to_LSDRaster(LSDRaster Data, LSDFlowInfo FlowInfo){
   
   int i;
   int j; 
   Array2D<float> Output(NRows, NCols, NoDataValue);
   
-  for (int q = 0; q < int(BasinNodes.size()); ++q){
-    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+  for (int q = 0; q < int(HollowNodes.size()); ++q){
+    FlowInfo.retrieve_current_row_and_col(HollowNodes[q], i, j);
     Output[i][j] = Data.get_data_element(i,j);
   }
 
@@ -590,17 +580,17 @@ LSDRaster LSDBasin::write_raster_data_to_LSDRaster(LSDRaster Data, LSDFlowInfo F
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Cookie cut data from an LSDIndexRaster into the shape of the basin.
+// Cookie cut data from an LSDIndexRaster into the shape of the hollow.
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-LSDIndexRaster LSDBasin::write_raster_data_to_LSDIndexRaster(LSDIndexRaster Data, LSDFlowInfo FlowInfo){
+LSDIndexRaster LSDHollow::write_raster_data_to_LSDIndexRaster(LSDIndexRaster Data, LSDFlowInfo FlowInfo){
   
   int i;
   int j; 
   Array2D<int> Output(NRows, NCols, NoDataValue);
   
-  for (int q = 0; q < int(BasinNodes.size()); ++q){
-    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+  for (int q = 0; q < int(HollowNodes.size()); ++q){
+    FlowInfo.retrieve_current_row_and_col(HollowNodes[q], i, j);
     Output[i][j] = Data.get_data_element(i,j);
   }
 
@@ -613,12 +603,11 @@ LSDIndexRaster LSDBasin::write_raster_data_to_LSDIndexRaster(LSDIndexRaster Data
 
 
 //this is to be transplanted into the LSDHollow object when that gets written.
-float LSDBasin::Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir){
+float LSDHollow::set_Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir){
          
-  LSDIndexRaster basin = write_Junction(FlowInfo);
+  LSDIndexRaster hollow = write_Junction(FlowInfo);
   
-  Array2D<int> BasinArray = basin.get_RasterData();
-  
+  Array2D<int> HollowArray = hollow.get_RasterData();
   
   //Need to test the flowdirection averaging properly before using it.  
   
@@ -685,7 +674,7 @@ float LSDBasin::Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir){
   if (perp_angle_2 > 360) {perp_angle_2 = perp_angle_2 - 360;} 
   
        
-    while (BasinArray[i_new][j_new] != NoDataValue){
+    while (HollowArray[i_new][j_new] != NoDataValue){
       
       x2 = x1 + cos(rad(perp_angle_1)) * DataResolution;
       y2 = y1 - sin(rad(perp_angle_1)) * DataResolution;
@@ -710,7 +699,7 @@ float LSDBasin::Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir){
     x_top = i_list[i_list.size()-1];
     y_top = j_list[j_list.size()-1];
   
-    while (BasinArray[i_new][j_new] != NoDataValue){
+    while (HollowArray[i_new][j_new] != NoDataValue){
     
     
       x2 = x1 + cos(rad(perp_angle_2)) * DataResolution;
@@ -742,7 +731,7 @@ float LSDBasin::Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir){
   
   float len = sqrt( ((x_top - x_bottom) * (x_top - x_bottom)) + ((y_top - y_bottom) * (y_top - y_bottom)) );
   
-  return len;
+  Width = len;
   
   //cout << "length: " << len << endl;
   

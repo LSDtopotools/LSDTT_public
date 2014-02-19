@@ -101,6 +101,8 @@ class LSDHollow
   float get_CHTMean() const { return CHTMean; }
   /// @return Soil production rate
   float get_SoilProduction const ( return SoilProduction; )
+  // @return Hollow Width
+  float get_Width const ( return Width;)
   
   /// @brief Calculate the mean value of an LSDRaster which falls inside a hollow.
   /// @param FlowInfo Flowinfo object.
@@ -374,10 +376,9 @@ class LSDHollow
   /// @brief Calculate the width of a hollow.
   /// @param FlowInfo Flowinfo object.
   /// @param FlowDir D infinity flow directions.
-  /// @return Hollow width.
   /// @author SWDG
-  /// @date 16/12/13 
-  float Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir);
+  /// @date 19/02/14 
+  float set_Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir);
    
   protected:
   
