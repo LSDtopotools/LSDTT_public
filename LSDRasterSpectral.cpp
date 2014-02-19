@@ -104,73 +104,162 @@ using namespace JAMA;
 #ifndef LSDRasterSpectral_CPP
 #define LSDRasterSpectral_CPP
 
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Assignment operator
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDRasterSpectral& LSDRasterSpectral::operator=(const LSDRasterSpectral& rhs)
- {
+{
   if (&rhs != this)
-   {
+  {
     create(rhs.get_NRows(),rhs.get_NCols(),rhs.get_XMinimum(),rhs.get_YMinimum(),
            rhs.get_DataResolution(),rhs.get_NoDataValue(),rhs.get_RasterData());
-   }
+  }
   return *this;
- }
+}
 
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // the create function. This is default and throws an error
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDRasterSpectral::create()
 {
-	cout << "LSDRasterSpectral line 63 You need to initialize with a filename!" << endl;
-	exit(EXIT_FAILURE);
+  cout << "LSDRasterSpectral line 63 You need to initialize with a filename!" << endl;
+  exit(EXIT_FAILURE);
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// create function that creates a LSDSpectralRaster with 
+// that is square, and that has dimensions NRow, NCols = 2^raster_order
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDRasterSpectral::create(int raster_order, float cellsize, float ndv)
+{
+  // get the raster size
+  int raster_size = pow(2,raster_order);
+  cout << "You are making an LSDSpectralRaster with an size of: " << raster_size << endl;
+
+  // now set the raster properties
+  NRows = raster_size;
+  NCols = raster_size;
+  XMinimum = 0.0;
+  YMinimum = 0.0;
+  DataResolution = cellsize;
+  NoDataValue = ndv;
+  
+  Array2D<float> test_data(NRows,NCols,ndv);
+
+  RasterData = test_data.copy();
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this creates a raster using an infile
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDRasterSpectral::create(string filename, string extension)
 {
-	read_raster(filename,extension);
+  read_raster(filename,extension);
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this creates a raster filled with no data values
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDRasterSpectral::create(int nrows, int NCols, float xmin, float ymin,
             float cellsize, float ndv, Array2D<float> data)
 {
-	NRows = nrows;
-	NCols = NCols;
-	XMinimum = xmin;
-	YMinimum = ymin;
-	DataResolution = cellsize;
-	NoDataValue = ndv;
+  NRows = nrows;
+  NCols = NCols;
+  XMinimum = xmin;
+  YMinimum = ymin;
+  DataResolution = cellsize;
+  NoDataValue = ndv;
   Ly = int(pow(2,ceil(log(NRows)/log(2))));
   Lx = int(pow(2,ceil(log(NCols)/log(2))));
   
-	RasterData = data.copy();
-
-	if (RasterData.dim1() != NRows)
-	{
-		cout << "dimension of data is not the same as stated in NRows!" << endl;
-		exit(EXIT_FAILURE);
-	}
-	if (RasterData.dim2() != NCols)
-	{
-		cout << "dimension of data is not the same as stated in NRows!" << endl;
-		exit(EXIT_FAILURE);
-	}
+  RasterData = data.copy();
+  
+  if (RasterData.dim1() != NRows)
+  {
+    cout << "dimension of data is not the same as stated in NRows!" << endl;
+    exit(EXIT_FAILURE);
+  }
+  if (RasterData.dim2() != NCols)
+  {
+    cout << "dimension of data is not the same as stated in NRows!" << endl;
+    exit(EXIT_FAILURE);
+  }
 
 }
 
+// this function creates an LSDSpectralRaster from an LSDRaster
 void LSDRasterSpectral::create(LSDRaster& An_LSDRaster)
 {
-	NRows = An_LSDRaster.get_NRows();
-	NCols = An_LSDRaster.get_NCols();
-	XMinimum = An_LSDRaster.get_XMinimum();
-	YMinimum = An_LSDRaster.get_YMinimum();
-	DataResolution = An_LSDRaster.get_DataResolution();
-	NoDataValue = An_LSDRaster.get_NoDataValue();
+  NRows = An_LSDRaster.get_NRows();
+  NCols = An_LSDRaster.get_NCols();
+  XMinimum = An_LSDRaster.get_XMinimum();
+  YMinimum = An_LSDRaster.get_YMinimum();
+  DataResolution = An_LSDRaster.get_DataResolution();
+  NoDataValue = An_LSDRaster.get_NoDataValue();
   Ly = int(pow(2,ceil(log(NRows)/log(2))));
   Lx = int(pow(2,ceil(log(NCols)/log(2))));
   
-	RasterData = An_LSDRaster.get_RasterData();
+  RasterData = An_LSDRaster.get_RasterData();
 
 }
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Fourier Helper functions
+// These function don't really use the data stored within the object
+// but are useful in Fourier analysis so are located here as member functions
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This function returns the frequencies in the direction of the rows
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+vector<float> LSDRasterSpectral::get_row_direction_frequencies_unshifted()
+{
+  vector<float> freq_values(NRows);
+
+  // now get the frequencies based on the cellsize.
+  int lastrow = 0;
+  for(int row = 0; row<=(NRows-1)/2; row++)
+  {
+    freq_values[row] = float(row)*DataResolution/(float(NRows));
+    //cout << "Row: " << row << endl;
+    lastrow = row;
+  }
+  for(int row = (NRows)/2; row > 0; row--)
+  {
+    lastrow++;
+    freq_values[lastrow] = -float(row)*DataResolution/(float(NRows));
+    //cout << "Row is: " << lastrow << "and selection is: " << -row << endl;
+  }
+
+  return freq_values;
+}
+  
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This function returns the frequencies in the direction of the cols
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+vector<float> LSDRasterSpectral::get_col_direction_frequencies_unshifted()
+{
+  vector<float> freq_values(NCols);
+
+  // now get the frequencies based on the cellsize.
+  int lastcol = 0;
+  for(int col = 0; col<=(NCols-1)/2; col++)
+  {
+    freq_values[col] = float(col)*DataResolution/(float(NCols));
+    //cout << "Col: " << col << endl;
+    lastcol = col;
+  }
+  for(int col = (NCols)/2; col > 0; col--)
+  {
+    lastcol++;
+    freq_values[lastcol] = -float(col)*DataResolution/(float(NCols));
+    //cout << "Col is: " << lastcol << "and selection is: " << -col << endl;
+  }
+
+  return freq_values;
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -198,14 +287,17 @@ void LSDRasterSpectral::create(LSDRaster& An_LSDRaster)
 //    - InputArray = zeta_padded (padded DEM)
 //    - transform_direction = -1
 //    - OutputArray = 2D spectrum
-void LSDRasterSpectral::dfftw2D_fwd(Array2D<float>& InputArray, Array2D<float>& OutputArrayReal, Array2D<float>& OutputArrayImaginary, int transform_direction)
+void LSDRasterSpectral::dfftw2D_fwd(Array2D<float>& InputArray, Array2D<float>& OutputArrayReal,
+                                  Array2D<float>& OutputArrayImaginary, int transform_direction)
 {
-//  cout << Ly << " " << Lx << endl;
+  //  cout << Ly << " " << Lx << endl;
   fftw_complex *input,*output;
   fftw_plan plan;
+
   // Declare one_dimensional contiguous arrays of dimension Ly*Lx
   input = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*Ly*Lx);
   output = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*Ly*Lx);
+
   // SET UP PLAN
   // -forwards, transform_direction==-1, -inverse, transform_direction==1
   if (transform_direction==-1)
@@ -218,6 +310,7 @@ void LSDRasterSpectral::dfftw2D_fwd(Array2D<float>& InputArray, Array2D<float>& 
     cout << "\nFATAL ERROR: for the tranform direction\n\t -1 = FORWARD \n\t" << endl;
 		exit(EXIT_FAILURE);
   }
+
   // LOAD DATA INTO COMPLEX ARRAY FOR FFT IN ROW MAJOR ORDER
   for (int i=0;i<Ly;++i)
   {
@@ -226,8 +319,10 @@ void LSDRasterSpectral::dfftw2D_fwd(Array2D<float>& InputArray, Array2D<float>& 
       input[Lx*i+j][0] = InputArray[i][j];
     }
   }
+
   // EXECUTE PLAN
   fftw_execute(plan);
+
   // RETRIEVE OUTPUT - since data is real, we only need to extract real part of
   // the output.
   for (int i=0;i<Ly;++i)
@@ -238,6 +333,7 @@ void LSDRasterSpectral::dfftw2D_fwd(Array2D<float>& InputArray, Array2D<float>& 
       OutputArrayImaginary[i][j] = output[Lx*i+j][1];
     }
   }
+
   // DEALLOCATE PLAN AND ARRAYS
   fftw_destroy_plan(plan);
   fftw_free(input);
@@ -249,24 +345,30 @@ void LSDRasterSpectral::dfftw2D_fwd(Array2D<float>& InputArray, Array2D<float>& 
 //    - InputArrays = Real and Imaginary components of 2D spectrum
 //    - transform_direction = 1
 //    - OutputArray = reconstructed DEM
-void LSDRasterSpectral::dfftw2D_inv(Array2D<float>& InputArrayReal, Array2D<float>& InputArrayImaginary, Array2D<float>& OutputArray, int transform_direction)
+void LSDRasterSpectral::dfftw2D_inv(Array2D<float>& InputArrayReal,
+                          Array2D<float>& InputArrayImaginary, 
+                          Array2D<float>& OutputArray, int transform_direction)
 {
   fftw_complex *input,*output;
   fftw_plan plan;
+  
   // Declare one_dimensional contiguous arrays of dimension Ly*Lx
   input = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*Ly*Lx);
   output = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*Ly*Lx);
+  
   // SET UP PLAN
   // -forwards => transform_direction==-1, -inverse => transform_direction==1
   if (transform_direction==1)
   {
-  cout << "  Running 2D discrete INVERSE fast fourier transform..." << endl;
-  plan = fftw_plan_dft_2d(Ly,Lx,input,output,transform_direction,FFTW_MEASURE);
+    cout << "  Running 2D discrete INVERSE fast fourier transform..." << endl;
+    plan = fftw_plan_dft_2d(Ly,Lx,input,output,transform_direction,FFTW_MEASURE);
   }
-  else {
+  else 
+  {
     cout << "\nFATAL ERROR: for the tranform direction\n\t 1 = INVERSE \n\t" << endl;
 		exit(EXIT_FAILURE);
   }
+  
   // LOAD DATA INTO COMPLEX ARRAY FOR FFT IN ROW MAJOR ORDER
   for (int i=0;i<Ly;++i)
   {
@@ -276,8 +378,10 @@ void LSDRasterSpectral::dfftw2D_inv(Array2D<float>& InputArrayReal, Array2D<floa
       input[Lx*i+j][1] = InputArrayImaginary[i][j];
     }
   }
+  
   // EXECUTE PLAN
   fftw_execute(plan);
+  
   // RETRIEVE OUTPUT ARRAY
   for (int i=0;i<Ly;++i)
   {
@@ -286,11 +390,14 @@ void LSDRasterSpectral::dfftw2D_inv(Array2D<float>& InputArrayReal, Array2D<floa
       OutputArray[i][j] = output[Lx*i+j][0];
     }
   }
+  
   // DEALLOCATE PLAN AND ARRAYS
   fftw_destroy_plan(plan);
   fftw_free(input);
   fftw_free(output);
 }
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // DETREND DATA MODULE
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -312,45 +419,49 @@ void LSDRasterSpectral::detrend2D(Array2D<float>& zeta, Array2D<float>& zeta_det
 	Array1D<float> coeffs(3);
 
   for (int i=0; i<NRows; ++i)
-	{
+  {
     for (int j=0; j<NCols; ++j)
-		{
-			if(zeta[i][j] != NoDataValue)
-			{
+    {
+      if(zeta[i][j] != NoDataValue)
+      {
         float x = j;
-			  float y = i;
+	float y = i;
         // Generate matrix A
-			  A[0][0] += pow(x,2);
-			  A[0][1] += x*y;
-			  A[0][2] += x;
-			  A[1][0] += y*x;
-			  A[1][1] += pow(y,2);
-			  A[1][2] += y;
-			  A[2][0] += x;
-			  A[2][1] += y;
-			  A[2][2] += 1;
-			  // Generate vector bb
-			  bb[0] += zeta[i][j]*x;
-			  bb[1] += zeta[i][j]*y;
-			  bb[2] += zeta[i][j];
-			}
-		}
-	}
+	A[0][0] += pow(x,2);
+	A[0][1] += x*y;
+	A[0][2] += x;
+	A[1][0] += y*x;
+	A[1][1] += pow(y,2);
+	A[1][2] += y;
+	A[2][0] += x;
+	A[2][1] += y;
+	A[2][2] += 1;
+	
+        // Generate vector bb
+	bb[0] += zeta[i][j]*x;
+	bb[1] += zeta[i][j]*y;
+	bb[2] += zeta[i][j];
+      }
+    }
+  }
+  
   // Solve matrix equations using LU decomposition using the TNT JAMA package:
-	// A.coefs = b, where coefs is the coefficients vector.
-	LU<float> sol_A(A);  // Create LU object
-	coeffs = sol_A.solve(bb);
-	float a_plane = coeffs[0];
-	float b_plane = coeffs[1];
-	float c_plane = coeffs[2];
-	// Create detrended surface
+  // A.coefs = b, where coefs is the coefficients vector.
+  LU<float> sol_A(A);  // Create LU object
+  coeffs = sol_A.solve(bb);
+  float a_plane = coeffs[0];
+  float b_plane = coeffs[1];
+  float c_plane = coeffs[2];
+
+  // Create detrended surface
   for (int i=0; i<NRows; ++i)
-	{
+  {
     for (int j=0; j<NCols; ++j)
-		{
+    {
       float x = j;
-			float y = i;
+      float y = i;
       trend_plane[i][j] = a_plane*x + b_plane*y + c_plane;
+      
       if(zeta[i][j] != NoDataValue)
       {
         zeta_detrend[i][j] = zeta[i][j] - trend_plane[i][j];
@@ -362,6 +473,7 @@ void LSDRasterSpectral::detrend2D(Array2D<float>& zeta, Array2D<float>& zeta_det
     }
   }
 }
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // HANN WINDOW MODULE
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
