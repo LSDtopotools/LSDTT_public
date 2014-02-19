@@ -30,15 +30,15 @@
 #include <iomanip>
 #include <math.h>
 #include <string.h>
-#include "LSDStatsTools.hpp"
-#include "LSDRaster.hpp"
-#include "LSDIndexRaster.hpp"
-#include "LSDFlowInfo.hpp"
-#include "LSDRasterSpectral.hpp"
-#include "LSDJunctionNetwork.hpp"
-#include "fftw-3.3.1/api/fftw3.h"
-#include "TNT/jama_lu.h"
-#include "TNT/tnt.h"
+#include "../LSDStatsTools.hpp"
+#include "../LSDRaster.hpp"
+#include "../LSDIndexRaster.hpp"
+#include "../LSDFlowInfo.hpp"
+#include "../LSDRasterSpectral.hpp"
+#include "../LSDJunctionNetwork.hpp"
+#include "../fftw-3.3.1/api/fftw3.h"
+#include "../TNT/jama_lu.h"
+#include "../TNT/tnt.h"
 
 int main ()
 {
