@@ -99,6 +99,8 @@ class LSDHollow
   vector<int> get_Perimeter_j() const { return Perimeter_j; }
   /// @return Mean hilltop curvature.
   float get_CHTMean() const { return CHTMean; }
+  /// @return Soil production rate
+  float get_SoilProduction const ( return SoilProduction; )
   
   /// @brief Calculate the mean value of an LSDRaster which falls inside a hollow.
   /// @param FlowInfo Flowinfo object.
@@ -200,6 +202,18 @@ class LSDHollow
   /// @author SWDG
   /// @date 12/12/13
   void set_Perimeter(LSDFlowInfo& FlowInfo);
+  
+  /// @brief Set the Soil production rate.
+  /// @param SoilProdRate Soil production rate - No sanity check on this value.
+  /// @author SWDG
+  /// @date 19/02/14
+  void set_SoilProduction(float SoilProdRate) { SoilProduction = SoilProdRate; }
+  
+  /// @brief Set the basal age.
+  /// @param BasalAge Basal age - No sanity check on this value.
+  /// @author SWDG
+  /// @date 19/02/14
+  void set_BasalAge(float basal_age) { BasalAge = basal_age; }
   
   /// @brief Set all of the hollow parameters with one call.
   ///
@@ -429,7 +443,11 @@ class LSDHollow
   vector<int> Perimeter_j;
   /// Mean hollow hilltop curvature.
   float CHTMean;
- 											
+  /// Soil production rate.
+  float SoilProduction;
+  /// Basal age of hollow.
+  float BasalAge;
+  
   private:
 	void create(int Junction, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChanNet);
 
