@@ -146,6 +146,28 @@ class LSDRasterSpectral: public LSDRaster
     /// @date 19/02/2014
     vector<float> get_col_direction_frequencies_unshifted(); 
 
+    /// @brief This calucaltes a scaling array for scaling an unshifted DFT
+    /// by the factor 1/f^beta.
+    /// @param beta the fractal exponent
+    /// @return a float array with the scaling factor 1/f^beta
+    /// @author SMM
+    /// @date 19/02/2014
+    Array2D<float> get_frequency_scaling_array(float beta);
+
+    /// @brief This creates a fractal surface using the spectral method.
+    /// @details The method works as follows:\n
+    ///  1) Generate a random surface.\n
+    ///  2) Perform DFT on this random surface.\n
+    ///  3) Scale the tranform (both real and imaginary parts) by 1/f^beta.\n
+    ///  4) Perform the inverse DFT.\n 
+    ///
+    ///  This results in a pseudo fractal surface that can be used in comarison 
+    ///  with real topography.
+    /// @param beta value which is the scaling exponent
+    /// @author SMM
+    /// @date 20/02/2014
+    void generate_fractal_surface_spectral_method(float beta);
+
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     // FAST FOURIER TRANSFORM MODULE
     //------------------------------------------------------------------------------
@@ -164,7 +186,7 @@ class LSDRasterSpectral: public LSDRaster
     /// @param InputArrayReal = Real component of 2D spectrum.
     /// @param InputArrayImaginary = Imaginary component of 2D spectrum.
     /// @param OutputArray = reconstructed DEM.
-    /// @param transform_direction = -1.
+    /// @param transform_direction = 1.
     /// @author David Milodowski
     /// @date 18/12/2012
     void dfftw2D_inv(Array2D<float>& InputArrayReal, Array2D<float>& InputArrayImaginary,

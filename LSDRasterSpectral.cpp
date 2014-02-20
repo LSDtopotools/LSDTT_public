@@ -143,6 +143,11 @@ void LSDRasterSpectral::create(int raster_order, float cellsize, float ndv)
   YMinimum = 0.0;
   DataResolution = cellsize;
   NoDataValue = ndv;
+  Ly = int(pow(2,ceil(log(NRows)/log(2))));
+  Lx = int(pow(2,ceil(log(NCols)/log(2))));
+
+  cout << "Created square raster with NRows = " << NRows << " and Ly: " << Ly << endl;
+  cout << "NCols: " << NCols << " and Lx: " << Lx << endl;
   
   Array2D<float> test_data(NRows,NCols,ndv);
 
@@ -260,6 +265,97 @@ vector<float> LSDRasterSpectral::get_col_direction_frequencies_unshifted()
   return freq_values;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function returns an array2d that contains entries scaled by 1/f^beta where
+// beta is the fractal scaling
+// This is used in generation of psuedo-fractal surfaces using the 
+// Fourier synthesis method of fractal generation
+// (e.g., http://bringerp.free.fr/Files/Captain%20Blood/Saupe87d.pdf p.105
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+Array2D<float> LSDRasterSpectral::get_frequency_scaling_array(float beta)
+{
+  Array2D<float> freq_scaling_array(NRows,NCols);
+  float radial_freq;
+  
+  // get the frequencies
+  vector<float> row_freqs = get_row_direction_frequencies_unshifted();
+  vector<float> col_freqs = get_col_direction_frequencies_unshifted();
+  
+  // get the frequency scaling
+  for(int row = 0; row<NRows; row++)
+  {
+    for (int col = 0; col<NCols; col++)
+    {
+      radial_freq = sqrt( row_freqs[row]*row_freqs[row]+col_freqs[col]*col_freqs[col]);
+      
+      if (radial_freq == 0)
+      {
+        freq_scaling_array[row][col] = 0;
+      }
+      else
+      {
+        freq_scaling_array[row][col] = 1/pow(radial_freq,beta);
+      }
+    }
+  }
+
+  return freq_scaling_array;
+}
+      
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// This creates a fractal surface using the spectral method
+// The method works as follows:
+//  1) Generate a random surface
+//  2) Perform DFT on this random surface
+//  3) Scale the tranform (both real and imaginary parts) by 1/f^beta
+//  4) Perform the inverse DFT. 
+//
+//  This results in a pseudo fractal surface that can be used in comarison 
+//  with real topography
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDRasterSpectral::generate_fractal_surface_spectral_method(float beta)
+{
+  // first generate a random field
+  float range = 1.0;
+  rewrite_with_random_values(range);
+
+  // now get the frequency scaling
+  Array2D<float> freq_scaling = get_frequency_scaling_array(beta);
+  
+  // now get the real and imaginary DFT arrays
+  // first set up the input and output arrays
+  Array2D<float> InputArray = RasterData.copy();
+  Array2D<float> OutputArrayReal = RasterData.copy();
+  Array2D<float> OutputArrayImaginary = RasterData.copy();
+  int transform_direction = -1;   // this means it will be a forward transform
+
+  // perform the fourier annalysis
+  dfftw2D_fwd(InputArray, OutputArrayReal, OutputArrayImaginary,transform_direction);
+  cout << "Performed DFT! " << endl;
+
+  // now scale the DFT. We replace values in the output arrays
+  for(int row = 0; row<NRows; row++)
+  {
+    for (int col = 0; col<NCols; col++)
+    {
+      OutputArrayReal[row][col] = OutputArrayReal[row][col]*freq_scaling[row][col];
+      OutputArrayImaginary[row][col] = OutputArrayImaginary[row][col]*freq_scaling[row][col];   
+    }
+  } 
+
+  // now perform the inverse transform
+  // this overwrites the InputArray
+  transform_direction = 1;
+  dfftw2D_inv(OutputArrayReal, OutputArrayImaginary,
+  	              InputArray, transform_direction);
+
+  RasterData = InputArray;
+}
+  
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
