@@ -41,14 +41,9 @@ void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNetw
   LSDIndexChannel StreamLinkVector = LSDIndexChannel(Junction, JunctionVector[Junction],
                                                      ReceiverVector[Junction], JunctionVector[ReceiverVector[Junction]], FlowInfo);
 
-  
-
   int n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
   int basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
-  //int basin_outlet = StreamLinkVector.get_node_in_channel(0); // get hollow
   BasinNodes = FlowInfo.get_upslope_nodes(basin_outlet);
-  
-
                                                                                      
   NumberOfCells = int(BasinNodes.size());
   Area = NumberOfCells * (DataResolution*DataResolution);
@@ -777,147 +772,6 @@ LSDIndexRaster LSDBasin::write_raster_data_to_LSDIndexRaster(LSDIndexRaster Data
 
   return OutputRaster;
 
-}
-
-
-//this is to be transplanted into the LSDHollow object when that gets written.
-float LSDBasin::Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir){
-         
-  LSDIndexRaster basin = write_Junction(FlowInfo);
-  
-  Array2D<int> BasinArray = basin.get_RasterData();
-  
-  
-  //Need to test the flowdirection averaging properly before using it.  
-  
-  /* 
-  float x_component = 0;
-  float y_component = 0;
-  float angle_r = 0;
-  int ndv_count = 0;
-  
-  int dX[] = {0, 1, 1, 1, 0, -1, -1, -1, 0};
-  int dY[] = {0, -1, 0, 1, 1, 1, 0, -1, -1};
-  
-  for (int a = 0; a < 9; ++a){
-  
-  if (FlowDir[Centroid_i + dX[a]][Centroid_j + dY[a]] != -1){
-    
-    angle_r = rad(FlowDir[Centroid_i + dX[a]][Centroid_j + dY[a]]);
-    x_component += cos(angle_r);
-    y_component += sin(angle_r);
-   
-  }
-  else {++ndv_count;}
-  }  
-  
-    
-  x_component = x_component / (9 - ndv_count);
-  y_component = x_component / (9 - ndv_count);
-  float avg_r = atan2(y_component, x_component);
-  
-  float centre_flowdir = deg(avg_r);
-  
-  */
-  
- 
-  float centre_flowdir = FlowDir[Centroid_i][Centroid_j];
-
-  //cout << centre_flowdir << " : " << FlowDir[Centroid_i][Centroid_j] << endl;
-  
-  float x2;
-  float y2;
-  vector<int> i_list;
-  vector<int> j_list;
-  
-  int i_new = Centroid_i;
-  int j_new = Centroid_j;
-  
-  i_list.push_back(i_new);
-  j_list.push_back(j_new);
-  
-  float x1 = i_new + 0.5;
-  float y1 = j_new - 0.5;
-   
-  int x_top = 0;
-  int y_top = 0;
-  
-
-  
-  //get perpendicular flowdirs
-  float perp_angle_1 = centre_flowdir - 90;
-  float perp_angle_2 = centre_flowdir + 90;
-  
-  if (perp_angle_1 < 0) {perp_angle_1 = perp_angle_1 + 360;}
-   
-  if (perp_angle_2 > 360) {perp_angle_2 = perp_angle_2 - 360;} 
-  
-       
-    while (BasinArray[i_new][j_new] != NoDataValue){
-      
-      x2 = x1 + cos(rad(perp_angle_1)) * DataResolution;
-      y2 = y1 - sin(rad(perp_angle_1)) * DataResolution;
-        
-      i_new = trunc(x2);
-      j_new = ceil(y2);  
-        
-      i_list.push_back(i_new);
-      j_list.push_back(j_new);
-        
-      x1 = x2;
-      y1 = y2;
-
-    }
-     
-    i_new = Centroid_i;
-    j_new = Centroid_j;
-  
-    x1 = i_new + 0.5;
-    y1 = j_new - 0.5;
-    
-    x_top = i_list[i_list.size()-1];
-    y_top = j_list[j_list.size()-1];
-  
-    while (BasinArray[i_new][j_new] != NoDataValue){
-    
-    
-      x2 = x1 + cos(rad(perp_angle_2)) * DataResolution;
-      y2 = y1 - sin(rad(perp_angle_2)) * DataResolution;
-    
-      i_new = trunc(x2);
-      j_new = ceil(y2);  
-      
-      i_list.push_back(i_new);
-      j_list.push_back(j_new);
-      
-      x1 = x2;
-      y1 = y2;
-
-    }
-  
-
-  Array2D<int> out(NRows, NCols, NoDataValue);
-
-  for (int q = 0; q < int(i_list.size()); ++q){
-    out[i_list[q]][j_list[q]] = 1;
-  
-  }
-  
-  int x_bottom = i_list[i_list.size()-1];
-  int y_bottom = j_list[j_list.size()-1];
-  
- 
-  
-  float len = sqrt( ((x_top - x_bottom) * (x_top - x_bottom)) + ((y_top - y_bottom) * (y_top - y_bottom)) );
-  
-  return len;
-  
-  //cout << "length: " << len << endl;
-  
-  //LSDIndexRaster OutputRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, out);
-
-  //OutputRaster.write_raster("wid","flt"); 
-  
 }
 
 #endif

@@ -587,14 +587,6 @@ class LSDBasin
   /// @author SWDG
   /// @date 12/12/13 
   LSDRaster write_RStar(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(RStar, FlowInfo); }
-  
-  /// @brief Calculate the width of a hollow - to be moved into LSDHollow.
-  /// @param FlowInfo Flowinfo object.
-  /// @param FlowDir D infinity flow directions.
-  /// @return Basin width.
-  /// @author SWDG
-  /// @date 16/12/13 
-  float Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir);
    
   protected:
   
