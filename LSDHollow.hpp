@@ -99,9 +99,9 @@ class LSDHollow
   vector<int> get_Perimeter_j() const { return Perimeter_j; }
   /// @return Mean hilltop curvature.
   float get_CHTMean() const { return CHTMean; }
-  /// @return Soil production rate
+  /// @return Soil production rate.
   float get_SoilProduction const ( return SoilProduction; )
-  // @return Hollow Width
+  /// @return Hollow Width.
   float get_Width const ( return Width;)
   
   /// @brief Calculate the mean value of an LSDRaster which falls inside a hollow.
@@ -119,6 +119,22 @@ class LSDHollow
   /// @author SWDG
   /// @date 14/2/14
   float CalculateHollowMax(LSDFlowInfo& FlowInfo, LSDRaster Data);
+  
+  /// @brief Return the LSDRaster data from within a hollow as an array.
+  /// @param FlowInfo Flowinfo object.
+  /// @param Data Values to extract.
+  /// @return Array of values.
+  /// @author SWDG
+  /// @date 20/2/14  
+  Array2D<float> get_Raster_Data_For_Hollow(LSDFlowInfo& FlowInfo, LSDRaster Data);
+
+  /// @brief Return the LSDIndexRaster data from within a hollow as an array.
+  /// @param FlowInfo Flowinfo object.
+  /// @param Data Values to extract.
+  /// @return Array of values.
+  /// @author SWDG
+  /// @date 20/2/14  
+  Array2D<int> get_Raster_Data_For_Hollow(LSDFlowInfo& FlowInfo, LSDIndexRaster Data);
   
   /// @brief Set the mean slope of a hollow.
   /// @param FlowInfo Flowinfo object.
@@ -372,6 +388,13 @@ class LSDHollow
   /// @author SWDG
   /// @date 14/2/14
   LSDRaster write_CHTMean(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(CHTMean, FlowInfo); }
+
+  /// @brief Write Width values into the shape of the hollow.
+  /// @param FlowInfo Flowinfo object.
+  /// @return LSDRaster of Width values in the shape of the hollow.
+  /// @author SWDG
+  /// @date 20/2/14
+  LSDRaster write_Width(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(Width, FlowInfo); }
     
   /// @brief Calculate the width of a hollow.
   /// @param FlowInfo Flowinfo object.

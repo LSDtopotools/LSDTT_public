@@ -161,6 +161,55 @@ float LSDHollow::CalculateHollowMax(LSDFlowInfo& FlowInfo, LSDRaster Data){
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Get the raster data passed out as an array of floats in the shape of the hollow.
+// SWDG 20/2/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+Array2D<float> get_Raster_Data_For_Hollow(LSDFlowInfo& FlowInfo, LSDRaster Data){
+
+  int i;
+  int j;
+  Array2D<float> HollowData(NRows, NCols, NoDataValue);
+
+  for (int q = 0; q < int(HollowNodes.size()); ++q){
+    
+    FlowInfo.retrieve_current_row_and_col(HollowNodes[q], i, j);
+    
+    //exclude NDV 
+    if (Data.get_data_element(i,j) != NoDataValue){
+      HollowData[i][j](Data.get_data_element(i,j));
+    }
+  }
+
+  return HollowData;
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Get the raster data passed out as an array of integers in the shape of the hollow.
+// SWDG 20/2/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+Array2D<int> get_Raster_Data_For_Hollow(LSDFlowInfo& FlowInfo, LSDIndexRaster Data){
+
+  int i;
+  int j;
+  Array2D<int> HollowData(NRows, NCols, NoDataValue);
+
+  for (int q = 0; q < int(HollowNodes.size()); ++q){
+    
+    FlowInfo.retrieve_current_row_and_col(HollowNodes[q], i, j);
+    
+    //exclude NDV 
+    if (Data.get_data_element(i,j) != NoDataValue){
+      HollowData[i][j](Data.get_data_element(i,j));
+    }
+  }
+
+  return HollowData;
+  
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Set the mean hollow aspect. Does not use the normal hollow mean method as angles
 // need to be handled differently. 
 // SWDG 19/2/14
