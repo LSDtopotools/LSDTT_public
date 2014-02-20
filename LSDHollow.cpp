@@ -164,7 +164,7 @@ float LSDHollow::CalculateHollowMax(LSDFlowInfo& FlowInfo, LSDRaster Data){
 // Get the raster data passed out as an array of floats in the shape of the hollow.
 // SWDG 20/2/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-Array2D<float> get_Raster_Data_For_Hollow(LSDFlowInfo& FlowInfo, LSDRaster Data){
+Array2D<float> LSDHollow::get_Raster_Data_For_Hollow(LSDFlowInfo& FlowInfo, LSDRaster Data){
 
   int i;
   int j;
@@ -176,7 +176,7 @@ Array2D<float> get_Raster_Data_For_Hollow(LSDFlowInfo& FlowInfo, LSDRaster Data)
     
     //exclude NDV 
     if (Data.get_data_element(i,j) != NoDataValue){
-      HollowData[i][j](Data.get_data_element(i,j));
+      HollowData[i][j] = Data.get_data_element(i,j);
     }
   }
 
@@ -188,7 +188,7 @@ Array2D<float> get_Raster_Data_For_Hollow(LSDFlowInfo& FlowInfo, LSDRaster Data)
 // Get the raster data passed out as an array of integers in the shape of the hollow.
 // SWDG 20/2/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-Array2D<int> get_Raster_Data_For_Hollow(LSDFlowInfo& FlowInfo, LSDIndexRaster Data){
+Array2D<int> LSDHollow::get_Raster_Data_For_Hollow(LSDFlowInfo& FlowInfo, LSDIndexRaster Data){
 
   int i;
   int j;
@@ -200,7 +200,7 @@ Array2D<int> get_Raster_Data_For_Hollow(LSDFlowInfo& FlowInfo, LSDIndexRaster Da
     
     //exclude NDV 
     if (Data.get_data_element(i,j) != NoDataValue){
-      HollowData[i][j](Data.get_data_element(i,j));
+      HollowData[i][j] = Data.get_data_element(i,j);
     }
   }
 
@@ -311,7 +311,7 @@ void LSDHollow::set_Perimeter(LSDFlowInfo& FlowInfo){
 // parameters of -9999 as these are rarely used variables.
 // SWDG 19/2/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDHollow::set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& CHT, LSDIndexRaster& StreamNetwork,
+/*void LSDHollow::set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& CHT, LSDIndexRaster& StreamNetwork,
                                   LSDRaster& HillslopeLengths, LSDRaster& Relief, float window_radius, float log_bin_width,
                                   int SplineResolution, float bin_threshold, float CriticalSlope, float CosmoErosionRate, 
                                   float OtherErosionRate){
@@ -351,7 +351,7 @@ void LSDHollow::set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, 
   set_CosmoErosionRate(CosmoErosionRate);
   set_OtherErosionRate(OtherErosionRate);
 
-}
+} */
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Write integer hollow parameters into the shape of the hollow.
@@ -443,7 +443,7 @@ LSDIndexRaster LSDHollow::write_raster_data_to_LSDIndexRaster(LSDIndexRaster Dat
 
 
 //NEEDS DOCUMENTED
-float LSDHollow::set_Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir){
+void LSDHollow::set_Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir){
          
   LSDIndexRaster hollow = write_Junction(FlowInfo);
   

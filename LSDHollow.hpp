@@ -100,9 +100,11 @@ class LSDHollow
   /// @return Mean hilltop curvature.
   float get_CHTMean() const { return CHTMean; }
   /// @return Soil production rate.
-  float get_SoilProduction const ( return SoilProduction; )
+  float get_SoilProduction() const { return SoilProduction; }
+  /// @return Basal age of hollow.
+  float get_BasalAge() const { return BasalAge; }
   /// @return Hollow Width.
-  float get_Width const ( return Width;)
+  float get_Width() const { return Width; }
   
   /// @brief Calculate the mean value of an LSDRaster which falls inside a hollow.
   /// @param FlowInfo Flowinfo object.
@@ -233,6 +235,8 @@ class LSDHollow
   /// @date 19/02/14
   void set_BasalAge(float basal_age) { BasalAge = basal_age; }
   
+  
+  /*
   /// @brief Set all of the hollow parameters with one call.
   ///
   /// @details Runs polyfit to get the elevation derivatives, so can be quite memory intensive. Method
@@ -258,7 +262,7 @@ class LSDHollow
                           LSDRaster& HillslopeLengths, LSDRaster& Relief, float window_radius, float log_bin_width, 
                           int SplineResolution, float bin_threshold, float CriticalSlope, 
                           float CosmoErosionRate = -9999, float OtherErosionRate = -9999);        //THIS NEEDS UPDATED FOR HOLLOW PARAMETERS
-
+  */
   /// @brief Cookie cut data from an LSDIndexRaster into the shape of the hollow.
   /// @param Data LSDIndexRaster data to be written.
   /// @param FlowInfo Flowinfo object.
@@ -401,7 +405,7 @@ class LSDHollow
   /// @param FlowDir D infinity flow directions.
   /// @author SWDG
   /// @date 19/02/14 
-  float set_Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir);
+  void set_Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir);
    
   protected:
   
@@ -471,6 +475,8 @@ class LSDHollow
   float SoilProduction;
   /// Basal age of hollow.
   float BasalAge;
+  ///Hollow width
+  float Width;
   
   private:
 	void create(int Junction, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChanNet);
