@@ -240,33 +240,26 @@ class LSDHollow
   void set_BasalAge(float basal_age) { BasalAge = basal_age; }
   
   
-  /*
+  
   /// @brief Set all of the hollow parameters with one call.
   ///
   /// @details Runs polyfit to get the elevation derivatives, so can be quite memory intensive. Method
   /// calls all the setters one by one, to populate all the hollow parameters. So a
-  /// hollow can be created and all it's properties set with 2 calls. The erosion rates have default 
+  /// hollow can be created and all it's properties set with 2 calls. The BasalAge and SoilProduction have default 
   /// parameters of -9999 as these are rarely used variables.
   /// @param Elevation LSDRaster of filled elevation values.
   /// @param FlowInfo Flowinfo object.
   /// @param CHT LSDRaster of hilltop curvatures.
-  /// @param StreamNetwork LSDIndexRaster of the stream network.
-  /// @param HillslopeLengths LSDRaster of hillslope lengths from the hilltop flow routing method.
   /// @param Relief LSDRaster of the hilltop relief.
   /// @param window_radius Radius in spatial units for the polyft routine.
-  /// @param log_bin_width Width (in log space) of the bins, with respect to D_inf. Default value is 0.1.
-  /// @param SplineResolution Number of values between each point for the spline curve. Default value is 10000.
-  /// @param bin_threshold Threshold fraction of values needed to keep a bin. Default value is 0.
-  /// @param CriticalSlope Slope threshold used for E* R* calculations. Default value is 0.4.
-  /// @param CosmoErosionRate Erosion rate from cosmo.
-  /// @param OtherErosionRate Erosion rate from another source.
+  /// @param SoilProduction Soil production rate.
+  /// @param BasalAge Basal age of the hollow.
   /// @author SWDG
-  /// @date 19/2/14
-  void set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& CHT, LSDIndexRaster& StreamNetwork,
-                          LSDRaster& HillslopeLengths, LSDRaster& Relief, float window_radius, float log_bin_width, 
-                          int SplineResolution, float bin_threshold, float CriticalSlope, 
-                          float CosmoErosionRate = -9999, float OtherErosionRate = -9999);        //THIS NEEDS UPDATED FOR HOLLOW PARAMETERS
-  */
+  /// @date 20/2/14
+void set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& CHT,
+                                  LSDRaster& Relief, float window_radius,
+                                  float SoilProduction = -9999, float BasalAge = -9999);
+    
   /// @brief Cookie cut data from an LSDIndexRaster into the shape of the hollow.
   /// @param Data LSDIndexRaster data to be written.
   /// @param FlowInfo Flowinfo object.

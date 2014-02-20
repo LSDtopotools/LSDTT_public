@@ -307,14 +307,13 @@ void LSDHollow::set_Perimeter(LSDFlowInfo& FlowInfo){
 //
 // Runs polyfit to get the elevation derivatives, so can be quite memory intensive. Method
 // calls all the setters one by one, to populate all the hollow parameters. So a
-// hollow can be created and all it's properties set with 2 calls. The erosion rates have default 
-// parameters of -9999 as these are rarely used variables.
-// SWDG 19/2/14
+// hollow can be created and all it's properties set with 2 calls. The BasalAge and SoilProduction
+// have default parameters of -9999 as these are rarely used variables.
+// SWDG 20/2/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-/*void LSDHollow::set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& CHT, LSDIndexRaster& StreamNetwork,
-                                  LSDRaster& HillslopeLengths, LSDRaster& Relief, float window_radius, float log_bin_width,
-                                  int SplineResolution, float bin_threshold, float CriticalSlope, float CosmoErosionRate, 
-                                  float OtherErosionRate){
+void LSDHollow::set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& CHT,
+                                  LSDRaster& Relief, float window_radius,
+                                  float SoilProduction, float BasalAge){
 
   // coefficent matrices for polyfit routine
   Array2D<float> a;
@@ -325,12 +324,12 @@ void LSDHollow::set_Perimeter(LSDFlowInfo& FlowInfo){
   Array2D<float> f;
 
   Elevation.calculate_polyfit_coefficient_matrices(window_radius, a, b, c, d, e, f);
-  LSDRaster TotalCurv = Elevation.calculate_polyfit_curvature (a,b);
-  LSDRaster ProfileCurv = Elevation.calculate_polyfit_profile_curvature (a,b,c,d,e);
-  LSDRaster PlanCurv = Elevation.calculate_polyfit_planform_curvature (a,b,c,d,e);
+  LSDRaster TotalCurv = Elevation.calculate_polyfit_curvature(a,b);
+  LSDRaster ProfileCurv = Elevation.calculate_polyfit_profile_curvature(a,b,c,d,e);
+  LSDRaster PlanCurv = Elevation.calculate_polyfit_planform_curvature(a,b,c,d,e);
   LSDRaster Aspect = Elevation.calculate_polyfit_aspect(d,e);  
   LSDRaster Slope = Elevation.calculate_polyfit_slope(d,e);
-  LSDRaster DinfArea = Elevation.D_inf_units(); 
+  Array2D<float> FlowDir = Elevation.D_inf_FlowDir(); 
   
   set_SlopeMean(FlowInfo, Slope);
   set_ElevationMean(FlowInfo, Elevation);
@@ -343,15 +342,14 @@ void LSDHollow::set_Perimeter(LSDFlowInfo& FlowInfo){
   set_TotalCurvMax(FlowInfo, TotalCurv);
   set_CHTMean(FlowInfo, CHT);
   set_AspectMean(FlowInfo, Aspect);
-  set_FlowLength(StreamNetwork, FlowInfo);
-  set_DrainageDensity();
-  set_all_HillslopeLengths(FlowInfo, HillslopeLengths, Slope, DinfArea, log_bin_width, SplineResolution, bin_threshold);
   set_Perimeter(FlowInfo);
-  set_EStar_RStar(CriticalSlope);
-  set_CosmoErosionRate(CosmoErosionRate);
-  set_OtherErosionRate(OtherErosionRate);
+  set_BasalAge(BasalAge);
+  set_SoilProduction(SoilProduction);
+  set_Width(FlowInfo, FlowDir);
+  set_DownslopeLength(FlowInfo, Elevation);
+  set_LongProfileLength(FlowInfo);
 
-} */
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Write integer hollow parameters into the shape of the hollow.
