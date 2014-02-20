@@ -601,5 +601,40 @@ void LSDHollow::set_DownslopeLength(LSDFlowInfo FlowInfo, LSDRaster DEM){
 
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Measure the long profile length in the hollow, defined as the maximum dimension 
+// of the bounding box excluding diagonals.
+//  
+// SWDG 20/2/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDHollow::set_LongProfileLength(LSDFlowInfo FlowInfo){
+
+  int i;
+  int j; 
+  int Min_i = 10000000; //a very large number
+  int Min_j = 10000000; //a very large number
+  int Max_i = 0;
+  int Max_j = 0;
+  
+  
+  LSDIndexRaster Hollow = write_Junction(FlowInfo);
+  
+  for (int q = 0; q < int(HollowNodes.size()); ++q){
+    FlowInfo.retrieve_current_row_and_col(HollowNodes[q], i, j);
+    
+    if (Hollow.get_data_element(i,j) != NoDataValue){
+    
+      if (i > Max_i) { Max_i = i; }
+      if (i < Min_i) { Min_i = i; }
+      if (j > Max_j) { Max_j = j; }
+      if (j < Min_j) { Min_j = i; }
+       
+    }
+  }
+
+  if ((Max_i - Min_i) > (Max_j - Min_j)) { LongProfileLength = Max_i - Min_i;}
+  if ((Max_i - Min_i) < (Max_j - Min_j)) { LongProfileLength = Max_j - Min_j;}
+
+}
 
 #endif

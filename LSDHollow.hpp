@@ -107,6 +107,8 @@ class LSDHollow
   float get_Width() const { return Width; }
   /// @return Downslope length.
   float get_DownslopeLength() const { return DownslopeLength; }
+  /// @return Long Profile Length. 
+  float get_LongProfileLength() const {return LongProfileLength; }
   
   /// @brief Calculate the mean value of an LSDRaster which falls inside a hollow.
   /// @param FlowInfo Flowinfo object.
@@ -418,6 +420,13 @@ class LSDHollow
   /// @date 20/02/14  
   void set_DownslopeLength(LSDFlowInfo FlowInfo, LSDRaster DEM);
    
+  /// @brief Measure the long profile length in the hollow, defined as the maximum dimension 
+  /// of the bounding box excluding diagonals.
+  /// @param FlowInfo Flowinfo object. 
+  /// @author SWDG
+  /// @date 20/02/14  
+  void set_LongProfileLength(LSDFlowInfo FlowInfo);
+  
   protected:
   
   //These instance variables are set at initialisation
@@ -490,6 +499,8 @@ class LSDHollow
   float Width;
   /// Downslope length
   float DownslopeLength;
+  /// Long Profile Length
+  float LongProfileLength;
   
   private:
 	void create(int Junction, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChanNet);
