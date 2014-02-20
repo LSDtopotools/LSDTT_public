@@ -549,7 +549,7 @@ void LSDHollow::set_DownslopeLength(LSDFlowInfo FlowInfo, LSDRaster DEM){
   int i;
   int j;
   float MinData = 100000000.0; // a large number
-  float Maxdata = 0.0; // a small number number
+  float MaxData = 0.0; // a small number number
   float CurrentData;
   
   int Min_i = 0;
@@ -564,8 +564,8 @@ void LSDHollow::set_DownslopeLength(LSDFlowInfo FlowInfo, LSDRaster DEM){
     
     if (CurrentData != NoDataValue && CurrentData < MinData){
       MinData = CurrentData;
-      int Min_i = i;
-      int Min_j = j;     
+      Min_i = i;
+      Min_j = j;     
     }
     if (CurrentData != NoDataValue && CurrentData > MaxData){
       MaxData = CurrentData;
@@ -579,25 +579,25 @@ void LSDHollow::set_DownslopeLength(LSDFlowInfo FlowInfo, LSDRaster DEM){
   float root_2 = 1.4142135623;
   float length = 0;
   int node;
-  int reciever_node = retrieve_node_from_row_and_column(Max_i, Max_j);
+  int receiver_node = FlowInfo.retrieve_node_from_row_and_column(Max_i, Max_j);
   int receiver_row = Max_i;
   int receiver_col = Max_j;
   
   LSDIndexRaster Hollow = write_Junction(FlowInfo);
    
-  while ((reciever_row != Min_i && reciever_col != Min_j) || Hollow.get_data_element(reciever_row, reciever_col) != NoDataValue){
+  while ((receiver_row != Min_i && receiver_col != Min_j) || Hollow.get_data_element(receiver_row, receiver_col) != NoDataValue){
     
-    retrieve_receiver_information(reciever_node, node, receiver_row, receiver_col);
+    FlowInfo.retrieve_receiver_information(receiver_node, node, receiver_row, receiver_col);
   
     //update length
-    if (retrieve_flow_length_code_of_node(reciever_node) == 1){ length += DataResolution; }
-    else if (retrieve_flow_length_code_of_node(reciever_node) == 1){ length += (DataResolution * root_2); }
+    if (FlowInfo.retrieve_flow_length_code_of_node(receiver_node) == 1){ length += DataResolution; }
+    else if (FlowInfo.retrieve_flow_length_code_of_node(receiver_node) == 1){ length += (DataResolution * root_2); }
       
-    reciever_node = node;
+    receiver_node = node;
    
   }
   
-  FlowLength = length;
+  DownslopeLength = length;
 
 }
 
