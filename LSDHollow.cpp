@@ -442,49 +442,17 @@ LSDIndexRaster LSDHollow::write_raster_data_to_LSDIndexRaster(LSDIndexRaster Dat
 }
 
 
-//NEEDS DOCUMENTED
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Measure the width of a hollow, defined as the width perpendicular to the 
+// centroid flow direction. 
+// SWDG 19/2/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDHollow::set_Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir){
          
   LSDIndexRaster hollow = write_Junction(FlowInfo);
-  
   Array2D<int> HollowArray = hollow.get_RasterData();
-  
-  //Need to test the flowdirection averaging properly before using it.  
-  
-  /* 
-  float x_component = 0;
-  float y_component = 0;
-  float angle_r = 0;
-  int ndv_count = 0;
-  
-  int dX[] = {0, 1, 1, 1, 0, -1, -1, -1, 0};
-  int dY[] = {0, -1, 0, 1, 1, 1, 0, -1, -1};
-  
-  for (int a = 0; a < 9; ++a){
-  
-  if (FlowDir[Centroid_i + dX[a]][Centroid_j + dY[a]] != -1){
     
-    angle_r = rad(FlowDir[Centroid_i + dX[a]][Centroid_j + dY[a]]);
-    x_component += cos(angle_r);
-    y_component += sin(angle_r);
-   
-  }
-  else {++ndv_count;}
-  }  
-  
-    
-  x_component = x_component / (9 - ndv_count);
-  y_component = x_component / (9 - ndv_count);
-  float avg_r = atan2(y_component, x_component);
-  
-  float centre_flowdir = deg(avg_r);
-  
-  */
-  
- 
   float centre_flowdir = FlowDir[Centroid_i][Centroid_j];
-
-  //cout << centre_flowdir << " : " << FlowDir[Centroid_i][Centroid_j] << endl;
   
   float x2;
   float y2;
@@ -539,7 +507,6 @@ void LSDHollow::set_Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir){
   
     while (HollowArray[i_new][j_new] != NoDataValue){
     
-    
       x2 = x1 + cos(rad(perp_angle_2)) * DataResolution;
       y2 = y1 - sin(rad(perp_angle_2)) * DataResolution;
     
@@ -554,7 +521,6 @@ void LSDHollow::set_Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir){
 
     }
   
-
   Array2D<int> out(NRows, NCols, NoDataValue);
 
   for (int q = 0; q < int(i_list.size()); ++q){
@@ -565,18 +531,10 @@ void LSDHollow::set_Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir){
   int x_bottom = i_list[i_list.size()-1];
   int y_bottom = j_list[j_list.size()-1];
   
- 
-  
   float len = sqrt( ((x_top - x_bottom) * (x_top - x_bottom)) + ((y_top - y_bottom) * (y_top - y_bottom)) );
   
   Width = len;
-  
-  //cout << "length: " << len << endl;
-  
-  //LSDIndexRaster OutputRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, out);
-
-  //OutputRaster.write_raster("wid","flt"); 
-  
+    
 }
 
 #endif
