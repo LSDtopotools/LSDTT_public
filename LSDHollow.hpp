@@ -105,6 +105,8 @@ class LSDHollow
   float get_BasalAge() const { return BasalAge; }
   /// @return Hollow Width.
   float get_Width() const { return Width; }
+  /// @return Downslope length.
+  float get_DownslopeLength() const { return DownslopeLength; }
   
   /// @brief Calculate the mean value of an LSDRaster which falls inside a hollow.
   /// @param FlowInfo Flowinfo object.
@@ -406,6 +408,15 @@ class LSDHollow
   /// @author SWDG
   /// @date 19/02/14 
   void set_Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir);
+  
+  /// @brief Calculate the downslope length in the hollow, defined as the D8 flow routing distance
+  /// from between the maximum elevation point in the hollow to the minimum elevation, or 
+  /// to the edge of the hollow, whichever comes first.
+  /// @param FlowInfo Flowinfo object.
+  /// @param DEM An LSDRaster of elevations. 
+  /// @author SWDG
+  /// @date 20/02/14  
+  void set_DownslopeLength(LSDFlowInfo FlowInfo, LSDRaster DEM);
    
   protected:
   
@@ -475,8 +486,10 @@ class LSDHollow
   float SoilProduction;
   /// Basal age of hollow.
   float BasalAge;
-  ///Hollow width
+  /// Hollow width
   float Width;
+  /// Downslope length
+  float DownslopeLength;
   
   private:
 	void create(int Junction, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChanNet);

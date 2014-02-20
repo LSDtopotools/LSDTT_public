@@ -537,4 +537,69 @@ void LSDHollow::set_Width(LSDFlowInfo FlowInfo, Array2D<float> FlowDir){
     
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Measure the downslope length in the hollow, defined as the D8 flow routing distance
+// from between the maximum elevation point in the hollow to the minimum elevation, or 
+// to the edge of the hollow, whichever comes first.    
+//  
+// SWDG 20/2/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDHollow::set_DownslopeLength(LSDFlowInfo FlowInfo, LSDRaster DEM){
+
+  int i;
+  int j;
+  float MinData = 100000000.0; // a large number
+  float Maxdata = 0.0; // a small number number
+  float CurrentData;
+  
+  int Min_i = 0;
+  int Min_j = 0;
+  int Max_i = 0;
+  int Max_j = 0;
+  
+  for (int q = 0; q < int(HollowNodes.size()); ++q){
+    
+    FlowInfo.retrieve_current_row_and_col(HollowNodes[q], i, j);
+    CurrentData = DEM.get_data_element(i,j);
+    
+    if (CurrentData != NoDataValue && CurrentData < MinData){
+      MinData = CurrentData;
+      int Min_i = i;
+      int Min_j = j;     
+    }
+    if (CurrentData != NoDataValue && CurrentData > MaxData){
+      MaxData = CurrentData;
+      Max_i = i;
+      Max_j = j;     
+    }
+  }
+  
+  //flow from max i,j to min i,j
+  
+  float root_2 = 1.4142135623;
+  float length = 0;
+  int node;
+  int reciever_node = retrieve_node_from_row_and_column(Max_i, Max_j);
+  int receiver_row = Max_i;
+  int receiver_col = Max_j;
+  
+  LSDIndexRaster Hollow = write_Junction(FlowInfo);
+   
+  while ((reciever_row != Min_i && reciever_col != Min_j) || Hollow.get_data_element(reciever_row, reciever_col) != NoDataValue){
+    
+    retrieve_receiver_information(reciever_node, node, receiver_row, receiver_col);
+  
+    //update length
+    if (retrieve_flow_length_code_of_node(reciever_node) == 1){ length += DataResolution; }
+    else if (retrieve_flow_length_code_of_node(reciever_node) == 1){ length += (DataResolution * root_2); }
+      
+    reciever_node = node;
+   
+  }
+  
+  FlowLength = length;
+
+}
+
+
 #endif
