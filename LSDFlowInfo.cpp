@@ -1959,7 +1959,7 @@ void LSDFlowInfo::D8_Trace(int i, int j, LSDIndexRaster StreamNetwork, float& le
   
   int node;
   
-  int reveiver_node = retrieve_node_from_row_and_column(i, j);
+  int reciever_node = retrieve_node_from_row_and_column(i, j);
   receiver_row = i;
   receiver_col = j;
   
@@ -1967,15 +1967,15 @@ void LSDFlowInfo::D8_Trace(int i, int j, LSDIndexRaster StreamNetwork, float& le
   
   while (StreamNetwork.get_data_element(receiver_row, receiver_col) == NoDataValue){  // need to do edge checking 
   
-    retrieve_receiver_information(reveiver_node, node, receiver_row, receiver_col);
+    retrieve_receiver_information(reciever_node, node, receiver_row, receiver_col);
   
     Path[receiver_row][receiver_col] = 1;
   
     //update length
-    if (retrieve_flow_length_code_of_node(reveiver_node) == 1){ length += DataResolution; }
-    else if (retrieve_flow_length_code_of_node(reveiver_node) == 1){ length += (DataResolution * root_2); }
+    if (retrieve_flow_length_code_of_node(reciever_node) == 1){ length += DataResolution; }
+    else if (retrieve_flow_length_code_of_node(reciever_node) == 1){ length += (DataResolution * root_2); }
       
-    reveiver_node = node;
+    reciever_node = node;
    
   }
   
