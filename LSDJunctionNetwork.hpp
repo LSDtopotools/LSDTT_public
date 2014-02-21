@@ -727,10 +727,18 @@ class LSDJunctionNetwork
 	/// @param ChannelNodeIndex is the node index of the channel node (if it isn't a channel
 	/// the function returns NoDataValue
 	/// @param FlowInfo LSDFlowInfo object.
-    /// @return Returns the Junction Number of the nearest upslope junction
-    /// @author SMM
-    /// @date 21/10/2013
+  /// @return Returns the Junction Number of the nearest upslope junction
+  /// @author SMM
+  /// @date 21/10/2013
 	int find_upstream_junction_from_channel_nodeindex(int ChannelNodeIndex, LSDFlowInfo& FlowInfo);
+
+  /// @brief This functions takes a junction number and then follwos the receiver
+  /// junctions until it hits a baselevel junction. 
+  /// @param a junction node to start from. 
+  /// @return The base level junction to which the starting junction drains
+  /// @author SMM
+  /// @date 21/02/2014
+  int find_base_level_node_of_junction(int StartingJunction);
 
 	// Get functions
 
@@ -765,7 +773,10 @@ class LSDJunctionNetwork
 										{ return ReceiverVector[junction]; }
 										
 	/// @return The Vector of Junctions.									
-  vector<int> get_JunctionVector() const { return JunctionVector; }										
+  vector<int> get_JunctionVector() const { return JunctionVector; }		
+  
+  /// @return Get the baselevel junstions
+  vector<int> get_BaseLevelJunctions() const { return BaseLevelJunctions; }								
   
   /// @return The Vector of recievers.
   vector<int> get_ReceiverVector() const { return ReceiverVector; }
@@ -808,18 +819,18 @@ class LSDJunctionNetwork
   vector<int> StreamOrderVector;
 	/// A vector that give the baselevel index of each junction node.
   vector<int> BLBasinVector;
-	/// Stores the number of donors to each node.
+	/// Stores the number of donors to each junction.
   vector<int> NDonorsVector;
-  /// Stores the node index of the receiving node.
+  /// Stores the node index of the receiving junction.
 	vector<int> ReceiverVector;
-	/// Stores the delta vector which is used to index into the donor stack and order contributing nodes see Braun and Willett [2012].
+	/// Stores the delta vector which is used to index into the donor stack and order contributing junction see Braun and Willett [2012].
   vector<int> DeltaVector;
-	/// This is a vector that stores the donor nodes of of the nodes and is indexed by the DeltaVector.
+	/// This is a vector that stores the donor junction of of the junction and is indexed by the DeltaVector.
   vector<int> DonorStackVector;
 
   ///@brief This vector is used to calculate flow accumulation.
   ///
-  ///@details For each base level node it progresses from a hilltop to a confluence
+  ///@details For each base level junction it progresses from a hilltop to a confluence
   ///and then	jumps to the next hilltop so that by cascading down through
 	///the node indices in this list one can quickly calculate drainage area,
   ///discharge, sediment flux, etc.

@@ -1172,6 +1172,20 @@ vector<int> LSDJunctionNetwork::extract_basin_junctions_from_nodes(vector<int> b
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+// This function extracts the base level junction to which a starting junction 
+// drains
+// Added by SMM 21/02/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+int LSDJunctionNetwork::find_base_level_node_of_junction(int StartingJunction)
+{
+  int ThisJunction = StartingJunction;
+  while(ReceiverVector[ThisJunction] != ThisJunction)  
+  {
+       ThisJunction =  ReceiverVector[ThisJunction];
+  }
+  return ThisJunction;
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 // This function extracts the junctions of a given basin order that are the lowermost
