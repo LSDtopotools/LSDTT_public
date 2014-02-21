@@ -1180,6 +1180,13 @@ vector<int> LSDJunctionNetwork::extract_basin_junctions_from_nodes(vector<int> b
 int LSDJunctionNetwork::find_base_level_node_of_junction(int StartingJunction)
 {
   int ThisJunction = StartingJunction;
+  
+  if(ThisJunction >= int(ReceiverVector.size()))
+  {
+    cout << "Warning, you have selected a junction that doesn't exist!" << endl;
+    cout << "Defaulting to Junction 0" << endl;
+    ThisJunction = 0;
+  }
   while(ReceiverVector[ThisJunction] != ThisJunction)  
   {
        ThisJunction =  ReceiverVector[ThisJunction];
@@ -1187,6 +1194,32 @@ int LSDJunctionNetwork::find_base_level_node_of_junction(int StartingJunction)
   return ThisJunction;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+// Two getter functions that require bounds checking
+// Added by SMM 21/02/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+int LSDJunctionNetwork::get_Node_of_Junction(int junction) const
+{ 
+  if(junction >= int(JunctionVector.size()))
+  {
+    cout << "Warning, you have selected a junction that doesn't exist!" << endl;
+    cout << "Defaulting to Junction 0" << endl;
+    junction = 0;
+  }
+  return JunctionVector[junction];
+}
+
+int LSDJunctionNetwork::get_Receiver_of_Junction(int junction) const  
+{ 
+  if(junction >= int(ReceiverVector.size()))
+  {
+    cout << "Warning, you have selected a junction that doesn't exist!" << endl;
+    cout << "Defaulting to Junction 0" << endl;
+    junction = 0;
+  }
+  return ReceiverVector[junction];
+}	  
+  
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 // This function extracts the junctions of a given basin order that are the lowermost
 // junction in the basin

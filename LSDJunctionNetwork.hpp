@@ -760,17 +760,16 @@ class LSDJunctionNetwork
 	/// @return No Data Value as an integer.
 	int get_NoDataValue() const			{ return NoDataValue; }
 
-  /// @details Not bounds checked!! Need to adjust!!
+  /// @details Gets the node of a junction
   /// @param junction integer node index.
   /// @return Integer node of junction.
-	int get_Node_of_Junction(int junction) const
-										{ return JunctionVector[junction]; }
-
-  /// @details Not bounds checked!! Need to adjust!!
+	int get_Node_of_Junction(int junction) const;
+                  
+  /// @details Gets the receiver of a junction
   /// @param junction integer reciever index.
   /// @return Integer reciever of junction.
-	int get_Receiver_of_Junction(int junction) const
-										{ return ReceiverVector[junction]; }
+	int get_Receiver_of_Junction(int junction) const;
+
 										
 	/// @return The Vector of Junctions.									
   vector<int> get_JunctionVector() const { return JunctionVector; }		
