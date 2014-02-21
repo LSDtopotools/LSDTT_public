@@ -397,6 +397,13 @@ class LSDBasin
   /// @date 12/12/13 
   LSDRaster write_raster_data_to_LSDRaster(LSDRaster Data, LSDFlowInfo FlowInfo);
   
+  /// @brief check whether a test node is in the basin or not
+  /// @param test_node node to test
+  /// @return integer which is 1 if node is in the basin or 0 if it is not
+  /// @author FJC
+  /// @date 21/02/14
+  int is_node_in_basin(int test_node);
+  
   /// @brief Write a real value to an LSDRaster in the shape of the basin.
   /// @param Param real value to be written
   /// @param FlowInfo Flowinfo object.

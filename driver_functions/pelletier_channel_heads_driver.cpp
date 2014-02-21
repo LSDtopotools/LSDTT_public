@@ -40,16 +40,43 @@
 #include "../TNT/jama_lu.h"
 #include "../TNT/tnt.h"
 
-int main ()
+int main (int nNumberofArgs,char *argv[])
 {
+  //Test for correct input arguments
+	if (nNumberofArgs!=3)
+	{
+		cout << "FATAL ERROR: wrong number inputs. The program needs the path name and the file name" << endl;
+		exit(EXIT_SUCCESS);
+	}
+
+	string path_name = argv[1];
+	string f_name = argv[2];
+
+	cout << "The path is: " << path_name << " and the filename is: " << f_name << endl;
+
+	string full_name = path_name+f_name; 
+
+	ifstream file_info_in;
+	file_info_in.open(full_name.c_str());
+	if( file_info_in.fail() )
+	{
+		cout << "\nFATAL ERROR: the header file \"" << full_name
+		     << "\" doesn't exist" << endl;
+		exit(EXIT_FAILURE);
+	}   
+
+	string DEM_name; 
+	string fill_ext = "_fill";
+	file_info_in >> DEM_name;
+	float Minimum_Slope;
+	file_info_in >> Minimum_Slope;
 
   // STEP 1: Spectral filtering
-  string DEM_name = "ind_17n";
 	string DEM_flt_extension = "flt";
 	string DEM_asc_extension = "asc";
-	string DEM_outname = "ind_filt";
+	string DEM_outname = "fr1m_filt";
 
-	LSDRaster topo_test(DEM_name, DEM_flt_extension);
+	LSDRaster topo_test((path_name+DEM_name), DEM_flt_extension);
   cout << "LINE 47" << endl;
 	
   LSDRasterSpectral SpectralRaster(topo_test);                                    
@@ -59,7 +86,7 @@ int main ()
 
 	LSDRaster topo_data_filtered = SpectralRaster.fftw2D_wiener();
 	// Write raster of filtered DEM
-	topo_data_filtered.write_raster(DEM_outname,DEM_flt_extension);	
+	topo_data_filtered.write_raster((path_name+DEM_outname),DEM_flt_extension);	
 
 	vector<string> boundary_conditions(4);
 	boundary_conditions[0] = "No";
@@ -67,7 +94,6 @@ int main ()
 	boundary_conditions[2] = "no flux";
 	boundary_conditions[3] = "No flux";
 	
-	float Minimum_Slope = 0.0001;	
 	float threshold = 50;
 	// get the filled file
 	cout << "Filling the DEM" << endl;
@@ -84,8 +110,8 @@ int main ()
 	// now get the junction network
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 
-	string tan_curvature_name = "ind_curv";
-	string chan_heads_name = "ind_chan_heads";
+	string tan_curvature_name = "fr1m_curv";
+	string chan_heads_name = "fr1m_chan_heads";
 	
 	// STEP 2: Creating a contour curvature map
 	
@@ -108,7 +134,7 @@ int main ()
 	// Call on the member function
   LSDIndexRaster source_nodes = topo_data_filtered.calculate_pelletier_channel_heads(window_radius, tan_curv_threshold,
                                                                                       tan_curv_array); 
-	source_nodes.write_raster(chan_heads_name,DEM_flt_extension);	
+	source_nodes.write_raster((path_name+chan_heads_name),DEM_flt_extension);	
 	
 	Array2D<int> pelletier_sources = source_nodes.get_RasterData();
   vector<int> source_vector;
@@ -135,6 +161,6 @@ int main ()
   
   LSDJunctionNetwork ChanNetworkPel(source_vector, FlowInfo);
   LSDIndexRaster SOArrayNew = ChanNetworkPel.StreamOrderArray_to_LSDIndexRaster();
-	string SO_name_new = "ind_17n_SO_from_PEL";	
-	SOArrayNew.write_raster(SO_name_new,DEM_flt_extension);	
+	string SO_name_new = "fr1m_SO_from_PEL";	
+	SOArrayNew.write_raster((path_name+SO_name_new),DEM_flt_extension);	
 }

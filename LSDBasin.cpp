@@ -774,4 +774,21 @@ LSDIndexRaster LSDBasin::write_raster_data_to_LSDIndexRaster(LSDIndexRaster Data
 
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Function to check whether a node is in the basin
+// FJC 21/02/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+int LSDBasin::is_node_in_basin(int test_node)
+{
+  int node_checker = 0;
+  for (int i =0; i < int(BasinNodes.size()); i++)
+  {
+    if (test_node == BasinNodes[i])
+    {
+      node_checker = 1;
+    }
+  }  
+  return node_checker;
+}
+
 #endif
