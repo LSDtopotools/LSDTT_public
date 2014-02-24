@@ -1038,7 +1038,9 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension)
     for (int j = 0; j < NCols; ++j){
       if (CHeads.get_data_element(i,j) != NoDataValue){
         CH_node = retrieve_node_from_row_and_column(i,j);
-        Sources.push_back(CH_node);  
+        if (CH_node != NoDataValue){
+          Sources.push_back(CH_node);
+        }  
       }
     }
   }
@@ -1934,7 +1936,10 @@ vector<int> LSDFlowInfo::get_sources_from_mapped_channel_heads(vector<float>& X_
   for (unsigned int i = 0; i < X_coords.size(); i++)
   {
     int NI = get_node_index_of_coordinate_point(X_coords[i], Y_coords[i]);
-    SourceNodes.push_back(NI);
+    if (NI != NoDataValue)
+    {
+      SourceNodes.push_back(NI);
+    }
   }
   
   return SourceNodes;
