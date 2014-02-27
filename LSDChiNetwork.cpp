@@ -496,7 +496,110 @@ void LSDChiNetwork::print_channel_details_to_file_full_fitted(string fname, int 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// 
+// This function prints channel detaisl to a file that can be read by ArcMap
+// in csv format
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiNetwork::print_channel_details_to_file_full_fitted_for_ArcMap(string fname)
+{
 
+  // fid the last '.' in the filename to use in the scv filename
+	unsigned dot = fname.find_last_of(".");
+
+	string prefix = fname.substr(0,dot);
+	//string suffix = str.substr(dot);
+  string insert = "_for_Arc.csv";
+  string outfname = prefix+insert;
+
+  cout << "the Arc tree filename is: " << outfname << endl;
+
+  // open the outfile
+  ofstream ArcChan_out;
+  ArcChan_out.open(outfname.c_str());
+  ArcChan_out.precision(10);
+
+  // get the paramaters and calculate chi
+	float m_over_n = m_over_n_for_fitted_data;
+	float A_0 = A_0_for_fitted_data;
+  calculate_chi(A_0, m_over_n);
+
+  // set up an id placeholder. This is for arcmap
+  int id = 0;
+  double x,y;
+
+	int n_channels = chis.size();
+	
+	// print the header information
+  ArcChan_out << "id,x,y,channel_number,receiver_channel,node_on_reciever_channel,";
+  ArcChan_out << "node,row,column,flow_distance,chi,elevation,drainage_area,n_data_points,";
+  ArcChan_out << "m_mean,m_st_dev,m_std_err,b_mean,b_st_dev,b_std_err,";
+  ArcChan_out << "DW_mean,DW_st_dev,DW_std_err,fitted_elev_mean,fitted_elev_st_dev,fitted_elev_std_err" << endl;
+  
+	if (chi_b_means.size() == chis.size())
+	{
+
+		for (int channel_number = 0; channel_number< n_channels; channel_number++)
+		{
+			vector<int> node = node_indices[channel_number];
+			vector<int> row = row_indices[channel_number];
+			vector<int> col = col_indices[channel_number];
+			vector<float> elevation = elevations[channel_number];
+			vector<float> flow_distance = flow_distances[channel_number];
+			vector<float> drainage_area = drainage_areas[channel_number];
+			vector<float> chi = chis[channel_number];
+
+			vector<float> m_mean = chi_m_means[channel_number];
+			vector<float> m_standard_deviation = chi_m_standard_deviations[channel_number];
+			vector<float> m_standard_error = chi_m_standard_errors[channel_number];
+
+			vector<float> b_mean = chi_b_means[channel_number];
+			vector<float> b_standard_deviation = chi_b_standard_deviations[channel_number];
+			vector<float> b_standard_error = chi_b_standard_errors[channel_number];
+
+			vector<float> DW_mean = chi_DW_means[channel_number];
+			vector<float> DW_standard_deviation = chi_DW_standard_deviations[channel_number];
+			vector<float> DW_standard_error = chi_DW_standard_errors[channel_number];
+
+			vector<float> fitted_elev_mean = all_fitted_elev_means[channel_number];
+			vector<float> fitted_elev_standard_deviation = all_fitted_elev_standard_deviations[channel_number];
+			vector<float> fitted_elev_standard_error = all_fitted_elev_standard_errors[channel_number];
+
+			vector<int> n_data_points_uic = n_data_points_used_in_stats[channel_number];
+
+			// loop through the nodes in the channel
+      int n_nodes = node.size();
+			for (int i = 0; i< n_nodes; i++)
+			{
+			
+		    // increment the id and calculate the x and y locations 
+        id++;
+		    x = XMinimum + float(col[i])*DataResolution + 0.5*DataResolution;
+		    y = YMinimum + float(NRows-row[i])*DataResolution - 0.5*DataResolution;		// this is because the DEM starts from the top corner
+			
+				ArcChan_out << id << "," << x << "," << y << "," 
+             << channel_number << "," << receiver_channel[channel_number] << ","
+						 << node_on_receiver_channel[channel_number] << ","
+						 << node[i] << "," << row[i] << "," << col[i] << "," << flow_distance[i] << ","
+						 << chi[i] << "," << elevation[i] << "," << drainage_area[i] << ","
+						 << n_data_points_uic[i] << ","
+						 << m_mean[i] << "," << m_standard_deviation[i] << "," << m_standard_error[i] << ","
+						 << b_mean[i] << "," << b_standard_deviation[i] << "," << b_standard_error[i] << ","
+						 << DW_mean[i] << "," << DW_standard_deviation[i] << "," << DW_standard_error[i] << ","
+						 << fitted_elev_mean[i] << "," << fitted_elev_standard_deviation[i] << ","
+						 << fitted_elev_standard_error[i] <<  endl;
+			}
+		}
+	}
+	else
+	{
+		cout << "LSDChiNetwork Line 276 you don't seem to have run the monte carlo fitting routine" << endl;
+	}
+
+	ArcChan_out.close();
+
+}
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

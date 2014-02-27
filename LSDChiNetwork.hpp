@@ -124,7 +124,7 @@ class LSDChiNetwork
 		/// @param A_0 A_0 value.
 		/// @param m_over_n  m over n ratio.
 		/// @author SMM
-  		/// @date 01/04/13
+  	/// @date 01/04/13
     void print_channel_details_to_file(string fname, float A_0, float m_over_n);
 
 	  /// @brief This function prints the details of all channels to a file.
@@ -133,8 +133,16 @@ class LSDChiNetwork
     /// A_0 m_over_n channel_number node_on_receiver_channel node_index row col flow_distance chi elevation darainage_area.
 		/// @param fname Output filename.
 		/// @author SMM
-  		/// @date 01/04/13
+  	/// @date 01/04/13
     void print_channel_details_to_file_full_fitted(string fname);
+
+	  /// @brief This function prints the details of all channels to a csv file that
+    /// can be ingested by ArcMap.
+    /// @details It includes data from monte carlo fitting. 
+		/// @param fname Output filename, which has _for_Arc automatically appended.
+		/// @author SMM
+  	/// @date 28/02/14
+    void print_channel_details_to_file_full_fitted_for_ArcMap(string fname);
 
 		/// @brief This function prints the details of all channels to a file.
     ///
@@ -144,7 +152,7 @@ class LSDChiNetwork
     /// @param target_nodes
     /// @param minimum_segment_length
 		/// @author SMM
-  		/// @date 01/04/13
+  	/// @date 01/04/13
     void print_channel_details_to_file_full_fitted(string fname, int target_nodes,
 		                                               int minimum_segment_length);
 
@@ -153,7 +161,7 @@ class LSDChiNetwork
     /// @details In its current version this only works if the tributaries all drain
 		/// to the mainstem.
 		/// @author SMM
-  		/// @date 01/04/13
+  	/// @date 01/04/13
 		void extend_tributaries_to_outlet();
 
 		/// @brief Routine for returning calculated data to an array.

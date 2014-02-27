@@ -108,7 +108,7 @@ int main (int nNumberofArgs,char *argv[])
 	string Chan_ext = ".chan";
 	string Chan_for_chi_ingestion_fname = path_name+DEM_name+Chan_fname+jn_name+Chan_ext;
 
-	// test if if works:
+	// test if infilef works:
 	ifstream file_info_in2;
 	file_info_in2.open(Chan_for_chi_ingestion_fname.c_str());
 	if( file_info_in2.fail() )
@@ -120,11 +120,11 @@ int main (int nNumberofArgs,char *argv[])
 	file_info_in2.close();
 
 	// get a string with some paramter values
-  	string sigma_str;
-  	string skip_str;
-  	string msl_str;
-  	string tn_str;
-  	string param_str;
+  string sigma_str;
+  string skip_str;
+  string msl_str;
+  string tn_str;
+  string param_str;
 	sigma_str = static_cast<ostringstream*>( &(ostringstream() << sigma) )->str();
 	skip_str = static_cast<ostringstream*>( &(ostringstream() << target_skip) )->str();
 	msl_str = static_cast<ostringstream*>( &(ostringstream() << minimum_segment_length) )->str();
@@ -132,12 +132,10 @@ int main (int nNumberofArgs,char *argv[])
 
 	param_str = uscore+sigma_str+uscore+skip_str+uscore+msl_str+uscore+tn_str;
 
-
 	// create the chi network
 	LSDChiNetwork ChiNetwork(Chan_for_chi_ingestion_fname);
 	LSDChiNetwork ChiNetwork_extended(Chan_for_chi_ingestion_fname);
 	ChiNetwork_extended.extend_tributaries_to_outlet();
-
 
 	//=-=-=-=-=-=-=-=-=-=-=-=-
 	// now caluculate the slope area data
@@ -160,8 +158,6 @@ int main (int nNumberofArgs,char *argv[])
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// loop through MULTIPLE M/N vlaues
   // produces separate profile files for each value of m/n
-
-
     for(int i = 0; i<n_movern; i++)
 	  {
 		  float this_movern = start_movern + float(i)*d_movern;
@@ -187,7 +183,8 @@ int main (int nNumberofArgs,char *argv[])
 		  string fpt_mc = "_fullProfileMC_forced_" + prefix_movn+param_str;
 
 		  ChiNetwork_extended.print_channel_details_to_file_full_fitted((path_name+DEM_name+fpt_mc+jn_name+fpt_ext));
-
+		  cout << "Printing the scv file" << endl;
+      ChiNetwork_extended.print_channel_details_to_file_full_fitted_for_ArcMap((path_name+DEM_name+fpt_mc+jn_name+fpt_ext));
 
     }
 
