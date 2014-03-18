@@ -103,8 +103,6 @@ int main (int nNumberofArgs,char *argv[])
 	// load the DEM
 	LSDRaster topo_test((path_name+DEM_name), DEM_flt_extension);
 	
-	// load the sources
-	LSDRaster sources_raster((path_name+sources_name), DEM_flt_extension);
 
 	// Set the no flux boundary conditions
   vector<string> boundary_conditions(4);
@@ -137,20 +135,8 @@ int main (int nNumberofArgs,char *argv[])
   float NoDataValue = topo_test.get_NoDataValue();
   
 	//get the sources from raster to vector
-	Array2D<float> sources_array = sources_raster.get_RasterData();
-	vector<int> sources;
-	for (int row = 0; row < NRows; row++)
-	{
-    for (int col = 0; col < NCols; col++)
-    {
-      if (sources_array[row][col] != NoDataValue)
-      {
-        int node = FlowInfo.retrieve_node_from_row_and_column(row,col);
-        sources.push_back(node);
-      }
-    }
-  }
-
+  vector<int> sources = FlowInfo.Ingest_Channel_Heads((path_name+sources_name),DEM_flt_extension);
+  
 	// now get the junction network
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 	LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
@@ -167,7 +153,7 @@ int main (int nNumberofArgs,char *argv[])
   cout << "Reading in the cosmo points" << endl;
   // reading in cosmo points - getting upstream junctions and then extracting basins
   string string_filename;
-	string filename = "coordinates";
+	string filename = "coordinates_fr1m_cosmo";
 	string dot = ".";
 	string extension = "txt";
   string_filename = filename+dot+extension;
@@ -181,7 +167,7 @@ int main (int nNumberofArgs,char *argv[])
   vector<float> Errors;
   while (coords_list >> X_coord >> Y_coord >> ErosionRate >> Error)
   {
-     cout << "X Coord: " << X_coord << " Y Coord: " << Y_coord << " Erosion Rate: " << ErosionRate << "Error on cosmo point: " << Error << endl;
+     cout << "X Coord: " << X_coord << " Y Coord: " << Y_coord << " Erosion Rate: " << ErosionRate << " Error on cosmo point: " << Error << endl;
      X_coords.push_back(X_coord);
      Y_coords.push_back(Y_coord);
      ErosionRates.push_back(ErosionRate);
@@ -232,7 +218,7 @@ int main (int nNumberofArgs,char *argv[])
   int no_junctions = junction_vector.size();  
   cout << "Number of basins: " << no_junctions << endl;
   string string_filename2;
-  string filename2 = "drainage_density_cosmo";
+  string filename2 = "drainage_density_cosmo_fr1m";
   string_filename2 = filename2+dot+extension;
   ofstream DD_cosmo;
   DD_cosmo.open(string_filename2.c_str());
@@ -241,13 +227,13 @@ int main (int nNumberofArgs,char *argv[])
   
   cout << "Calculating DINF area for boomerang plotting" << endl;
   
-  // D-infinty flowdirection for HFR   
+  // D-infinty flowdirection   
   Array2D<float> FlowDir = filled_topo_test.D_inf_FlowDir();
   LSDRaster DinfArea = filled_topo_test.D_inf_FlowArea(FlowDir);
   
   //declaring variables for boomerang plotting
   float log_bin_width = 0.1;
-	int SplineResolution = 10000;
+	int SplineResolution = 20000;
 	float bin_threshold =  0;
 	
   //get mean DD of each basin for plotting
@@ -269,10 +255,11 @@ int main (int nNumberofArgs,char *argv[])
     float drainage_density = Basin.get_DrainageDensity();
     cout << "Drainage density: " << drainage_density << endl;
     float basin_slope = Basin.get_SlopeMean();
+    float slope_stdev = Basin.CalculateBasinStdDev(FlowInfo, Slope);
 
     if (drainage_density != NoDataValue)
     {
-      DD_cosmo << drainage_density << " " << basin_slope << " " << BasinErosionRate << " " << BasinError << endl;
+      DD_cosmo << drainage_density << " " << basin_slope << " " << slope_stdev << " " << BasinErosionRate << " " << BasinError << endl;
     } 
   }        
 }
