@@ -6,8 +6,8 @@
 // It then runs the chi analysis for the parameter space defined in the driver
 // file, allowing the user to examine the effects of changing m/n value,
 // number of target nodes, minimum segment length, sigma and target skip value.
-// At present it just spits out an output file for each iteration. In future, it
-// will kick out the files in a nicer format :-).
+// At present it just spits out an output file for each iteration.
+// Now also kicks out a table with the parameters and best fit m/n.
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // 18/03/2014
@@ -60,6 +60,7 @@ int main (int nNumberofArgs,char *argv[])
   string fill_ext = "_fill";
   string sources_ext = "_CH";
   string DEM_flt_extension = "flt";
+  string txt_extension = ".txt";
   
   // initialise variables to be assigned from .driver file
   int junction_number;
@@ -174,6 +175,12 @@ int main (int nNumberofArgs,char *argv[])
 	LSDChiNetwork ChiNetwork_extended(Chan_for_chi_ingestion_fname);
 	ChiNetwork_extended.extend_tributaries_to_outlet();
 	
+  ofstream summary_out;
+  string summary_ext = "summary";
+  string summary_fname = (path_name+DEM_ID+jn_name+summary_ext+txt_extension);
+  summary_out.open(summary_fname.c_str());
+  summary_out << "TargetNodes\t MinSegLength\t Sigma\t Skip\t m_ov_n_ms\t m_ov_n_coll\n";
+        	
   // Loop through range of target nodes to be tested
   for(int i_target_nodes = 0; i_target_nodes < n_TargetNodes; ++ i_target_nodes)
   {
@@ -233,7 +240,7 @@ int main (int nNumberofArgs,char *argv[])
         
         	  string fpt_mc = "_fullProfileMC_forced_" + prefix_movn+param_str;
         
-        	  ChiNetwork_extended.print_channel_details_to_file_full_fitted((path_name+DEM_ID+fpt_mc+param_str+jn_name+fpt_ext));
+        	  ChiNetwork_extended.print_channel_details_to_file_full_fitted((path_name+DEM_ID+fpt_mc+jn_name+fpt_ext));
         	} 
                                                                                
           //--------------------------------------------------------------------
@@ -282,8 +289,7 @@ int main (int nNumberofArgs,char *argv[])
         		mn_analysis_out << AICc_stdd_breaks[i] << " ";
         	}
         	mn_analysis_out << endl;
-        
-        
+                
         	for(int chan = 0; chan<  ChiNetwork.get_n_channels(); chan++)
         	{
         		mn_analysis_out << chan << " ";
@@ -301,11 +307,12 @@ int main (int nNumberofArgs,char *argv[])
         	}
         	mn_analysis_out.close();                                            
           //--------------------------------------------------------------------
-        	cout << "best fit m over n collinear: " << bf_colinear_movn_breaks
-               << " and mainstem: " << bf_cum_movn_ms << endl;
+        	summary_out << target_nodes << "\t " << minimum_segment_length << "\t " << sigma << "\t "
+          << target_skip << "\t " << bf_cum_movn_ms << "\t" << bf_colinear_movn_breaks << "\n";
           //-------------------------------------------------------------------- 
         }
       }
     }
   }
+  summary_out.close();
 }
