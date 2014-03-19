@@ -4,7 +4,7 @@ CC=g++
 CFLAGS=-c -Wall -O3
 OFLAGS = -Wall -O3
 LDFLAGS= -Wall
-SOURCES=chi_get_profiles_driver.cpp ../LSDMostLikelyPartitionsFinder.cpp ../LSDChiNetwork.cpp ../LSDStatsTools.cpp
+SOURCES=chi_get_profiles_driver.cpp ../LSDMostLikelyPartitionsFinder.cpp ../LSDChiNetwork.cpp ../LSDStatsTools.cpp ../LSDShapeTools.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=chi_get_profiles.exe
 

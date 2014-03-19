@@ -4,7 +4,7 @@ CC=g++
 CFLAGS=-c -Wall -O3 -pg
 OFLAGS = -Wall -O3 -pg
 LDFLAGS= -Wall
-SOURCES= get_boomerang_plots_driver.cpp ../LSDMostLikelyPartitionsFinder.cpp ../LSDChiNetwork.cpp ../LSDIndexRaster.cpp ../LSDRaster.cpp ../LSDFlowInfo.cpp ../LSDJunctionNetwork.cpp ../LSDIndexChannel.cpp ../LSDChannel.cpp ../LSDIndexChannelTree.cpp ../LSDStatsTools.cpp ../LSDBasin.cpp
+SOURCES= get_boomerang_plots_driver.cpp ../LSDMostLikelyPartitionsFinder.cpp ../LSDChiNetwork.cpp ../LSDIndexRaster.cpp ../LSDRaster.cpp ../LSDFlowInfo.cpp ../LSDJunctionNetwork.cpp ../LSDIndexChannel.cpp ../LSDChannel.cpp ../LSDIndexChannelTree.cpp ../LSDStatsTools.cpp ../LSDBasin.cpp ../LSDShapeTools.cpp
 
 OBJECTS=$(SOURCES:.cpp=.o)
 
