@@ -769,7 +769,14 @@ class LSDJunctionNetwork
   /// @param junction integer reciever index.
   /// @return Integer reciever of junction.
 	int get_Receiver_of_Junction(int junction) const;
-
+	
+	/// @details Gets the stream order of a junction
+	/// @param FlowInfo LSDFlowInfo object
+	/// @param junction the junction of interest
+	/// @return integer with stream order of junction
+	/// @author FJC
+	/// @date 20/03/14
+	int get_StreamOrder_of_Junction(LSDFlowInfo&FlowInfo, int junction);
 										
 	/// @return The Vector of Junctions.									
   vector<int> get_JunctionVector() const { return JunctionVector; }		

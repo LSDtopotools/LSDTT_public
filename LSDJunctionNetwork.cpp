@@ -1195,6 +1195,22 @@ int LSDJunctionNetwork::find_base_level_node_of_junction(int StartingJunction)
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+// This function gets the stream order of a junction
+// FJC 20/03/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+int LSDJunctionNetwork::get_StreamOrder_of_Junction(LSDFlowInfo& FlowInfo, int junction)
+{
+  int StreamOrder;
+  int row, col;
+  int node = get_Node_of_Junction(junction);
+  
+  FlowInfo.retrieve_current_row_and_col(node, row, col);
+  StreamOrder = StreamOrderArray[row][col];
+  
+  return StreamOrder;  
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 // Two getter functions that require bounds checking
 // Added by SMM 21/02/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
