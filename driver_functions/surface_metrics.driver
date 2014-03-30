@@ -1,0 +1,10 @@
+DEMFile data/cr
+SurfaceFittingWindowRadius 7
+Elevation 0
+Slope 1
+Aspect 0
+Curvature 1
+PlanformCurvature 0
+ProfileCurvature 0
+TangentialCurvature 0
+ClassificationOfStationaryPoints 0
