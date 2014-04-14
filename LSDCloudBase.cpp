@@ -372,6 +372,7 @@ void LSDCloud::raster_to_cloud(LSDRaster& raster)
 {
   XOffset = raster.get_XMinimum();
   YOffset = raster.get_YMinimum();
+  NPts = 0;
   vector<float> x_coordinates, y_coordinates, zeta_values;
   for(int i = 0; i < raster.get_NRows(); ++i)
   {
@@ -382,6 +383,7 @@ void LSDCloud::raster_to_cloud(LSDRaster& raster)
         zeta_values.push_back(raster.get_data_element(i,j));
         x_coordinates.push_back(float(j));
         y_coordinates.push_back((float(raster.get_NRows() - 1) - float(i)));
+        ++NPts;
       }
     }
   }
