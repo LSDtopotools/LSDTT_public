@@ -152,7 +152,12 @@ void LSDCloud::create(LSDRaster& raster)
  	OctreeResolution = raster.get_DataResolution();
 	raster_to_cloud(raster);
 }
-
+// Read in data from a PointData object (see LSDShapeTools module)
+void LSDCloud::create(PointData& point_data, LSDRaster& raster)
+{
+ 	OctreeResolution = raster.get_DataResolution();
+	PointData_to_cloud(point_data,raster);
+}
 //------------------------------------------------------------------------------
 // READING .las FILES
 // Read in header information only.  If origin shift specified (e.g. using lower
