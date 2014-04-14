@@ -406,6 +406,51 @@ void LSDCloud::raster_to_cloud(LSDRaster& raster)
   cloudOctree->setInputCloud(theCloud);
   cloudOctree->addPointsFromInputCloud();
 }
+// Read in data from a PointData object (see LSDShapeTools module)
+void LSDCloud::PointData_to_cloud(PointData& point_data, LSDRaster& raster)
+{
+  XOffset = raster.get_XMinimum();
+  YOffset = raster.get_YMinimum();
+  vector<float> x_coordinates, y_coordinates, zeta_values;
+  NPts = 0;
+  x_coordinates.push_back(point_data.X[0]-XOffset);
+  y_coordinates.push_back(point_data.Y[0]-YOffset);
+  ++NPts;
+  XMin = x_coordinates[0];
+  YMin = y_coordinates[0];
+  XMax = x_coordinates[0];
+  YMax = y_coordinates[0];
+  for(int i = 1; i < point_data.X.size(); ++i)
+  {
+    x_coordinates.push_back(point_data.X[i]-XOffset);
+    y_coordinates.push_back(point_data.Y[i]-YOffset);
+    ++NPts;
+    if(x_coordinates[i] < XMin) XMin = x_coordinates[i];
+    if(x_coordinates[i] > XMax) XMax = x_coordinates[i];  
+    if(y_coordinates[i] < YMin) YMin = y_coordinates[i];
+    if(y_coordinates[i] > YMax) YMax = y_coordinates[i];
+  }  
+  // Generate pointcloud data structure
+  pcl::PointCloud<pcl::PointXYZI>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZI>);
+  theCloud = cloud;
+  
+  theCloud->width = y_coordinates.size();
+  theCloud->height = 1;
+  theCloud->points.resize (theCloud->width * theCloud->height);
+  
+  // Loop through the .las file, reading the points into the new data structure.
+  for (size_t i = 0; i < theCloud->points.size(); ++i)
+  {
+    theCloud->points[i].x = x_coordinates[i];
+    theCloud->points[i].y = y_coordinates[i];
+    theCloud->points[i].z = 0;
+    theCloud->points[i].intensity = 0;
+  }
+  cloudOctree = (new pcl::octree::OctreePointCloudSearch<pcl::PointXYZI>(OctreeResolution) );
+  cloudOctree->setInputCloud(theCloud);
+  cloudOctree->addPointsFromInputCloud();
+}
+
   //------------------------------------------------------------------------------
   // SEARCHING TOOLS
   // a set of tools to conduct search operations on the structured point cloud
