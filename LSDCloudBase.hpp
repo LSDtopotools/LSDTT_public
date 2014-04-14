@@ -54,6 +54,9 @@ class LSDCloud
   ///@brief create an LSDCloud from a raster.
   ///
   LSDCloud(LSDRaster& raster)	 { create(raster); }
+    
+  ///@brief create an LSDCloud from a PointData object (see LSDShapeTools module)
+  LSDCloud(PointData& point_data, LSDRaster& raster) { create(point_data,raster); }
   
   LSDCloud(int n_pts, float x_min, float x_max, float y_min, float y_max, float x_offset, float y_offset, pcl::PointCloud<pcl::PointXYZI>::Ptr cloud, const double resolution)
             { create( n_pts, x_min, x_max, y_min, y_max, x_offset, y_offset, cloud, resolution); }
@@ -71,7 +74,8 @@ class LSDCloud
   pcl::PointCloud<pcl::PointXYZI>::Ptr get_theCloud() const { return theCloud; }
   float get_OctreeResolution() const   		{ return OctreeResolution; }
 
-  
+  float get_point_x(int index) { return theCloud->points[index].x; }
+  float get_point_y(int index) { return theCloud->points[index].y; }
   //pcl::octree::OctreePointCloudSearch<pcl::PointXYZI> get_octree() const   { return cloudOctree; }
   
   // Functions to get point from (i) cloud and (ii) octree index
@@ -129,6 +133,16 @@ class LSDCloud
   /// @author DTM
   /// @date 18/02/2014
   void raster_to_cloud(LSDRaster& raster);
+    
+  /// @brief Read in data from a PointData (LSDShapeTools) into a LSDCloud
+  ///
+  /// @details The point cloud is also structured in an octree for rapid spatial
+  /// querying. Uses the PCL library (www.poinclouds.org).
+  /// @param PointData -> x,y coordinate strucure to load into cloud
+  /// @param LSDRaster -> raster used as spatial reference frame
+  /// @author DTM
+  /// @date 11/04/2014
+  void PointData_to_cloud(PointData& point_data, LSDRaster& raster);
   ///---------------------------------------------------------------------------
   /// SEARCH TOOLS
   
@@ -168,7 +182,7 @@ class LSDCloud
   
   // Octree spatial structure
   double OctreeResolution;  
-  pcl::octree::OctreePointCloudSearch<pcl::PointXYZI> *cloudOctree;//(const double);	
+  pcl::octree::OctreePointCloudSearch<pcl::PointXYZI> *cloudOctree;	
   
   // GEOREFERENCING
   // bounding box of point cloud
@@ -190,7 +204,7 @@ class LSDCloud
   void create(LSDRaster& raster);
   void create(int n_pts, float x_min, float x_max, float y_min, float y_max,
               float x_offset, float y_offset, pcl::PointCloud<pcl::PointXYZI>::Ptr cloud, const double resolution);
-            
+  void create(PointData& point_data, LSDRaster& raster);           
 };
 
 #endif
