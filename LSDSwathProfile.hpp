@@ -22,6 +22,7 @@
 #include <vector>
 #include "TNT/tnt.h"
 #include "LSDRaster.hpp"
+#include "LSDCloudBase.hpp"
 #include "LSDShapeTools.hpp"
 // PCL
 #include <pcl/point_types.h>
@@ -52,7 +53,10 @@ class LSDSwath
   ///@author DTM
   ///@date 11/04/2014
   ///
-  LSDSwath(PointData& ProfilePoints, LSDRaster& RasterTemplate, float ProfileHalfWidth) { create(ProfilePoints, RasterTemplate, ProfileHalfWidth); }
+  LSDSwath(PointData& ProfilePoints, LSDRaster& RasterTemplate, float HalfWidth) { create(ProfilePoints, RasterTemplate, HalfWidth); }
+	
+	void get_transverse_swath_profile(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth,
+       vector<float>& mid_points, vector<float>& mean_profile, vector<float>& sd_profile, vector< vector<float> >& output_percentile_profiles);
 	
   // get functions
   // these get data elements
@@ -69,9 +73,16 @@ class LSDSwath
 
 	// metadata
   int NPtsInProfile;
+  float ProfileHalfWidth;
   float NoDataValue;
   int NRows;
   int NCols;
+  
+  // Bounding Box of profile
+  float XMax;
+  float XMin;
+  float YMax;
+  float YMin;
 
 	private:
   void create();
