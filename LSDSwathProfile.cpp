@@ -426,11 +426,11 @@ void LSDSwath::get_transverse_swath_profile(LSDRaster& Raster, vector<float> des
   int NBins = mid_points.size();
   vector<float> mean_profile_temp(NBins, NoDataValue);
   vector<float> sd_profile_temp(NBins, NoDataValue);
-  
+  vector< vector<float> > output_percentile_profiles_temp;
   for(int i = 0; i < NBins; ++i)
   {
-    mean_profile[i]=get_mean(binned_RasterValues[i]);
-    sd_profile[i]=get_standard_deviation(binned_RasterValues[i], mean_profile[i]);
+    mean_profile_temp[i]=get_mean(binned_RasterValues[i]);
+    sd_profile_temp[i]=get_standard_deviation(binned_RasterValues[i], mean_profile[i]);
   }
   for(int j = 0; j < NumberOfPercentileProfiles; ++j)
   {
@@ -439,7 +439,90 @@ void LSDSwath::get_transverse_swath_profile(LSDRaster& Raster, vector<float> des
     {
       percentile[i] = get_percentile(binned_RasterValues[i], desired_percentiles[j]);
     }
-    output_percentile_profiles.push_back(percentile);
+    output_percentile_profiles_temp.push_back(percentile);
   }
+  // Load profiles into export vectors
+  mean_profile = mean_profile_temp;
+  sd_profile = sd_profile_temp;
+  output_percentile_profiles = output_percentile_profiles_temp;
+}
+
+// GET_LONGITUDINAL_SWATH_PROFILES
+// Function takes a raster and calculates longitudinal swath profiles, based on
+// the swath template in the LSDSwath object.  Note that the input raster at
+// present must have the same extent as the original template raster used to
+// create the LSDSwath object.
+// The function returns a vector container of the desired profiles.  The first
+// and second profiles in the container are ALWAYS the mean and standard 
+// deviation respectively.  The following profiles contain the desired 
+// percentile profiles indicated in the input vector "desired_percentiles".
+void LSDSwath::get_longitudinal_swath_profile(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth,
+       vector<float>& mid_points, vector<float>& mean_profile, vector<float>& sd_profile, vector< vector<float> >& output_percentile_profiles)
+{  
+  vector<float> LongitudinalDistance, RasterValues;
+  float Resolution = Raster.get_DataResolution();
+  // Define bounding box of swath profile
+  int ColStart = int(floor((XMin)/Resolution));
+  int ColEnd = ColStart + int(ceil((XMax-XMin)/Resolution));
+  ColStart = ColStart - int(ceil(ProfileHalfWidth/Resolution));
+  ColEnd = ColEnd + int(ceil(ProfileHalfWidth/Resolution));
+  if (ColStart < 0) ColStart = 0;
+  if (ColEnd > NCols) ColEnd = NCols;
+  
+  int RowEnd = NRows - 1 - int(floor(YMin/Resolution));
+  int RowStart = RowEnd - int(ceil((YMax-YMin)/Resolution));
+  RowStart = RowStart - int(ceil(ProfileHalfWidth/Resolution));
+  RowEnd = RowEnd + int(ceil(ProfileHalfWidth/Resolution));  
+  if (RowEnd > NRows) RowEnd = NRows;
+  if (RowStart < 0) RowStart = 0;
+
+  for(int i = RowStart; i<RowEnd; ++i)
+  {
+    for(int j = ColStart; j<ColEnd; ++j)
+    {
+      if((DistanceToBaselineArray[i][j]!=NoDataValue) && (Raster.get_data_element(i,j)!=NoDataValue))
+      {
+        LongitudinalDistance.push_back(DistanceToBaselineArray[i][j]);
+        RasterValues.push_back(Raster.get_data_element(i,j));
+      }
+    }
+  }
+  // Sort values if you need percentiles  
+  int NumberOfPercentileProfiles = desired_percentiles.size();
+  if (NumberOfPercentileProfiles > 0)
+  {
+    vector<long unsigned int> index_map;
+    matlab_float_sort(RasterValues,RasterValues,index_map);
+    matlab_float_reorder(LongitudinalDistance, index_map, LongitudinalDistance);
+  }
+  
+  // Bin data
+  vector< vector<float> > binned_RasterValues;
+  float start_point = DistanceAlongBaseline[0];
+  float end_point = DistanceAlongBaseline[NPtsInProfile-1];
+  bin_data(RasterValues, LongitudinalDistance, start_point, end_point, BinWidth, mid_points, binned_RasterValues);
+  // Produce desired profiles from binned_RasterValues.
+  int NBins = mid_points.size();
+  vector<float> mean_profile_temp(NBins, NoDataValue);
+  vector<float> sd_profile_temp(NBins, NoDataValue);
+  vector< vector<float> > output_percentile_profiles_temp;
+  for(int i = 0; i < NBins; ++i)
+  {
+    mean_profile_temp[i]=get_mean(binned_RasterValues[i]);
+    sd_profile_temp[i]=get_standard_deviation(binned_RasterValues[i], mean_profile[i]);
+  }
+  for(int j = 0; j < NumberOfPercentileProfiles; ++j)
+  {
+    vector<float> percentile(NBins,NoDataValue);
+    for(int i = 0; i < NBins; ++i)
+    {
+      percentile[i] = get_percentile(binned_RasterValues[i], desired_percentiles[j]);
+    }
+    output_percentile_profiles_temp.push_back(percentile);
+  }
+  // Load profiles into export vectors
+  mean_profile = mean_profile_temp;
+  sd_profile = sd_profile_temp;
+  output_percentile_profiles = output_percentile_profiles_temp;
 }
 #endif
