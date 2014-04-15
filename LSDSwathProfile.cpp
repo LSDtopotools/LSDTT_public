@@ -444,7 +444,7 @@ void LSDSwath::get_transverse_swath_profile(LSDRaster& Raster, vector<float> des
   // Load profiles into export vectors
   mean_profile = mean_profile_temp;
   sd_profile = sd_profile_temp;
-  output_percentile_profiles = output_percentile_profiles_temp;
+  output_percentile_profiles = output_percentile_profiles_temp; 
 }
 
 // GET_LONGITUDINAL_SWATH_PROFILES
@@ -524,5 +524,75 @@ void LSDSwath::get_longitudinal_swath_profile(LSDRaster& Raster, vector<float> d
   mean_profile = mean_profile_temp;
   sd_profile = sd_profile_temp;
   output_percentile_profiles = output_percentile_profiles_temp;
+}
+
+//------------------------------------------------------------------------------
+// WRITE PROFILES TO FILE
+// These routines take a swath profile template, comprising the LSDSwath object,
+// and then uses this to construct either transverse (normal to profile) or
+// longitudinal (parallel to profile) profiles.
+void LSDSwath::write_transverse_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix)
+{
+  string profile_extension = "_trans_profile.txt";
+  vector<float> mid_points;
+  vector<float> mean_profile;
+  vector<float> sd_profile;
+  vector< vector<float> > output_percentile_profiles;
+  get_transverse_swath_profile(Raster, desired_percentiles, BinWidth, mid_points, mean_profile, sd_profile, output_percentile_profiles);
+  // Print profiles to file
+  string filename = prefix + profile_extension;
+  cout << "\t printing profiles to " << filename << endl;
+  ofstream ofs;
+  ofs.open(filename.c_str());
+  
+  if(ofs.fail())
+  {
+    cout << "\nFATAL ERROR: unable to write output_file" << endl;
+		exit(EXIT_FAILURE);
+  }
+  
+  ofs << "Midpoint Mean SD ";
+  for(int i_perc = 0; i_perc<desired_percentiles.size(); ++i_perc) ofs << desired_percentiles[i_perc] << " ";
+  ofs << "\n";
+  for(int i = 0; i < mid_points.size(); ++i)
+  {
+    ofs << mid_points[i] << " " << mean_profile[i] << " " << sd_profile[i] << " " ;
+    for(int i_perc = 0; i_perc<desired_percentiles.size(); ++i_perc) ofs << output_percentile_profiles[i_perc][i] << " ";
+    ofs << "\n";
+  }
+  
+  ofs.close();
+}
+void LSDSwath::write_longitudinal_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix)
+{
+  string profile_extension = "_long_profile.txt";
+  vector<float> mid_points;
+  vector<float> mean_profile;
+  vector<float> sd_profile;
+  vector< vector<float> > output_percentile_profiles;
+  get_longitudinal_swath_profile(Raster, desired_percentiles, BinWidth, mid_points, mean_profile, sd_profile, output_percentile_profiles);
+  // Print profiles to file
+  string filename = prefix + profile_extension;
+  cout << "\t printing profiles to " << filename << endl;
+  ofstream ofs;
+  ofs.open(filename.c_str());
+  
+  if(ofs.fail())
+  {
+    cout << "\nFATAL ERROR: unable to write output_file" << endl;
+		exit(EXIT_FAILURE);
+  }
+  
+  ofs << "Midpoint Mean SD ";
+  for(int i_perc = 0; i_perc<desired_percentiles.size(); ++i_perc) ofs << desired_percentiles[i_perc] << " ";
+  ofs << "\n";
+  for(int i = 0; i < mid_points.size(); ++i)
+  {
+    ofs << mid_points[i] << " " << mean_profile[i] << " " << sd_profile[i] << " " ;
+    for(int i_perc = 0; i_perc<desired_percentiles.size(); ++i_perc) ofs << output_percentile_profiles[i_perc][i] << " ";
+    ofs << "\n";
+  }
+  
+  ofs.close();
 }
 #endif
