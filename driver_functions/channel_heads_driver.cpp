@@ -114,7 +114,7 @@ int main (int nNumberofArgs,char *argv[])
 		// get the filled file
 	cout << "Filling the DEM" << endl;
 	LSDRaster filled_topo_test = topo_test.fill(Minimum_Slope);
-//	filled_topo_test.write_raster((DEM_f_name),DEM_flt_extension);
+	filled_topo_test.write_raster((DEM_f_name),DEM_flt_extension);
   
   //get a FlowInfo object
 	LSDFlowInfo FlowInfo(boundary_conditions,filled_topo_test); 
