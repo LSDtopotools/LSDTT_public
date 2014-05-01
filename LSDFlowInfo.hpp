@@ -471,7 +471,59 @@ class LSDFlowInfo
                                                          LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir, string Prefix, LSDIndexRaster Basins,
                                                          bool print_paths_switch, int thinning, string trace_path, bool basin_filter_switch,
                                                          vector<int> Target_Basin_Vector);
-
+  /// @brief Hilltop flow routing, modded for use in probabilistic hillslope length measures.
+  ///
+  /// @details Hilltop flow routing code built around original code from Martin Hurst. Based on
+  /// Lea (1992), with improvements discussed by Tarboton (1997) and a solution to the
+  /// problem of looping flow paths implemented.
+  ///
+  /// This code is SLOW but robust, a refactored version may appear, but there may not be 
+  /// enough whisky in Scotland to support that endeavour.
+  ///
+  /// The algorithm now checks for local uphill flows and in the case of identifying one,
+  /// D8 flow path is used to push the flow into the centre of the steepest downslope
+  /// cell, at which point the trace is restarted. The same technique is used to cope 
+  /// with self intersections of the flow path. These problems are not solved in the 
+  /// original paper and I think they are caused at least in part by the high resolution 
+  /// topogrpahy we are using.
+  ///
+  /// The code is also now built to take a d infinity flow direction raster instead of an
+  /// aspect raster. See Tarboton (1997) for discussions on why this is the best solution.
+  ///
+  /// The Basins input raster is used to code each hilltop into a basin to allow basin 
+  /// averaging to take place.
+  ///
+  /// The final 5 parameters are used to set up printing flow paths to files for visualisation,
+  /// if this is not needed simply pass in false to the two boolean switches and empty variables for the 
+  /// others, and the code will run as normal.
+  ///
+  /// The structure of the returned vector< Array2D<float> > is as follows: \n\n
+  /// [0] Hilltop Network coded with stream ID \n
+  /// [1] Hillslope Lengths \n
+  /// [2] Slope \n
+  /// [3] Relief \n
+  ///
+  /// Does not buffer the stream network and records the channel ID in the output file.
+  ///
+  /// @param Elevation LSDRaster of elevation values.
+  /// @param Slope LSDRaster of slope values.
+  /// @param Hilltops LSDRaster of hilltops.
+  /// @param StreamNetwork LSDIndexRaster of the stream network.
+  /// @param D_inf_Flowdir LSDRaster of flow directions.
+  /// @param Prefix String Prefix for output data filename.
+  /// @param Basins LSDIndexRaster of basin outlines.
+  /// @param print_paths_switch If true paths will be printed.
+  /// @param thinning Thinning factor, value used to skip hilltops being printed, use 1 to print every hilltop.
+  /// @param trace_path The file path to be used to write the path files to, must end with a slash. 
+  /// @param basin_filter_switch If this switch is true only basins in Target_Basin_Vector will have their paths printed.
+  /// @param Target_Basin_Vector Vector of Basin IDs that the user wants to print traces for.     
+  /// @return Vector of Array2D<float> containing hillslope metrics.
+  /// @author SWDG 
+  /// @date 28/4/14
+  vector< Array2D<float> > HilltopFlowRouting_probability(LSDRaster Elevation, LSDRaster Hilltops, LSDRaster Slope, 
+                                                         LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir, string Prefix, LSDIndexRaster Basins,
+                                                         bool print_paths_switch, int thinning, string trace_path, bool basin_filter_switch,
+                                                         vector<int> Target_Basin_Vector);
 	protected:
 
 	///Number of rows.

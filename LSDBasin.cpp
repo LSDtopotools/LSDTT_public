@@ -347,7 +347,7 @@ void LSDBasin::set_EStar_RStar(float CriticalSlope){
 
     EStar = (2 * (abs(CHTMean)) * HillslopeLength_HFR) / CriticalSlope;
     RStar = ReliefMean / (HillslopeLength_HFR * CriticalSlope);
-
+    
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
