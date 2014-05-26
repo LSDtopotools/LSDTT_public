@@ -1,8 +1,12 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// channel_heads_part2_driver.cpp
+// channel_heads_driver.cpp
 // A driver function for use with the Land Surace Dynamics Topo Toolbox
 // This program calculates channel heads using a chi method described in
-// Clubb et al. (manuscript in prep)
+// Clubb et al. (2014)
+//
+// Reference: Clubb, F. J., S. M. Mudd, D. T. Milodowski, M. D. Hurst, 
+// and L. J. Slater (2014), Objective extraction of channel heads from 
+// high-resolution topographic data, Water Resour. Res., 50, doi: 10.1002/2013WR015167.
 //
 // Developed by:
 //  Fiona Clubb
@@ -137,24 +141,22 @@ int main (int nNumberofArgs,char *argv[])
 	
 	// Get the valleys using the contour curvature
 	
-	// Calculate polyfit coefficients and the tangential curvature
-  Array2D<float> a;
-  Array2D<float> b;
-  Array2D<float> c;
-  Array2D<float> d;
-  Array2D<float> e;
-  Array2D<float> f;
-  //int NRows = topo_test.get_NRows();
-  //int NCols = topo_test.get_NCols();
-  //float XMinimum = topo_test.get_XMinimum();
-  //float YMinimum = topo_test.get_YMinimum();
-  //float DataResolution = topo_test.get_DataResolution();
-  //float NoDataValue = topo_test.get_NoDataValue();
-  float window_radius=6;
+  int surface_fitting_window_radius = 7;
+  vector<LSDRaster> surface_fitting;
+  LSDRaster tan_curvature;
+  string curv_name = "_tan_curv";
+  vector<int> raster_selection(8, 0);
+  raster_selection[6] = 1;
+  surface_fitting = filled_topo_test.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
   
-  topo_test.calculate_polyfit_coefficient_matrices(window_radius, a, b, c, d, e, f);
-  LSDRaster tan_curvature = topo_test.calculate_polyfit_tangential_curvature(a ,b ,c ,d, e);
-  
+  for(int i = 0; i<raster_selection.size(); ++i)
+	{
+		if(raster_selection[i]==1)
+		{
+      tan_curvature = surface_fitting[i];
+      tan_curvature.write_raster((path_name+DEM_name+curv_name), DEM_flt_extension);
+    }
+  }
   // Find the valley junctions
   Array2D<float> tan_curv_array = tan_curvature.get_RasterData();
   cout << "got tan curvature array" << endl;
