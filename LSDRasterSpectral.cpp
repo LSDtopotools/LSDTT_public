@@ -413,6 +413,7 @@ void LSDRasterSpectral::dfftw2D_fwd(Array2D<float>& InputArray, Array2D<float>& 
     for (int j=0;j<Lx;++j)
     {
       input[Lx*i+j][0] = InputArray[i][j];
+      input[Lx*i+j][1] = 0;
     }
   }
 
