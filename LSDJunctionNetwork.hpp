@@ -532,7 +532,49 @@ class LSDJunctionNetwork
   /// @date 16/07/13
 	vector<int> calculate_pelletier_channel_heads(float tan_curv_threshold, LSDFlowInfo& FlowInfo, Array2D<float>& tan_curv_array);
 	
-	/// @brief This function is used to identify concave portions of the landscape using a tangential curvature threshold.
+	/// @brief This function predicts channel head locations based on a tangential threshold 
+  /// as proposed by Pelletier (2013).
+  ///
+  /// @detail This function is used to predict channel head locations based on the method
+  /// proposed by Pelletier (2013).  First it creates a contour curvature map and
+  /// identifies channel heads as pixels with tangential curvature greater than a user
+  /// defined threshold value. This map needed to be reduced to give the source
+  /// pixels only.  This is done by i) sorting all the possible sources by
+  /// elevation and ii) routing flow from each potential source using an adaption
+  /// of Freeman MD flow.  Any potential sources that are located on ANY down-slope
+  /// pathway within convergent part of the topography from previously visited
+  /// source pixels are excluded.
+  ///
+  /// Reference: Pelletier (2013) A robust, two-parameter method for the extraction of
+  /// drainage networks from high-resolution digital elevation models (DEMs): Evaluation
+  /// using synthetic and real-world DEMs, Water Resources Research 49: 1-15
+  ///
+  /// @param FlowInfo object
+  /// @param raster containing elevation data
+  /// @param a threshold value of tangential curvature
+  /// @param an array of tangential curvature
+  /// @author DTM
+  /// @date 03/06/2014
+  vector<int> calculate_pelletier_channel_heads_DTM(LSDFlowInfo& FlowInfo, Array2D<float> topography, float tan_curv_threshold, Array2D<float>& tan_curv_array);
+  
+  /// @brief This function identifies upstream limit of channel network
+	///
+  /// @detail This is used to reduce a map of channel pixels down to a vector of sources 
+  /// for channel extraction.  It finds the upstream limit of each channel and then 
+  /// removes channelised pixels that are on ANY downslope pathway, within convergent part 
+  /// of the topography, from previous sources.  It uses a similar algorithm to the 
+  /// Freeman multi-directional flow routing algorithm in the LSDRaster object.
+  /// 
+  /// @param FlowInfo object
+  /// @param raster containing elevation data
+  /// @param a vector of row coordinates for possible source pixels
+  /// @param a vector of column coordinates for possible source pixels
+  /// @param an array of tangential curvature
+  /// @author DTM
+  /// @date 03/06/2014
+  vector<int> identify_upstream_limits(LSDFlowInfo& FlowInfo, Array2D<float>& topography, vector<int> source_row_vec,vector<int> source_col_vec, Array2D<float>& tan_curv);
+	
+  /// @brief This function is used to identify concave portions of the landscape using a tangential curvature threshold.
   ///
   /// @details It defines the threshold based on a multiple of the standard deviation
   /// of the curvature.  It then identifies valleys in which there are a linked series of pixels
