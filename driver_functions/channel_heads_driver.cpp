@@ -45,7 +45,7 @@
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// Fiona Clubb, Univertsity of Edinburgh
+// Fiona Clubb, University of Edinburgh
 //
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -67,6 +67,21 @@
 
 int main (int nNumberofArgs,char *argv[])
 {
+
+  cout << "Welcome to the channel heads driver program. This program finds channel\n"
+       << "heads using the Dreich algorithm (Clubb et al, 2014, WRR)\n"
+       << "To run this program you need a driver file with the name of the DEM\n"
+       << "WITHOUT extension, the minimum slope, a threshold number of pixels for\n"
+       << "intial channel identification, A_0 and m/n values for chi analysis\n"
+       << "and the number of connecting nodes that wil be considered a candidate channel\n\n"
+       << "Here is an example:\n"
+       << "indian_creek\n"
+       << "0.0001\n"
+       << "250\n"
+       << "1000\n"
+       << "0.45\n"
+       << "10\n\n";
+
 	//Test for correct input arguments
 	if (nNumberofArgs!=3)
 	{
@@ -104,6 +119,7 @@ int main (int nNumberofArgs,char *argv[])
 	// get some file names
 	string DEM_f_name = path_name+DEM_name+fill_ext;
 	string DEM_flt_extension = "flt";
+	string complete_fname = DEM_f_name+".flt";
 
 	// load the DEM
 	LSDRaster topo_test((path_name+DEM_name), DEM_flt_extension);
@@ -141,15 +157,17 @@ int main (int nNumberofArgs,char *argv[])
 	
 	// Get the valleys using the contour curvature
 	
-  int surface_fitting_window_radius = 7;
+	
+  float surface_fitting_window_radius = 7;      // the radius of the fitting window in metres
   vector<LSDRaster> surface_fitting;
   LSDRaster tan_curvature;
   string curv_name = "_tan_curv";
   vector<int> raster_selection(8, 0);
-  raster_selection[6] = 1;
+  raster_selection[6] = 1;                      // this indicates you only want the tangential curvature
   surface_fitting = filled_topo_test.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
-  
-  for(int i = 0; i<raster_selection.size(); ++i)
+
+  // now print the tangential curvature raster to file.   
+  for(int i = 0; i<int(raster_selection.size()); ++i)
 	{
 		if(raster_selection[i]==1)
 		{
@@ -173,6 +191,9 @@ int main (int nNumberofArgs,char *argv[])
   int MinSegLength = 10;
   vector<int> ChannelHeadNodes = ChanNetwork.GetChannelHeadsChiMethodFromValleys(valley_junctions, MinSegLength,
                                                  A_0, m_over_n, FlowInfo, DistanceFromOutlet, filled_topo_test);
+
+  //write channel_heads to a csv file
+  FlowInfo.print_vector_of_nodeindices_to_csv_file(ChannelHeadNodes, complete_fname);
 									                    
 	//write channel heads to a raster
 	string CH_name = "_CH";

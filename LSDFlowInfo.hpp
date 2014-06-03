@@ -136,11 +136,20 @@ class LSDFlowInfo
 	void retrieve_current_row_and_col(int current_node,int& curr_row,
                                              int& curr_col);
 
+  ///@brief This function takes a vector of node indices and prints a csv 
+  ///file that can be read by arcmap
+  ///@param nodeindex vec is a vector of nodeindices (which are ints)
+  ///@param outfilename is a string of the filename
+  /// @author SMM
+  /// @date 03/06/14
+  void print_vector_of_nodeindices_to_csv_file(vector<int>& nodeindex_vec, string outfilename);
+
+
   ///@brief Get the number of pixels flowing into a node.
   ///@param node Integer of node index value.
   ///@return Integer of the number of contributing pixels.
-  	/// @author SMM
-    /// @date 01/016/12
+  /// @author SMM
+  /// @date 01/016/12
 	int retrieve_contributing_pixels_of_node(int node)
 										{ return NContributingNodes[node]; }
 

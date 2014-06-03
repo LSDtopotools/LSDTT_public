@@ -160,6 +160,68 @@ void LSDFlowInfo::retrieve_current_row_and_col(int current_node,int& curr_row,
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// algorithms for searching the vectors
+// This gets the row and column of the current node
+//
+// SMM 01/06/2012
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDFlowInfo::print_vector_of_nodeindices_to_csv_file(vector<int>& nodeindex_vec, string outfilename)
+{
+
+  // fid the last '.' in the filename to use in the scv filename
+	unsigned dot = outfilename.find_last_of(".");
+
+	string prefix = outfilename.substr(0,dot);
+	//string suffix = str.substr(dot);
+  string insert = "_nodeindices_for_Arc.csv";
+  string outfname = prefix+insert;
+
+  cout << "the Arc tree filename is: " << outfname << endl;
+
+  int n_nodes = nodeindex_vec.size();
+  int n_nodeindeces = RowIndex.size();
+  
+  // open the outfile
+  ofstream csv_out;
+  csv_out.open(outfname.c_str());
+  
+  csv_out << "x,y,node,row,col" << endl;
+  
+  int current_row, current_col;
+  float x,y;
+  
+  // loop through node indices in vector
+  for (int i = 0; i<n_nodes; i++)
+  {
+     int current_node = nodeindex_vec[i];
+     
+     // make sure the nodeindex isn't out of bounds
+     if (current_node < n_nodeindeces)
+     {
+        // get the row and column
+        retrieve_current_row_and_col(current_node,current_row,
+                                             current_col);
+        
+        // get the x and y location of the node                                     
+		    x = XMinimum + float(current_col)*DataResolution + 0.5*DataResolution;
+		    
+		    // y coord a bit different since the DEM starts from the top corner   
+		    y = YMinimum + float(NRows-current_row)*DataResolution - 0.5*DataResolution;		 
+        csv_out << x << "," << y << "," << current_node << "," << current_row << "," << current_col << endl;                                         
+                                             
+     }
+  
+  }
+  
+  csv_out.close();
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
