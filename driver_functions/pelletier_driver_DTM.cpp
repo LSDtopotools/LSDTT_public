@@ -57,14 +57,15 @@
 #include <iomanip>
 #include <math.h>
 #include <string.h>
-#include "../../LSDStatsTools.hpp"
-#include "../../LSDRaster.hpp"
-#include "../../LSDRasterSpectral.hpp"
-#include "../../LSDIndexRaster.hpp"
-#include "../../LSDFlowInfo.hpp"
-#include "../../LSDJunctionNetwork.hpp"
-#include "../../LSDIndexChannelTree.hpp"
-#include "../../LSDChiNetwork.hpp"
+#include "../LSDStatsTools.hpp"
+#include "../LSDRaster.hpp"
+#include "../LSDRasterSpectral.hpp"
+#include "../LSDIndexRaster.hpp"
+#include "../LSDFlowInfo.hpp"
+#include "../LSDJunctionNetwork.hpp"
+#include "../LSDIndexChannelTree.hpp"
+#include "../LSDChiNetwork.hpp"
+using namespace std;
 
 int main (int nNumberofArgs,char *argv[])
 {
@@ -150,7 +151,7 @@ int main (int nNumberofArgs,char *argv[])
   raster_selection[6] = 1;
   surface_fitting = topo_test_wiener.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
   
-  for(int i = 0; i<raster_selection.size(); ++i)
+  for(int i = 0; i<int(raster_selection.size()); ++i)
 	{
 		if(raster_selection[i]==1)
 		{
@@ -159,13 +160,20 @@ int main (int nNumberofArgs,char *argv[])
     }
   }
 
-	string CH_name = "_CH";
+	string CH_name = "_CH_pelletier";
+	string complete_fname = path_name+DEM_name+CH_name+".flt";
+	
 	Array2D<float> topography = filled_topo_test.get_RasterData();
 	Array2D<float> curvature = tan_curvature.get_RasterData();
 	cout << "\tLocating channel heads..." << endl;
   vector<int> ChannelHeadNodes = ChanNetwork.calculate_pelletier_channel_heads_DTM(FlowInfo, topography, curv_threshold, curvature);
- 	LSDIndexRaster Channel_heads_raster = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(ChannelHeadNodes);
-  Channel_heads_raster.write_raster((path_name+DEM_name+CH_name),DEM_flt_extension);
+  
+  //write channel_heads to a csv file
+  FlowInfo.print_vector_of_nodeindices_to_csv_file(ChannelHeadNodes, complete_fname);  
+ 	
+   
+  //LSDIndexRaster Channel_heads_raster = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(ChannelHeadNodes);
+  //Channel_heads_raster.write_raster((path_name+DEM_name+CH_name),DEM_flt_extension);
 	
 // 	//create a channel network based on these channel heads
 // 	LSDJunctionNetwork NewChanNetwork(ChannelHeadNodes, FlowInfo);
