@@ -101,8 +101,9 @@ int main (int nNumberofArgs,char *argv[])
 	float m_over_n;
 	int no_connecting_nodes;
 	float curv_threshold;
+	float minimum_catchment_area;
 
-	file_info_in >> Minimum_Slope >> threshold >> A_0 >> m_over_n >> no_connecting_nodes >> curv_threshold;
+	file_info_in >> Minimum_Slope >> threshold >> A_0 >> m_over_n >> no_connecting_nodes >> curv_threshold >> minimum_catchment_area;
 
 	// get some file names
 	string DEM_f_name = path_name+DEM_name+fill_ext;
@@ -111,14 +112,14 @@ int main (int nNumberofArgs,char *argv[])
 	// load the DEM
 	LSDRaster topo_test((path_name+DEM_name), DEM_flt_extension);
   LSDRasterSpectral SpectralRaster(topo_test);                        
-  int FilterType = 2;
-  float FLow = 0.01;
-  float FHigh = 0.1;
-  LSDRaster topo_test_filtered = SpectralRaster.fftw2D_filter(FilterType, FLow, FHigh);
+//   int FilterType = 2;
+//   float FLow = 0.01;
+//   float FHigh = 0.1;
+//   LSDRaster topo_test_filtered = SpectralRaster.fftw2D_filter(FilterType, FLow, FHigh);
   LSDRaster topo_test_wiener = SpectralRaster.fftw2D_wiener();
   int border_width = 50;	
-  topo_test_filtered = topo_test_filtered.border_with_nodata(border_width);
-	topo_test_wiener = topo_test_wiener.border_with_nodata(border_width);
+  LSDRaster topo_test_filtered = topo_test_wiener.border_with_nodata(border_width);
+	topo_test_wiener = topo_test_wiener.border_with_nodata(border_width);       
 	
 	// Set the no flux boundary conditions
   vector<string> boundary_conditions(4);
@@ -168,12 +169,23 @@ int main (int nNumberofArgs,char *argv[])
 	cout << "\tLocating channel heads..." << endl;
   vector<int> ChannelHeadNodes = ChanNetwork.calculate_pelletier_channel_heads_DTM(FlowInfo, topography, curv_threshold, curvature);
   
-  //write channel_heads to a csv file
-  FlowInfo.print_vector_of_nodeindices_to_csv_file(ChannelHeadNodes, complete_fname);  
- 	
-   
-  //LSDIndexRaster Channel_heads_raster = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(ChannelHeadNodes);
-  //Channel_heads_raster.write_raster((path_name+DEM_name+CH_name),DEM_flt_extension);
+  // Now filter out false positives along channel according to a threshold 
+  // catchment area
+  cout << "\tFiltering out false positives..." << endl;
+  LSDJunctionNetwork ChanNetworkNew(ChannelHeadNodes, FlowInfo);
+	vector<int> ChannelHeadNodesFilt;
+  int count = 0;
+  for(int i = 0; i<ChannelHeadNodes.size(); ++i)
+	{
+    int upstream_junc = ChanNetworkNew.get_Junction_of_Node(ChannelHeadNodes[i], FlowInfo);
+    int test_node = ChanNetworkNew.get_penultimate_node_from_stream_link(upstream_junc, FlowInfo);
+    float catchment_area = float(FlowInfo.retrieve_contributing_pixels_of_node(test_node)) * FlowInfo.get_DataResolution();
+    if (catchment_area >= minimum_catchment_area) ChannelHeadNodesFilt.push_back(ChannelHeadNodes[i]);
+    else ++count;
+  }
+  cout << "\t...removed " << count << " nodes out of " << ChannelHeadNodes.size() << endl;
+  LSDIndexRaster Channel_heads_raster = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(ChannelHeadNodesFilt);
+  Channel_heads_raster.write_raster((path_name+DEM_name+CH_name),DEM_flt_extension);
 	
 // 	//create a channel network based on these channel heads
 // 	LSDJunctionNetwork NewChanNetwork(ChannelHeadNodes, FlowInfo);
