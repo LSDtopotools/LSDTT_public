@@ -139,7 +139,15 @@ class LSDJunctionNetwork
   /// @author FC
   /// @date 31/10/13
   int get_Junction_of_Node(int Node, LSDFlowInfo& FlowInfo);
-
+  
+  /// @brief returns the penultimate node of the stream link below given junction
+  /// @param upstream junction of desired stream link
+  /// @param FlowInfo object
+  /// @return node index (for FlowInfo) of penultimate node in stream link
+  /// @author DTM
+  /// @date 04/06/14
+  int get_penultimate_node_from_stream_link(int upstream_junction, LSDFlowInfo& FlowInfo);
+	
 	// this prints the link array to raster
 	/// @brief This sends the StreamOrderArray to a LSDIndexRaster.
   /// @return LSDIndexRaster of StreamOrderArray.

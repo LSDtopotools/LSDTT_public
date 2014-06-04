@@ -773,6 +773,26 @@ int LSDJunctionNetwork::get_Junction_of_Node(int Node, LSDFlowInfo& FlowInfo)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// this function returns the penultimate node of the stream link below a given
+// junction
+// DTM 04/06/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+int LSDJunctionNetwork::get_penultimate_node_from_stream_link(int upstream_junction, LSDFlowInfo& FlowInfo)
+{
+  int current_junc = upstream_junction;
+	int receiver_junc = ReceiverVector[current_junc];
+  // First, get channel pixels draining from the current junction.
+  LSDIndexChannel StreamLinkVector = LSDIndexChannel(current_junc, JunctionVector[current_junc],
+                                                     receiver_junc, JunctionVector[receiver_junc], FlowInfo);
+  // Find final nth order channel pixel, which is the penultimate pixel
+  // in channel.
+  int n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
+  // penultimate node is given by the second to last node in the stream link.
+  int penultimate_node = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
+  return penultimate_node;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // This function generates and LSDIndexChannel given a starting junction
