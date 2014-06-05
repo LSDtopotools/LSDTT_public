@@ -57,14 +57,14 @@
 #include <iomanip>
 #include <math.h>
 #include <string.h>
-#include "../../LSDStatsTools.hpp"
-#include "../../LSDRaster.hpp"
-#include "../../LSDRasterSpectral.hpp"
-#include "../../LSDIndexRaster.hpp"
-#include "../../LSDFlowInfo.hpp"
-#include "../../LSDJunctionNetwork.hpp"
-#include "../../LSDIndexChannelTree.hpp"
-#include "../../LSDChiNetwork.hpp"
+#include "../LSDStatsTools.hpp"
+#include "../LSDRaster.hpp"
+#include "../LSDRasterSpectral.hpp"
+#include "../LSDIndexRaster.hpp"
+#include "../LSDFlowInfo.hpp"
+#include "../LSDJunctionNetwork.hpp"
+#include "../LSDIndexChannelTree.hpp"
+#include "../LSDChiNetwork.hpp"
 
 int main (int nNumberofArgs,char *argv[])
 {
