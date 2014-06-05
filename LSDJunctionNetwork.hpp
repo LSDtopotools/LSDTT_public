@@ -563,7 +563,7 @@ class LSDJunctionNetwork
   /// @param an array of tangential curvature
   /// @author DTM
   /// @date 03/06/2014
-  vector<int> calculate_pelletier_channel_heads_DTM(LSDFlowInfo& FlowInfo, Array2D<float> topography, float tan_curv_threshold, Array2D<float>& tan_curv_array);
+  vector<int> calculate_pelletier_channel_heads_DTM(LSDFlowInfo& FlowInfo, Array2D<float> topography, float tan_curv_threshold, Array2D<float>& tan_curv_array, Array2D<float>& tan_curv_array_LW);
   
   /// @brief This function identifies upstream limit of channel network
 	///
