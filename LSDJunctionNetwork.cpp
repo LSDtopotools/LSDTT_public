@@ -2228,7 +2228,7 @@ vector<int> LSDJunctionNetwork::calculate_pelletier_channel_heads(float tan_curv
 // source pixels are excluded.  This is held within the  
 // 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-vector<int> LSDJunctionNetwork::calculate_pelletier_channel_heads_DTM(LSDFlowInfo& FlowInfo, Array2D<float> topography, float tan_curv_threshold, Array2D<float>& tan_curv_array)
+vector<int> LSDJunctionNetwork::calculate_pelletier_channel_heads_DTM(LSDFlowInfo& FlowInfo, Array2D<float> topography, float tan_curv_threshold, Array2D<float>& tan_curv_array, Array2D<float>& tan_curv_array_LW)
 {
   Array2D<float> curv_array(NRows,NCols,NoDataValue);
   vector<int> possible_sources_row;
@@ -2239,7 +2239,7 @@ vector<int> LSDJunctionNetwork::calculate_pelletier_channel_heads_DTM(LSDFlowInf
 	{
     for(int col = 0; col < NCols; col++)
     {
-      if (tan_curv_array[row][col] > tan_curv_threshold)
+      if (tan_curv_array[row][col] > tan_curv_threshold && tan_curv_array_LW[row][col] > 0)
       {
         possible_sources_row.push_back(row);
         possible_sources_col.push_back(col);
@@ -2255,8 +2255,8 @@ vector<int> LSDJunctionNetwork::calculate_pelletier_channel_heads_DTM(LSDFlowInf
   matlab_int_reorder(possible_sources_row, index_map, possible_sources_row);
   matlab_int_reorder(possible_sources_col, index_map, possible_sources_col);
   // remove all pixels on downstream pathway
-  vector<int> Sources = identify_upstream_limits(FlowInfo, topography, possible_sources_row,possible_sources_col,tan_curv_array);
-   
+  vector<int> Sources = identify_upstream_limits(FlowInfo, topography, possible_sources_row,possible_sources_col,tan_curv_array_LW);
+       
   return Sources;
 }
 //------------------------------------------------------------------------------
