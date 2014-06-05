@@ -188,8 +188,9 @@ int main (int nNumberofArgs,char *argv[])
     else ++count;
   }
   cout << "\t...removed " << count << " nodes out of " << ChannelHeadNodes.size() << endl;
-  LSDIndexRaster Channel_heads_raster = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(ChannelHeadNodesFilt);
-  Channel_heads_raster.write_raster((path_name+DEM_name+CH_name),DEM_flt_extension);
+  FlowInfo.print_vector_of_nodeindices_to_csv_file(ChannelHeadNodesFilt,(path_name+DEM_name+CH_name));
+  //LSDIndexRaster Channel_heads_raster = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(ChannelHeadNodesFilt);
+  //Channel_heads_raster.write_raster((path_name+DEM_name+CH_name),DEM_flt_extension);
 	
 	//create a channel network based on these channel heads
 	LSDJunctionNetwork NewChanNetwork(ChannelHeadNodesFilt, FlowInfo);
