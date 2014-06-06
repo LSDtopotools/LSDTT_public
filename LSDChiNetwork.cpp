@@ -497,7 +497,7 @@ void LSDChiNetwork::print_channel_details_to_file_full_fitted(string fname, int 
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// 
+//
 // This function prints channel detaisl to a file that can be read by ArcMap
 // in csv format
 //
@@ -530,13 +530,13 @@ void LSDChiNetwork::print_channel_details_to_file_full_fitted_for_ArcMap(string 
   double x,y;
 
 	int n_channels = chis.size();
-	
+
 	// print the header information
   ArcChan_out << "id,x,y,channel_number,receiver_channel,node_on_reciever_channel,";
   ArcChan_out << "node,row,column,flow_distance,chi,elevation,drainage_area,n_data_points,";
   ArcChan_out << "m_mean,m_st_dev,m_std_err,b_mean,b_st_dev,b_std_err,";
   ArcChan_out << "DW_mean,DW_st_dev,DW_std_err,fitted_elev_mean,fitted_elev_st_dev,fitted_elev_std_err" << endl;
-  
+
 	if (chi_b_means.size() == chis.size())
 	{
 
@@ -572,13 +572,15 @@ void LSDChiNetwork::print_channel_details_to_file_full_fitted_for_ArcMap(string 
       int n_nodes = node.size();
 			for (int i = 0; i< n_nodes; i++)
 			{
-			
-		    // increment the id and calculate the x and y locations 
+
+		    // increment the id and calculate the x and y locations
+		    // the last 0.0001*DataResolution is to make sure there are no integer data points
         id++;
-		    x = XMinimum + float(col[i])*DataResolution + 0.5*DataResolution;
-		    y = YMinimum + float(NRows-row[i])*DataResolution - 0.5*DataResolution;		// this is because the DEM starts from the top corner
-			
-				ArcChan_out << id << "," << x << "," << y << "," 
+		    x = XMinimum + float(col[i])*DataResolution + 0.5*DataResolution + 0.0001*DataResolution;
+		    // y location is a little different because the DEM starts from the top corner
+		    y = YMinimum + float(NRows-row[i])*DataResolution - 0.5*DataResolution + 0.0001*DataResolution;
+
+				ArcChan_out << id << "," << x << "," << y << ","
              << channel_number << "," << receiver_channel[channel_number] << ","
 						 << node_on_receiver_channel[channel_number] << ","
 						 << node[i] << "," << row[i] << "," << col[i] << "," << flow_distance[i] << ","

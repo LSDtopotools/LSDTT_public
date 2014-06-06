@@ -179,43 +179,45 @@ void LSDFlowInfo::print_vector_of_nodeindices_to_csv_file(vector<int>& nodeindex
   string insert = "_nodeindices_for_Arc.csv";
   string outfname = prefix+insert;
 
-  cout << "the Arc tree filename is: " << outfname << endl;
+  cout << "the Arc filename is: " << outfname << endl;
 
   int n_nodes = nodeindex_vec.size();
   int n_nodeindeces = RowIndex.size();
-  
+
   // open the outfile
   ofstream csv_out;
   csv_out.open(outfname.c_str());
-  
+
   csv_out << "x,y,node,row,col" << endl;
-  
+
   int current_row, current_col;
   float x,y;
-  
+
   // loop through node indices in vector
   for (int i = 0; i<n_nodes; i++)
   {
      int current_node = nodeindex_vec[i];
-     
+
      // make sure the nodeindex isn't out of bounds
      if (current_node < n_nodeindeces)
      {
         // get the row and column
         retrieve_current_row_and_col(current_node,current_row,
                                              current_col);
-        
-        // get the x and y location of the node                                     
-		    x = XMinimum + float(current_col)*DataResolution + 0.5*DataResolution;
-		    
-		    // y coord a bit different since the DEM starts from the top corner   
-		    y = YMinimum + float(NRows-current_row)*DataResolution - 0.5*DataResolution;		 
-        csv_out << x << "," << y << "," << current_node << "," << current_row << "," << current_col << endl;                                         
-                                             
+
+        // get the x and y location of the node
+        // the last 0.0001*DataResolution is to make sure there are no integer data points
+		    x = XMinimum + float(current_col)*DataResolution + 0.5*DataResolution + 0.0001*DataResolution;
+
+		    // the last 0.0001*DataResolution is to make sure there are no integer data points
+		    // y coord a bit different since the DEM starts from the top corner
+		    y = YMinimum + float(NRows-current_row)*DataResolution - 0.5*DataResolution + 0.0001*DataResolution;;
+        csv_out << x << "," << y << "," << current_node << "," << current_row << "," << current_col << endl;
+
      }
-  
+
   }
-  
+
   csv_out.close();
 
 }
@@ -1081,13 +1083,13 @@ void LSDFlowInfo::unpickle(string filename)
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Method to ingest the channel heads raster generated using channel_heads_driver.cpp
-// into a vector of source nodes so that an LSDJunctionNetwork can be created easily 
+// into a vector of source nodes so that an LSDJunctionNetwork can be created easily
 // from them. Assumes the FlowInfo object has the same dimensions as the channel
 // heads raster.
 //
 // Takes the filename and extension of the channel heads raster.
 //
-// SWDG 05/12/12 
+// SWDG 05/12/12
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension){
 
@@ -1102,7 +1104,7 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension)
         CH_node = retrieve_node_from_row_and_column(i,j);
         if (CH_node != NoDataValue){
           Sources.push_back(CH_node);
-        }  
+        }
       }
     }
   }
@@ -1807,7 +1809,7 @@ int LSDFlowInfo::find_farthest_upslope_node(int node, LSDRaster& DistFromOutlet)
 // this is different from the above function in that it does not snap to the nearest channel
 //
 // FJC 11/02/14
-// 
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 int LSDFlowInfo::get_node_index_of_coordinate_point(float X_coordinate, float Y_coordinate)
@@ -1819,11 +1821,11 @@ int LSDFlowInfo::get_node_index_of_coordinate_point(float X_coordinate, float Y_
   // Get row and column of point
   int col_point = int(X_coordinate_shifted_origin/DataResolution);
   int row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/DataResolution));
-  
+
   // Get node of point
   int CurrentNode = retrieve_node_from_row_and_column(row_point, col_point);
-  
-  return CurrentNode;  
+
+  return CurrentNode;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -1928,7 +1930,7 @@ vector<int> LSDFlowInfo::get_sources_slope_area(LSDIndexRaster& FlowPixels, LSDR
 	{
 		row = RowIndex[node];
 		col = ColIndex[node];
-		
+
 		float area = FlowPixels.get_data_element(row,col);
 		float slope = Slope.get_data_element(row,col);
     float SA_product = area * (slope*slope);
@@ -1994,7 +1996,7 @@ vector<int> LSDFlowInfo::get_sources_slope_area(LSDIndexRaster& FlowPixels, LSDR
 vector<int> LSDFlowInfo::get_sources_from_mapped_channel_heads(vector<float>& X_coords, vector<float>& Y_coords)
 {
   vector<int> SourceNodes;
-  cout << "N of channel heads: " << X_coords.size() << endl;  
+  cout << "N of channel heads: " << X_coords.size() << endl;
   for (unsigned int i = 0; i < X_coords.size(); i++)
   {
     int NI = get_node_index_of_coordinate_point(X_coords[i], Y_coords[i]);
@@ -2003,7 +2005,7 @@ vector<int> LSDFlowInfo::get_sources_from_mapped_channel_heads(vector<float>& X_
       SourceNodes.push_back(NI);
     }
   }
-  
+
   return SourceNodes;
 }
 
@@ -2016,36 +2018,36 @@ vector<int> LSDFlowInfo::get_sources_from_mapped_channel_heads(vector<float>& X_
 //trace and the final pixel coordinates of the trace.
 // SWDG 20/1/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDFlowInfo::D8_Trace(int i, int j, LSDIndexRaster StreamNetwork, float& length, int& receiver_row, int& receiver_col, Array2D<int>& Path){ 
-  
+void LSDFlowInfo::D8_Trace(int i, int j, LSDIndexRaster StreamNetwork, float& length, int& receiver_row, int& receiver_col, Array2D<int>& Path){
+
   float root_2 = 1.4142135623;
 
   Array2D<int> stnet = StreamNetwork.get_RasterData();
 
   length = 0;
-  
+
   int node;
-  
+
   int reciever_node = retrieve_node_from_row_and_column(i, j);
   receiver_row = i;
   receiver_col = j;
-  
+
   Path[receiver_row][receiver_col] = 1;
-  
-  while (StreamNetwork.get_data_element(receiver_row, receiver_col) == NoDataValue){  // need to do edge checking 
-  
+
+  while (StreamNetwork.get_data_element(receiver_row, receiver_col) == NoDataValue){  // need to do edge checking
+
     retrieve_receiver_information(reciever_node, node, receiver_row, receiver_col);
-  
+
     Path[receiver_row][receiver_col] = 1;
-  
+
     //update length
     if (retrieve_flow_length_code_of_node(reciever_node) == 1){ length += DataResolution; }
     else if (retrieve_flow_length_code_of_node(reciever_node) == 1){ length += (DataResolution * root_2); }
-      
+
     reciever_node = node;
-   
+
   }
-  
+
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -2053,35 +2055,35 @@ void LSDFlowInfo::D8_Trace(int i, int j, LSDIndexRaster StreamNetwork, float& le
 // Lea (1992), with improvements discussed by Tarboton (1997) and a solution to the
 // problem of looping flow paths implemented.
 //
-// This code is SLOW but robust, a refactored version may appear, but there may not be 
+// This code is SLOW but robust, a refactored version may appear, but there may not be
 // enough whisky in Scotland to support that endeavour.
 //
 // The algorithm now checks for local uphill flows and in the case of identifying one,
 // D8 flow path is used to push the flow into the centre of the steepest downslope
-// cell, at which point the trace is restarted. The same technique is used to cope 
-// with self intersections of the flow path. These problems are not solved in the 
-// original paper and I think they are caused at least in part by the high resolution 
+// cell, at which point the trace is restarted. The same technique is used to cope
+// with self intersections of the flow path. These problems are not solved in the
+// original paper and I think they are caused at least in part by the high resolution
 // topogrpahy we are using.
 //
 // The code is also now built to take a d infinity flow direction raster instead of an
 // aspect raster. See Tarboton (1997) for discussions on why this is the best solution.
 //
-// The Basins input raster is used to code each hilltop into a basin to allow basin 
+// The Basins input raster is used to code each hilltop into a basin to allow basin
 // averaging to take place.
 //
 // The final 5 parameters are used to set up printing flow paths to files for visualisation,
-// if this is not needed simply pass in false to the two boolean switches and empty variables for the 
+// if this is not needed simply pass in false to the two boolean switches and empty variables for the
 // others, and the code will run as normal.
 //
 // The structure of the returned vector< Array2D<float> > is as follows:
-// [0] Hilltop Network coded with stream ID 
-// [1] Hillslope Lengths 
-// [2] Slope 
-// [3] Relief 
+// [0] Hilltop Network coded with stream ID
+// [1] Hillslope Lengths
+// [2] Slope
+// [3] Relief
 //
 // SWDG 12/2/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LSDRaster Hilltops, LSDRaster Slope, 
+vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LSDRaster Hilltops, LSDRaster Slope,
                                                          LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir, string Prefix, LSDIndexRaster Basins,
                                                          bool print_paths_switch, int thinning, string trace_path, bool basin_filter_switch,
                                                          vector<int> Target_Basin_Vector){
@@ -2097,7 +2099,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 	int count = 0;
 	float PI = 3.14159265;
 	float degs, degs_old, degs_new, theta;
-	float s_local, s_edge;      
+	float s_local, s_edge;
 	float xo, yo, xi, yi, temp_yo1, temp_yo2, temp_xo1, temp_xo2;
 
   //debugging counters
@@ -2109,7 +2111,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 
 	// a direction flag numbered 1,2,3,4 for E,S,W,N respectively
 	int dir;
-	
+
 	float ymax = YMinimum + NRows*DataResolution;
 
 	//Get data arrays from LSDRasters
@@ -2119,10 +2121,10 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 	Array2D<float> hilltops = Hilltops.get_RasterData(); //hilltops
 	Array2D<float> slope = Slope.get_RasterData(); //hilltops
   Array2D<int> basin = Basins.get_RasterData(); //basins
-  
+
   //empty arrays for data to be stored in
   Array2D<float> rads(NRows,NCols);
-	Array2D<float> path(NRows, NCols, 0.0);	
+	Array2D<float> path(NRows, NCols, 0.0);
 	Array2D<float> blank(NRows, NCols, 0.0);
 	Array2D<float> RoutedHilltops(NRows,NCols,NoDataValue);
   Array2D<float> HillslopeLength_Array(NRows,NCols,NoDataValue);
@@ -2140,11 +2142,11 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 	Array1D<float> north_vec(vec_size);
 
 	ofstream ofs;
-	
+
   //create the output filename from the user supplied filename prefix
   stringstream ss_filename;
   ss_filename << Prefix << "_HilltopData.txt";
-     
+
   ofs.open(ss_filename.str().c_str());
 
 	if( ofs.fail() ){
@@ -2170,10 +2172,10 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 	}
 
 	// cycle through study area, find hilltops and trace downstream
-	for (i=1; i<NRows-1; ++i) { 
-    cout << flush <<  "\tRow: " << i << " of = " << NRows-1 << "              \r";	          
-    for (j=1; j<NCols-1; ++j) {                        
-		                                    
+	for (i=1; i<NRows-1; ++i) {
+    cout << flush <<  "\tRow: " << i << " of = " << NRows-1 << "              \r";
+    for (j=1; j<NCols-1; ++j) {
+
 			// ignore edge cells and non-hilltop cells
 			// route initial node by aspect and get outlet coordinates
 			if (hilltops[i][j] != NoDataValue) {
@@ -2184,7 +2186,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 				path = blank.copy();
 
 				++ht_count;
-				
+
 				degs = aspect[i][j];
 				theta = rads[i][j];
 				a = i;
@@ -2233,7 +2235,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 					dir = 4;
 					east_vec[count] = easting[b] + xo - 0.5*DataResolution;
 					north_vec[count] = northing[a] + 0.5*DataResolution;
-					--a; 
+					--a;
 				}
 				else {
 					cout << "FATAL ERROR, Kinematic routing algorithm enountered null aspect value" << endl;
@@ -2243,13 +2245,13 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 				//collect slopes and totals weighted by path length
 				length += d;
 				s_local = slope[a][b];
-			
+
 				//continue trace until a stream node is encountered
 				while (flag == true) {
-				
+
 				  int a_2 = a;
           int b_2 = b;
-				
+
 					path[a][b] += 1;
 
 					degs_old = degs;
@@ -2275,12 +2277,12 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 						else if (dir == 2) temp_xo1 = -1;
 						else if (dir == 3) temp_yo1 = -1;
 						else if (dir == 4) temp_xo2 = -1;
-						
+
 						s_local = slope[a][b];
-            
+
             int flag_new = 0; //explain this flag
-            
-						if (temp_yo1 <= 1 && temp_yo1 > 0) {  
+
+						if (temp_yo1 <= 1 && temp_yo1 > 0) {
               ++flag_new;
 							xo = 1, yo = temp_yo1;
 							d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
@@ -2292,8 +2294,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 							if (xi== 0 && yi == 0) yi = 0.00001;
 							else if (xi== 0 && yi == 1) yi = 1 - 0.00001;
 						}
-						else if (temp_xo2 <= 1 && temp_xo2 > 0) { 
-              ++flag_new; 
+						else if (temp_xo2 <= 1 && temp_xo2 > 0) {
+              ++flag_new;
 							xo = temp_xo2, yo = 0;
 							d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
 							xi = xo, yi = 1,
@@ -2304,7 +2306,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 							if (xi== 0 && yi == 1) xi = 0.00001;
 							else if (xi== 1 && yi == 1) xi = 1 - 0.00001;
 						}
-						else if (temp_yo2 <= 1 && temp_yo2 > 0) { 
+						else if (temp_yo2 <= 1 && temp_yo2 > 0) {
               ++flag_new;
 							xo = 0, yo = temp_yo2;
 							d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
@@ -2317,7 +2319,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 							else if (xi== 1 && yi == 1) yi = 1 - 0.00001;
 						}
 
-						else if (temp_xo1 <= 1 && temp_xo1 > 0) { 
+						else if (temp_xo1 <= 1 && temp_xo1 > 0) {
               ++flag_new;
 							xo = temp_xo1, yo = 1;
 							d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
@@ -2358,8 +2360,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 								exit(EXIT_FAILURE);
 							}
 						}
-						else if (dir == 2) {   
-							if 	(degs_old <= 180 || degs_new >= 0) {     
+						else if (dir == 2) {
+							if 	(degs_old <= 180 || degs_new >= 0) {
 								xo = 1, yo = 1-0.00001;
 								s_edge = abs(s_local*sin((2/PI)-theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
@@ -2436,15 +2438,15 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 								cout << "Flow unable to route E or W" << endl;
 								exit(EXIT_FAILURE);
 							}
-						}             
+						}
             }
 					}
 
 					else {
-                  
+
 						// ROUTE ALONG EDGES
 						if (dir	== 1) {
-							if (degs_old <= 90 || degs_new >= 270) {							
+							if (degs_old <= 90 || degs_new >= 270) {
 								xo = 0.00001, yo = 1;
 								s_edge = abs(s_local*sin(theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
@@ -2469,7 +2471,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 								exit(EXIT_FAILURE);
 							}
 						}
-						else if (dir == 2) {   
+						else if (dir == 2) {
 							if 	(degs_old <= 180 || degs_new >= 0) {
 								xo = 1, yo = 1-0.00001;
 								s_edge = abs(s_local*sin((2/PI)-theta));
@@ -2549,24 +2551,24 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 							}
 						}
 					}
-					
+
 					if (path[a][b] < 1){  // only update length on 'first slosh'
 					  length += d;
           }
-          
+
           degs = degs_new;
-					              
-          if(zeta[a][b] - zeta[a_2][b_2] > 0){   
-            
+
+          if(zeta[a][b] - zeta[a_2][b_2] > 0){
+
             length -= d;    //remove uphill length from trace
-            
+
             a = a_2;
             b = b_2;
-            
+
             //restart trace
             degs = aspect[a][b];
 			    	theta = rads[a][b];
-		    		path[a][b] += 1;    
+		    		path[a][b] += 1;
 		    		east_vec[0] = easting[b];
 			    	north_vec[0] = northing[a];
 		    		s_local = slope[a][b];
@@ -2612,34 +2614,34 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 							dir = 4;
 							east_vec[count] = easting[b] + xo - 0.5*DataResolution;
 							north_vec[count] = northing[a] + 0.5*DataResolution;
-							--a; 
+							--a;
 						}
 						else {
 							cout << "FATAL ERROR, Kinematic routing algorithm enountered null aspect value" << endl;
 							exit(EXIT_FAILURE);
 						}
-   		
+
 						//collect slopes and totals weighted by path length
 
 			    	length += d;
-			    	s_local = slope[a][b];            
-            
+			    	s_local = slope[a][b];
+
           }
-					
+
 		    	if (path[a][b] >= 1){  //self intersect/'slosh'
-           
+
             degs = aspect[a][b];
 						theta = rads[a][b];
 						path[a][b] += 1;
 						east_vec[0] = easting[b];
 						north_vec[0] = northing[a];
 						s_local = slope[a][b];
-        
+
             a_2 = a;
             b_2 = b;
-    		
+
     		    length += sqrt((pow((xo-0.5),2) + pow((yo-0.5),2)));  //update length to cope with the 'jump' to the centre of the cell to restart the trace
-    		
+
 						//test direction, calculate outlet coordinates and update indicies
 						// easterly
 						if (degs >= 45 && degs < 135) {
@@ -2679,7 +2681,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 				    	dir = 4;
 				    	east_vec[count] = easting[b] + xo - 0.5*DataResolution;
 			    		north_vec[count] = northing[a] + 0.5*DataResolution;
-			    		--a; 
+			    		--a;
 				}
 				else {
 					cout << "FATAL ERROR, Kinematic routing algorithm enountered null aspect value" << endl;
@@ -2688,43 +2690,43 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 
 				//collect slopes and totals weighted by path length
 				length += d;
-				s_local = slope[a][b];            
-                    
+				s_local = slope[a][b];
+
         }
-					
+
 				if (a == 0 || b == 0 ||	a == NRows-1 || b == NCols-1 || stnet[a][b] != NoDataValue || stnet[a-1][b-1] != NoDataValue || stnet[a][b-1] != NoDataValue || stnet[a+1][b-1] != NoDataValue || stnet[a+1][b] != NoDataValue || stnet[a+1][b+1] != NoDataValue || stnet[a][b+1] != NoDataValue || stnet[a-1][b+1] != NoDataValue || stnet[a-1][b] != NoDataValue || path[a][b] >= 3) flag = false;
 				}
-                
+
         if (a == 0 || b == 0 ||	a == NRows-1 || b == NCols-1 ){
           // avoid going out of bounds.
-        
+
           // this is caused by having a hilltop on the first row or col away from the border
           // eg i or j == 1 or nrows/ncols - 2 and flowing towards the edge.
           // can fix with a test here for if streamnet[a][b] != NDV otherwise trace will fail *correctly*
-          
+
           ++edge_count;
-        
-        } 
-        else{   
+
+        }
+        else{
 				  //if trace finished at a stream, print hillslope info.
-				  if (stnet[a][b] != NoDataValue || stnet[a-1][b-1] != NoDataValue || stnet[a][b-1] != NoDataValue || stnet[a+1][b-1] != NoDataValue || stnet[a+1][b] != NoDataValue || stnet[a+1][b+1] != NoDataValue || stnet[a][b+1] != NoDataValue || stnet[a-1][b+1] != NoDataValue || stnet[a-1][b] != NoDataValue) 
-          {				
-				    path[a][b] = 1; 
-				                                                                    
+				  if (stnet[a][b] != NoDataValue || stnet[a-1][b-1] != NoDataValue || stnet[a][b-1] != NoDataValue || stnet[a+1][b-1] != NoDataValue || stnet[a+1][b] != NoDataValue || stnet[a+1][b+1] != NoDataValue || stnet[a][b+1] != NoDataValue || stnet[a-1][b+1] != NoDataValue || stnet[a-1][b] != NoDataValue)
+          {
+				    path[a][b] = 1;
+
             ++s_count;
-          
+
 					  X = XMinimum + j*DataResolution;
 					  Y = YMinimum - (NRows-i)*DataResolution;
 					  relief = zeta[i][j] - zeta[a][b];
 					  mean_slope = relief/(length * DataResolution);
 
-            // update arrays with the current metrics 
-            RoutedHilltops[i][j] = 1; 
+            // update arrays with the current metrics
+            RoutedHilltops[i][j] = 1;
             HillslopeLength_Array[i][j] = (length * DataResolution);
             Slope_Array[i][j] = mean_slope;
-            Relief_Array[i][j] = relief; 
-                 
-            if (relief > 0){            
+            Relief_Array[i][j] = relief;
+
+            if (relief > 0){
 					    ofs << X << " " << Y << " " << " " << hilltops[i][j] << " " << mean_slope << " " << relief << " " << length << " " << basin[i][j] << "\n";
             }
             else {
@@ -2733,44 +2735,44 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 				  }
 				  else{  //unable to route using aspects
 				    ofs << "fail: " << a << " " << b << " " << i << " " << j << endl;
-            ++ns_count;              
+            ++ns_count;
           }
 				}
 			}
-			
+
       //This block check the various path printing options and writes the data out accordingly
 	    if (print_paths_switch == true){
         if (ht_count % thinning == 0){
-  		
-  		  //create stringstream object to create filename      
+
+  		  //create stringstream object to create filename
 	      ofstream pathwriter;
-	
+
         //create the output filename from the user supplied path
         stringstream ss_path;
         ss_path << trace_path << i << "_" << j << "_trace.txt";
-     
+
         pathwriter.open(ss_path.str().c_str());
 
 	      if( pathwriter.fail() ){
 		      cout << "\nFATAL ERROR: unable to write to " << ss_path.str() << endl;
 		      exit(EXIT_FAILURE);
-	      }      
-      	 			
+	      }
+
 	      for (int v = 0; v < count; ++v){
 	        if (basin_filter_switch == false){
             pathwriter << setiosflags(ios::fixed) << setprecision(7) << east_vec[v] << " " << north_vec[v] << endl;
-          }        
+          }
           else if (basin_filter_switch == true && find(Target_Basin_Vector.begin(), Target_Basin_Vector.end(), basin[a][b]) != Target_Basin_Vector.end() && find(Target_Basin_Vector.begin(), Target_Basin_Vector.end(), basin[i][j]) != Target_Basin_Vector.end()){  //is this correct? evaulating to not equal one past the end of the vector should equal that the value is found
             pathwriter << setiosflags(ios::fixed) << setprecision(7) << east_vec[v] << " " << north_vec[v] << endl;
           }
         }
         pathwriter.close();
 	      }
-	
+
       }
-	    // End of path printing logic		
-			
-		}   //for loop i,j 
+	    // End of path printing logic
+
+		}   //for loop i,j
 	}
 
 	ofs.close();
@@ -2785,10 +2787,10 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
   cout << endl; //push output onto new line
   cout << "Hilltop count: " << ht_count << endl;
   cout << "Stream count: " << s_count << endl;
-  cout << "Fail count: " << ns_count << endl; 
+  cout << "Fail count: " << ns_count << endl;
   cout << "Uphill count: " << neg_count << endl;
-  cout << "Edge count: " << edge_count << endl;  
-  
+  cout << "Edge count: " << edge_count << endl;
+
   return OutputArrays;
 }
 
@@ -2798,35 +2800,35 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 // Lea (1992), with improvements discussed by Tarboton (1997) and a solution to the
 // problem of looping flow paths implemented.
 //
-// This code is SLOW but robust, a refactored version may appear, but there may not be 
+// This code is SLOW but robust, a refactored version may appear, but there may not be
 // enough whisky in Scotland to support that endeavour.
 //
 // The algorithm now checks for local uphill flows and in the case of identifying one,
 // D8 flow path is used to push the flow into the centre of the steepest downslope
-// cell, at which point the trace is restarted. The same technique is used to cope 
-// with self intersections of the flow path. These problems are not solved in the 
-// original paper and I think they are caused at least in part by the high resolution 
+// cell, at which point the trace is restarted. The same technique is used to cope
+// with self intersections of the flow path. These problems are not solved in the
+// original paper and I think they are caused at least in part by the high resolution
 // topogrpahy we are using.
 //
 // The code is also now built to take a d infinity flow direction raster instead of an
 // aspect raster. See Tarboton (1997) for discussions on why this is the best solution.
 //
-// The Basins input raster is used to code each hilltop into a basin to allow basin 
+// The Basins input raster is used to code each hilltop into a basin to allow basin
 // averaging to take place.
 //
 // The final 5 parameters are used to set up printing flow paths to files for visualisation,
-// if this is not needed simply pass in false to the two boolean switches and empty variables for the 
+// if this is not needed simply pass in false to the two boolean switches and empty variables for the
 // others, and the code will run as normal.
 //
 // The structure of the returned vector< Array2D<float> > is as follows:
-// [0] Hilltop Network coded with stream ID 
-// [1] Hillslope Lengths 
-// [2] Slope 
-// [3] Relief 
+// [0] Hilltop Network coded with stream ID
+// [1] Hillslope Lengths
+// [2] Slope
+// [3] Relief
 //
 // SWDG 12/2/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster Elevation, LSDRaster Hilltops, LSDRaster Slope, 
+vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster Elevation, LSDRaster Hilltops, LSDRaster Slope,
                                                          LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir, string Prefix, LSDIndexRaster Basins,
                                                          bool print_paths_switch, int thinning, string trace_path, bool basin_filter_switch,
                                                          vector<int> Target_Basin_Vector){
@@ -2842,7 +2844,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 	int count = 0;
 	float PI = 3.14159265;
 	float degs, degs_old, degs_new, theta;
-	float s_local, s_edge;      
+	float s_local, s_edge;
 	float xo, yo, xi, yi, temp_yo1, temp_yo2, temp_xo1, temp_xo2;
 
   //debugging counters
@@ -2854,7 +2856,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 
 	// a direction flag numbered 1,2,3,4 for E,S,W,N respectively
 	int dir;
-	
+
 	float ymax = YMinimum + NRows*DataResolution;
 
 	//Get data arrays from LSDRasters
@@ -2864,10 +2866,10 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 	Array2D<float> hilltops = Hilltops.get_RasterData(); //hilltops
 	Array2D<float> slope = Slope.get_RasterData(); //hilltops
   Array2D<int> basin = Basins.get_RasterData(); //basins
-  
+
   //empty arrays for data to be stored in
   Array2D<float> rads(NRows,NCols);
-	Array2D<float> path(NRows, NCols, 0.0);	
+	Array2D<float> path(NRows, NCols, 0.0);
 	Array2D<float> blank(NRows, NCols, 0.0);
 	Array2D<float> RoutedHilltops(NRows,NCols,NoDataValue);
   Array2D<float> HillslopeLength_Array(NRows,NCols,NoDataValue);
@@ -2885,11 +2887,11 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 	Array1D<float> north_vec(vec_size);
 
 	ofstream ofs;
-	
+
   //create the output filename from the user supplied filename prefix
   stringstream ss_filename;
   ss_filename << Prefix << "_HilltopData.txt";
-     
+
   ofs.open(ss_filename.str().c_str());
 
 	if( ofs.fail() ){
@@ -2915,10 +2917,10 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 	}
 
 	// cycle through study area, find hilltops and trace downstream
-	for (i=1; i<NRows-1; ++i) { 
-    cout << flush <<  "\tRow: " << i << " of = " << NRows-1 << "              \r";	          
-    for (j=1; j<NCols-1; ++j) {                        
-		                                    
+	for (i=1; i<NRows-1; ++i) {
+    cout << flush <<  "\tRow: " << i << " of = " << NRows-1 << "              \r";
+    for (j=1; j<NCols-1; ++j) {
+
 			// ignore edge cells and non-hilltop cells
 			// route initial node by aspect and get outlet coordinates
 			if (hilltops[i][j] != NoDataValue) {
@@ -2929,7 +2931,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 				path = blank.copy();
 
 				++ht_count;
-				
+
 				degs = aspect[i][j];
 				theta = rads[i][j];
 				a = i;
@@ -2978,7 +2980,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 					dir = 4;
 					east_vec[count] = easting[b] + xo - 0.5*DataResolution;
 					north_vec[count] = northing[a] + 0.5*DataResolution;
-					--a; 
+					--a;
 				}
 				else {
 					cout << "FATAL ERROR, Kinematic routing algorithm enountered null aspect value" << endl;
@@ -2988,13 +2990,13 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 				//collect slopes and totals weighted by path length
 				length += d;
 				s_local = slope[a][b];
-			
+
 				//continue trace until a stream node is encountered
 				while (flag == true) {
-				
+
 				  int a_2 = a;
           int b_2 = b;
-				
+
 					path[a][b] += 1;
 
 					degs_old = degs;
@@ -3020,12 +3022,12 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 						else if (dir == 2) temp_xo1 = -1;
 						else if (dir == 3) temp_yo1 = -1;
 						else if (dir == 4) temp_xo2 = -1;
-						
+
 						s_local = slope[a][b];
-            
+
             int flag_new = 0; //explain this flag
-            
-						if (temp_yo1 <= 1 && temp_yo1 > 0) {  
+
+						if (temp_yo1 <= 1 && temp_yo1 > 0) {
               ++flag_new;
 							xo = 1, yo = temp_yo1;
 							d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
@@ -3037,8 +3039,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 							if (xi== 0 && yi == 0) yi = 0.00001;
 							else if (xi== 0 && yi == 1) yi = 1 - 0.00001;
 						}
-						else if (temp_xo2 <= 1 && temp_xo2 > 0) { 
-              ++flag_new; 
+						else if (temp_xo2 <= 1 && temp_xo2 > 0) {
+              ++flag_new;
 							xo = temp_xo2, yo = 0;
 							d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
 							xi = xo, yi = 1,
@@ -3049,7 +3051,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 							if (xi== 0 && yi == 1) xi = 0.00001;
 							else if (xi== 1 && yi == 1) xi = 1 - 0.00001;
 						}
-						else if (temp_yo2 <= 1 && temp_yo2 > 0) { 
+						else if (temp_yo2 <= 1 && temp_yo2 > 0) {
               ++flag_new;
 							xo = 0, yo = temp_yo2;
 							d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
@@ -3062,7 +3064,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 							else if (xi== 1 && yi == 1) yi = 1 - 0.00001;
 						}
 
-						else if (temp_xo1 <= 1 && temp_xo1 > 0) { 
+						else if (temp_xo1 <= 1 && temp_xo1 > 0) {
               ++flag_new;
 							xo = temp_xo1, yo = 1;
 							d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
@@ -3103,8 +3105,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 								exit(EXIT_FAILURE);
 							}
 						}
-						else if (dir == 2) {   
-							if 	(degs_old <= 180 || degs_new >= 0) {     
+						else if (dir == 2) {
+							if 	(degs_old <= 180 || degs_new >= 0) {
 								xo = 1, yo = 1-0.00001;
 								s_edge = abs(s_local*sin((2/PI)-theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
@@ -3181,15 +3183,15 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 								cout << "Flow unable to route E or W" << endl;
 								exit(EXIT_FAILURE);
 							}
-						}             
+						}
             }
 					}
 
 					else {
-                  
+
 						// ROUTE ALONG EDGES
 						if (dir	== 1) {
-							if (degs_old <= 90 || degs_new >= 270) {							
+							if (degs_old <= 90 || degs_new >= 270) {
 								xo = 0.00001, yo = 1;
 								s_edge = abs(s_local*sin(theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
@@ -3214,7 +3216,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 								exit(EXIT_FAILURE);
 							}
 						}
-						else if (dir == 2) {   
+						else if (dir == 2) {
 							if 	(degs_old <= 180 || degs_new >= 0) {
 								xo = 1, yo = 1-0.00001;
 								s_edge = abs(s_local*sin((2/PI)-theta));
@@ -3294,24 +3296,24 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 							}
 						}
 					}
-					
+
 					if (path[a][b] < 1){  // only update length on 'first slosh'
 					  length += d;
           }
-          
+
           degs = degs_new;
-					              
-          if(zeta[a][b] - zeta[a_2][b_2] > 0){   
-            
+
+          if(zeta[a][b] - zeta[a_2][b_2] > 0){
+
             length -= d;    //remove uphill length from trace
-            
+
             a = a_2;
             b = b_2;
-            
+
             //restart trace
             degs = aspect[a][b];
 			    	theta = rads[a][b];
-		    		path[a][b] += 1;    
+		    		path[a][b] += 1;
 		    		east_vec[0] = easting[b];
 			    	north_vec[0] = northing[a];
 		    		s_local = slope[a][b];
@@ -3357,34 +3359,34 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 							dir = 4;
 							east_vec[count] = easting[b] + xo - 0.5*DataResolution;
 							north_vec[count] = northing[a] + 0.5*DataResolution;
-							--a; 
+							--a;
 						}
 						else {
 							cout << "FATAL ERROR, Kinematic routing algorithm enountered null aspect value" << endl;
 							exit(EXIT_FAILURE);
 						}
-   		
+
 						//collect slopes and totals weighted by path length
 
 			    	length += d;
-			    	s_local = slope[a][b];            
-            
+			    	s_local = slope[a][b];
+
           }
-					
+
 		    	if (path[a][b] >= 1){  //self intersect/'slosh'
-           
+
             degs = aspect[a][b];
 						theta = rads[a][b];
 						path[a][b] += 1;
 						east_vec[0] = easting[b];
 						north_vec[0] = northing[a];
 						s_local = slope[a][b];
-        
+
             a_2 = a;
             b_2 = b;
-    		
+
     		    length += sqrt((pow((xo-0.5),2) + pow((yo-0.5),2)));  //update length to cope with the 'jump' to the centre of the cell to restart the trace
-    		
+
 						//test direction, calculate outlet coordinates and update indicies
 						// easterly
 						if (degs >= 45 && degs < 135) {
@@ -3424,7 +3426,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 				    	dir = 4;
 				    	east_vec[count] = easting[b] + xo - 0.5*DataResolution;
 			    		north_vec[count] = northing[a] + 0.5*DataResolution;
-			    		--a; 
+			    		--a;
 				}
 				else {
 					cout << "FATAL ERROR, Kinematic routing algorithm enountered null aspect value" << endl;
@@ -3433,43 +3435,43 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 
 				//collect slopes and totals weighted by path length
 				length += d;
-				s_local = slope[a][b];            
-                    
+				s_local = slope[a][b];
+
         }
-					
+
 				if (a == 0 || b == 0 ||	a == NRows-1 || b == NCols-1 || stnet[a][b] != NoDataValue || path[a][b] >= 3) flag = false;
 				}
-                
+
         if (a == 0 || b == 0 ||	a == NRows-1 || b == NCols-1 ){
           // avoid going out of bounds.
-        
+
           // this is caused by having a hilltop on the first row or col away from the border
           // eg i or j == 1 or nrows/ncols - 2 and flowing towards the edge.
           // can fix with a test here for if streamnet[a][b] != NDV otherwise trace will fail *correctly*
-          
+
           ++edge_count;
-        
-        } 
-        else{   
+
+        }
+        else{
 				  //if trace finished at a stream, print hillslope info.
-				  if (stnet[a][b] != NoDataValue ) 
-          {				
-				    path[a][b] = 1; 
-				                                                                    
+				  if (stnet[a][b] != NoDataValue )
+          {
+				    path[a][b] = 1;
+
             ++s_count;
-          
+
 					  X = XMinimum + j*DataResolution;
 					  Y = YMinimum - (NRows-i)*DataResolution;
 					  relief = zeta[i][j] - zeta[a][b];
 					  mean_slope = relief/(length * DataResolution);
 
-            // update arrays with the current metrics 
-            RoutedHilltops[i][j] = 1; 
+            // update arrays with the current metrics
+            RoutedHilltops[i][j] = 1;
             HillslopeLength_Array[i][j] = (length * DataResolution);
             Slope_Array[i][j] = mean_slope;
-            Relief_Array[i][j] = relief; 
-                 
-            if (relief > 0){            
+            Relief_Array[i][j] = relief;
+
+            if (relief > 0){
 					    ofs << X << " " << Y << " " << " " << hilltops[i][j] << " " << mean_slope << " " << relief << " " << length << " " << basin[i][j] << " " << stnet[a][b] << "\n";
             }
             else {
@@ -3478,44 +3480,44 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 				  }
 				  else{  //unable to route using aspects
 				    ofs << "fail: " << a << " " << b << " " << i << " " << j << endl;
-            ++ns_count;              
+            ++ns_count;
           }
 				}
 			}
-			
+
       //This block check the various path printing options and writes the data out accordingly
 	    if (print_paths_switch == true){
         if (ht_count % thinning == 0){
-  		
-  		  //create stringstream object to create filename      
+
+  		  //create stringstream object to create filename
 	      ofstream pathwriter;
-	
+
         //create the output filename from the user supplied path
         stringstream ss_path;
         ss_path << trace_path << i << "_" << j << "_trace.txt";
-     
+
         pathwriter.open(ss_path.str().c_str());
 
 	      if( pathwriter.fail() ){
 		      cout << "\nFATAL ERROR: unable to write to " << ss_path.str() << endl;
 		      exit(EXIT_FAILURE);
-	      }      
-      	 			
+	      }
+
 	      for (int v = 0; v < count; ++v){
 	        if (basin_filter_switch == false){
             pathwriter << setiosflags(ios::fixed) << setprecision(7) << east_vec[v] << " " << north_vec[v] << endl;
-          }        
+          }
           else if (basin_filter_switch == true && find(Target_Basin_Vector.begin(), Target_Basin_Vector.end(), basin[a][b]) != Target_Basin_Vector.end() && find(Target_Basin_Vector.begin(), Target_Basin_Vector.end(), basin[i][j]) != Target_Basin_Vector.end()){  //is this correct? evaulating to not equal one past the end of the vector should equal that the value is found
             pathwriter << setiosflags(ios::fixed) << setprecision(7) << east_vec[v] << " " << north_vec[v] << endl;
           }
         }
         pathwriter.close();
 	      }
-	
+
       }
-	    // End of path printing logic		
-			
-		}   //for loop i,j 
+	    // End of path printing logic
+
+		}   //for loop i,j
 	}
 
 	ofs.close();
@@ -3530,10 +3532,10 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
   cout << endl; //push output onto new line
   cout << "Hilltop count: " << ht_count << endl;
   cout << "Stream count: " << s_count << endl;
-  cout << "Fail count: " << ns_count << endl; 
+  cout << "Fail count: " << ns_count << endl;
   cout << "Uphill count: " << neg_count << endl;
-  cout << "Edge count: " << edge_count << endl;  
-  
+  cout << "Edge count: " << edge_count << endl;
+
   return OutputArrays;
 }
 

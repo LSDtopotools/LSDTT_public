@@ -158,12 +158,12 @@ int main (int nNumberofArgs,char *argv[])
 	// Get the valleys using the contour curvature
 	
 	
-  float surface_fitting_window_radius = 7;      // the radius of the fitting window in metres
+  float surface_fitting_window_radius = 6;      // the radius of the fitting window in metres
   vector<LSDRaster> surface_fitting;
   LSDRaster tan_curvature;
   string curv_name = "_tan_curv";
   vector<int> raster_selection(8, 0);
-  raster_selection[6] = 1;                      // this indicates you only want the tangential curvature
+  raster_selection[3] = 1;                      // this indicates you only want the tangential curvature
   surface_fitting = filled_topo_test.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
 
   // now print the tangential curvature raster to file.   
