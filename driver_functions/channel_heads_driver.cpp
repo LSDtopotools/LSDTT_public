@@ -4,8 +4,8 @@
 // This program calculates channel heads using a chi method described in
 // Clubb et al. (2014)
 //
-// Reference: Clubb, F. J., S. M. Mudd, D. T. Milodowski, M. D. Hurst, 
-// and L. J. Slater (2014), Objective extraction of channel heads from 
+// Reference: Clubb, F. J., S. M. Mudd, D. T. Milodowski, M. D. Hurst,
+// and L. J. Slater (2014), Objective extraction of channel heads from
 // high-resolution topographic data, Water Resour. Res., 50, doi: 10.1002/2013WR015167.
 //
 // Developed by:
@@ -130,43 +130,43 @@ int main (int nNumberofArgs,char *argv[])
 	boundary_conditions[1] = "no flux";
 	boundary_conditions[2] = "no flux";
 	boundary_conditions[3] = "No flux";
-	
+
 		// get the filled file
 	cout << "Filling the DEM" << endl;
 	LSDRaster filled_topo_test = topo_test.fill(Minimum_Slope);
 	filled_topo_test.write_raster((DEM_f_name),DEM_flt_extension);
-  
+
   //get a FlowInfo object
-	LSDFlowInfo FlowInfo(boundary_conditions,filled_topo_test); 
+	LSDFlowInfo FlowInfo(boundary_conditions,filled_topo_test);
 	LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
 	LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
-	
+
 	//string NI_name = "_NI";
   //LSDIndexRaster NodeIndex = FlowInfo.write_NodeIndex_to_LSDIndexRaster();
 	//NodeIndex.write_raster((path_name+DEM_name+NI_name), DEM_flt_extension);
-	
+
 	//get the sources: note: this is only to select basins!
 	vector<int> sources;
-	sources = FlowInfo.get_sources_index_threshold(ContributingPixels, threshold); 
+	sources = FlowInfo.get_sources_index_threshold(ContributingPixels, threshold);
 
 	// now get the junction network
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 
 	//string tan_curvature_name = "ind_curv";
 	//string chan_heads_name = "ind_chan_heads";
-	
+
 	// Get the valleys using the contour curvature
-	
-	
+
+
   float surface_fitting_window_radius = 6;      // the radius of the fitting window in metres
   vector<LSDRaster> surface_fitting;
   LSDRaster tan_curvature;
   string curv_name = "_tan_curv";
   vector<int> raster_selection(8, 0);
-  raster_selection[3] = 1;                      // this indicates you only want the tangential curvature
+  raster_selection[6] = 1;                      // this indicates you only want the tangential curvature
   surface_fitting = filled_topo_test.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
 
-  // now print the tangential curvature raster to file.   
+  // now print the tangential curvature raster to file.
   for(int i = 0; i<int(raster_selection.size()); ++i)
 	{
 		if(raster_selection[i]==1)
@@ -179,14 +179,14 @@ int main (int nNumberofArgs,char *argv[])
   Array2D<float> tan_curv_array = tan_curvature.get_RasterData();
   cout << "got tan curvature array" << endl;
 	Array2D<int> valley_junctions = ChanNetwork.find_valleys(FlowInfo, tan_curv_array, sources, no_connecting_nodes);
-	
+
 	// Write the valley junctions to an LSDIndexRaster
   //string VJ_name = "_VJ";
   //LSDIndexRaster ValleyJunctionsRaster (NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,valley_junctions);
 	//ValleyJunctionsRaster.write_raster((path_name+DEM_name+VJ_name),DEM_flt_extension);
-	
+
 	cout << "Got valley junctions, proceeding to chi analysis" << endl;
-	
+
 	// Calculate the channel head nodes
   int MinSegLength = 10;
   vector<int> ChannelHeadNodes = ChanNetwork.GetChannelHeadsChiMethodFromValleys(valley_junctions, MinSegLength,
@@ -194,18 +194,23 @@ int main (int nNumberofArgs,char *argv[])
 
   //write channel_heads to a csv file
   FlowInfo.print_vector_of_nodeindices_to_csv_file(ChannelHeadNodes, complete_fname);
-									                    
+
+
+  string prefix = "/home/smudd/LSDTopoData/LiDAR_datasets/USA/OH/indian_creek2_fill_nodeindices_for_Arc";
+
+  FlowInfo.Ingest_Channel_Heads(prefix,"csv");
+
 	//write channel heads to a raster
 	string CH_name = "_CH";
 	LSDIndexRaster Channel_heads_raster = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(ChannelHeadNodes);
 	Channel_heads_raster.write_raster((path_name+DEM_name+CH_name),DEM_flt_extension);
-	
+
 	//create a channel network based on these channel heads
 	LSDJunctionNetwork NewChanNetwork(ChannelHeadNodes, FlowInfo);
 	//int n_junctions = NewChanNetwork.get_Number_of_Junctions();
   LSDIndexRaster SOArrayNew = NewChanNetwork.StreamOrderArray_to_LSDIndexRaster();
 	string SO_name_new = "_SO_from_CH";
-	
-	SOArrayNew.write_raster((path_name+DEM_name+SO_name_new),DEM_flt_extension);	
-                              
+
+	SOArrayNew.write_raster((path_name+DEM_name+SO_name_new),DEM_flt_extension);
+
 }

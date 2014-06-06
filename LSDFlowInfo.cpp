@@ -1090,20 +1090,67 @@ void LSDFlowInfo::unpickle(string filename)
 // Takes the filename and extension of the channel heads raster.
 //
 // SWDG 05/12/12
+//
+// Update: 6/6/14 Happy 3rd birthday Skye!!!!
+// SMM
+// Now if the file extension is "csv" then the script reads a csv channel heads
+// file
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension){
 
   vector<int> Sources;
   int CH_node;
 
-  LSDIndexRaster CHeads(filename, extension);
+  // if this is a csv file, read its contents directly into the node index vector
+  if(extension == "csv")
+  {
+    ifstream ch_csv_in;
+    string fname = filename +"."+extension;
+    ch_csv_in.open(fname.c_str());
+    
+    cout << "fname is: " << fname << endl;
+    
+    string sline = "";
+    getline(ch_csv_in,sline);
 
-  for (int i = 0; i < NRows; ++i){
-    for (int j = 0; j < NCols; ++j){
-      if (CHeads.get_data_element(i,j) != NoDataValue){
-        CH_node = retrieve_node_from_row_and_column(i,j);
-        if (CH_node != NoDataValue){
-          Sources.push_back(CH_node);
+    float x,y;
+    int nodeindex,row,col;
+        
+    while(!ch_csv_in.eof())
+    {   
+       char name[256];
+       ch_csv_in.getline(name,256);
+       sline = name;
+
+       // a very tedious way to get the right bit of data. There is probably a 
+       // better way to do this but this way works
+       if (sline.size() > 0)
+       {
+         unsigned comma = sline.find_last_of(",");
+         string prefix = sline.substr(0,comma);
+         comma = prefix.find_last_of(",");
+         prefix = prefix.substr(0,comma);
+         comma = prefix.find_last_of(",");
+         string suffix = prefix.substr(comma+1,prefix.size());
+       
+         nodeindex =  atoi(suffix.c_str());
+         Sources.push_back(nodeindex);
+       }        
+    }
+  }
+  
+  // if not the code assums a sources raster. 
+  else
+  {
+    LSDIndexRaster CHeads(filename, extension);
+    
+    for (int i = 0; i < NRows; ++i){
+      for (int j = 0; j < NCols; ++j){
+        if (CHeads.get_data_element(i,j) != NoDataValue){
+          CH_node = retrieve_node_from_row_and_column(i,j);
+          if (CH_node != NoDataValue){
+            Sources.push_back(CH_node);
+          } 
         }
       }
     }
@@ -1111,6 +1158,7 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension)
 
   return Sources;
 }
+
 
 
 
