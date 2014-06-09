@@ -481,7 +481,7 @@ void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 				// EAST BOUNDAY
 				if (col == NCols-1)
 				{
-					if( BoundaryConditions[0].find("B") == 0 || BoundaryConditions[0].find("b") == 0 )
+					if( BoundaryConditions[1].find("B") == 0 || BoundaryConditions[1].find("b") == 0 )
 					{
 						one_if_a_baselevel_node = 1;
 					}
@@ -504,7 +504,7 @@ void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 				// SOUTH BOUNDARY
 				if (row == NRows-1)
 				{
-					if( BoundaryConditions[0].find("B") == 0 || BoundaryConditions[0].find("b") == 0 )
+					if( BoundaryConditions[2].find("B") == 0 || BoundaryConditions[2].find("b") == 0 )
 					{
 						one_if_a_baselevel_node = 1;
 					}
@@ -527,7 +527,7 @@ void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 				// WEST BOUNDARY
 				if (col == 0)
 				{
-					if( BoundaryConditions[0].find("B") == 0 || BoundaryConditions[0].find("b") == 0 )
+					if( BoundaryConditions[3].find("B") == 0 || BoundaryConditions[3].find("b") == 0 )
 					{
 						one_if_a_baselevel_node = 1;
 					}
