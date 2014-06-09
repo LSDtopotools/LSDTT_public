@@ -94,16 +94,16 @@ class LSDFlowInfo
 	/// @brief Creates a FlowInfo object from a binary flowinfo data.
 	/// @param fname String of the binary flowinfo data file to be read.
 	/// @author SMM
-    /// @date 01/016/12
+  /// @date 01/016/12
 	LSDFlowInfo(string fname)							{ create(fname); }
 	/// @brief Creates a FlowInfo object from topography.
 	/// @param BoundaryConditions Vector<string> of the boundary conditions at each edge of the
-    /// DEM file. Boundary conditions can start with 'P' or 'p' for periodic,
-    /// 'B' or 'b' for base level, or anything else for no flux.
-    /// the vector shold have 4 elements, 0 is north, 1 is east, 2 is south and 3 is west
+  /// DEM file. Boundary conditions can start with 'P' or 'p' for periodic,
+  /// 'B' or 'b' for base level, or anything else for no flux.
+  /// the vector shold have 4 elements, 0 is north, 1 is east, 2 is south and 3 is west
 	/// @param TopoRaster LSDRaster object containing the topographic data.
 	/// @author SMM
-    /// @date 01/016/12
+  /// @date 01/016/12
 	LSDFlowInfo(vector<string> BoundaryConditions, LSDRaster& TopoRaster)
 									{ create(BoundaryConditions, TopoRaster); }
 
@@ -121,7 +121,7 @@ class LSDFlowInfo
   ///@param receiver_col Empty integer to be assigned the column index of the
   ///reciever node.
 	/// @author SMM
-    /// @date 01/016/12
+  /// @date 01/016/12
 	void retrieve_receiver_information(int current_node,int& reveiver_node, int& receiver_row,
                                              int& receiver_col);
 
@@ -131,8 +131,8 @@ class LSDFlowInfo
   ///node.
   ///@param curr_col Empty integer to be assigned the column index of the given
   ///node.
-  	/// @author SMM
-    /// @date 01/016/12
+  /// @author SMM
+  /// @date 01/016/12
 	void retrieve_current_row_and_col(int current_node,int& curr_row,
                                              int& curr_col);
 
@@ -156,8 +156,8 @@ class LSDFlowInfo
   ///@brief Get the FlowLengthCode of a given node.
   ///@param node Integer of node index value.
   ///@return Integer of the FlowLengthCode.
-  	/// @author SMM
-    /// @date 01/016/12
+  /// @author SMM
+  /// @date 01/016/12
   int retrieve_flow_length_code_of_node(int node)
 										{ return FlowLengthCode[ RowIndex[node] ][ ColIndex[node] ]; }
 
@@ -183,8 +183,8 @@ class LSDFlowInfo
 	/// @return Number of rows as an integer.
 	int get_NRows() const				{ return NRows; }
 	/// @return Number of columns as an integer.
-  	int get_NCols() const				{ return NCols; }
-  	/// @return Minimum X coordinate as an integer.
+  int get_NCols() const				{ return NCols; }
+  /// @return Minimum X coordinate as an integer.
 	float get_XMinimum() const			{ return XMinimum; }
 	/// @return Minimum Y coordinate as an integer.
 	float get_YMinimum() const			{ return YMinimum; }
@@ -195,12 +195,13 @@ class LSDFlowInfo
 	/// @return Number of nodes with data as an integer.
 	int get_NDataNodes () const			{ return NDataNodes; }
 	/// @return Vector of all base level nodes.
-  	vector<int> get_BaseLevelNodeList ()
-										{ return BaseLevelNodeList; }
+  vector<int> get_BaseLevelNodeList () { return BaseLevelNodeList; }
 
-  	/// @return donor stack vector (depth first search sequence of nodes)
-	vector <int> get_donorStack( void ) { return DonorStackVector; }
-  	/// @return FlowDirection values as a 2D Array.
+  /// @return donor stack vector (depth first search sequence of nodes)
+	vector <int> get_donorStack() const { return DonorStackVector; }
+	/// @return the S vector, which is a sorted list of nodes (see Braun and Willett 2012)
+	vector <int> get_SVector() const { return SVector; }
+  /// @return FlowDirection values as a 2D Array.
 	Array2D<int> get_FlowDirection() const { return FlowDirection; }
 
   ///@brief Recursive add_to_stack routine, from Braun and Willett (2012)
@@ -213,24 +214,23 @@ class LSDFlowInfo
 	// some functions that print out indices to rasters
 	///@brief Write NodeIndex to an LSDIndexRaster.
   ///@return LSDIndexRaster of node index data.
-  	/// @author SMM
-    /// @date 01/016/12
+  /// @author SMM
+  /// @date 01/016/12
 	LSDIndexRaster write_NodeIndex_to_LSDIndexRaster();
 
 
 	///@brief Write FlowDirection to an LSDIndexRaster.
-  	///@return LSDIndexRaster of flow directions.
-  	/// @author SMM
-    /// @date 01/016/12
-  	LSDIndexRaster write_FlowDirection_to_LSDIndexRaster();
+  ///@return LSDIndexRaster of flow directions.
+  /// @author SMM
+  /// @date 01/016/12
+  LSDIndexRaster write_FlowDirection_to_LSDIndexRaster();
 
 
 	///@brief Write FlowLengthCode to an LSDIndexRaster.
-  	///@return LSDIndexRaster of flow lengths.
-  	/// @author SMM
-    /// @date 01/016/12
+  ///@return LSDIndexRaster of flow lengths.
+  /// @author SMM
+  /// @date 01/016/12
 	LSDIndexRaster write_FlowLengthCode_to_LSDIndexRaster();
-
 
 	/// @brief This function writes and LSDIndexRaster containing the location of nodes in the nodeindexvector.
 	/// @param nodeindexvec a vector containing node indices one use is to export
@@ -241,11 +241,10 @@ class LSDFlowInfo
 	LSDIndexRaster write_NodeIndexVector_to_LSDIndexRaster(vector<int>& nodeindexvec);
 
 	///@brief Write NContributingNodes to an LSDIndexRaster.
-  	///@return LSDIndexRaster of number of contributing nodes for each cell.
-  	/// @author SMM
-    /// @date 01/016/12
-  	LSDIndexRaster write_NContributingNodes_to_LSDIndexRaster();
-
+  ///@return LSDIndexRaster of number of contributing nodes for each cell.
+  /// @author SMM
+  /// @date 01/016/12
+  LSDIndexRaster write_NContributingNodes_to_LSDIndexRaster();
 
 	///@brief Writes flow directions to an LSDIndexRaster.
   ///Flow direction in arcmap format is: \n\n
@@ -254,8 +253,8 @@ class LSDFlowInfo
   /// 8    4  2     \n
   ///
   ///@return LSDIndexRaster of flow directions in arcgis format.
-  	/// @author SMM
-    /// @date 01/016/12
+  /// @author SMM
+  /// @date 01/016/12
 	LSDIndexRaster write_FlowDirection_to_LSDIndexRaster_Arcformat();
 	///@brief
   ///@return
@@ -265,14 +264,14 @@ class LSDFlowInfo
 
 	///@brief Prints the flow information to file.
 	///@param filename String of the output file to be written.
-		/// @author SMM
-    /// @date 01/016/12
+	/// @author SMM
+  /// @date 01/016/12
 	void print_flow_info_vectors(string filename);
 
   ///@brief Unpickles flow information data from a binary file.
 	///@param filename String of the binary file to be read.
-		/// @author SMM
-    /// @date 01/016/12
+	/// @author SMM
+  /// @date 01/016/12
   void unpickle(string filename);
   ///@brief Pickles flow information data from a binary file.
   ///@details WARNING!!! This creates HUGE files (sometimes 10x bigger than
@@ -335,7 +334,6 @@ class LSDFlowInfo
 	///@date 08/10/13
   int is_node_upstream(int current_node, int test_node);
 
-
 	/// @brief this function gets a list of the node indices of the donors to a particular node
 	/// @param node this is the nodeindex of the node for which you want to find the donors
 	/// @return a vector of the donor nodes
@@ -353,13 +351,14 @@ class LSDFlowInfo
   ///@param A_0
   ///@return Vector of chi values.
 	vector<float> get_upslope_chi(int starting_node, float m_over_n, float A_0);
+	
   ///@brief This function calculates the chi function for all the nodes upslope
   ///of a given list of nodes.
   ///@param upslope_pixel_list Vector of nodes to analyse.
   ///@param m_over_n
   ///@param A_0
   ///@return Vector of chi values.
-   /// @author SMM
+  /// @author SMM
   /// @date 01/016/12
   vector<float> get_upslope_chi(vector<int>& upslope_pixel_list, float m_over_n, float A_0);
 
