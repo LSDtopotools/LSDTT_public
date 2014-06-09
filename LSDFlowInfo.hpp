@@ -326,6 +326,17 @@ class LSDFlowInfo
   /// @date 01/016/12
 	vector<int> get_upslope_nodes(int node_number_outlet);
 
+  ///@brief This function accumulates some variable from an LSDRaster
+  ///The most probably use is to accumulate precipitation in order
+  ///to get a discharge raster
+  ///@param A raster that contains the variable to be accumulated (e.g., precipitation)
+  ///@return A raster containing the accumulated variable: NOTE the accumulation 
+  ///does not include the node itself
+  ///@author SMM
+  ///@date 09/06/2014 
+  LSDRaster upslope_variable_accumulator(LSDRaster& accum_raster);
+
+
 	///@brief This function tests whether one node is upstream of another node
 	///@param current_node
 	///@param test_node

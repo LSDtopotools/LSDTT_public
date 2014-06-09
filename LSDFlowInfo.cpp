@@ -118,7 +118,6 @@ void LSDFlowInfo::create()
 void LSDFlowInfo::create(string fname)
 {
 	unpickle(fname);
-
 }
 
 //
@@ -141,6 +140,7 @@ void LSDFlowInfo::retrieve_receiver_information(int current_node,
 	receiver_row = rr;
 	receiver_col = rc;
 }
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // algorithms for searching the vectors
@@ -213,17 +213,12 @@ void LSDFlowInfo::print_vector_of_nodeindices_to_csv_file(vector<int>& nodeindex
 		    // y coord a bit different since the DEM starts from the top corner
 		    y = YMinimum + float(NRows-current_row)*DataResolution - 0.5*DataResolution + 0.0001*DataResolution;;
         csv_out << x << "," << y << "," << current_node << "," << current_row << "," << current_col << endl;
-
      }
-
   }
 
   csv_out.close();
-
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -343,11 +338,9 @@ void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 	ReceiverVector = empty_vec;
 	Array2D<int> ndv_raster(NRows,NCols,ndv);
 
-
 	NodeIndex = ndv_raster.copy();
 	FlowDirection = ndv_raster.copy();
 	FlowLengthCode = ndv_raster.copy();
-
 
 	// loop through the topo data finding places where there is actually data
 	for (row = 0; row<NRows; row++)
@@ -384,11 +377,9 @@ void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 	{
 		for (col = 0; col<NCols; col++)
 		{
-
 			// only do calcualtions if there is data
 			if(TopoRaster.RasterData[row][col] != NoDataValue)
 			{
-
 				// calcualte 8 slopes
 				// no slopes mean get NoDataValue entries
 				// the algorithm loops through the neighbors to the cells, collecting
@@ -415,7 +406,6 @@ void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 				col_kernal[5] = col-1;
 				col_kernal[6] = col-1;
 				col_kernal[7] = col-1;
-
 
 				// check for periodic boundary conditions
 				if( BoundaryConditions[0].find("P") == 0 || BoundaryConditions[0].find("p") == 0 )
@@ -1113,8 +1103,9 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension)
     string sline = "";
     getline(ch_csv_in,sline);
 
-    float x,y;
-    int nodeindex,row,col;
+    //float x,y;
+    //int nodeindex,row,col;
+    int nodeindex;
         
     while(!ch_csv_in.eof())
     {   
@@ -1590,6 +1581,74 @@ vector<int> LSDFlowInfo::get_upslope_nodes(int node_number_outlet)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+//  Accumulate some variable (such a precipitation) from an accumulation raster
+//
+//  This requires summing all upslope nodes for every node. It seems a bit inefficient
+//  but the other simple alternative is to do a sort() operation initially and then
+//  move from upslope node down. There is probably a more efficient way to do this
+//  and this algorithm should be revisited later to see if we can speed it up. 
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+LSDRaster LSDFlowInfo::upslope_variable_accumulator(LSDRaster& accum_raster)
+{
+  int raster_NRows, raster_NCols;
+  float raster_XMin, raster_YMin, raster_DataRes;
+
+  // first check to make sure the raster dimensions match that of the 
+  // raster upon which LSDFlowInfo is based
+  raster_NRows =  accum_raster.get_NRows();
+  raster_NCols =  accum_raster.get_NCols();
+  raster_XMin  =  accum_raster.get_XMinimum();
+  raster_YMin  =  accum_raster.get_YMinimum();
+  raster_DataRes  =  accum_raster.get_DataResolution();
+  
+  if (raster_NRows != NRows || raster_NCols != NCols ||
+      raster_XMin != XMinimum || raster_YMin != YMinimum ||
+      raster_DataRes != DataResolution)
+  {
+    cout << "Warning!!, LSDFlowInfo::upslope_area_accumulator\n"
+         << "Accumulation raster does not match dimensions of original raster" << endl;
+    return accum_raster; 
+  }
+  else
+  {
+    // create the data array
+    Array2D<float> accumulated_data_array(NRows,NCols,NoDataValue);
+        
+    // loop through all the nodes, accumulating the areas
+    for(int this_node = 0; this_node <NDataNodes; this_node++)
+    {
+      // get the upslope nodes
+      vector<int> node_vec = get_upslope_nodes(this_node);
+      
+      // loop through these nodes, adding them to the accumulator
+      float this_node_accumulated = 0;
+      int this_row, this_col;
+      for (int ni = 0; ni<int(node_vec.size()); ni++)
+      {
+        retrieve_current_row_and_col(node_vec[ni],this_row,this_col);
+        this_node_accumulated += accum_raster.get_data_element(this_row, this_col);
+      }
+      
+      // write the accumulated variable to the array
+      int curr_row, curr_col; 
+      retrieve_current_row_and_col(this_node,curr_row,curr_col);
+      accumulated_data_array[curr_row][curr_col] = this_node_accumulated; 
+    }
+    // create the raster
+    LSDRaster accumulated_flow(NRows, NCols, XMinimum, YMinimum, 
+                      DataResolution, NoDataValue, accumulated_data_array);
+    return accumulated_flow;      
+  }  
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
