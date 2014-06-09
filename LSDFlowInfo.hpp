@@ -336,7 +336,6 @@ class LSDFlowInfo
   ///@date 09/06/2014 
   LSDRaster upslope_variable_accumulator(LSDRaster& accum_raster);
 
-
 	///@brief This function tests whether one node is upstream of another node
 	///@param current_node
 	///@param test_node

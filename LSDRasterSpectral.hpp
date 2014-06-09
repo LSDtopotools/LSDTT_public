@@ -84,7 +84,7 @@ using namespace TNT;
 class LSDRasterSpectral: public LSDRaster
 {
   public:
-    //LSDRasterSpectral()		    	{ create(); }
+    LSDRasterSpectral()		    	{ create(); }
 
     /// @brief Create an LSDRasterSpectral from a file.
     /// Uses a filename and file extension
@@ -94,7 +94,7 @@ class LSDRasterSpectral: public LSDRaster
     /// @author SMM
     /// @date 18/12/2012
     LSDRasterSpectral(string filename, string extension)	{ create(filename, extension); }
-    
+
     /// @brief Create an LSDRasterSpectral from memory.
     /// @return LSDRasterSpectral
     /// @param nrows An integer of the number of rows.
@@ -110,7 +110,7 @@ class LSDRasterSpectral: public LSDRaster
     LSDRasterSpectral(int nrows, int ncols, float xmin, float ymin,
 	          float cellsize, float ndv, Array2D<float> data)
 			{ create(nrows, ncols, xmin, ymin, cellsize, ndv, data); }
-	
+
     /// @brief Create an LSDRasterSpectral from an LSDRaster object.
     /// @param An_LSDRaster LSDRaster object.
     /// @return LSDRasterSpectral.
@@ -119,7 +119,7 @@ class LSDRasterSpectral: public LSDRaster
     LSDRasterSpectral(LSDRaster& An_LSDRaster)		{ create(An_LSDRaster); }
 
     /// @brief Create an LSDRasterSpectral object that has dimensions 2^raster_order.
-    /// @param raster order, that is the order of the raster dimension where 
+    /// @param raster order, that is the order of the raster dimension where
     /// the dimension is 2^raster_order.
     /// @param The size of the cells
     /// @param no data value
@@ -133,18 +133,18 @@ class LSDRasterSpectral: public LSDRaster
 
     // Fourier helper functions
     // these functions are used to manipulate fourier transformed data
-    
+
     /// @brief This returns the frequency values of an UNSHIFTED DFT along the rows.
-    /// @return A float vector containing the frequency 
+    /// @return A float vector containing the frequency
     /// @author SMM
     /// @date 19/02/2014
-    vector<float> get_row_direction_frequencies_unshifted(); 
+    vector<float> get_row_direction_frequencies_unshifted();
 
     /// @brief This returns the frequency values of an UNSHIFTED DFT along the columns.
-    /// @return A float vector containing the frequency 
+    /// @return A float vector containing the frequency
     /// @author SMM
     /// @date 19/02/2014
-    vector<float> get_col_direction_frequencies_unshifted(); 
+    vector<float> get_col_direction_frequencies_unshifted();
 
     /// @brief This calucaltes a scaling array for scaling an unshifted DFT
     /// by the factor 1/f^beta.
@@ -159,9 +159,9 @@ class LSDRasterSpectral: public LSDRaster
     ///  1) Generate a random surface.\n
     ///  2) Perform DFT on this random surface.\n
     ///  3) Scale the tranform (both real and imaginary parts) by 1/f^beta.\n
-    ///  4) Perform the inverse DFT.\n 
+    ///  4) Perform the inverse DFT.\n
     ///
-    ///  This results in a pseudo fractal surface that can be used in comarison 
+    ///  This results in a pseudo fractal surface that can be used in comarison
     ///  with real topography.
     /// @param beta value which is the scaling exponent
     /// @author SMM
@@ -226,7 +226,7 @@ class LSDRasterSpectral: public LSDRaster
 
     /// @brief DE-SHIFT ORIGIN OF SPECTRUM.
     ///
-    /// @details Inverse process of shift_spectrum() to return filtered spectrum to 
+    /// @details Inverse process of shift_spectrum() to return filtered spectrum to
     /// original format required for the inverse fourier transform algorithm.
     /// @param FilteredSpectrumReal.
     /// @param FilteredSpectrumImaginary.
@@ -407,7 +407,7 @@ class LSDRasterSpectral: public LSDRaster
     //------------------------------------------------------------------------------
     void print_radial_spectrum(float bin_width, string file_id);
 
-    
+
   protected:
     int Lx;
     int Ly;
@@ -415,7 +415,7 @@ class LSDRasterSpectral: public LSDRaster
     Array2D<float> P_DFT;
     vector<float> RadialFrequency;
     vector<float> RadiallyAveragedPSD;
-	
+
   private:
     void create();
     void create(string filename, string extension);

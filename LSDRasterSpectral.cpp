@@ -123,11 +123,11 @@ LSDRasterSpectral& LSDRasterSpectral::operator=(const LSDRasterSpectral& rhs)
 void LSDRasterSpectral::create()
 {
   cout << "LSDRasterSpectral line 63 You need to initialize with a filename!" << endl;
-  exit(EXIT_FAILURE);
+  //exit(EXIT_FAILURE);
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// create function that creates a LSDSpectralRaster with 
+// create function that creates a LSDSpectralRaster with
 // that is square, and that has dimensions NRow, NCols = 2^raster_order
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDRasterSpectral::create(int raster_order, float cellsize, float ndv)
@@ -148,7 +148,7 @@ void LSDRasterSpectral::create(int raster_order, float cellsize, float ndv)
 
   cout << "Created square raster with NRows = " << NRows << " and Ly: " << Ly << endl;
   cout << "NCols: " << NCols << " and Lx: " << Lx << endl;
-  
+
   Array2D<float> test_data(NRows,NCols,ndv);
 
   RasterData = test_data.copy();
@@ -176,9 +176,9 @@ void LSDRasterSpectral::create(int nrows, int NCols, float xmin, float ymin,
   NoDataValue = ndv;
   Ly = int(pow(2,ceil(log(NRows)/log(2))));
   Lx = int(pow(2,ceil(log(NCols)/log(2))));
-  
+
   RasterData = data.copy();
-  
+
   if (RasterData.dim1() != NRows)
   {
     cout << "dimension of data is not the same as stated in NRows!" << endl;
@@ -203,7 +203,7 @@ void LSDRasterSpectral::create(LSDRaster& An_LSDRaster)
   NoDataValue = An_LSDRaster.get_NoDataValue();
   Ly = int(pow(2,ceil(log(NRows)/log(2))));
   Lx = int(pow(2,ceil(log(NCols)/log(2))));
-  
+
   RasterData = An_LSDRaster.get_RasterData();
 
 }
@@ -239,7 +239,7 @@ vector<float> LSDRasterSpectral::get_row_direction_frequencies_unshifted()
 
   return freq_values;
 }
-  
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // This function returns the frequencies in the direction of the cols
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -269,7 +269,7 @@ vector<float> LSDRasterSpectral::get_col_direction_frequencies_unshifted()
 //
 // This function returns an array2d that contains entries scaled by 1/f^beta where
 // beta is the fractal scaling
-// This is used in generation of psuedo-fractal surfaces using the 
+// This is used in generation of psuedo-fractal surfaces using the
 // Fourier synthesis method of fractal generation
 // (e.g., http://bringerp.free.fr/Files/Captain%20Blood/Saupe87d.pdf p.105
 //
@@ -278,18 +278,18 @@ Array2D<float> LSDRasterSpectral::get_frequency_scaling_array(float beta)
 {
   Array2D<float> freq_scaling_array(NRows,NCols);
   float radial_freq;
-  
+
   // get the frequencies
   vector<float> row_freqs = get_row_direction_frequencies_unshifted();
   vector<float> col_freqs = get_col_direction_frequencies_unshifted();
-  
+
   // get the frequency scaling
   for(int row = 0; row<NRows; row++)
   {
     for (int col = 0; col<NCols; col++)
     {
       radial_freq = sqrt( row_freqs[row]*row_freqs[row]+col_freqs[col]*col_freqs[col]);
-      
+
       if (radial_freq == 0)
       {
         freq_scaling_array[row][col] = 0;
@@ -303,7 +303,7 @@ Array2D<float> LSDRasterSpectral::get_frequency_scaling_array(float beta)
 
   return freq_scaling_array;
 }
-      
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // This creates a fractal surface using the spectral method
@@ -311,9 +311,9 @@ Array2D<float> LSDRasterSpectral::get_frequency_scaling_array(float beta)
 //  1) Generate a random surface
 //  2) Perform DFT on this random surface
 //  3) Scale the tranform (both real and imaginary parts) by 1/f^beta
-//  4) Perform the inverse DFT. 
+//  4) Perform the inverse DFT.
 //
-//  This results in a pseudo fractal surface that can be used in comarison 
+//  This results in a pseudo fractal surface that can be used in comarison
 //  with real topography
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -325,7 +325,7 @@ void LSDRasterSpectral::generate_fractal_surface_spectral_method(float beta)
 
   // now get the frequency scaling
   Array2D<float> freq_scaling = get_frequency_scaling_array(beta);
-  
+
   // now get the real and imaginary DFT arrays
   // first set up the input and output arrays
   Array2D<float> InputArray = RasterData.copy();
@@ -343,9 +343,9 @@ void LSDRasterSpectral::generate_fractal_surface_spectral_method(float beta)
     for (int col = 0; col<NCols; col++)
     {
       OutputArrayReal[row][col] = OutputArrayReal[row][col]*freq_scaling[row][col];
-      OutputArrayImaginary[row][col] = OutputArrayImaginary[row][col]*freq_scaling[row][col];   
+      OutputArrayImaginary[row][col] = OutputArrayImaginary[row][col]*freq_scaling[row][col];
     }
-  } 
+  }
 
   // now perform the inverse transform
   // this overwrites the InputArray
@@ -355,7 +355,7 @@ void LSDRasterSpectral::generate_fractal_surface_spectral_method(float beta)
 
   RasterData = InputArray;
 }
-  
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -443,16 +443,16 @@ void LSDRasterSpectral::dfftw2D_fwd(Array2D<float>& InputArray, Array2D<float>& 
 //    - transform_direction = 1
 //    - OutputArray = reconstructed DEM
 void LSDRasterSpectral::dfftw2D_inv(Array2D<float>& InputArrayReal,
-                          Array2D<float>& InputArrayImaginary, 
+                          Array2D<float>& InputArrayImaginary,
                           Array2D<float>& OutputArray, int transform_direction)
 {
   fftw_complex *input,*output;
   fftw_plan plan;
-  
+
   // Declare one_dimensional contiguous arrays of dimension Ly*Lx
   input = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*Ly*Lx);
   output = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*Ly*Lx);
-  
+
   // SET UP PLAN
   // -forwards => transform_direction==-1, -inverse => transform_direction==1
   if (transform_direction==1)
@@ -460,12 +460,12 @@ void LSDRasterSpectral::dfftw2D_inv(Array2D<float>& InputArrayReal,
     cout << "  Running 2D discrete INVERSE fast fourier transform..." << endl;
     plan = fftw_plan_dft_2d(Ly,Lx,input,output,transform_direction,FFTW_MEASURE);
   }
-  else 
+  else
   {
     cout << "\nFATAL ERROR: for the tranform direction\n\t 1 = INVERSE \n\t" << endl;
 		exit(EXIT_FAILURE);
   }
-  
+
   // LOAD DATA INTO COMPLEX ARRAY FOR FFT IN ROW MAJOR ORDER
   for (int i=0;i<Ly;++i)
   {
@@ -475,10 +475,10 @@ void LSDRasterSpectral::dfftw2D_inv(Array2D<float>& InputArrayReal,
       input[Lx*i+j][1] = InputArrayImaginary[i][j];
     }
   }
-  
+
   // EXECUTE PLAN
   fftw_execute(plan);
-  
+
   // RETRIEVE OUTPUT ARRAY
   for (int i=0;i<Ly;++i)
   {
@@ -487,7 +487,7 @@ void LSDRasterSpectral::dfftw2D_inv(Array2D<float>& InputArrayReal,
       OutputArray[i][j] = output[Lx*i+j][0];
     }
   }
-  
+
   // DEALLOCATE PLAN AND ARRAYS
   fftw_destroy_plan(plan);
   fftw_free(input);
@@ -533,7 +533,7 @@ void LSDRasterSpectral::detrend2D(Array2D<float>& zeta, Array2D<float>& zeta_det
 	A[2][0] += x;
 	A[2][1] += y;
 	A[2][2] += 1;
-	
+
         // Generate vector bb
 	bb[0] += zeta[i][j]*x;
 	bb[1] += zeta[i][j]*y;
@@ -541,7 +541,7 @@ void LSDRasterSpectral::detrend2D(Array2D<float>& zeta, Array2D<float>& zeta_det
       }
     }
   }
-  
+
   // Solve matrix equations using LU decomposition using the TNT JAMA package:
   // A.coefs = b, where coefs is the coefficients vector.
   LU<float> sol_A(A);  // Create LU object
@@ -558,7 +558,7 @@ void LSDRasterSpectral::detrend2D(Array2D<float>& zeta, Array2D<float>& zeta_det
       float x = j;
       float y = i;
       trend_plane[i][j] = a_plane*x + b_plane*y + c_plane;
-      
+
       if(zeta[i][j] != NoDataValue)
       {
         zeta_detrend[i][j] = zeta[i][j] - trend_plane[i][j];
@@ -1502,8 +1502,8 @@ LSDRaster LSDRasterSpectral::fftw2D_wiener()
 // spectrum
 void LSDRasterSpectral::print_radial_spectrum(float bin_width, string file_id)
 {
-  
-  //----------------------------------------------------------------------------  
+
+  //----------------------------------------------------------------------------
   // Radially averaged PSD
   ofstream ofs;
   string PSD_suffix = "_radialPSD";
@@ -1526,13 +1526,13 @@ void LSDRasterSpectral::print_radial_spectrum(float bin_width, string file_id)
   // Binned averaged PSD
   // First, need to bin the spectra into logarithmically spaced bins with
   // specified bin_width.
-  
+
   vector<float> Bin_MeanRadialFreq;
   vector<float> Bin_RadialPSD;
   vector<float> BinMidpoints;
   vector<float> StandardDeviationRadialFreq;
   vector<float> StandardDeviationRadialPSD;
-  
+
   // Execute log binning
   log_bin_data(RadialFrequency, RadiallyAveragedPSD, bin_width, Bin_MeanRadialFreq, Bin_RadialPSD, BinMidpoints, StandardDeviationRadialFreq, StandardDeviationRadialPSD, NoDataValue);
 //   RemoveSmallBins(vector<float>& MeanX_output, vector<float>& MeanY_output, vector<float>& midpoints_output,
@@ -1555,7 +1555,7 @@ void LSDRasterSpectral::print_radial_spectrum(float bin_width, string file_id)
   }
   ofs.close();
 }
-    
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
