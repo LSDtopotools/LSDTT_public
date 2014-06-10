@@ -788,7 +788,9 @@ int LSDJunctionNetwork::get_penultimate_node_from_stream_link(int upstream_junct
   // in channel.
   int n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
   // penultimate node is given by the second to last node in the stream link.
-  int penultimate_node = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
+  int penultimate_node;
+  if(n_nodes_in_channel > 1) penultimate_node = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
+  else  penultimate_node = StreamLinkVector.get_node_in_channel(0);
   return penultimate_node;
 }
 
