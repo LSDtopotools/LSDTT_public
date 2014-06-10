@@ -49,7 +49,7 @@ int main (int nNumberofArgs,char *argv[])
   //Test for correct input arguments
 	if (nNumberofArgs!=7)
 	{
-		cout << "FATAL ERROR: wrong number inputs. The program needs the path (with trailing slash), the filename prefix, window radius, basin order, critical slope and a switch to write rasters if desired." << endl;         //update this guidance to reflect the new params
+		cout << "FATAL ERROR: wrong number inputs. The program needs the path (with trailing slash), the filename prefix, window radius, basin order, critical slope and a switch to write rasters if desired." << endl;
 		exit(EXIT_SUCCESS);
 	}
   
