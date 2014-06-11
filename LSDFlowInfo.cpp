@@ -1087,7 +1087,7 @@ void LSDFlowInfo::unpickle(string filename)
 // file
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension){
-
+  
   vector<int> Sources;
   int CH_node;
 
@@ -1098,6 +1098,14 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension)
     string fname = filename +"."+extension;
     ch_csv_in.open(fname.c_str());
     
+    if( ch_csv_in.fail() )
+		{
+			cout << "\nFATAL ERROR: the data file \"" << fname
+			     << "\" doesn't exist" << endl;
+			     
+			exit(EXIT_FAILURE);
+    }    
+        
     cout << "fname is: " << fname << endl;
     
     string sline = "";
