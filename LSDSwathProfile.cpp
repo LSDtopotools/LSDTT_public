@@ -430,24 +430,35 @@ void LSDSwath::get_transverse_swath_profile(LSDRaster& Raster, vector<float> des
   vector<float> mean_profile_temp(NBins, NoDataValue);
   vector<float> sd_profile_temp(NBins, NoDataValue);
   vector< vector<float> > output_percentile_profiles_temp;
-  cout << "CALCULATING MEAN AND SD" << endl;
+  vector<int> N_data(NBins,0);
+  cout << "\t CALCULATING MEAN AND SD" << endl;
   for(int i = 0; i < NBins; ++i)
   {
-    mean_profile_temp[i]=get_mean(binned_RasterValues[i]);
-    sd_profile_temp[i]=get_standard_deviation(binned_RasterValues[i], mean_profile_temp[i]);
+    N_data[i] = binned_RasterValues[i].size();
+    if (N_data[i] >= 1)
+    {
+      mean_profile_temp[i]=get_mean(binned_RasterValues[i]);
+      sd_profile_temp[i]=get_standard_deviation(binned_RasterValues[i], mean_profile_temp[i]);
+    }
+    else
+    {
+      mean_profile_temp[i]=NoDataValue;
+      sd_profile_temp[i]=NoDataValue;
+    }
   }
-  cout << "done" << endl;
-  cout << "CALCULATING PERCENTILES" << endl;
+  cout << "\t done" << endl;
+  cout << "\t CALCULATING PERCENTILES" << endl;
   for(int j = 0; j < NumberOfPercentileProfiles; ++j)
   {
     vector<float> percentile(NBins,NoDataValue);
     for(int i = 0; i < NBins; ++i)
     {
-      percentile[i] = get_percentile(binned_RasterValues[i], desired_percentiles[j]);
+      if (N_data[i] >= 1) percentile[i] = get_percentile(binned_RasterValues[i], desired_percentiles[j]);
+      else percentile[i] = NoDataValue;
     }
     output_percentile_profiles_temp.push_back(percentile);
   }
-  cout << "done" << endl;
+  cout << "\t done" << endl;
   // Load profiles into export vectors
   mean_profile = mean_profile_temp;
   sd_profile = sd_profile_temp;
@@ -513,20 +524,35 @@ void LSDSwath::get_longitudinal_swath_profile(LSDRaster& Raster, vector<float> d
   vector<float> mean_profile_temp(NBins, NoDataValue);
   vector<float> sd_profile_temp(NBins, NoDataValue);
   vector< vector<float> > output_percentile_profiles_temp;
+  vector<int> N_data(NBins,0);
+  cout << "\t CALCULATING MEAN AND SD" << endl;
   for(int i = 0; i < NBins; ++i)
   {
-    mean_profile_temp[i]=get_mean(binned_RasterValues[i]);
-    sd_profile_temp[i]=get_standard_deviation(binned_RasterValues[i], mean_profile[i]);
+    N_data[i] = binned_RasterValues[i].size();
+    if (N_data[i] >= 1)
+    {
+      mean_profile_temp[i]=get_mean(binned_RasterValues[i]);
+      sd_profile_temp[i]=get_standard_deviation(binned_RasterValues[i], mean_profile_temp[i]);
+    }
+    else
+    {
+      mean_profile_temp[i]=NoDataValue;
+      sd_profile_temp[i]=NoDataValue;
+    }
   }
+  cout << "\t done" << endl;
+  cout << "\t CALCULATING PERCENTILES" << endl;
   for(int j = 0; j < NumberOfPercentileProfiles; ++j)
   {
     vector<float> percentile(NBins,NoDataValue);
     for(int i = 0; i < NBins; ++i)
     {
-      percentile[i] = get_percentile(binned_RasterValues[i], desired_percentiles[j]);
+      if (N_data[i] >= 1) percentile[i] = get_percentile(binned_RasterValues[i], desired_percentiles[j]);
+      else percentile[i] = NoDataValue;
     }
     output_percentile_profiles_temp.push_back(percentile);
   }
+  cout << "\t done" << endl;
   // Load profiles into export vectors
   mean_profile = mean_profile_temp;
   sd_profile = sd_profile_temp;
