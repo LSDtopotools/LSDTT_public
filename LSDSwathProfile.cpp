@@ -164,8 +164,8 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
     for(int j = ColStart; j<ColEnd; ++j)
     {
       vector<float> V_p;  // the search point coordinates
-      V_p.push_back(float(j));
-      V_p.push_back(float(NRows - 1) - float(i));
+      V_p.push_back(float(j)*Resolution);
+      V_p.push_back((float(NRows - 1) - float(i))*Resolution);
       // Find nearest two points on profile baseline
       ProfileCloud.NearestNeighbourSearch2D(V_p[0], V_p[1], K, temp, ProfilePointIndex, SquaredDistanceToBaseline);
 
@@ -181,7 +181,7 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
         int V_a_index, V_b_index;
         if(abs(ProfilePointIndex[0]-ProfilePointIndex[1]) <= 1)
         {
-//          cout << "SCENARIO 1" << endl;
+//           cout << "SCENARIO 1" << endl;
           // If yes, then find point along cojoining line that minimises this
           // distance.
           // Note that this point is located at the point given by the vector:
@@ -208,11 +208,12 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
         // baseline between those points.
         else
         {
-          cout << "SCENARIO 2" << endl;
+//           cout << "SCENARIO 2" << endl;//" " << sqrt(SquaredDistanceToBaseline[0]) << endl;
           vector<int> ClosestPointIndex;
           float shortest_distance = NoDataValue;
           float distance_to_point;
-          ProfileCloud.RadiusSearch2D(V_p[0], V_p[1], sqrt(SquaredDistanceToBaseline[0]), temp, ClosestPointIndex, temp2);
+          //ProfileCloud.RadiusSearch2D(V_p[0], V_p[1], sqrt(SquaredDistanceToBaseline[0]), temp, ClosestPointIndex, temp2);
+          ProfileCloud.NearestNeighbourSearch2D(V_p[0], V_p[1], 8, temp, ClosestPointIndex, temp2);
           for(int i_point_iter = 0; i_point_iter < ClosestPointIndex.size(); ++i_point_iter)
           {
             if((ClosestPointIndex[i_point_iter]!=0) && (ClosestPointIndex[i_point_iter]!=NPtsInProfile-1))
@@ -288,7 +289,7 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
         // calculate position along baseline vector 
         float t = calculate_t(V_a, V_b, V_p);
         float d;
-        if(t>0 && t<=1)
+        if(t>0 && t<1)
         // find the distance to the nearest point along the straight line
         // segment that links the two points
         {
