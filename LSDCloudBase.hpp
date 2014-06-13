@@ -21,7 +21,8 @@
 #include <string>
 #include <vector>
 #include "TNT/tnt.h"
-#include "LSDRaster.hpp"
+#include "LSDRaster.hpp"  
+#include "LSDShapeTools.hpp"
 // PCL
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>

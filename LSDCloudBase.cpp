@@ -26,7 +26,8 @@
 
 // LSDTopotools objects
 #include "LSDRaster.hpp"
-#include "LSDCloudBase.hpp"
+#include "LSDCloudBase.hpp" 
+#include "LSDShapeTools.hpp"
 
 // PCL
 #include <pcl/point_types.h>
