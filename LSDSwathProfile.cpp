@@ -115,15 +115,38 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
   // Loop through profile points, calculating cumulative distance along profile
   // with each iteration
   vector<float> DistanceAlongBaseline_temp(NPtsInProfile,NoDataValue);
+  vector<float> BaselineValue_temp(NPtsInProfile,NoDataValue);
   float cumulative_distance = 0;
   DistanceAlongBaseline_temp[0]=cumulative_distance;
+  // Retrieve baseline value at each point - sample closest pixel in template raster
+  float X_coordinate_shifted_origin = ProfilePoints.X[0] - RasterTemplate.get_XMinimum();
+  float Y_coordinate_shifted_origin = ProfilePoints.Y[0] - RasterTemplate.get_YMinimum();
+  // Get row and column of point
+  int col_point = int(round(X_coordinate_shifted_origin/Resolution));
+  int row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/Resolution));
+  if(col_point < 0 || col_point > NCols-1 || row_point < 0 || row_point > NRows) BaselineValue_temp[0]=NoDataValue;
+  else BaselineValue_temp[0] = RasterTemplate.get_data_element(row_point,col_point);
+  
+  
   for(int i = 1; i<NPtsInProfile; ++i)
   {
+    // Calculate cumulative distance
     cumulative_distance += sqrt((ProfilePoints.X[i]-ProfilePoints.X[i-1])*(ProfilePoints.X[i]-ProfilePoints.X[i-1])
                                               +(ProfilePoints.Y[i]-ProfilePoints.Y[i-1])*(ProfilePoints.Y[i]-ProfilePoints.Y[i-1]));
     DistanceAlongBaseline_temp[i]=cumulative_distance;
+    
+    // Retrieve baseline value at each point - sample closest pixel in template raster
+    X_coordinate_shifted_origin = ProfilePoints.X[i] - RasterTemplate.get_XMinimum();
+    Y_coordinate_shifted_origin = ProfilePoints.Y[i] - RasterTemplate.get_YMinimum();
+    // Get row and column of point
+    col_point = int(round(X_coordinate_shifted_origin/Resolution));
+    row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/Resolution));
+    if(col_point < 0 || col_point > NCols-1 || row_point < 0 || row_point > NRows) BaselineValue_temp[i]=NoDataValue;
+    else BaselineValue_temp[i] = RasterTemplate.get_data_element(row_point,col_point);
   }
+  
   DistanceAlongBaseline = DistanceAlongBaseline_temp;
+  BaselineValue = BaselineValue_temp;
   // Read profile data into a LSDCloud object for querying
   vector<float> zeros(NPtsInProfile,0.0);
   LSDCloud ProfileCloud(ProfilePoints, RasterTemplate);
@@ -133,7 +156,9 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
   // considered positive, and those on the right are negative.
   Array2D<float> DistanceToBaseline_temp(NRows,NCols,NoDataValue);
   Array2D<float> ProjectedDistanceAlongBaseline_temp(NRows,NCols,NoDataValue);
-  
+  Array2D<float> ProjectedBaselineValue_temp(NRows,NCols,NoDataValue);
+  Array2D<float> BaselineValueArray_temp(NRows,NCols,NoDataValue);
+
   float searchPoint_x,searchPoint_y;
   vector<float> SquaredDistanceToBaseline,temp,temp2;
   vector<int> ProfilePointIndex;
@@ -310,11 +335,14 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
               if(test_point_left(V_a,V_b,V_p)==false) DistanceToBaseline_temp[i][j] = -1*d;
               else DistanceToBaseline_temp[i][j] = d; 
             }
+            // Now get baseline value
+            BaselineValueArray_temp[i][j] = BaselineValue[V_a_index]+(BaselineValue[V_b_index]-BaselineValue[V_a_index])*t;
           }
           else
           {
             DistanceToBaseline_temp[i][j] = NoDataValue;
             ProjectedDistanceAlongBaseline_temp[i][j] = NoDataValue;
+            BaselineValueArray_temp[i][j] = NoDataValue;
           }
         }
         
@@ -324,6 +352,7 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
 //          cout << "test2" << endl;
           DistanceToBaseline_temp[i][j] = NoDataValue;
           ProjectedDistanceAlongBaseline_temp[i][j] = NoDataValue;
+          BaselineValueArray_temp[i][j] = NoDataValue;
         }
         else
         // Select nearest point (e.g. on outer side of bend)
@@ -333,6 +362,7 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
           if(d<ProfileHalfWidth)
           {
             ProjectedDistanceAlongBaseline_temp[i][j] = DistanceAlongBaseline[V_a_index];
+            BaselineValueArray_temp[i][j] = BaselineValue[V_a_index];
             // determine which side of the profile the point is on using the cross
             // product.  In this case, take the baseline vector as being formed
             // by straight line that joins the points on either side.
@@ -356,6 +386,7 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
           {
             DistanceToBaseline_temp[i][j] = NoDataValue;
             ProjectedDistanceAlongBaseline_temp[i][j] = NoDataValue;
+            BaselineValueArray_temp[i][j] = NoDataValue;
           }
         }
       }       
@@ -363,6 +394,7 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
   }
   DistanceToBaselineArray = DistanceToBaseline_temp.copy();
   DistanceAlongBaselineArray = ProjectedDistanceAlongBaseline_temp.copy();
+  BaselineValueArray = BaselineValueArray_temp.copy();
 }
 
 //------------------------------------------------------------------------------
@@ -381,7 +413,8 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
 // deviation respectively.  The following profiles contain the desired 
 // percentile profiles indicated in the input vector "desired_percentiles".
 void LSDSwath::get_transverse_swath_profile(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth,
-       vector<float>& mid_points, vector<float>& mean_profile, vector<float>& sd_profile, vector< vector<float> >& output_percentile_profiles)
+       vector<float>& mid_points, vector<float>& mean_profile, vector<float>& sd_profile, vector< vector<float> >& output_percentile_profiles,
+       int NormaliseToBaseline)
 {  
   vector<float> TransverseDistance, RasterValues;
   float Resolution = Raster.get_DataResolution();
@@ -407,10 +440,14 @@ void LSDSwath::get_transverse_swath_profile(LSDRaster& Raster, vector<float> des
       if((DistanceToBaselineArray[i][j]!=NoDataValue) && (Raster.get_data_element(i,j)!=NoDataValue))
       {
         TransverseDistance.push_back(DistanceToBaselineArray[i][j]);
-        RasterValues.push_back(Raster.get_data_element(i,j));
+        // To normalise the profile values, subtract baseline value from raster value
+        if (NormaliseToBaseline == 1) RasterValues.push_back(Raster.get_data_element(i,j)-BaselineValueArray[i][j]);
+        // Otherwise, just get the raster value
+        else RasterValues.push_back(Raster.get_data_element(i,j));
       }
     }
   }
+  cout << "test" << endl;
   // Sort values if you need percentiles  
   int NumberOfPercentileProfiles = desired_percentiles.size();
   if (NumberOfPercentileProfiles > 0)
@@ -475,7 +512,8 @@ void LSDSwath::get_transverse_swath_profile(LSDRaster& Raster, vector<float> des
 // deviation respectively.  The following profiles contain the desired 
 // percentile profiles indicated in the input vector "desired_percentiles".
 void LSDSwath::get_longitudinal_swath_profile(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth,
-       vector<float>& mid_points, vector<float>& mean_profile, vector<float>& sd_profile, vector< vector<float> >& output_percentile_profiles)
+       vector<float>& mid_points, vector<float>& mean_profile, vector<float>& sd_profile, vector< vector<float> >& output_percentile_profiles,
+       int NormaliseToBaseline)
 {  
   vector<float> LongitudinalDistance, RasterValues;
   float Resolution = Raster.get_DataResolution();
@@ -501,7 +539,10 @@ void LSDSwath::get_longitudinal_swath_profile(LSDRaster& Raster, vector<float> d
       if((DistanceAlongBaselineArray[i][j]!=NoDataValue) && (Raster.get_data_element(i,j)!=NoDataValue))
       {
         LongitudinalDistance.push_back(DistanceAlongBaselineArray[i][j]);
-        RasterValues.push_back(Raster.get_data_element(i,j));
+        // To normalise the profile values, subtract baseline value from raster value
+        if (NormaliseToBaseline == 1) RasterValues.push_back(Raster.get_data_element(i,j)-BaselineValueArray[i][j]);
+        // Otherwise, just get the raster value
+        else RasterValues.push_back(Raster.get_data_element(i,j));
       }
     }
   }
@@ -564,14 +605,15 @@ void LSDSwath::get_longitudinal_swath_profile(LSDRaster& Raster, vector<float> d
 // These routines take a swath profile template, comprising the LSDSwath object,
 // and then uses this to construct either transverse (normal to profile) or
 // longitudinal (parallel to profile) profiles.
-void LSDSwath::write_transverse_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix)
+void LSDSwath::write_transverse_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth,
+      string prefix, int NormaliseToBaseline)
 {
   string profile_extension = "_trans_profile.txt";
   vector<float> mid_points;
   vector<float> mean_profile;
   vector<float> sd_profile;
   vector< vector<float> > output_percentile_profiles;
-  get_transverse_swath_profile(Raster, desired_percentiles, BinWidth, mid_points, mean_profile, sd_profile, output_percentile_profiles);
+  get_transverse_swath_profile(Raster, desired_percentiles, BinWidth, mid_points, mean_profile, sd_profile, output_percentile_profiles, NormaliseToBaseline);
   // Print profiles to file
   string filename = prefix + profile_extension;
   cout << "\t printing profiles to " << filename << endl;
@@ -596,14 +638,15 @@ void LSDSwath::write_transverse_profile_to_file(LSDRaster& Raster, vector<float>
   
   ofs.close();
 }
-void LSDSwath::write_longitudinal_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix)
+void LSDSwath::write_longitudinal_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, 
+      string prefix, int NormaliseToBaseline)
 {
   string profile_extension = "_long_profile.txt";
   vector<float> mid_points;
   vector<float> mean_profile;
   vector<float> sd_profile;
   vector< vector<float> > output_percentile_profiles;
-  get_longitudinal_swath_profile(Raster, desired_percentiles, BinWidth, mid_points, mean_profile, sd_profile, output_percentile_profiles);
+  get_longitudinal_swath_profile(Raster, desired_percentiles, BinWidth, mid_points, mean_profile, sd_profile, output_percentile_profiles, NormaliseToBaseline);
   // Print profiles to file
   string filename = prefix + profile_extension;
   cout << "\t printing profiles to " << filename << endl;
