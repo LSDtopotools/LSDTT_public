@@ -498,9 +498,9 @@ void LSDSwath::get_longitudinal_swath_profile(LSDRaster& Raster, vector<float> d
   {
     for(int j = ColStart; j<ColEnd; ++j)
     {
-      if((DistanceToBaselineArray[i][j]!=NoDataValue) && (Raster.get_data_element(i,j)!=NoDataValue))
+      if((DistanceAlongBaselineArray[i][j]!=NoDataValue) && (Raster.get_data_element(i,j)!=NoDataValue))
       {
-        LongitudinalDistance.push_back(DistanceToBaselineArray[i][j]);
+        LongitudinalDistance.push_back(DistanceAlongBaselineArray[i][j]);
         RasterValues.push_back(Raster.get_data_element(i,j));
       }
     }
