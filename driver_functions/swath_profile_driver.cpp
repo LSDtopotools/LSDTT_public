@@ -33,6 +33,7 @@ int main (int nNumberofArgs,char *argv[])
   string flt_ext = "flt";  
   string Swath_ext = "_swath_trans";
   string Long_Swath_ext = "_swath_long";
+  string BV_ext = "_baseline_values";
   cout << "starting the test run... here we go!" << endl;
 	RasterTemplate_file = RasterTemplate_file;
 	
@@ -50,13 +51,19 @@ int main (int nNumberofArgs,char *argv[])
   percentiles.push_back(50);
   percentiles.push_back(75);
   percentiles.push_back(100);
-  cout << "\t writing output" << endl;
-  TestSwath.write_transverse_profile_to_file(RasterTemplate, percentiles, BinWidth, RasterTemplate_file.c_str());
-  TestSwath.write_longitudinal_profile_to_file(RasterTemplate, percentiles, BinWidth, RasterTemplate_file.c_str());
+  int NormaliseTransProfile = 1;
+  int NormaliseLongProfile = 0;
+  cout << "\n\t writing output \n\t\t - transverse profile" << endl;
+  TestSwath.write_transverse_profile_to_file(RasterTemplate, percentiles, BinWidth, RasterTemplate_file.c_str(),NormaliseTransProfile);
+  cout << "\t - longitudinal profile" << endl;
+  TestSwath.write_longitudinal_profile_to_file(RasterTemplate, percentiles, BinWidth, RasterTemplate_file.c_str(),NormaliseLongProfile);
+  cout << "\t - profile templates" << endl;
   LSDRaster Swath(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_XMinimum(),RasterTemplate.get_YMinimum(),
                   RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_DistanceToBaselineArray());  
   LSDRaster Long_Swath(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_XMinimum(),RasterTemplate.get_YMinimum(),
                   RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_DistanceAlongBaselineArray());
+  LSDRaster BaselineValues(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_XMinimum(),RasterTemplate.get_YMinimum(),
+                  RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_BaselineValueArray());
   string output_file = RasterTemplate_file+Swath_ext;
   Swath.write_raster(output_file.c_str(),flt_ext);
   string output_file2 = RasterTemplate_file+Long_Swath_ext;
