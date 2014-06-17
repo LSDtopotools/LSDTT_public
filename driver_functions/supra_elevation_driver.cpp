@@ -14,9 +14,9 @@
 #include <string>
 #include <vector>
 #include <fstream>
-#include "../../LSDRaster.hpp"
-#include "../../LSDSwathProfile.hpp"
-#include "../../LSDShapeTools.hpp"
+#include "../LSDRaster.hpp"
+#include "../LSDSwathProfile.hpp"
+#include "../LSDShapeTools.hpp"
 
 int main (int nNumberofArgs,char *argv[])
 {
