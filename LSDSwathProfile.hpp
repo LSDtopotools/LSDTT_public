@@ -56,24 +56,29 @@ class LSDSwath
   LSDSwath(PointData& ProfilePoints, LSDRaster& RasterTemplate, float HalfWidth) { create(ProfilePoints, RasterTemplate, HalfWidth); }
 	
 	void get_transverse_swath_profile(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth,
-       vector<float>& mid_points, vector<float>& mean_profile, vector<float>& sd_profile, vector< vector<float> >& output_percentile_profiles);
+       vector<float>& mid_points, vector<float>& mean_profile, vector<float>& sd_profile, vector< vector<float> >& output_percentile_profiles,
+       int NormaliseToBaseline);
 	void get_longitudinal_swath_profile(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth,
-       vector<float>& mid_points, vector<float>& mean_profile, vector<float>& sd_profile, vector< vector<float> >& output_percentile_profiles);
+       vector<float>& mid_points, vector<float>& mean_profile, vector<float>& sd_profile, vector< vector<float> >& output_percentile_profiles,
+       int NormaliseToBaseline);
   // write profiles to file
-  void write_transverse_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix);
-  void write_longitudinal_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix);
+  void write_transverse_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix, int NormaliseToBaseline);
+  void write_longitudinal_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix, int NormaliseToBaseline);
   // get functions
   // these get data elements
   int get_NPtsInProfile() const {return NPtsInProfile;}
   Array2D<float> get_DistanceToBaselineArray() const { return DistanceToBaselineArray; }
   Array2D<float> get_DistanceAlongBaselineArray() const { return DistanceAlongBaselineArray; }
+  Array2D<float> get_BaselineValueArray() const { return BaselineValueArray; }
   
 	protected:
   
   // Swath template
   vector<float> DistanceAlongBaseline;
+  vector<float> BaselineValue;
   Array2D<float> DistanceToBaselineArray;
   Array2D<float> DistanceAlongBaselineArray;
+  Array2D<float> BaselineValueArray;
 
 	// metadata
   int NPtsInProfile;
