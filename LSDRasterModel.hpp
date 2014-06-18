@@ -330,8 +330,19 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// model run.   
 	///------------------------------------------------------------------------------
 	LSDRasterModel run_model_implicit_hillslope_and_fluvial(string param_file);
+		
+  /// @brief This wrapper just calls the run_components method. Parameters used are those
+  /// stored as data members
+	/// @author JAJ
+	/// @date 01/01/2014	
 	void run_model( void );
+	
 	void run_model_from_steady_state( void );
+	
+  /// @brief This wrapper just calls the run_components method. Parameters used are those
+  /// stored as data members. This one actually calls the erosion laws
+	/// @author JAJ
+	/// @date 01/01/2014		
 	void run_components( void );
 
 	/// This method forces the landscape into its steady state profile, by using periodic forcing. 
@@ -352,7 +363,13 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// At a future timestep in linear time
 	/// -----------------------------------------------------------------------
 	void fluvial_incision( void );
-
+  
+  /// @brief This assumes that all sediment transported from rivers into 
+  /// channels is removed. It checks the raster to see where the channels are
+  /// which at this point is determined by a threshold drainage area, 
+  /// and then removes all the sediment to those pixels
+	/// @author JAJ
+	/// @date 01/01/2014	
 	void wash_out( void );
 	
 	/// fluvial_erosion_rate
@@ -366,9 +383,18 @@ class LSDRasterModel: public LSDRasterSpectral
 	LSDRasterModel run_isostatic_correction( void );
 
 	/// --------------------------------------------------------------------
-	/// Adds random noise to each pixel in range [min, max]
-	/// --------------------------------------------------------------------
+  /// @brief Adds random noise to each pixel in range [min, max]
+	/// @param minium random addition
+	/// @param maximum random addition
+	/// @author JAJ
+	/// @date 01/01/2014
 	void random_surface_noise( float min, float max );
+
+  /// --------------------------------------------------------------------
+  /// @brief Adds random noise to each pixel using the noise data member
+	/// @author SMM
+	/// @date 17/06/2014
+	void random_surface_noise();
 
 	/// --------------------------------------------------------------------
 	/// Creates uplift field from a set of templates

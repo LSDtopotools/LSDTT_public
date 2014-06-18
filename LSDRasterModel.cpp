@@ -1463,6 +1463,11 @@ LSDRasterModel LSDRasterModel::run_model_implicit_hillslope_and_fluvial(string p
 	return Zeta;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This is a wrapper function used to drive a model run
+// it checks parameters and flags from the data members
+// JAJ, sometime 2014
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::run_components( void )
 {
 	//recording = false;
@@ -1475,18 +1480,25 @@ void LSDRasterModel::run_components( void )
 
 	stringstream ss, ss_root;
 	int frame = 1, print = 1;
-	do {
+	do 
+  {
 		// Check if hung
 		if ( check_if_hung() )
 		{
 			cout << "Model took too long to reach steady state, assumed to be stuck" << endl;
 			break;
 		}
-		check_periodicity_switch();
+				
+		check_periodicity_switch();     // SMM: not sure what this is for, to be checked
+		
 		// Record current topography
 		zeta_old = RasterData.copy();
-		// run active model components
 		
+		// run active model components
+    
+    // first diffuse the hillslopes. Currently two options. Perhaps a flag could be
+    // added so that we don't have to keep adding if statements as more
+    // hillslope rules are added?
 		if (hillslope)
 		{
 			if (nonlinear)
@@ -1495,9 +1507,20 @@ void LSDRasterModel::run_components( void )
 				soil_diffusion_fd_linear();
 		}
 
+    // sediment will have moved into channels. This is assumed to 
+    // be immediately removed by fluvial processes, so we use the
+    // 'wash out' member function
 		wash_out();
+		
+		// now for fluvial erosion
 		if (fluvial)
-			fluvial_incision();
+		{
+		  // currently the opnly option is stream power using the FASTSCAPE 
+      // algorithm so there are no choices here
+		  fluvial_incision();
+    }  
+		  
+		// now for isostacy. As of 17/6/2014 this wasn't working	
 		if (isostasy)
 		{
 			if (flexure)
@@ -1507,7 +1530,11 @@ void LSDRasterModel::run_components( void )
 				Airy_isostasy();
 		}
 
+    // after everything has been eroded/deposited, the surface is uplifted
+    // this currently is the block uplift option
 		uplift_surface();
+		
+		
 		write_report();
 
 		current_time += timeStep;
@@ -1521,6 +1548,7 @@ void LSDRasterModel::run_components( void )
 		++print;
 		check_steady_state();
 	} while (not check_end_condition());
+	
 	if ( print_interval == 0 || (print_interval > 0 && ((print-1) % print_interval) != 0))
 	{
 		//if (not quiet) cout << current_time << ": " << endl;
@@ -1528,28 +1556,37 @@ void LSDRasterModel::run_components( void )
 	}
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This function simply calls the run_components function
+// JAJ, sometime 2014
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDRasterModel::run_model( void )
 {
 	// file to write details of each time step
 	// This will be opened by the write_report method
 	int run = 1;
-	do {
-	initial_steady_state = false;
-	recording = false;
+	
+	// loop through the number of runs. The number of runs is stored as a data member
+	do 
+  {
+	  initial_steady_state = false;      // SMM: not clear why this is set to false
+	  recording = false;                 // SMM: not clear why this is set to false
 
-	if (not initialized && not quiet)
-	{
-		cout << "Model has not been initialized with a parameter file." << endl;
-		cout << "All values used are defaults" << endl;
-	}
+	  if (not initialized && not quiet)
+	  {
+		  cout << "Model has not been initialized with a parameter file." << endl;
+		  cout << "All values used are defaults" << endl;
+	  }
 
 		current_time = 0;
 		run_components();
-	++run;
+	  ++run;
 	} while (run <= num_runs);
 	
 	final_report();
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
 
 void LSDRasterModel::run_model_from_steady_state( void )
 {
@@ -2290,6 +2327,9 @@ void LSDRasterModel::soil_diffusion_fv_nonlinear( void )
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This is the component of the model that is solved using the 
+// FASTSCAPE algorithm of Willett and Braun (2013)
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDRasterModel::fluvial_incision( void )
 {
@@ -2303,14 +2343,17 @@ void LSDRasterModel::fluvial_incision( void )
 	int node, row, col, receiver, receiver_row, receiver_col;
 	float drainageArea, dx, streamPowerFactor;
 	float root_2 = pow(2, 0.5);
+	float dx_root2 = root_2*DataResolution;
+	float DR2 = DataResolution*DataResolution;
 	float K = get_K();
 
+  // this is only for bug checking
 	if (not quiet && name == "debug" && NRows <= 10 && NCols <= 10)
 	{
 		cout << "Drainage area: " << endl;
 		for (int i=0; i<NRows*NCols; ++i)
 		{
-			drainageArea = flow.retrieve_contributing_pixels_of_node(i) *  DataResolution * DataResolution;	
+			drainageArea = flow.retrieve_contributing_pixels_of_node(i) *  DR2;	
 			cout << drainageArea << " ";
 			if (((i+1)%NCols) == 0)
 				cout << endl;
@@ -2324,13 +2367,17 @@ void LSDRasterModel::fluvial_incision( void )
 		node = nodeList[i];
 		flow.retrieve_current_row_and_col(node, row, col);
 		flow.retrieve_receiver_information(node, receiver, receiver_row, receiver_col);
-		drainageArea = flow.retrieve_contributing_pixels_of_node(node) *  DataResolution * DataResolution;	
-		if (not quiet && name == "debug" && NRows <= 10 && NCols <= 10)
+		drainageArea = flow.retrieve_contributing_pixels_of_node(node) *  DR2;	
+		
+    // some debugging code
+    if (not quiet && name == "debug" && NRows <= 10 && NCols <= 10)
 		{
 			cout << row << ", " << col << ", " << receiver_row << ", " << receiver_col << endl;
 			cout << flow.retrieve_flow_length_code_of_node(node) << endl;
 			cout << drainageArea << endl;
 		}
+
+    // get the distance between nodes. Depends on flow direction		
 		switch (flow.retrieve_flow_length_code_of_node(node))
 		{
 			case 0:
@@ -2340,24 +2387,29 @@ void LSDRasterModel::fluvial_incision( void )
 				dx = DataResolution;
 				break;
 			case 2:
-				dx = DataResolution * root_2;
+				dx = dx_root2;
 				break;
 			default:
 				dx = -99;
 				break;
 		}
+		
+		// some logic if n is close to 1. Saves a bit of computational expense. 
 		if (abs(n - 1) < 0.0001)
 		{
 			if (dx == -99)
 				continue;
+				
+			// compute new elevation if node is not a base level node	
+			// SMM_working 17/6/2014 Check maths on iteration
 			if (node != receiver)
 			{
-			streamPowerFactor = K * pow(drainageArea, m) * (timeStep / dx);
-			zeta[row][col] = (zeta[row][col] + zeta[receiver_row][receiver_col] * streamPowerFactor) /
-						 (1 + streamPowerFactor);
+			  streamPowerFactor = K * pow(drainageArea, m) * (timeStep / dx);
+			  zeta[row][col] = (zeta[row][col] + zeta[receiver_row][receiver_col] * streamPowerFactor) /
+						             (1 + streamPowerFactor);
 			}
 		}
-		else
+		else    // this else loop is for when n is not close to one and you need an iterative solution
 		{
 			if (dx == -99)
 				continue;
@@ -2367,6 +2419,8 @@ void LSDRasterModel::fluvial_incision( void )
 			float epsilon;
 			float streamPowerFactor = K * pow(drainageArea, m) * timeStep;
 			float slope;
+			
+			// iterate until you converge on a solution
 			do
 			{
 				slope = (new_zeta - zeta[receiver_row][receiver_col]) / dx;
@@ -2379,30 +2433,49 @@ void LSDRasterModel::fluvial_incision( void )
 	//return LSDRasterModel(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
 	this->RasterData = zeta;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This little routine 'washes out' the channels: it assumes all 
+// sediment transported from hillslopes is transported  away in the channel. 
+// To determine the channel, it uses a threshold drainage area, 
+// which is one of the data members
+// JAJ, sometime 2014
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::wash_out( void )
 {
-	if (threshold_drainage < 0 || not hillslope || not fluvial)
+	// don't do anything if there is no hillslope or fluvial erosion, 
+	// or if the threshold drainage is less than zero
+  if (threshold_drainage < 0 || not hillslope || not fluvial)
 		return;
+		
+	// get the old elevations	
 	Array2D<float> zeta=zeta_old.copy();
 	int node;
 	float DrainageArea;
 
 	// Step one, create donor "stack" etc. via FlowInfo
 	LSDRaster temp(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
-	LSDFlowInfo flow(boundary_conditions, temp);
 	
+  // SMM: does the flow info calculations every timestip: this might be streamlined
+  // to do it every few timesteps
+  LSDFlowInfo flow(boundary_conditions, temp);
+	
+	// loop through the nodes and wash out any node that is a channel
 	for (int i=0; i<NRows; ++i)
 	{
 		for (int j=0; j<NCols; ++j)
 		{
 			node = flow.retrieve_node_from_row_and_column(i, j);
-			DrainageArea = flow.retrieve_contributing_pixels_of_node(node) *  DataResolution * DataResolution;	
+			DrainageArea = flow.retrieve_contributing_pixels_of_node(node) *  
+                                               DataResolution * DataResolution;	
 			if (DrainageArea > threshold_drainage)
 				RasterData[i][j] = zeta_old[i][j];
 		}
 	}
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 LSDRaster LSDRasterModel::fluvial_erosion_rate(float timestep, float K, float m, float n, vector <string> boundary)
 {
@@ -2490,8 +2563,15 @@ LSDRasterModel LSDRasterModel::run_isostatic_correction( void )
 }
 */
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// this function adds a random float to each pixel in the raster
+// Written sometime 2014 JAJ
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDRasterModel::random_surface_noise( float min, float max )
 {
+
+  cout << "Seeding the surface with random asperities of the amplitude " << max-min << endl;
+
 	// Seed random numbers
 	short dimension;
 	int size;
@@ -2524,6 +2604,61 @@ void LSDRasterModel::random_surface_noise( float min, float max )
 		}
 	}
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Similar to above, but uses the noise parameter stored in the object
+// SMM 17/6/2014
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDRasterModel::random_surface_noise()
+{
+  // check on the noise data member. It needs to be bigger than 10-6)
+  // if not set 1 mm as default
+  if (noise < 0.000001)
+  {
+    noise = 0.001;
+  }
+  
+  // we set the min and max between zero and noise. We don't go between
+  // -noise/2 and noise/2 just because we don't want negative elevations near
+  // a base level node. 
+  float min = 0;
+  float max = noise;
+  
+  cout << "Seeding the surface with random asperities of the amplitude " << noise << endl;
+
+	// Seed random numbers
+	short dimension;
+	int size;
+	bool periodic;
+	interpret_boundary(dimension, periodic, size);
+	int start_i, end_i;
+	int start_j, end_j;
+
+	if (dimension == 0)
+	{
+		start_i = 1; end_i = NRows-2;
+		start_j = 0; end_j = NCols-1;
+	}
+	else
+	{
+		start_i = 0; end_i = NRows-1;
+		start_j = 1; end_j = NCols-2;
+	}
+
+	srand( static_cast <unsigned> (time(0)) );
+
+	// Add random float to each pixel
+	for (int i=start_i; i<=end_i; ++i)
+	{
+		for (int j=start_j; j<=end_j; ++j)
+		{
+			if (is_base_level(i, j))
+				continue;
+			RasterData[i][j] += static_cast <float> ( rand()) / static_cast <float> (RAND_MAX/(max-min)) + min;
+		}
+	}
+}
+
 
 Array2D <float> LSDRasterModel::generate_uplift_field( int mode, float max_uplift )
 {

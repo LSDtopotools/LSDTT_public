@@ -28,6 +28,9 @@ int main(int argc, char *argv[])
 		cout << "Creating a template parameter file (template_param)" << endl;
 		cout << "###################################################" << endl;
 		mod.make_template_param_file("template_param");
+		
+		// add random asperities to the surface of default model
+		mod.random_surface_noise();
 	}
 
 	if (argc > 2)
@@ -40,7 +43,11 @@ int main(int argc, char *argv[])
 			string ans;
 			cerr << "A run with the name '" << mod.get_name() << "' already exsist, do you wish to overwrite it? (y/n) ";
 			cin >> ans;
-			if (ans != "y") exit(0);
+			if (ans != "y") 
+      {
+        cout << "You will need to choose another run name, exiting" << endl;
+        exit(0);
+      }
 			else
 				cout << "\nOverwriting" << endl;
 		}
