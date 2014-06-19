@@ -156,6 +156,9 @@ class LSDFlowInfo
   ///@brief Get the FlowLengthCode of a given node.
   ///@param node Integer of node index value.
   ///@return Integer of the FlowLengthCode.
+	/// 0 == no receiver/self receiver (base level) \n
+	/// 1 == cardinal direction, flow length = DataResolution \n
+	/// 2 == diagonal, flow length = DataResolution*(1/sqrt(2)) \n
   /// @author SMM
   /// @date 01/016/12
   int retrieve_flow_length_code_of_node(int node)

@@ -382,7 +382,6 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// --------------------------------------------------------------------
 	LSDRasterModel run_isostatic_correction( void );
 
-	/// --------------------------------------------------------------------
   /// @brief Adds random noise to each pixel in range [min, max]
 	/// @param minium random addition
 	/// @param maximum random addition
@@ -390,31 +389,34 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @date 01/01/2014
 	void random_surface_noise( float min, float max );
 
-  /// --------------------------------------------------------------------
   /// @brief Adds random noise to each pixel using the noise data member
 	/// @author SMM
 	/// @date 17/06/2014
 	void random_surface_noise();
 
-	/// --------------------------------------------------------------------
-	/// Creates uplift field from a set of templates
-	/// int mode specifies a mode of uplift:
+	/// @brief Creates uplift field from a set of templates
+	/// @param mode specifies a mode of uplift:
 	/// 	(0) - block uplift
 	///	1   - tilt block
 	///	2   - gaussian
 	///	3   - quadratic
-	/// --------------------------------------------------------------------
+	/// @param second argument is the maximum uplift
+	/// @return returns the uplift field that is the same dimensions as the original 
+	/// raster
+	/// @author JAJ
+	/// @date 01/01/2014
 	Array2D <float> generate_uplift_field( int mode, float max_uplift); 
 
-
-	/// -------------------------------------------------------------------
-	/// Gets the uplift value at a given cell
+	/// @brief Gets the uplift value at a given cell
 	/// this method is implemented as a memory saving measure, rather than
 	/// storing the uplift field in memory
-	///
 	/// Some methods still implemented still use this uplift field
 	/// It's advisable this is changed, otherwise the size of rasters that
 	/// can be modelled will be severely reduced
+	/// @param row
+	/// @param column
+	/// @author JAJ
+	/// @author 01/01/2014
 	/// -------------------------------------------------------------------
 	float get_uplift_at_cell(int i, int j);
 
@@ -438,17 +440,19 @@ class LSDRasterModel: public LSDRasterSpectral
 	Array2D <float> calculate_root( void );
 	Array2D <float> calculate_airy( void );
 
-	/// -------------------------------------------------------------------
-	/// Check whether current node is a base level node
-	/// -------------------------------------------------------------------
+	/// @brief Check whether current node is a base level node
+	/// @param row
+	/// @param column
+	/// @return true or false
+	/// @author JAJ
+	/// @date 01/01/2014
 	bool is_base_level(int i, int j);
 
 	void interpret_boundary(short &dimension, bool &periodic, int &size);
 
 	/// -------------------------------------------------------------------
 	/// Setter methods 
-	/// -------------------------------------------------------------------
-	
+	/// -------------------------------------------------------------------	
 	void set_boundary_conditions(vector <string> bc) 	{ for (int i=0; i<4; ++i) {bc[i][0] = tolower(bc[i][0]);} boundary_conditions = bc; }
 	void set_timeStep( float dt )				{ timeStep = dt; }
 	void set_endTime( float time )				{ endTime = time; }
@@ -470,7 +474,6 @@ class LSDRasterModel: public LSDRasterSpectral
 	void set_K_mode( short mode )				{ K_mode = mode; }
 	void set_D_mode( short mode )				{ D_mode = mode; }
 	void set_period_mode( short mode )			{ period_mode = mode; }
-
 	void set_name( string name )				{this->name = name;}
 	void set_report_name( string name )			{report_name = name;}
 
@@ -484,7 +487,6 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// -------------------------------------------------------------------
 	/// Getter methods 
 	/// -------------------------------------------------------------------
-	
 	string get_name( void )					{ return name; }
 	float get_K( void );
 	float get_D( void );
@@ -507,15 +509,34 @@ class LSDRasterModel: public LSDRasterSpectral
 
 	void print_rasters( int frame_num );
 
-	/// ------------------------------------------------------------------
-	/// Print slope area data
+	/// @brief Print slope area data
 	/// Probably fits better into LSDRaster, but requires LSDFlowInfo
-	/// ------------------------------------------------------------------
+	/// @param requires a filename 
+	/// @author JAJ
+	/// @date 01/01/2014
 	void slope_area_data( string name );
 
-	/// ------------------------------------------------------------------
-	/// Produce a template of a parameter file to be supplied to the model
-	/// ------------------------------------------------------------------
+  /// @brief Print slope area data
+	/// This is an overloaded function that calcualtes slope area
+	/// data based on flags. There are two flag, one for the slope
+	/// calculation and one for the area calculation
+	/// @param requires a filename
+	/// @param a flag for calculation of the topographic slope
+	/// 0 == polyfit using the data resolution as the smoothing diameter
+	/// 1 == slope calculated with the D8 slopes, with dx = data resolution
+  /// or DataResolution*sqrt(2) depending on flow direction. 
+	/// @param a flag for calculation of the area
+	/// 0 == area using contributing pixels only
+	/// 1 == area using contributing pixels but smoothed to data resolution with polyfit
+	/// 2 == 
+	/// @author SMM
+	/// @date 18/06/2014
+	void slope_area_data( string name, int slope_flag, int area_flag  );
+
+	/// @brief Produce a template of a parameter file to be supplied to the model
+	/// @param the name of the parameter file to be printed
+	/// @author JAJ
+	/// @date 01/01/2014
 	void make_template_param_file(string filename);
 
 	/// ------------------------------------------------------------------

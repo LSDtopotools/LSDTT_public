@@ -3349,17 +3349,24 @@ void LSDRasterModel::print_rasters( int frame )
 		slope_area_data( name+"_sa");
 	}
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function calculates slope-area data and prints to file
+// It is retainaed from JAJ's original so that there are no errors with the new
+// function
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::slope_area_data( string name )
 {
 	ofstream outfile;
 	outfile.open((name).c_str());
 
-	LSDRaster slope;
+	LSDRaster slope;                  
 	Array2D<float> a, b, c, d, e, f;
-	Array2D<float> drainage_array(NRows, NCols, 0.0);
+	Array2D<float> drainage_array(NRows, NCols, 0.0);    
 	LSDFlowInfo flowData(boundary_conditions, *this);
 	int node;
+	float DR2 = DataResolution*DataResolution;
 
 	calculate_polyfit_coefficient_matrices(DataResolution, a, b, c, d, e, f);
 	slope = calculate_polyfit_slope(d, e);
@@ -3369,7 +3376,7 @@ void LSDRasterModel::slope_area_data( string name )
 		for (int j=0; j<NCols; ++j)
 		{
 			node = flowData.retrieve_node_from_row_and_column(i, j);
-			drainage_array[i][j] = flowData.retrieve_contributing_pixels_of_node(node) * DataResolution;
+			drainage_array[i][j] = flowData.retrieve_contributing_pixels_of_node(node) * DR2;
 		}
 	}
 	LSDRaster drainage(NRows, NCols, XMinimum, YMinimum, DataResolution,
@@ -3402,7 +3409,182 @@ void LSDRasterModel::slope_area_data( string name )
 
 	outfile.close();
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Print slope area data
+// This is an overloaded function that calcualtes slope area
+// data based on flags. There are two flag, one for the slope
+// calculation and one for the area calculation
+// slope_flag is a flag for calculation of the topographic slope
+//   0 == polyfit using the data resolution as the smoothing diameter
+//   1 == slope calculated with the D8 slopes, with dx = data resolution
+//        or DataResolution*sqrt(2) depending on flow direction. 
+// area_flag is a flag for calculation of the area
+//   0 == area using contributing pixels only
+//   1 == area using contributing pixels but smoothed to data resolution with polyfit
+// SMM
+// 18/06/2014
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::slope_area_data( string name, int slope_flag, int area_flag  )
+{
+	// open the file for printing
+  ofstream outfile;
+	outfile.open((name).c_str());
+	
+	// get the flow info
+	LSDFlowInfo flowData(boundary_conditions, *this);
+
+  // first calculate the slope
+  // slope_flag is a flag for calculation of the topographic slope
+  //   0 == polyfit using the data resolution as the smoothing diameter
+  //   1 == slope calculated with the D8 slopes, with dx = data resolution
+  //        or DataResolution*sqrt(2) depending on flow direction.
+  Array2D<float> slope_array(NRows, NCols, 0.0);  
+  LSDRaster slope;
+  switch (slope_flag)
+  {
+    case 0:
+    {	
+      vector<LSDRaster> surface_fitting;      
+	    vector<int> raster_selection(8, 0);
+      raster_selection[1] = 1;            // this indicates you only want the slope
+      surface_fitting = calculate_polyfit_surface_metrics(DataResolution+0.001, raster_selection);
+      slope = surface_fitting[1];
+    }
+    break;
+    case 1: 
+    {   
+      int n_FI_nodes = flowData.get_NDataNodes();
+      int fl_code;
+      float donor_elevation;
+      float receiver_elevation;
+      float dx = DataResolution;
+      float dx_rt2 = DataResolution*sqrt(2.0);
+      int row, col, rnode, rrow, rcol;
+      // loop through the nodes, collecting slope information
+      for(int node = 0; node< n_FI_nodes; node++)
+      {
+         // get the donor elevation
+         flowData.retrieve_current_row_and_col(node,row, col); 
+         donor_elevation =  RasterData[row][col];
+         
+         // now the receiver elevation
+         flowData.retrieve_receiver_information(node,rnode, rrow, rcol);
+         receiver_elevation = RasterData[rrow][rcol];
+         
+         // now get the flow length code
+         fl_code = flowData.retrieve_flow_length_code_of_node(node);
+         
+         // now calculate the slope
+         if (fl_code == 1)
+         {
+           slope_array[row][col] = (donor_elevation-receiver_elevation)/dx;  
+         } 
+         else if (fl_code == 2)
+         {
+           slope_array[row][col] = (donor_elevation-receiver_elevation)/dx_rt2; 
+         }
+      }       // end loop through nodes
+      LSDRaster slope2(NRows, NCols, XMinimum, YMinimum, DataResolution,
+		                     NoDataValue, slope_array);
+		  slope = slope2;       // a bit of a stupid way to do this but don't want 
+		                        // local slope raster  
+		}
+    break;
+    default:
+      cout << "Slope_area function, you have chose an incorrect slope flag" << endl;
+      exit(EXIT_FAILURE); 
+  }           // end slope flag switch logic
+      
+
+  // now calculate the area
+  // 0 == drainage area using D8 but then smooth the area using polyfit
+  // 1 == drainage area D8 No Smoothing
+  LSDRaster drainage_area;
+  float DR2 = DataResolution*DataResolution;
+  Array2D<float> drainage_array(NRows, NCols, 0.0); 
+  switch (area_flag)
+  {
+    case 0:
+    {
+      vector<LSDRaster> surface_fitting_area;
+      vector<int> raster_selection(8, 0);
+      raster_selection[1] = 0;            // this indicates you only want averaged selection
+      int node;
+      
+      // loop through the nodes collecting drainage area
+	    for (int i=0; i<NRows; ++i)
+	    {
+		    for (int j=0; j<NCols; ++j)
+		    {
+			    node = flowData.retrieve_node_from_row_and_column(i, j);
+			    drainage_array[i][j] = flowData.retrieve_contributing_pixels_of_node(node) * DR2;
+		    }
+	    }
+	    LSDRaster drainage(NRows, NCols, XMinimum, YMinimum, DataResolution,
+		                     NoDataValue, drainage_array); 
+		                     
+		  // fit the surface
+	    surface_fitting_area = drainage.calculate_polyfit_surface_metrics(DataResolution+0.001, raster_selection);
+      drainage_area = surface_fitting_area[0];
+    }
+    break;
+    case 1:
+    {
+      int node;
+      // loop through the nodes getting drainage area. 
+	    for (int i=0; i<NRows; ++i)
+	    {
+		    for (int j=0; j<NCols; ++j)
+		    {
+			    node = flowData.retrieve_node_from_row_and_column(i, j);
+			    drainage_array[i][j] = flowData.retrieve_contributing_pixels_of_node(node) * DR2;
+		    }
+	    }      
+      LSDRaster drainage(NRows, NCols, XMinimum, YMinimum, DataResolution,
+		                     NoDataValue, drainage_array);
+		  drainage_area = drainage;
+    } 
+		break;
+		default:
+      cout << "Slope_area function, you have chose an incorrect area flag" << endl;
+      exit(EXIT_FAILURE);
+	}       // end area flag switch logic
+	
+	// Write data
+	outfile << name << endl;
+	outfile << "Elevation\tSlope\tArea" << endl;
+
+	for (int i=0; i<NRows; ++i)
+	{
+		for (int j=0; j<NCols; ++j)
+		{
+			if (slope.get_data_element(i,j) == NoDataValue || RasterData[i][j] == NoDataValue)
+			{
+				continue;
+			}
+			else
+			{
+				outfile << RasterData[i][j];
+				outfile << "\t" << slope.get_data_element(i, j);
+				outfile << "\t" << drainage_area.get_data_element(i, j); 
+				outfile << endl;
+			}
+		}
+	}
+
+	outfile.close();	
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function takes the default parameters and prints out a template 
+// paramter file. It is used so that if you run the model with 
+// no arguments you can look back at what parameters were used. 
+// JAJ, sometime 2014
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::make_template_param_file(string filename)
 {
 	ofstream param;
@@ -3448,6 +3630,7 @@ void LSDRasterModel::make_template_param_file(string filename)
 
 	param.close();
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 void LSDRasterModel::show( void )
 {
