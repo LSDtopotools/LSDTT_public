@@ -2946,7 +2946,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster Elevation, LSDRaster Hilltops, LSDRaster Slope,
                                                          LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir, string Prefix, LSDIndexRaster Basins,
                                                          bool print_paths_switch, int thinning, string trace_path, bool basin_filter_switch,
-                                                         vector<int> Target_Basin_Vector){
+                                                         vector<int> Target_Basin_Vector, int OrderThreshold){
 
 	//Declare parameters
 	int i,j;
@@ -3571,27 +3571,44 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 				  //if trace finished at a stream, print hillslope info.
 				  if (stnet[a][b] != NoDataValue )
           {
-				    path[a][b] = 1;
+				    
+				    if (stnet[a][b] >= OrderThreshold){
+            
+              path[a][b] = 1;
 
-            ++s_count;
+              ++s_count;
 
-					  X = XMinimum + j*DataResolution;
-					  Y = YMinimum - (NRows-i)*DataResolution;
-					  relief = zeta[i][j] - zeta[a][b];
-					  mean_slope = relief/(length * DataResolution);
+					    X = XMinimum + j*DataResolution;
+					    Y = YMinimum - (NRows-i)*DataResolution;
+					    relief = zeta[i][j] - zeta[a][b];
+					    mean_slope = relief/(length * DataResolution);
 
-            // update arrays with the current metrics
-            RoutedHilltops[i][j] = 1;
-            HillslopeLength_Array[i][j] = (length * DataResolution);
-            Slope_Array[i][j] = mean_slope;
-            Relief_Array[i][j] = relief;
+              // update arrays with the current metrics
+              RoutedHilltops[i][j] = 1;
+              HillslopeLength_Array[i][j] = (length * DataResolution);
+              Slope_Array[i][j] = mean_slope;
+              Relief_Array[i][j] = relief;
 
-            if (relief > 0){
-					    ofs << X << " " << Y << " " << " " << hilltops[i][j] << " " << mean_slope << " " << relief << " " << length << " " << basin[i][j] << " " << stnet[a][b] << "\n";
+              if (relief > 0){
+					      ofs << X << " " << Y << " " << " " << hilltops[i][j] << " " << mean_slope << " " << relief << " " << length << " " << basin[i][j] << " " << stnet[a][b] << "\n";
+              }
+              else {
+                ++neg_count;
+              }
             }
-            else {
-              ++neg_count;
+            else{  //The trace was successful but terminates below the stream order threshold
+                   //so it is excluded and no data is written
+          
+              ++s_count;
+            
+              // update arrays with the current metrics
+              RoutedHilltops[i][j] = NoDataValue;
+              HillslopeLength_Array[i][j] = NoDataValue;
+              Slope_Array[i][j] = NoDataValue;
+              Relief_Array[i][j] = NoDataValue;
+          
             }
+            
 				  }
 				  else{  //unable to route using aspects
 				    ofs << "fail: " << a << " " << b << " " << i << " " << j << endl;

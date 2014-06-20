@@ -156,9 +156,6 @@ class LSDFlowInfo
   ///@brief Get the FlowLengthCode of a given node.
   ///@param node Integer of node index value.
   ///@return Integer of the FlowLengthCode.
-	/// 0 == no receiver/self receiver (base level) \n
-	/// 1 == cardinal direction, flow length = DataResolution \n
-	/// 2 == diagonal, flow length = DataResolution*(1/sqrt(2)) \n
   /// @author SMM
   /// @date 01/016/12
   int retrieve_flow_length_code_of_node(int node)
@@ -492,6 +489,7 @@ class LSDFlowInfo
                                                          LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir, string Prefix, LSDIndexRaster Basins,
                                                          bool print_paths_switch, int thinning, string trace_path, bool basin_filter_switch,
                                                          vector<int> Target_Basin_Vector);
+
   /// @brief Hilltop flow routing, modded for use in probabilistic hillslope length measures.
   ///
   /// @details Hilltop flow routing code built around original code from Martin Hurst. Based on
@@ -544,7 +542,7 @@ class LSDFlowInfo
   vector< Array2D<float> > HilltopFlowRouting_probability(LSDRaster Elevation, LSDRaster Hilltops, LSDRaster Slope, 
                                                          LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir, string Prefix, LSDIndexRaster Basins,
                                                          bool print_paths_switch, int thinning, string trace_path, bool basin_filter_switch,
-                                                         vector<int> Target_Basin_Vector);
+                                                         vector<int> Target_Basin_Vector, int OrderThreshold);
 	protected:
 
 	///Number of rows.
