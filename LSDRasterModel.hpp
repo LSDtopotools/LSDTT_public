@@ -64,12 +64,14 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @return An instance of LSDRasterModel
 	/// @param master_param A filenam for the master parameter file
 	LSDRasterModel( string master_param )  { create(master_param); }
+	
 	/// @brief Create an LSDRasterModel from a file.
 	/// Uses a filename and file extension
 	/// @return LSDRasterModel
 	/// @param filename A String, the file to be loaded.
 	/// @param extension A String, the file extension to be loaded.
 	LSDRasterModel(string filename, string extension)	{ create(filename, extension); default_parameters();}
+	
 	/// @brief Create an LSDRasterModel from memory.
 	/// @return LSDRasterModel
 	/// @param nrows An integer of the number of rows.
@@ -83,6 +85,7 @@ class LSDRasterModel: public LSDRasterSpectral
 	LSDRasterModel(int nrows, int ncols, float xmin, float ymin,
 	          float cellsize, float ndv, Array2D<float> data)
 								{ default_parameters(); create(nrows, ncols, xmin, ymin, cellsize, ndv, data); }
+								
 	/// @brief Create an LSDRasterModel from an LSDRaster.
 	/// @return LSDRasterModel
 	/// @param An_LSDRaster LSDRaster object.							
@@ -94,17 +97,11 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @param NRows Width of raster
 	LSDRasterModel(int NRows, int NCols);
 
-	/// operator
+	/// @brief operator
 	LSDRasterModel& operator=(const LSDRasterModel& LSDR);
 
-	///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	/// INITIALISATION MODULE
-	///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	/// This module initialises the model runs, calling the required function from
+	/// @brief This module initialises the model runs, calling the required function from
 	/// the initial topography and loads the parameters from the parameter file.
-	///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	///  Initialise_model_with_parabolic_surface
-	///----------------------------------------------------------------------------
 	void initialize_model(
 	  string& parameter_file, string& run_name, float& dt, float& EndTime, float& PrintInterval,
 	  float& k_w, float& b, float& m, float& n, float& K, float& ErosionThreshold, 
@@ -140,6 +137,7 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// is only one implementation: no flux across N and S; periodic for E and W. 
 	///----------------------------------------------------------------------------
 	LSDRasterModel create_buffered_surf(int b_type);
+	
 	///----------------------------------------------------------------------------
 	/// This second version has periodic boundaries at E and W boundaries, and 
 	/// Neumann boundary conditions (prescribed elevations) at the N and S
@@ -336,7 +334,11 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @author JAJ
 	/// @date 01/01/2014	
 	void run_model( void );
-	
+
+  /// @brief This loads a steady state raster from the data members so that
+  /// a model can be run repeatedly from the same steady state condition
+  /// @author JAJ
+  /// @date 01/01/2014	
 	void run_model_from_steady_state( void );
 	
   /// @brief This wrapper just calls the run_components method. Parameters used are those
@@ -345,10 +347,12 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @date 01/01/2014		
 	void run_components( void );
 
-	/// This method forces the landscape into its steady state profile, by using periodic forcing. 
+	/// @brief This method forces the landscape into its steady state profile, by using periodic forcing. 
 	/// This is much more efficient than using static forcing (as in run model), but doesn't give
 	/// a nice animation of an evolving landscape
 	/// Swings and roundabouts
+	/// @author JAJ
+	/// @date 01/01/2014
 	void reach_steady_state( void );
 
 	/// -----------------------------------------------------------------------
@@ -356,13 +360,26 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// -----------------------------------------------------------------------
 	void reset_model( void );
 
-	/// -----------------------------------------------------------------------
-	/// Fastscape, implicit finite difference solver for stream power equations
+	/// @brief Fastscape, implicit finite difference solver for stream power equations
 	/// O(n)
-	/// Method takes a series of paramaters and solves the stream power equation
-	/// At a future timestep in linear time
-	/// -----------------------------------------------------------------------
+	/// Method takes its paramaters from the model data members
+  /// and solves the stream power equation at a future timestep in linear time
+	/// @author JAJ, commented SMM
+	/// @date 01/01/2014, edit 18/01/2014
 	void fluvial_incision( void );
+
+	/// @brief This function is more or less identical to fluvial_incision above, but it
+  /// Returns a raster with the erosion rate and takes arguments rather
+  /// than reading from data members
+  /// @param the time spacing
+  /// @param fluvial erosivity
+  /// @param area exponent
+  /// @param slope exponent
+  /// @param a vector of strings cotaining model boundary conditions
+  /// @return A raster containing the erosion rate from fluvial processes
+  /// @author JAJ
+  /// @date 01/01/2014
+	LSDRaster fluvial_erosion_rate(float timestep, float K, float m, float n, vector <string> boundary);
   
   /// @brief This assumes that all sediment transported from rivers into 
   /// channels is removed. It checks the raster to see where the channels are
@@ -372,8 +389,7 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @date 01/01/2014	
 	void wash_out( void );
 	
-	/// fluvial_erosion_rate
-	LSDRaster fluvial_erosion_rate(float timestep, float K, float m, float n, vector <string> boundary);
+
 
 	/// --------------------------------------------------------------------
 	/// Runs flexural isostatic calculations

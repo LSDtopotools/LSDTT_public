@@ -1587,7 +1587,13 @@ void LSDRasterModel::run_model( void )
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This function starts from a steady state. 
+// apparently the steady state data is stored as a data member. 
+// SMM: not sure if this is the best thing to do since it adds a lot
+// of memory overhead. Could this be done by using a steady state raster 
+// as an argument?
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDRasterModel::run_model_from_steady_state( void )
 {
 	// file to write details of each time step
@@ -1620,7 +1626,15 @@ void LSDRasterModel::run_model_from_steady_state( void )
 	if (not quiet) cout << "\nModel finished!\n" << endl;
 	final_report();
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This function brings a model run to steady state
+// It does not simply run at a constant erosion rate, but rather 
+// runs using periodic forcing. Tests have shown this can greatly reduce
+// the time required to reach steady state
+// JAJ, sometie 2014
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDRasterModel::reach_steady_state( void )
 {
 	// file to write details of each time step
@@ -1691,6 +1705,7 @@ void LSDRasterModel::reach_steady_state( void )
 	steady_state_data = Array2D<float> (NRows, NCols, 0.0);
 	steady_state_data = RasterData;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 void LSDRasterModel::reset_model( void )
 {
@@ -2329,7 +2344,7 @@ void LSDRasterModel::soil_diffusion_fv_nonlinear( void )
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // This is the component of the model that is solved using the 
 // FASTSCAPE algorithm of Willett and Braun (2013)
-
+// Uses Newton's method to solve incision if the slope exponent != 1
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDRasterModel::fluvial_incision( void )
 {
@@ -2342,10 +2357,13 @@ void LSDRasterModel::fluvial_incision( void )
 	int numNodes = nodeList.size();
 	int node, row, col, receiver, receiver_row, receiver_col;
 	float drainageArea, dx, streamPowerFactor;
+	float K = get_K();
+	
+	// these save a bit of computational expense. 
 	float root_2 = pow(2, 0.5);
 	float dx_root2 = root_2*DataResolution;
 	float DR2 = DataResolution*DataResolution;
-	float K = get_K();
+	
 
   // this is only for bug checking
 	if (not quiet && name == "debug" && NRows <= 10 && NCols <= 10)
@@ -2364,12 +2382,14 @@ void LSDRasterModel::fluvial_incision( void )
 	//for (int i=numNodes-1; i>=0; --i)
 	for (int i=0; i<numNodes; ++i)
 	{
+	
+	  // get the information about node relashionships from the flow info object
 		node = nodeList[i];
 		flow.retrieve_current_row_and_col(node, row, col);
 		flow.retrieve_receiver_information(node, receiver, receiver_row, receiver_col);
 		drainageArea = flow.retrieve_contributing_pixels_of_node(node) *  DR2;	
 		
-    // some debugging code
+    // some code for debugging
     if (not quiet && name == "debug" && NRows <= 10 && NCols <= 10)
 		{
 			cout << row << ", " << col << ", " << receiver_row << ", " << receiver_col << endl;
@@ -2416,11 +2436,13 @@ void LSDRasterModel::fluvial_incision( void )
 			float new_zeta = zeta[row][col];
 			float old_zeta = zeta[row][col];
 
-			float epsilon;
+			float epsilon;     // in newton's method, z_n+1 = z_n - f(z_n)/f'(z_n)
+			                   // and here epsilon =   f(z_n)/f'(z_n)
+			                   // f(z_n) = -z_n + z_old - dt*K*A^m*( (z_n-z_r)/dx )^n
 			float streamPowerFactor = K * pow(drainageArea, m) * timeStep;
 			float slope;
 			
-			// iterate until you converge on a solution
+			// iterate until you converge on a solution. Uses Newton's method. 
 			do
 			{
 				slope = (new_zeta - zeta[receiver_row][receiver_col]) / dx;
@@ -2435,48 +2457,12 @@ void LSDRasterModel::fluvial_incision( void )
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// This little routine 'washes out' the channels: it assumes all 
-// sediment transported from hillslopes is transported  away in the channel. 
-// To determine the channel, it uses a threshold drainage area, 
-// which is one of the data members
+// This function is more or less identical to fluvial_incision above, but it
+// Returns a raster with the erosion rate and takes arguments rather
+// than reading from data members
 // JAJ, sometime 2014
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDRasterModel::wash_out( void )
-{
-	// don't do anything if there is no hillslope or fluvial erosion, 
-	// or if the threshold drainage is less than zero
-  if (threshold_drainage < 0 || not hillslope || not fluvial)
-		return;
-		
-	// get the old elevations	
-	Array2D<float> zeta=zeta_old.copy();
-	int node;
-	float DrainageArea;
-
-	// Step one, create donor "stack" etc. via FlowInfo
-	LSDRaster temp(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
-	
-  // SMM: does the flow info calculations every timestip: this might be streamlined
-  // to do it every few timesteps
-  LSDFlowInfo flow(boundary_conditions, temp);
-	
-	// loop through the nodes and wash out any node that is a channel
-	for (int i=0; i<NRows; ++i)
-	{
-		for (int j=0; j<NCols; ++j)
-		{
-			node = flow.retrieve_node_from_row_and_column(i, j);
-			DrainageArea = flow.retrieve_contributing_pixels_of_node(node) *  
-                                               DataResolution * DataResolution;	
-			if (DrainageArea > threshold_drainage)
-				RasterData[i][j] = zeta_old[i][j];
-		}
-	}
-}
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 LSDRaster LSDRasterModel::fluvial_erosion_rate(float timestep, float K, float m, float n, vector <string> boundary)
 {
 	Array2D<float> erosionRate(NRows, NCols, NoDataValue);
@@ -2545,6 +2531,51 @@ LSDRaster LSDRasterModel::fluvial_erosion_rate(float timestep, float K, float m,
 	}
 	return LSDRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, erosionRate);
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This little routine 'washes out' the channels: it assumes all 
+// sediment transported from hillslopes is transported  away in the channel. 
+// To determine the channel, it uses a threshold drainage area, 
+// which is one of the data members
+// JAJ, sometime 2014
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::wash_out( void )
+{
+	// don't do anything if there is no hillslope or fluvial erosion, 
+	// or if the threshold drainage is less than zero
+  if (threshold_drainage < 0 || not hillslope || not fluvial)
+		return;
+		
+	// get the old elevations	
+	Array2D<float> zeta=zeta_old.copy();
+	int node;
+	float DrainageArea;
+
+	// Step one, create donor "stack" etc. via FlowInfo
+	LSDRaster temp(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
+	
+  // SMM: does the flow info calculations every timestip: this might be streamlined
+  // to do it every few timesteps
+  LSDFlowInfo flow(boundary_conditions, temp);
+	
+	// loop through the nodes and wash out any node that is a channel
+	for (int i=0; i<NRows; ++i)
+	{
+		for (int j=0; j<NCols; ++j)
+		{
+			node = flow.retrieve_node_from_row_and_column(i, j);
+			DrainageArea = flow.retrieve_contributing_pixels_of_node(node) *  
+                                               DataResolution * DataResolution;	
+			if (DrainageArea > threshold_drainage)
+				RasterData[i][j] = zeta_old[i][j];
+		}
+	}
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
 
 /*
 LSDRasterModel LSDRasterModel::run_isostatic_correction( void )
