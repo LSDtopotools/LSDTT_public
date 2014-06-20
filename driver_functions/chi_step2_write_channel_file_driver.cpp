@@ -32,6 +32,16 @@ int main (int nNumberofArgs,char *argv[])
 	}
 
 	string path_name = argv[1];
+	
+  // make sure there is a slash on the end of the file
+  string lchar = path_name.substr(path_name.length()-2,1);
+  string slash = "/";      
+  if (lchar != slash)
+  {
+    cout << "You forgot the frontslash at the end of the path. Appending." << endl; 
+    path_name = path_name+slash;
+  } 		
+	
 	string f_name = argv[2];
 
 	cout << "The path is: " << path_name << " and the filename is: " << f_name << endl;
