@@ -112,6 +112,12 @@ class LSDRasterModel: public LSDRasterSpectral
 
 	void initialize_model( string parameter_file );
 
+  /// @brief this ads a pathname to the default names
+	/// @param the name of the path
+	/// @author SMM
+	/// @date 18/06/2014
+	void add_path_to_names( string pathname);
+
 	/// --------------------------------------------------------------------------
 	/// Check steady state
 	/// --------------------------------------------------------------------------
@@ -492,6 +498,8 @@ class LSDRasterModel: public LSDRasterSpectral
 	void set_period_mode( short mode )			{ period_mode = mode; }
 	void set_name( string name )				{this->name = name;}
 	void set_report_name( string name )			{report_name = name;}
+	
+
 
 	// Setters for turning on/off model components
 	void set_fluvial( bool on_status )			{ fluvial = on_status; }

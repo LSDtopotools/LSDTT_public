@@ -225,6 +225,29 @@ void LSDRasterModel::default_parameters( void )
 	cycle_steady_check = false;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This adds a path to the run name and the report name
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::add_path_to_names( string pathname)
+{
+  string lchar = pathname.substr(pathname.length()-2,1);
+  string slash = "/";
+  cout << "lchar is " << lchar << " and slash is " << slash << endl;
+      
+  if (lchar != slash)
+  {
+    cout << "You forgot the frontslash at the end of the path. Appending." << endl;  
+    pathname = pathname+slash;
+  }
+  
+  name = pathname+name;
+  report_name = pathname+name;
+   
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // INITIALISATION MODULE
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This module initialises the model runs, calling the required function from
