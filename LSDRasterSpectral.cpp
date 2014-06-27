@@ -1360,6 +1360,14 @@ LSDRaster LSDRasterSpectral::fftw2D_filter(int FilterType, float FLow, float FHi
       if(RasterData[i][j]!=NoDataValue) FilteredTopography[i][j] = FilteredTopographyPadded[i][j]/(Lx*Ly) + trend_plane[i][j];
     }
   }
+  // Remove areas initially classified as NoData in the original DEM (only really necessary for irregular shaped datasets)
+  for (int i=0; i < NRows; ++i)
+  {
+    for (int j=0; j < NCols; ++j)
+    {
+      if(RasterData[i][j]==NoDataValue) FilteredTopography[i][j] = NoDataValue;
+    }
+  }
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   LSDRaster FilteredTopographyRaster(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,FilteredTopography);
   return FilteredTopographyRaster;
@@ -1487,6 +1495,14 @@ LSDRaster LSDRasterSpectral::fftw2D_wiener()
     for (int j=0; j < NCols; ++j)
     {
       if(RasterData[i][j]!=NoDataValue) FilteredTopography[i][j] = FilteredTopographyPadded[i][j]/(Lx*Ly) + trend_plane[i][j];
+    }
+  }
+  // Remove areas initially classified as NoData in the original DEM (only really necessary for irregular shaped datasets)
+  for (int i=0; i < NRows; ++i)
+  {
+    for (int j=0; j < NCols; ++j)
+    {
+      if(RasterData[i][j]==NoDataValue) FilteredTopography[i][j] = NoDataValue;
     }
   }
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
