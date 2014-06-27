@@ -331,8 +331,6 @@ void LSDRasterModel::initialize_model(
 // Parameters are loaded into intrinsic class attributes
 // Part of a move to using attributes vs passing through functions
 //  ----------------------------------------------------------------------
-
-
 void LSDRasterModel::initialize_model(string param_file)
 {
 	bool loaded_from_file = false;
@@ -433,21 +431,36 @@ void LSDRasterModel::initialize_model(string param_file)
 	root_depth = Array2D<float>(NRows, NCols, 0.0);
 	current_time = 0;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function checks to see if the model has arrived at steady state
+// Written by JAJ sometime 2014. Commented by SMM 27/06/2014
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::check_steady_state( void )
 {
+
+  // start by assuming steady_state has been acheived and then
+  // reset flag to false if not. 
 	steady_state = true;
+	
+	//  SMM: this check if steady state has been arrived across a cycle. 
+	// It check a data member erosion_cycle_record, which is calculated elsewhere
 	if (cycle_steady_check)
 	{
 		for (int i=0; i<4; ++i)
 		{
-			if (erosion_cycle_record[i] == -99 || abs(erosion_cycle_record[i] - erosion_cycle_record[i+1]) > steady_state_tolerance)
+			if (erosion_cycle_record[i] == -99 || abs(erosion_cycle_record[i] 
+             - erosion_cycle_record[i+1]) > steady_state_tolerance)
 			{
 				steady_state = false;
 				return;
 			}
 		}
 	}
+	// this next one just check if the surface topography does not change in time
 	else if (steady_state_limit < 0 || current_time < steady_state_limit)
 	{
 		for (int i=0; i<NRows; ++i)
@@ -462,10 +475,14 @@ void LSDRasterModel::check_steady_state( void )
 			}
 		}
 	}
+	
+	// this is seperate logic: it simply sets the initial_steady_state flag to true
 	if (not initial_steady_state)
 	{
 		initial_steady_state = true;
 		time_delay = current_time;
+		
+		// SMM: no idea what end time modes are, will have to look this up. 
 		if (endTime_mode == 1 || endTime_mode == 3)
 			endTime += time_delay;
 		if (not quiet)
@@ -474,7 +491,17 @@ void LSDRasterModel::check_steady_state( void )
 		}
 	}
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function checks to see if the model should record results
+// If initial steady state has not been reached, recording is set to 
+// false: that is, the  model does not record information on the build up
+// to steady state. 
+// JAJ, sometime 2014
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::check_recording( void )
 {
 	int num_cycles = (current_time - time_delay) / periodicity;
@@ -504,9 +531,30 @@ void LSDRasterModel::check_recording( void )
 		recording = false;
 	}
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This checks on the ending condition of the model run
+// endTime_mode:
+//  1 == The end time is just some fixed time after initial steady state
+//  2 == The end time is after a fixed number of cycles
+//  3 == End time is after steady state, but waits for a fixed number of cycles
+//       before ending
+//
+// Returns a boolean that is true if the end time has been reached
+// and false if end time has not been reached
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 bool LSDRasterModel::check_end_condition( void )
 {
+
+  if (not quiet)
+  {
+    cout << "End time mode is: " << endTime_mode 
+        << " and current time is: " << current_time << endl;
+  }
 	int num_cycles;
 	if (K_mode != 0 || D_mode != 0)
 		num_cycles = cycle_number-1;
@@ -547,13 +595,34 @@ bool LSDRasterModel::check_end_condition( void )
 			break;
 	};
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function checks to see if this is a periodic run. If it is, 
+// it sets the times to align with the period
+// JAJ, sometime 2014
+// Note this only realy comes into play if period mode == 2 or 4
+// period_mode means
+// 1 (default) one periodicity used without
+// 2 Two periodicities that switch at a given interval
+// 3 Two periodicities used as a compound sin wave
+// 4 Same as three, but weightings switch at a given interval (as in 2)
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::check_periodicity_switch( void )
 {
+
+
+
 	if ((K_mode == 0 && D_mode == 0) || (not initial_steady_state && not cycle_steady_check))
 		return;
 	else if (period_mode == 2 || period_mode == 4)
 	{
+	
+	  if (not quiet)
+	  {
+      cout << "Periodic run. ::check_periodicity_switch. Adjusting times" << endl;
+    }
 		float p = periodicity;
 
 		float swap;
@@ -578,6 +647,7 @@ void LSDRasterModel::check_periodicity_switch( void )
 		}
 	}
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 bool LSDRasterModel::check_if_hung( void )
 {
@@ -1512,13 +1582,16 @@ void LSDRasterModel::run_components( void )
 			break;
 		}
 				
-		check_periodicity_switch();     // SMM: not sure what this is for, to be checked
+		check_periodicity_switch();     // This checks to see if this is a periodic 
+		                                // run, if so it adjusts time and end time
+		                                // it really only comes into play if you
+		                                // have more than one periodicity that 
+		                                // between which the model oscillates. 
 		
 		// Record current topography
 		zeta_old = RasterData.copy();
 		
-		// run active model components
-    
+		// run active model components    
     // first diffuse the hillslopes. Currently two options. Perhaps a flag could be
     // added so that we don't have to keep adding if statements as more
     // hillslope rules are added?
@@ -1557,10 +1630,12 @@ void LSDRasterModel::run_components( void )
     // this currently is the block uplift option
 		uplift_surface();
 		
-		
+		// this writes a file if it is on the print interval, and writes some erosion
+		// data to an array always so that steady state may be tested
 		write_report();
 
 		current_time += timeStep;
+		cout << "current_time is: " << current_time << endl;
 
 		if ( print_interval > 0 && (print % print_interval) == 0)	// write at every print interval
 		{
@@ -1569,7 +1644,10 @@ void LSDRasterModel::run_components( void )
 		}
 		if (not quiet) cout << "\rTime: " << current_time << " years" << flush;
 		++print;
+		
+		// check to see if steady state has been achieved
 		check_steady_state();
+		
 	} while (not check_end_condition());
 	
 	if ( print_interval == 0 || (print_interval > 0 && ((print-1) % print_interval) != 0))
@@ -1668,6 +1746,10 @@ void LSDRasterModel::reach_steady_state( void )
 	max_erosion = 0;
 	min_erosion = -99;
 
+  // these 'swap' functions are here because the run to steady state
+  // uses default paramaters but the original model parameters are
+  // stored in these 'swap' data members and restored after running
+  // the model to steady state. 
 	int K_mode_swap = K_mode;
 	int D_mode_swap = D_mode;
 	float K_amp_swap = K_amplitude;
@@ -1697,14 +1779,26 @@ void LSDRasterModel::reach_steady_state( void )
 	K_mode = 1;
 	K_amplitude = K_fluv * 0.3;
 	endTime = 0;
+	cout << "Running to steady state, periodicity is: " << periodicity << endl;
 	//periodicity = 2000;
 	period_mode = 1;
-	cycle_steady_check = true;
+	cycle_steady_check = true;       // this means that the steady state check
+	                                 // is run based on erosion from one cycle
+	                                 // to the next
 	print_interval = 0;
 	reporting = false;
 
-	if (not quiet) cout << "Producing steady state profile" << endl;
-	run_components();
+	if (not quiet) 
+  {
+    cout << "Producing steady state profile" << endl;
+	}
+  // because the cycle_steady_check is true, it means that this will run
+	// through several periods until the surface does not change between cycles
+  run_components();
+	if (not quiet) 
+  {
+    cout << "Finished producing cyclic steady" << endl;
+	}  
 
 	// Now run with static forcing
 	K_mode = K_mode_swap;
@@ -3096,46 +3190,54 @@ void LSDRasterModel::print_parameters( void )
 	cout << "\n" << endl;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This method calculates some features of the landscape at set times. The 
+// frequency of the reports are set by the data member report_delay
+// One of the things it does is calculates erosion rates, and stores this
+// as a data member
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::write_report( void )
 {
 	static ofstream outfile;
+	
+	// check to see if enough time has elapsed to write the report
 	if (reporting && current_time > report_delay)
 	{
-	if (not outfile.is_open())
-	{
-		// Headers
-		outfile.open((report_name + "_report").c_str());
-		outfile << name << endl;
-		outfile << "Time\t";
-		outfile << "Periodicity\t";
-		outfile << ((fluvial) ? "K\t" : "");
-		outfile << ((hillslope) ? "D\t" : ""); 
-		outfile << "Erosion\t";
-		outfile << "Total erosion\t";
-		outfile << "Steady\t";
-		outfile << "Max_height\t";
-		outfile << "Mean_height\t";
-		outfile << "Relief-3px\t";
-		outfile << "Relief-10m\t";
-		//outfile << "Relief-30m\t";
-		outfile << "Drainage-20m2\t";
-		outfile << "Drainage-200m2\t";
-		//outfile << "Drainage-500m2\t";
-		outfile << endl;
-	}
-	if (not recording)
-		check_recording();
-	if (print_erosion_cycle)
-		erosion_cycle_field = Array2D<float>(NRows, NCols, 0.0);
+	  if (not outfile.is_open())
+	  {
+		  // Headers
+		  outfile.open((report_name + "_report").c_str());
+		  outfile << name << endl;
+		  outfile << "Time\t";
+		  outfile << "Periodicity\t";
+		  outfile << ((fluvial) ? "K\t" : "");
+		  outfile << ((hillslope) ? "D\t" : ""); 
+		  outfile << "Erosion\t";
+		  outfile << "Total erosion\t";
+		  outfile << "Steady\t";
+		  outfile << "Max_height\t";
+		  outfile << "Mean_height\t";
+		  outfile << "Relief-3px\t";
+		  outfile << "Relief-10m\t";
+		  //outfile << "Relief-30m\t";
+		  outfile << "Drainage-20m2\t";
+		  outfile << "Drainage-200m2\t";
+		  //outfile << "Drainage-500m2\t";
+		  outfile << endl;
+	  }
+	  if (not recording)
+		  check_recording();
+	  if (print_erosion_cycle)
+		  erosion_cycle_field = Array2D<float>(NRows, NCols, 0.0);
 
-	outfile << current_time << "\t";
-	outfile << periodicity << "\t";
-	if (fluvial) 	outfile << get_K() << "\t";
-	if (hillslope) 	outfile << get_D() << "\t";
+	  outfile << current_time << "\t";
+	  outfile << periodicity << "\t";
+	  if (fluvial) 	outfile << get_K() << "\t";
+	  if (hillslope) 	outfile << get_D() << "\t";
 	}
 
 	// Calculate erosion across landscape
-	erosion_last_step = erosion;
+	erosion_last_step = erosion;     // reset the erosion rates
 	erosion = 0.0;
 	float e;
 	int n = 0;
@@ -3195,7 +3297,14 @@ void LSDRasterModel::write_report( void )
 	if ((initial_steady_state || cycle_steady_check) && (K_mode !=0 || D_mode != 0))
 		cycle_report(mean_elev, relief0, relief10);
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// SMM: This seems to be a method to check on what has happened over a complete 
+// cycle. 
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::cycle_report( float elev, float relief0, float relief10)
 {
 	// There's got to be a better way to design this method, I don't like it
@@ -3240,7 +3349,8 @@ void LSDRasterModel::cycle_report( float elev, float relief0, float relief10)
 	current_time += timeStep;
 	float p = periodicity;
 
-
+  // if we are checking if the method is checking for steady state over a cycle, 
+  // initiate the erosion_cycle_record data member
 	if (cycle_steady_check)
 	{
 		if (erosion_cycle_record.size() == 0)
@@ -3249,6 +3359,9 @@ void LSDRasterModel::cycle_report( float elev, float relief0, float relief10)
 		erosion_cycle_record.empty();
 	}
 
+  // SMM this seems to use a number of statistics derived from the underlying 
+  // raster, but they are not calculated here. Will need to find where
+  // they are calculated. 
 	if (periodic_parameter(1, 1) > 1)
 	{
 		if (phase_pos == 0)
@@ -3325,7 +3438,11 @@ void LSDRasterModel::cycle_report( float elev, float relief0, float relief10)
 
 	++n;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::final_report( void )
 {
 	ofstream final_report;
@@ -3344,6 +3461,8 @@ void LSDRasterModel::final_report( void )
 	//final_report << "Erosion\tResponse\tK amp\tD amp\tPeriodicity" << endl;
 	//final_report << total_erosion << "\t" << ((initial_steady_state) ? max_erosion - min_erosion : -99) << "\t" << K_amplitude << "\t" 
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 void LSDRasterModel::print_rasters( int frame )
 {

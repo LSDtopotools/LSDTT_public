@@ -56,6 +56,12 @@ using namespace TNT;
 class LSDRasterModel: public LSDRasterSpectral
 {
 	public:
+		
+	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
+	// CONSTRUCTORS AND CREATE FUNCTIONS
+	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
+	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-	
 	/// @brief Create a deafult LSDRasterModel (100x100)
 	/// @return An instance of LSDRasterModel
 	LSDRasterModel() { create(); }
@@ -118,15 +124,52 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @date 18/06/2014
 	void add_path_to_names( string pathname);
 
-	/// --------------------------------------------------------------------------
-	/// Check steady state
-	/// --------------------------------------------------------------------------
+	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
+	// TOOLS FOR CHECKING STEADY STATE
+	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
+	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  /// @brief This function checks to see if the model has achieved steady state.
+  /// The nature of steady state checked is set by the cycle_steady_check flag
+  /// If this is false, it checks if there is simple steady state 
+  /// (the surface elevations do not change in time)	
+  /// If the cycle_steady_check is true, it check if steady state has been 
+  /// achieved from one cycle to another
+  /// @return does not return anything, but instead changes the steady_state flag
+  /// @author JAJ     commented SMM
+  /// @date 01/01/2014 commented SMM 27/06/2014
 	void check_steady_state( void );
 
+  /// @brief This function checks to see if the model should record results
+  /// If initial steady state has not been reached, recording is set to 
+  /// false: that is, the  model does not record information on the build up
+  /// to steady state. 
+  /// @author JAJ
+  /// @date 01/01/2014
 	void check_recording( void );
 
+  /// @brief This checks on the ending condition of the model run
+  /// endTime_mode:
+  ///  1 == The end time is just some fixed time after initial steady state
+  ///  2 == The end time is after a fixed number of cycles
+  ///  3 == Ten time is after steady state, but waits for a fixed number of cycles
+  ///       before ending
+  /// @return returns a boolean that is true if the end time has been reached
+  /// and false if end time has not been reached
+  /// @author JAJ, comments SMM
+  /// @date 01/01/2014 comments SMM 27/06/2014
 	bool check_end_condition( void );
 
+  /// @brief This function checks to see if this is a periodic run. If it is, 
+  /// it sets the times to align with the period
+  /// Note this only realy comes into play if period mode == 2 or 4
+  /// period_mode means
+  /// 1 (default) one periodicity used without
+  /// 2 Two periodicities that switch at a given interval
+  /// 3 Two periodicities used as a compound sin wave
+  /// 4 Same as three, but weightings switch at a given interval (as in 2)  
+  /// @author JAJ
+  /// @date 01/012014
 	void check_periodicity_switch( void );
 
 	bool check_if_hung( void );
@@ -158,7 +201,12 @@ class LSDRasterModel: public LSDRasterSpectral
 	///----------------------------------------------------------------------------
 	Array2D<float> calculate_erosion_rates( void );
 	float get_erosion_at_cell(int row, int col);
-	
+
+	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
+	// TOOLS FOR UPLIFT
+	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
+	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-		
 	///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	/// UPLIFT SURFACE
 	/// Apply uplift field to the raster.  Overloaded function so that the first
@@ -523,10 +571,20 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// ------------------------------------------------------------------
 	void print_parameters( void );
 
-	/// ------------------------------------------------------------------
-	/// Write model reports
-	/// ------------------------------------------------------------------
+	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
+	// TOOLS FOR WRITING REPORTS
+	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
+	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-			
+	/// @brief This method calculates some features of the landscape at set times. The 
+  /// frequency of the reports are set by the data member report_delay
+  /// One of the things it does is calculates erosion rates, and stores this
+  /// as a data member
+  /// @author JAJ
+  /// @date 01/01/2014
 	void write_report( void );
+	
+	
 	void cycle_report( float, float, float);
 
 	void final_report( void );
