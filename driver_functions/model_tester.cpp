@@ -98,7 +98,9 @@ int main(int argc, char *argv[])
 
 	mod.print_parameters();
 
+  // run the model to steady state. 
 	mod.reach_steady_state();
+	
 	//mod.run_model_from_steady_state();
 	//mod.run_model();
 	cout << "\a";
