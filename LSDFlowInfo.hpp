@@ -290,10 +290,11 @@ class LSDFlowInfo
   /// @details Assumes the FlowInfo object has the same dimensions as the channel heads raster.
   /// @param filename of the channel heads raster.
   /// @param extension of the channel heads raster.
+  /// @param (optional) input_switch, ONLY NEEDED FOR LOADING .csv FILES! An integer to determine whether to use the node index (0 -> default), row and column indices (1), or point coordinates from .csv file (2) to locate the channel heads
   /// @return Vector of source nodes.
-  /// @author SWDG updated SMM
+  /// @author SWDG updated SMM updated DTM
   /// @date 6/6/14 Happy 3rd birthday Skye!! 
-  vector<int> Ingest_Channel_Heads(string filename, string extension);
+  vector<int> Ingest_Channel_Heads(string filename, string extension, int input_switch = 0);
 
 	// functions for getting flow, discharge, sediment flux, etc
 

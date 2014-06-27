@@ -1086,26 +1086,23 @@ void LSDFlowInfo::unpickle(string filename)
 // Now if the file extension is "csv" then the script reads a csv channel heads
 // file
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension){
-  
+vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension, int input_switch){
+
   vector<int> Sources;
   int CH_node;
 
   // if this is a csv file, read its contents directly into the node index vector
   if(extension == "csv")
   {
+    if(input_switch != 0 && input_switch != 1 && input_switch != 2)
+    {
+      cout << "\t Note, you have specified an unsupported value for the input switch.  Note: \n\t\t 0=take node index\n\t\t 1=take row and column indices\n\t\t 2=take x and y coordinates"  << endl;
+      cout << "\t ...taking node index by default" << endl;
+    }
     ifstream ch_csv_in;
     string fname = filename +"."+extension;
     ch_csv_in.open(fname.c_str());
     
-    if( ch_csv_in.fail() )
-		{
-			cout << "\nFATAL ERROR: the data file \"" << fname
-			     << "\" doesn't exist" << endl;
-			     
-			exit(EXIT_FAILURE);
-    }    
-        
     cout << "fname is: " << fname << endl;
     
     string sline = "";
@@ -1113,28 +1110,64 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension)
 
     //float x,y;
     //int nodeindex,row,col;
-    int nodeindex;
-        
+    int nodeindex,rowindex,colindex;
+    float x_coord,y_coord;    
     while(!ch_csv_in.eof())
     {   
-       char name[256];
-       ch_csv_in.getline(name,256);
-       sline = name;
-
-       // a very tedious way to get the right bit of data. There is probably a 
-       // better way to do this but this way works
-       if (sline.size() > 0)
-       {
-         unsigned comma = sline.find_last_of(",");
-         string prefix = sline.substr(0,comma);
-         comma = prefix.find_last_of(",");
-         prefix = prefix.substr(0,comma);
-         comma = prefix.find_last_of(",");
-         string suffix = prefix.substr(comma+1,prefix.size());
-       
-         nodeindex =  atoi(suffix.c_str());
-         Sources.push_back(nodeindex);
-       }        
+      char name[256];
+      ch_csv_in.getline(name,256);
+      sline = name;
+      
+      // a very tedious way to get the right bit of data. There is probably a 
+      // better way to do this but this way works
+      if (sline.size() > 0)
+      {
+        // column index
+        string prefix = sline.substr(0,sline.size());
+        unsigned comma = sline.find_last_of(",");
+        string suffix = prefix.substr(comma+1,prefix.size()); 
+        colindex =  atoi(suffix.c_str());         
+        // row index
+        prefix = sline.substr(0,comma);
+        comma = prefix.find_last_of(",");
+        suffix = prefix.substr(comma+1,prefix.size());       
+        rowindex =  atoi(suffix.c_str());        
+        // node index
+        prefix = sline.substr(0,comma);
+        comma = prefix.find_last_of(",");
+        suffix = prefix.substr(comma+1,prefix.size());       
+        nodeindex =  atoi(suffix.c_str());        
+        // y coordinate
+        prefix = sline.substr(0,comma);
+        comma = prefix.find_last_of(",");
+        suffix = prefix.substr(comma+1,prefix.size());       
+        y_coord =  atof(suffix.c_str());      
+        // x coordinate
+        prefix = sline.substr(0,comma);
+        comma = prefix.find_last_of(",");
+        suffix = prefix.substr(comma+1,prefix.size());       
+        x_coord =  atof(suffix.c_str());
+        
+//         cout << x_coord << " - " << y_coord << " - " << rowindex << " - " << colindex << endl;
+        if(input_switch == 1)
+        {
+          if(rowindex<NRows-1 && rowindex>=0 && colindex<NCols-1 && colindex >=0 && get_LocalFlowDirection(rowindex,colindex)!=NoDataValue)
+          {
+            nodeindex = retrieve_node_from_row_and_column(rowindex,colindex);
+            Sources.push_back(nodeindex);
+          }
+        }
+        else if(input_switch == 2)
+        {
+          //if(rowindex<NRows-1 && rowindex>=0 && colindex<NCols-1 && colindex >=0 && get_LocalFlowDirection(rowindex,colindex)!=NoDataValue)
+          {
+            nodeindex = get_node_index_of_coordinate_point(x_coord, y_coord);
+            Sources.push_back(nodeindex);
+          }
+        }
+        else Sources.push_back(nodeindex);
+        
+      }        
     }
   }
   
@@ -1154,7 +1187,6 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension)
       }
     }
   }
-
   return Sources;
 }
 
