@@ -245,18 +245,22 @@ int main (int nNumberofArgs,char *argv[])
     
     //Basin.Plot_Boomerang(Slope, DinfArea, FlowInfo, log_bin_width, SplineResolution, bin_threshold, path_name);
     
-    // return basin parameters
+   // return basin parameters
     float drainage_density = Basin.get_DrainageDensity();
-    DrainageDensities.push_back(drainage_density);
     cout << "Drainage density: " << drainage_density << endl;
     float basin_slope = Basin.get_SlopeMean();
-    Slopes.push_back(basin_slope);
     float basin_CHT = Basin.get_CHTMean();
-    CHTs.push_back(abs(basin_CHT));
-
-    if (drainage_density != NoDataValue)
+    float basin_area = Basin.get_Area();
+    if (isnan(basin_CHT) == false)
     {
-      DD_cloud << drainage_density << " " << basin_CHT << " " << basin_slope << " " << endl;
+      Slopes.push_back(basin_slope);
+      CHTs.push_back(abs(basin_CHT));
+      DrainageDensities.push_back(drainage_density);
+    }
+
+    if (drainage_density != NoDataValue || isnan(basin_CHT) == false)
+    {
+      DD_cloud << drainage_density << " " << basin_CHT << " " << basin_slope << " " << basin_area << endl;
     } 
   }   
   
