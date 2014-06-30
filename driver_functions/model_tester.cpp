@@ -99,6 +99,15 @@ int main(int argc, char *argv[])
 	mod.print_parameters();
 
   // run the model to steady state. 
+  // first make it a bit bigger:
+  int newrows = 150;
+  int newcols = 300;
+  mod.resize_and_reset(newrows,newcols);
+  
+  // and turn the hillslopes off, just to save some time
+  mod.set_hillslope(false);
+  
+  // now run to steady state
 	mod.reach_steady_state();
 	
 	//mod.run_model_from_steady_state();

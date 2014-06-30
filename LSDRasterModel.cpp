@@ -532,6 +532,50 @@ void LSDRasterModel::random_surface_noise()
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This resizes and resets the model
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::resize_and_reset( int new_rows, int new_cols )
+{
+  // set up some empty arrays
+  Array2D<float> empty_array;
+  Array2D<float> empty_array_sized(new_rows,new_cols,0.0);
+
+  // set most of the arrays as data members to empty arrays  
+  uplift_field = empty_array.copy();
+  root_depth =  empty_array.copy();  
+	zeta_old = empty_array.copy();
+	steady_state_data = empty_array.copy();
+	erosion_cycle_field = empty_array.copy(); 
+  zeta_last_iter = empty_array.copy(); 
+  zeta_last_timestep = empty_array.copy(); 
+  zeta_this_iter = empty_array.copy(); 
+
+  // reset the size of the RasterData
+  RasterData = empty_array_sized.copy();
+ 
+  // reset the rows and columns 
+  NRows = new_rows;
+  NCols = new_cols;
+  
+  // now generate a random surface
+  random_surface_noise();
+  
+  // reset flags and total erosion rates
+	total_erosion = 0;
+	total_response = 0;
+  steady_state = false;
+  initial_steady_state = false;  
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@
+// FUNCTIONS FOR CHECKING STATE VARIABLES
+//@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function checks to see if the model has arrived at steady state
 // Written by JAJ sometime 2014. Commented by SMM 27/06/2014
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -572,14 +616,17 @@ void LSDRasterModel::check_steady_state( void )
 		}
 	}
 	
-	// this is seperate logic: it simply sets the initial_steady_state flag to true
-	if (not initial_steady_state)
-	{
-		initial_steady_state = true;
-		time_delay = current_time;
+  // this is seperate logic: it simply sets the initial_steady_state flag to true
+  if (not initial_steady_state)
+  {
+	  initial_steady_state = true;
+	  time_delay = current_time;
 		
-		// SMM: no idea what end time modes are, will have to look this up. 
-		if (endTime_mode == 1 || endTime_mode == 3)
+	  // This is a mode of end times. 0 == default, run until the endTime
+	  // 1 == run until a specified time after steady state
+	  // 2 == run a number of cycles
+	  // 3 == run to steady state, then run some cycles. 
+	  if (endTime_mode == 1 || endTime_mode == 3)
 			endTime += time_delay;
 		if (not quiet)
 		{
@@ -646,31 +693,41 @@ void LSDRasterModel::check_recording( void )
 bool LSDRasterModel::check_end_condition( void )
 {
 
-  if (not quiet)
-  {
-    cout << "End time mode is: " << endTime_mode 
-        << " and current time is: " << current_time << endl;
-  }
+  //if (not quiet)
+  //{
+  //  cout << "End time mode is: " << endTime_mode 
+  //      << " and current time is: " << current_time << endl;
+  //}
 	int num_cycles;
+	
+	// if this is not cyclic, first just get a placeholder for the number of cycles
 	if (K_mode != 0 || D_mode != 0)
 		num_cycles = cycle_number-1;
-	else
+	else     // if not calculate time based on current time
 		num_cycles = (current_time - time_delay) / periodicity;
 	float endTime_adjusted;
+	
+	// now check to see if end time is reached in a number of conditions
 	switch (endTime_mode){
 		case 1:		// time specified is after reaching steady state
+		{
+		  // end is only true if the time exceeds or is equal to the end time
 			if (not initial_steady_state || current_time <= endTime+timeStep)
 				return false;
 			else
 				return true;
 			break;
+		}
 		case 2:		// Number specified is a number of cycles of periodicity
+		{
 			if (not initial_steady_state || num_cycles <= endTime)
 				return false;
 			else
 				return true;
 			break;	
+		}
 		case 3:		// Time specified is after reaching steady state, but waits till a roughly exact number of cycles of periodicty have passed
+		{
 			if (ceil((endTime-time_delay)/periodicity) == 1)
 				endTime_adjusted = (1+ceil((endTime-time_delay) / periodicity)) * periodicity + time_delay;
 			else
@@ -683,6 +740,7 @@ bool LSDRasterModel::check_end_condition( void )
 			else
 				return true;
 			break;
+		}
 		default:
 			if (current_time >= endTime)
 				return true;
@@ -707,18 +765,16 @@ bool LSDRasterModel::check_end_condition( void )
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::check_periodicity_switch( void )
 {
-
-
-
+  // don't do anything if not periodic
 	if ((K_mode == 0 && D_mode == 0) || (not initial_steady_state && not cycle_steady_check))
-		return;
+		return;	
 	else if (period_mode == 2 || period_mode == 4)
 	{
-	
-	  if (not quiet)
-	  {
-      cout << "Periodic run. ::check_periodicity_switch. Adjusting times" << endl;
-    }
+	  // this syncs the periods if there are multiple periodicities
+	  //if (not quiet)
+	  //{
+    //  cout << "Periodic run. ::check_periodicity_switch. Adjusting times" << endl;
+    //}
 		float p = periodicity;
 
 		float swap;
@@ -775,6 +831,16 @@ bool LSDRasterModel::check_if_hung( void )
 			return false;
 			break;
 	};
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Resets the data members total_erosion and total_response to 0
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::reset_model( void )
+{
+	total_erosion = 0;
+	total_response = 0;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -1025,6 +1091,7 @@ float LSDRasterModel::get_erosion_at_cell(int i, int j)
 //------------------------------------------------------------------------------
 LSDRasterModel LSDRasterModel::uplift_surface(float UpliftRate, float dt)
 {
+  // copy the underlying surface
 	Array2D<float> ZetaRaster;
 	ZetaRaster = RasterData.copy();
 	for(int row=0; row<NRows; ++row)
@@ -1037,25 +1104,15 @@ LSDRasterModel LSDRasterModel::uplift_surface(float UpliftRate, float dt)
 			}
 		}
 	}
+	
+	// make a new rastermodel with the updated data. 
+	// SMM Note: this is a bit risky since only a very limited subset of the 
+	// data members are translated across
 	LSDRasterModel Zeta(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ZetaRaster);
 	return Zeta;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-void LSDRasterModel::uplift_surface( void )
-{	
-	for(int row=0; row<NRows; ++row)
-	{
-		for(int col=0; col<NCols; ++col)
-		{
-			if (is_base_level(row, col))
-				continue;
-			if(get_data_element(row,col)!=NoDataValue) 
-			{
-				RasterData[row][col] += get_uplift_at_cell(row, col);
-			}
-		}
-	}
-}
 //------------------------------------------------------------------------------
 // Specified uplift field 
 // uplift field should be specified as an array with the same dimensions as the
@@ -1076,9 +1133,35 @@ LSDRasterModel LSDRasterModel::uplift_surface(Array2D<float> UpliftRate, float d
 			}
 		}
 	}
+	
+	// make a new rastermodel with the updated data. 
+	// SMM Note: this is a bit risky since only a very limited subset of the 
+	// data members are translated across	
 	LSDRasterModel Zeta(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ZetaRaster);
 	return Zeta;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This uplift tool uses the get_uplift_at_cell member function to modify 
+// directly the elevation raster. 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::uplift_surface( void )
+{	
+	for(int row=0; row<NRows; ++row)
+	{
+		for(int col=0; col<NCols; ++col)
+		{
+			if (is_base_level(row, col))
+				continue;
+			if(get_data_element(row,col)!=NoDataValue) 
+			{
+				RasterData[row][col] += get_uplift_at_cell(row, col);
+			}
+		}
+	}
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This just gets the maximum uplift from the data members
@@ -1115,40 +1198,53 @@ Array2D <float> LSDRasterModel::generate_uplift_field( int mode, float max_uplif
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // This gets uplift at a particular cell
-//
+// It is based on the uplift mode, 
+// which is
+// default == block uplift
+// 1 == tilt block
+// 2 == gaussian
+// 3 == quadratic 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float LSDRasterModel::get_uplift_at_cell(int i, int j)
 {
 	float result;
 
-	// Gaussian parameters
-	int mu_i = NRows/2;
-	int mu_j = NCols/2;
-	float sigma_i = NRows/10;
-	float sigma_j = NCols/10;
 
+  // don't do anything if this is a base level node
 	if (is_base_level(i,j))
 		return 0;		
 	else
 		switch (uplift_mode)
 		{
-			case 1:		// Tilt block
+			case 1:		// Tilt block (SMM: seems to only tilt in one direction)
+			{
 				result = (NRows - i - 1) * get_max_uplift() / ((float) NRows - 1);
 				break;
+			}
 			case 2:		// Gausian
-				
+	    {  
+        // Gaussian parameters
+	      int mu_i = NRows/2;
+	      int mu_j = NCols/2;
+	      float sigma_i = NRows/10;
+	      float sigma_j = NCols/10;	
+        			
 				result = get_max_uplift()*pow(1.1, -((i-mu_i)*(i-mu_i)/(2*sigma_i*sigma_i) + (j-mu_j)*(j-mu_j)/(2*sigma_j*sigma_j) ));
 				break;
-			case 3:
+			}
+			case 3:    // polynomial
+			{
 				result = get_max_uplift() * ( -pow((2.0*i/(NRows-1) - 1),2) - pow((2.0*j/(NCols-1) - 1), 2) + 1);
 				if (result < 0)
 					result = 0;
 				break;
-				
+			}	
 			default:
 				result = get_max_uplift();
 				break;
 		}
+	// the uplift is multiplied by the timestep so uplift is passed as a distance
+	// and not a rate. 
 	return result * timeStep;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1855,7 +1951,8 @@ void LSDRasterModel::run_components( void )
 			cout << "Model took too long to reach steady state, assumed to be stuck" << endl;
 			break;
 		}
-				
+		
+    // ONLY IMPORTANT IF USING TWO PERIODICITIES		
 		check_periodicity_switch();     // This checks to see if this is a periodic 
 		                                // run, if so it adjusts time and end time
 		                                // it really only comes into play if you
@@ -1909,7 +2006,7 @@ void LSDRasterModel::run_components( void )
 		write_report();
 
 		current_time += timeStep;
-		cout << "current_time is: " << current_time << endl;
+		//cout << "current_time is: " << current_time << endl;
 
 		if ( print_interval > 0 && (print % print_interval) == 0)	// write at every print interval
 		{
@@ -2014,7 +2111,9 @@ void LSDRasterModel::reach_steady_state( void )
 {
 	// file to write details of each time step
 	// This will be opened by the write_report method
-	initial_steady_state = false;
+	initial_steady_state = false;        // this means that the model
+	                                     // knows SS has not been reached so it 
+	                                     // will not 'record' model results
 	current_time = 0;
 	total_erosion = 0;
 	max_erosion = 0;
@@ -2050,9 +2149,10 @@ void LSDRasterModel::reach_steady_state( void )
 	delete temp;
 
 	// Run model with some modest fluvial forcing
-	K_mode = 1;
+	K_mode = 1;                    // THis means a sinusoidal variation in 
+	                               // channel forcing
 	K_amplitude = K_fluv * 0.3;
-	endTime = 0;
+	endTime = 0;                   // SMM: not sure why this is set to zero. 
 	cout << "Running to steady state, periodicity is: " << periodicity << endl;
 	//periodicity = 2000;
 	period_mode = 1;
@@ -2068,7 +2168,17 @@ void LSDRasterModel::reach_steady_state( void )
 	}
   // because the cycle_steady_check is true, it means that this will run
 	// through several periods until the surface does not change between cycles
+	
+	// switch the end time mode to be periodic
+  short endTimeModeSwap = endTime_mode;
+	endTime_mode = 2; 
+  
+  // run components
   run_components();
+  
+  // switch back to the original endTime_mode
+  endTime_mode =  endTimeModeSwap;
+  
 	if (not quiet) 
   {
     cout << "Finished producing cyclic steady" << endl;
@@ -2098,11 +2208,6 @@ void LSDRasterModel::reach_steady_state( void )
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void LSDRasterModel::reset_model( void )
-{
-	total_erosion = 0;
-	total_response = 0;
-}
 
 void LSDRasterModel::soil_diffusion_fv( void )
 {

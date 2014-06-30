@@ -139,6 +139,16 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @date 17/06/2014
 	void random_surface_noise();
 
+  /// @brief This resizes the LSDRasterModel, resetting some flags in the process, 
+  /// as well as setting many of the Array2D data members to be empty arrays
+  /// The raster data in the end is a random surface (determined by the noise
+  /// data member)
+  /// @param new_rows the new number of rows
+  /// @param new_cols the new number of columns
+  /// @author SMM
+  /// @date 30/06/2014
+  void resize_and_reset( int new_rows, int new_cols );
+
   /// @brief this ads a pathname to the default names
 	/// @param the name of the path
 	/// @author SMM
@@ -196,6 +206,11 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @brief If the periodic model cycles over 100 times this returns true
   /// @author JAJ
 	bool check_if_hung( void );
+  
+  /// @brief Reset model - reset erosion values to 0 after a complete model run
+	/// @author JAJ
+	/// @date 01/01/2014
+	void reset_model( void );
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
   // @@@@@@@@@@@@!!!!!!!!!!!!!!!!!!!@@@@@@@@@@@@@@@@@@@@@
@@ -425,11 +440,6 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @date 01/01/2014
 	void reach_steady_state( void );
 
-	/// @brief Reset model - reset erosion values to 0 after a complete model run
-	/// @author JAJ
-	/// @date 01/01/2014
-	void reset_model( void );
-
 	/// @brief Fastscape, implicit finite difference solver for stream power equations
 	/// O(n)
 	/// Method takes its paramaters from the model data members
@@ -459,9 +469,6 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @date 01/01/2014	
 	void wash_out( void );
 	
-
-
-
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
 	// TOOLS FOR UPLIFT
@@ -486,33 +493,62 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// Some methods still implemented still use this uplift field
 	/// It's advisable this is changed, otherwise the size of rasters that
 	/// can be modelled will be severely reduced
+	/// @details 	 This uses the uplift_mode to determine how uplift is calculated
+  /// 	(0) - block uplift
+	///	1   - tilt block
+	///	2   - gaussian
+	///	3   - quadratic
 	/// @param row
 	/// @param column
-	/// @author JAJ
-	/// @author 01/01/2014
-	/// -------------------------------------------------------------------
+	/// @return the uplift (as a distance rather than rate, uses data member timestep)
+	/// @author JAJ  commented SMM
+	/// @author 01/01/2014   commented 26/06/2014
 	float get_uplift_at_cell(int i, int j);
 	
-	///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	/// UPLIFT SURFACE
-	/// Apply uplift field to the raster.  Overloaded function so that the first
+	/// @brief Apply uplift field to the raster.  Overloaded function so that the first
 	/// simply considers uniform uplift, the second allows user to use a prescribed
 	/// uplift fields of greater complexity, for example taking account of fault
 	/// geometry.
-	///----------------------------------------------------------------------------
+	/// @details WARNING the returned LSDRasterModel only contains a very small
+	/// subset of the data members of the original LSDRasterModel. Implementation
+	/// NOT RECOMMENDED!
+	/// @param UpliftRate the rate of uplift at that timestep
+	/// @param dt the timestep
+	/// @param Returns an LSDRasterModel of uplift (SMM: why not just update
+  /// the raster directly??)
+  /// @author JAJ, comments SMM
+  /// @date 01/01/2014  SMM comments 26/06/2014
 	LSDRasterModel uplift_surface(float UpliftRate, float dt);
-	///------------------------------------------------------------------------------
-	/// Specified uplift field 
+	
+	/// @brief Uplift surface using specified uplift field 
 	/// uplift field should be specified as an array with the same dimensions as the
 	/// elevation raster, permitting non-uniform uplift fields to be applied in the 
 	/// model.
-	///----------------------------------------------------------------------------
+	/// @details WARNING the returned LSDRasterModel only contains a very small
+	/// subset of the data members of the original LSDRasterModel. Implementation
+	/// NOT RECOMMENDED!
+	/// @param UpliftRate a 2D float array of the uplift. Can be made using the 
+	/// member function generate_uplift_field
+	/// @param dt the timestep
+	/// @param an LSDRasterModel object (SMM again, why not update the underlying 
+  /// data member of surface elevation?)
+  /// @author JAJ, comments SMM
+  /// @date 01/01/2014  SMM comments 26/06/2014
 	LSDRasterModel uplift_surface(Array2D<float> UpliftRate, float dt);
 	
-	/// ---------------------------------------------------------------------------
-	/// Intrinsice method of uplifting the Raster
+	/// @brief Intrinsic method of uplifting the Raster
 	/// Uplift field attribute is incremented onto RasterData itself
-	/// ---------------------------------------------------------------------------
+	/// There are no parameters, but rather it simply passes upflift to the
+	/// get upflift at cell function
+	/// @details Uplift is calculated based on data_members max_uplift, timestep and 
+	/// uplift mode. 
+	/// This uses the uplift_mode to determine how uplift is calculated
+  /// 	(0) - block uplift
+	///	1   - tilt block
+	///	2   - gaussian
+	///	3   - quadratic
+	/// @author JAJ commented SMM 26/06/2014
+	/// @date 01/01/2014, commented 26/06/2014
 	void uplift_surface( void );
 
   /// @brief  This just returns the max_uplift data member
@@ -721,21 +757,55 @@ class LSDRasterModel: public LSDRasterSpectral
 	// Various parameters used in throughout the model run
 	// These are set to the default values with default_parameters( void )
 	// and then a parameter file is read to overwrite any of these explicitly set
-	bool			quiet;				// Supress output messages
-	bool			initialized;			// Check whether initialize_model has been run
-	bool			steady_state;			// Check whether initial steady state has been arrived at
-	bool			initial_steady_state;		// Switch for first steady state arrival, used for activating periodic forcing parameters
-	bool			cycle_steady_check;		// Check for steady state using periodic forcing (not sure about this one)
-	bool			recording;			// Switch for start of recording data
-	bool			reporting;			// Whether or not to write the run report
-	vector <string>		boundary_conditions;		// Boundary conditions of model NESW
-	string			name;				// Name of the model run
+	
+	/// True if Supress output messages
+	bool			quiet;
+  
+  ///	True if initialize_model has been run			
+	bool			initialized;			
+	
+	/// True if initial steady state has been arrived at
+	bool			steady_state;		
+  
+  /// True for first steady state arrival, used for activating periodic forcing parameters	
+	bool			initial_steady_state;	
+  
+  /// True for steady state using periodic forcing (not sure about this one)	
+	bool			cycle_steady_check;		
+	
+	/// True if recording data
+	bool			recording;	
+  
+  /// True if writing the run report		
+	bool			reporting;		
+  
+  /// Boundary conditions of model NESW	
+	vector <string>		boundary_conditions;		
+	
+  /// Name of the model run
+  string			name;	
+  
+  /// Name of the report		
 	string 			report_name;
-	float 			current_time;			// Current time
-	float			time_delay;			// Time at which initial steady state was reached
-	float 			timeStep;			// Time in between each calculation
-	float			endTime;			// Time at end of model run
+	
+	/// The current time
+	float 			current_time;		
+  
+  /// The time at which steady state was reached. Used to sync period after steady state	
+	float			time_delay;			
+	
+	/// Time in between each calculation
+	float 			timeStep;			
+	
+	/// ending time
+	float			endTime;			
+	
+	/// This is a mode of end times. 0 == default, run until the endTime
+	/// 1 == run until a specified time after steady state
+	/// 2 == run a number of cycles
+	/// 3 == run to steady state, then run some cycles. 
 	short			endTime_mode;
+	
 	int			num_runs;
 	Array2D <float> 	uplift_field;			// Field of uplift for each cell
 	int 			uplift_mode;
@@ -779,24 +849,49 @@ class LSDRasterModel: public LSDRasterSpectral
 					// 3 Two periodicities used as a compound sin wave
 					// 4 Same as three, but weightings switch at a given interval (as in 2)
 
-	float K_amplitude;		// Amplitude of K wave
-	float D_amplitude;		// Amplitude of D wave
-	float periodicity;		// Periodicty
-	float periodicity_2;		// 2nd periodicity (if period_mode = 2)
+  /// Amplitude of K wave
+	float K_amplitude;	
+  
+  /// Amplitude of D wave	
+	float D_amplitude;	
+  
+  /// Periodicty	
+	float periodicity;		
+	
+	/// 2nd periodicity (if period_mode = 2)
+	float periodicity_2;	
+  
+  /// cycle that the model is on. Used to track changes in erosion between cycles	
 	int   cycle_number;
-	float p_weight;			// Ratio for weight of periodicity in period_mode 3 or 4
-	float switch_time;		// Time at which switch happens (time mode is same as endTime_mode)
-	float switch_delay;		// Similar to time delay (but for switching periodicities)
+	
+	/// Ratio for weight of periodicity in period_mode 3 or 4
+	float p_weight;	
+  
+  /// Time at which switch happens (time mode is same as endTime_mode)		
+	float switch_time;		
+	
+	/// Similar to time delay (but for switching periodicities)
+	float switch_delay;		
 
 	// Components switches
+	/// True if fluvial erosion is on
 	bool			fluvial;
+	/// true if linear hillslope erosion is on
 	bool			hillslope;
-	bool			nonlinear;			// Whether nonlinear mode is used
+	/// True if nonlinear hillslope erosion is on
+	bool			nonlinear;	
+  /// True if isostatic component is on		
 	bool			isostasy;
-	bool			flexure;			// Whether flexural isostasy will be used
+	/// True if // Whether flexural isostasy will be used  
+	bool			flexure;			
 
+  /// This array keeps track of the elevation on the previous iteration
   Array2D<float> zeta_last_iter;
+  
+  /// This array keeps track of the elevation from the previous timestep
   Array2D<float> zeta_last_timestep;
+  
+  /// Array for the current iteratation (used for implicit nonlinear solvers)
   Array2D<float> zeta_this_iter;
 
 
