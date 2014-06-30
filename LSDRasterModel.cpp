@@ -881,6 +881,80 @@ LSDRasterModel LSDRasterModel::uplift_surface(Array2D<float> UpliftRate, float d
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This just gets the maximum uplift from the data members
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDRasterModel::get_max_uplift( void )
+{
+	return max_uplift;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This returns an uplift field in the form of an array
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+Array2D <float> LSDRasterModel::generate_uplift_field( int mode, float max_uplift )
+{
+	// Generates an uplift field from some default functions
+	// Maybe worth splitting into different methods?
+	Array2D <float> uplift(NRows, NCols);
+
+	for (int i=0; i<NRows; ++i)
+	{
+		for (int j=0; j<NCols; ++j)
+		{
+			uplift[i][j] = get_uplift_at_cell(i, j);
+		}
+	}
+	return uplift;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This gets uplift at a particular cell
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDRasterModel::get_uplift_at_cell(int i, int j)
+{
+	float result;
+
+	// Gaussian parameters
+	int mu_i = NRows/2;
+	int mu_j = NCols/2;
+	float sigma_i = NRows/10;
+	float sigma_j = NCols/10;
+
+	if (is_base_level(i,j))
+		return 0;		
+	else
+		switch (uplift_mode)
+		{
+			case 1:		// Tilt block
+				result = (NRows - i - 1) * get_max_uplift() / ((float) NRows - 1);
+				break;
+			case 2:		// Gausian
+				
+				result = get_max_uplift()*pow(1.1, -((i-mu_i)*(i-mu_i)/(2*sigma_i*sigma_i) + (j-mu_j)*(j-mu_j)/(2*sigma_j*sigma_j) ));
+				break;
+			case 3:
+				result = get_max_uplift() * ( -pow((2.0*i/(NRows-1) - 1),2) - pow((2.0*j/(NCols-1) - 1), 2) + 1);
+				if (result < 0)
+					result = 0;
+				break;
+				
+			default:
+				result = get_max_uplift();
+				break;
+		}
+	return result * timeStep;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // CREATE PRECIPITION FLUX ARRAY
 // Produces precipitation array from provided precipitation rate.
 //------------------------------------------------------------------------------
@@ -2808,56 +2882,7 @@ void LSDRasterModel::random_surface_noise()
 }
 
 
-Array2D <float> LSDRasterModel::generate_uplift_field( int mode, float max_uplift )
-{
-	// Generates an uplift field from some default functions
-	// Maybe worth splitting into different methods?
-	Array2D <float> uplift(NRows, NCols);
 
-	for (int i=0; i<NRows; ++i)
-	{
-		for (int j=0; j<NCols; ++j)
-		{
-			uplift[i][j] = get_uplift_at_cell(i, j);
-		}
-	}
-	return uplift;
-}
-
-float LSDRasterModel::get_uplift_at_cell(int i, int j)
-{
-	float result;
-
-	// Gaussian parameters
-	int mu_i = NRows/2;
-	int mu_j = NCols/2;
-	float sigma_i = NRows/10;
-	float sigma_j = NCols/10;
-
-	if (is_base_level(i,j))
-		return 0;		
-	else
-		switch (uplift_mode)
-		{
-			case 1:		// Tilt block
-				result = (NRows - i - 1) * get_max_uplift() / ((float) NRows - 1);
-				break;
-			case 2:		// Gausian
-				
-				result = get_max_uplift()*pow(1.1, -((i-mu_i)*(i-mu_i)/(2*sigma_i*sigma_i) + (j-mu_j)*(j-mu_j)/(2*sigma_j*sigma_j) ));
-				break;
-			case 3:
-				result = get_max_uplift() * ( -pow((2.0*i/(NRows-1) - 1),2) - pow((2.0*j/(NCols-1) - 1), 2) + 1);
-				if (result < 0)
-					result = 0;
-				break;
-				
-			default:
-				result = get_max_uplift();
-				break;
-		}
-	return result * timeStep;
-}
 
 void LSDRasterModel::Airy_isostasy( void )
 {
@@ -3112,6 +3137,13 @@ Array2D<float> LSDRasterModel::calculate_airy( void )
 	}
 	return airy;
 }
+
+void LSDRasterModel::write_root( string name, string ext )
+{
+	LSDRaster root(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, root_depth);
+	root.write_raster(name, ext);
+}
+
 
 bool LSDRasterModel::is_base_level( int i, int j )
 {
@@ -3818,6 +3850,127 @@ void LSDRasterModel::show( void )
 	Py_Finalize();
 }
 
+
+
+/*
+float LSDRasterModel::filestream_param(ifstream & strm, float &upr_param, float &lwr_param, float &upr_t, float &lwr_t)
+{
+	float temp;
+	bool read;
+	
+	while (current_time >= upr_t)
+	{
+		if (strm >> temp)
+		{
+			if (upr_t == -99)
+				lwr_t = time_delay;
+			else
+				lwr_t = upr_t;
+			lwr_param = upr_param;
+			upr_t = temp+time_delay;
+			strm >> upr_param;
+			read = true;
+		}
+		else
+			read = false;
+
+	}
+	if (read)
+		return (upr_param - lwr_param) * (current_time-lwr_t) / (upr_t - lwr_t) + lwr_param;
+	else
+		return upr_param;
+}
+*/
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function gets the fluvial erodability. It has a number of switches
+// that determine how K is calcualted. 
+// K_mode == 1 sine wave
+// K_mode == 2 square wave
+// K_mode == 3 read from file
+// K_mode: default is constant value
+//
+// Author JAJ, sometime 2014
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDRasterModel::get_K( void )
+{
+
+  // SMM I'm not sure why this system call to make a writable copy of the K file
+  // is here and not in the get_D function
+	if (K_mode == 3)
+	{
+		stringstream ss;
+		ss << "cp K_file .K_file_" << name;
+		system(ss.str().c_str());
+		ss.str("");
+		ss.str("");
+		ss << "chmod -w .K_file_" << name;
+		system(ss.str().c_str());
+	}
+
+  // in all of these switches, the ternary operator is used: a constant value
+  // is selected if initial_steady_state is false, otherwise the parameter is 
+  // determined from a function		
+	switch( K_mode ) {
+		case 1:			// sin wave
+			return (initial_steady_state || cycle_steady_check) ? periodic_parameter( K_fluv, K_amplitude ) : K_fluv;
+			break;
+		case 2:			// square wave
+			return (initial_steady_state) ? square_wave_parameter( K_fluv, K_amplitude ) : K_fluv;
+			break;
+		case 3:
+			return (initial_steady_state) ? stream_K_fluv() : K_fluv;
+			break;
+		default:		// constant
+			return K_fluv;
+			break;
+	}
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function gets the soil transport coefficient. It has a number of switches
+// that determine how D is calcualted. 
+// D_mode == 1 sine wave
+// D_mode == 2 square wave
+// D_mode == 3 read from file
+// D_mode: default is constant value
+//
+// Author JAJ, sometime 2014
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDRasterModel::get_D( void )
+{
+  // in all of these switches, the ternary operator is used: a constant value
+  // is selected if initial_steady_state is false, otherwise the parameter is 
+  // determined from a function
+		
+	switch( D_mode ) {
+		case 1:			// sin wave
+			return (initial_steady_state) ? periodic_parameter( K_soil, D_amplitude ) : K_soil;
+			break;
+		case 2:			// square wave
+			return (initial_steady_state) ? square_wave_parameter( K_soil, D_amplitude ) : K_soil;
+			break;
+		case 3:
+			return (initial_steady_state) ? stream_K_soil() : K_soil;
+			break;
+		default:		// constant
+			return K_soil;
+			break;
+	}
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function calculates the value of a sinusoidal periodic variable. 
+// To calcualte the variable, it uses the data member current_time
+// and delay_switch to calcualte where in the cycle the parameter is. 
+// It uses a 'period mode' variable to determine the nature of the periodic
+// forcing (which I'll have to look up later, SMM)
+// Author JAJ sometime 2014 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float LSDRasterModel::periodic_parameter( float base_param, float amplitude )
 {
 	float result;
@@ -3830,7 +3983,14 @@ float LSDRasterModel::periodic_parameter( float base_param, float amplitude )
 
 	return result;
 } 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function calculates the value of a sinusoidal periodic variable. 
+// To calcualte the variable, it uses the data member current_time
+// and delay_switch to calcualte where in the cycle the parameter is. 
+// Author JAJ sometime 2014 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float LSDRasterModel::square_wave_parameter( float base_param, float amplitude )
 {
 	int wave = (current_time - time_delay - switch_delay) /  (this->periodicity / 2);
@@ -3839,7 +3999,13 @@ float LSDRasterModel::square_wave_parameter( float base_param, float amplitude )
 
 	return base_param + (wave*amplitude);
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function reads in the K parameter as a stream
+// JAJ, sometime 2014
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float LSDRasterModel::stream_K_fluv( void )
 {
 	static float upr_param = K_fluv;
@@ -3883,7 +4049,12 @@ float LSDRasterModel::stream_K_fluv( void )
 		return upr_param;
 
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function reads in the D parameter as a stream
+// JAJ, sometime 2014
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float LSDRasterModel::stream_K_soil( void )
 {
 	static float upr_param = K_soil;
@@ -3922,89 +4093,10 @@ float LSDRasterModel::stream_K_soil( void )
 		return upr_param;
 
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-/*
-float LSDRasterModel::filestream_param(ifstream & strm, float &upr_param, float &lwr_param, float &upr_t, float &lwr_t)
-{
-	float temp;
-	bool read;
-	
-	while (current_time >= upr_t)
-	{
-		if (strm >> temp)
-		{
-			if (upr_t == -99)
-				lwr_t = time_delay;
-			else
-				lwr_t = upr_t;
-			lwr_param = upr_param;
-			upr_t = temp+time_delay;
-			strm >> upr_param;
-			read = true;
-		}
-		else
-			read = false;
 
-	}
-	if (read)
-		return (upr_param - lwr_param) * (current_time-lwr_t) / (upr_t - lwr_t) + lwr_param;
-	else
-		return upr_param;
-}
-*/
 
-float LSDRasterModel::get_K( void )
-{
-	if (K_mode == 3)
-	{
-		stringstream ss;
-		ss << "cp K_file .K_file_" << name;
-		system(ss.str().c_str());
-		ss.str("");
-		ss.str("");
-		ss << "chmod -w .K_file_" << name;
-		system(ss.str().c_str());
-	}
-		
-	switch( K_mode ) {
-		case 1:			// sin wave
-			return (initial_steady_state || cycle_steady_check) ? periodic_parameter( K_fluv, K_amplitude ) : K_fluv;
-			break;
-		case 2:			// square wave
-			return (initial_steady_state) ? square_wave_parameter( K_fluv, K_amplitude ) : K_fluv;
-			break;
-		case 3:
-			return (initial_steady_state) ? stream_K_fluv() : K_fluv;
-			break;
-		default:		// constant
-			return K_fluv;
-			break;
-	}
-}
-
-float LSDRasterModel::get_D( void )
-{
-		
-	switch( D_mode ) {
-		case 1:			// sin wave
-			return (initial_steady_state) ? periodic_parameter( K_soil, D_amplitude ) : K_soil;
-			break;
-		case 2:			// square wave
-			return (initial_steady_state) ? square_wave_parameter( K_soil, D_amplitude ) : K_soil;
-			break;
-		case 3:
-			return (initial_steady_state) ? stream_K_soil() : K_soil;
-			break;
-		default:		// constant
-			return K_soil;
-			break;
-	}
-}
-
-float LSDRasterModel::get_max_uplift( void )
-{
-	return max_uplift;
-}
 
 float LSDRasterModel::find_max_boundary(int boundary_number)
 {
@@ -4400,11 +4492,7 @@ void LSDRasterModel::DAVE_assemble_matrix(Array2D<float>& uplift_rate, Array2D<f
 	}
 }
 
-void LSDRasterModel::write_root( string name, string ext )
-{
-	LSDRaster root(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, root_depth);
-	root.write_raster(name, ext);
-}
+
 
 void LSDRasterModel::snap_periodicity( void )
 {

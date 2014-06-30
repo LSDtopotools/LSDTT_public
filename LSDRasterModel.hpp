@@ -202,32 +202,7 @@ class LSDRasterModel: public LSDRasterSpectral
 	Array2D<float> calculate_erosion_rates( void );
 	float get_erosion_at_cell(int row, int col);
 
-	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
-	// TOOLS FOR UPLIFT
-	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
-	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-		
-	///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	/// UPLIFT SURFACE
-	/// Apply uplift field to the raster.  Overloaded function so that the first
-	/// simply considers uniform uplift, the second allows user to use a prescribed
-	/// uplift fields of greater complexity, for example taking account of fault
-	/// geometry.
-	///----------------------------------------------------------------------------
-	LSDRasterModel uplift_surface(float UpliftRate, float dt);
-	///------------------------------------------------------------------------------
-	/// Specified uplift field 
-	/// uplift field should be specified as an array with the same dimensions as the
-	/// elevation raster, permitting non-uniform uplift fields to be applied in the 
-	/// model.
-	///----------------------------------------------------------------------------
-	LSDRasterModel uplift_surface(Array2D<float> UpliftRate, float dt);
-	
-	/// ---------------------------------------------------------------------------
-	/// Intrinsice method of uplifting the Raster
-	/// Uplift field attribute is incremented onto RasterData itself
-	/// ---------------------------------------------------------------------------
-	void uplift_surface( void );
+
 
 	///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	/// CREATE PRECIPITION FLUX ARRAY
@@ -444,14 +419,6 @@ class LSDRasterModel: public LSDRasterSpectral
 	void wash_out( void );
 	
 
-
-	/// --------------------------------------------------------------------
-	/// Runs flexural isostatic calculations
-	/// Uses fourier filtering method
-	/// Pelletier (2008)
-	/// --------------------------------------------------------------------
-	LSDRasterModel run_isostatic_correction( void );
-
   /// @brief Adds random noise to each pixel in range [min, max]
 	/// @param minium random addition
 	/// @param maximum random addition
@@ -464,6 +431,11 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @date 17/06/2014
 	void random_surface_noise();
 
+  //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
+	// TOOLS FOR UPLIFT
+	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
+	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-	
 	/// @brief Creates uplift field from a set of templates
 	/// @param mode specifies a mode of uplift:
 	/// 	(0) - block uplift
@@ -489,20 +461,61 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @author 01/01/2014
 	/// -------------------------------------------------------------------
 	float get_uplift_at_cell(int i, int j);
+	
+	///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	/// UPLIFT SURFACE
+	/// Apply uplift field to the raster.  Overloaded function so that the first
+	/// simply considers uniform uplift, the second allows user to use a prescribed
+	/// uplift fields of greater complexity, for example taking account of fault
+	/// geometry.
+	///----------------------------------------------------------------------------
+	LSDRasterModel uplift_surface(float UpliftRate, float dt);
+	///------------------------------------------------------------------------------
+	/// Specified uplift field 
+	/// uplift field should be specified as an array with the same dimensions as the
+	/// elevation raster, permitting non-uniform uplift fields to be applied in the 
+	/// model.
+	///----------------------------------------------------------------------------
+	LSDRasterModel uplift_surface(Array2D<float> UpliftRate, float dt);
+	
+	/// ---------------------------------------------------------------------------
+	/// Intrinsice method of uplifting the Raster
+	/// Uplift field attribute is incremented onto RasterData itself
+	/// ---------------------------------------------------------------------------
+	void uplift_surface( void );
+
+  /// @brief  This just returns the max_uplift data member
+  /// NOTE; while this is currently a very trivial, and arguably unecessary method, it should be used
+	/// and developed if someone wants to integrate some sort of changing uplift field
+  /// @return the data member holding the maximum uplift
+  /// @author JAJ
+  /// @date 01/01/2014
+	float get_max_uplift( void );	
+
+	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
+	// TOOLS FOR ISOSTACY
+	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
+	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-		
+	/// --------------------------------------------------------------------
+	/// Runs flexural isostatic calculations
+	/// Uses fourier filtering method
+	/// Pelletier (2008)
+	/// --------------------------------------------------------------------
+	LSDRasterModel run_isostatic_correction( void );
 
 	/// -------------------------------------------------------------------
 	/// Correct for isostasy using Airy model 
-	/// -------------------------------------------------------------------
-	
+	/// -------------------------------------------------------------------	
 	void Airy_isostasy( void );
 
 	/// -------------------------------------------------------------------
 	/// Correct for isostasy using flexural model 
 	/// -------------------------------------------------------------------
-	
 	void flexural_isostasy( float alpha );
-
 	void flexural_isostasy_alt( void );
+
+	void write_root(string name, string ext);
 
 	/// -------------------------------------------------------------------
 	/// Calculates depth of topographic root using FFT methods inherited from LSDRasterSpectral
@@ -560,20 +573,36 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// Getter methods 
 	/// -------------------------------------------------------------------
 	string get_name( void )					{ return name; }
+	
+
+  /// @brief This function gets the fluvial erodability. It has a number of switches
+  /// that determine how K is calcualted. 
+  /// K_mode == 1 sine wave
+  /// K_mode == 2 square wave
+  /// K_mode == 3 read from file
+  /// K_mode: default is constant value
+  /// @author JAJ
+  /// @date 01/01/2014	
 	float get_K( void );
+	
+  /// @brief This function gets the soil transport coefficient erodability. 
+  /// It has a number of switches that determine how D is calculated. 
+  /// D_mode == 1 sine wave
+  /// D_mode == 2 square wave
+  /// D_mode == 3 read from file
+  /// D_mode: default is constant value
+  /// @author JAJ
+  /// @date 01/01/2014		
 	float get_D( void );
-	float get_max_uplift( void );			// NOTE; while this is currently a very trivial, and arguably unecessary method, it should be used
-							// and developed if someone wants to integrate some sort of changing uplift field
+	
+
 	float find_max_boundary( int boundary_number );
 	
-	/// ------------------------------------------------------------------
-	/// Display list of parameters
-	/// ------------------------------------------------------------------
-	void print_parameters( void );
+
 
 	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
-	// TOOLS FOR WRITING REPORTS
+	// TOOLS FOR WRITING REPORTS AND PRINTING THINGS
 	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
 	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-			
 	/// @brief This method calculates some features of the landscape at set times. The 
@@ -584,7 +613,10 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @date 01/01/2014
 	void write_report( void );
 	
-	
+	/// ------------------------------------------------------------------
+	/// Display list of parameters
+	/// ------------------------------------------------------------------
+	void print_parameters( void );	
 	void cycle_report( float, float, float);
 
 	void final_report( void );
@@ -650,7 +682,7 @@ class LSDRasterModel: public LSDRasterSpectral
 
 
 
-	void write_root(string name, string ext);
+
 
 
 		
@@ -746,10 +778,43 @@ class LSDRasterModel: public LSDRasterSpectral
 	void create(LSDRaster& An_LSDRaster);
 	void default_parameters( void );
 
+
+  /// @brief This function calculates the value of a sinusoidal periodic variable. 
+  /// To calcualte the variable, it uses the data member current_time
+  /// and delay_switch to calcualte where in the cycle the parameter is. 
+  /// It uses a 'period mode' variable to determine the nature of the periodic
+  /// forcing (which I'll have to look up later, SMM)
+  /// @param the average value of the parameter
+  /// @param the amplitude of variation in the parameter
+  /// @return the value of the parameter at the current time
+  /// @author JAJ
+  /// @date 01/01/2014  
 	float periodic_parameter( float base_param, float amplitude );
+	
+  /// @brief This function calculates the value of a square wave periodic variable. 
+  /// To calcualte the variable, it uses the data member current_time
+  /// and delay_switch to calcualte where in the cycle the parameter is. 
+  /// @param the average value of the parameter
+  /// @param the amplitude of variation in the parameter
+  /// @return the value of the parameter at the current time
+  /// @author JAJ
+  /// @date 01/01/2014  	
 	float square_wave_parameter( float base_param, float amplitude );
+	
+	/// @brief load the K parameter from a stream
+	/// The stream comes from a file called 'K_file' (with no extension)
+	/// @return the K parameter at this timestesp
+	/// @author JAJ
+	/// @date 01/01/2014
 	float stream_K_fluv(void);		// I don't like that these two are split up, but I was rushed and couldn't figure out how to pass an ifstream
+
+	/// @brief load the D parameter from a stream
+	/// The stream comes from a file called 'D_file' (with no extension)
+	/// @return the D parameter at this timestesp
+	/// @author JAJ
+	/// @date 01/01/2014
 	float stream_K_soil(void);
+	
 	void _run_components( void );
 };
 
