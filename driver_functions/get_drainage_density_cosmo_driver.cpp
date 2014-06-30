@@ -58,7 +58,6 @@
 #include "../LSDRaster.hpp"
 #include "../LSDIndexRaster.hpp"
 #include "../LSDFlowInfo.hpp"
-#include "../LSDRasterSpectral.hpp"
 #include "../LSDJunctionNetwork.hpp"
 #include "../LSDIndexChannelTree.hpp"
 #include "../LSDChiNetwork.hpp"
@@ -204,16 +203,16 @@ int main (int nNumberofArgs,char *argv[])
   //drainage_density.write_raster((path_name+DEM_name+DD_name),DEM_flt_extension);   
   
   //getting the slope raster
-  // Calculate polyfit coefficients
-  Array2D<float> a;
-  Array2D<float> b;
-  Array2D<float> c;
-  Array2D<float> d;
-  Array2D<float> e;
-  Array2D<float> f;
-  float window_radius = 6;
-  filled_topo_test.calculate_polyfit_coefficient_matrices(window_radius, a, b, c, d, e, f);
-  LSDRaster Slope = filled_topo_test.calculate_polyfit_slope(d, e);
+  float surface_fitting_window_radius = 6;      // the radius of the fitting window in metres
+  vector<LSDRaster> surface_fitting;
+  string slope_name = "_slope";
+  vector<int> raster_selection(8, 0);
+  raster_selection[1] = 1;                      // this indicates you want the slope
+  
+  surface_fitting = filled_topo_test.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
+
+  LSDRaster Slope = surface_fitting[1];  
+  Slope.write_raster((path_name+DEM_name+slope_name), DEM_flt_extension);
             
   int no_junctions = junction_vector.size();  
   cout << "Number of basins: " << no_junctions << endl;
