@@ -106,8 +106,12 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @brief operator
 	LSDRasterModel& operator=(const LSDRasterModel& LSDR);
 
-	/// @brief This module initialises the model runs, calling the required function from
-	/// the initial topography and loads the parameters from the parameter file.
+  //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  // @~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@
+  // INITIALISATION ROUTINES
+  // @~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@
+  //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  /// @brief this initialises the model by directly setting the data members
 	void initialize_model(
 	  string& parameter_file, string& run_name, float& dt, float& EndTime, float& PrintInterval,
 	  float& k_w, float& b, float& m, float& n, float& K, float& ErosionThreshold, 
@@ -116,7 +120,24 @@ class LSDRasterModel: public LSDRasterSpectral
 	  Array2D<float>& PrecipitationFlux, Array2D<float>& SlopesBetweenRows,
 	  Array2D<float>& SlopesBetweenColumns, Array2D<float>& ErosionRate);
 
+  /// @brief This module initialises the model runs, calling the required function from
+	/// the initial topography and loads the parameters from the parameter file.
+	/// @param parameter_file the filename of the paramter file (with extension)
+	/// @author JAJ
+	/// @date 01/01/2014
 	void initialize_model( string parameter_file );
+
+  /// @brief Adds random noise to each pixel in range [min, max]
+	/// @param minium random addition
+	/// @param maximum random addition
+	/// @author JAJ
+	/// @date 01/01/2014
+	void random_surface_noise( float min, float max );
+
+  /// @brief Adds random noise to each pixel using the noise data member
+	/// @author SMM
+	/// @date 17/06/2014
+	void random_surface_noise();
 
   /// @brief this ads a pathname to the default names
 	/// @param the name of the path
@@ -152,7 +173,7 @@ class LSDRasterModel: public LSDRasterSpectral
   /// endTime_mode:
   ///  1 == The end time is just some fixed time after initial steady state
   ///  2 == The end time is after a fixed number of cycles
-  ///  3 == Ten time is after steady state, but waits for a fixed number of cycles
+  ///  3 == The time is after steady state, but waits for a fixed number of cycles
   ///       before ending
   /// @return returns a boolean that is true if the end time has been reached
   /// and false if end time has not been reached
@@ -172,28 +193,48 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @date 01/012014
 	void check_periodicity_switch( void );
 
+  /// @brief If the periodic model cycles over 100 times this returns true
+  /// @author JAJ
 	bool check_if_hung( void );
-	     
-	///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	/// BUFFER SURFACE
-	///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	/// 2 functions to buffer the raster surface.
-	///----------------------------------------------------------------------------
-	/// This first function is used as a simple way to implement boundary conditions,
+
+  //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+  // @@@@@@@@@@@@!!!!!!!!!!!!!!!!!!!@@@@@@@@@@@@@@@@@@@@@
+  // Deal with the BOUNDARY CONDITIONS
+  // @@@@@@@@@@@@!!!!!!!!!!!!!!!!!!!@@@@@@@@@@@@@@@@@@@@@
+  //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-	     
+	/// @brief This first function is used as a simple way to implement boundary conditions,
 	/// particularly no flux and periodic boundary conditions.
 	/// The buffered surface has NRows+2 rows and NCols+2 columns.
 	/// The integer b_type sets the type of boundary conditions, but currently there
 	/// is only one implementation: no flux across N and S; periodic for E and W. 
-	///----------------------------------------------------------------------------
+	/// @param b_type at the moment this is irrelevant since this just switches to default
+	/// @return creates a buffered LSDRasterModel
 	LSDRasterModel create_buffered_surf(int b_type);
 	
 	///----------------------------------------------------------------------------
-	/// This second version has periodic boundaries at E and W boundaries, and 
+	/// @brief This second version has periodic boundaries at E and W boundaries, and 
 	/// Neumann boundary conditions (prescribed elevations) at the N and S
 	/// boundaries.
-	///------------------------------------------------------------------------------
+	/// @param South_boundary_elevation the elevation at the southern boundary
+	/// @param North_boundary_elevation the elevation at the southern boundary
 	LSDRasterModel create_buffered_surf(float South_boundary_elevation,float North_boundary_elevation);
+
+	/// @brief Check whether current node is a base level node
+	/// @param row
+	/// @param column
+	/// @return true or false
+	/// @author JAJ
+	/// @date 01/01/2014
+	bool is_base_level(int i, int j);
+
+  /// @brief not sure what this does yet (SMM)
+	void interpret_boundary(short &dimension, bool &periodic, int &size);
 	
+	/// @brief Gets the maxium elevation along a boundary
+	/// @param boundary_number 0 == row 0   1 == col 0
+	/// @return the maximum elevation along the boundaty	
+	float find_max_boundary( int boundary_number );
+
 	///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	/// CALCULATE EROSION RATES
 	/// Simple function that creates an array with the erosion rates for a given 
@@ -384,9 +425,9 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @date 01/01/2014
 	void reach_steady_state( void );
 
-	/// -----------------------------------------------------------------------
-	/// Reset model - reset erosion values to 0 after a complete model run
-	/// -----------------------------------------------------------------------
+	/// @brief Reset model - reset erosion values to 0 after a complete model run
+	/// @author JAJ
+	/// @date 01/01/2014
 	void reset_model( void );
 
 	/// @brief Fastscape, implicit finite difference solver for stream power equations
@@ -400,11 +441,11 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @brief This function is more or less identical to fluvial_incision above, but it
   /// Returns a raster with the erosion rate and takes arguments rather
   /// than reading from data members
-  /// @param the time spacing
-  /// @param fluvial erosivity
-  /// @param area exponent
-  /// @param slope exponent
-  /// @param a vector of strings cotaining model boundary conditions
+  /// @param timestep the time spacing
+  /// @param K fluvial erosivity
+  /// @param m area exponent
+  /// @param n slope exponent
+  /// @param boundary a vector of strings cotaining model boundary conditions
   /// @return A raster containing the erosion rate from fluvial processes
   /// @author JAJ
   /// @date 01/01/2014
@@ -419,17 +460,7 @@ class LSDRasterModel: public LSDRasterSpectral
 	void wash_out( void );
 	
 
-  /// @brief Adds random noise to each pixel in range [min, max]
-	/// @param minium random addition
-	/// @param maximum random addition
-	/// @author JAJ
-	/// @date 01/01/2014
-	void random_surface_noise( float min, float max );
 
-  /// @brief Adds random noise to each pixel using the noise data member
-	/// @author SMM
-	/// @date 17/06/2014
-	void random_surface_noise();
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
@@ -523,19 +554,11 @@ class LSDRasterModel: public LSDRasterSpectral
 	Array2D <float> calculate_root( void );
 	Array2D <float> calculate_airy( void );
 
-	/// @brief Check whether current node is a base level node
-	/// @param row
-	/// @param column
-	/// @return true or false
-	/// @author JAJ
-	/// @date 01/01/2014
-	bool is_base_level(int i, int j);
-
-	void interpret_boundary(short &dimension, bool &periodic, int &size);
-
-	/// -------------------------------------------------------------------
-	/// Setter methods 
-	/// -------------------------------------------------------------------	
+	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// @~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@
+	// Setter methods
+  // @~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@  
+	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	void set_boundary_conditions(vector <string> bc) 	{ for (int i=0; i<4; ++i) {bc[i][0] = tolower(bc[i][0]);} boundary_conditions = bc; }
 	void set_timeStep( float dt )				{ timeStep = dt; }
 	void set_endTime( float time )				{ endTime = time; }
@@ -546,13 +569,26 @@ class LSDRasterModel: public LSDRasterSpectral
 	void set_K( float K )					{ this->K_fluv = K; }
 	void set_D( float D )					{ this->K_soil = D; }
 	void set_rigidity( float D )				{ this->rigidity = D; }
-	void set_m( float m )					{ this->m = m; }
+	
+  /// @brief sets the Area exponent in the SPIM
+  void set_m( float m )					{ this->m = m; }
+  
+  /// @brief sets the slope exponent in the SPIM
 	void set_n( float n )					{ this->n = n; }
+	
+  /// @brief sets the critical drainage area for channels	
 	void set_threshold_drainage( float area )		{ this->threshold_drainage = area; }
-	void set_S_c( float degrees )				{ S_c = tan(degrees*3.14159265358/180); }
+	
+  /// @brief Sets the critical slope
+  /// @param the critical slope IN DEGREES!!!
+  void set_S_c( float degrees )				{ S_c = tan(degrees*3.14159265358/180); }
+  
 	void set_periodicity( float time )			{ periodicity = time; }
 	void set_periodicity_2( float time )			{ periodicity_2 = time; }
-	void snap_periodicity( void );
+	  
+  /// @brief this snaps the periodicity to the timestep to ensure the max
+  /// and min values of a varying parameter are reached
+  void snap_periodicity( void );
 	void set_print_interval( int num_steps )		{ print_interval = num_steps; }
 	void set_K_mode( short mode )				{ K_mode = mode; }
 	void set_D_mode( short mode )				{ D_mode = mode; }
@@ -574,7 +610,6 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// -------------------------------------------------------------------
 	string get_name( void )					{ return name; }
 	
-
   /// @brief This function gets the fluvial erodability. It has a number of switches
   /// that determine how K is calcualted. 
   /// K_mode == 1 sine wave
@@ -595,10 +630,6 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @date 01/01/2014		
 	float get_D( void );
 	
-
-	float find_max_boundary( int boundary_number );
-	
-
 
 	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@

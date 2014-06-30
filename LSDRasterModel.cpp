@@ -433,7 +433,103 @@ void LSDRasterModel::initialize_model(string param_file)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// this function adds a random float to each pixel in the raster
+// Written sometime 2014 JAJ
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDRasterModel::random_surface_noise( float min, float max )
+{
 
+  cout << "Seeding the surface with random asperities of the amplitude " << max-min << endl;
+
+	// Seed random numbers
+	short dimension;
+	int size;
+	bool periodic;
+	interpret_boundary(dimension, periodic, size);
+	int start_i, end_i;
+	int start_j, end_j;
+
+	if (dimension == 0)
+	{
+		start_i = 1; end_i = NRows-2;
+		start_j = 0; end_j = NCols-1;
+	}
+	else
+	{
+		start_i = 0; end_i = NRows-1;
+		start_j = 1; end_j = NCols-2;
+	}
+
+	srand( static_cast <unsigned> (time(0)) );
+
+	// Add random float to each pixel
+	for (int i=start_i; i<=end_i; ++i)
+	{
+		for (int j=start_j; j<=end_j; ++j)
+		{
+			if (is_base_level(i, j))
+				continue;
+			RasterData[i][j] += static_cast <float> ( rand()) / static_cast <float> (RAND_MAX/(max-min)) + min;
+		}
+	}
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Similar to above, but uses the noise parameter stored in the object
+// SMM 17/6/2014
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDRasterModel::random_surface_noise()
+{
+  // check on the noise data member. It needs to be bigger than 10-6)
+  // if not set 1 mm as default
+  if (noise < 0.000001)
+  {
+    noise = 0.001;
+  }
+  
+  // we set the min and max between zero and noise. We don't go between
+  // -noise/2 and noise/2 just because we don't want negative elevations near
+  // a base level node. 
+  float min = 0;
+  float max = noise;
+  
+  cout << "Seeding the surface with random asperities of the amplitude " << noise << endl;
+
+	// Seed random numbers
+	short dimension;
+	int size;
+	bool periodic;
+	interpret_boundary(dimension, periodic, size);
+	int start_i, end_i;
+	int start_j, end_j;
+
+	if (dimension == 0)
+	{
+		start_i = 1; end_i = NRows-2;
+		start_j = 0; end_j = NCols-1;
+	}
+	else
+	{
+		start_i = 0; end_i = NRows-1;
+		start_j = 1; end_j = NCols-2;
+	}
+
+	srand( static_cast <unsigned> (time(0)) );
+
+	// Add random float to each pixel
+	for (int i=start_i; i<=end_i; ++i)
+	{
+		for (int j=start_j; j<=end_j; ++j)
+		{
+			if (is_base_level(i, j))
+				continue;
+			RasterData[i][j] += static_cast <float> ( rand()) / static_cast <float> (RAND_MAX/(max-min)) + min;
+		}
+	}
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function checks to see if the model has arrived at steady state
@@ -649,6 +745,9 @@ void LSDRasterModel::check_periodicity_switch( void )
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// If the periodic model cycles over 100 times this returns true
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 bool LSDRasterModel::check_if_hung( void )
 {
 	int num_cycles = (current_time) / periodicity;
@@ -677,12 +776,18 @@ bool LSDRasterModel::check_if_hung( void )
 			break;
 	};
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// @@@@@@@@@@@@!!!!!!!!!!!!!!!!!!!@@@@@@@@@@@@@@@@@@@@@
+// Deal with the BOUNDARY CONDITIONS
+// @@@@@@@@@@@@!!!!!!!!!!!!!!!!!!!@@@@@@@@@@@@@@@@@@@@@
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // BUFFER SURFACE
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // 2 functions to buffer the raster surface.
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This first function is used as a simple way to implement boundary conditions,
 // particularly no flux and periodic boundary conditions.
 // The buffered surface has NRows+2 rows and NCols+2 columns.
@@ -733,6 +838,8 @@ LSDRasterModel LSDRasterModel::create_buffered_surf(int b_type)
 // 			exit(1);
 // 	}
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 //------------------------------------------------------------------------------
 // This second version has periodic boundaries at E and W boundaries, and 
@@ -768,7 +875,100 @@ LSDRasterModel LSDRasterModel::create_buffered_surf(float South_boundary_elevati
 	LSDRasterModel BufferedSurface(NRows+2, NCols+2, (XMinimum-DataResolution), (YMinimum-DataResolution), DataResolution, NoDataValue, buff_surf);
 	return BufferedSurface;
 }
- 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function seems to just set some flags within the data members
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::interpret_boundary(short &dimension, bool &periodic, int &size)
+{
+	dimension = 0;
+	for (int i=0; i<4; ++i)
+	{
+		if (boundary_conditions[i][0] == 'b')
+			dimension = i % 2;
+	}
+	if (boundary_conditions[1-dimension][0] == 'p' || boundary_conditions[3-dimension][0] == 'p')
+	{
+		periodic = true;
+		if (not (boundary_conditions[1-dimension][0] && boundary_conditions[3-dimension][0] == 'p'))
+			if (not quiet) cout << "Warning! Entered one boundary as periodic, but not t'other! Assuming both are periodic." << endl;
+	}
+	if (dimension == 0)
+		size = (NRows-2)*NCols;
+	else
+		size = NRows*(NCols-2);
+
+	if (dimension != 0 && dimension != 1)
+	{
+		cerr << "Warning line " << __LINE__ << ": Variable 'dimension' should have a value of 0 or 1" << endl;
+		exit(1);
+	}
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function checks on nodes to see if they are base level nodes
+// This is generally used in the FASTSCAPE algorithm as it starts from base
+// level nodes and works its way up 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+bool LSDRasterModel::is_base_level( int i, int j )
+{
+  // note: this only checks for base level nodes along the edges of the raster
+	if (i == 0 && boundary_conditions[0][0] == 'b')
+		return true;
+	else if (j == 0 && boundary_conditions[3][0] == 'b')
+		return true;
+	else if (i == NRows-1 && boundary_conditions[2][0] == 'b')
+		return true;
+	else if (j == NCols-1 && boundary_conditions[1][0] == 'b')
+		return true;
+	else
+		return false;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This checks on a boundary to find the maximum elevation at that boundary
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDRasterModel::find_max_boundary(int boundary_number)
+{
+	float max_val = 0;
+	int i, j;
+	switch (boundary_number % 2)
+	{
+		case 0:
+			if (boundary_number == 0)
+				i = 0;
+			else
+				i = NRows - 1;
+			for (j=0; j<NCols; ++j)
+			{
+				if (RasterData[i][j] > max_val)
+					max_val = RasterData[i][j];
+			}
+			break;
+
+		case 1:
+			if (boundary_number == 1)
+				j = NCols - 1;
+			else
+				j = 0;
+
+			for (i=0; i<NRows; ++i)
+			{
+				if (RasterData[i][j] > max_val)
+					max_val = RasterData[i][j];
+			}
+			break;
+	}
+	return max_val;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
 ////------------------------------------------------------------------------------
 //// impose_channels: this imposes channels onto the landscape
 //// the row and column of the channels are stored in the c_rows and c_cols vectors
@@ -1949,31 +2149,7 @@ void LSDRasterModel::soil_diffusion_fv( void )
 			south, north);
 }
 
-void LSDRasterModel::interpret_boundary(short &dimension, bool &periodic, int &size)
-{
-	dimension = 0;
-	for (int i=0; i<4; ++i)
-	{
-		if (boundary_conditions[i][0] == 'b')
-			dimension = i % 2;
-	}
-	if (boundary_conditions[1-dimension][0] == 'p' || boundary_conditions[3-dimension][0] == 'p')
-	{
-		periodic = true;
-		if (not (boundary_conditions[1-dimension][0] && boundary_conditions[3-dimension][0] == 'p'))
-			if (not quiet) cout << "Warning! Entered one boundary as periodic, but not t'other! Assuming both are periodic." << endl;
-	}
-	if (dimension == 0)
-		size = (NRows-2)*NCols;
-	else
-		size = NRows*(NCols-2);
 
-	if (dimension != 0 && dimension != 1)
-	{
-		cerr << "Warning line " << __LINE__ << ": Variable 'dimension' should have a value of 0 or 1" << endl;
-		exit(1);
-	}
-}
 
 
 mtl::compressed2D<float> LSDRasterModel::generate_fd_matrix( int dimension, int size, bool periodic )
@@ -2785,101 +2961,6 @@ LSDRasterModel LSDRasterModel::run_isostatic_correction( void )
 }
 */
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// this function adds a random float to each pixel in the raster
-// Written sometime 2014 JAJ
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDRasterModel::random_surface_noise( float min, float max )
-{
-
-  cout << "Seeding the surface with random asperities of the amplitude " << max-min << endl;
-
-	// Seed random numbers
-	short dimension;
-	int size;
-	bool periodic;
-	interpret_boundary(dimension, periodic, size);
-	int start_i, end_i;
-	int start_j, end_j;
-
-	if (dimension == 0)
-	{
-		start_i = 1; end_i = NRows-2;
-		start_j = 0; end_j = NCols-1;
-	}
-	else
-	{
-		start_i = 0; end_i = NRows-1;
-		start_j = 1; end_j = NCols-2;
-	}
-
-	srand( static_cast <unsigned> (time(0)) );
-
-	// Add random float to each pixel
-	for (int i=start_i; i<=end_i; ++i)
-	{
-		for (int j=start_j; j<=end_j; ++j)
-		{
-			if (is_base_level(i, j))
-				continue;
-			RasterData[i][j] += static_cast <float> ( rand()) / static_cast <float> (RAND_MAX/(max-min)) + min;
-		}
-	}
-}
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// Similar to above, but uses the noise parameter stored in the object
-// SMM 17/6/2014
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDRasterModel::random_surface_noise()
-{
-  // check on the noise data member. It needs to be bigger than 10-6)
-  // if not set 1 mm as default
-  if (noise < 0.000001)
-  {
-    noise = 0.001;
-  }
-  
-  // we set the min and max between zero and noise. We don't go between
-  // -noise/2 and noise/2 just because we don't want negative elevations near
-  // a base level node. 
-  float min = 0;
-  float max = noise;
-  
-  cout << "Seeding the surface with random asperities of the amplitude " << noise << endl;
-
-	// Seed random numbers
-	short dimension;
-	int size;
-	bool periodic;
-	interpret_boundary(dimension, periodic, size);
-	int start_i, end_i;
-	int start_j, end_j;
-
-	if (dimension == 0)
-	{
-		start_i = 1; end_i = NRows-2;
-		start_j = 0; end_j = NCols-1;
-	}
-	else
-	{
-		start_i = 0; end_i = NRows-1;
-		start_j = 1; end_j = NCols-2;
-	}
-
-	srand( static_cast <unsigned> (time(0)) );
-
-	// Add random float to each pixel
-	for (int i=start_i; i<=end_i; ++i)
-	{
-		for (int j=start_j; j<=end_j; ++j)
-		{
-			if (is_base_level(i, j))
-				continue;
-			RasterData[i][j] += static_cast <float> ( rand()) / static_cast <float> (RAND_MAX/(max-min)) + min;
-		}
-	}
-}
 
 
 
@@ -3145,19 +3226,7 @@ void LSDRasterModel::write_root( string name, string ext )
 }
 
 
-bool LSDRasterModel::is_base_level( int i, int j )
-{
-	if (i == 0 && boundary_conditions[0][0] == 'b')
-		return true;
-	else if (j == 0 && boundary_conditions[3][0] == 'b')
-		return true;
-	else if (i == NRows-1 && boundary_conditions[2][0] == 'b')
-		return true;
-	else if (j == NCols-1 && boundary_conditions[1][0] == 'b')
-		return true;
-	else
-		return false;
-}
+
 
 void LSDRasterModel::print_parameters( void )
 {
@@ -4095,42 +4164,17 @@ float LSDRasterModel::stream_K_soil( void )
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-
-
-
-float LSDRasterModel::find_max_boundary(int boundary_number)
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This snaps the period to a timestep
+// its main use is to make sure the max and min paramter values are reached
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::snap_periodicity( void )
 {
-	float max_val = 0;
-	int i, j;
-	switch (boundary_number % 2)
-	{
-		case 0:
-			if (boundary_number == 0)
-				i = 0;
-			else
-				i = NRows - 1;
-			for (j=0; j<NCols; ++j)
-			{
-				if (RasterData[i][j] > max_val)
-					max_val = RasterData[i][j];
-			}
-			break;
-
-		case 1:
-			if (boundary_number == 1)
-				j = NCols - 1;
-			else
-				j = 0;
-
-			for (i=0; i<NRows; ++i)
-			{
-				if (RasterData[i][j] > max_val)
-					max_val = RasterData[i][j];
-			}
-			break;
-	}
-	return max_val;
+	periodicity = ceil(periodicity/timeStep) * timeStep;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 
 ////////////  DAVE'S STUFF  //////////////////////
 void LSDRasterModel::DAVE_wrapper( void )
@@ -4494,10 +4538,7 @@ void LSDRasterModel::DAVE_assemble_matrix(Array2D<float>& uplift_rate, Array2D<f
 
 
 
-void LSDRasterModel::snap_periodicity( void )
-{
-	periodicity = ceil(periodicity/timeStep) * timeStep;
-}
+
 
 #endif
 
