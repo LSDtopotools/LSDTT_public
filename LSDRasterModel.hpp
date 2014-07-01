@@ -226,7 +226,6 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @return creates a buffered LSDRasterModel
 	LSDRasterModel create_buffered_surf(int b_type);
 	
-	///----------------------------------------------------------------------------
 	/// @brief This second version has periodic boundaries at E and W boundaries, and 
 	/// Neumann boundary conditions (prescribed elevations) at the N and S
 	/// boundaries.
@@ -250,12 +249,22 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @return the maximum elevation along the boundaty	
 	float find_max_boundary( int boundary_number );
 
-	///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	/// CALCULATE EROSION RATES
-	/// Simple function that creates an array with the erosion rates for a given 
-	/// timestep
-	///----------------------------------------------------------------------------
+	/// @brief Simple function that creates an array with the erosion rates for a given 
+	/// timestep. It doesn't do anything with NoData cells, and for cells with data
+	/// it calls the get_erosion_at_cell member function
+	/// updated to catch instances when zeta_old has not been calculated
+	/// @return an array with the erosion rates
+	/// @author JAJ  updated SMM
+	/// @date 01/01/2014  updated 01/07/2014
 	Array2D<float> calculate_erosion_rates( void );
+	
+	/// @brief This calculates the erosion rate for individual cells. 
+	/// Currently it assumes that the zeta_old data member is from the previous
+	/// timestep
+	/// @param row the row of the cell
+	/// @param col the column of the cell
+	/// @author JAJ
+	/// @date 01/01/2014
 	float get_erosion_at_cell(int row, int col);
 
 
@@ -633,17 +642,51 @@ class LSDRasterModel: public LSDRasterSpectral
 	void set_report_name( string name )			{report_name = name;}
 	
 
-
+ 	// -------------------------------------------------------------------
+	//@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@
 	// Setters for turning on/off model components
+	//@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@
+	// -------------------------------------------------------------------	
+	/// @brief set the fluvial switch
+	/// @param on_status a boolean, true if on, false if off
+	/// @author JAJ
+	/// @ date 01/01/2014
 	void set_fluvial( bool on_status )			{ fluvial = on_status; }
+	
+	/// @brief set the hillslop switch
+	/// @param on_status a boolean, true if on, false if off
+	/// @author JAJ
+	/// @ date 01/01/2014	
 	void set_hillslope( bool on_status )			{ hillslope = on_status; }
+	
+	/// @brief set the isostacy switch
+	/// @param on_status a boolean, true if on, false if off
+	/// @author JAJ
+	/// @ date 01/01/2014		
 	void set_isostasy( bool on_status )			{ isostasy = on_status; }
+	
+	/// @brief set the flexure switch
+	/// @param on_status a boolean, true if on, false if off
+	/// @author JAJ
+	/// @ date 01/01/2014	
 	void set_flexure( bool on_status )			{ flexure = on_status; }
+	
+	/// @brief set the quiet switch
+	/// @param on_status a boolean, true if on, false if off
+	/// @author JAJ
+	/// @ date 01/01/2014		
 	void set_quiet( bool on_status )			{ quiet = on_status; }
 
-	/// -------------------------------------------------------------------
-	/// Getter methods 
-	/// -------------------------------------------------------------------
+	// -------------------------------------------------------------------
+	//@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@
+	// Getter methods 
+	//@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@
+	// -------------------------------------------------------------------
+	
+	/// @brief gets the name of the model run from the data members
+	/// @return the name of the model run
+	/// @author JAJ
+	/// @date 01/01/2014
 	string get_name( void )					{ return name; }
 	
   /// @brief This function gets the fluvial erodability. It has a number of switches
@@ -841,13 +884,18 @@ class LSDRasterModel: public LSDRasterSpectral
 	Array2D <float>		erosion_cycle_field;
 
 	// Parameters for periodic forcing components
-	short K_mode;			// Whether or not K is periodic
-	short D_mode;			// Whether or not D is periodic
-	short period_mode;		// Whether or not there is only one periodicity or two
-					// 1 (default) one periodicity used without
-					// 2 Two periodicities that switch at a given interval
-					// 3 Two periodicities used as a compound sin wave
-					// 4 Same as three, but weightings switch at a given interval (as in 2)
+	/// Whether or not K is periodic
+  short K_mode;			
+	
+	/// Whether or not D is periodic
+	short D_mode;			
+	
+  /// Whether or not there is only one periodicity or two
+  /// 1 (default) one periodicity used without
+  /// 2 Two periodicities that switch at a given interval
+  /// 3 Two periodicities used as a compound sin wave
+  /// 4 Same as three, but weightings switch at a given interval (as in 2)	
+	short period_mode;		
 
   /// Amplitude of K wave
 	float K_amplitude;	
@@ -873,7 +921,7 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// Similar to time delay (but for switching periodicities)
 	float switch_delay;		
 
-	// Components switches
+	// Component switches
 	/// True if fluvial erosion is on
 	bool			fluvial;
 	/// true if linear hillslope erosion is on

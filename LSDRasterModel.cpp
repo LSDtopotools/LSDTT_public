@@ -1061,25 +1061,42 @@ float LSDRasterModel::find_max_boundary(int boundary_number)
 //------------------------------------------------------------------------------
 Array2D<float> LSDRasterModel::calculate_erosion_rates( void )
 {
-	// Array2D<float> Zeta = RasterData.copy();	// This is just a waste of memory
+  // create the erosion array
 	Array2D<float> ErosionRateArray(NRows,NCols,NoDataValue);
-	for(int row=0; row<NRows; ++row)
-	{
-	  for(int col=0; col<NCols; ++col)
+  
+  // first check to see if zeta_old exists
+  if (zeta_old.dim1() != NRows || zeta_old.dim2() != NCols)
+  {
+    cout << "LSDRasterModel::calculate_erosion_rates, WARNING zeta_old doesn't exist" << endl;
+  }
+  else
+  {
+    // loop through all the raster data getting erosion rate using the
+    // get_erosion_at_cell data member
+	  for(int row=0; row<NRows; ++row)
 	  {
-	    if(RasterData[row][col]!=NoDataValue)
+	    for(int col=0; col<NCols; ++col)
 	    {
-		    ErosionRateArray[row][col] = get_erosion_at_cell(row, col);
-	    }
-	  }
-	}
+	      if(RasterData[row][col]!=NoDataValue)
+  	    {
+	  	    ErosionRateArray[row][col] = get_erosion_at_cell(row, col);
+  	    }
+  	  }
+  	}
+  }
 	return ErosionRateArray;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function does the actual calculation of the erosion rates cell by cell
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float LSDRasterModel::get_erosion_at_cell(int i, int j)
 {
-      return (zeta_old[i][j]-RasterData[i][j]+get_uplift_at_cell(i,j))/timeStep;
+  // note, this does not check to see if zeta_old exists
+  return (zeta_old[i][j]-RasterData[i][j]+get_uplift_at_cell(i,j))/timeStep;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // UPLIFT SURFACE
@@ -1197,18 +1214,20 @@ Array2D <float> LSDRasterModel::generate_uplift_field( int mode, float max_uplif
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
-// This gets uplift at a particular cell
+// This gets uplift (in distance, not a rate) at a particular cell
 // It is based on the uplift mode, 
 // which is
 // default == block uplift
 // 1 == tilt block
 // 2 == gaussian
 // 3 == quadratic 
+// The function is called by the generate_uplift_field  and uplift_surface 
+// member functions
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float LSDRasterModel::get_uplift_at_cell(int i, int j)
 {
 	float result;
-
 
   // don't do anything if this is a base level node
 	if (is_base_level(i,j))
