@@ -790,11 +790,52 @@ class LSDRasterModel: public LSDRasterSpectral
 						 vector<int>& vec_k_value_i_jp1, vector<int>& vec_k_value_i_jm1);
 	void DAVE_wrapper( void );
 
+  //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  // ~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~
+  // MUDDPILE 
+  // nonlinear hillslope solver
+  // Uses the boost library and mtl
+  // ~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~
+  //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  /// @brief this initiates some parameters for the assembler matrix
+  /// it is required before running any further calculations for the
+  /// nonlinear solver
+  /// @details The function sets data members inv_dx_S_c_squared, dx_front_term,
+  /// problem_dimension,  vec_k_value_i_j, vec_k_value_ip1_j,
+	/// vec_k_value_im1_j, vec_k_value_i_jp1 and vec_k_value_i_jm1
+	/// @author SMM
+	/// @date 01/07/2014
+  void MuddPILE_initiate_assembler_matrix( void );
 
+  /// @brief this initiates some parameters for the assembler matrix
+  /// it is required before running any further calculations for the
+  /// nonlinear solver
+  /// @details Does the work of calculating vec_k_value_i_j, vec_k_value_ip1_j,
+	/// vec_k_value_im1_j, vec_k_value_i_jp1 and vec_k_value_i_jm1.
+	/// These are the indices into the vectorized matrix of 
+  /// zeta values that are used in the assembly matrix
+  /// the number of elements in the k vectors is N_rows*N_cols
+	/// WARNING: This is only used for fixed NS boundaries and periodic EW boundaries
+	/// @author SMM
+	/// @date 01/07/2014
+  void MuddPILE_calculate_k_values_for_assembly_matrix( void );	
 
-
-
-
+  /// @brief this assembles the sparse matrix that must then be solved
+  /// to get the next iteration of the hillslope elevations
+  /// @details Note this is not a buffered surface, boundaries are
+  /// implemented at Row == 0 and Row = NRows-1 in the LSDModelRasters domain
+  /// @param uplift_rate a float array giving the uplift rate
+  /// @param fluvial_erosion_rate a float array giving the fluvial erosion rate
+  /// @param mtl_Assembly_matrix this is a sparce matrix that is reset within
+  /// this member function and passed to the solver
+  /// @param mtl_b_vector the b vector in the linear system M z = b where
+  /// M is the assembly matrix and z is the vector of surface elevations  
+	/// @author SMM
+	/// @date 01/07/2014
+  void MuddPILE_assemble_matrix(Array2D<float>& uplift_rate,
+						 Array2D<float>& fluvial_erosion_rate,
+						 mtl::compressed2D<float>& mtl_Assembly_matrix,
+						 mtl::dense_vector<float>& mtl_b_vector);
 		
 	protected:
 	// Various parameters used in throughout the model run
@@ -942,6 +983,36 @@ class LSDRasterModel: public LSDRasterSpectral
   /// Array for the current iteratation (used for implicit nonlinear solvers)
   Array2D<float> zeta_this_iter;
 
+  //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  // 
+  // Data members for the MuddPILE implicit solver
+  //
+  //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  /// precalculated 1/(dx^2*S_c^2)
+  float inv_dx_S_c_squared;
+  
+  /// precalculated dt*D_nl/(dx^2)
+  float dx_front_term;
+  
+  /// the problem dimension, used to determine the size of the solver matrix
+  int problem_dimension;
+
+  /// k value at i,j. This is an index into the vectorised elevation data. 
+  vector<int> vec_k_value_i_j;
+  
+  /// k value at i+1, j. This is an index into the vectorised elevation data.
+  vector<int> vec_k_value_ip1_j;
+  
+  /// k value at i-1, j. This is an index into the vectorised elevation data.
+	vector<int> vec_k_value_im1_j;
+	
+	/// k value at i, j+1. This is an index into the vectorised elevation data.
+	vector<int> vec_k_value_i_jp1;
+	
+	/// k value at i, j-1. This is an index into the vectorised elevation data.
+  vector<int> vec_k_value_i_jm1;  
+
+
 
 	private:
 	void create();
@@ -988,7 +1059,13 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @author JAJ
 	/// @date 01/01/2014
 	float stream_K_soil(void);
-	
+
+  /// @brief This is the main wrapper for running the landscape evolution model
+  /// The nature of the model run is set by various switches (e.g., fluvial, 
+  /// hillslope, nonlinear hillslope, etc) and paramters that are contained
+  /// within the object as data members. 
+  /// @author JAJ
+  /// @date 01/01/2014
 	void _run_components( void );
 };
 

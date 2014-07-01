@@ -4904,3 +4904,209 @@ void LSDRasterModel::DAVE_assemble_matrix(Array2D<float>& uplift_rate, Array2D<f
 // 	LSDRasterModel NonLinearHillslope(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
 //   return NonLinearHillslope;
 // }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This sets data members associated with the MuddPILE solution of 
+// the nonlinear hillslope equations
+// SMM, 01/07/2014
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::MuddPILE_initiate_assembler_matrix(void)
+{
+  float dx = DataResolution;
+  float D_nl = get_D();
+  
+  // update data_members
+	inv_dx_S_c_squared = 1/(dx*dx*S_c*S_c);
+	dx_front_term = timeStep*D_nl/(dx*dx);
+  problem_dimension = (NRows+2)*NCols;
+  
+  // this sets the vector k data members
+  MuddPILE_calculate_k_values_for_assembly_matrix();
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This caluculates the k values needed for the assemply matrix 
+// this function creates vectors of integers that refer to the k values, that is
+// the index into the vectorized matrix of zeta values, that is used in the assembly matrix
+// the number of elements in the k vectors is N_rows*N_cols
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::MuddPILE_calculate_k_values_for_assembly_matrix()											
+{
+  // SMM: need to double check if this is only true of periodic boundary
+  // conditions. It seems that it is the case. 
+	int N_elements_in_k_vec = NRows*NCols;
+
+	// initialise the vectors with empty values
+	vector<int> empty_vec(N_elements_in_k_vec,0);
+	vec_k_value_i_j   = empty_vec;
+	vec_k_value_ip1_j = empty_vec;
+	vec_k_value_im1_j = empty_vec;
+	vec_k_value_i_jp1 = empty_vec;
+	vec_k_value_i_jm1 = empty_vec;
+
+
+	// we loop through each node
+	// This is done without buffering. 
+	// Some of these entries will result in negative indices, but these
+	// will never be called since the boundaries are set by the 
+	// constant elevation boundary condition
+	int counter = 0;
+	for (int row = 0; row<NRows; row++)
+	{
+		for (int col = 0; col<NCols; col++)
+		{
+			vec_k_value_ip1_j[counter] = NCols*(row+1)+col;
+			vec_k_value_im1_j[counter] = NCols*(row-1)+col;
+			vec_k_value_i_j[counter] = NCols*(row)+col;
+
+			// logic for west periodic boundary
+			if(col == 0)
+			{
+				vec_k_value_i_jp1[counter] = NCols*(row)+col+1;
+				vec_k_value_i_jm1[counter] = NCols*(row)+NCols-1;
+			}
+			// logic for east periodic boundary
+			else if(col == NCols-1)
+			{
+				vec_k_value_i_jp1[counter] = NCols*(row);
+				vec_k_value_i_jm1[counter] = NCols*(row)+col-1;
+
+			}
+			// logic for rest of matrix
+			else
+			{
+				vec_k_value_i_jp1[counter] = NCols*(row)+col+1;
+				vec_k_value_i_jm1[counter] = NCols*(row)+col-1;
+			}
+
+			// increment counter
+			counter++;
+		}
+	}
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function assembles the solution matrix for nonlinear creep transport.
+// There is no buffereing of the surface: the constant elevation nodes are
+// in the zeta value within the domain of the DataArray
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::MuddPILE_assemble_matrix(Array2D<float>& uplift_rate,
+						 Array2D<float>& fluvial_erosion_rate,
+						 mtl::compressed2D<float>& mtl_Assembly_matrix,
+						 mtl::dense_vector<float>& mtl_b_vector)
+{
+	// the coefficients in the assembly matrix
+	float A,B,C,D;
+
+	// reset the assembly and b vector
+	mtl_Assembly_matrix = 0.0;
+	mtl_b_vector = 0.0;
+
+	// create the inserter. This is deleted when this function is exited
+	mtl::matrix::inserter< mtl::compressed2D<float> > ins(mtl_Assembly_matrix);
+
+	// first we assemble the boundary nodes. First the nodes in row 0
+	for (int k = 0; k<NCols; k++)
+	{
+		ins[k][k] << 1.0;
+		mtl_b_vector[k] =  zeta_last_iter[0][0];
+	}
+
+	// now assemble the north boundary
+	// in this implementation there is no buffered surface
+	int starting_north_boundary = (NRows-1)*(NCols);
+	int one_past_last_north_boundary = (NRows)*NCols;
+	for (int k = starting_north_boundary; k < one_past_last_north_boundary; k++)
+	{
+		ins[k][k] << 1.0;
+		mtl_b_vector[k] = zeta_last_iter[NRows-1][0];
+	}
+
+	// now assemble the rest
+	// we loop through each node
+	int counter = 0;
+	float b_value;
+	int k_value_i_j,k_value_ip1_j,k_value_im1_j,k_value_i_jp1,k_value_i_jm1;
+	
+	// this does not loop over row 0 or NRows-1 because these have a 
+	// fixed elevation, these are addressed earlier in the boundary nodes
+	for (int row = 1; row<NRows-1; row++)
+	{
+		for (int col = 0; col<NCols; col++)
+		{
+
+			b_value = zeta_last_timestep[row][col]+timeStep*uplift_rate[row][col]
+                                            -timeStep*fluvial_erosion_rate[row][col];
+
+			k_value_ip1_j = vec_k_value_ip1_j[counter];
+			k_value_im1_j = vec_k_value_im1_j[counter];
+			k_value_i_j   = vec_k_value_i_j[counter];
+			k_value_i_jp1 = vec_k_value_i_jp1[counter];
+			k_value_i_jm1 = vec_k_value_i_jm1[counter];
+
+			A =  dx_front_term/(1 -
+			        (zeta_last_iter[row+1][col]-zeta_last_iter[row][col])*
+			        (zeta_last_iter[row+1][col]-zeta_last_iter[row][col])*
+					inv_dx_S_c_squared);
+			B = dx_front_term/(1 -
+			        (zeta_last_iter[row][col]-zeta_last_iter[row-1][col])*
+			        (zeta_last_iter[row][col]-zeta_last_iter[row-1][col])*
+					inv_dx_S_c_squared);
+
+			// logic for west periodic boundary
+			if(col == 0)
+			{
+				C = dx_front_term/(1 -
+			           (zeta_last_iter[row][col+1]-zeta_last_iter[row][col])*
+			           (zeta_last_iter[row][col+1]-zeta_last_iter[row][col])*
+					   inv_dx_S_c_squared);
+				D = dx_front_term/(1 -
+			           (zeta_last_iter[row][col]-zeta_last_iter[row][NCols-1])*
+			           (zeta_last_iter[row][col]-zeta_last_iter[row][NCols-1])*
+					   inv_dx_S_c_squared);
+			}
+			// logic for east periodic boundary
+			else if(col == NCols-1)
+			{
+				C = dx_front_term/(1 -
+			           (zeta_last_iter[row][0]-zeta_last_iter[row][col])*
+			           (zeta_last_iter[row][0]-zeta_last_iter[row][col])*
+					   inv_dx_S_c_squared);
+
+				D = dx_front_term/(1 -
+			           (zeta_last_iter[row][col]-zeta_last_iter[row][col-1])*
+			           (zeta_last_iter[row][col]-zeta_last_iter[row][col-1])*
+					   inv_dx_S_c_squared);
+
+			}
+			// logic for rest of matrix
+			else
+			{
+				C = dx_front_term/(1 -
+			           (zeta_last_iter[row][col+1]-zeta_last_iter[row][col])*
+			           (zeta_last_iter[row][col+1]-zeta_last_iter[row][col])*
+					   inv_dx_S_c_squared);
+
+				D = dx_front_term/(1 -
+			           (zeta_last_iter[row][col]-zeta_last_iter[row][col-1])*
+			           (zeta_last_iter[row][col]-zeta_last_iter[row][col-1])*
+					   inv_dx_S_c_squared);
+
+			}
+
+			// place the values in the assembly matrix and the b vector
+			mtl_b_vector[k_value_i_j] = b_value;
+			ins[k_value_i_j][k_value_ip1_j] << -A;
+			ins[k_value_i_j][k_value_im1_j] << -B;
+			ins[k_value_i_j][k_value_i_jp1] << -C;
+			ins[k_value_i_j][k_value_i_jm1] << -D;
+			ins[k_value_i_j][k_value_i_j] << 1+A+B+C+D;
+
+			counter++;
+		}
+	}
+}
