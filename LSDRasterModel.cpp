@@ -532,6 +532,61 @@ void LSDRasterModel::random_surface_noise()
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// initializes a parabolic surface with elevations on the north and south edges at zero and
+// elevation in the middle of 'peak elevation'
+// the parabola also has random noise on it, with amplitude stored in
+// the data member 'noise'
+// The noise only adds to the elevations since we don't want elevations less
+// than zero. 
+// Default noise is 1mm
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::initialise_parabolic_surface(float peak_elev, float edge_offset)
+{
+  // check on the noise data member. It needs to be bigger than 10-6)
+  // if not set 1 mm as default
+  if (noise < 0.000001)
+  {
+    noise = 0.001;
+  }
+
+  // set up the length coordinate
+	float local_x;
+	float L = DataResolution*(NRows-1);
+	float row_elev;
+	float perturb;
+
+  // the seed for the random perturbation
+  long seed = time(NULL); 
+
+  // loop through getting the parabolic elevation at each row, and then
+  // writing across the entire domain
+	for(int row = 0; row < NRows; row++)
+	{
+
+		local_x = row*DataResolution;
+		row_elev = - 4.0*(local_x*local_x-local_x*L)*peak_elev / (L*L);
+
+		for (int col = 0; col < NCols; col++)
+		{
+		  
+		  // at N and S boundaries, the elevation is set to 0
+		  if( row == 0 || row == NRows-1)
+		  {
+         RasterData[row][col] = 0;
+      }
+      else      // elsewhere initiate with a parabola
+      {
+        perturb = (ran3(&seed))*noise;
+        RasterData[row][col] = row_elev + perturb + edge_offset;
+      }			
+		}
+	}
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This resizes and resets the model
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::resize_and_reset( int new_rows, int new_cols )
@@ -567,6 +622,7 @@ void LSDRasterModel::resize_and_reset( int new_rows, int new_cols )
   initial_steady_state = false;  
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 
 
@@ -5110,3 +5166,119 @@ void LSDRasterModel::MuddPILE_assemble_matrix(Array2D<float>& uplift_rate,
 		}
 	}
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// this function assembles the solution matrix
+// It used the mtl library for sparse matrices
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::MuddPILE_solve_assembler_matrix(Array2D<float>& uplift_rate,
+						 Array2D<float>& fluvial_erosion_rate)
+{
+
+	// reset the zeta array for this iteration
+	Array2D<float> empty_zeta(NRows,NCols,0.0);
+	zeta_this_iter = empty_zeta.copy();
+
+	// create a mtl matrix
+	// NOTE: you could probably save time by creating the mtl matrix and vector
+	// in main()
+	mtl::compressed2D<float> mtl_Assembly_matrix(problem_dimension, problem_dimension);
+	mtl::dense_vector<float> mtl_b_vector(problem_dimension,0.0);
+
+	// assemble the matrix
+	MuddPILE_assemble_matrix(uplift_rate, fluvial_erosion_rate,mtl_Assembly_matrix, 
+                           mtl_b_vector);
+
+  // some couts for bug checking
+	//std::cout << "matrix assembled!" << endl;
+	//std::ofstream assembly_out;
+	//assembly_out.open("assembly.data");
+	//assembly_out << mtl_Assembly_matrix << endl;
+	//assembly_out.close();
+
+	// now solve the mtl system
+	// Create an ILU(0) preconditioner
+	long time_start, time_end, time_diff;
+	time_start = time(NULL);
+	itl::pc::ilu_0< mtl::compressed2D<float> > P(mtl_Assembly_matrix);
+	mtl::dense_vector<float> mtl_zeta_solved_vector(problem_dimension);
+	itl::basic_iteration<float> iter(mtl_b_vector, 500, 1.e-8);
+	bicgstab(mtl_Assembly_matrix, mtl_zeta_solved_vector, mtl_b_vector, P, iter);
+	time_end = time(NULL);
+	time_diff = time_end-time_start;
+	//std::cout << "iter MTL bicg took: " << time_diff << endl;
+
+	// now reconstitute zeta
+	int counter = NCols;
+	for (int row = 0; row<NRows; row++)
+	{
+		for (int col = 0; col < NCols; col++)
+		{
+			zeta_this_iter[row][col] = mtl_zeta_solved_vector[counter];
+			counter++;
+		}
+	}
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// do a creep timestep
+// NOTE you need to run MuddPILE_initiate_assembler_matrix before you run this function
+// At the end of this iteration RasterData will have the new surface elevations
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::MuddPILE_nonlinear_creep_timestep(Array2D<float>& uplift_rate,
+						Array2D<float>& fluvial_erosion_rate,
+						float iteration_tolerance)
+{
+	// reset old zeta
+	zeta_last_timestep = RasterData.copy();
+
+  // reset the zeta_this_iter
+	zeta_this_iter = RasterData.copy();
+
+	// set up residual
+	float residual;
+	float N_nodes = float(NRows*NCols);
+	int iteration = 0;
+	int Max_iter = 100;
+	do
+	{
+		residual = 0.0;
+		
+		// this solves for zeta_this_iter
+		MuddPILE_solve_assembler_matrix(uplift_rate, fluvial_erosion_rate);
+
+		// check the residuals (basically this is the aveage elevation change between intermediate
+		// zeta values
+		for (int row = 0; row<NRows; row++)
+		{
+			for (int col = 0; col<NCols; col++)
+			{
+			  // in the first iteration, RasterData contains the elevations from the
+			  // previous timestep. In subsequent iterations it contains the last iteration
+				residual+= sqrt( (zeta_this_iter[row][col]-RasterData[row][col])*
+								 (zeta_this_iter[row][col]-RasterData[row][col]) );
+			}
+		}
+		residual = residual/N_nodes;
+
+		// reset the last iteration of surface elevations zeta
+		RasterData = zeta_this_iter.copy();
+		iteration++;
+
+		if (iteration%5 == 0)
+		{
+			std::cout << "iteration is: " << iteration << " and residual RMSE is: " << residual << endl;
+		}
+		if (iteration > Max_iter)
+		{
+			iteration_tolerance = iteration_tolerance*10;
+			iteration = 0;
+		}
+
+	} while (residual > iteration_tolerance);
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+

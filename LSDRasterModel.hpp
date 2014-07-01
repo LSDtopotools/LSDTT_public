@@ -139,6 +139,18 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @date 17/06/2014
 	void random_surface_noise();
 
+  /// @brief This resets the RasterData array to have a parabolic shape, 
+  /// with 0 elevation at the N and S boundaries. It also adds some random
+  /// noise to the topography. The amplitude of this noise is set by the 
+  /// data member 'noise'. The default noise is 1mm. 
+  /// @param peak_elev The peak elevation in metres. Is in the middle of the
+  /// model domain
+  /// @param edge_offset an offest from the edge elevation. You can have a little
+  /// cliff at the edge
+  /// @author SMM
+  /// @date 1/7/2014
+  void initialise_parabolic_surface(float peak_elev, float edge_offset);
+
   /// @brief This resizes the LSDRasterModel, resetting some flags in the process, 
   /// as well as setting many of the Array2D data members to be empty arrays
   /// The raster data in the end is a random surface (determined by the noise
@@ -836,6 +848,33 @@ class LSDRasterModel: public LSDRasterSpectral
 						 Array2D<float>& fluvial_erosion_rate,
 						 mtl::compressed2D<float>& mtl_Assembly_matrix,
 						 mtl::dense_vector<float>& mtl_b_vector);
+
+  /// @brief this function solves the assembled matrix for the nonlinear
+  /// hillslope sediment flux law. The implementation calls
+  /// MuddPILE_assemble_matrix. 
+  /// @details After solution the zeta_this_iter data member will be
+  /// updated
+  /// @param uplift_rate a float array of the same size as RasterData
+  /// that contains the uplift rate
+  /// @param fluvial_erosion_rate a float array of the same size as RasterData
+  /// @author SMM
+  /// @date 01/07/2014
+  void MuddPILE_solve_assembler_matrix(Array2D<float>& uplift_rate,
+						 Array2D<float>& fluvial_erosion_rate);
+
+  /// @brief This runs one timestep of the nonlinear sediment flux law
+  /// It replaces the data in RasterData
+  /// @param uplift_rate a float array of the same size as RasterData
+  /// that contains the uplift rate
+  /// @param fluvial_erosion_rate a float array of the same size as RasterData
+  /// @param iteration_tolerance the maximum change in surface elevation
+  /// between iterations
+  /// @author SMM
+  /// @date 01/07/2014
+  void MuddPILE_nonlinear_creep_timestep(Array2D<float>& uplift_rate,
+						Array2D<float>& fluvial_erosion_rate,
+						float iteration_tolerance);
+
 		
 	protected:
 	// Various parameters used in throughout the model run
