@@ -151,6 +151,15 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @date 1/7/2014
   void initialise_parabolic_surface(float peak_elev, float edge_offset);
 
+  /// @brief This initialises a surface with a hillslope
+  /// that is the solution to the nonlinear sediment flux equation.
+  /// It overwrites RasterData
+  /// @details The parameters D and S_c are stored as data members
+  /// @param U the uplift rate
+  /// @author SMM
+  /// @date 01/07/2014
+  void initialise_nonlinear_SS(float U);
+
   /// @brief This resizes the LSDRasterModel, resetting some flags in the process, 
   /// as well as setting many of the Array2D data members to be empty arrays
   /// The raster data in the end is a random surface (determined by the noise
@@ -637,8 +646,7 @@ class LSDRasterModel: public LSDRasterSpectral
 	void set_threshold_drainage( float area )		{ this->threshold_drainage = area; }
 	
   /// @brief Sets the critical slope
-  /// @param the critical slope IN DEGREES!!!
-  void set_S_c( float degrees )				{ S_c = tan(degrees*3.14159265358/180); }
+  void set_S_c( float Sc_new )				{ S_c = Sc_new; }
   
 	void set_periodicity( float time )			{ periodicity = time; }
 	void set_periodicity_2( float time )			{ periodicity_2 = time; }

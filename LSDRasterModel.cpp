@@ -188,7 +188,7 @@ void LSDRasterModel::default_parameters( void )
 	set_m( 0.5 );
 	set_n( 1 );
 	set_threshold_drainage( -99 );					// Not used if negative
-	set_S_c( 30 );							// 30 degrees 
+	set_S_c( 1.0 );							// 45 degrees, slope of 1 
 	set_print_interval( 10 );						// number of timesteps
 	set_steady_state_tolerance( 0.00001 );
 	current_time = 0;
@@ -255,8 +255,8 @@ void LSDRasterModel::add_path_to_names( string pathname)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //  Initialise_model
 //----------------------------------------------------------------------------
-void LSDRasterModel::initialize_model(
-	string& parameter_file, string& run_name, float& dt, float& EndTime, float& PrintInterval,
+void LSDRasterModel::initialize_model( string& parameter_file, string& run_name, 
+  float& dt, float& EndTime, float& PrintInterval,
 	float& k_w, float& b, float& m, float& n, float& K, float& ErosionThreshold, 
 	float& K_nl, float& S_c, float& UpliftRate, float& PrecipitationRate,
 	float& NorthBoundaryElevation, float& SouthBoundaryElevation,
@@ -584,6 +584,50 @@ void LSDRasterModel::initialise_parabolic_surface(float peak_elev, float edge_of
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// this creates a hillslope at steady state for the nonlinear sediment flux law
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::initialise_nonlinear_SS(float U)
+{
+
+  // check to make sure there are values for K_soil and S_c that are reasonable
+  if (K_soil > 1 || K_soil < 1e-6)
+  {
+    cout << "Warning, LSDRasterModel::initialise_nonlinear_SS, D does not appear to be set" << endl;
+    cout << "Defaulting to 0.0001 m^2/yr" << endl;
+    K_soil = 0.0002;
+  }
+  if (S_c > 1.5 || S_c  < 0.3)
+  {
+    cout << "Warning, LSDRasterModel::initialise_nonlinear_SS, S_c does not appear to be set" << endl;
+    cout << "Defaulting to 1 m^2/yr" << endl;
+    S_c = 1.0;
+  }  
+
+	float y,loc_y;
+ 	float max_y = (NRows-1)*DataResolution;
+
+ 	float term1 = K_soil*S_c*S_c*0.5/U;
+ 	float term2 = 2*U/(K_soil*S_c);
+
+	y = max_y;
+ 	float min_zeta = term1*(  log(0.5*(sqrt(1+ (y*term2)*(y*term2)) +1))
+ 	                       -sqrt(1+ (y*term2)*(y*term2))+1);
+
+	for (int row = 0; row<NRows; row++)
+	{
+		for (int col = 0; col<NCols; col++)
+		{
+			loc_y = DataResolution*float(row);
+			y = max_y-loc_y;
+			//y = dy*float(row);
+			RasterData[row][col] = term1*(  log(0.5*(sqrt(1+ (y*term2)*(y*term2)) +1))
+ 	                       -sqrt(1+ (y*term2)*(y*term2))+1) - min_zeta;
+ 	                     //-sqrt(1+ (y*term2)*(y*term2))+1);
+		}
+	}
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
