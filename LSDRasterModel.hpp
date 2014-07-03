@@ -646,15 +646,35 @@ class LSDRasterModel: public LSDRasterSpectral
 	// Setter methods
   // @~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@  
 	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	void set_boundary_conditions(vector <string> bc) 	{ for (int i=0; i<4; ++i) {bc[i][0] = tolower(bc[i][0]);} boundary_conditions = bc; }
-	void set_timeStep( float dt )				{ timeStep = dt; }
+	/// @brief this sets the boundary conditions
+  void set_boundary_conditions(vector <string> bc) 	{ for (int i=0; i<4; ++i) {bc[i][0] = tolower(bc[i][0]);} boundary_conditions = bc; }
+	
+  /// @brief set the time step
+  void set_timeStep( float dt )				{ timeStep = dt; }
+  
+  /// @brief set the ending time
 	void set_endTime( float time )				{ endTime = time; }
 	void set_num_runs( int num )				{ num_runs = num; }
+	
+	/// @brief overloaded function, set the array of uplift
 	void set_uplift( Array2D <float> uplift )		{ uplift_field = uplift; }
+	
+	/// @brief overloaded function, set the array of uplift, but using the uplift mode
 	void set_uplift( int mode, float max_rate )		{ uplift_field = generate_uplift_field( mode, max_rate ); this->max_uplift = max_rate; }
-	void set_steady_state_tolerance( float tol )		{ steady_state_tolerance = tol; }
+	
+  /// @brief set the tolerance for determining steady state
+  void set_steady_state_tolerance( float tol )		{ steady_state_tolerance = tol; }
+
+  /// @brief set the amplitude of random noise
+  void set_noise( float noise_amp) { this->noise = noise_amp; }
+
+	/// @brief sets fluvial erodibility
 	void set_K( float K )					{ this->K_fluv = K; }
+	
+	/// @brief sets the hillslope diffusivity
 	void set_D( float D )					{ this->K_soil = D; }
+	
+	/// @brief set the flexural rigidity
 	void set_rigidity( float D )				{ this->rigidity = D; }
 	
   /// @brief sets the Area exponent in the SPIM
@@ -669,17 +689,27 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @brief Sets the critical slope
   void set_S_c( float Sc_new )				{ S_c = Sc_new; }
   
+  /// @brief Sets the periodicity in years
 	void set_periodicity( float time )			{ periodicity = time; }
+	
+	/// @brief Sets the 2nd periodicity in years
 	void set_periodicity_2( float time )			{ periodicity_2 = time; }
 	  
   /// @brief this snaps the periodicity to the timestep to ensure the max
   /// and min values of a varying parameter are reached
   void snap_periodicity( void );
+  
+  /// set the print interval
 	void set_print_interval( int num_steps )		{ print_interval = num_steps; }
+	
 	void set_K_mode( short mode )				{ K_mode = mode; }
 	void set_D_mode( short mode )				{ D_mode = mode; }
 	void set_period_mode( short mode )			{ period_mode = mode; }
+	
+	/// @brief set the name of the model run
 	void set_name( string name )				{this->name = name;}
+	
+	/// @brief set the name of the report
 	void set_report_name( string name )			{report_name = name;}
 	
 
@@ -699,6 +729,12 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @author JAJ
 	/// @ date 01/01/2014	
 	void set_hillslope( bool on_status )			{ hillslope = on_status; }
+	
+	/// @brief set the hillslop linear or nonlinear switch
+	/// @param on_status a boolean, true if on, false if off
+	/// @author SMM
+	/// @ date 03/07/2014	
+	void set_nonlinear( bool on_status )			{ nonlinear = on_status; }
 	
 	/// @brief set the isostacy switch
 	/// @param on_status a boolean, true if on, false if off
@@ -764,14 +800,28 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @date 01/01/2014
 	void write_report( void );
 	
-	/// ------------------------------------------------------------------
-	/// Display list of parameters
-	/// ------------------------------------------------------------------
-	void print_parameters( void );	
+	/// @brief this prints parameters to screen
+	/// @author JAJ
+	/// @date 01/01/2014
+	void print_parameters( void );
+  
+	/// @brief this prints a file about what has happened over a cycle
+	/// @author JAJ
+	/// @date 01/01/2014  	
 	void cycle_report( float, float, float);
 
+  /// @brief this prints a final report (SMML not sure what is in the final report)
+	/// @author JAJ
+	/// @date 01/01/2014  
 	void final_report( void );
 
+  /// @brief This function prints a series of rasters. 
+  /// The rasters printed depend on the switches
+  /// print_elevation,	print_erosion, print_erosion_cycle, print_hillshade;		
+	/// and print_slope_area
+  /// The filename inculdes the frame_num		
+	/// @author JAJ
+	/// @date 01/01/2014  
 	void print_rasters( int frame_num );
 
 	/// @brief Print slope area data
@@ -904,6 +954,12 @@ class LSDRasterModel: public LSDRasterSpectral
 						Array2D<float>& fluvial_erosion_rate,
 						float iteration_tolerance);
 
+  /// @brief This version of the MuddPILE nonlinear solver does not include
+  /// uplift and uses a default iteration tolerance of 1e-7. It is built 
+  /// to integrate with JAJ's 'run_components' module
+  /// @author SMM
+  /// @date 03/07/2014 
+  void MuddPILE_nl_soil_diffusion_nouplift();
 		
 	protected:
 	// Various parameters used in throughout the model run
@@ -957,39 +1013,90 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// 2 == run a number of cycles
 	/// 3 == run to steady state, then run some cycles. 
 	short			endTime_mode;
-	
+
+  /// the number of runs, used to do repeated cycles from the same steady state	
 	int			num_runs;
-	Array2D <float> 	uplift_field;			// Field of uplift for each cell
+	
+	/// The uplift field, can be used as absolute uplift or uplift rate, depending
+	/// on the calling member function
+	Array2D <float> 	uplift_field;
+  
+  /// The mode of uplift. Options are:
+  /// default == block uplift
+  /// 1 == tilt block
+  /// 2 == gaussian
+  /// 3 == quadratic 			
 	int 			uplift_mode;
+	
+	/// the maximum uplift rate
 	float			max_uplift;
+	
+	/// an iteration tolerance for detemring if a model run is at steady state. 
 	float			steady_state_tolerance;
 	float			steady_state_limit;
-	float 			m, n;				// Dimensionless exponents for SPL
-	float			K_fluv, K_soil;			// Fluvial and soil coefficients
-	float			threshold_drainage;		// Drainage area above which soil will be flushed from the system
-	float			S_c;				// Critical slope (for non-linear soil creep)
-	float			rigidity;			// Flexural rigidity of plate
-	int			print_interval;			// Interval at which output is written
-	bool			print_elevation;		
-	bool			print_erosion;			// Whether or not to print the erosion field at each print interval
-	bool			print_erosion_cycle;
-	bool			print_hillshade;		// Whether or not to print a hillshade raster instead of topographic	
-	bool			print_slope_area;		// Whether or not to produce a slope area report 
-	Array2D <float>		root_depth;			// Depth of topographic root
-	//	Measures of landscape response
+	
+	/// Area exponent from the stream power law
+	float 		m;
+	
+	/// Slope exponent for the stream power law
+  float     n;		
+  
+  /// Fluvial erodability coefficient (units depend on m and n)			
+  float			K_fluv;
+  
+  /// Soil transport coefficient (usually in m^2/yr)
+  float     K_soil;			
+  
+  /// Drainage area above which soil will be flushed from the system in m^2
+	float			threshold_drainage;	
+  
+  /// Critical slope (for non-linear soil creep), dimensionless	
+	float			S_c;	
+  
+  /// Flexural rigidity of plate (SMM: dimensions?)			
+	float			rigidity;			
+	
+  /// Depth to topographic root, used in isostatic calculations
+  Array2D <float>		root_depth;			// Depth of topographic root
+  	
+  //	Measures of landscape response 
+  /// the erosion (distance) 
 	float			erosion;
+	
+	/// the erosion (distance) over the last timestep
 	float			erosion_last_step;
+	
+	/// the erosion over cycles, a vector since it stores sucessive cycles
 	vector<float>		erosion_cycle_record;
-	float			total_erosion;			// Offset from uplift from each cell
+	
+	/// Total erosion, calcualted as Offset from uplift from each cell
+	float			total_erosion;
+  
+  /// minimum erosion distance, used in cyclic calculations
 	float			min_erosion;
-	float 			max_erosion;
-	float 			response;			// maximum response over a single run
-	float			total_response;			// response over all model runs (to be divided by num_runs)
+	
+	/// minimum erosion distance, used in cyclic calculations
+	float 		max_erosion;
+	
+	/// maximum response over a single run (SMM: no idea if this is a length or what)
+	float 		response;	
+  
+  /// response over all model runs (to be divided by num_runs)		
+	float			total_response;	
+  
+  /// This sets the amplitude of random noise, used in model initialisation		
 	float			noise;
+	
+	/// SMM: not sure what this does	
 	float			report_delay;
 
+  /// the elevations from the last timestep
 	Array2D <float>		zeta_old;
+	
+	/// the elevations at steady state
 	Array2D <float>		steady_state_data;
+	
+	/// a field calculated over an erosion cycle
 	Array2D <float>		erosion_cycle_field;
 
 	// Parameters for periodic forcing components
@@ -1041,6 +1148,25 @@ class LSDRasterModel: public LSDRasterSpectral
 	bool			isostasy;
 	/// True if // Whether flexural isostasy will be used  
 	bool			flexure;			
+
+  // Printing Utilities
+  /// interval over which output is written. Just based on number of timesteps
+  int			  print_interval;			// Interval at which output is written
+  
+  /// Switch for printing elevation, if true elevation is printed to a raster
+	bool			print_elevation;		
+	
+	/// Switch for printing erosion, if true elevation is printed to a raster
+	bool			print_erosion;			
+	
+	/// Switch for printing erosion over a cycle, if true erosion is printed to a raster
+	bool			print_erosion_cycle;
+	
+	/// Switch for printing the hillshade, if true hillshade is printed to a raster
+	bool			print_hillshade;		
+	
+	/// Switch for printing S-A data, if true S-A data is printed 
+	bool			print_slope_area;		
 
   /// This array keeps track of the elevation on the previous iteration
   Array2D<float> zeta_last_iter;

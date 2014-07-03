@@ -623,7 +623,6 @@ void LSDRasterModel::initialise_nonlinear_SS(float U)
  	float inside_sqrt;
  	float sqrt_term;
  	float log_term;
- 	float elev;
 
   vector<float> elevs;
   for (int row = 0; row<NRows; row++)
@@ -1321,6 +1320,7 @@ LSDRasterModel LSDRasterModel::uplift_surface(Array2D<float> UpliftRate, float d
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This uplift tool uses the get_uplift_at_cell member function to modify 
 // directly the elevation raster. 
+// Base level nodes are not uplifted
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::uplift_surface( void )
 {	
@@ -1328,7 +1328,8 @@ void LSDRasterModel::uplift_surface( void )
 	{
 		for(int col=0; col<NCols; ++col)
 		{
-			if (is_base_level(row, col))
+			// if it is a base level node, don't uplift
+      if (is_base_level(row, col))
 				continue;
 			if(get_data_element(row,col)!=NoDataValue) 
 			{
@@ -2162,7 +2163,8 @@ void LSDRasterModel::run_components( void )
 		if (hillslope)
 		{
 			if (nonlinear)
-				soil_diffusion_fv_nonlinear();
+				//soil_diffusion_fv_nonlinear();
+				MuddPILE_nl_soil_diffusion_nouplift();
 			else
 				soil_diffusion_fd_linear();
 		}
@@ -2201,8 +2203,10 @@ void LSDRasterModel::run_components( void )
 		current_time += timeStep;
 		//cout << "current_time is: " << current_time << endl;
 
+    //cout << "Print is " << print << " and print interval is: " << print_interval << endl;
 		if ( print_interval > 0 && (print % print_interval) == 0)	// write at every print interval
 		{
+		  //cout << "Printing frame " << frame << " at time " << current_time << " years" << endl;
 			print_rasters( frame );
 			++frame;
 		}
@@ -2216,6 +2220,11 @@ void LSDRasterModel::run_components( void )
 	
 	if ( print_interval == 0 || (print_interval > 0 && ((print-1) % print_interval) != 0))
 	{
+	  // if the print interval is 0, we set the frame to zero
+	  if (print_interval == 0)
+	  {
+      frame = 0;
+    }
 		//if (not quiet) cout << current_time << ": " << endl;
 		print_rasters( frame );
 	}
@@ -2369,14 +2378,15 @@ void LSDRasterModel::reach_steady_state( void )
   // run components
   run_components();
   
-  // switch back to the original endTime_mode
-  endTime_mode =  endTimeModeSwap;
-  
+
 	if (not quiet) 
   {
     cout << "Finished producing cyclic steady" << endl;
 	}  
 
+  // switch back to the original endTime_mode
+  endTime_mode =  endTimeModeSwap;
+  
 	// Now run with static forcing
 	K_mode = K_mode_swap;
 	D_mode = D_mode_swap;
@@ -2386,8 +2396,10 @@ void LSDRasterModel::reach_steady_state( void )
 	initial_steady_state = false;
 	current_time = 0;
 
-	if (not quiet) cout << "Producing steady state elevation of base level forcing" << endl;
+	if (not quiet) cout << "Did cyclic steady, now running at constant forcing for a while." << endl;
+	cout << "Timestep is" << timeStep << endl;
 	run_components();
+	if (not quiet) cout << "Forced from constant steady state, exiting steady state routine." << endl;
 
 	endTime = endTime_swap;
 	periodicity = period_swap;
@@ -3525,7 +3537,9 @@ void LSDRasterModel::write_root( string name, string ext )
 
 
 
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prints parameters to screen
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::print_parameters( void )
 {
 	if (quiet)
@@ -3588,6 +3602,7 @@ void LSDRasterModel::print_parameters( void )
 	cout << "\n========================================================" << endl;
 	cout << "\n" << endl;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This method calculates some features of the landscape at set times. The 
@@ -3840,7 +3855,8 @@ void LSDRasterModel::cycle_report( float elev, float relief0, float relief10)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-//
+//   Some overall details about runs through periods, used by JAJ's periodicity
+//  routines
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::final_report( void )
 {
@@ -3862,7 +3878,10 @@ void LSDRasterModel::final_report( void )
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This routine prints rasters according to some internal model switched
+// Used by JAJ's code so DO NOT MODIFY
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::print_rasters( int frame )
 {
 	cout << endl;
@@ -5447,6 +5466,14 @@ void LSDRasterModel::MuddPILE_nonlinear_creep_timestep(Array2D<float>& uplift_ra
 						Array2D<float>& fluvial_erosion_rate,
 						float iteration_tolerance)
 {
+  
+  // check to see if the model has been initiated
+  if ( int(vec_k_value_i_j.size()) != (NRows*NCols) )
+  {
+    cout << "LSDRasterModel::MuddPILE creep, initialising k vectors for 1st time" << endl;
+    MuddPILE_initiate_assembler_matrix();
+  } 
+
 	// reset old zeta
 	zeta_last_timestep = RasterData.copy();
 
@@ -5498,3 +5525,27 @@ void LSDRasterModel::MuddPILE_nonlinear_creep_timestep(Array2D<float>& uplift_ra
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Run the soil diffusion routine, but with a set tolerance
+// and no fluvial or tectonic uplift. The end result is an updated RasterData
+// surface. 
+//
+// This particular version is set to run within JAJ's 'run_components' 
+// module
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::MuddPILE_nl_soil_diffusion_nouplift()
+{
+  
+  // set the fluvial and uplift rasters to zero
+  // I don't use the same raster for both since I'm a bir worried about
+  // passing the same reference to a data oject for two different computations
+  // in the nonlinear_creep_timestep module
+  Array2D<float> zero_uplift(NRows,NCols,0.0);
+  Array2D<float> zero_fluvial(NRows,NCols,0.0);
+  
+  float default_tolerance = 1e-6;
+  
+  // run a timestep 
+  MuddPILE_nonlinear_creep_timestep(zero_uplift, zero_fluvial,default_tolerance);
+  
+}

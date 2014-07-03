@@ -47,6 +47,9 @@ int main(int argc, char *argv[])
     string full_param_name = pathname+param_name;
     cout << "The full path is: " << full_param_name << endl;
     mod.initialize_model(full_param_name);
+    
+    // add the path to the default filenames
+		mod.add_path_to_names( pathname);
   }
 	else
 	{
@@ -54,6 +57,16 @@ int main(int argc, char *argv[])
 		cout << "No parameter file supplied" << endl;
 		cout << "Creating a template parameter file (template_param)" << endl;
 		cout << "###################################################" << endl;
+    // first change the default dimensions
+    int newrows = 150;
+    int newcols = 300;
+    mod.resize_and_reset(newrows,newcols);
+
+    // set the end time, print interval, etc
+    mod.set_K(0.0001);
+    mod.set_endTime(50000);  
+    mod.set_print_interval(25);
+
 		string template_param = "template_param.param";
 		string full_template_name = pathname+template_param;		
 		mod.make_template_param_file(full_template_name);
@@ -96,13 +109,15 @@ int main(int argc, char *argv[])
 		system(ss.str().c_str());
 	}
 
+  // initiate a parabolic surface  
+  float max_elev = 0.2;
+  float new_noise = max_elev/3;
+  mod.set_noise(new_noise);
+  float edge_offset = 0.0;
+  mod.initialise_parabolic_surface(max_elev, edge_offset);
+   
+  // print parameters to screen
 	mod.print_parameters();
-
-  // run the model to steady state. 
-  // first change the default dimensions
-  int newrows = 300;
-  int newcols = 150;
-  mod.resize_and_reset(newrows,newcols);
 
   // and turn the hillslopes off, just to save some time
   mod.set_hillslope(false);
@@ -110,9 +125,13 @@ int main(int argc, char *argv[])
   // now run to steady state
 	mod.reach_steady_state();
 	
+  // turn the hillslopes back on again
+  mod.set_hillslope(true);
+  mod.set_nonlinear(true);
+
 	//mod.run_model_from_steady_state();
-	//mod.run_model();
-	cout << "\a";
+	mod.run_model();
+	//cout << "\a";
 	//mod.slope_area();
 	//mod.show();
 	//ss.str("");
