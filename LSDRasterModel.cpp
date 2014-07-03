@@ -586,6 +586,7 @@ void LSDRasterModel::initialise_parabolic_surface(float peak_elev, float edge_of
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this creates a hillslope at steady state for the nonlinear sediment flux law
+// Solution from Roering et al., (EPSL, 2007)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::initialise_nonlinear_SS(float U)
 {
@@ -604,26 +605,46 @@ void LSDRasterModel::initialise_nonlinear_SS(float U)
     S_c = 1.0;
   }  
 
-	float y,loc_y;
- 	float max_y = (NRows-1)*DataResolution;
+  float loc_y;
+ 	float rho_ratio = 1;                    // need to double check if density conversion
+ 	                                        // is factored into the nonlinear solver (SMM, 2/7/2014) 	
+ 	float hillslope_length = (NRows-1)*DataResolution;
+ 	float divide_loc = hillslope_length*0.5;
 
- 	float term1 = K_soil*S_c*S_c*0.5/U;
- 	float term2 = 2*U/(K_soil*S_c);
+  cout << "LSDRasterModel::initialise_nonlinear_SS, D_nl is: " 
+       << K_soil << " and S_c is: " << S_c << endl;
 
-	y = max_y;
- 	float min_zeta = term1*(  log(0.5*(sqrt(1+ (y*term2)*(y*term2)) +1))
- 	                       -sqrt(1+ (y*term2)*(y*term2))+1);
+ 	cout << "Hillslope length is: " << hillslope_length 
+       << " and the divide location is: " << divide_loc << endl;
+
+  // some precalculations to save time
+  float beta = rho_ratio*U;
+ 	float leading_term = -S_c*S_c/(2*beta);
+ 	float inside_sqrt;
+ 	float sqrt_term;
+ 	float log_term;
+ 	float elev;
+
+  vector<float> elevs;
+  for (int row = 0; row<NRows; row++)
+  {
+		// get the position along the slope
+		loc_y = DataResolution*float(row);
+		inside_sqrt = K_soil*K_soil+ (4*(loc_y-divide_loc)*(loc_y-divide_loc)*beta*beta/(S_c*S_c)); 
+		sqrt_term = sqrt(inside_sqrt);
+		log_term = log(((sqrt_term+K_soil)*S_c)/(2*beta) ); 
+    elevs.push_back(leading_term*(sqrt_term-K_soil*log_term));  
+  
+    cout << "Location is " << loc_y << " and elevation is " << elevs[row]-elevs[0] << endl;
+  }
+
 
 	for (int row = 0; row<NRows; row++)
 	{
 		for (int col = 0; col<NCols; col++)
 		{
-			loc_y = DataResolution*float(row);
-			y = max_y-loc_y;
-			//y = dy*float(row);
-			RasterData[row][col] = term1*(  log(0.5*(sqrt(1+ (y*term2)*(y*term2)) +1))
- 	                       -sqrt(1+ (y*term2)*(y*term2))+1) - min_zeta;
- 	                     //-sqrt(1+ (y*term2)*(y*term2))+1);
+
+			RasterData[row][col] = elevs[row]-elevs[0];
 		}
 	}
 }
@@ -668,7 +689,45 @@ void LSDRasterModel::resize_and_reset( int new_rows, int new_cols )
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This resizes and resets the model
+// This overloaded version also resets the data resolution
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::resize_and_reset( int new_rows, int new_cols, float new_resolution )
+{
+  // set up some empty arrays
+  Array2D<float> empty_array;
+  Array2D<float> empty_array_sized(new_rows,new_cols,0.0);
 
+  // set most of the arrays as data members to empty arrays  
+  uplift_field = empty_array.copy();
+  root_depth =  empty_array.copy();  
+	zeta_old = empty_array.copy();
+	steady_state_data = empty_array.copy();
+	erosion_cycle_field = empty_array.copy(); 
+  zeta_last_iter = empty_array.copy(); 
+  zeta_last_timestep = empty_array.copy(); 
+  zeta_this_iter = empty_array.copy(); 
+
+  // reset the size of the RasterData
+  RasterData = empty_array_sized.copy();
+ 
+  // reset the rows and columns 
+  NRows = new_rows;
+  NCols = new_cols;
+  
+  DataResolution = new_resolution;
+  
+  // now generate a random surface
+  random_surface_noise();
+  
+  // reset flags and total erosion rates
+	total_erosion = 0;
+	total_response = 0;
+  steady_state = false;
+  initial_steady_state = false;  
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@
@@ -1295,10 +1354,13 @@ float LSDRasterModel::get_max_uplift( void )
 // This returns an uplift field in the form of an array
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-Array2D <float> LSDRasterModel::generate_uplift_field( int mode, float max_uplift )
+Array2D <float> LSDRasterModel::generate_uplift_field( int mode, float maximum_uplift )
 {
 	// Generates an uplift field from some default functions
 	// Maybe worth splitting into different methods?
+	uplift_mode = mode;
+	max_uplift = maximum_uplift;
+   
 	Array2D <float> uplift(NRows, NCols);
 
 	for (int i=0; i<NRows; ++i)
@@ -1368,6 +1430,18 @@ float LSDRasterModel::get_uplift_at_cell(int i, int j)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// set_uplift_field_to_block_uplift
+// This function sets the uplift_field data member to block uplift at a given
+// uplift rate
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::set_uplift_field_to_block_uplift(float uplift_rate)
+{
+  Array2D<float> uplift_rate_field(NRows,NCols,uplift_rate);
+  uplift_field = uplift_rate_field.copy();
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // CREATE PRECIPITION FLUX ARRAY
@@ -5001,7 +5075,8 @@ void LSDRasterModel::DAVE_assemble_matrix(Array2D<float>& uplift_rate, Array2D<f
 //  	                       -sqrt(1+ (y*term2)*(y*term2))+1) - min_zeta;
 // 		}
 // 	}
-// 	LSDRasterModel NonLinearHillslope(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
+// 	LSDRasterModel NonLinearHillslope(NRows, NCols, XMinimum, YMinimum, DataResolution,
+//                                          NoDataValue, zeta);
 //   return NonLinearHillslope;
 // }
 
@@ -5015,22 +5090,34 @@ void LSDRasterModel::MuddPILE_initiate_assembler_matrix(void)
   float dx = DataResolution;
   float D_nl = get_D();
   
+  cout << "LSDRasterModel::MuddPILE_initiate_assembler_matrix, D_nl is: " 
+       << D_nl << " and S_c is: " << S_c << endl;
+  
   // update data_members
 	inv_dx_S_c_squared = 1/(dx*dx*S_c*S_c);
 	dx_front_term = timeStep*D_nl/(dx*dx);
-  problem_dimension = (NRows+2)*NCols;
-  
+  problem_dimension = NRows*NCols;
+
+  cout << "MuddPILE_initiate_assembler_matrix, calling k values" << endl;  
   // this sets the vector k data members
   MuddPILE_calculate_k_values_for_assembly_matrix();
-
+  
+  cout << "LSDRasterModel::MuddPILE_initiate_assembler_matrix(void) initiated! " << endl;
+  
+  // check that zeta_last_iter has been initiated
+  //if(zeta_last_iter.dim1() != NRows || zeta_last_iter.dim2() != NCols)
+  //{
+  //  cout << "LSDRasterModel::MuddPILE_initiate_assembler_matrix, Warning " << endl
+  //       << "zeta_last_iter doesn't exist" << endl;
+  // }
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// This caluculates the k values needed for the assemply matrix 
+// This calculates the k values needed for the assembly matrix 
 // this function creates vectors of integers that refer to the k values, that is
-// the index into the vectorized matrix of zeta values, that is used in the assembly matrix
+// the index into the vectorised matrix of zeta values, that is used in the assembly matrix
 // the number of elements in the k vectors is N_rows*N_cols
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::MuddPILE_calculate_k_values_for_assembly_matrix()											
@@ -5047,6 +5134,7 @@ void LSDRasterModel::MuddPILE_calculate_k_values_for_assembly_matrix()
 	vec_k_value_i_jp1 = empty_vec;
 	vec_k_value_i_jm1 = empty_vec;
 
+	//cout << "MuddPILE calculate k vecs, n elements: " << N_elements_in_k_vec << endl;
 
 	// we loop through each node
 	// This is done without buffering. 
@@ -5058,6 +5146,14 @@ void LSDRasterModel::MuddPILE_calculate_k_values_for_assembly_matrix()
 	{
 		for (int col = 0; col<NCols; col++)
 		{
+		  // bounds checking
+      if (counter > N_elements_in_k_vec)
+		  {
+         cout << "DANGER, LSDRasterModel::MuddPILE_calculate_k_values_for_assembly_matrix" << endl
+              << "counter is out of bounds!" << endl;
+      } 
+      
+        
 			vec_k_value_ip1_j[counter] = NCols*(row+1)+col;
 			vec_k_value_im1_j[counter] = NCols*(row-1)+col;
 			vec_k_value_i_j[counter] = NCols*(row)+col;
@@ -5099,7 +5195,10 @@ void LSDRasterModel::MuddPILE_assemble_matrix(Array2D<float>& uplift_rate,
 						 mtl::compressed2D<float>& mtl_Assembly_matrix,
 						 mtl::dense_vector<float>& mtl_b_vector)
 {
-	// the coefficients in the assembly matrix
+  // get the number of elements in the k vec
+  int n_k_elements = vec_k_value_i_j.size();
+
+        // the coefficients in the assembly matrix
 	float A,B,C,D;
 
 	// reset the assembly and b vector
@@ -5110,34 +5209,49 @@ void LSDRasterModel::MuddPILE_assemble_matrix(Array2D<float>& uplift_rate,
 	mtl::matrix::inserter< mtl::compressed2D<float> > ins(mtl_Assembly_matrix);
 
 	// first we assemble the boundary nodes. First the nodes in row 0
+  //cout << "Line 5180, getting south boundary" << endl;
 	for (int k = 0; k<NCols; k++)
 	{
+	  //cout << "k is " << k << endl;
+	  
 		ins[k][k] << 1.0;
-		mtl_b_vector[k] =  zeta_last_iter[0][0];
+		//cout << "inserted boundary, now doing b vec" << endl;
+		//cout << "b vec this k" << mtl_b_vector[k] << endl;
+		//cout << "zeta_last_iter[0][0] " << RasterData[0][0] << endl;
+    mtl_b_vector[k] =  RasterData[0][0];
+    //cout << "did b vec" << endl;
 	}
 
 	// now assemble the north boundary
 	// in this implementation there is no buffered surface
 	int starting_north_boundary = (NRows-1)*(NCols);
 	int one_past_last_north_boundary = (NRows)*NCols;
+  //cout << "Line 5190, getting N boundary!" << endl;
 	for (int k = starting_north_boundary; k < one_past_last_north_boundary; k++)
 	{
 		ins[k][k] << 1.0;
-		mtl_b_vector[k] = zeta_last_iter[NRows-1][0];
+		mtl_b_vector[k] = RasterData[NRows-1][0];
 	}
 
 	// now assemble the rest
 	// we loop through each node
-	int counter = 0;
+	int counter = NCols;       // the counter starts at NCols because the assumbly
+	                           // matrix starts at the first row. 
 	float b_value;
 	int k_value_i_j,k_value_ip1_j,k_value_im1_j,k_value_i_jp1,k_value_i_jm1;
 	
 	// this does not loop over row 0 or NRows-1 because these have a 
 	// fixed elevation, these are addressed earlier in the boundary nodes
+  //cout << "Line 5204, assembling!!!" << endl;
 	for (int row = 1; row<NRows-1; row++)
 	{
 		for (int col = 0; col<NCols; col++)
 		{
+		  // bounds check
+      if (counter >= n_k_elements)
+		  {
+        cout << "Danger!!!, counter: " << counter << " n_k: " << n_k_elements << endl;
+      } 
 
 			b_value = zeta_last_timestep[row][col]+timeStep*uplift_rate[row][col]
                                             -timeStep*fluvial_erosion_rate[row][col];
@@ -5147,39 +5261,76 @@ void LSDRasterModel::MuddPILE_assemble_matrix(Array2D<float>& uplift_rate,
 			k_value_i_j   = vec_k_value_i_j[counter];
 			k_value_i_jp1 = vec_k_value_i_jp1[counter];
 			k_value_i_jm1 = vec_k_value_i_jm1[counter];
-
+			
+			// bounds check
+			if (k_value_ip1_j >= problem_dimension)
+			{
+        cout << "Warning, k i+1,j value out of bounds!" << endl;
+        cout << "problem dimension: " << problem_dimension << endl;
+        cout << "value: " <<  k_value_ip1_j << endl;
+        cout << "row" << row << " and col: " << col << endl;
+      }
+			if (k_value_im1_j >= problem_dimension)
+			{
+        cout << "Warning, k i-1,j value out of bounds!" << endl;
+        cout << "problem dimension: " << problem_dimension << endl;
+        cout << "value: " <<  k_value_im1_j << endl;
+        cout << "row" << row << " and col: " << col << endl;
+      }			
+ 			if (k_value_i_j >= problem_dimension)
+			{
+        cout << "Warning, k i,j value out of bounds!" << endl;
+        cout << "problem dimension: " << problem_dimension << endl;
+        cout << "value: " <<  k_value_i_j << endl;
+        cout << "row" << row << " and col: " << col << endl;
+      }
+			if (k_value_i_jm1 >= problem_dimension)
+			{
+        cout << "Warning, k i,j-1 value out of bounds!" << endl;
+        cout << "problem dimension: " << problem_dimension << endl;
+        cout << "value: " <<  k_value_i_jm1 << endl;
+        cout << "row" << row << " and col: " << col << endl;
+      }      
+			if (k_value_i_jp1 >= problem_dimension)
+			{
+        cout << "Warning, k i,j+1 value out of bounds!" << endl;
+        cout << "problem dimension: " << problem_dimension << endl;
+        cout << "value: " <<  k_value_i_jp1 << endl;
+        cout << "row" << row << " and col: " << col << endl;
+      }   
+      
 			A =  dx_front_term/(1 -
-			        (zeta_last_iter[row+1][col]-zeta_last_iter[row][col])*
-			        (zeta_last_iter[row+1][col]-zeta_last_iter[row][col])*
+			        (RasterData[row+1][col]-RasterData[row][col])*
+			        (RasterData[row+1][col]-RasterData[row][col])*
 					inv_dx_S_c_squared);
 			B = dx_front_term/(1 -
-			        (zeta_last_iter[row][col]-zeta_last_iter[row-1][col])*
-			        (zeta_last_iter[row][col]-zeta_last_iter[row-1][col])*
+			        (RasterData[row][col]-RasterData[row-1][col])*
+			        (RasterData[row][col]-RasterData[row-1][col])*
 					inv_dx_S_c_squared);
 
 			// logic for west periodic boundary
 			if(col == 0)
 			{
 				C = dx_front_term/(1 -
-			           (zeta_last_iter[row][col+1]-zeta_last_iter[row][col])*
-			           (zeta_last_iter[row][col+1]-zeta_last_iter[row][col])*
+			           (RasterData[row][col+1]-RasterData[row][col])*
+			           (RasterData[row][col+1]-RasterData[row][col])*
 					   inv_dx_S_c_squared);
 				D = dx_front_term/(1 -
-			           (zeta_last_iter[row][col]-zeta_last_iter[row][NCols-1])*
-			           (zeta_last_iter[row][col]-zeta_last_iter[row][NCols-1])*
+			           (RasterData[row][col]-RasterData[row][NCols-1])*
+			           (RasterData[row][col]-RasterData[row][NCols-1])*
 					   inv_dx_S_c_squared);
 			}
 			// logic for east periodic boundary
 			else if(col == NCols-1)
 			{
 				C = dx_front_term/(1 -
-			           (zeta_last_iter[row][0]-zeta_last_iter[row][col])*
-			           (zeta_last_iter[row][0]-zeta_last_iter[row][col])*
+			           (RasterData[row][0]-RasterData[row][col])*
+			           (RasterData[row][0]-RasterData[row][col])*
 					   inv_dx_S_c_squared);
 
 				D = dx_front_term/(1 -
-			           (zeta_last_iter[row][col]-zeta_last_iter[row][col-1])*
-			           (zeta_last_iter[row][col]-zeta_last_iter[row][col-1])*
+			           (RasterData[row][col]-RasterData[row][col-1])*
+			           (RasterData[row][col]-RasterData[row][col-1])*
 					   inv_dx_S_c_squared);
 
 			}
@@ -5187,17 +5338,27 @@ void LSDRasterModel::MuddPILE_assemble_matrix(Array2D<float>& uplift_rate,
 			else
 			{
 				C = dx_front_term/(1 -
-			           (zeta_last_iter[row][col+1]-zeta_last_iter[row][col])*
-			           (zeta_last_iter[row][col+1]-zeta_last_iter[row][col])*
+			           (RasterData[row][col+1]-RasterData[row][col])*
+			           (RasterData[row][col+1]-RasterData[row][col])*
 					   inv_dx_S_c_squared);
 
 				D = dx_front_term/(1 -
-			           (zeta_last_iter[row][col]-zeta_last_iter[row][col-1])*
-			           (zeta_last_iter[row][col]-zeta_last_iter[row][col-1])*
+			           (RasterData[row][col]-RasterData[row][col-1])*
+			           (RasterData[row][col]-RasterData[row][col-1])*
 					   inv_dx_S_c_squared);
 
 			}
 
+			
+			// some couts for bug checking
+			//cout << "problem dimension: " << problem_dimension << ", k values" << endl;
+			//cout << "row: " << row << " and col " << col << endl;
+			//cout << "k i,j: " <<  k_value_i_j << endl;
+			//cout << "k i+1,j: " <<  k_value_ip1_j << endl;
+			//cout << "k i-1,j: " <<  k_value_im1_j << endl;
+			//cout << "k i,j+1: " <<  k_value_i_jp1 << endl;
+			//cout << "k i,j-1: " <<  k_value_i_jm1 << endl;
+			
 			// place the values in the assembly matrix and the b vector
 			mtl_b_vector[k_value_i_j] = b_value;
 			ins[k_value_i_j][k_value_ip1_j] << -A;
@@ -5228,14 +5389,19 @@ void LSDRasterModel::MuddPILE_solve_assembler_matrix(Array2D<float>& uplift_rate
 	// in main()
 	mtl::compressed2D<float> mtl_Assembly_matrix(problem_dimension, problem_dimension);
 	mtl::dense_vector<float> mtl_b_vector(problem_dimension,0.0);
+	
+	//cout << "dense vector is: " << mtl_b_vector << endl;
 
 	// assemble the matrix
+	//cout << "LINE 5289 assembling matrix 1st time" << endl;
+	//cout << "Line 5309, problem dimension: " << problem_dimension << endl;
 	MuddPILE_assemble_matrix(uplift_rate, fluvial_erosion_rate,mtl_Assembly_matrix, 
                            mtl_b_vector);
-
+  //cout << "LINE 5292 assembled!" << endl;
+  
   // some couts for bug checking
-	//std::cout << "matrix assembled!" << endl;
-	//std::ofstream assembly_out;
+	//cout << "matrix assembled!" << endl;
+	//ofstream assembly_out;
 	//assembly_out.open("assembly.data");
 	//assembly_out << mtl_Assembly_matrix << endl;
 	//assembly_out.close();
@@ -5244,20 +5410,26 @@ void LSDRasterModel::MuddPILE_solve_assembler_matrix(Array2D<float>& uplift_rate
 	// Create an ILU(0) preconditioner
 	long time_start, time_end, time_diff;
 	time_start = time(NULL);
+	//cout << "LINE 5404 making P " << endl;
 	itl::pc::ilu_0< mtl::compressed2D<float> > P(mtl_Assembly_matrix);
+	//cout << "LINE 5405 made P " << endl;
 	mtl::dense_vector<float> mtl_zeta_solved_vector(problem_dimension);
+	//cout << "LINE 5406 made mtl_zeta_solved_vector" << endl;
 	itl::basic_iteration<float> iter(mtl_b_vector, 500, 1.e-8);
+	//cout << "LINE 5408 made iter" << endl;
 	bicgstab(mtl_Assembly_matrix, mtl_zeta_solved_vector, mtl_b_vector, P, iter);
 	time_end = time(NULL);
 	time_diff = time_end-time_start;
-	//std::cout << "iter MTL bicg took: " << time_diff << endl;
+	//cout << "iter MTL bicg took: " << time_diff << endl;
 
 	// now reconstitute zeta
-	int counter = NCols;
+	int counter = 0;
+	//cout << "LINE 5413 reconstituting data!" << endl;
 	for (int row = 0; row<NRows; row++)
 	{
 		for (int col = 0; col < NCols; col++)
 		{
+		  //cout << "counter is: " << counter << endl;
 			zeta_this_iter[row][col] = mtl_zeta_solved_vector[counter];
 			counter++;
 		}

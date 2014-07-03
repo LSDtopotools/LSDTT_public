@@ -155,6 +155,7 @@ class LSDRasterModel: public LSDRasterSpectral
   /// that is the solution to the nonlinear sediment flux equation.
   /// It overwrites RasterData
   /// @details The parameters D and S_c are stored as data members
+  /// Solution from Roering et al., (EPSL, 2007)
   /// @param U the uplift rate
   /// @author SMM
   /// @date 01/07/2014
@@ -169,6 +170,18 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @author SMM
   /// @date 30/06/2014
   void resize_and_reset( int new_rows, int new_cols );
+
+  /// @brief This resizes the LSDRasterModel, resetting some flags in the process, 
+  /// as well as setting many of the Array2D data members to be empty arrays
+  /// The raster data in the end is a random surface (determined by the noise
+  /// data member)
+  /// This overloaded version also changes the data resolution
+  /// @param new_rows the new number of rows
+  /// @param new_cols the new number of columns
+  /// @param new_resolution the new data resolution
+  /// @author SMM
+  /// @date 30/06/2014
+  void resize_and_reset( int new_rows, int new_cols, float new_resolution );
 
   /// @brief this ads a pathname to the default names
 	/// @param the name of the path
@@ -588,6 +601,14 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @author JAJ
   /// @date 01/01/2014
 	float get_max_uplift( void );	
+	
+	/// @brief This function sets the uplift_field data member as bolck uplift
+	/// with a rate of uplift_rate
+	/// @param uplift_rate a float of uplift rate, the entire block will uplift 
+	/// at this rate
+	/// @author SMM
+	/// @date 03/07/2014
+	void set_uplift_field_to_block_uplift(float uplift_rate);
 
 	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
