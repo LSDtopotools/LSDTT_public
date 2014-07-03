@@ -1,0 +1,37 @@
+# Template for parameter file
+Run Name:		TestRun
+NRows:			150
+NCols:			300
+Resolution:		10
+Boundary code:		bpbp	North, east, south, west
+# b = base level, p = periodic, n = no flow (default)
+Time step:		200
+End time:		100000
+End time mode:		0	(if 1, wait for steady state to set the time to count down)
+Uplift mode:		0	Block uplift
+Max uplift:		0.0002
+Tolerance:		0.00002
+Print interval:		50
+Periodicity:		10000
+
+#####################
+Fluvial:		on
+K:			0.0001
+m:			0.5
+n:			1
+K mode:			0	constant
+#K amplitude:		0.005
+
+#####################
+Hillslope:		on
+Non-linear:		on
+Threshold drainage:	-1	(if negative, ignored)
+D:			0.002
+S_c:			1
+D mode:			0	Constant
+#D amplitude:		0.005
+
+#####################
+Isostasy:		off
+Flexure:		off
+Rigidity:		1000000
