@@ -134,6 +134,7 @@ int main(int argc, char *argv[])
 	//mod.run_model_from_steady_state();
 	mod.run_model();
 
+  /*
   // now reduce the fluvial efficiency and run again
   float new_K = mod.get_K();
   new_K = new_K/4;
@@ -152,7 +153,8 @@ int main(int argc, char *argv[])
 	//ss.str("");
 	//ss << "./graph.py " << mod.get_name();
 	//system(ss.str().c_str());
-
+  */
+  
 	return 0;
 	
 }
