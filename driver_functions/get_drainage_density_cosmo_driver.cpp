@@ -152,7 +152,7 @@ int main (int nNumberofArgs,char *argv[])
   cout << "Reading in the cosmo points" << endl;
   // reading in cosmo points - getting upstream junctions and then extracting basins
   string string_filename;
-	string filename = "coordinates_fr1m_cosmo";
+	string filename = "fr1m_cosmo";
 	string dot = ".";
 	string extension = "txt";
   string_filename = filename+dot+extension;
@@ -166,7 +166,7 @@ int main (int nNumberofArgs,char *argv[])
   vector<float> Errors;
   while (coords_list >> X_coord >> Y_coord >> ErosionRate >> Error)
   {
-     cout << "X Coord: " << X_coord << " Y Coord: " << Y_coord << " Erosion Rate: " << ErosionRate << " Error on cosmo point: " << Error << endl;
+     cout << "X Coord: " << X_coord << " Y Coord: " << Y_coord << " Erosion Rate: " << ErosionRate << "Error: " << Error << endl;
      X_coords.push_back(X_coord);
      Y_coords.push_back(Y_coord);
      ErosionRates.push_back(ErosionRate);
@@ -178,13 +178,17 @@ int main (int nNumberofArgs,char *argv[])
   int threshold_SO = 1;
   int search_radius = 5;
   vector<int> junction_vector;
+  cout << "Line 180" << endl;
   for (unsigned int i = 0; i < X_coords.size(); i++)
   {
+    cout << "Line 183" << endl;
     cout << flush << "Snapped = " << i+1 << " of " << X_coords.size() << "\r";
+    cout << "Line 185" << endl;
     int NICosmo = ChanNetwork.get_nodeindex_of_nearest_channel_for_specified_coordinates(X_coords[i], Y_coords[i],
                                                                 search_radius, threshold_SO, FlowInfo);
-  
+    cout << "Line 187" << endl;
     int JunctionCosmo = ChanNetwork.find_upstream_junction_from_channel_nodeindex(NICosmo, FlowInfo);
+    cout << "Line 189" << endl;
     cout << "Junction of cosmo point: " << JunctionCosmo << endl;
     junction_vector.push_back(JunctionCosmo);  
   }                                                     
@@ -248,17 +252,18 @@ int main (int nNumberofArgs,char *argv[])
     Basin.set_FlowLength(SOArray, FlowInfo);
     Basin.set_DrainageDensity();
     Basin.set_SlopeMean(FlowInfo, Slope);
-    Basin.Plot_Boomerang(Slope, DinfArea, FlowInfo, log_bin_width, SplineResolution, bin_threshold, path_name);
+    //Basin.Plot_Boomerang(Slope, DinfArea, FlowInfo, log_bin_width, SplineResolution, bin_threshold, path_name);
     
     // return basin parameters
     float drainage_density = Basin.get_DrainageDensity();
     cout << "Drainage density: " << drainage_density << endl;
     float basin_slope = Basin.get_SlopeMean();
     float slope_stdev = Basin.CalculateBasinStdDev(FlowInfo, Slope);
+    float slope_sterr = Basin.CalculateBasinStdError(FlowInfo, Slope);
 
     if (drainage_density != NoDataValue)
     {
-      DD_cosmo << drainage_density << " " << basin_slope << " " << slope_stdev << " " << BasinErosionRate << " " << BasinError << endl;
+      DD_cosmo << drainage_density << " " << basin_slope << " " << slope_stdev << " " << slope_sterr << " " << BasinErosionRate << " " << BasinError << endl;
     } 
   }        
 }
