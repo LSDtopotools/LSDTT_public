@@ -109,28 +109,43 @@ int main(int argc, char *argv[])
 		system(ss.str().c_str());
 	}
 
-  // initiate a parabolic surface  
-  float max_elev = 0.2;
-  float new_noise = max_elev/3;
-  mod.set_noise(new_noise);
-  float edge_offset = 0.0;
-  mod.initialise_parabolic_surface(max_elev, edge_offset);
-   
   // print parameters to screen
 	mod.print_parameters();
 
+  // initiate a parabolic surface  
+  float max_elev = 0.2;
+  float new_noise = max_elev/2;
+  mod.set_noise(new_noise);
+  float edge_offset = 0.0;
+  mod.initialise_parabolic_surface(max_elev, edge_offset);
+  
+  // run to steady state using a large fluvial incision rate 
+  // (I don't know why but this seems to encourage complete dissection)
   // and turn the hillslopes off, just to save some time
   mod.set_hillslope(false);
-  
+   
   // now run to steady state
 	mod.reach_steady_state();
-	
+		
   // turn the hillslopes back on again
   mod.set_hillslope(true);
   mod.set_nonlinear(true);
 
 	//mod.run_model_from_steady_state();
 	mod.run_model();
+
+  // now reduce the fluvial efficiency and run again
+  float new_K = mod.get_K();
+  new_K = new_K/4;
+  mod.set_K(new_K);
+  
+  float new_end_time = mod.get_current_time();
+  float this_end_time = mod.get_endTime();
+  new_end_time = new_end_time+this_end_time;
+  
+  mod.set_endTime(new_end_time);
+  mod.run_components();	
+	
 	//cout << "\a";
 	//mod.slope_area();
 	//mod.show();

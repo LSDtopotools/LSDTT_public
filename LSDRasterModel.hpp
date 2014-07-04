@@ -654,6 +654,9 @@ class LSDRasterModel: public LSDRasterSpectral
   
   /// @brief set the ending time
 	void set_endTime( float time )				{ endTime = time; }
+	
+	/// @brief set the number of runs. Used for running multiple simulations from
+	/// the same starting conditions
 	void set_num_runs( int num )				{ num_runs = num; }
 	
 	/// @brief overloaded function, set the array of uplift
@@ -702,8 +705,34 @@ class LSDRasterModel: public LSDRasterSpectral
   /// set the print interval
 	void set_print_interval( int num_steps )		{ print_interval = num_steps; }
 	
+	/// @brief this sets the K mode
+	/// @param mode The mode of calculating K
+	/// K_mode == 1 sine wave
+  /// K_mode == 2 square wave
+  /// K_mode == 3 read from file
+  /// K_mode: default is constant value
+  /// @author JAJ
+  /// @date 01/01/2014
 	void set_K_mode( short mode )				{ K_mode = mode; }
+	
+	/// @brief this sets the D mode
+	/// @param mode The mode of calculating D
+	/// D_mode == 1 sine wave
+  /// D_mode == 2 square wave
+  /// D_mode == 3 read from file
+  /// D_mode: default is constant value
+  /// @author JAJ
+  /// @date 01/01/2014	
 	void set_D_mode( short mode )				{ D_mode = mode; }
+	
+  /// @brief This sets the way the periodicity is calculated
+  /// @param mode the mode of periodic forcing
+  /// 1 (default) one periodicity used without
+  /// 2 Two periodicities that switch at a given interval
+  /// 3 Two periodicities used as a compound sin wave
+  /// 4 Same as three, but weightings switch at a given interval (as in 2)	
+  /// @author JAJ
+  /// @date 01/01/2014	
 	void set_period_mode( short mode )			{ period_mode = mode; }
 	
 	/// @brief set the name of the model run
@@ -785,6 +814,12 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @author JAJ
   /// @date 01/01/2014		
 	float get_D( void );
+	
+	/// @brief this gets the current_time
+	float get_current_time( void )   { return current_time; }
+	
+	/// @brief this gets the endTime
+	float get_endTime( void)         { return endTime; }
 	
 
 	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1101,9 +1136,17 @@ class LSDRasterModel: public LSDRasterSpectral
 
 	// Parameters for periodic forcing components
 	/// Whether or not K is periodic
+	/// K_mode == 1 sine wave
+  /// K_mode == 2 square wave
+  /// K_mode == 3 read from file
+  /// K_mode: default is constant value
   short K_mode;			
 	
 	/// Whether or not D is periodic
+	/// D_mode == 1 sine wave
+  /// D_mode == 2 square wave
+  /// D_mode == 3 read from file
+  /// D_mode: default is constant value
 	short D_mode;			
 	
   /// Whether or not there is only one periodicity or two
@@ -1150,6 +1193,9 @@ class LSDRasterModel: public LSDRasterSpectral
 	bool			flexure;			
 
   // Printing Utilities
+  /// This is the current frame, used for keeping track of the output rasters
+  int current_frame;
+  
   /// interval over which output is written. Just based on number of timesteps
   int			  print_interval;			// Interval at which output is written
   

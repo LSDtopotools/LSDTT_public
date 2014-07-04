@@ -2136,7 +2136,10 @@ void LSDRasterModel::run_components( void )
 	time_delay = 0;
 
 	stringstream ss, ss_root;
-	int frame = 1, print = 1;
+	
+	// set the fram to the current frame
+	int frame = current_frame;
+  int print = 1;
 	do 
   {
 		// Check if hung
@@ -2228,6 +2231,9 @@ void LSDRasterModel::run_components( void )
 		//if (not quiet) cout << current_time << ": " << endl;
 		print_rasters( frame );
 	}
+	
+	// reset the current frame
+	current_frame = frame;
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -3888,7 +3894,9 @@ void LSDRasterModel::print_rasters( int frame )
 	static ofstream outfile;
 	if (not outfile.is_open())
 	{
-		outfile.open(("."+name+"_frame_metadata").c_str());
+	  string metadata_fname =  name+"._frame_metadata";
+		cout << "Name of raster metadata file is: " <<  metadata_fname << endl;
+    outfile.open(metadata_fname.c_str());
 		outfile << name << endl;
 		outfile << "Frame_num\t";
 		outfile << "Time\t";
