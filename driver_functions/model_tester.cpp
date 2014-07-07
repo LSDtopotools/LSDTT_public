@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
 	}
 
   // print parameters to screen
-	mod.print_parameters();
+  mod.print_parameters();
 
   // initiate a parabolic surface  
   float max_elev = 0.2;
@@ -125,14 +125,16 @@ int main(int argc, char *argv[])
   mod.set_hillslope(false);
    
   // now run to steady state
-	mod.reach_steady_state();
+  mod.reach_steady_state();
 		
   // turn the hillslopes back on again
   mod.set_hillslope(true);
   mod.set_nonlinear(true);
 
-	//mod.run_model_from_steady_state();
-	mod.run_model();
+  //mod.check_steady_state();
+
+  //mod.run_model_from_steady_state();
+  mod.run_model();
 
   /*
   // now reduce the fluvial efficiency and run again
