@@ -949,27 +949,6 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// ------------------------------------------------------------------
 	void show( void );
 
-	/// ----------------------------------------------------------------
-	/// Dave's stuff
-	/// ----------------------------------------------------------------
-	void DAVE_initiate_assembler_matrix(int& problem_dimension, float& inv_dx_S_c_squared, float& inv_dy_S_c_squared, float& dx_front_term, 
-               float& dy_front_term, vector<int>& vec_k_value_i_j, vector<int>& vec_k_value_ip1_j,
-					     vector<int>& vec_k_value_im1_j, vector<int>& vec_k_value_i_jp1, vector<int>& vec_k_value_i_jm1);
-	void DAVE_calculate_k_values_for_assembly_matrix(int NRows, int NCols, vector<int>& k_value_i_j,
-                      vector<int>& k_value_ip1_j,	vector<int>& k_value_im1_j, vector<int>& k_value_i_jp1, vector<int>& k_value_i_jm1);											
-	void DAVE_nonlinear_creep_timestep(Array2D<float>& uplift_rate, Array2D<float>& fluvial_erosion_rate, float iteration_tolerance, int problem_dimension,
-				float inv_dx_S_c_squared, float inv_dy_S_c_squared, float dx_front_term, float dy_front_term, vector<int>& vec_k_value_i_j,
-				vector<int>& vec_k_value_ip1_j, vector<int>& vec_k_value_im1_j,	vector<int>& vec_k_value_i_jp1, vector<int>& vec_k_value_i_jm1,
-					  float South_boundary_elevation, float North_boundary_elevation);
-	void DAVE_solve_assembler_matrix(Array2D<float>& uplift_rate, Array2D<float>& fluvial_erosion_rate, int problem_dimension, float inv_dx_S_c_squared,
-			float inv_dy_S_c_squared, float dx_front_term, float dy_front_term, vector<int>& vec_k_value_i_j, vector<int>& vec_k_value_ip1_j,
-			vector<int>& vec_k_value_im1_j, vector<int>& vec_k_value_i_jp1, std::vector<int>& vec_k_value_i_jm1, float South_boundary_elevation, float North_boundary_elevation);
-	void DAVE_assemble_matrix(Array2D<float>& uplift_rate, Array2D<float>& fluvial_erosion_rate, mtl::compressed2D<float>& mtl_Assembly_matrix, mtl::dense_vector<float>& mtl_b_vector,
-						 int problem_dimension, float inv_dx_S_c_squared, float inv_dy_S_c_squared, float dx_front_term, float dy_front_term,
-		     float South_boundary_elevation, float North_boundary_elevation, vector<int>& vec_k_value_i_j, vector<int>& vec_k_value_ip1_j,vector<int>& vec_k_value_im1_j,
-						 vector<int>& vec_k_value_i_jp1, vector<int>& vec_k_value_i_jm1);
-	void DAVE_wrapper( void );
-
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // ~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~
   // MUDDPILE 
