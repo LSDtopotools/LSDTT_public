@@ -739,58 +739,65 @@ void LSDRasterModel::resize_and_reset( int new_rows, int new_cols, float new_res
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::check_steady_state( void )
 {
-
   // start by assuming steady_state has been acheived and then
   // reset flag to false if not. 
-	steady_state = true;
+  steady_state = true;
+
+  //cout << "Line 591, checking steady state, at this point ISS is" << initial_steady_state << endl;
 	
-	//  SMM: this check if steady state has been arrived across a cycle. 
-	// It check a data member erosion_cycle_record, which is calculated elsewhere
-	if (cycle_steady_check)
-	{
-		for (int i=0; i<4; ++i)
-		{
-			if (erosion_cycle_record[i] == -99 || abs(erosion_cycle_record[i] 
+  //  SMM: this check if steady state has been arrived across a cycle. 
+  // It check a data member erosion_cycle_record, which is calculated elsewhere
+  if (cycle_steady_check)
+  {
+    for (int i=0; i<4; ++i)
+    {
+      if (erosion_cycle_record[i] == -99 || abs(erosion_cycle_record[i] 
              - erosion_cycle_record[i+1]) > steady_state_tolerance)
-			{
-				steady_state = false;
-				return;
-			}
-		}
-	}
-	// this next one just check if the surface topography does not change in time
-	else if (steady_state_limit < 0 || current_time < steady_state_limit)
+      {
+	steady_state = false;
+	return;
+      }
+    }
+  }
+  // this next one just checks if the surface topography does not change in time
+  else if (steady_state_limit < 0 || current_time < steady_state_limit)
+  {
+    for (int i=0; i<NRows; ++i)
+    {
+      for (int j=0; j<NCols; ++j)
+      {
+        if (abs(RasterData[i][j] - zeta_old[i][j]) > steady_state_tolerance)
 	{
-		for (int i=0; i<NRows; ++i)
-		{
-			for (int j=0; j<NCols; ++j)
-			{
-				if (abs(RasterData[i][j] - zeta_old[i][j]) > steady_state_tolerance)
-				{
-					steady_state = false;
-					return;
-				}
-			}
-		}
+	    steady_state = false;
+	    return;
 	}
-	
+      }
+    }
+  }
+
+  //cout << "Line 777, checking steady, iss: " << initial_steady_state << endl;	
   // this is seperate logic: it simply sets the initial_steady_state flag to true
+  // because if steady state has not been reached above, the return statements
+  // mean this is only reached if it gets to steady state. It then checks if
+  // this is the initial steady, state, and if not switches the initial_steady_state
+  // flag to true
   if (not initial_steady_state)
   {
-	  initial_steady_state = true;
-	  time_delay = current_time;
+    initial_steady_state = true;
+    time_delay = current_time;
 		
-	  // This is a mode of end times. 0 == default, run until the endTime
-	  // 1 == run until a specified time after steady state
-	  // 2 == run a number of cycles
-	  // 3 == run to steady state, then run some cycles. 
-	  if (endTime_mode == 1 || endTime_mode == 3)
+    // This is a mode of end times. 0 == default, run until the endTime
+    // 1 == run until a specified time after steady state
+    // 2 == run a number of cycles
+    // 3 == run to steady state, then run some cycles. 
+    if (endTime_mode == 1 || endTime_mode == 3)
 			endTime += time_delay;
-		if (not quiet)
-		{
-			cout << "\t\t\t> Initial steady state reached at " << current_time;
-		}
-	}
+    if (not quiet)
+    {
+      cout << "\t\t\t> Initial steady state reached at " << current_time;
+    }
+  }
+  //cout << "check iSS, it is now: " << initial_steady_state << endl;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -1377,6 +1384,28 @@ Array2D <float> LSDRasterModel::generate_uplift_field( int mode, float maximum_u
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
+// This returns an uplift field in the form of an array
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+Array2D <float> LSDRasterModel::generate_uplift_field( void )
+{
+	// Generates an uplift field from some default functions  
+	Array2D <float> uplift(NRows, NCols,0.0);
+
+	for (int i=0; i<NRows; ++i)
+	{
+		for (int j=0; j<NCols; ++j)
+		{
+			uplift[i][j] = get_uplift_at_cell(i, j);
+		}
+	}
+	return uplift;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
 // This gets uplift (in distance, not a rate) at a particular cell
 // It is based on the uplift mode, 
 // which is
@@ -1428,6 +1457,63 @@ float LSDRasterModel::get_uplift_at_cell(int i, int j)
 	// the uplift is multiplied by the timestep so uplift is passed as a distance
 	// and not a rate. 
 	return result * timeStep;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This gets uplift rate at a particular cell
+// It is based on the uplift mode, 
+// which is
+// default == block uplift
+// 1 == tilt block
+// 2 == gaussian
+// 3 == quadratic 
+// The function is called by the generate_uplift_field  and uplift_surface 
+// member functions
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDRasterModel::get_uplift_rate_at_cell(int i, int j)
+{
+	float result;
+
+  // don't do anything if this is a base level node
+	if (is_base_level(i,j))
+		return 0;		
+	else
+		switch (uplift_mode)
+		{
+			case 1:		// Tilt block (SMM: seems to only tilt in one direction)
+			{
+				result = (NRows - i - 1) * get_max_uplift() / ((float) NRows - 1);
+				break;
+			}
+			case 2:		// Gausian
+	    {  
+        // Gaussian parameters
+	      int mu_i = NRows/2;
+	      int mu_j = NCols/2;
+	      float sigma_i = NRows/10;
+	      float sigma_j = NCols/10;	
+        			
+				result = get_max_uplift()*pow(1.1, -((i-mu_i)*(i-mu_i)/(2*sigma_i*sigma_i) + (j-mu_j)*(j-mu_j)/(2*sigma_j*sigma_j) ));
+				break;
+			}
+			case 3:    // polynomial
+			{
+				result = get_max_uplift() * ( -pow((2.0*i/(NRows-1) - 1),2) - pow((2.0*j/(NCols-1) - 1), 2) + 1);
+				if (result < 0)
+					result = 0;
+				break;
+			}	
+			default:
+				result = get_max_uplift();
+				break;
+		}
+	// the uplift is multiplied by the timestep so uplift is passed as a distance
+	// and not a rate. 
+	return result;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -2113,7 +2199,7 @@ LSDRasterModel LSDRasterModel::run_model_implicit_hillslope_and_fluvial(string p
 //    ErosionRate = Zeta.calculate_erosion_rates(ZetaOld,dt);
 
 //		print_at_print_interval(run_name, t_ime, dt, NRows, NCols, print_interval,
-//								print_counter, ts_out, zeta, erosion_rate, fluvial_erosion_rate, Q_w);
+//				    print_counter, ts_out, zeta, erosion_rate, fluvial_erosion_rate, Q_w);
 	}
 	ts_out.close();
 	//LSDRasterModel(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Zeta.get_RasterData());
@@ -2127,114 +2213,241 @@ LSDRasterModel LSDRasterModel::run_model_implicit_hillslope_and_fluvial(string p
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::run_components( void )
 {
-	//recording = false;
-	cycle_number = 1;
-	total_erosion = 0;
-	max_erosion = 0;
-	min_erosion = -99;
-	switch_delay = 0;
-	time_delay = 0;
+  //recording = false;
+  cycle_number = 1;
+  total_erosion = 0;
+  max_erosion = 0;
+  min_erosion = -99;
+  switch_delay = 0;
+  time_delay = 0;
 
-	stringstream ss, ss_root;
+  stringstream ss, ss_root;
 	
-	// set the fram to the current frame
-	int frame = current_frame;
+  // set the fram to the current frame
+  int frame = current_frame;
   int print = 1;
-	do 
+  do 
   {
-		// Check if hung
-		if ( check_if_hung() )
-		{
-			cout << "Model took too long to reach steady state, assumed to be stuck" << endl;
-			break;
-		}
+    // Check if hung
+    if ( check_if_hung() )
+    {
+      cout << "Model took too long to reach steady state, assumed to be stuck" << endl;
+      break;
+    }
 		
     // ONLY IMPORTANT IF USING TWO PERIODICITIES		
-		check_periodicity_switch();     // This checks to see if this is a periodic 
-		                                // run, if so it adjusts time and end time
-		                                // it really only comes into play if you
-		                                // have more than one periodicity that 
-		                                // between which the model oscillates. 
+    check_periodicity_switch();     // This checks to see if this is a periodic 
+                                    // run, if so it adjusts time and end time
+                                    // it really only comes into play if you
+                                    // have more than one periodicity that 
+                                    // between which the model oscillates. 
 		
-		// Record current topography
-		zeta_old = RasterData.copy();
+    // Record current topography
+    zeta_old = RasterData.copy();
 		
-		// run active model components    
+    // run active model components    
     // first diffuse the hillslopes. Currently two options. Perhaps a flag could be
     // added so that we don't have to keep adding if statements as more
     // hillslope rules are added?
-		if (hillslope)
-		{
-			if (nonlinear)
-				//soil_diffusion_fv_nonlinear();
-				MuddPILE_nl_soil_diffusion_nouplift();
-			else
-				soil_diffusion_fd_linear();
-		}
+    if (hillslope)
+    {
+	if (nonlinear)
+	{
+	  //soil_diffusion_fv_nonlinear();
+	  MuddPILE_nl_soil_diffusion_nouplift();
+	}
+	else
+	soil_diffusion_fd_linear();
+    }
 
     // sediment will have moved into channels. This is assumed to 
     // be immediately removed by fluvial processes, so we use the
     // 'wash out' member function
-		wash_out();
+    wash_out();
 		
-		// now for fluvial erosion
-		if (fluvial)
-		{
-		  // currently the opnly option is stream power using the FASTSCAPE 
+    // now for fluvial erosion
+    if (fluvial)
+    {
+      // currently the opnly option is stream power using the FASTSCAPE 
       // algorithm so there are no choices here
-		  fluvial_incision();
+      fluvial_incision();
     }  
 		  
-		// now for isostacy. As of 17/6/2014 this wasn't working	
-		if (isostasy)
-		{
+    // now for isostacy. As of 17/6/2014 this wasn't working	
+    if (isostasy)
+    {
 			if (flexure)
 				//flexural_isostasy( 0.00001 );
 				flexural_isostasy_alt( );
 			else
 				Airy_isostasy();
-		}
+    }
 
     // after everything has been eroded/deposited, the surface is uplifted
     // this currently is the block uplift option
-		uplift_surface();
+    uplift_surface();
 		
-		// this writes a file if it is on the print interval, and writes some erosion
-		// data to an array always so that steady state may be tested
-		write_report();
+    // this writes a file if it is on the print interval, and writes some erosion
+    // data to an array always so that steady state may be tested
+    write_report();
 
-		current_time += timeStep;
-		//cout << "current_time is: " << current_time << endl;
+    current_time += timeStep;
+    //cout << "current_time is: " << current_time << endl;
 
     //cout << "Print is " << print << " and print interval is: " << print_interval << endl;
-		if ( print_interval > 0 && (print % print_interval) == 0)	// write at every print interval
-		{
-		  //cout << "Printing frame " << frame << " at time " << current_time << " years" << endl;
-			print_rasters( frame );
-			++frame;
-		}
-		if (not quiet) cout << "\rTime: " << current_time << " years" << flush;
-		++print;
+    if ( print_interval > 0 && (print % print_interval) == 0)	// write at every print interval
+    {
+      //cout << "Printing frame " << frame << " at time " << current_time << " years" << endl;
+      print_rasters( frame );
+      ++frame;
+    }
+    if (not quiet) cout << "\rTime: " << current_time << " years" << flush;
+    ++print;
 		
-		// check to see if steady state has been achieved
-		check_steady_state();
+    // check to see if steady state has been achieved
+    //cout << "Line 2222, checking steady, initial steady: " << initial_steady_state << endl;
+    check_steady_state();
+    //cout << "Line 2224, checked, iss: " << initial_steady_state << endl;
 		
-	} while (not check_end_condition());
+  } while (not check_end_condition());
 	
-	if ( print_interval == 0 || (print_interval > 0 && ((print-1) % print_interval) != 0))
-	{
-	  // if the print interval is 0, we set the frame to zero
-	  if (print_interval == 0)
-	  {
+  if ( print_interval == 0 || (print_interval > 0 && ((print-1) % print_interval) != 0))
+  {
+    // if the print interval is 0, we set the frame to zero
+    if (print_interval == 0)
+    {
       frame = 0;
     }
-		//if (not quiet) cout << current_time << ": " << endl;
-		print_rasters( frame );
-	}
+    //if (not quiet) cout << current_time << ": " << endl;
+    print_rasters( frame );
+  }
 	
-	// reset the current frame
-	current_frame = frame;
+  // reset the current frame
+  current_frame = frame;
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This is a wrapper function used to drive a model run
+// it checks parameters and flags from the data members
+//
+// Similar to run_componets but instead of running fluvial
+// and uplift in seperate steps it inserts the fluvial
+// and uplift matrices into the nonlinear hillslope
+// solver.
+//
+// SMM, 06/07/2014
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::run_components_combined( void )
+{
+  //recording = false;
+  cycle_number = 1;
+  total_erosion = 0;
+  max_erosion = 0;
+  min_erosion = -99;
+  switch_delay = 0;
+  time_delay = 0;
+
+  stringstream ss, ss_root;
+  
+  // some fields for uplift and fluvial incision
+  Array2D<float> uplift_field;
+  Array2D<float> fluvial_incision_rate_field;
+	
+  // set the fram to the current frame
+  int frame = current_frame;
+  int print = 1;
+  do 
+  {
+    // Check if hung
+    if ( check_if_hung() )
+    {
+      cout << "Model took too long to reach steady state, assumed to be stuck" << endl;
+      break;
+    }
+		
+    // ONLY IMPORTANT IF USING TWO PERIODICITIES		
+    check_periodicity_switch();     // This checks to see if this is a periodic 
+                                    // run, if so it adjusts time and end time
+                                    // it really only comes into play if you
+                                    // have more than one periodicity that 
+                                    // between which the model oscillates. 
+		
+    // Record current topography
+    zeta_old = RasterData.copy();
+		
+    // run active model components    
+    // first diffuse the hillslopes. Currently two options. Perhaps a flag could be
+    // added so that we don't have to keep adding if statements as more
+    // hillslope rules are added?
+    if (hillslope)
+    {
+	    if (nonlinear)
+	    {
+	      //soil_diffusion_fv_nonlinear();
+	      MuddPILE_nl_soil_diffusion_nouplift();
+	    }
+	    else
+	      soil_diffusion_fd_linear();
+    }
+
+    // sediment will have moved into channels. This is assumed to 
+    // be immediately removed by fluvial processes, so we use the
+    // 'wash out' member function
+    wash_out();
+		
+    // now for fluvial erosion
+    if (fluvial)
+    {
+      // currently the opnly option is stream power using the FASTSCAPE 
+      // algorithm so there are no choices here
+      fluvial_incision_with_uplift();
+    }  
+		  
+    // now for isostacy. As of 17/6/2014 this wasn't working	
+    if (isostasy)
+    {
+			if (flexure)
+				//flexural_isostasy( 0.00001 );
+				flexural_isostasy_alt( );
+			else
+				Airy_isostasy();
+    }
+		
+    // this writes a file if it is on the print interval, and writes some erosion
+    // data to an array always so that steady state may be tested
+    write_report();
+
+    //update the time
+    current_time += timeStep;
+
+    // write at every print interval
+    if ( print_interval > 0 && (print % print_interval) == 0)	
+    {
+      print_rasters( frame );
+      ++frame;
+    }
+    if (not quiet) cout << "\rTime: " << current_time << " years" << flush;
+    ++print;
+		
+    // check to see if steady state has been achieved
+    check_steady_state();
+		
+  } while (not check_end_condition());
+	
+  if ( print_interval == 0 || (print_interval > 0 && ((print-1) % print_interval) != 0))
+  {
+    // if the print interval is 0, we set the frame to zero
+    if (print_interval == 0)
+    {
+      frame = 0;
+    }
+    print_rasters( frame );
+  }
+	
+  // reset the current frame
+  current_frame = frame;
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // This function simply calls the run_components function
@@ -2242,28 +2455,30 @@ void LSDRasterModel::run_components( void )
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDRasterModel::run_model( void )
 {
-	// file to write details of each time step
-	// This will be opened by the write_report method
-	int run = 1;
+  // file to write details of each time step
+  // This will be opened by the write_report method
+  int run = 1;
 	
-	// loop through the number of runs. The number of runs is stored as a data member
-	do 
+  // loop through the number of runs. The number of runs is stored as a data member
+  do 
   {
-	  initial_steady_state = false;      // SMM: not clear why this is set to false
-	  recording = false;                 // SMM: not clear why this is set to false
+    //initial_steady_state = false;      // SMM: not clear why this is set to false
+    // SMM: I have turned this off because it was overriding the periodic forcing
 
-	  if (not initialized && not quiet)
-	  {
-		  cout << "Model has not been initialized with a parameter file." << endl;
-		  cout << "All values used are defaults" << endl;
-	  }
+    recording = false;                 // SMM: not clear why this is set to false
 
-		current_time = 0;
-		run_components();
-	  ++run;
-	} while (run <= num_runs);
+    if (not initialized && not quiet)
+    {
+      cout << "Model has not been initialized with a parameter file." << endl;
+      cout << "All values used are defaults" << endl;
+    }
+
+    current_time = 0;
+    run_components();
+    ++run;
+  } while (run <= num_runs);
 	
-	final_report();
+  final_report();
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -2313,109 +2528,113 @@ void LSDRasterModel::run_model_from_steady_state( void )
 // It does not simply run at a constant erosion rate, but rather 
 // runs using periodic forcing. Tests have shown this can greatly reduce
 // the time required to reach steady state
-// JAJ, sometie 2014
+// JAJ, sometime 2014
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDRasterModel::reach_steady_state( void )
 {
-	// file to write details of each time step
-	// This will be opened by the write_report method
-	initial_steady_state = false;        // this means that the model
-	                                     // knows SS has not been reached so it 
-	                                     // will not 'record' model results
-	current_time = 0;
-	total_erosion = 0;
-	max_erosion = 0;
-	min_erosion = -99;
+  // file to write details of each time step
+  // This will be opened by the write_report method
+  initial_steady_state = false;        // this means that the model
+                                       // knows SS has not been reached so it 
+                                       // will not 'record' model results
+  current_time = 0;
+  total_erosion = 0;
+  max_erosion = 0;
+  min_erosion = -99;
 
   // these 'swap' functions are here because the run to steady state
   // uses default paramaters but the original model parameters are
   // stored in these 'swap' data members and restored after running
   // the model to steady state. 
-	int K_mode_swap = K_mode;
-	int D_mode_swap = D_mode;
-	float K_amp_swap = K_amplitude;
-	float endTime_swap = endTime;
-	float period_swap = periodicity;
-	int period_mode_swap = period_mode;
-	float print_interval_swap = print_interval;
-	bool reporting_swap = reporting;
-	string name_swap = name;
+  int K_mode_swap = K_mode;
+  int D_mode_swap = D_mode;
+  float K_amp_swap = K_amplitude;
+  float endTime_swap = endTime;
+  float period_swap = periodicity;
+  int period_mode_swap = period_mode;
+  float print_interval_swap = print_interval;
+  bool reporting_swap = reporting;
+  string name_swap = name;
 
-	if (not initialized && not quiet)
-	{
-		cout << "Model has not been initialized with a parameter file." << endl;
-		cout << "All values used are defaults" << endl;
-	}
-	// Generate random noise
-	random_surface_noise(0, noise);
-	// Fill the topography
-	LSDRaster *temp;
-	temp = new LSDRaster(*this);
+  if (not initialized && not quiet)
+  {
+    cout << "Model has not been initialized with a parameter file." << endl;
+    cout << "All values used are defaults" << endl;
+  }
+  
+  // Generate random noise
+  random_surface_noise(0, noise);
+  // Fill the topography
+  LSDRaster *temp;
+  temp = new LSDRaster(*this);
   float thresh_slope = 0.00001;
   *temp = fill(thresh_slope);
-	RasterData = temp->get_RasterData();
-	delete temp;
+  RasterData = temp->get_RasterData();
+  delete temp;
 
-	// Run model with some modest fluvial forcing
-	K_mode = 1;                    // THis means a sinusoidal variation in 
-	                               // channel forcing
-	K_amplitude = K_fluv * 0.3;
-	endTime = 0;                   // SMM: not sure why this is set to zero. 
-	cout << "Running to steady state, periodicity is: " << periodicity << endl;
-	//periodicity = 2000;
-	period_mode = 1;
-	cycle_steady_check = true;       // this means that the steady state check
-	                                 // is run based on erosion from one cycle
-	                                 // to the next
-	print_interval = 0;
-	reporting = false;
+  // Run model with some modest fluvial forcing
+  K_mode = 1;                    // THis means a sinusoidal variation in 
+                                 // channel forcing
+  K_amplitude = K_fluv * 0.3;
+  endTime = 0;                   // SMM: not sure why this is set to zero. 
+  cout << "Running to steady state, periodicity is: " << periodicity << endl;
+  //periodicity = 2000;
+  period_mode = 1;
+  cycle_steady_check = true;       // this means that the steady state check
+                                   // is run based on erosion from one cycle
+                                   // to the next
+  print_interval = 0;
+  reporting = false;
 
-	if (not quiet) 
+  if (not quiet) 
   {
     cout << "Producing steady state profile" << endl;
-	}
+  }
   // because the cycle_steady_check is true, it means that this will run
-	// through several periods until the surface does not change between cycles
+  // through several periods until the surface does not change between cycles
 	
-	// switch the end time mode to be periodic
+  // switch the end time mode to be periodic
   short endTimeModeSwap = endTime_mode;
-	endTime_mode = 2; 
+  endTime_mode = 2; 
   
   // run components
   run_components();
   
-
-	if (not quiet) 
+  if (not quiet) 
   {
     cout << "Finished producing cyclic steady" << endl;
-	}  
+  }  
 
   // switch back to the original endTime_mode
   endTime_mode =  endTimeModeSwap;
   
-	// Now run with static forcing
-	K_mode = K_mode_swap;
-	D_mode = D_mode_swap;
-	K_amplitude = K_amp_swap;
-	endTime = timeStep*10;
-	cycle_steady_check = false;
-	initial_steady_state = false;
-	current_time = 0;
+  // Now run with static forcing
+  K_mode = K_mode_swap;
+  D_mode = D_mode_swap;
+  K_amplitude = K_amp_swap;
+  endTime = timeStep*10;
+  cycle_steady_check = false;
+  initial_steady_state = false;
+  current_time = 0;
 
-	if (not quiet) cout << "Did cyclic steady, now running at constant forcing for a while." << endl;
-	cout << "Timestep is" << timeStep << endl;
-	run_components();
-	if (not quiet) cout << "Forced from constant steady state, exiting steady state routine." << endl;
+  if (not quiet) cout << "Did cyclic steady, now running at constant forcing for a while." << endl;
+  cout << "Timestep is: " << timeStep << endl;
+  run_components();
+  if (not quiet) cout << "Forced from constant steady state, exiting steady state routine." << endl;
 
-	endTime = endTime_swap;
-	periodicity = period_swap;
-	period_mode = period_mode_swap;
-	cycle_steady_check = false;
-	print_interval = print_interval_swap;
-	reporting = reporting_swap;
+  endTime = endTime_swap;
+  periodicity = period_swap;
+  period_mode = period_mode_swap;
+  cycle_steady_check = false;
+  print_interval = print_interval_swap;
+  reporting = reporting_swap;
 
-	steady_state_data = Array2D<float> (NRows, NCols, 0.0);
-	steady_state_data = RasterData;
+  steady_state_data = Array2D<float> (NRows, NCols, 0.0);
+  steady_state_data = RasterData;
+
+  // set the initial steady state flag to true
+  initial_steady_state = true;
+  cout << "Line 2526 Finished run_to_steady_state, initial_steady_state: " << initial_steady_state << endl;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -3031,71 +3250,71 @@ void LSDRasterModel::soil_diffusion_fv_nonlinear( void )
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDRasterModel::fluvial_incision( void )
 {
-	Array2D<float> zeta=RasterData.copy();
+  Array2D<float> zeta=RasterData.copy();
 
-	// Step one, create donor "stack" etc. via FlowInfo
-	LSDRaster temp(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
-	LSDFlowInfo flow(boundary_conditions, temp);
-	vector <int> nodeList = flow.get_SVector();
-	int numNodes = nodeList.size();
-	int node, row, col, receiver, receiver_row, receiver_col;
-	float drainageArea, dx, streamPowerFactor;
-	float K = get_K();
+  // Step one, create donor "stack" etc. via FlowInfo
+  LSDRaster temp(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
+  LSDFlowInfo flow(boundary_conditions, temp);
+  vector <int> nodeList = flow.get_SVector();
+  int numNodes = nodeList.size();
+  int node, row, col, receiver, receiver_row, receiver_col;
+  float drainageArea, dx, streamPowerFactor;
+  float K = get_K();
 	
-	// these save a bit of computational expense. 
-	float root_2 = pow(2, 0.5);
-	float dx_root2 = root_2*DataResolution;
-	float DR2 = DataResolution*DataResolution;
+  // these save a bit of computational expense. 
+  float root_2 = pow(2, 0.5);
+  float dx_root2 = root_2*DataResolution;
+  float DR2 = DataResolution*DataResolution;
 	
 
   // this is only for bug checking
-	if (not quiet && name == "debug" && NRows <= 10 && NCols <= 10)
-	{
-		cout << "Drainage area: " << endl;
-		for (int i=0; i<NRows*NCols; ++i)
-		{
-			drainageArea = flow.retrieve_contributing_pixels_of_node(i) *  DR2;	
-			cout << drainageArea << " ";
-			if (((i+1)%NCols) == 0)
-				cout << endl;
-		}
-	}
+  if (not quiet && name == "debug" && NRows <= 10 && NCols <= 10)
+  {
+    cout << "Drainage area: " << endl;
+    for (int i=0; i<NRows*NCols; ++i)
+    {
+      drainageArea = flow.retrieve_contributing_pixels_of_node(i) *  DR2;	
+      cout << drainageArea << " ";
+      if (((i+1)%NCols) == 0)
+	cout << endl;
+    }
+  }
 
-	// Step two calculate new height
-	//for (int i=numNodes-1; i>=0; --i)
-	for (int i=0; i<numNodes; ++i)
-	{
+  // Step two calculate new height
+  //for (int i=numNodes-1; i>=0; --i)
+  for (int i=0; i<numNodes; ++i)
+  {
 	
-	  // get the information about node relashionships from the flow info object
-		node = nodeList[i];
-		flow.retrieve_current_row_and_col(node, row, col);
-		flow.retrieve_receiver_information(node, receiver, receiver_row, receiver_col);
-		drainageArea = flow.retrieve_contributing_pixels_of_node(node) *  DR2;	
+    // get the information about node relashionships from the flow info object
+    node = nodeList[i];
+    flow.retrieve_current_row_and_col(node, row, col);
+    flow.retrieve_receiver_information(node, receiver, receiver_row, receiver_col);
+    drainageArea = flow.retrieve_contributing_pixels_of_node(node) *  DR2;	
 		
     // some code for debugging
     if (not quiet && name == "debug" && NRows <= 10 && NCols <= 10)
-		{
-			cout << row << ", " << col << ", " << receiver_row << ", " << receiver_col << endl;
-			cout << flow.retrieve_flow_length_code_of_node(node) << endl;
-			cout << drainageArea << endl;
-		}
+    {
+      cout << row << ", " << col << ", " << receiver_row << ", " << receiver_col << endl;
+      cout << flow.retrieve_flow_length_code_of_node(node) << endl;
+      cout << drainageArea << endl;
+    }
 
     // get the distance between nodes. Depends on flow direction		
-		switch (flow.retrieve_flow_length_code_of_node(node))
-		{
-			case 0:
-				dx = -99;
-				break;
-			case 1:
-				dx = DataResolution;
-				break;
-			case 2:
-				dx = dx_root2;
-				break;
-			default:
-				dx = -99;
-				break;
-		}
+    switch (flow.retrieve_flow_length_code_of_node(node))
+    {
+      case 0:
+	dx = -99;
+	break;
+      case 1:
+        dx = DataResolution;
+	break;
+      case 2:
+        dx = dx_root2;
+	break;
+      default:
+	dx = -99;
+	break;
+    }
 		
 		// some logic if n is close to 1. Saves a bit of computational expense. 
 		if (abs(n - 1) < 0.0001)
@@ -3104,7 +3323,6 @@ void LSDRasterModel::fluvial_incision( void )
 				continue;
 				
 			// compute new elevation if node is not a base level node	
-			// SMM_working 17/6/2014 Check maths on iteration
 			if (node != receiver)
 			{
 			  streamPowerFactor = K * pow(drainageArea, m) * (timeStep / dx);
@@ -3132,7 +3350,7 @@ void LSDRasterModel::fluvial_incision( void )
 				epsilon = (new_zeta - old_zeta + streamPowerFactor * pow(slope, n)) /
 						 (1 + streamPowerFactor * (n/dx) * pow(slope, n-1));
 				new_zeta -= epsilon;
-			} while (abs(epsilon > 0.001));
+			} while (abs(epsilon > 1e-6));
 		}
 	}
 	//return LSDRasterModel(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
@@ -3140,13 +3358,143 @@ void LSDRasterModel::fluvial_incision( void )
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This is the component of the model that is solved using the 
+// FASTSCAPE algorithm of Willett and Braun (2013)
+// Uses Newton's method to solve incision if the slope exponent != 1
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDRasterModel::fluvial_incision_with_uplift( void )
+{
+  Array2D<float> zeta=RasterData.copy();
+
+  // Step one, create donor "stack" etc. via FlowInfo
+  LSDRaster temp(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
+  LSDFlowInfo flow(boundary_conditions, temp);
+  vector <int> nodeList = flow.get_SVector();
+  int numNodes = nodeList.size();
+  int node, row, col, receiver, receiver_row, receiver_col;
+  float drainageArea, dx, streamPowerFactor;
+  float K = get_K();
+  float U;
+	
+  // these save a bit of computational expense. 
+  float root_2 = pow(2, 0.5);
+  float dx_root2 = root_2*DataResolution;
+  float DR2 = DataResolution*DataResolution;
+	
+
+  // this is only for bug checking
+  if (not quiet && name == "debug" && NRows <= 10 && NCols <= 10)
+  {
+    cout << "Drainage area: " << endl;
+    for (int i=0; i<NRows*NCols; ++i)
+    {
+      drainageArea = flow.retrieve_contributing_pixels_of_node(i) *  DR2;	
+      cout << drainageArea << " ";
+      if (((i+1)%NCols) == 0)
+	    cout << endl;
+    }
+  }
+
+  // Step two calculate new height
+  //for (int i=numNodes-1; i>=0; --i)
+  for (int i=0; i<numNodes; ++i)
+  {
+	
+    // get the information about node relashionships from the flow info object
+    node = nodeList[i];
+    flow.retrieve_current_row_and_col(node, row, col);
+    flow.retrieve_receiver_information(node, receiver, receiver_row, receiver_col);
+    drainageArea = flow.retrieve_contributing_pixels_of_node(node) *  DR2;	
+		
+    // some code for debugging
+    if (not quiet && name == "debug" && NRows <= 10 && NCols <= 10)
+    {
+      cout << row << ", " << col << ", " << receiver_row << ", " << receiver_col << endl;
+      cout << flow.retrieve_flow_length_code_of_node(node) << endl;
+      cout << drainageArea << endl;
+    }
+
+    // get the distance between nodes. Depends on flow direction		
+    switch (flow.retrieve_flow_length_code_of_node(node))
+    {
+      case 0:
+	      dx = -99;
+	      break;
+      case 1:
+        dx = DataResolution;
+      	break;
+      case 2:
+        dx = dx_root2;
+	      break;
+      default:
+	      dx = -99;
+	      break;
+    }
+		
+		// some logic if n is close to 1. Saves a bit of computational expense. 
+		if (abs(n - 1) < 0.0001)
+		{
+			if (dx == -99)
+				continue;
+				
+			// compute new elevation if node is not a base level node	
+			if (node != receiver)
+			{
+			  // get the uplift rate
+			  U = get_uplift_rate_at_cell(row,col);
+			  
+			  // get the stream power factor
+			  streamPowerFactor = K * pow(drainageArea, m) * (timeStep / dx);
+			  
+			  // calculate elevation
+			  zeta[row][col] = (zeta[row][col] 
+                          + zeta[receiver_row][receiver_col]*streamPowerFactor
+                          + timeStep*U) /
+						             (1 + streamPowerFactor);
+			}
+		}
+		else    // this else loop is for when n is not close to one and you need an iterative solution
+		{
+			if (dx == -99)
+				continue;
+			float new_zeta = zeta[row][col];
+			float old_zeta = zeta[row][col];
+
+      // get the uplift rate
+			U = get_uplift_rate_at_cell(row,col);
+
+			float epsilon;     // in newton's method, z_n+1 = z_n - f(z_n)/f'(z_n)
+			                   // and here epsilon =   f(z_n)/f'(z_n)
+			                   // f(z_n) = -z_n + z_old - dt*K*A^m*( (z_n-z_r)/dx )^n
+			float streamPowerFactor = K * pow(drainageArea, m) * timeStep;
+			float slope;
+			
+			// iterate until you converge on a solution. Uses Newton's method. 
+			do
+			{
+				slope = (new_zeta - zeta[receiver_row][receiver_col]) / dx;
+				epsilon = (new_zeta - old_zeta 
+                   + streamPowerFactor * pow(slope, n) - timeStep*U) /
+						 (1 + streamPowerFactor * (n/dx) * pow(slope, n-1));
+				new_zeta -= epsilon;
+			} while (abs(epsilon > 1e-6));
+		}
+	}
+	//return LSDRasterModel(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
+	this->RasterData = zeta;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function is more or less identical to fluvial_incision above, but it
 // Returns a raster with the erosion rate and takes arguments rather
 // than reading from data members
 // JAJ, sometime 2014
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-LSDRaster LSDRasterModel::fluvial_erosion_rate(float timestep, float K, float m, float n, vector <string> boundary)
+LSDRaster LSDRasterModel::fluvial_erosion_rate(float timestep, float K, float m, float n, 
+                                               vector <string> boundary)
 {
 	Array2D<float> erosionRate(NRows, NCols, NoDataValue);
 	Array2D<float> zeta = RasterData.copy();
@@ -3190,7 +3538,8 @@ LSDRaster LSDRasterModel::fluvial_erosion_rate(float timestep, float K, float m,
 			else
 			{
 			streamPowerFactor = K * pow(drainageArea, m) * (timestep / dx);
-			erosionRate[row][col] = ((RasterData[row][col] + RasterData[receiver_row][receiver_col] * streamPowerFactor) /
+			erosionRate[row][col] = ((RasterData[row][col] + RasterData[receiver_row][receiver_col] *
+						  streamPowerFactor) /
 						 (1 + streamPowerFactor) - RasterData[row][col]) / timestep;
 			}
 		}
@@ -3208,13 +3557,95 @@ LSDRaster LSDRasterModel::fluvial_erosion_rate(float timestep, float K, float m,
 				epsilon = (new_zeta - old_zeta + streamPowerFactor * pow(slope, n)) /
 						 (1 + streamPowerFactor * (n/dx) * pow(slope, n-1));
 				new_zeta -= epsilon;
-			} while (abs(epsilon > 0.001));
+			} while (abs(epsilon > 1e-6));
 			erosionRate[row][col] = (new_zeta - old_zeta) / timestep;
 		}
 	}
 	return LSDRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, erosionRate);
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Returns the fluvial inicision rate, but uses data members
+// also returns an array
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+Array2D<float> LSDRasterModel::fluvial_erosion_rate()
+{
+	Array2D<float> erosionRate(NRows, NCols, NoDataValue);
+	Array2D<float> zeta = RasterData.copy();
+
+	// Step one, create donor "stack" etc. via FlowInfo
+	LSDFlowInfo flow(boundary_conditions, *this);
+	vector <int> nodeList = flow.get_SVector();
+	int numNodes = nodeList.size();
+	int node, row, col, receiver, receiver_row, receiver_col;
+	float drainageArea, dx, streamPowerFactor;
+  float K = get_K();
+	
+  // these save a bit of computational expense. 
+  float root_2 = pow(2, 0.5);
+  float dx_root2 = root_2*DataResolution;
+  float DR2 = DataResolution*DataResolution;
+
+	// Step two calculate new height
+	for (int i=numNodes-1; i>=0; --i)
+	{
+		node = nodeList[i];
+		flow.retrieve_current_row_and_col(node, row, col);
+		flow.retrieve_receiver_information(node, receiver, receiver_row, receiver_col);
+		drainageArea = flow.retrieve_contributing_pixels_of_node(node) *  DR2;	
+		switch (flow.retrieve_flow_length_code_of_node(node))
+		{
+			case 0:
+				dx = -99;
+				break;
+			case 1:
+				dx = DataResolution;
+				break;
+			case 2:
+				dx = dx_root2;
+				break;
+			default:
+				dx = -99;
+				break;
+		}
+		if (abs(n - 1) < 0.0001)
+		{
+			if (node == receiver)
+			{
+				erosionRate[row][col] = 0;
+			}
+			else
+			{
+			streamPowerFactor = K * pow(drainageArea, m) * (timeStep / dx);
+			erosionRate[row][col] = ((RasterData[row][col] + RasterData[receiver_row][receiver_col] *
+						  streamPowerFactor) /
+						 (1 + streamPowerFactor) - RasterData[row][col]) / timeStep;
+			}
+		}
+		else
+		{
+			float new_zeta = RasterData[row][col];
+			float old_zeta = RasterData[row][col];
+
+			float epsilon;
+			float streamPowerFactor = K * pow(drainageArea, m) * timeStep;
+			float slope;
+			do
+			{
+				slope = (new_zeta - zeta[receiver_row][receiver_col]) / dx;
+				epsilon = (new_zeta - old_zeta + streamPowerFactor * pow(slope, n)) /
+						 (1 + streamPowerFactor * (n/dx) * pow(slope, n-1));
+				new_zeta -= epsilon;
+			} while (abs(epsilon > 1e-6));
+			erosionRate[row][col] = (new_zeta - old_zeta) / timeStep;
+		}
+	}
+	return erosionRate;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This little routine 'washes out' the channels: it assumes all 
@@ -3895,10 +4326,10 @@ void LSDRasterModel::print_rasters( int frame )
 	if (not outfile.is_open())
 	{
 	  string metadata_fname =  name+"._frame_metadata";
-		cout << "Name of raster metadata file is: " <<  metadata_fname << endl;
-    outfile.open(metadata_fname.c_str());
-		outfile << name << endl;
-		outfile << "Frame_num\t";
+	  cout << "Name of raster metadata file is: " <<  metadata_fname << endl;
+          outfile.open(metadata_fname.c_str());
+       	  outfile << name << endl;
+          outfile << "Frame_num\t";
 		outfile << "Time\t";
 		outfile << "K\t";
 		outfile << "D\t";
@@ -4021,16 +4452,23 @@ void LSDRasterModel::slope_area_data( string name )
 //   1 == slope calculated with the D8 slopes, with dx = data resolution
 //        or DataResolution*sqrt(2) depending on flow direction. 
 // area_flag is a flag for calculation of the area
-//   0 == area using contributing pixels only
-//   1 == area using contributing pixels but smoothed to data resolution with polyfit
+//   0 == area using contributing pixels but smoothed to data resolution with polyfit
+//   1 == area using contributing pixels only
+// The data is printed out in tab seperated format, 
+// elevation  slope area  predicted_slope
 // SMM
 // 18/06/2014
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDRasterModel::slope_area_data( string name, int slope_flag, int area_flag  )
+void LSDRasterModel::slope_area_data( string fname, int slope_flag, int area_flag  )
 {
-	// open the file for printing
+	if (not quiet)
+	{
+    cout << "Printing slope-area data, filename is " << fname << endl;
+  }
+  
+  // open the file for printing
   ofstream outfile;
-	outfile.open((name).c_str());
+	outfile.open((fname).c_str());
 	
 	// get the flow info
 	LSDFlowInfo flowData(boundary_conditions, *this);
@@ -4042,6 +4480,13 @@ void LSDRasterModel::slope_area_data( string name, int slope_flag, int area_flag
   //        or DataResolution*sqrt(2) depending on flow direction.
   Array2D<float> slope_array(NRows, NCols, 0.0);  
   LSDRaster slope;
+  
+  if (not quiet)
+  {
+    cout << " LSDRasterModel::slope_area_data, slope_flag is: " << slope_flag 
+         << " and area_flag is: " << area_flag << endl;
+  }
+         
   switch (slope_flag)
   {
     case 0:
@@ -4110,7 +4555,7 @@ void LSDRasterModel::slope_area_data( string name, int slope_flag, int area_flag
     {
       vector<LSDRaster> surface_fitting_area;
       vector<int> raster_selection(8, 0);
-      raster_selection[1] = 0;            // this indicates you only want averaged selection
+      raster_selection[0] = 1;            // this indicates you only want averaged selection
       int node;
       
       // loop through the nodes collecting drainage area
@@ -4126,7 +4571,7 @@ void LSDRasterModel::slope_area_data( string name, int slope_flag, int area_flag
 		                     NoDataValue, drainage_array); 
 		                     
 		  // fit the surface
-	    surface_fitting_area = drainage.calculate_polyfit_surface_metrics(DataResolution+0.001, raster_selection);
+	    surface_fitting_area = drainage.calculate_polyfit_surface_metrics(DataResolution+0.5*DataResolution, raster_selection);
       drainage_area = surface_fitting_area[0];
     }
     break;
@@ -4154,26 +4599,56 @@ void LSDRasterModel::slope_area_data( string name, int slope_flag, int area_flag
 	
 	// Write data
 	outfile << name << endl;
-	outfile << "Elevation\tSlope\tArea" << endl;
+	outfile << "row\tcol\tElevation\tSlope\tArea\tPredicted_slope" << endl;
+	
+	float predicted_slope, A_pow, U_over_KApowm;
+	int n_sa_nodes = 0;
+	float err;
+	float err_tot = 0;
 
 	for (int i=0; i<NRows; ++i)
 	{
 		for (int j=0; j<NCols; ++j)
 		{
-			if (slope.get_data_element(i,j) == NoDataValue || RasterData[i][j] == NoDataValue)
+			if (slope.get_data_element(i,j) == NoDataValue 
+            || RasterData[i][j] == NoDataValue
+            || is_base_level(i,j))
 			{
 				continue;
 			}
 			else
 			{
-				outfile << RasterData[i][j];
+			  A_pow = pow( drainage_area.get_data_element(i, j), m);
+			  
+			  if (A_pow == 0)
+			  {
+          predicted_slope = NoDataValue;
+        }
+        else
+        {
+			    U_over_KApowm = get_uplift_rate_at_cell(i,j)/(get_K()*A_pow);
+  			  predicted_slope = pow(U_over_KApowm, (1/n));
+  			}
+			
+			  err = (slope.get_data_element(i, j)- predicted_slope)
+			        *(slope.get_data_element(i, j)- predicted_slope)
+			        /	(predicted_slope*predicted_slope);	
+			  err_tot+= err;
+        n_sa_nodes++;	        
+			
+				outfile << i << "\t" << j << "\t" << RasterData[i][j];
 				outfile << "\t" << slope.get_data_element(i, j);
 				outfile << "\t" << drainage_area.get_data_element(i, j); 
+				outfile << "\t" << predicted_slope;
 				outfile << endl;
 			}
 		}
 	}
-
+	
+	if (not quiet)
+	{
+	  cout << "mean error % between predicted and measured slope is: " << err_tot/n_sa_nodes << endl;
+  }
 	outfile.close();	
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -4339,21 +4814,36 @@ float LSDRasterModel::get_D( void )
   // in all of these switches, the ternary operator is used: a constant value
   // is selected if initial_steady_state is false, otherwise the parameter is 
   // determined from a function
+
+  //cout << "LINE 454 Getting D, D mode is: " << D_mode << " and D amp is: " << D_amplitude << endl;
+  float thisD;
+  //cout << "initial steady state: " << initial_steady_state << endl;
 		
-	switch( D_mode ) {
-		case 1:			// sin wave
-			return (initial_steady_state) ? periodic_parameter( K_soil, D_amplitude ) : K_soil;
-			break;
-		case 2:			// square wave
-			return (initial_steady_state) ? square_wave_parameter( K_soil, D_amplitude ) : K_soil;
-			break;
-		case 3:
-			return (initial_steady_state) ? stream_K_soil() : K_soil;
-			break;
-		default:		// constant
-			return K_soil;
-			break;
-	}
+  switch( D_mode )
+  {
+    case 1:
+    {			// sin wave
+      thisD =  ((initial_steady_state) ? periodic_parameter( K_soil, D_amplitude ) : K_soil);
+      break;
+    }
+    case 2:			// square wave
+    {
+      thisD =  ((initial_steady_state) ? square_wave_parameter( K_soil, D_amplitude ) : K_soil);
+      break;
+    }
+    case 3:
+    {
+      thisD = ((initial_steady_state) ? stream_K_soil() : K_soil);
+      break;
+    }
+    default:		// constant
+    {
+      thisD =  K_soil;
+      break;
+    }
+  }
+  //cout << "thisD is: " << thisD << endl;
+  return thisD;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -4367,15 +4857,19 @@ float LSDRasterModel::get_D( void )
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float LSDRasterModel::periodic_parameter( float base_param, float amplitude )
 {
-	float result;
+  float result;
 	
-	if (period_mode == 3 || period_mode == 4)
-		result = p_weight * sin( (current_time-time_delay-switch_delay)*2*PI/periodicity )*amplitude + 
+  if (period_mode == 3 || period_mode == 4)
+  {
+    result = p_weight * sin( (current_time-time_delay-switch_delay)*2*PI/periodicity )*amplitude + 
 			 (1-p_weight) * sin( (current_time-time_delay-switch_delay)*2*PI/periodicity_2)*amplitude + base_param;
-	else
-		result = sin( (current_time - time_delay - switch_delay) * 2 * PI / periodicity )* amplitude + base_param;
+  }
+  else
+  {
+    result = sin( (current_time - time_delay - switch_delay) * 2 * PI / periodicity )* amplitude + base_param;
+  }
 
-	return result;
+  return result;
 } 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -4861,252 +5355,6 @@ void LSDRasterModel::DAVE_assemble_matrix(Array2D<float>& uplift_rate, Array2D<f
 	}
 }
 
-
-
-
-
-#endif
-
-
-
-// nonlinear_diffusion - MIGHT STILL BE A WORK IN PROGRESS - CHECK WITH SIMON
-// calculate fluxes using the nonlinear soil flux model - use the buffered
-// topographic raster
-//------------------------------------------------------------------------------
-// LSDRasterModel LSDRasterModel::nonlinear_diffusion(Array2D<float>& SlopesBetweenRows,
-//                 Array2D<float>& SlopesBetweenColumns, float K_nl, float S_c, float dt)
-// {
-// 	// search around each node
-// 	//		2
-// 	//		|
-// 	//  3 - N - 1
-// 	//		|
-// 	//		4
-// 	float Q_1, Q_2, Q_3, Q_4;
-// 	float inverse_S_c2 = 1/(S_c*S_c);
-// 	float crit_term;
-// 	float dxKnl = DataResolution*K_nl;
-// 	float dyKnl = DataResolution*K_nl;
-// 	float dt_over_dxdy = dt/(DataResolution*DataResolution);
-//   Array2D<float> zeta = RasterData.copy();
-// //	ofstream a_out;
-// //	a_out.open("outs.txt");
-// 
-// 	for (int row = 0; row<NRows; row++)
-// 	{
-// 		for (int col = 0; col<NCols; col++)
-// 		{
-// 			// direction 1
-// 			crit_term = 1 - (slopes_between_columns[row][col+1]*slopes_between_columns[row][col+1]*inverse_S_c2);
-// 			if(crit_term < 0)
-// 			{
-// 				crit_term = 0.01;
-// 			}
-// 			Q_1 =  dyKnl*slopes_between_columns[row][col+1]/crit_term;
-// 			//a_out << endl << endl << "col: " << col << " row: " << row << endl;
-// 			//a_out << "crit term 1: " << crit_term << " Q_1: " << Q_1 << endl;
-// 			// direction 2
-// 			crit_term = 1 - (slopes_between_rows[row+1][col]*slopes_between_rows[row+1][col]*inverse_S_c2);
-// 			if(crit_term < 0)
-// 			{
-// 				crit_term = 0.01;
-// 			}
-// 			Q_2 =  dxKnl*slopes_between_rows[row+1][col]/crit_term;
-// 			//a_out << "crit term 2: " << crit_term << " Q_2: " << Q_2 << endl;
-// 			// direction 3
-// 			crit_term = 1 - (slopes_between_columns[row][col]*slopes_between_columns[row][col]*inverse_S_c2);
-// 			if(crit_term < 0)
-// 			{
-// 				crit_term = 0.01;
-// 			}
-// 			Q_3 =  - dyKnl*slopes_between_columns[row][col]/crit_term;
-// 			//a_out << "crit term 3: " << crit_term << " Q_3: " << Q_3 << endl;
-// 
-// 			// direction 3
-// 			crit_term = 1 - (slopes_between_rows[row][col]*slopes_between_rows[row][col]*inverse_S_c2);
-// 			if(crit_term < 0)
-// 			{
-// 				crit_term = 0.01;
-// 			}
-// 			Q_4 =  - dxKnl*slopes_between_rows[row][col]/crit_term;
-// 			//a_out << "crit term 4: " << crit_term << " Q_4: " << Q_4 << endl;
-// 			      
-//       zeta[row][col] = zeta[row][col] + dt_over_dxdy*(Q_1+Q_2+Q_3+Q_4);
-// 			//a_out << "dz = " << dt*(Q_1+Q_2+Q_3+Q_4)/(dx*dy) << endl;
-// 		}
-// 	}
-// 	//a_out.close();
-// 	LSDRasterModel Zeta(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
-//   return Zeta;
-// }
-
-// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// EXPLICIT MODEL COMPONENTS
-// ------------------------------------------------------------------------------
-// A series of functions that carry out parts of the number crunching in the
-// explicit version of the model
-// ------------------------------------------------------------------------------
-// creep_and_fluvial_timestep
-// For a given timestep in the model, calculates the hillslope and channel
-// sediment fluxes and adjusts topography accordingly
-// ------------------------------------------------------------------------------
-// LSDRasterModel LSDRasterModel::creep_and_fluvial_timestep(float& t_ime, float dt, float uplift_rate,
-// 								float South_boundary_elevation, float North_boundary_elevation,
-// 								float D_nl, float S_c, float k_w, float b, float K, float n, float m, 
-//                 float erosion_threshold, LSDRasterModel& ZetaOld, LSDRasterModel& ZetaRasterBuff,
-// 								Array2D<float>& SlopesBetweenRows, Array2D<float>& SlopesBetweenColumns,
-// 								Array2D<float>& ErosionRateArray, Array2D<float>& precip_flux, Array2D<float>& Q_w, 
-//                 Array2D<float>& ChannelWidthArray, Array2D<float>& TopoDivergence,
-//                 Array2D<float>& FluvialErosionRateArray)
-// {
-// 	// Load object data into new array
-//   Array2D<float> zeta = RasterData.copy();
-//   
-//   int any_pits = 1;
-// 	t_ime+=dt;			// increment time
-// 	// reset zeta_old
-// 	LSDRasterModel ZetaOld(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
-//   // uplift the landsape
-// 	LSDRasterModel ZetaRaster = uplift_surface(UpliftRate, dt);
-// 	// buffer the landscape
-// 	LSDRasterModel ZetaRasterBuff = ZetaRaster.create_buffered_surf(South_boundary_elevation, North_boundary_elevation);
-// 	// get slopes for creep
-// 	ZetaRasterBuff.get_slopes(Array2D<float>& SlopesBetweenRows, Array2D<float>& SlopesBetweenColumns);
-//   // diffuse surface with nonlinear creep
-// 	nonlinear_diffusion(SlopesBetweenRows, SlopesBetweenColumns, K_nl, S_c, dt);
-// 	// now update the original surface
-// 	for (int row = 0; row < NCols; row++)
-// 	{
-// 		for (int col = 0; col < NRols; col++)
-// 		{
-// 			ZetaRaster.get_data_element(row,col) = ZetaRasterBuff.get_data_element(row+1,col+1);
-//   	}
-// 	}
-//   ZetaRaster = ZetaRaster.fill(0.00001);
-// 
-// THIS NEEDS TO BE REPLACED BY FASTSCAPE!!!
-// 	while (any_pits == 1)
-// 	{
-// 		// now vectorize surface to look at fluvial erosion
-// 		vectorize_surface(zeta, N_rows, N_cols, vector_zeta,
-// 					  		row_vec, col_vec);
-// 		// now sort the surface
-// 		matlab_float_sort(vector_zeta,sorted_surf_vec,sorting_index);
-// 		// now route the flow
-// 		any_pits = flow_routing_2Direction(sorted_surf_vec, sorting_index,
-// 							row_vec, col_vec, zeta_buff, Q_w, precip_flux, N_rows, N_cols);
-// 
-// 		if (any_pits == 1)
-// 		{
-// 			//cout << "FILLING LINE 271" << endl;
-// 
-// 			// now fill the pits and flats of this buffered surface
-// 			fill_pits_and_flats_parent(zeta_buff, N_rows+2, N_cols+2);
-// 
-// 			// now update the original surface with the filled surface
-// 			for (int row = 0; row < N_rows; row++)
-// 			{
-// 				for (int col = 0; col < N_cols; col++)
-// 				{
-// 					zeta[row][col] = zeta_buff[row+1][col+1];
-// 				}
-// 			}
-// 		}
-// 	}
-// 	
-//   // now get the channel widths
-// 	ChannelWidthArray = array_channel_width_wolman(Q_w,k_w,b);
-// 	// calcualte the topographic divergence
-// 	TopoDivergence = ZetaRaster.get_topographic_divergence();
-// 	// calcualte fluvial erosion rate
-// 	FluvialErosionRateArray = calculate_fluvial_erosion_rate(ChannelWidth, Q_w, TopoDivergence, K, n, m, ErosionThreshold);
-// 	// erode fluvially
-// 	for (int row = 0; row<NRows; row++)
-// 	{
-// 		for (int col = 0; col<NCols; col++)
-// 		{
-// 			ZetaRaster.get_data_element(row,col) -= dt*FluvialErosionRate[row][col];
-// 		}
-// 	}
-//   // calucalte erosion rate
-//   ErosionRateArray = calculate_erosion_rate_array(ZetaRaster, ZetaOld, dt);  
-//   return ZetaRaster;
-// }
-
-
-////=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-//// INITIAL TOPOGRAPHY MODULE
-////=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-//// There are a number of options that will be built into this to give 
-//// flexibility when it comes to setting up the LEM.
-//// This includes:
-//// i) Artifial parabolic surfaces - other surfaces may be added later as 
-//// needed
-//// ii) Existing topographic datasets (for example a real DEM) - this is simply
-//// done by loading the data as LSDRasterModel rather than an LSDRaster
-////=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-//// Initialise_parabolic_surface
-//// This function generates a parabolic surface with elevations on the North
-//// and South edges at zero, and in the middle at 'PeakElevation'
-////----------------------------------------------------------------------------
-// LSDRasterModel LSDRasterModel::create_parabolic_surface(int NRows,
-//   int NCols, float DataResolution, float NoDataValue, float PeakElevation, float RandomAmplitude,
-//   float EdgeOffset)
-// {
-//   Array2D<float> temp_surf(N_rows,N_cols,0.0);
-// 	surf = temp_surf.copy();
-// 
-// 	long seed = time(NULL);               // seed for random number generator
-// 	float local_x;
-// 	float L = dx*(N_rows-1);
-// 	float row_elev;
-// 	float perturb;
-// 
-// 	for(int row = 0; row < N_rows; row++)
-// 	{
-// 		local_x = row*dx;
-// 		row_elev = - 4.0*(local_x*local_x-local_x*L)*peak_elev / (L*L);
-// 		for (int col = 0; col < N_cols; col++)
-// 		{
-// 			perturb = (ran3(&seed)-0.5)*random_amp;
-// 			surf[row][col] = row_elev + perturb + edge_offset;
-// 		}
-// 	}
-// 	LSDRasterModel ParabolicSurface(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, surf);
-//   return ParabolicSurface;
-// }
-////----------------------------------------------------------------------------
-//// Create Nonlinear Steady State Hillslope
-//// Does what it says on the tin
-// LSDRasterModel LSDRasterModel::create_nonlinear_SS_hillslope(int NRows, int NCols,
-//   float XMinimum, float YMinimum, float DataResolution, float NoDataValue,
-//   float K_nl, float S_c, float U)
-// {  
-// 	float y,loc_y;
-//  	float max_y = (N_rows-1)*dy;
-//  	
-//   float term1 = K_nl*S_c*S_c*0.5/U;
-//  	float term2 = 2*U/(K_nl*S_c);
-// 
-// 	y = max_y;
-//  	float min_zeta = term1*(  log(0.5*(sqrt(1+ (y*term2)*(y*term2)) +1))
-//  	                       -sqrt(1+ (y*term2)*(y*term2))+1);
-// 
-// 	for (int row = 0; row<N_rows; row++)
-// 	{
-// 		for (int col = 0; col<N_cols; col++)
-// 		{
-// 			loc_y = dy*float(row);
-// 			y = max_y-loc_y;
-// 			zeta[row][col] = term1*(  log(0.5*(sqrt(1+ (y*term2)*(y*term2)) +1))
-//  	                       -sqrt(1+ (y*term2)*(y*term2))+1) - min_zeta;
-// 		}
-// 	}
-// 	LSDRasterModel NonLinearHillslope(NRows, NCols, XMinimum, YMinimum, DataResolution,
-//                                          NoDataValue, zeta);
-//   return NonLinearHillslope;
-// }
-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This sets data members associated with the MuddPILE solution of 
 // the nonlinear hillslope equations
@@ -5121,8 +5369,8 @@ void LSDRasterModel::MuddPILE_initiate_assembler_matrix(void)
        << D_nl << " and S_c is: " << S_c << endl;
   
   // update data_members
-	inv_dx_S_c_squared = 1/(dx*dx*S_c*S_c);
-	dx_front_term = timeStep*D_nl/(dx*dx);
+  inv_dx_S_c_squared = 1/(dx*dx*S_c*S_c);
+  dx_front_term = timeStep*D_nl/(dx*dx);
   problem_dimension = NRows*NCols;
 
   cout << "MuddPILE_initiate_assembler_matrix, calling k values" << endl;  
@@ -5147,68 +5395,67 @@ void LSDRasterModel::MuddPILE_initiate_assembler_matrix(void)
 // the index into the vectorised matrix of zeta values, that is used in the assembly matrix
 // the number of elements in the k vectors is N_rows*N_cols
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDRasterModel::MuddPILE_calculate_k_values_for_assembly_matrix()											
+void LSDRasterModel::MuddPILE_calculate_k_values_for_assembly_matrix()								    
 {
   // SMM: need to double check if this is only true of periodic boundary
   // conditions. It seems that it is the case. 
-	int N_elements_in_k_vec = NRows*NCols;
+  int N_elements_in_k_vec = NRows*NCols;
 
-	// initialise the vectors with empty values
-	vector<int> empty_vec(N_elements_in_k_vec,0);
-	vec_k_value_i_j   = empty_vec;
-	vec_k_value_ip1_j = empty_vec;
-	vec_k_value_im1_j = empty_vec;
-	vec_k_value_i_jp1 = empty_vec;
-	vec_k_value_i_jm1 = empty_vec;
+  // initialise the vectors with empty values
+  vector<int> empty_vec(N_elements_in_k_vec,0);
+  vec_k_value_i_j   = empty_vec;
+  vec_k_value_ip1_j = empty_vec;
+  vec_k_value_im1_j = empty_vec;
+  vec_k_value_i_jp1 = empty_vec;
+  vec_k_value_i_jm1 = empty_vec;
 
-	//cout << "MuddPILE calculate k vecs, n elements: " << N_elements_in_k_vec << endl;
+  //cout << "MuddPILE calculate k vecs, n elements: " << N_elements_in_k_vec << endl;
 
-	// we loop through each node
-	// This is done without buffering. 
-	// Some of these entries will result in negative indices, but these
-	// will never be called since the boundaries are set by the 
-	// constant elevation boundary condition
-	int counter = 0;
-	for (int row = 0; row<NRows; row++)
-	{
-		for (int col = 0; col<NCols; col++)
-		{
-		  // bounds checking
+  // we loop through each node
+  // This is done without buffering. 
+  // Some of these entries will result in negative indices, but these
+  // will never be called since the boundaries are set by the 
+  // constant elevation boundary condition
+  int counter = 0;
+  for (int row = 0; row<NRows; row++)
+  {
+    for (int col = 0; col<NCols; col++)
+    {
+      // bounds checking
       if (counter > N_elements_in_k_vec)
-		  {
+      {
          cout << "DANGER, LSDRasterModel::MuddPILE_calculate_k_values_for_assembly_matrix" << endl
               << "counter is out of bounds!" << endl;
-      } 
+       } 
       
         
-			vec_k_value_ip1_j[counter] = NCols*(row+1)+col;
-			vec_k_value_im1_j[counter] = NCols*(row-1)+col;
-			vec_k_value_i_j[counter] = NCols*(row)+col;
+      vec_k_value_ip1_j[counter] = NCols*(row+1)+col;
+      vec_k_value_im1_j[counter] = NCols*(row-1)+col;
+      vec_k_value_i_j[counter] = NCols*(row)+col;
 
-			// logic for west periodic boundary
-			if(col == 0)
-			{
-				vec_k_value_i_jp1[counter] = NCols*(row)+col+1;
-				vec_k_value_i_jm1[counter] = NCols*(row)+NCols-1;
-			}
-			// logic for east periodic boundary
-			else if(col == NCols-1)
-			{
-				vec_k_value_i_jp1[counter] = NCols*(row);
-				vec_k_value_i_jm1[counter] = NCols*(row)+col-1;
+      // logic for west periodic boundary
+      if(col == 0)
+      {
+        vec_k_value_i_jp1[counter] = NCols*(row)+col+1;
+	vec_k_value_i_jm1[counter] = NCols*(row)+NCols-1;
+      }
+      // logic for east periodic boundary
+      else if(col == NCols-1)
+      {
+	vec_k_value_i_jp1[counter] = NCols*(row);
+	vec_k_value_i_jm1[counter] = NCols*(row)+col-1;
+      }
+      // logic for rest of matrix
+      else
+      {
+	vec_k_value_i_jp1[counter] = NCols*(row)+col+1;
+	vec_k_value_i_jm1[counter] = NCols*(row)+col-1;
+      }
 
-			}
-			// logic for rest of matrix
-			else
-			{
-				vec_k_value_i_jp1[counter] = NCols*(row)+col+1;
-				vec_k_value_i_jm1[counter] = NCols*(row)+col-1;
-			}
-
-			// increment counter
-			counter++;
-		}
-	}
+      // increment counter
+      counter++;
+    }
+  }
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -5222,104 +5469,112 @@ void LSDRasterModel::MuddPILE_assemble_matrix(Array2D<float>& uplift_rate,
 						 mtl::compressed2D<float>& mtl_Assembly_matrix,
 						 mtl::dense_vector<float>& mtl_b_vector)
 {
+
+  // get the soil diffusivity of the current step
+  // note that in the future we might want
+  // i) spatially varying D values
+  // ii) time and space varying S_c
+  float D_nl = get_D();
+  dx_front_term = timeStep*D_nl/(DataResolution*DataResolution);
+
   // get the number of elements in the k vec
   int n_k_elements = vec_k_value_i_j.size();
 
-        // the coefficients in the assembly matrix
-	float A,B,C,D;
+  // the coefficients in the assembly matrix
+  float A,B,C,D;
 
-	// reset the assembly and b vector
-	mtl_Assembly_matrix = 0.0;
-	mtl_b_vector = 0.0;
+  // reset the assembly and b vector
+  mtl_Assembly_matrix = 0.0;
+  mtl_b_vector = 0.0;
 
-	// create the inserter. This is deleted when this function is exited
-	mtl::matrix::inserter< mtl::compressed2D<float> > ins(mtl_Assembly_matrix);
+  // create the inserter. This is deleted when this function is exited
+  mtl::matrix::inserter< mtl::compressed2D<float> > ins(mtl_Assembly_matrix);
 
-	// first we assemble the boundary nodes. First the nodes in row 0
+  // first we assemble the boundary nodes. First the nodes in row 0
   //cout << "Line 5180, getting south boundary" << endl;
-	for (int k = 0; k<NCols; k++)
-	{
-	  //cout << "k is " << k << endl;
+  for (int k = 0; k<NCols; k++)
+  {
+    //cout << "k is " << k << endl;
 	  
-		ins[k][k] << 1.0;
-		//cout << "inserted boundary, now doing b vec" << endl;
-		//cout << "b vec this k" << mtl_b_vector[k] << endl;
-		//cout << "zeta_last_iter[0][0] " << RasterData[0][0] << endl;
+    ins[k][k] << 1.0;
+    //cout << "inserted boundary, now doing b vec" << endl;
+    //cout << "b vec this k" << mtl_b_vector[k] << endl;
+    //cout << "zeta_last_iter[0][0] " << RasterData[0][0] << endl;
     mtl_b_vector[k] =  RasterData[0][0];
     //cout << "did b vec" << endl;
-	}
+  }
 
-	// now assemble the north boundary
-	// in this implementation there is no buffered surface
-	int starting_north_boundary = (NRows-1)*(NCols);
-	int one_past_last_north_boundary = (NRows)*NCols;
+  // now assemble the north boundary
+  // in this implementation there is no buffered surface
+  int starting_north_boundary = (NRows-1)*(NCols);
+  int one_past_last_north_boundary = (NRows)*NCols;
   //cout << "Line 5190, getting N boundary!" << endl;
-	for (int k = starting_north_boundary; k < one_past_last_north_boundary; k++)
-	{
-		ins[k][k] << 1.0;
-		mtl_b_vector[k] = RasterData[NRows-1][0];
-	}
+  for (int k = starting_north_boundary; k < one_past_last_north_boundary; k++)
+  {
+    ins[k][k] << 1.0;
+    mtl_b_vector[k] = RasterData[NRows-1][0];
+  }
 
-	// now assemble the rest
-	// we loop through each node
-	int counter = NCols;       // the counter starts at NCols because the assumbly
-	                           // matrix starts at the first row. 
-	float b_value;
-	int k_value_i_j,k_value_ip1_j,k_value_im1_j,k_value_i_jp1,k_value_i_jm1;
+  // now assemble the rest
+  // we loop through each node
+  int counter = NCols;       // the counter starts at NCols because the assumbly
+                             // matrix starts at the first row. 
+  float b_value;
+  int k_value_i_j,k_value_ip1_j,k_value_im1_j,k_value_i_jp1,k_value_i_jm1;
 	
-	// this does not loop over row 0 or NRows-1 because these have a 
-	// fixed elevation, these are addressed earlier in the boundary nodes
+  // this does not loop over row 0 or NRows-1 because these have a 
+  // fixed elevation, these are addressed earlier in the boundary nodes
   //cout << "Line 5204, assembling!!!" << endl;
-	for (int row = 1; row<NRows-1; row++)
-	{
-		for (int col = 0; col<NCols; col++)
-		{
-		  // bounds check
+  for (int row = 1; row<NRows-1; row++)
+  {
+    for (int col = 0; col<NCols; col++)
+    {
+      // bounds check
       if (counter >= n_k_elements)
-		  {
+      {
         cout << "Danger!!!, counter: " << counter << " n_k: " << n_k_elements << endl;
       } 
 
-			b_value = zeta_last_timestep[row][col]+timeStep*uplift_rate[row][col]
-                                            -timeStep*fluvial_erosion_rate[row][col];
+      b_value = zeta_last_timestep[row][col]+timeStep*uplift_rate[row][col]
+                                   -timeStep*fluvial_erosion_rate[row][col];
 
-			k_value_ip1_j = vec_k_value_ip1_j[counter];
+      k_value_ip1_j = vec_k_value_ip1_j[counter];
 			k_value_im1_j = vec_k_value_im1_j[counter];
 			k_value_i_j   = vec_k_value_i_j[counter];
 			k_value_i_jp1 = vec_k_value_i_jp1[counter];
 			k_value_i_jm1 = vec_k_value_i_jm1[counter];
 			
-			// bounds check
-			if (k_value_ip1_j >= problem_dimension)
-			{
+      // bounds check
+     if (k_value_ip1_j >= problem_dimension)
+      {
         cout << "Warning, k i+1,j value out of bounds!" << endl;
         cout << "problem dimension: " << problem_dimension << endl;
         cout << "value: " <<  k_value_ip1_j << endl;
         cout << "row" << row << " and col: " << col << endl;
       }
-			if (k_value_im1_j >= problem_dimension)
-			{
+      if (k_value_im1_j >= problem_dimension)
+      {
         cout << "Warning, k i-1,j value out of bounds!" << endl;
         cout << "problem dimension: " << problem_dimension << endl;
         cout << "value: " <<  k_value_im1_j << endl;
         cout << "row" << row << " and col: " << col << endl;
       }			
- 			if (k_value_i_j >= problem_dimension)
-			{
+      if (k_value_i_j >= problem_dimension)
+      {
         cout << "Warning, k i,j value out of bounds!" << endl;
         cout << "problem dimension: " << problem_dimension << endl;
         cout << "value: " <<  k_value_i_j << endl;
         cout << "row" << row << " and col: " << col << endl;
       }
-			if (k_value_i_jm1 >= problem_dimension)
-			{
+      if (k_value_i_jm1 >= problem_dimension)
+      {
         cout << "Warning, k i,j-1 value out of bounds!" << endl;
         cout << "problem dimension: " << problem_dimension << endl;
         cout << "value: " <<  k_value_i_jm1 << endl;
         cout << "row" << row << " and col: " << col << endl;
       }      
-			if (k_value_i_jp1 >= problem_dimension)
-			{
+      if (k_value_i_jp1 >= problem_dimension)
+      {
         cout << "Warning, k i,j+1 value out of bounds!" << endl;
         cout << "problem dimension: " << problem_dimension << endl;
         cout << "value: " <<  k_value_i_jp1 << endl;
@@ -5557,3 +5812,11 @@ void LSDRasterModel::MuddPILE_nl_soil_diffusion_nouplift()
   MuddPILE_nonlinear_creep_timestep(zero_uplift, zero_fluvial,default_tolerance);
   
 }
+
+
+
+
+
+#endif
+
+

@@ -475,6 +475,12 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @date 01/01/2014		
 	void run_components( void );
 
+  /// @brief This is a wrapper similar to run_components but sends the
+  /// fluvial and uplfit fields to the nonlinear solver
+  /// @author SMM
+  /// @date 07/07/2014
+  void run_components_combined( void );
+
 	/// @brief This method forces the landscape into its steady state profile, by using periodic forcing. 
 	/// This is much more efficient than using static forcing (as in run model), but doesn't give
 	/// a nice animation of an evolving landscape
@@ -491,6 +497,16 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @date 01/01/2014, edit 18/01/2014
 	void fluvial_incision( void );
 
+	/// @brief Fastscape, implicit finite difference solver for stream power equations
+	/// O(n)
+	/// Method takes its paramaters from the model data members
+  /// and solves the stream power equation at a future timestep in linear time
+  /// This version includes the current uplift, so you do not need to call 
+  /// uplift after this has finished
+	/// @SMM
+	/// @date 7/07/2014
+	void fluvial_incision_with_uplift( void );
+
 	/// @brief This function is more or less identical to fluvial_incision above, but it
   /// Returns a raster with the erosion rate and takes arguments rather
   /// than reading from data members
@@ -503,6 +519,13 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @author JAJ
   /// @date 01/01/2014
 	LSDRaster fluvial_erosion_rate(float timestep, float K, float m, float n, vector <string> boundary);
+
+	/// @brief This function is more or less identical to fluvial_incision above, but it
+  /// Returns an array and takes arguments rather reads from data members
+  /// @return A 2d float containing the erosion rate from fluvial processes
+  /// @author SMM
+  /// @date 07/07/2014
+	Array2D<float> fluvial_erosion_rate( void );
   
   /// @brief This assumes that all sediment transported from rivers into 
   /// channels is removed. It checks the raster to see where the channels are
@@ -530,6 +553,15 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @date 01/01/2014
 	Array2D <float> generate_uplift_field( int mode, float max_uplift); 
 
+	/// @brief Creates uplift field from a set of templates, parameters are taken from
+	/// data members
+	/// @return returns the uplift field that is the same dimensions as the original 
+	/// raster
+	/// @author SMM
+	/// @date 07/07/2014
+	Array2D <float> generate_uplift_field( void ); 
+
+
 	/// @brief Gets the uplift value at a given cell
 	/// this method is implemented as a memory saving measure, rather than
 	/// storing the uplift field in memory
@@ -547,6 +579,24 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @author JAJ  commented SMM
 	/// @author 01/01/2014   commented 26/06/2014
 	float get_uplift_at_cell(int i, int j);
+
+	/// @brief Gets the uplift rate at a given cell
+	/// this method is implemented as a memory saving measure, rather than
+	/// storing the uplift field in memory
+	/// Some methods still implemented still use this uplift field
+	/// It's advisable this is changed, otherwise the size of rasters that
+	/// can be modelled will be severely reduced
+	/// @details 	 This uses the uplift_mode to determine how uplift is calculated
+  /// 	(0) - block uplift
+	///	1   - tilt block
+	///	2   - gaussian
+	///	3   - quadratic
+	/// @param row
+	/// @param column
+	/// @return the uplift rate
+	/// @author SMM
+  /// @date 07/07/2014   commented 26/06/2014
+	float get_uplift_rate_at_cell(int i, int j);
 	
 	/// @brief Apply uplift field to the raster.  Overloaded function so that the first
 	/// simply considers uniform uplift, the second allows user to use a prescribed
@@ -870,14 +920,18 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// This is an overloaded function that calcualtes slope area
 	/// data based on flags. There are two flag, one for the slope
 	/// calculation and one for the area calculation
+	/// @details The output is a file with four columns
+	/// Elevation  slope area  predicted_slope
+	/// The predicted slope is that based on the SS solution of stream power
+	/// at the current uplift rate and the current K
 	/// @param requires a filename
 	/// @param a flag for calculation of the topographic slope
 	/// 0 == polyfit using the data resolution as the smoothing diameter
 	/// 1 == slope calculated with the D8 slopes, with dx = data resolution
   /// or DataResolution*sqrt(2) depending on flow direction. 
 	/// @param a flag for calculation of the area
-	/// 0 == area using contributing pixels only
-	/// 1 == area using contributing pixels but smoothed to data resolution with polyfit
+	/// 0 == area using contributing pixels but smoothed to data resolution with polyfit
+	/// 1 == area using contributing pixels only
 	/// 2 == 
 	/// @author SMM
 	/// @date 18/06/2014
@@ -1312,53 +1366,3 @@ class LSDRasterModel: public LSDRasterSpectral
 #endif
 
 
-//  ///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-//  /// INITIAL TOPOGRAPHY MODULE
-//  ///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-//  /// There are a number of options that will be built into this to give 
-//  /// flexibility when it comes to setting up the LEM.
-//  /// This includes:
-//  /// i) Artifial parabolic surfaces - other surfaces may be added later as 
-//  /// needed
-//  /// ii) Existing topographic datasets (for example a real DEM) - this is simply
-//  /// done by loading the data as LSDRasterModel rather than an LSDRaster
-//  ///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-//  /// Create_parabolic_surface
-//  /// This function generates a parabolic surface with elevations on the North
-//  /// and South edges at zero, and in the middle at 'PeakElevation'
-//  LSDRasterModel create_parabolic_surface(int NRows, int NCols, float dx, 
-//    float PeakElevation, float RandomAmplitude, float EdgeOffset);
-//  
-//  ///----------------------------------------------------------------------------
-//  /// Create Nonlinear Steady State Hillslope
-//  /// Does what it says on the tin
-//  LSDRasterModel create_nonlinear_SS_hillslope(float K_nl, float S_c, float U);
-	   
-//   //------------------------------------------------------------------------------
-//   // nonlinear_diffusion - MIGHT STILL BE A WORK IN PROGRESS - CHECK WITH SIMON
-//   // calculate fluxes using the nonlinear soil flux model - use the buffered
-//   // topographic raster
-//   //------------------------------------------------------------------------------
-//   LSDRasterModel nonlinear_diffusion(Array2D<float>& SlopesBetweenRows, Array2D<float>& SlopesBetweenColumns, 
-//                 float K_nl, float S_c, float dt);
-//                 
-//   ///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-//   /// EXPLICIT MODEL COMPONENTS
-//   ///------------------------------------------------------------------------------
-//   /// A series of functions that carry out parts of the number crunching in the
-//   /// explicit version of the model
-//   ///------------------------------------------------------------------------------
-//   /// creep_and_fluvial_timestep
-//   /// For a given timestep in the model, calculates the hillslope and channel
-//   /// sediment fluxes and adjusts topography accordingly
-//   ///------------------------------------------------------------------------------
-//   LSDRasterModel creep_and_fluvial_timestep(float& t_ime, float dt, float uplift_rate,
-// 								float South_boundary_elevation, float North_boundary_elevation,
-// 								float D_nl, float S_c, float k_w, float b, float K, float n, float m, 
-//                 float erosion_threshold, LSDRasterModel& ZetaOld, LSDRasterModel& ZetaRasterBuff,
-// 								Array2D<float>& SlopesBetweenRows, Array2D<float>& SlopesBetweenColumns,
-// 								Array2D<float>& ErosionRateArray, Array2D<float>& precip_flux,
-//                 Array2D<float>& Q_w, Array2D<float>& ChannelWidthArray, 
-//                 Array2D<float>& TopoDivergence, Array2D<float>& FluvialErosionRateArray);   
-
-	       
