@@ -4,7 +4,7 @@
 // This program gets the drainage density of all basins with a threshold area of
 // 100,000 m^2 or above to compare drainage density with mean basin slope and mean hilltop
 // curvature (used as a proxy for erosion rate). It gets drainage density based on a channel
-// network methodology described by Clubb et al. (2014). The data are also binned (bin width = 0.1)
+// network methodology described by Clubb et al. (2014). The data are also binned (bin width = 0.01)
 //
 // Outputs a txt file for the data cloud with the format
 // drainage_density mean_hilltop_curvature mean_basin_slope 
@@ -152,6 +152,8 @@ int main (int nNumberofArgs,char *argv[])
   cout << "Extracting the basins" << endl;
   //getting basins to calculate drainage density	
   LSDIndexRaster Basins = ChanNetwork.extract_basins_from_junction_vector(basin_junctions, FlowInfo);
+  string basins_name = "_basins";
+  Basins.write_raster((path_name+DEM_name+basins_name), DEM_flt_extension);
   
   // get flow directions - D8 flowdir for drainage density calculations 
   Array2D<int> FlowDir_array = FlowInfo.get_FlowDirection();
@@ -179,31 +181,7 @@ int main (int nNumberofArgs,char *argv[])
   
   Slope.write_raster((path_name+DEM_name+slope_name), DEM_flt_extension);
   Curvature.write_raster((path_name+DEM_name+curv_name), DEM_flt_extension);
-  
-  // Get the hilltop curvature
-  
-  LSDRaster Hilltops = ChanNetwork.ExtractRidges(FlowInfo);
-  LSDRaster CHT_temp = filled_topo_test.get_hilltop_curvature(Curvature, Hilltops);
-  
-  // Remove hilltop pixels with positive curvature (noise)
-  
-  Array2D<float> CHT_array = CHT_temp.get_RasterData();
-  Array2D<float> CHT_array_final(NRows, NCols, NoDataValue);
-  for (int row = 0; row < NRows; row++)
-  {
-    for (int col = 0; col < NCols; col++)
-    {
-      if (CHT_array[row][col] < 0)
-      {
-        CHT_array_final[row][col] = CHT_array[row][col];
-      }
-    }
-  }
-
-  LSDRaster CHT(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,CHT_array_final);   
-  string CHT_name = "_CHT";
-  CHT.write_raster((path_name+DEM_name+CHT_name), DEM_flt_extension);
-   
+     
   // Create the text files for writing info to
             
   int no_junctions = basin_junctions.size();  
@@ -235,17 +213,39 @@ int main (int nNumberofArgs,char *argv[])
 	{
     cout << flush << "Junction = " << i+1 << " of " << no_junctions << "\r";
     int junction_number = basin_junctions[i];
+    int StreamOrder = ChanNetwork.get_StreamOrder_of_Junction(FlowInfo, junction_number);
     
+    // Get the hilltop curvature
+    int MinOrder = 1;
+    int MaxOrder = StreamOrder-1;
+    LSDRaster Hilltops = ChanNetwork.ExtractRidges(FlowInfo, MinOrder, MaxOrder);
+    LSDRaster CHT_temp = filled_topo_test.get_hilltop_curvature(Curvature, Hilltops);
+  
+    // Remove hilltop pixels with positive curvature (noise)
+  
+    Array2D<float> CHT_array = CHT_temp.get_RasterData();
+    Array2D<float> CHT_array_final(NRows, NCols, NoDataValue);
+    for (int row = 0; row < NRows; row++)
+    {
+      for (int col = 0; col < NCols; col++)
+      {
+        if (CHT_array[row][col] < 0)
+        {
+          CHT_array_final[row][col] = CHT_array[row][col];
+        }
+      }
+    }
+    LSDRaster CHT(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,CHT_array_final);
+
     // set basin parameters
     LSDBasin Basin(junction_number, FlowInfo, ChanNetwork);
     Basin.set_FlowLength(SOArray, FlowInfo);
     Basin.set_DrainageDensity();
     Basin.set_SlopeMean(FlowInfo, Slope);
     Basin.set_CHTMean(FlowInfo, CHT);
-    
     //Basin.Plot_Boomerang(Slope, DinfArea, FlowInfo, log_bin_width, SplineResolution, bin_threshold, path_name);
     
-   // return basin parameters
+    // return basin parameters
     float drainage_density = Basin.get_DrainageDensity();
     cout << "Drainage density: " << drainage_density << endl;
     float basin_slope = Basin.get_SlopeMean();
@@ -264,8 +264,9 @@ int main (int nNumberofArgs,char *argv[])
     } 
   }   
   
-  float bin_width = 0.1;
+  float bin_width = 0.01;
   float bin_lower_limit = 0;
+  float bin_threshold = 0.02;
   vector<float> CHTX_output;
   vector<float> DDY_output;
   vector<float> midpoints_output;
@@ -279,13 +280,23 @@ int main (int nNumberofArgs,char *argv[])
   vector<float> Slope_StDev_Y_output;
   vector<float> Slope_StandardErrorY_output;
   
+  cout << "Binning CHT/drainage density" << endl;
+
   bin_data(CHTs, DrainageDensities, bin_width, CHTX_output, DDY_output, midpoints_output, MedianY_output, 
            CHT_StDev_X_output, DD_StDev_Y_output, CHT_StandardErrorX_output, DD_StandardErrorY_output,
            number_observations_output, bin_lower_limit, NoDataValue); 
            
+  RemoveSmallBins(CHTX_output, DDY_output, midpoints_output, CHT_StDev_X_output, DD_StDev_Y_output, CHT_StandardErrorX_output, DD_StandardErrorY_output,
+                  number_observations_output, bin_threshold);
+           
+  cout << "Binning CHT/slope" << endl; 
+           
   bin_data(CHTs, Slopes, bin_width, CHTX_output, SlopeY_output, midpoints_output, MedianY_output, 
            CHT_StDev_X_output, Slope_StDev_Y_output, CHT_StandardErrorX_output, Slope_StandardErrorY_output,
-           number_observations_output, bin_lower_limit, NoDataValue);            
+           number_observations_output, bin_lower_limit, NoDataValue);        
+           
+  RemoveSmallBins(CHTX_output, SlopeY_output, midpoints_output, CHT_StDev_X_output, Slope_StDev_Y_output, CHT_StandardErrorX_output, Slope_StandardErrorY_output,
+                  number_observations_output, bin_threshold); 
            
   for (int i = 0; i < CHTX_output.size(); i++)
   {
