@@ -22,36 +22,100 @@ class LSDParticle
     LSDParticle( int StartType, double StartxLoc, double StartdLoc)
     						{ create(StartType, StartxLoc, StartdLoc); }
 
+    /// @brief Get the type
+    /// @return Type the type of the particle
     int    getType() const			{ return Type; }
+    
+    /// @brief Get the CellIndex
+    /// @return CellIndex the CellIndex of the particle
     int    getCellIndex() const		{ return CellIndex; }
+    
+    /// @brief Get the Age
+    /// @return Age the Age of the particle. This is the time since it has
+    /// entered the soil layer  
     double getAge() const			{ return Age; }
+    
+    /// @brief Get the OSLage
+    /// @return OSLage the Optically stimulated luminesce age of the particle      
     double getOSLage() const		{ return OSLage; }
+    
+    /// @brief Get the xLoc
+    /// @return  xLoc the  x location of the particle         
     double getxLoc() const			{ return xLoc; }
+    
+    /// @brief Get the dLoc
+    /// @return  dLoc the  depth of the particle       
     double getdLoc() const			{ return dLoc; }
 
+    /// @brief const reference operator
     LSDParticle(const LSDParticle& tP)
     	{ create(tP.getType(),tP.getCellIndex(), tP.getAge(),tP.getOSLage(),tP.getxLoc(),tP.getdLoc()); }
+    
+    /// @brief const reference operator
     LSDParticle(LSDParticle& tP)
     	{ create(tP.getType(),tP.getCellIndex(), tP.getAge(),tP.getOSLage(),tP.getxLoc(),tP.getdLoc()); }
 
+    /// @brief copy constructor
     LSDParticle& operator=(const LSDParticle& tP);
-
+    
+    /// @brief outstream operator
     std::ostream& operator<< (std::ostream&);
 
+    /// @brief Increase the age of the particle
+    /// @param dt the time increment
     void incrementAge(double dt);
+    
+    /// @brief Change the cell index. Used for referencing where the particle is
+    /// this could be changed in the future to an octree structure
+    /// @param CI the cell index
     void setCellIndex(int CI);
+    
+    /// @brief This 'exposes' the particle to light and resets the OSL age
     void OSLexpose();
+    
+    /// @brief This 'exposes' the particle and resets its soil age to zero
     void SoilAgeExpose();
+    
+    /// @brief Allows the user to update the horizontal location (dangerous!)    
 	  void update_xLoc(double new_xLoc);
-    void displaceReflect(double dx,double dd,double h,double dt);
+	  
+	  /// @brief this changes a particles horizontal and vertical position. If the
+	  /// particle reaches the surface it 'reflects' back into the soil layer
+	  /// @detail IMPORTANT: this increments the OSL age but not the soil age!!
+	  /// @param dx the distance moved horizontally. 
+	  /// @param dd the distance moved in depth
+	  /// @param h the thickness of the soil
+	  /// @param dt the time over which the particle moves.
+    /// @author SMM
+    /// @date 01/01/2010 
+    void displaceReflect(double dx,double dd,double h,double dt);   
+    
+    /// @brief this function test to see if the particle is within a hillslope, 
+    /// and if not sets the data to no data values
+    /// @param lambda the length of the hillslope
+    /// @author SMM
+    /// @date 01/01/2010   
     int  test_domain(double lambda);
 
  protected:
+ 
+    /// The type: used to identify, generally, what mineral the particle is
     int Type;
+    
+    /// The cell index, used for referencing the location of a particle in 
+    /// a grid 
     int CellIndex;
+    
+    /// Age the particle has spent in the soil
     double Age;
+    
+    /// Optically stimulated luminescence age
     double OSLage;
+    
+    /// Horizontal location of the particle
     double xLoc;
+    
+    /// Depth of the particle
     double dLoc;
 
  private:
