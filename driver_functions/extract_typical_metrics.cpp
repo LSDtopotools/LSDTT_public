@@ -66,16 +66,28 @@ int main (int nNumberofArgs,char *argv[])
   string f_name = argv[2];
   string f_ext = argv[3];
 
-  if(f_ext != "asc" || f_ext != "flt")
+  string lchar = path_name.substr(path_name.length()-2,1);
+  string slash = "/";
+  cout << "lchar is " << lchar << " and slash is " << slash << endl;
+
+  // make sure there is a slash at the end of the pathname      
+  if (lchar != slash)
+  {
+    cout << "You forgot the frontslash at the end of the path. Appending." << endl;  
+    path_name = path_name+slash;
+  } 
+  cout << "The pathname is: " << path_name << endl;
+
+  // make sure the extension is correct
+  if(f_ext != "asc" && f_ext != "flt")
   {
     cout << "You did not choose a valid file option, options are asc and flt" << endl;
+    cout << "you selected: " << f_ext << endl;
     exit(EXIT_SUCCESS);
   }
 
-  cout << "The path is: " << path_name << " and the filename is: " << f_name << endl;
-
   string full_name = path_name+f_name;
-
+  cout << "The full path is: " << full_name << endl;
   //string DEM_name;
   string fill_ext = "_fill";
 

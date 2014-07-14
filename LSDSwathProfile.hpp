@@ -1,10 +1,7 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // LSDSwathProfile.hpp
 //------------------------------------------------------------------------------
-// This code houses the LSDCloud object, and associated functions, designed to
-// analyse 3D pointcloud data, such as airborne LiDAR, and interface with the
-// raster based LSDTopotools.  Currently reads .las files, but this could be
-// expanded in the future to include other input types.
+// This code houses the LSDSwath object, used to make swath profiles
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // This object is written by
@@ -37,6 +34,9 @@ using namespace TNT;
 #ifndef LSDSwathProfile_H
 #define LSDSwathProfile_H
 
+/// @brief This code houses the LSDSwath object, used to make swath profiles
+/// @author DTM
+/// @date 17/02/14
 class LSDSwath
 {
   public:   

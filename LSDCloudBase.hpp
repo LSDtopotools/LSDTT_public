@@ -36,6 +36,12 @@ using namespace TNT;
 #ifndef LSDCloudBase_H
 #define LSDCloudBase_H
 
+/// @brief This code houses the LSDCloud object, and associated functions, designed to
+/// analyse 3D pointcloud data, such as airborne LiDAR, and interface with the
+/// raster based LSDTopotools.  Currently reads .las files, but this could be
+/// expanded in the future to include other input types.
+/// @author DTM
+/// @date 17/02/14
 class LSDCloud
 {
   public:   

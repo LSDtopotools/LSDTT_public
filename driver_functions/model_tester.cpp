@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
   //mod.check_steady_state();
 
   //mod.run_model_from_steady_state();
-  mod.run_model();
+  mod.run_components_combined();
 
   /*
   // now reduce the fluvial efficiency and run again
