@@ -256,7 +256,7 @@ class LSDHollow
   /// @param BasalAge Basal age of the hollow.
   /// @author SWDG
   /// @date 20/2/14
-void set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& CHT,
+  void set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& CHT,
                                   LSDRaster& Relief, float window_radius,
                                   float SoilProduction = -9999, float BasalAge = -9999);
     

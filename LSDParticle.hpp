@@ -1,5 +1,52 @@
-// LSDParticle.hpp
-// implementation of the LSDParticle.cpp object
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// LSDParticle
+// Land Surface Dynamics Particle
+//
+// An object within the University
+//  of Edinburgh Land Surface Dynamics group topographic toolbox
+//  for tracing particles and retaining geochemical information
+//
+// Developed by:
+//  Simon M. Mudd
+//  Martin D. Hurst
+//  David T. Milodowski
+//  Stuart W.D. Grieve
+//  Declan A. Valters
+//  Fiona Clubb
+//
+// Copyright (C) 2013 Simon M. Mudd 2013
+//
+// Developer can be contacted by simon.m.mudd _at_ ed.ac.uk
+//
+//    Simon Mudd                                                    
+//    University of Edinburgh
+//    School of GeoSciences
+//    Drummond Street
+//    Edinburgh, EH8 9XP
+//    Scotland
+//    United Kingdom
+//
+// This program is free software;
+// you can redistribute it and/or modify it under the terms of the
+// GNU General Public License as published by the Free Software Foundation;
+// either version 2 of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY;
+// without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the GNU General Public License for more details.
+//
+// You should have received a copy of the
+// GNU General Public License along with this program;
+// if not, write to:
+// Free Software Foundation, Inc.,
+// 51 Franklin Street, Fifth Floor,
+// Boston, MA 02110-1301
+// USA
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 #include <iostream>
 #include <vector>
 #include "LSDCRNParameters.hpp"
@@ -11,14 +58,41 @@ using namespace std;
 // empty class definition so that we can use friend functions
 class LSDCRNParameters;
 
+/// This is a class for a particle that can be tracked through simulations
+/// and retains data about position and chemical content
 class LSDParticle
 {
  public:
+ 
+    /// @brief default constructor. Makes a particle with type 0, age 0, and 
+    /// no data for other parameters
     LSDParticle()					{ create(); }
+    
+    /// @brief Constructor. Similar to default, but assignes type. 
+    /// @param StartType the type of the particle
     LSDParticle( int StartType)			{ create(StartType); }
+    
+    /// @brief Constructor. Similar to default, but assignes type and age. 
+    /// @param StartType the type of the particle    
+    /// @param StartAge the starting age of the particle
     LSDParticle( int StartType, double StartAge)	{ create(StartType, StartAge); }
-    LSDParticle( int StartType, int StartCI, double StartAge, double StartOSLage, double StartxLoc, double StartdLoc)
+    
+    /// @brief Constructor. Assignes all data members
+    /// @param StartType the type of the particle 
+    /// @param StartCI the starting cell index   
+    /// @param StartAge the starting age of the particle   
+    /// @param StartOSLage the starting OSL age
+    /// @param StartxLoc the starting x location
+    /// @param StartdLoc the starting depth
+    LSDParticle( int StartType, int StartCI, double StartAge, double StartOSLage, 
+                double StartxLoc, double StartdLoc)
     						{ create(StartType, StartCI, StartAge, StartOSLage, StartxLoc, StartdLoc); }
+    						
+    /// @brief Constructor. Assignes type, x location and d location. 
+    /// other parameters are default
+    /// @param StartType the type of the particle 
+    /// @param StartxLoc the starting x location
+    /// @param StartdLoc the starting depth    						
     LSDParticle( int StartType, double StartxLoc, double StartdLoc)
     						{ create(StartType, StartxLoc, StartdLoc); }
 
@@ -77,15 +151,15 @@ class LSDParticle
     void SoilAgeExpose();
     
     /// @brief Allows the user to update the horizontal location (dangerous!)    
-	  void update_xLoc(double new_xLoc);
+    void update_xLoc(double new_xLoc);
 	  
-	  /// @brief this changes a particles horizontal and vertical position. If the
-	  /// particle reaches the surface it 'reflects' back into the soil layer
-	  /// @detail IMPORTANT: this increments the OSL age but not the soil age!!
-	  /// @param dx the distance moved horizontally. 
-	  /// @param dd the distance moved in depth
-	  /// @param h the thickness of the soil
-	  /// @param dt the time over which the particle moves.
+    /// @brief this changes a particles horizontal and vertical position. If the
+    /// particle reaches the surface it 'reflects' back into the soil layer
+    /// @detail IMPORTANT: this increments the OSL age but not the soil age!!
+    /// @param dx the distance moved horizontally. 
+    /// @param dd the distance moved in depth
+    /// @param h the thickness of the soil
+    /// @param dt the time over which the particle moves.
     /// @author SMM
     /// @date 01/01/2010 
     void displaceReflect(double dx,double dd,double h,double dt);   
@@ -145,32 +219,33 @@ class LSDParticle
     void create(int, double, double);
 };
 
-// the CRN tracer particle object
-// this object tracks the CRN concnentration in a number
-// of particles
+/// the CRN tracer particle object, a particle that contains nuclide information
 class LSDCRNParticle: public LSDParticle
 {
-	public:
-	LSDCRNParticle()			{ create(); }
-	LSDCRNParticle(int startType, double startxLoc,double startdLoc,
+  public:
+  /// default constructor
+  LSDCRNParticle()			{ create(); }
+
+  /// constructor with starting x location, depth and z location
+  LSDCRNParticle(int startType, double startxLoc,double startdLoc,
 					double start_effdloc, double startzloc)
 							{ create(startType,startxLoc,startdLoc,
 							  start_effdloc,startzloc); }
-	LSDCRNParticle(int startType, double startxLoc,double startzeta_Loc)
+  LSDCRNParticle(int startType, double startxLoc,double startzeta_Loc)
 							{ create(startType,startxLoc,startzeta_Loc); }
-	LSDCRNParticle(int startType, double startxLoc,double startzeta_Loc,
+  LSDCRNParticle(int startType, double startxLoc,double startzeta_Loc,
 					double startdLoc, double start_effdLoc,
 					double start_C10Be,double start_C14C)
 							{ create(startType,startxLoc,startzeta_Loc,
 								startdLoc, start_effdLoc,
 								start_C10Be, start_C14C); }
-	LSDCRNParticle(int startType, double startxLoc,double startzeta_Loc,
+  LSDCRNParticle(int startType, double startxLoc,double startzeta_Loc,
 					double startdLoc, double start_effdLoc,
 					double start_C10Be,double start_C14C, double start_21Ne)
 							{ create(startType,startxLoc,startzeta_Loc,
 								startdLoc, start_effdLoc,
 								start_C10Be, start_C14C, start_21Ne); }
-	LSDCRNParticle(int startType, int startCellIndex, double startAge, double startOSLAge,
+  LSDCRNParticle(int startType, int startCellIndex, double startAge, double startOSLAge,
 					double startxLoc,double startdLoc, double startefdLoc,
 					double startzLoc, double start_C10Be, double start_C26Al,
 					double start_C36Cl, double start_C14C,
@@ -186,14 +261,23 @@ class LSDCRNParticle: public LSDParticle
 								start_Cf210Pb, start_Cf137Cs); }
 
 
-    LSDCRNParticle(const LSDCRNParticle& tP)
+  /// @brief The copy constructor
+  /// @param tP an LSDCRNParticle object
+  /// @author SMM
+  /// @date 01/01/2010
+  LSDCRNParticle(const LSDCRNParticle& tP)
     	{ create(tP.getType(), tP.getCellIndex(), tP.getAge(),tP.getOSLage(),tP.getxLoc(),tP.getdLoc(),
     	         tP.geteffective_dLoc(),tP.get_zetaLoc(),tP.getConc_10Be(),
     	         tP.getConc_26Al(), tP.getConc_36Cl(), tP.getConc_14C(),
     	         tP.getConc_21Ne(), tP.getConc_3He(),
     	         tP.getConc_f7Be(), tP.getConc_f10Be(),
     	         tP.getConc_f210Pb(), tP.getConc_f137Cs()); }
-    LSDCRNParticle(LSDCRNParticle& tP)
+
+  /// @brief The copy constructor
+  /// @param tP a constant LSDCRNParticle object
+  /// @author SMM
+  /// @date 01/01/2010
+  LSDCRNParticle(LSDCRNParticle& tP)
     	{ create(tP.getType(), tP.getCellIndex(), tP.getAge(),tP.getOSLage(),tP.getxLoc(),tP.getdLoc(),
     	         tP.geteffective_dLoc(),tP.get_zetaLoc(),tP.getConc_10Be(),
     	         tP.getConc_26Al(), tP.getConc_36Cl(), tP.getConc_14C(),
@@ -201,126 +285,457 @@ class LSDCRNParticle: public LSDParticle
     	         tP.getConc_f7Be(), tP.getConc_f10Be(),
     	         tP.getConc_f210Pb(), tP.getConc_f137Cs());   }
 
-	LSDCRNParticle& operator=(const LSDCRNParticle& tP);
-	LSDCRNParticle& operator=(LSDCRNParticle& tP);
+  /// @brief the copy constructor for constant LSDCRNParticle objects  
+  LSDCRNParticle& operator=(const LSDCRNParticle& tP);
 
+  /// @brief the copy constructor 
+  LSDCRNParticle& operator=(LSDCRNParticle& tP);
 
+  /// @brief Retrieves the concentration of 10Be
+  /// @return concentration of 10Be
+  double getConc_10Be() const			{ return Conc_10Be; }
 
-	// accessing function to get at the data elements
-	double getConc_10Be() const			{ return Conc_10Be; }
-	double getConc_26Al() const			{ return Conc_26Al; }
-	double getConc_36Cl() const			{ return Conc_36Cl; }
-	double getConc_14C() const			{ return Conc_14C; }
-	double getConc_21Ne() const			{ return Conc_21Ne; }
-	double getConc_3He() const			{ return Conc_3He; }
-	double getConc_f7Be() const			{ return Conc_f7Be; }
-	double getConc_f10Be() const		{ return Conc_f10Be; }
-	double getConc_f210Pb() const		{ return Conc_f210Pb; }
-	double getConc_f137Cs() const		{ return Conc_f137Cs; }
-	double geteffective_dLoc() const	{ return effective_dLoc; }
-	double get_zetaLoc() const			{ return zetaLoc; }
+  /// @brief Retrieves the concentration of 26Al
+  /// @return concentration of 26Al
+  double getConc_26Al() const			{ return Conc_26Al; }
+
+  /// @brief Retrieves the concentration of 36Cl
+  /// @return concentration of 36Cl
+  double getConc_36Cl() const			{ return Conc_36Cl; }
+
+  /// @brief Retrieves the concentration of 14C
+  /// @return concentration of 14C
+  double getConc_14C() const			{ return Conc_14C; }
+
+  /// @brief Retrieves the concentration of 21Ne
+  /// @return concentration of 21Ne
+  double getConc_21Ne() const			{ return Conc_21Ne; }
+
+  /// @brief Retrieves the concentration of 3He
+  /// @return concentration of 3He
+  double getConc_3He() const			{ return Conc_3He; }
+
+  /// @brief Retrieves the concentration of fallout 7Be
+  /// @return concentration of fallout 7Be
+  double getConc_f7Be() const			{ return Conc_f7Be; }
+
+  /// @brief Retrieves the concentration of fallout 10Be
+  /// @return concentration of fallout 10Be
+  double getConc_f10Be() const		{ return Conc_f10Be; }
+	
+  /// @brief Retrieves the concentration of 201Pb
+  /// @return concentration of 210Pb
+  double getConc_f210Pb() const		{ return Conc_f210Pb; }
+
+  /// @brief Retrieves the concentration of 137Cs
+  /// @return concentration of 137Cs
+  double getConc_f137Cs() const		{ return Conc_f137Cs; }
+
+  /// @brief Retrieves the effective depth
+  /// @return the effective depth
+  double geteffective_dLoc() const	{ return effective_dLoc; }
+
+  /// @brief Retrieves the zeta location
+  /// @return zetaLoc, which the the elevation relative to some arbitrary datum
+  double get_zetaLoc() const			{ return zetaLoc; }
 
 	// update nuclide concentrations in the event of constant erosion
 	// erosion is in g/cm^2/yr
-	void update_10Be_conc(double dt,double erosion, LSDCRNParameters& CRNp);
-	void update_26Al_conc(double dt,double erosion, LSDCRNParameters& CRNp);
-	void update_14C_conc(double dt,double erosion, LSDCRNParameters& CRNp);
-	void update_36Cl_conc(double dt,double erosion, LSDCRNParameters& CRNp);
-	void update_21Ne_conc(double dt,double erosion, LSDCRNParameters& CRNp);
-	void update_3He_conc(double dt,double erosion, LSDCRNParameters& CRNp);
 
-	// update nuclide concentrations if erosion is increasing (or decreasing) linearly
-	// alpha is the change in erosion rate--do not set alpha to zero
-	void update_10Be_conc_linear_increase(double dt,double erosion_rate, double alpha, LSDCRNParameters& CRNp);
+  /// @brief update the 10Be concentration based on a constant erosion rate
+  /// using the full production range, including muons. 
+  /// @details This function solves for the updated concentration assuming
+  /// a constant erosion rate (in g/cm^2/yr) over a duration of dt
+  /// @param dt the timestep over which erosion occurs
+  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// to approximate production from the different production mechanisms
+  /// @author SMM
+  /// @date 01/01/2010
+  void update_10Be_conc(double dt,double erosion, LSDCRNParameters& CRNp);
 
-	// update nuclide concentrations using only spallation
-	void update_10Be_conc_neutron_only(double dt,double erosion, LSDCRNParameters& CRNp);
-	void update_26Al_conc_neutron_only(double dt,double erosion, LSDCRNParameters& CRNp);
-	void update_14C_conc_neutron_only(double dt,double erosion, LSDCRNParameters& CRNp);
-	void update_36Cl_conc_neutron_only(double dt,double erosion, LSDCRNParameters& CRNp);
+  /// @brief update the 26Al concentration based on a constant erosion rate
+  /// using the full production range, including muons. 
+  /// @details This function solves for the updated concentration assuming
+  /// a constant erosion rate (in g/cm^2/yr) over a duration of dt
+  /// @param dt the timestep over which erosion occurs
+  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// to approximate production from the different production mechanisms
+  /// @author SMM
+  /// @date 01/01/2010
+  void update_26Al_conc(double dt,double erosion, LSDCRNParameters& CRNp);
 
-	// update nuclide concentrations with constant values
-	void update_cosmo_conc_const(double C_10Be, double C_26Al, double C_36Cl,
-								 double C_14C, double C_21Ne, double C_3He);
+  /// @brief update the 14C concentration based on a constant erosion rate
+  /// using the full production range, including muons. 
+  /// @details This function solves for the updated concentration assuming
+  /// a constant erosion rate (in g/cm^2/yr) over a duration of dt
+  /// @param dt the timestep over which erosion occurs
+  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// to approximate production from the different production mechanisms
+  /// @author SMM
+  /// @date 01/01/2010
+  void update_14C_conc(double dt,double erosion, LSDCRNParameters& CRNp);
 
-	// update the concentration of nuclides if there is a steady state
-	// profile
-	void update_10Be_SSfull(double erosion, LSDCRNParameters& CRNp);
-	void update_26Al_SSfull(double erosion, LSDCRNParameters& CRNp);
-	void update_14C_SSfull(double erosion, LSDCRNParameters& CRNp);
-	void update_36Cl_SSfull(double erosion, LSDCRNParameters& CRNp);
-	void update_21Ne_SSfull(double erosion, LSDCRNParameters& CRNp);
-	void update_3He_SSfull(double erosion, LSDCRNParameters& CRNp);
+  /// @brief update the 36Cl concentration based on a constant erosion rate
+  /// using the full production range, including muons. 
+  /// @details This function solves for the updated concentration assuming
+  /// a constant erosion rate (in g/cm^2/yr) over a duration of dt
+  /// @param dt the timestep over which erosion occurs
+  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// to approximate production from the different production mechanisms
+  /// @author SMM
+  /// @date 01/01/2010
+  void update_36Cl_conc(double dt,double erosion, LSDCRNParameters& CRNp);
 
-	// functions collecting the updating functions: these update
-	// all nuclides at once
-	void update_all_CRN(double dt, double erosion, LSDCRNParameters& CRNp);
-	void update_all_CRN_neutron_only(double dt, double erosion, LSDCRNParameters& CRNp);
-	void update_all_CRN_SSfull(double erosion_rate, LSDCRNParameters& CRNp);
+  /// @brief update the 21Ne concentration based on a constant erosion rate
+  /// using the full production range, including muons. 
+  /// @details This function solves for the updated concentration assuming
+  /// a constant erosion rate (in g/cm^2/yr) over a duration of dt
+  /// @param dt the timestep over which erosion occurs
+  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// to approximate production from the different production mechanisms
+  /// @author SMM
+  /// @date 01/01/2010
+  void update_21Ne_conc(double dt,double erosion, LSDCRNParameters& CRNp);
 
-	// caluclate the apparent erosion from nuclide concentrations
-	double apparent_erosion_10Be_neutron_only(double rho, LSDCRNParameters& CRNp);
-	double apparent_erosion_26Al_neutron_only(double rho, LSDCRNParameters& CRNp);
-	double apparent_erosion_14C_neutron_only(double rho, LSDCRNParameters& CRNp);
-	double apparent_erosion_36Cl_neutron_only(double rho, LSDCRNParameters& CRNp);
-	double apparent_erosion_21Ne(double rho, LSDCRNParameters& CRNp);
-	double apparent_erosion_3He(double rho, LSDCRNParameters& CRNp);
+  /// @brief update the 3He concentration based on a constant erosion rate
+  /// using the full production range, including muons. 
+  /// @details This function solves for the updated concentration assuming
+  /// a constant erosion rate (in g/cm^2/yr) over a duration of dt
+  /// @param dt the timestep over which erosion occurs
+  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// to approximate production from the different production mechanisms
+  /// @author SMM
+  /// @date 01/01/2010
+  void update_3He_conc(double dt,double erosion, LSDCRNParameters& CRNp);
 
-	// functions for dealing with fallout numclides
-	void update_fallout10Be_simple_density(double dt, double M_supply_surface,
-					double rho_s, double k_f10Be, double deltad, LSDCRNParameters& CRNp);
-	void update_fallout10Be_simple_density_2exp(double dt, double M_supply_surface,
-					double rho_skg, double k1_f10Be, double k2_f10Be, double chi_f10Be,
-					double deltad_m, LSDCRNParameters& CRNp);
+  /// @brief This updates 10Be nuclide concentration if erosion is increasing (or decreasing) linearly
+  /// alpha is the change in erosion rate--do not set alpha to zero!
+  /// @details This solves an analytical solution for cosmo concertration with a linear
+  /// increase in cosmo concentration
+  /// @param dt time step to calculate next cosmo concetration
+  /// @param erosion_rate the erosion rate in g/cm^2/yr
+  /// @param alpha the increase in erosion rate (in g/cm^2/yr^2)
+  /// @param CRNp a CRN parameters object
+  /// @author SMM
+  /// @date 01/01/2010
+  void update_10Be_conc_linear_increase(double dt,double erosion_rate, double alpha, LSDCRNParameters& CRNp);
 
-	// functions for managing the shielding depth, depth, and elevation of
-	// particles
-	void update_depths(double delta_d, double delta_ed);
-	void update_zetaLoc(double new_zeta);
-	void update_zetaLoc_with_new_surface(double new_zeta);
-	void erode_mass_only(double dt, double mass_erosion_rate);
-	void erode_mass_only_linear_increase(double dt, double mass_erosion_rate, double alpha);
+  /// @brief update the 10Be concentration based on a constant erosion rate
+  /// using the ONLY NEUTRON porduction. It is less computationally expensive
+  /// than calcualting the full production and is a good approximation of the
+  /// erosion rates are slow 
+  /// @details This function solves for the updated concentration assuming
+  /// a constant erosion rate (in g/cm^2/yr) over a duration of dt
+  /// @param dt the timestep over which erosion occurs
+  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// to approximate production from the different production mechanisms
+  /// @author SMM
+  /// @date 01/01/2010
+  void update_10Be_conc_neutron_only(double dt,double erosion, LSDCRNParameters& CRNp);
+
+  /// @brief update the 26Al concentration based on a constant erosion rate
+  /// using the ONLY NEUTRON porduction. It is less computationally expensive
+  /// than calcualting the full production and is a good approximation of the
+  /// erosion rates are slow 
+  /// @details This function solves for the updated concentration assuming
+  /// a constant erosion rate (in g/cm^2/yr) over a duration of dt
+  /// @param dt the timestep over which erosion occurs
+  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// to approximate production from the different production mechanisms
+  /// @author SMM
+  /// @date 01/01/2010
+  void update_26Al_conc_neutron_only(double dt,double erosion, LSDCRNParameters& CRNp);
+
+  /// @brief update the 14C concentration based on a constant erosion rate
+  /// using the ONLY NEUTRON porduction. It is less computationally expensive
+  /// than calcualting the full production and is a good approximation of the
+  /// erosion rates are slow 
+  /// @details This function solves for the updated concentration assuming
+  /// a constant erosion rate (in g/cm^2/yr) over a duration of dt
+  /// @param dt the timestep over which erosion occurs
+  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// to approximate production from the different production mechanisms
+  /// @author SMM
+  /// @date 01/01/2010
+  void update_14C_conc_neutron_only(double dt,double erosion, LSDCRNParameters& CRNp);
+
+  /// @brief update the 36Cl concentration based on a constant erosion rate
+  /// using the ONLY NEUTRON porduction. It is less computationally expensive
+  /// than calcualting the full production and is a good approximation of the
+  /// erosion rates are slow 
+  /// @details This function solves for the updated concentration assuming
+  /// a constant erosion rate (in g/cm^2/yr) over a duration of dt
+  /// @param dt the timestep over which erosion occurs
+  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// to approximate production from the different production mechanisms
+  /// @author SMM
+  /// @date 01/01/2010
+  void update_36Cl_conc_neutron_only(double dt,double erosion, LSDCRNParameters& CRNp);
+
+  /// @brief This assigns nuclide concentrations with constant values
+  /// @param C_10Be the 10Be concentration
+  /// @param C_26Al the 26Al concentration
+  /// @param C_36Cl the 36Cl concentration
+  /// @param C_14C the 14C concentration
+  /// @param C_21Ne the 21Ne concentration
+  /// @param C_3He the 3He concentration
+  void update_cosmo_conc_const(double C_10Be, double C_26Al, double C_36Cl,
+		       		 double C_14C, double C_21Ne, double C_3He);
+
+  /// @brief Bring the 10Be concentration to steady state based
+  /// on a constant erosion rate using full muogenic production.  
+  /// @details This function solves for the updated concentration assuming
+  /// a constant erosion rate (in g/cm^2/yr). It is an analytical
+  /// steady state solution
+  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// to approximate production from the different production mechanisms
+  /// @author SMM
+  /// @date 01/01/2010
+  void update_10Be_SSfull(double erosion, LSDCRNParameters& CRNp);
+
+  /// @brief Bring the 26Al concentration to steady state based
+  /// on a constant erosion rate using full muogenic production.  
+  /// @details This function solves for the updated concentration assuming
+  /// a constant erosion rate (in g/cm^2/yr). It is an analytical
+  /// steady state solution
+  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// to approximate production from the different production mechanisms
+  /// @author SMM
+  /// @date 01/01/2010
+  void update_26Al_SSfull(double erosion, LSDCRNParameters& CRNp);
+
+  /// @brief Bring the 14C concentration to steady state based
+  /// on a constant erosion rate using full muogenic production.  
+  /// @details This function solves for the updated concentration assuming
+  /// a constant erosion rate (in g/cm^2/yr). It is an analytical
+  /// steady state solution
+  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// to approximate production from the different production mechanisms
+  /// @author SMM
+  /// @date 01/01/2010
+  void update_14C_SSfull(double erosion, LSDCRNParameters& CRNp);
+
+  /// @brief Bring the 36Cl concentration to steady state based
+  /// on a constant erosion rate using full muogenic production.  
+  /// @details This function solves for the updated concentration assuming
+  /// a constant erosion rate (in g/cm^2/yr). It is an analytical
+  /// steady state solution
+  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// to approximate production from the different production mechanisms
+  /// @author SMM
+  /// @date 01/01/2010
+  void update_36Cl_SSfull(double erosion, LSDCRNParameters& CRNp);
+
+  /// @brief Bring the 21Ne concentration to steady state based
+  /// on a constant erosion rate using full muogenic production.  
+  /// @details This function solves for the updated concentration assuming
+  /// a constant erosion rate (in g/cm^2/yr). It is an analytical
+  /// steady state solution
+  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// to approximate production from the different production mechanisms
+  /// @author SMM
+  /// @date 01/01/2010
+  void update_21Ne_SSfull(double erosion, LSDCRNParameters& CRNp);
+
+  /// @brief Bring the 3He concentration to steady state based
+  /// on a constant erosion rate using full muogenic production.  
+  /// @details This function solves for the updated concentration assuming
+  /// a constant erosion rate (in g/cm^2/yr). It is an analytical
+  /// steady state solution
+  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// to approximate production from the different production mechanisms
+  /// @author SMM
+  /// @date 01/01/2010
+  void update_3He_SSfull(double erosion, LSDCRNParameters& CRNp);
+
+  /// @brief A wrapper function to update all the nuclide concentrations
+  /// in one go. It uses full muogenic production
+  /// @param dt the timestep over which the concetrations are updated
+  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// @author SMM
+  /// @date 01/01/2014
+  void update_all_CRN(double dt, double erosion, LSDCRNParameters& CRNp);
+  
+  /// @brief A wrapper function to update all the nuclide concentrations
+  /// in one go. It uses NEUTRON PRODUCTION ONLY to save computational
+  /// expense. This is a reasonable approximation in slowly eroding landscapes
+  /// @param dt the timestep over which the concetrations are updated
+  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// @author SMM
+  /// @date 01/01/2014
+  void update_all_CRN_neutron_only(double dt, double erosion, LSDCRNParameters& CRNp);
+
+  /// @brief A wrapper function to update all the nuclide concentrations
+  /// to steady state using full muon production
+  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// @author SMM
+  /// @date 01/01/2014
+  void update_all_CRN_SSfull(double erosion_rate, LSDCRNParameters& CRNp);
+
+  /// @brief This returns the 'apparent' erosion rate that one would calcualte
+  /// based on an assumed density above the sampling depth and if the
+  /// production was assumed to be from neutrons only for 10Be
+  /// @param rho the density in kg/m^3 above the 'sampling' point
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// @return the apparent erosion rate in (Units?)
+  /// @author SMM
+  /// @date 01/01/2010 
+  double apparent_erosion_10Be_neutron_only(double rho, LSDCRNParameters& CRNp);
+
+  /// @brief This returns the 'apparent' erosion rate that one would calcualte
+  /// based on an assumed density above the sampling depth and if the
+  /// production was assumed to be from neutrons only for 26Al
+  /// @param rho the density in kg/m^3 above the 'sampling' point
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// @return the apparent erosion rate in (Units?)
+  /// @author SMM
+  /// @date 01/01/2010 
+  double apparent_erosion_26Al_neutron_only(double rho, LSDCRNParameters& CRNp);
+
+  /// @brief This returns the 'apparent' erosion rate that one would calcualte
+  /// based on an assumed density above the sampling depth and if the
+  /// production was assumed to be from neutrons only for 14C
+  /// @param rho the density in kg/m^3 above the 'sampling' point
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// @return the apparent erosion rate in (Units?)
+  /// @author SMM
+  /// @date 01/01/2010 
+  double apparent_erosion_14C_neutron_only(double rho, LSDCRNParameters& CRNp);
+
+  /// @brief This returns the 'apparent' erosion rate that one would calcualte
+  /// based on an assumed density abouve the sampling depth and if the
+  /// production was assumed to be from neutrons only
+  /// @param rho the density in kg/m^3 above the 'sampling' point
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// @return the apparent erosion rate in (Units?)
+  /// @author SMM
+  /// @date 01/01/2010 
+  double apparent_erosion_36Cl_neutron_only(double rho, LSDCRNParameters& CRNp);
+
+  /// @brief This returns the 'apparent' erosion rate that one would calcualte
+  /// based on an assumed density above the sampling depth and if the
+  /// production was assumed to be from neutrons only for 21Ne
+  /// @param rho the density in kg/m^3 above the 'sampling' point
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// @return the apparent erosion rate in (Units?)
+  /// @author SMM
+  /// @date 01/01/2010 
+  double apparent_erosion_21Ne(double rho, LSDCRNParameters& CRNp);
+
+  /// @brief This returns the 'apparent' erosion rate that one would calcualte
+  /// based on an assumed density aboue the sampling depth and if the
+  /// production was assumed to be from neutrons only for 3He
+  /// @param rho the density in kg/m^3 above the 'sampling' point
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// @return the apparent erosion rate in (Units?)
+  /// @author SMM
+  /// @date 01/01/2010 
+  double apparent_erosion_3He(double rho, LSDCRNParameters& CRNp);
+
+  /// @brief  functions for dealing with fallout nuclides
+  void update_fallout10Be_simple_density(double dt, double M_supply_surface,
+      double rho_s, double k_f10Be, double deltad, LSDCRNParameters& CRNp);
+
+
+  void update_fallout10Be_simple_density_2exp(double dt, double M_supply_surface,
+		double rho_skg, double k1_f10Be, double k2_f10Be, double chi_f10Be,
+		double deltad_m, LSDCRNParameters& CRNp);
+
+  /// @brief This assignes depths. Note: it does not check if the
+  /// effective depth is compatible with the depth!
+  /// @param delta_d the new depth (in metres)
+  /// @param delta_ed the new effective depth in g/cm^2
+  void update_depths(double delta_d, double delta_ed);
+
+  /// @brief This assignes a new value for zeta
+  /// @param new_zeta the new zeta, which is elevation above an arbitrary datum
+  void update_zetaLoc(double new_zeta);
+
+  void update_zetaLoc_with_new_surface(double new_zeta);
+
+  void erode_mass_only(double dt, double mass_erosion_rate);
+  
+  void erode_mass_only_linear_increase(double dt, double mass_erosion_rate, double alpha);
 
   protected:
-  double effective_dLoc;		// the effective depth: in g/cm^2
-	double zetaLoc;				// the elevation relative to arbitrary
-								// datum (m)
-	double Conc_10Be;			// concnetration of 10Be in atoms/g
-	double Conc_26Al;			// a/g
-	double Conc_36Cl;			// a/g
-	double Conc_14C;			// a/g
-	double Conc_21Ne;			// a/g
-	double Conc_3He;			// a/g
-	double Conc_f7Be;			// fallout units tba
-	double Conc_f10Be; 			// fallout, units a/g
-	double Conc_f210Pb;			// fallout, units tba
-	double Conc_f137Cs;			// fallout, units tba
 
+  /// The effective depth of the particle in g/cm^2
+  double effective_dLoc;	
 
+  /// the elevation (in metres) relative to an arbitrary datum (used to interface with 
+  /// landscape evolution)
+  double zetaLoc;			
 
-	private:
-	// functions for creating particles
-	void create();
-	void create(int startType, double startxLoc,
-	            double startzLoc);
-	void create(int startType, double startxLoc,
-	            double startdLoc, double start_effdloc,
+  /// concentration of 10Be in atoms/g
+  double Conc_10Be;
+
+  /// concentration of 26Al in atoms/g	
+  double Conc_26Al;			// a/g
+
+  /// concentration of 36Cl in atoms/g
+  double Conc_36Cl;			// a/g
+
+  /// concentration of 14C in atoms/g
+  double Conc_14C;			// a/g
+
+  /// concentration of 21Ne in atoms/g
+  double Conc_21Ne;			// a/g
+
+  /// concentration of 3He in atoms/g
+  double Conc_3He;			// a/g
+
+  /// concentration of fallout 7Be in units tba
+  double Conc_f7Be;			// fallout units tba
+
+  /// concentration of fallout 10Be in units a/g
+  double Conc_f10Be; 			// fallout, units a/g
+
+  /// concentration of fallout 210Pb in units tba
+  double Conc_f210Pb;			// fallout, units tba
+
+  /// concentration of fallout 137Cs in units tba
+  double Conc_f137Cs;			// fallout, units tba
+
+  private:
+  // functions for creating particles
+  void create();
+  void create(int startType, double startxLoc,
+            double startzLoc);
+  void create(int startType, double startxLoc,
+             double startdLoc, double start_effdloc,
 	            double startzloc);
-	void create(int startType, double startxLoc,double startzeta_Loc,
-					double startdLoc, double start_effdLoc,
-					double start_C10Be,double start_C14C);
-	void create(int startType, double startxLoc,double startzeta_Loc,
-					double startdLoc, double start_effdLoc,
-					double start_C10Be,double start_C14C, double start_21Ne);
-	void create(int startType, int startCellIndex, double startAge, double startOSLAge,
-	            double startxLoc,double startdLoc, double startefdLoc,
-				double startzLoc, double start_C10Be, double start_C26Al,
-				double start_C36Cl, double start_C14C,
-				double start_C21Ne, double start_C3He,
-				double start_Cf7Be, double start_Cf10Be,
-				double start_Cf210Pb, double start_Cf137Cs);
-
-
+  void create(int startType, double startxLoc,double startzeta_Loc,
+			double startdLoc, double start_effdLoc,
+			double start_C10Be,double start_C14C);
+  void create(int startType, double startxLoc,double startzeta_Loc,
+			double startdLoc, double start_effdLoc,
+			double start_C10Be,double start_C14C, double start_21Ne);
+  void create(int startType, int startCellIndex, double startAge, double startOSLAge,
+              double startxLoc,double startdLoc, double startefdLoc,
+              double startzLoc, double start_C10Be, double start_C26Al,
+	double start_C36Cl, double start_C14C,
+	double start_C21Ne, double start_C3He,
+	double start_Cf7Be, double start_Cf10Be,
+	double start_Cf210Pb, double start_Cf137Cs);
 };
 
 

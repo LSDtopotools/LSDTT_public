@@ -3,9 +3,8 @@
 //
 // Land Surface Dynamics Cosmogenic Radionuclide Parameters Object
 //
-// header file for the discrete particle object
-// this version of the dicrete particle keeps track
-// of two integers, the time and the position
+// This keeps track of paramters used to calculate the evolution of 
+// in situ cosmogenic nuclides. 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // An object within the University
