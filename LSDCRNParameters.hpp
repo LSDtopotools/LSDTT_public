@@ -86,6 +86,12 @@ class LSDCRNParameters
 	/// @author SMM
 	/// @date 01/01/2010	
 	void set_Schaller_parameters();
+
+  /// @brief This sets the F values to use neutron only production
+  /// @details F0 == 1, all other F values == 0
+  /// @author SMM
+	/// @date 14/07/2014	
+  void set_Neutron_only_parameters();
 	
   /// @brief this function takes a single scaling factor for
   /// elevation scaling, self shielding, snow shielding,

@@ -114,6 +114,7 @@ void LSDCRNParameters::create()
 	F_36Cl[3] = 0.0;
 }
 
+// This sets the parameters to those used by Grange (need reference year!)
 void LSDCRNParameters::set_Granger_parameters()
 {
 	S_t = 1;
@@ -214,6 +215,57 @@ void LSDCRNParameters::set_Schaller_parameters()
 	F_36Cl[2] = 0.0177;
 	F_36Cl[3] = 0.0;
 }
+
+// this forces a neutron only calculation
+void LSDCRNParameters::set_Neutron_only_parameters()
+{
+	S_t =1;
+
+	// from Vermeesh 2007
+	lambda_10Be = 456e-9;		// in yr-1
+	lambda_26Al = 980e-9;		// in yr-1
+	lambda_14C = 121e-6;		// in yr-1
+	lambda_36Cl = 230e-8;		// in yr-1
+
+	// from Vermeesh 2007
+	P0_10Be = 5.11;					// in a/g/yr
+	P0_26Al = 30.31;				// in a/g/yr
+	P0_14C = 5.86;					// in a/g/yr
+	P0_36Cl = 55.45;				// in a/g/yr
+	P0_21Ne = 20.29;				// in a/g/yr
+	P0_3He = 97.40;					// in a/g/yr
+
+	// in g/cm^2
+	Gamma[0] = 160;
+	Gamma[1] = 738.6;
+	Gamma[2] = 2688;
+	Gamma[3] = 4360;
+
+	// dimensionless
+	F_10Be[0] = 1;
+	F_10Be[1] = 0;
+	F_10Be[2] = 0;
+	F_10Be[3] = 0;
+
+	// dimensionless
+	F_26Al[0] = 1;
+	F_26Al[1] = 0;
+	F_26Al[2] = 0;
+	F_26Al[3] = 0;
+
+	// dimensionless
+	F_14C[0] = 1;
+	F_14C[1] = 0;
+	F_14C[2] = 0;
+	F_14C[3] = 0;
+
+	// dimensionless
+	F_36Cl[0] = 1;
+	F_36Cl[1] = 0;
+	F_36Cl[2] = 0;
+	F_36Cl[3] = 0;
+}
+
 
 // this function takes a single scaling factor for
 // elevation scaling, self shielding, snow shielding,

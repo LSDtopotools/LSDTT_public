@@ -394,7 +394,7 @@ void LSDCRNParticle::update_cosmo_conc_const(double C_10Be, double C_26Al, doubl
 }
 
 
-// this function updates the concntration of CRNs in a particle
+// this function updates the concentration of CRNs in a particle
 // the model assumes that during the timestep the change in the
 // 'depth' of the particle occurs ofver a constant rate.
 // The depth in this case is an equvalent depth...it is linearly
