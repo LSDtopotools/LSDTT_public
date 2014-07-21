@@ -517,7 +517,7 @@ double LSDCRNParticle::apparent_erosion_10Be_neutron_only(double rho, LSDCRNPara
 	double app_eff_eros;                    // in g/cm2/yr
 	double app_eros;                        // in m/yr
 	
-	double exp_term = exp(effective_dLoc/Gamma_neutron);
+	double exp_term = exp(-effective_dLoc/Gamma_neutron);
 
 	app_eff_eros = Gamma_neutron*(exp_term*CRNp.S_t*CRNp.P0_10Be
                                 /Conc_10Be-CRNp.lambda_10Be);
@@ -570,7 +570,7 @@ double LSDCRNParticle::apparent_erosion_26Al_neutron_only(double rho, LSDCRNPara
 	double app_eff_eros;                    // in g/cm2/yr
 	double app_eros;                        // in m/yr
 	
-	double exp_term = exp(effective_dLoc/Gamma_neutron);
+	double exp_term = exp(-effective_dLoc/Gamma_neutron);
 
 	app_eff_eros = Gamma_neutron*(exp_term*CRNp.S_t*CRNp.P0_26Al
                                 /Conc_26Al-CRNp.lambda_26Al);
@@ -633,7 +633,7 @@ double LSDCRNParticle::apparent_erosion_14C_neutron_only(double rho, LSDCRNParam
 	double app_eff_eros;                    // in g/cm2/yr
 	double app_eros;                        // in m/yr
 	
-	double exp_term = exp(effective_dLoc/Gamma_neutron);
+	double exp_term = exp(-effective_dLoc/Gamma_neutron);
 
 	app_eff_eros = Gamma_neutron*(exp_term*CRNp.S_t*CRNp.P0_14C
                                 /Conc_14C-CRNp.lambda_14C);
@@ -697,7 +697,7 @@ double LSDCRNParticle::apparent_erosion_36Cl_neutron_only(double rho, LSDCRNPara
 	double app_eff_eros;                    // in g/cm2/yr
 	double app_eros;                        // in m/yr
 	
-	double exp_term = exp(effective_dLoc/Gamma_neutron);
+	double exp_term = exp(-effective_dLoc/Gamma_neutron);
 
 	app_eff_eros = Gamma_neutron*(exp_term*CRNp.S_t*CRNp.P0_36Cl
                                 /Conc_36Cl-CRNp.lambda_36Cl);
@@ -741,7 +741,7 @@ double LSDCRNParticle::apparent_erosion_21Ne(double rho, LSDCRNParameters& CRNp)
 	double app_eff_eros;                    // in g/cm2/yr
 	double app_eros;                        // in m/yr
 	
-	double exp_term = exp(effective_dLoc/Gamma_neutron);
+	double exp_term = exp(-effective_dLoc/Gamma_neutron);
 
 	app_eff_eros = Gamma_neutron*(exp_term*CRNp.S_t*CRNp.P0_21Ne
                                 /Conc_21Ne);
@@ -786,7 +786,7 @@ double LSDCRNParticle::apparent_erosion_3He(double rho, LSDCRNParameters& CRNp)
 	double app_eff_eros;                    // in g/cm2/yr
 	double app_eros;                        // in m/yr
 	
-	double exp_term = exp(effective_dLoc/Gamma_neutron);
+	double exp_term = exp(-effective_dLoc/Gamma_neutron);
 
 	app_eff_eros = Gamma_neutron*(exp_term*CRNp.S_t*CRNp.P0_3He
                                 /Conc_3He);
