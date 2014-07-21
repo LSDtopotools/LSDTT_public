@@ -596,7 +596,7 @@ class LSDCRNParticle: public LSDParticle
   /// production was assumed to be from neutrons only for 10Be
   /// @param rho the density in kg/m^3 above the 'sampling' point
   /// @param CRNp a CRN parameters object that stores the coefficients
-  /// @return the apparent erosion rate in (Units?)
+  /// @return the apparent erosion rate in m/yr
   /// @author SMM
   /// @date 01/01/2010 
   double apparent_erosion_10Be_neutron_only(double rho, LSDCRNParameters& CRNp);
@@ -606,7 +606,7 @@ class LSDCRNParticle: public LSDParticle
   /// production was assumed to be from neutrons only for 26Al
   /// @param rho the density in kg/m^3 above the 'sampling' point
   /// @param CRNp a CRN parameters object that stores the coefficients
-  /// @return the apparent erosion rate in (Units?)
+  /// @return the apparent erosion rate in m/yr
   /// @author SMM
   /// @date 01/01/2010 
   double apparent_erosion_26Al_neutron_only(double rho, LSDCRNParameters& CRNp);
@@ -616,7 +616,7 @@ class LSDCRNParticle: public LSDParticle
   /// production was assumed to be from neutrons only for 14C
   /// @param rho the density in kg/m^3 above the 'sampling' point
   /// @param CRNp a CRN parameters object that stores the coefficients
-  /// @return the apparent erosion rate in (Units?)
+  /// @return the apparent erosion rate in m/yr
   /// @author SMM
   /// @date 01/01/2010 
   double apparent_erosion_14C_neutron_only(double rho, LSDCRNParameters& CRNp);
@@ -626,7 +626,7 @@ class LSDCRNParticle: public LSDParticle
   /// production was assumed to be from neutrons only
   /// @param rho the density in kg/m^3 above the 'sampling' point
   /// @param CRNp a CRN parameters object that stores the coefficients
-  /// @return the apparent erosion rate in (Units?)
+  /// @return the apparent erosion rate in m/yr
   /// @author SMM
   /// @date 01/01/2010 
   double apparent_erosion_36Cl_neutron_only(double rho, LSDCRNParameters& CRNp);
@@ -636,7 +636,7 @@ class LSDCRNParticle: public LSDParticle
   /// production was assumed to be from neutrons only for 21Ne
   /// @param rho the density in kg/m^3 above the 'sampling' point
   /// @param CRNp a CRN parameters object that stores the coefficients
-  /// @return the apparent erosion rate in (Units?)
+  /// @return the apparent erosion rate in m/yr
   /// @author SMM
   /// @date 01/01/2010 
   double apparent_erosion_21Ne(double rho, LSDCRNParameters& CRNp);
@@ -646,7 +646,7 @@ class LSDCRNParticle: public LSDParticle
   /// production was assumed to be from neutrons only for 3He
   /// @param rho the density in kg/m^3 above the 'sampling' point
   /// @param CRNp a CRN parameters object that stores the coefficients
-  /// @return the apparent erosion rate in (Units?)
+  /// @return the apparent erosion rate in m/yr
   /// @author SMM
   /// @date 01/01/2010 
   double apparent_erosion_3He(double rho, LSDCRNParameters& CRNp);

@@ -486,6 +486,10 @@ void LSDCRNParticle::update_10Be_conc_neutron_only(double dt,double erosion_rate
 	Conc_10Be = Conc_10Be*Be_exp +  CRNp.S_t*Be_exp*CRNp.P0_10Be*sum_term;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This updates the 10Be concetration if erosion is steady using the full
+// 4 attenuation depth model of Vermeesch (2007)
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParticle::update_10Be_SSfull(double erosion_rate, LSDCRNParameters& CRNp)
 {
 	double sum_term = 0;
@@ -500,18 +504,28 @@ void LSDCRNParticle::update_10Be_SSfull(double erosion_rate, LSDCRNParameters& C
 	Conc_10Be = CRNp.S_t*CRNp.P0_10Be*sum_term;
 	//cout << "and ending 10Be conc is: " << Conc_10Be <<endl;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This gets the apparent erosion rate. 
+// if rho is in kg/m^3 this returns erosion in m/yr
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 double LSDCRNParticle::apparent_erosion_10Be_neutron_only(double rho, LSDCRNParameters& CRNp)
 {
-
-	double rho_r = rho/1000;
 	// a few constants, all computed from Vermeesh 2007
 	double Gamma_neutron=CRNp.Gamma[0];			// in g/cm^2
-	double app_eros;
+	double app_eff_eros;                    // in g/cm2/yr
+	double app_eros;                        // in m/yr
+	
+	double exp_term = exp(effective_dLoc/Gamma_neutron);
 
-	app_eros = Gamma_neutron*(CRNp.S_t*CRNp.P0_10Be/Conc_10Be-CRNp.lambda_10Be)/rho_r;
-	return -app_eros/100.0;
+	app_eff_eros = Gamma_neutron*(exp_term*CRNp.S_t*CRNp.P0_10Be
+                                /Conc_10Be-CRNp.lambda_10Be);
+  app_eros = app_eff_eros*10/rho;                              
+	return app_eros;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 void LSDCRNParticle::update_26Al_conc(double dt,double erosion_rate, LSDCRNParameters& CRNp)
 {
@@ -529,6 +543,8 @@ void LSDCRNParticle::update_26Al_conc(double dt,double erosion_rate, LSDCRNParam
 	Conc_26Al = Conc_26Al*Al_exp +  CRNp.S_t*Al_exp*CRNp.P0_26Al*sum_term;
 }
 
+
+
 void LSDCRNParticle::update_26Al_conc_neutron_only(double dt,double erosion_rate, LSDCRNParameters& CRNp)
 {
 	double Gamma_neutron = CRNp.Gamma[0];					// in g/cm^2
@@ -543,15 +559,25 @@ void LSDCRNParticle::update_26Al_conc_neutron_only(double dt,double erosion_rate
 	Conc_26Al = Conc_26Al*Al_exp +  CRNp.S_t*Al_exp*CRNp.P0_26Al*sum_term;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This gets the apparent erosion rate. 
+// if rho is in kg/m^3 this returns erosion in m/yr
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 double LSDCRNParticle::apparent_erosion_26Al_neutron_only(double rho, LSDCRNParameters& CRNp)
 {
-	double rho_r = rho/1000;
+	// a few constants, all computed from Vermeesh 2007
 	double Gamma_neutron=CRNp.Gamma[0];			// in g/cm^2
-	double app_eros;
+	double app_eff_eros;                    // in g/cm2/yr
+	double app_eros;                        // in m/yr
+	
+	double exp_term = exp(effective_dLoc/Gamma_neutron);
 
-	app_eros = Gamma_neutron*(CRNp.S_t*CRNp.P0_26Al/Conc_26Al-CRNp.lambda_26Al)/rho_r;
-	return -app_eros/100.0;
+	app_eff_eros = Gamma_neutron*(exp_term*CRNp.S_t*CRNp.P0_26Al
+                                /Conc_26Al-CRNp.lambda_26Al);
+  app_eros = app_eff_eros*10/rho;                              
+	return app_eros;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 void LSDCRNParticle::update_26Al_SSfull(double erosion_rate, LSDCRNParameters& CRNp)
 {
@@ -596,17 +622,25 @@ void LSDCRNParticle::update_14C_conc_neutron_only(double dt,double erosion_rate,
 	Conc_14C = Conc_14C*C_exp +  CRNp.S_t*C_exp*CRNp.P0_14C*sum_term;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This gets the apparent erosion rate. 
+// if rho is in kg/m^3 this returns erosion in m/yr
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 double LSDCRNParticle::apparent_erosion_14C_neutron_only(double rho, LSDCRNParameters& CRNp)
 {
-	double rho_r = rho/1000;			// in a/g/yr
+	// a few constants, all computed from Vermeesh 2007
 	double Gamma_neutron=CRNp.Gamma[0];			// in g/cm^2
-	double app_eros;
+	double app_eff_eros;                    // in g/cm2/yr
+	double app_eros;                        // in m/yr
+	
+	double exp_term = exp(effective_dLoc/Gamma_neutron);
 
-	//cout << "LINE 468 Conc 14C: " << Conc_14C << endl;
-	//cout << "P0: " << P0_14C << " lambda: " << lambda_14C << endl;
-	app_eros = Gamma_neutron*(CRNp.S_t*CRNp.P0_14C/Conc_14C-CRNp.lambda_14C)/rho_r;
-	return -app_eros/100.0;
+	app_eff_eros = Gamma_neutron*(exp_term*CRNp.S_t*CRNp.P0_14C
+                                /Conc_14C-CRNp.lambda_14C);
+  app_eros = app_eff_eros*10/rho;                              
+	return app_eros;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 void LSDCRNParticle::update_14C_SSfull(double erosion_rate, LSDCRNParameters& CRNp)
 {
@@ -652,15 +686,28 @@ void LSDCRNParticle::update_36Cl_conc_neutron_only(double dt,double erosion_rate
 	Conc_36Cl = Conc_36Cl*Cl_exp +  CRNp.S_t*Cl_exp*CRNp.P0_36Cl*sum_term;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This gets the apparent erosion rate. 
+// if rho is in kg/m^3 this returns erosion in m/yr
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 double LSDCRNParticle::apparent_erosion_36Cl_neutron_only(double rho, LSDCRNParameters& CRNp)
 {
-	double rho_r = rho/1000;
-	double Gamma_neutron = CRNp.Gamma[0];			// in g/cm^2
-	double app_eros;
+	// a few constants, all computed from Vermeesh 2007
+	double Gamma_neutron=CRNp.Gamma[0];			// in g/cm^2
+	double app_eff_eros;                    // in g/cm2/yr
+	double app_eros;                        // in m/yr
+	
+	double exp_term = exp(effective_dLoc/Gamma_neutron);
 
-	app_eros = Gamma_neutron*(CRNp.S_t*CRNp.P0_36Cl/Conc_36Cl-CRNp.lambda_36Cl)/rho_r;
-	return -app_eros/100.0;
+	app_eff_eros = Gamma_neutron*(exp_term*CRNp.S_t*CRNp.P0_36Cl
+                                /Conc_36Cl-CRNp.lambda_36Cl);
+  app_eros = app_eff_eros*10/rho;                              
+	return app_eros;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
 
 void LSDCRNParticle::update_36Cl_SSfull(double erosion_rate, LSDCRNParameters& CRNp)
 {
@@ -682,15 +729,27 @@ void LSDCRNParticle::update_21Ne_conc(double dt,double erosion_rate, LSDCRNParam
 	             (exp(dt*erosion_rate/Gamma_neutron) - 1)/erosion_rate;
 }
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This gets the apparent erosion rate. 
+// if rho is in kg/m^3 this returns erosion in m/yr
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 double LSDCRNParticle::apparent_erosion_21Ne(double rho, LSDCRNParameters& CRNp)
 {
-	double rho_r = rho/1000;
-	double Gamma_neutron = CRNp.Gamma[0];			// in g/cm^2
-	double app_eros;
+	// a few constants, all computed from Vermeesh 2007
+	double Gamma_neutron=CRNp.Gamma[0];			// in g/cm^2
+	double app_eff_eros;                    // in g/cm2/yr
+	double app_eros;                        // in m/yr
+	
+	double exp_term = exp(effective_dLoc/Gamma_neutron);
 
-	app_eros = Gamma_neutron*(CRNp.S_t*CRNp.P0_21Ne/Conc_21Ne)/rho_r;
-	return -app_eros/100.0;
+	app_eff_eros = Gamma_neutron*(exp_term*CRNp.S_t*CRNp.P0_21Ne
+                                /Conc_21Ne);
+  app_eros = app_eff_eros*10/rho;                              
+	return app_eros;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 void LSDCRNParticle::update_21Ne_SSfull(double erosion_rate, LSDCRNParameters& CRNp)
 {
@@ -715,15 +774,28 @@ void LSDCRNParticle::update_3He_conc(double dt,double erosion_rate, LSDCRNParame
 	             (exp(dt*erosion_rate/Gamma_neutron) - 1)/erosion_rate;
 }
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This gets the apparent erosion rate. 
+// if rho is in kg/m^3 this returns erosion in m/yr
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 double LSDCRNParticle::apparent_erosion_3He(double rho, LSDCRNParameters& CRNp)
 {
-	double rho_r = rho/1000;
-	double Gamma_neutron = CRNp.Gamma[0];	// in g/cm^2
-	double app_eros;
+	// a few constants, all computed from Vermeesh 2007
+	double Gamma_neutron=CRNp.Gamma[0];			// in g/cm^2
+	double app_eff_eros;                    // in g/cm2/yr
+	double app_eros;                        // in m/yr
+	
+	double exp_term = exp(effective_dLoc/Gamma_neutron);
 
-	app_eros = Gamma_neutron*(CRNp.S_t*CRNp.P0_3He/Conc_3He)/rho_r;
-	return -app_eros/100.0;
+	app_eff_eros = Gamma_neutron*(exp_term*CRNp.S_t*CRNp.P0_3He
+                                /Conc_3He);
+  app_eros = app_eff_eros*10/rho;                              
+	return app_eros;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 
 void LSDCRNParticle::update_3He_SSfull(double erosion_rate, LSDCRNParameters& CRNp)
 {
