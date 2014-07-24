@@ -60,6 +60,9 @@
 #include "LSDCRNParameters.hpp"
 using namespace std;
 
+#ifndef LSDCRNParameters_CPP
+#define LSDCRNParameters_CPP
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // the LSDCRNParameters object
@@ -514,3 +517,5 @@ void LSDCRNParameters::scale_F_values(double single_scaling)
 	//cout << "FINISHED 14C x is: " << x << " and test_scaling is: " << test_scaling << endl;
 	//cout << F_14C[0] << endl << F_14C[1] << endl << F_14C[2] << endl << F_14C[3] << endl;
 }
+
+#endif

@@ -54,6 +54,10 @@
 #include "LSDParticle.hpp"
 using namespace std;
 
+#ifndef LSDParticle_CPP
+#define LSDParticle_CPP
+
+
 const double one_min_exp_neg_2 = 1-exp(-2);
 const double one_min_exp_neg_5 = 1-exp(-5);
 
@@ -969,6 +973,6 @@ void LSDCRNParticle::update_zetaLoc_with_new_surface(double new_zeta)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 
-
+#endif
 
 
