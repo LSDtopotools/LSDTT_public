@@ -46,6 +46,7 @@
 #include "LSDRaster.hpp"
 #include "LSDRasterSpectral.hpp"
 #include "LSDJunctionNetwork.hpp"
+#include "LSDParticleColumn.hpp"
 using namespace std;
 using namespace TNT;
 
@@ -480,6 +481,14 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @author SMM
   /// @date 07/07/2014
   void run_components_combined( void );
+
+  /// @brief This is a wrapper that runs the model but includes CRN columns
+  /// fluvial and uplfit fields to the nonlinear solver
+  /// @author SMM
+  /// @date 25/07/2014
+  void run_components_combined_cell_tracker( vector<LSDParticleColumn>& CRNColumns,
+                      vector<LSDParticleColumn>& eroded_cells, double& this_end_time);
+
 
 	/// @brief This method forces the landscape into its steady state profile, by using periodic forcing. 
 	/// This is much more efficient than using static forcing (as in run model), but doesn't give

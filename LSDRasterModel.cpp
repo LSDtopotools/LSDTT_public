@@ -2447,12 +2447,110 @@ void LSDRasterModel::run_components_combined( void )
   // reset the current frame
   current_frame = frame;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This is a wrapper function used to drive a model run
+// it checks parameters and flags from the data members
+//
+// This includes a number of columns for tracking erosion rates
+// 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleColumn>& CRNColumns,
+                      vector<LSDParticleColumn>& eroded_cells , double& this_end_time)
+{
+
+  // first you need to get the locations of the columns
+  int N_pcolumns = CRNColumns.size();
+  vector<double> row_vec;
+  vector<double> col_vec;
+  
+  for (int i = 0; i<N_pcolumns; i++)
+  {
+    row_vec.push_back( CRNColumns[i].getRow() );
+    col_vec.push_back( CRNColumns[i].getCol() );
+  }
+
+  stringstream ss, ss_root;
+  
+  // some fields for uplift and fluvial incision
+  Array2D<float> uplift_field;
+  Array2D<float> fluvial_incision_rate_field;
+	
+  // set the fram to the current frame
+  int frame = current_frame;
+  int print = 1;
+  while(current_time < this_end_time) 
+  {		
+    // Record current topography
+    zeta_old = RasterData.copy();
+		
+    // run active model components    
+    // first diffuse the hillslopes. Currently two options. Perhaps a flag could be
+    // added so that we don't have to keep adding if statements as more
+    // hillslope rules are added?
+    if (hillslope)
+    {
+	    if (nonlinear)
+	    {
+	      //soil_diffusion_fv_nonlinear();
+	      MuddPILE_nl_soil_diffusion_nouplift();
+	    }
+	    else
+	      soil_diffusion_fd_linear();
+    }
+
+    // sediment will have moved into channels. This is assumed to 
+    // be immediately removed by fluvial processes, so we use the
+    // 'wash out' member function
+    wash_out();
+		
+    // now for fluvial erosion
+    if (fluvial)
+    {
+      // currently the opnly option is stream power using the FASTSCAPE 
+      // algorithm so there are no choices here
+      fluvial_incision_with_uplift();
+    }  
+
+    //update the time
+    current_time += timeStep;
+    
+    // get the erosion rates at the cells
+    for (int i = 0; i<N_pcolumns; i++)
+    {
+      int row, col;
+      row = row_vec[i];
+      col = col_vec[i];
+      
+      double this_zeta_old = zeta_old[row][col];
+      double this_zeta_new = zeta_old[row][col];
+      double this_uplift_rate = get_uplift_at_cell(row,col);
+    }    
+
+    // write at every print interval
+    if ( print_interval > 0 && (print % print_interval) == 0)	
+    {
+      print_rasters( frame );
+      ++frame;
+    }
+    if (not quiet) cout << "\rTime: " << current_time << " years" << flush;
+    ++print;
+		
+    // check to see if steady state has been achieved
+    check_steady_state();
+		
+  }
+	
+  
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function simply calls the run_components function
 // JAJ, sometime 2014
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::run_model( void )
 {
   // file to write details of each time step

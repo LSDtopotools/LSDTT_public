@@ -435,7 +435,7 @@ class LSDCRNParticle: public LSDParticle
   /// @details This function solves for the updated concentration assuming
   /// a constant erosion rate (in g/cm^2/yr) over a duration of dt
   /// @param dt the timestep over which erosion occurs
-  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param erosion the erosion rate in g/cm^2/yr  POSITIVE FOR EROSION
   /// @param CRNp a CRN parameters object that stores the coefficients
   /// to approximate production from the different production mechanisms
   /// @author SMM
@@ -447,7 +447,7 @@ class LSDCRNParticle: public LSDParticle
   /// @details This function solves for the updated concentration assuming
   /// a constant erosion rate (in g/cm^2/yr) over a duration of dt
   /// @param dt the timestep over which erosion occurs
-  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param erosion the erosion rate in g/cm^2/yr  POSITIVE FOR EROSION
   /// @param CRNp a CRN parameters object that stores the coefficients
   /// to approximate production from the different production mechanisms
   /// @author SMM
@@ -459,7 +459,7 @@ class LSDCRNParticle: public LSDParticle
   /// @details This function solves for the updated concentration assuming
   /// a constant erosion rate (in g/cm^2/yr) over a duration of dt
   /// @param dt the timestep over which erosion occurs
-  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param erosion the erosion rate in g/cm^2/yr  POSITIVE FOR EROSION
   /// @param CRNp a CRN parameters object that stores the coefficients
   /// to approximate production from the different production mechanisms
   /// @author SMM
@@ -471,7 +471,7 @@ class LSDCRNParticle: public LSDParticle
   /// @details This function solves for the updated concentration assuming
   /// a constant erosion rate (in g/cm^2/yr) over a duration of dt
   /// @param dt the timestep over which erosion occurs
-  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param erosion the erosion rate in g/cm^2/yr    POSITIVE FOR EROSION
   /// @param CRNp a CRN parameters object that stores the coefficients
   /// to approximate production from the different production mechanisms
   /// @author SMM
@@ -483,7 +483,7 @@ class LSDCRNParticle: public LSDParticle
   /// @details This function solves for the updated concentration assuming
   /// a constant erosion rate (in g/cm^2/yr) over a duration of dt
   /// @param dt the timestep over which erosion occurs
-  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param erosion the erosion rate in g/cm^2/yr    POSITIVE FOR EROSION
   /// @param CRNp a CRN parameters object that stores the coefficients
   /// to approximate production from the different production mechanisms
   /// @author SMM
@@ -495,7 +495,7 @@ class LSDCRNParticle: public LSDParticle
   /// @details This function solves for the updated concentration assuming
   /// a constant erosion rate (in g/cm^2/yr) over a duration of dt
   /// @param dt the timestep over which erosion occurs
-  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param erosion the erosion rate in g/cm^2/yr   POSITIVE FOR EROSION
   /// @param CRNp a CRN parameters object that stores the coefficients
   /// to approximate production from the different production mechanisms
   /// @author SMM
@@ -507,7 +507,7 @@ class LSDCRNParticle: public LSDParticle
   /// @details This solves an analytical solution for cosmo concertration with a linear
   /// increase in cosmo concentration
   /// @param dt time step to calculate next cosmo concetration
-  /// @param erosion_rate the erosion rate in g/cm^2/yr
+  /// @param erosion_rate the erosion rate in g/cm^2/yr   POSITIVE FOR EROSION
   /// @param alpha the increase in erosion rate (in g/cm^2/yr^2)
   /// @param CRNp a CRN parameters object
   /// @author SMM
@@ -522,7 +522,7 @@ class LSDCRNParticle: public LSDParticle
   /// @details This function solves for the updated concentration assuming
   /// a constant erosion rate (in g/cm^2/yr) over a duration of dt
   /// @param dt the timestep over which erosion occurs
-  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param erosion the erosion rate in g/cm^2/yr      POSITIVE FOR EROSION
   /// @param CRNp a CRN parameters object that stores the coefficients
   /// to approximate production from the different production mechanisms
   /// @author SMM
@@ -536,7 +536,7 @@ class LSDCRNParticle: public LSDParticle
   /// @details This function solves for the updated concentration assuming
   /// a constant erosion rate (in g/cm^2/yr) over a duration of dt
   /// @param dt the timestep over which erosion occurs
-  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param erosion the erosion rate in g/cm^2/yr       POSITIVE FOR EROSION
   /// @param CRNp a CRN parameters object that stores the coefficients
   /// to approximate production from the different production mechanisms
   /// @author SMM
@@ -550,7 +550,7 @@ class LSDCRNParticle: public LSDParticle
   /// @details This function solves for the updated concentration assuming
   /// a constant erosion rate (in g/cm^2/yr) over a duration of dt
   /// @param dt the timestep over which erosion occurs
-  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param erosion the erosion rate in g/cm^2/yr    POSITIVE FOR EROSION
   /// @param CRNp a CRN parameters object that stores the coefficients
   /// to approximate production from the different production mechanisms
   /// @author SMM
@@ -564,7 +564,7 @@ class LSDCRNParticle: public LSDParticle
   /// @details This function solves for the updated concentration assuming
   /// a constant erosion rate (in g/cm^2/yr) over a duration of dt
   /// @param dt the timestep over which erosion occurs
-  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param erosion the erosion rate in g/cm^2/yr    POSITIVE FOR EROSION
   /// @param CRNp a CRN parameters object that stores the coefficients
   /// to approximate production from the different production mechanisms
   /// @author SMM
@@ -586,7 +586,7 @@ class LSDCRNParticle: public LSDParticle
   /// @details This function solves for the updated concentration assuming
   /// a constant erosion rate (in g/cm^2/yr). It is an analytical
   /// steady state solution
-  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param erosion the erosion rate in g/cm^2/yr   POSITIVE FOR EROSION
   /// @param CRNp a CRN parameters object that stores the coefficients
   /// to approximate production from the different production mechanisms
   /// @author SMM
@@ -598,7 +598,7 @@ class LSDCRNParticle: public LSDParticle
   /// @details This function solves for the updated concentration assuming
   /// a constant erosion rate (in g/cm^2/yr). It is an analytical
   /// steady state solution
-  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param erosion the erosion rate in g/cm^2/yr  POSITIVE FOR EROSION
   /// @param CRNp a CRN parameters object that stores the coefficients
   /// to approximate production from the different production mechanisms
   /// @author SMM
@@ -610,7 +610,7 @@ class LSDCRNParticle: public LSDParticle
   /// @details This function solves for the updated concentration assuming
   /// a constant erosion rate (in g/cm^2/yr). It is an analytical
   /// steady state solution
-  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param erosion the erosion rate in g/cm^2/yr    POSITIVE FOR EROSION
   /// @param CRNp a CRN parameters object that stores the coefficients
   /// to approximate production from the different production mechanisms
   /// @author SMM
@@ -622,7 +622,7 @@ class LSDCRNParticle: public LSDParticle
   /// @details This function solves for the updated concentration assuming
   /// a constant erosion rate (in g/cm^2/yr). It is an analytical
   /// steady state solution
-  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param erosion the erosion rate in g/cm^2/yr    POSITIVE FOR EROSION
   /// @param CRNp a CRN parameters object that stores the coefficients
   /// to approximate production from the different production mechanisms
   /// @author SMM
@@ -634,7 +634,7 @@ class LSDCRNParticle: public LSDParticle
   /// @details This function solves for the updated concentration assuming
   /// a constant erosion rate (in g/cm^2/yr). It is an analytical
   /// steady state solution
-  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param erosion the erosion rate in g/cm^2/yr    POSITIVE FOR EROSION
   /// @param CRNp a CRN parameters object that stores the coefficients
   /// to approximate production from the different production mechanisms
   /// @author SMM
@@ -646,7 +646,7 @@ class LSDCRNParticle: public LSDParticle
   /// @details This function solves for the updated concentration assuming
   /// a constant erosion rate (in g/cm^2/yr). It is an analytical
   /// steady state solution
-  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param erosion the erosion rate in g/cm^2/yr   POSITIVE FOR EROSION
   /// @param CRNp a CRN parameters object that stores the coefficients
   /// to approximate production from the different production mechanisms
   /// @author SMM
@@ -656,7 +656,7 @@ class LSDCRNParticle: public LSDParticle
   /// @brief A wrapper function to update all the nuclide concentrations
   /// in one go. It uses full muogenic production
   /// @param dt the timestep over which the concetrations are updated
-  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param erosion the erosion rate in g/cm^2/yr    POSITIVE FOR EROSION
   /// @param CRNp a CRN parameters object that stores the coefficients
   /// @author SMM
   /// @date 01/01/2014
@@ -666,7 +666,7 @@ class LSDCRNParticle: public LSDParticle
   /// in one go. It uses NEUTRON PRODUCTION ONLY to save computational
   /// expense. This is a reasonable approximation in slowly eroding landscapes
   /// @param dt the timestep over which the concetrations are updated
-  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param erosion the erosion rate in g/cm^2/yr    POSITIVE FOR EROSION
   /// @param CRNp a CRN parameters object that stores the coefficients
   /// @author SMM
   /// @date 01/01/2014
@@ -674,7 +674,7 @@ class LSDCRNParticle: public LSDParticle
 
   /// @brief A wrapper function to update all the nuclide concentrations
   /// to steady state using full muon production
-  /// @param erosion the erosion rate in g/cm^2/yr
+  /// @param erosion the erosion rate in g/cm^2/yr    POSITIVE FOR EROSION
   /// @param CRNp a CRN parameters object that stores the coefficients
   /// @author SMM
   /// @date 01/01/2014

@@ -347,4 +347,58 @@ LSDParticleColumn LSDParticleColumn::update_CRN_list_rock_only_eros_limit_3CRN(
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function collects particles so that they can be used by 
+// to estimate erosion rates or used for other aggregating purposes
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDParticleColumn::collect_particles(vector<LSDParticleColumn>& ColList_vec)
+{
+  // get the number of columns 
+  int N_cols = ColList_vec.size();
+  
+  // loop through them, aggregating the particles. 
+	list<LSDCRNParticle>::iterator part_iter;
+	
+	for (int i = 0; i<N_cols; i++)
+	{
+    list<LSDCRNParticle> list_from_col = ColList_vec[i].getCRNParticleList();
+    
+    // loop through the columns, collecting particles
+    part_iter =  list_from_col.begin();
+    while(part_iter != list_from_col.end())
+	  {  
+	    CRNParticleList.push_back(*part_iter);
+	    part_iter++;
+    }
+  }  
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function calculates the apparent erosion rate from 3CRNs based on neutron
+// only assumption from the first particle in the list
+// without mixing, this will be the top particle
+// rho_r is the rock density
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<double> LSDParticleColumn::calculate_app_erosion_3CRN_neutron_rock_only(
+                                                   LSDCRNParameters& CRN_param )
+{
+	vector<double> apparent_erosion(3,0.0);
+  list<LSDCRNParticle>::iterator part_iter;
+
+	// first go through and update the CRN concentrations
+	// in the list
+	part_iter = CRNParticleList.begin();
+  apparent_erosion[0] = (*part_iter).apparent_erosion_10Be_neutron_only(RockDensity, CRN_param);
+  apparent_erosion[1] =(*part_iter).apparent_erosion_14C_neutron_only(RockDensity, CRN_param);
+  apparent_erosion[2] =(*part_iter).apparent_erosion_21Ne(RockDensity, CRN_param);
+  
+  return apparent_erosion; 
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 #endif

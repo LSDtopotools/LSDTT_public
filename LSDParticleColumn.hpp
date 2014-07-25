@@ -217,7 +217,27 @@ class LSDParticleColumn
 	                   double zeta_old,double zeta_new,
                      double particle_spacing, LSDCRNParameters& CRN_param);
 
-           
+ 
+    /// @brief the purpose of this object is to collect particles into one
+    /// column that can be used, for example, to explore the CRN concetrations
+    /// of particles being eroded from a landscape
+    /// @param ColList_vec a vector of particle columns
+    /// @author SMM
+    /// @date 25/07/2014
+    void collect_particles(vector<LSDParticleColumn>& ColList_vec);
+
+    /// @brief this function calculates the apparent erosion from the top
+    /// particle in the column using neutron only assumption, and only rock density
+    /// @param CRN_param and LSDCRNParameters object
+    /// @return a vector with the apprent erosion rates in m/yr
+    /// [0] from 10Be
+    /// [1] from 14C
+    /// [2] from 21Ne
+    /// @author SMM
+    /// @date 25/7/2014 
+    vector<double> calculate_app_erosion_3CRN_neutron_rock_only(LSDCRNParameters& CRN_param ); 
+ 
+    
 	protected:
 
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
