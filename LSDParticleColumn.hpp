@@ -58,7 +58,7 @@ using namespace std;
 #define LSDParticleColumn_H
 
 
-/// This is a class for a particle that can be tracked through simulations
+/// @brief This is a class for a particle that can be tracked through simulations
 /// and retains data about position and chemical content
 class LSDParticleColumn
 {
@@ -70,15 +70,15 @@ class LSDParticleColumn
 
 	protected:
   
-    /// The row of the particlecolumn. 
+    /// The row of the particle column. 
     /// This allows the obect to be linked to an LSDRaster	
     int Row;
     
-    /// The row of the particlecolumn. 
+    /// The row of the particle column. 
     /// This allows the obect to be linked to an LSDRaster	    
     int Col;
     
-    /// The row of the particlecolumn. 
+    /// The row of the particle column. 
     /// This allows the obect to be linked to an LSDFlowInfo object	    
     int NodeIndex;
     
@@ -90,6 +90,11 @@ class LSDParticleColumn
     
     /// the soil thickness. It is a float since LSDRasters are floats
     float SoilThickness;
+    
+    /// the cellsize of the raster if the column is linked to a raster.
+    /// It is a float since LSDRasters are floats
+    /// used to track if the particle is withing the cell
+    float DataResolution;
     
     /// This tells the model if it needs to use the density profile
     bool UseDenstyProfile;
@@ -105,7 +110,33 @@ class LSDParticleColumn
     /// This is the list for holding the particles
     list<LSDCRNParticle> CRNParticleList;
     
-    /// 
+    /// @brief This function initiates a list with particles evenly spaced
+    /// @param start_type the starting type of the particle
+    /// @param startxLoc the starting x location of the particle
+    /// @param startxLoc the starting y location of the particle
+    /// @param start_depth the starting depth of the particle in metres
+    /// @param particle_spacing the spacing in metres between particles (in depth)
+    /// @param zeta the surface elevation (m)
+    /// @param eff_eros_rate the erosion rate in g/cm^2/yr
+    /// @param CRN_param a CRNParameters object
+    /// @author SMM
+    /// @date 25/07/2014
+    void initiate_SS_cosmo_column_3CRN(int start_type, 
+          double startxLoc, double startyLoc,
+		      double start_depth, double particle_spacing, 
+		      double zeta, double eff_eros_rate,
+		      LSDCRNParameters& CRN_param);
+
+    /// @brief This inserts particles into the column
+    /// @param start_type the starting type of the particle
+    /// @param startxLoc the starting x location of the particle
+    /// @param startxLoc the starting y location of the particle
+    /// @param start_depth the starting depth of the particle in metres
+    /// @param zeta the elevation of the surface
+    void insert_particle_into_column(int start_type, 
+       double startxLoc, double startyLoc,
+	     double start_depth, double zeta);
+    
     
   private:
     void create();		
