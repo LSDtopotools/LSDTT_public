@@ -63,53 +63,103 @@ using namespace std;
 class LSDParticleColumn
 {
 	public:
+
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    //
+    // Constructors
+    //
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-  
     /// @brief The default constructor. It is the only possible constructor
 	  LSDParticleColumn()			{ create(); }
 	
+	  /// @brief Constructor where all data member are assigned. Used for copy 
+	  /// constructors
+    LSDParticleColumn(int tRow, int tCol, int tNodeIndex, 
+        double tSoilDensity, double tRockDensity,   
+        float tSoilThickness, float tDataResolution, bool tUseDenstyProfile, 
+        vector<double> tDensityDepths, vector<double> tDensityDensities, 
+        list<LSDCRNParticle> tCRNParticleList)
+        { create(tRow, tCol, tNodeIndex, tSoilDensity, tRockDensity,   
+                 tSoilThickness,tDataResolution, tUseDenstyProfile, 
+                 tDensityDepths, tDensityDensities, tCRNParticleList); }
+ 
+    /// @brief const reference operator
+    LSDParticleColumn(const LSDParticleColumn& tPC)
+    	{ create(tPC.getRow(), tPC.getCol(), tPC.getNodeIndex(), 
+               tPC.getSoilDensity(),tPC.getRockDensity(),
+               tPC.getSoilThickness(),tPC.getDataResolution(),
+               tPC.getUseDenstyProfile(),tPC.getDensityDepths(),
+               tPC.getDensityDensities(), tPC.getCRNParticleList()); }
+    
+    /// @brief const reference operator
+    LSDParticleColumn(LSDParticleColumn& tPC)
+    	{ create(tPC.getRow(), tPC.getCol(), tPC.getNodeIndex(), 
+               tPC.getSoilDensity(),tPC.getRockDensity(),
+               tPC.getSoilThickness(),tPC.getDataResolution(),
+               tPC.getUseDenstyProfile(),tPC.getDensityDepths(),
+               tPC.getDensityDensities(), tPC.getCRNParticleList()); }
+
+    /// @brief const copy constructor
+    LSDParticleColumn& operator=(const LSDParticleColumn& tPC); 
+
+    /// @brief copy constructor
+    LSDParticleColumn& operator=(LSDParticleColumn& tPC); 
+         
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    //
+    // GETTER FUNCTIONS
+    //
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-         
+    /// @getter function for the row
+    /// @return Row the row
+    int getRow() const { return Row;}
+      
+    /// @getter function for the Col
+    /// @return Col the column of the particle column (links to LSDRaster)
+    int getCol() const { return Col;}
+           
+    /// @getter function for the NodeIndex
+    /// @return NodeIndex of the particle column (links to LSDRaster)
+    int getNodeIndex() const { return NodeIndex;}
+    
+    /// @getter function for the SoilDensity
+    /// @return SoilDensity of the particle column
+    double  getSoilDensity() const { return SoilDensity;}    
+
+    /// @getter function for the RockDensity
+    /// @return RockDensity of the particle column
+    double  getRockDensity() const { return RockDensity;}        
+
+    /// @getter function for the SoilThickness
+    /// @return SoilThickness of the particle column
+    float getSoilThickness() const { return SoilThickness;}   
+    
+    /// @getter function for the DataResolution
+    /// @return DataResolution of the particle column (links to LSDRaster)
+    float getDataResolution() const { return DataResolution;}       
+
+    /// @getter function for the UseDenstyProfile;
+    /// @return UseDenstyProfile tells object to use density profile
+    bool getUseDenstyProfile() const { return UseDenstyProfile;} 
+
+    /// @getter function for the DensityDepths;
+    /// @return DensityDepths depth density measurments in the profile
+    vector<double> getDensityDepths() const { return DensityDepths;} 
+
+    /// @getter function for the DensityDensities;
+    /// @return DensityDensities density measurments in the profile (kg/m^3)
+    vector<double> getDensityDensities() const { return DensityDensities;} 
+
+    /// @getter function for the CRNParticleList
+    /// @return CRNParticleList the underlying particle list
+     list<LSDCRNParticle> getCRNParticleList() const { return CRNParticleList;} 
 
 
-	protected:
-  
-    /// The row of the particle column. 
-    /// This allows the obect to be linked to an LSDRaster	
-    int Row;
-    
-    /// The row of the particle column. 
-    /// This allows the obect to be linked to an LSDRaster	    
-    int Col;
-    
-    /// The row of the particle column. 
-    /// This allows the obect to be linked to an LSDFlowInfo object	    
-    int NodeIndex;
-    
-    /// the soil density in kg/m^3
-    double SoilDensity;
-    
-    /// the rock density in kh/m^3
-    double RockDensity;
-    
-    /// the soil thickness. It is a float since LSDRasters are floats
-    float SoilThickness;
-    
-    /// the cellsize of the raster if the column is linked to a raster.
-    /// It is a float since LSDRasters are floats
-    /// used to track if the particle is withing the cell
-    float DataResolution;
-    
-    /// This tells the model if it needs to use the density profile
-    bool UseDenstyProfile;
-    
-    /// This is the density profile. The depths are the points where
-    /// density has been sampled
-    vector<double> DensityDepths;
-    
-    /// This is the density profile. The densities (in kg/m^3) are the density 
-    /// measuremetns at depths set by DenstiyDepths    
-    vector<double> DensityDensities;
-    
-    /// This is the list for holding the particles
-    list<LSDCRNParticle> CRNParticleList;
-    
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    //
+    // Computations 
+    //
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-      
     /// @brief This function initiates a list with particles evenly spaced
     /// @param start_type the starting type of the particle
     /// @param startxLoc the starting x location of the particle
@@ -136,10 +186,104 @@ class LSDParticleColumn
     void insert_particle_into_column(int start_type, 
        double startxLoc, double startyLoc,
 	     double start_depth, double zeta);
+
+    /// @brief This function updates the CRN concentrations, updates the
+    /// zeta values in the face of uplift, and gives partial exposure for
+    /// particles near the surface so these particles should represent the 
+    /// concentration at the time of erosion. 
+    /// @detail The returned particle column contains the eroded particles. 
+    /// The function uses rock only since at the moment there is not time
+    /// to include soil layers and all the computation required to sort out
+    /// the density expansion
+    /// @param dt the time step
+    /// @param uplift_rate the rate of uplift in m/yr
+    /// @param start_type the starting type of the particle
+    /// @param start_depth the starting depth of the particle in metres
+    /// @param startxLoc the starting x location of the particle
+    /// @param startxLoc the starting y location of the particle
+    /// @param zeta_old the elevation of the previous timestep
+    /// @param zeta_new the elevation at this timestep
+    /// @param particle spacing the distance between particles
+    /// @param CRN_param a LSDCRNParameters object 
+    /// @return a particle column that contains eroded particles. These particles
+    /// have been eroded in the last timestep but they are only exposed 
+    /// during the time they are in the ground. This is to replicate collection
+    /// of particles that are in streams and have only just emerged from the ground
+    /// @author SMM
+    /// @date 25/07/2014
+    LSDParticleColumn update_CRN_list_rock_only_eros_limit_3CRN(	double dt, 
+                     double uplift_rate, int start_type, double start_depth,
+	                   double startxLoc, double startyLoc,
+	                   double zeta_old,double zeta_new,
+                     double particle_spacing, LSDCRNParameters& CRN_param);
+
+           
+	protected:
+
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    //
+    // DATA MEMBERS
+    //
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- 
+    /// The row of the particle column. 
+    /// This allows the obect to be linked to an LSDRaster	
+    int Row;
+
+    /// The row of the particle column. 
+    /// This allows the obect to be linked to an LSDRaster	    
+    int Col;
+
+    /// The row of the particle column. 
+    /// This allows the obect to be linked to an LSDFlowInfo object	    
+    int NodeIndex;
+    
+    /// the soil density in kg/m^3
+    double SoilDensity;
+    
+    /// the rock density in kh/m^3
+    double RockDensity;
+    
+    /// the soil thickness. It is a float since LSDRasters are floats
+    float SoilThickness;
+
+    /// the cellsize of the raster if the column is linked to a raster.
+    /// It is a float since LSDRasters are floats
+    /// used to track if the particle is within the cell
+    float DataResolution;
+    
+    /// This tells the model if it needs to use the density profile
+    bool UseDenstyProfile;
+    
+    /// This is the density profile. The depths are the points where
+    /// density has been sampled
+    vector<double> DensityDepths;
+    
+    /// This is the density profile. The densities (in kg/m^3) are the density 
+    /// measurments at depths set by DenstiyDepths    
+    vector<double> DensityDensities;
+    
+    /// This is the list for holding the particles
+    list<LSDCRNParticle> CRNParticleList;
+    
+
     
     
   private:
+
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    //
+    // CREATE FUNCTIONS
+    //
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-  
+    /// @brief default create function
     void create();		
+    
+    /// @brief create function using all data members
+    void create(int tRow, int tCol, int tNodeIndex, 
+        double tSoilDensity, double tRockDensity,   
+        float tSoilThickness, float tDataResolution, bool tUseDenstyProfile, 
+        vector<double> tDensityDepths, vector<double> tDensityDensities, 
+        list<LSDCRNParticle> tCRNParticleList);
 };
 
 #endif
