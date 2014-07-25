@@ -59,7 +59,7 @@ using namespace std;
 #ifndef LSDCRNParameters_H
 #define LSDCRNParameters_H
 
-/// This class contains parameters used in cosmogenic nuclide calculations
+/// @brief This class contains parameters used in cosmogenic nuclide calculations
 /// It sits seperately from the particle object since it applies to an
 /// entire environment and not just an individual particle. 
 /// Seperating the object in this way reduces memory redundancy 

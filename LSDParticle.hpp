@@ -58,7 +58,7 @@ using namespace std;
 // empty class definition so that we can use friend functions
 class LSDCRNParameters;
 
-/// This is a class for a particle that can be tracked through simulations
+/// @brief This is a class for a particle that can be tracked through simulations
 /// and retains data about position and chemical content
 class LSDParticle
 {
@@ -77,7 +77,7 @@ class LSDParticle
     /// @param StartAge the starting age of the particle
     LSDParticle( int StartType, double StartAge)	{ create(StartType, StartAge); }
     
-    /// @brief Constructor. Assignes all data members
+    /// @brief Constructor. Assignes all data members except yLoc
     /// @param StartType the type of the particle 
     /// @param StartCI the starting cell index   
     /// @param StartAge the starting age of the particle   
@@ -87,6 +87,19 @@ class LSDParticle
     LSDParticle( int StartType, int StartCI, double StartAge, double StartOSLage, 
                 double StartxLoc, double StartdLoc)
     						{ create(StartType, StartCI, StartAge, StartOSLage, StartxLoc, StartdLoc); }
+
+    /// @brief Constructor. Assignes all data members
+    /// @param StartType the type of the particle 
+    /// @param StartCI the starting cell index   
+    /// @param StartAge the starting age of the particle   
+    /// @param StartOSLage the starting OSL age
+    /// @param StartxLoc the starting x location
+    /// @param StartyLoc the starting y location
+    /// @param StartdLoc the starting depth
+    LSDParticle( int StartType, int StartCI, double StartAge, double StartOSLage, 
+                double StartxLoc, double StartyLoc, double StartdLoc)
+    						{ create(StartType, StartCI, StartAge, StartOSLage, StartxLoc, StartyLoc,StartdLoc); }
+
     						
     /// @brief Constructor. Assignes type, x location and d location. 
     /// other parameters are default
@@ -117,17 +130,23 @@ class LSDParticle
     /// @return  xLoc the  x location of the particle         
     double getxLoc() const			{ return xLoc; }
     
+    /// @brief Get the yLoc
+    /// @return  yLoc the  y location of the particle         
+    double getyLoc() const			{ return yLoc; }    
+    
     /// @brief Get the dLoc
     /// @return  dLoc the  depth of the particle       
     double getdLoc() const			{ return dLoc; }
 
     /// @brief const reference operator
     LSDParticle(const LSDParticle& tP)
-    	{ create(tP.getType(),tP.getCellIndex(), tP.getAge(),tP.getOSLage(),tP.getxLoc(),tP.getdLoc()); }
+    	{ create(tP.getType(),tP.getCellIndex(), tP.getAge(),tP.getOSLage(),
+               tP.getxLoc(),tP.getyLoc(),tP.getdLoc()); }
     
     /// @brief const reference operator
     LSDParticle(LSDParticle& tP)
-    	{ create(tP.getType(),tP.getCellIndex(), tP.getAge(),tP.getOSLage(),tP.getxLoc(),tP.getdLoc()); }
+    	{ create(tP.getType(),tP.getCellIndex(), tP.getAge(),tP.getOSLage(),
+               tP.getxLoc(),tP.getyLoc(),tP.getdLoc()); }
 
     /// @brief copy constructor
     LSDParticle& operator=(const LSDParticle& tP);
@@ -152,6 +171,9 @@ class LSDParticle
     
     /// @brief Allows the user to update the horizontal location (dangerous!)    
     void update_xLoc(double new_xLoc);
+
+    /// @brief Allows the user to update the horizontal location (dangerous!)    
+    void update_yLoc(double new_yLoc);
 	  
     /// @brief this changes a particles horizontal and vertical position. If the
     /// particle reaches the surface it 'reflects' back into the soil layer
@@ -189,6 +211,9 @@ class LSDParticle
     /// Horizontal location of the particle
     double xLoc;
     
+    /// Other coordinate, used in 3D simulations
+    double yLoc;
+    
     /// Depth of the particle
     double dLoc;
 
@@ -215,50 +240,92 @@ class LSDParticle
     /// @date 01/01/2008    
     void create(int, double);
     
+    /// @brief create function where user assigns all data members excepth
+    /// yLoc (yLoc is only used in 3D simulations)
     void create(int, int, double, double, double, double);
+    
+    /// @brief create function where user assigns all data members except 
+    void create(int, int, double, double, double, double, double);
+    
+    /// @brief create function where user assigns type, dLoc and xLoc
     void create(int, double, double);
 };
 
-/// the CRN tracer particle object, a particle that contains nuclide information
+/// @brief CRN tracer particle object, a particle that contains nuclide information
 class LSDCRNParticle: public LSDParticle
 {
   public:
   /// default constructor
   LSDCRNParticle()			{ create(); }
 
-  /// constructor with starting x location, depth and z location
+  /// @ brief constructor with starting x location, depth and z location
   LSDCRNParticle(int startType, double startxLoc,double startdLoc,
 					double start_effdloc, double startzloc)
 							{ create(startType,startxLoc,startdLoc,
 							  start_effdloc,startzloc); }
+
+  /// @ brief constructor with starting location information
+  LSDCRNParticle(int startType, double startxLoc, double startyLoc,
+               double startdLoc, double start_effdloc, double startzloc)
+							{ create(startType,startxLoc,startyLoc,startdLoc,
+							  start_effdloc,startzloc); }
+							  
   LSDCRNParticle(int startType, double startxLoc,double startzeta_Loc)
 							{ create(startType,startxLoc,startzeta_Loc); }
+
+  /// @brief a create function for a volume particle
+  LSDCRNParticle(int startType, int startGSDType,
+				      double startxLoc,
+	            double startdLoc, double start_effdloc,
+	            double startzLoc, double startMass,
+	            double startSurfaceArea)
+	            { create(startType, startGSDType,startxLoc,
+	                     startdLoc, start_effdloc, startzLoc, startMass,
+	                     startSurfaceArea); }
+	            
+	/// @brief a create function for a volume particle  with y loc          
+  LSDCRNParticle(int startType, int startGSDType, double startxLoc, double startyLoc,
+	            double startdLoc, double start_effdloc,
+	            double startzLoc, double startMass,
+	            double startSurfaceArea)
+              { create(startType, startGSDType, startxLoc, startyLoc,
+	                     startdLoc, start_effdloc, startzLoc, startMass,
+	                     startSurfaceArea); } 
+
+  /// @brief constructor that includes some CRN information
   LSDCRNParticle(int startType, double startxLoc,double startzeta_Loc,
 					double startdLoc, double start_effdLoc,
 					double start_C10Be,double start_C14C)
 							{ create(startType,startxLoc,startzeta_Loc,
 								startdLoc, start_effdLoc,
 								start_C10Be, start_C14C); }
+  
+  /// @brief constructor that includes CRN information with many nuclides
   LSDCRNParticle(int startType, double startxLoc,double startzeta_Loc,
 					double startdLoc, double start_effdLoc,
 					double start_C10Be,double start_C14C, double start_21Ne)
 							{ create(startType,startxLoc,startzeta_Loc,
 								startdLoc, start_effdLoc,
 								start_C10Be, start_C14C, start_21Ne); }
-  LSDCRNParticle(int startType, int startCellIndex, double startAge, double startOSLAge,
-					double startxLoc,double startdLoc, double startefdLoc,
+  
+  /// @brief constructor that retains all data 
+  LSDCRNParticle(int startType, int startGSDType, int startCellIndex, double startAge, double startOSLAge,
+					double startxLoc,double startyLoc, double startdLoc, double startefdLoc,
 					double startzLoc, double start_C10Be, double start_C26Al,
 					double start_C36Cl, double start_C14C,
 					double start_C21Ne, double start_C3He,
 					double start_Cf7Be, double start_Cf10Be,
-					double start_Cf210Pb, double start_Cf137Cs)
-							{ create(startType, startCellIndex, startAge, startOSLAge,
-								startxLoc, startdLoc, startefdLoc,
+					double start_Cf210Pb, double start_Cf137Cs, 
+          double start_Mass, double start_StartingMass,
+					double start_SurfaceArea)
+							{ create(startType, startGSDType, startCellIndex, startAge, startOSLAge,
+								startxLoc, startyLoc,startdLoc, startefdLoc,
 								startzLoc, start_C10Be, start_C26Al,
 								start_C36Cl, start_C14C,
 								start_C21Ne, start_C3He,
 								start_Cf7Be, start_Cf10Be,
-								start_Cf210Pb, start_Cf137Cs); }
+								start_Cf210Pb, start_Cf137Cs,
+								start_Mass, start_StartingMass,start_SurfaceArea); }
 
 
   /// @brief The copy constructor
@@ -266,24 +333,30 @@ class LSDCRNParticle: public LSDParticle
   /// @author SMM
   /// @date 01/01/2010
   LSDCRNParticle(const LSDCRNParticle& tP)
-    	{ create(tP.getType(), tP.getCellIndex(), tP.getAge(),tP.getOSLage(),tP.getxLoc(),tP.getdLoc(),
+    	{ create(tP.getType(), tP.getGSDType(), tP.getCellIndex(), tP.getAge(),tP.getOSLage(),
+               tP.getxLoc(),tP.getyLoc(),tP.getdLoc(),
     	         tP.geteffective_dLoc(),tP.get_zetaLoc(),tP.getConc_10Be(),
     	         tP.getConc_26Al(), tP.getConc_36Cl(), tP.getConc_14C(),
     	         tP.getConc_21Ne(), tP.getConc_3He(),
     	         tP.getConc_f7Be(), tP.getConc_f10Be(),
-    	         tP.getConc_f210Pb(), tP.getConc_f137Cs()); }
+    	         tP.getConc_f210Pb(), tP.getConc_f137Cs(),
+               tP.getMass(), tP.getStartingMass(),
+				       tP.getSurfaceArea()); }
 
   /// @brief The copy constructor
   /// @param tP a constant LSDCRNParticle object
   /// @author SMM
   /// @date 01/01/2010
   LSDCRNParticle(LSDCRNParticle& tP)
-    	{ create(tP.getType(), tP.getCellIndex(), tP.getAge(),tP.getOSLage(),tP.getxLoc(),tP.getdLoc(),
+    	{ create(tP.getType(), tP.getGSDType(), tP.getCellIndex(), tP.getAge(),tP.getOSLage(),
+               tP.getxLoc(),tP.getyLoc(),tP.getdLoc(),
     	         tP.geteffective_dLoc(),tP.get_zetaLoc(),tP.getConc_10Be(),
     	         tP.getConc_26Al(), tP.getConc_36Cl(), tP.getConc_14C(),
     	         tP.getConc_21Ne(), tP.getConc_3He(),
     	         tP.getConc_f7Be(), tP.getConc_f10Be(),
-    	         tP.getConc_f210Pb(), tP.getConc_f137Cs());   }
+    	         tP.getConc_f210Pb(), tP.getConc_f137Cs(),
+               tP.getMass(), tP.getStartingMass(),
+				       tP.getSurfaceArea());   }
 
   /// @brief the copy constructor for constant LSDCRNParticle objects  
   LSDCRNParticle& operator=(const LSDCRNParticle& tP);
@@ -339,8 +412,23 @@ class LSDCRNParticle: public LSDParticle
   /// @return zetaLoc, which the the elevation relative to some arbitrary datum
   double get_zetaLoc() const			{ return zetaLoc; }
 
-	// update nuclide concentrations in the event of constant erosion
-	// erosion is in g/cm^2/yr
+  /// @brief returns the mass of the particle
+  /// @return the mass
+	double getMass() const  				{ return Mass; }
+	
+  /// @brief returns the starting mass of the particle
+  /// @return the starting mass
+	double getStartingMass() const			{ return StartingMass; }
+	
+  /// @brief returns the surface area of the particle
+  /// @return the surface area	
+	double getSurfaceArea()	const			{ return SurfaceArea; }
+	
+  /// @brief returns the GSDType of the particle, which is an index into a 
+  /// LSDVolumeParticleInfo object
+  /// @return the surface GSDType	
+	int getGSDType()	const				{ return GSDType; }
+
 
   /// @brief update the 10Be concentration based on a constant erosion rate
   /// using the full production range, including muons. 
@@ -424,7 +512,8 @@ class LSDCRNParticle: public LSDParticle
   /// @param CRNp a CRN parameters object
   /// @author SMM
   /// @date 01/01/2010
-  void update_10Be_conc_linear_increase(double dt,double erosion_rate, double alpha, LSDCRNParameters& CRNp);
+  void update_10Be_conc_linear_increase(double dt,double erosion_rate, double alpha, 
+       LSDCRNParameters& CRNp);
 
   /// @brief update the 10Be concentration based on a constant erosion rate
   /// using the ONLY NEUTRON porduction. It is less computationally expensive
@@ -666,7 +755,7 @@ class LSDCRNParticle: public LSDParticle
   /// @param delta_ed the new effective depth in g/cm^2
   void update_depths(double delta_d, double delta_ed);
 
-  /// @brief This assignes a new value for zeta
+  /// @brief This assigns a new value for zeta
   /// @param new_zeta the new zeta, which is elevation above an arbitrary datum
   void update_zetaLoc(double new_zeta);
 
@@ -715,27 +804,72 @@ class LSDCRNParticle: public LSDParticle
   /// concentration of fallout 137Cs in units tba
   double Conc_f137Cs;			// fallout, units tba
 
+  /// the mass of the particle. Default units kg
+  double Mass;
+  
+  /// Starting mass of the particle. Default units kg
+  double StartingMass;	
+  
+  /// Surface area in m^2
+  double SurfaceArea;
+  
+  /// an integer used to denote the GSD type
+  /// this is an INDEX into a vector in the LSDVolumeParticleInfo
+  /// object  
+  int GSDType;
+  
   private:
-  // functions for creating particles
+  /// @breif default create function
   void create();
+  
+  /// @brief this just sets simple location information
   void create(int startType, double startxLoc,
             double startzLoc);
+  
+  /// @brief a create function setting location data
   void create(int startType, double startxLoc,
              double startdLoc, double start_effdloc,
 	            double startzloc);
+  
+  /// @brief a create function for a setting location data with y loc
+  void create(int startType, double startxLoc, double startyLoc,
+	            double startdLoc, double start_effdloc,
+	            double startzLoc);	    
+  
+  /// @brief a create function for a volume particle
+  void create(int startType, int startGSDType,
+				double startxLoc,
+	            double startdLoc, double start_effdloc,
+	            double startzLoc, double startMass,
+	            double startSurfaceArea);
+	            
+	/// @brief a create function for a volume particle  with y loc          
+  void create(int startType, int startGSDType, double startxLoc, double startyLoc,
+	            double startdLoc, double start_effdloc,
+	            double startzLoc, double startMass,
+	            double startSurfaceArea);	 
+              
+  /// @brief a create function if you just want to work with cosmo                                 
   void create(int startType, double startxLoc,double startzeta_Loc,
 			double startdLoc, double start_effdLoc,
 			double start_C10Be,double start_C14C);
+	
+  /// @brief a create function if you just want to work with cosmo, but with more nuclides
+  /// than previous version		
   void create(int startType, double startxLoc,double startzeta_Loc,
 			double startdLoc, double start_effdLoc,
 			double start_C10Be,double start_C14C, double start_21Ne);
-  void create(int startType, int startCellIndex, double startAge, double startOSLAge,
-              double startxLoc,double startdLoc, double startefdLoc,
-              double startzLoc, double start_C10Be, double start_C26Al,
-	double start_C36Cl, double start_C14C,
-	double start_C21Ne, double start_C3He,
-	double start_Cf7Be, double start_Cf10Be,
-	double start_Cf210Pb, double start_Cf137Cs);
+	
+  /// @brief this is the create function used in the copy constructors 		
+  void create(int startType, int startGSDType, int startCellIndex, 
+          double startAge, double startOSLAge,
+          double startxLoc,double startyLoc,double startdLoc, double startefdLoc,
+          double startzLoc, double start_C10Be, double start_C26Al,
+	        double start_C36Cl, double start_C14C,
+	        double start_C21Ne, double start_C3He,
+	        double start_Cf7Be, double start_Cf10Be,
+	        double start_Cf210Pb, double start_Cf137Cs, 
+	        double start_Mass, double start_StartingMass,double startSurfaceArea);
 };
 
 

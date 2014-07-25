@@ -97,6 +97,18 @@ void LSDParticle::create( int StartType, int StartCI,  double StartAge, double S
   dLoc = StartdLoc;
  }
 
+ void LSDParticle::create( int StartType, int StartCI,  double StartAge, 
+              double StartOSLage, double StartxLoc, double StartyLoc, double StartdLoc)
+ {
+  Type = StartType;
+  CellIndex = StartCI;
+  Age = StartAge;
+  OSLage = StartOSLage;
+  xLoc = StartxLoc;
+  yLoc = StartyLoc;
+  dLoc = StartdLoc;
+ }
+
 void LSDParticle::create(int StartType, double StartxLoc, double StartdLoc)
  {
   Type = StartType;
@@ -111,7 +123,7 @@ LSDParticle& LSDParticle::operator=(const LSDParticle& rhs)
  {
   if (&rhs != this)
    {
-    create(rhs.getType(),rhs.getCellIndex(),rhs.getAge(),rhs.getOSLage(), rhs.getxLoc(),rhs.getdLoc());
+    create(rhs.getType(),rhs.getCellIndex(),rhs.getAge(),rhs.getOSLage(), rhs.getxLoc(),rhs.getyLoc(),rhs.getdLoc());
    }
   return *this;
  }
@@ -119,7 +131,8 @@ LSDParticle& LSDParticle::operator=(const LSDParticle& rhs)
 std::ostream& operator<<(std::ostream& os, const LSDParticle& tP)
  {
   os <<   tP.getType() << " " << tP.getCellIndex() << " " << tP.getAge() << " "
-       << tP.getOSLage() << " " << tP.getxLoc() << " " << tP.getdLoc();
+       << tP.getOSLage() << " " << tP.getxLoc() << " " << tP.getyLoc() 
+       << " " << tP.getdLoc();
   return os;
  }
 
@@ -148,10 +161,18 @@ void LSDParticle::OSLexpose()
  	 Age = 0;
  }
 
+// update the x location 
 void LSDParticle::update_xLoc(double new_xLoc)
 {
 	xLoc = new_xLoc;
 }
+
+// update the y location
+void LSDParticle::update_yLoc(double new_yLoc)
+{
+	yLoc = new_yLoc;
+}
+
 
 void LSDParticle::displaceReflect(double dx,double dd,double h, double dt)
  {
@@ -179,6 +200,8 @@ void LSDParticle::displaceReflect(double dx,double dd,double h, double dt)
   // std::cout << "tPart.cpp LINE 86 dLoc  is: " << dLoc << std::endl;
  }
 
+
+// this test to see if the particle is still within the x location < lambda
 int  LSDParticle::test_domain(double lambda)
  {
   int td;
@@ -211,8 +234,9 @@ void LSDCRNParticle::create()
 	CellIndex = -1;
 	Age = 0;
 	OSLage = 0;
-	xLoc = 0;			// in meters
-	dLoc = 5;			// in meters
+	xLoc = 0;			// in metres
+	yLoc = 0;     // in metres
+	dLoc = 5;			// in metres
 	zetaLoc = 100;
     Conc_10Be = 0.0;
 	Conc_26Al = 0.0;
@@ -239,6 +263,7 @@ void LSDCRNParticle::create(int startType, double startxLoc,
 	Age = 0;
 	OSLage = 0;
 	xLoc = startxLoc;			// in meters
+	yLoc = 0;
 	dLoc = 0;			// in meters
 	zetaLoc = startzLoc;
     Conc_10Be = 0.0;
@@ -265,6 +290,7 @@ void LSDCRNParticle::create(int startType, double startxLoc,
 	Age = -99;
 	OSLage = -99;
 	xLoc = startxLoc;			// in meters
+	yLoc = 0;
 	dLoc = startdLoc;			// in meters
 	zetaLoc = startzLoc;
     Conc_10Be = 0.0;
@@ -280,6 +306,108 @@ void LSDCRNParticle::create(int startType, double startxLoc,
 	effective_dLoc = start_effdloc;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParticle::create(int startType, double startxLoc, double startyLoc,
+	            double startdLoc, double start_effdloc,
+	            double startzLoc)
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-	            
+{
+	Type = startType;
+	CellIndex = -1;
+	Age = -99;
+	OSLage = -99;
+	xLoc = startxLoc;			// in meters
+	yLoc = startyLoc;
+	dLoc = startdLoc;			// in meters
+	zetaLoc = startzLoc;
+    Conc_10Be = 0.0;
+	Conc_26Al = 0.0;
+	Conc_36Cl = 0.0;
+	Conc_14C = 0.0;
+	Conc_21Ne = 0.0;
+	Conc_3He = 0.0;
+	Conc_f7Be = 0.0;
+	Conc_f10Be = 0.0;
+	Conc_f210Pb = 0.0;
+	Conc_f137Cs = 0.0;
+	effective_dLoc = start_effdloc;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// a create function for a volume particle
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParticle::create(int startType, int startGSDType,
+				double startxLoc,
+	            double startdLoc, double start_effdloc,
+	            double startzLoc, double startMass,
+	            double startSurfaceArea)
+{
+	Mass = startMass;					// in kg
+	StartingMass = startMass;			// in kg
+	SurfaceArea = startSurfaceArea;
+										// in m^2/kg
+
+	Type = startType;
+	GSDType = startGSDType;
+	CellIndex = -1;
+	Age = -99;
+	OSLage = -99;
+	xLoc = startxLoc;			// in meters
+	dLoc = startdLoc;			// in meters
+	zetaLoc = startzLoc;
+	Conc_26Al = 0.0;
+	Conc_36Cl = 0.0;
+	Conc_14C = 0.0;
+	Conc_21Ne = 0.0;
+	Conc_3He = 0.0;
+	Conc_f7Be = 0.0;
+	Conc_f10Be = 0.0;
+	Conc_f210Pb = 0.0;
+	Conc_f137Cs = 0.0;
+	effective_dLoc = start_effdloc;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-	            
+// a create function for a volume particle  with y loc  
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-        
+void LSDCRNParticle::create(int startType, int startGSDType, double startxLoc, double startyLoc,
+	            double startdLoc, double start_effdloc,
+	            double startzLoc, double startMass,
+	            double startSurfaceArea)	 
+{
+	Mass = startMass;					// in kg
+	StartingMass = startMass;			// in kg
+	SurfaceArea = startSurfaceArea;
+										// in m^2/kg
+
+	Type = startType;
+	GSDType = startGSDType;
+	CellIndex = -1;
+	Age = -99;
+	OSLage = -99;
+	xLoc = startxLoc;			// in meters
+	yLoc = startyLoc;     // in metres
+	dLoc = startdLoc;			// in meters
+	zetaLoc = startzLoc;
+	Conc_26Al = 0.0;
+	Conc_36Cl = 0.0;
+	Conc_14C = 0.0;
+	Conc_21Ne = 0.0;
+	Conc_3He = 0.0;
+	Conc_f7Be = 0.0;
+	Conc_f10Be = 0.0;
+	Conc_f210Pb = 0.0;
+	Conc_f137Cs = 0.0;
+	effective_dLoc = start_effdloc;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// contains posiution and CRN information
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParticle::create(int startType, double startxLoc,double startzeta_Loc,
  					double startdLoc, double start_effdLoc,
 					double start_C10Be,double start_C14C)
@@ -303,7 +431,11 @@ void LSDCRNParticle::create(int startType, double startxLoc,double startzeta_Loc
 	Conc_f210Pb = 0.0;
 	Conc_f137Cs = 0.0;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This includes some position and CRN information
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParticle::create(int startType, double startxLoc,double startzeta_Loc,
  					double startdLoc, double start_effdLoc,
 					double start_C10Be,double start_C14C, double start_21Ne)
@@ -327,24 +459,32 @@ void LSDCRNParticle::create(int startType, double startxLoc,double startzeta_Loc
 	Conc_f210Pb = 0.0;
 	Conc_f137Cs = 0.0;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-void LSDCRNParticle::create(int startType, int startCellIndex, double startAge, double startOSLAge,
-	            double startxLoc,double startdLoc, double startefdLoc,
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This includes all data members for copy constructor
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParticle::create(int startType, int start_GSDType, int startCellIndex, 
+        double startAge, double startOSLAge,
+	      double startxLoc,double startyLoc,double startdLoc, double startefdLoc,
 				double startzLoc, double start_C10Be, double start_C26Al,
 				double start_C36Cl, double start_C14C,
 				double start_C21Ne, double start_C3He,
 				double start_Cf7Be, double start_Cf10Be,
-				double start_Cf210Pb, double start_Cf137Cs)
+				double start_Cf210Pb, double start_Cf137Cs,
+        double start_Mass, double start_StartingMass,
+				double start_SurfaceArea)
 {
 	Type = startType;
 	CellIndex = startCellIndex;
 	Age = startAge;
 	OSLage = startOSLAge;
-	xLoc = startxLoc;			// in meters
-	dLoc = startdLoc;			// in meters
+	xLoc = startxLoc;			// in metres
+	yLoc = startyLoc;     // in metres
+	dLoc = startdLoc;			// in metres
 	effective_dLoc = startefdLoc;
 	zetaLoc = startzLoc;
-    Conc_10Be = start_C10Be;
+  Conc_10Be = start_C10Be;
 	Conc_26Al = start_C26Al;
 	Conc_36Cl = start_C36Cl;
 	Conc_14C = start_C14C;
@@ -354,6 +494,10 @@ void LSDCRNParticle::create(int startType, int startCellIndex, double startAge, 
 	Conc_f10Be = start_Cf10Be;
 	Conc_f210Pb = start_Cf210Pb;
 	Conc_f137Cs = start_Cf137Cs;
+	Mass = start_Mass;
+	StartingMass = start_StartingMass;
+	SurfaceArea =  start_SurfaceArea;
+	GSDType = start_GSDType;	
 }
 
 
@@ -361,12 +505,16 @@ LSDCRNParticle& LSDCRNParticle::operator=(const LSDCRNParticle& rhs)
 {
 	if (&rhs != this)
     {
-		create(rhs.getType(), rhs.getCellIndex(), rhs.getAge(),rhs.getOSLage(),rhs.getxLoc(),rhs.getdLoc(),
+		create(rhs.getType(), rhs.getGSDType(), rhs.getCellIndex(), 
+               rhs.getAge(),rhs.getOSLage(),
+               rhs.getxLoc(),rhs.getyLoc(),rhs.getdLoc(),
     	         rhs.geteffective_dLoc(),rhs.get_zetaLoc(),rhs.getConc_10Be(),
     	         rhs.getConc_26Al(), rhs.getConc_36Cl(), rhs.getConc_14C(),
     	         rhs.getConc_21Ne(), rhs.getConc_3He(),
     	         rhs.getConc_f7Be(), rhs.getConc_f10Be(),
-    	         rhs.getConc_f210Pb(), rhs.getConc_f137Cs());
+    	         rhs.getConc_f210Pb(), rhs.getConc_f137Cs(),
+    	         rhs.getMass(), rhs.getStartingMass(),
+    	         rhs.getSurfaceArea());
     }
     return *this;
 }
@@ -375,12 +523,16 @@ LSDCRNParticle& LSDCRNParticle::operator=(LSDCRNParticle& rhs)
 {
 	if (&rhs != this)
     {
-		create(rhs.getType(), rhs.getCellIndex(), rhs.getAge(),rhs.getOSLage(),rhs.getxLoc(),rhs.getdLoc(),
+		create(rhs.getType(), rhs.getGSDType(), rhs.getCellIndex(), 
+               rhs.getAge(),rhs.getOSLage(),
+               rhs.getxLoc(),rhs.getyLoc(),rhs.getdLoc(),
      	         rhs.geteffective_dLoc(),rhs.get_zetaLoc(),rhs.getConc_10Be(),
      	         rhs.getConc_26Al(), rhs.getConc_36Cl(), rhs.getConc_14C(),
     	         rhs.getConc_21Ne(), rhs.getConc_3He(),
     	         rhs.getConc_f7Be(), rhs.getConc_f10Be(),
-    	         rhs.getConc_f210Pb(), rhs.getConc_f137Cs());
+    	         rhs.getConc_f210Pb(), rhs.getConc_f137Cs(),
+    	         rhs.getMass(), rhs.getStartingMass(),
+    	         rhs.getSurfaceArea());
     }
     return *this;
 }
