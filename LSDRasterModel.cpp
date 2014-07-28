@@ -176,7 +176,8 @@ void LSDRasterModel::default_parameters( void )
 	bc[3] = "p";
 	set_boundary_conditions( bc );					// Set these as default boundary conditions
 
-	set_uplift( 0, 0.0005 );					// Block uplift, 0.005mm.yr^{-1}
+	set_uplift( 0, 0.0005 );					// Block uplift, 0.005m.yr^{-1}
+	set_baseline_uplift( 0.0005 );
 
 	set_timeStep( 100 );						// 100 years
 	set_endTime( 10000 );
@@ -353,7 +354,8 @@ void LSDRasterModel::initialize_model(string param_file)
 		else if (lower == "end time")		endTime 	= atof(value.c_str());
 		else if (lower == "num runs")		num_runs	= atoi(value.c_str());
 		else if (lower == "end time mode")	endTime_mode	= atoi(value.c_str());
-		else if (lower == "max uplift")		max_uplift 	= atof(value.c_str());
+		else if (lower == "max uplift")		max_uplift = atof(value.c_str());
+		else if (lower == "baseline uplift")  baseline_uplift = atof(value.c_str());
 		else if (lower == "uplift mode")	uplift_mode 	= atoi(value.c_str());
 		else if (lower == "tolerance")		steady_state_tolerance = atof(value.c_str());
 		else if (lower == "steady limit")	steady_state_limit = atof(value.c_str());
@@ -1429,7 +1431,17 @@ float LSDRasterModel::get_uplift_at_cell(int i, int j)
 		{
 			case 1:		// Tilt block (SMM: seems to only tilt in one direction)
 			{
-				result = (NRows - i - 1) * get_max_uplift() / ((float) NRows - 1);
+			  if (baseline_uplift > 0 && baseline_uplift < max_uplift)
+			  {
+			    // this tilt block is maximum in row 1 and at the baseline_uplift 
+			    // in row NRows-2
+			    float m = (baseline_uplift-get_max_uplift())/(NRows-3);
+			    result = float(i)*m+get_max_uplift()-m;
+        }
+				else
+				{
+          result = (NRows - i - 1) * get_max_uplift() / ((float) NRows - 1);
+        }
 				break;
 			}
 			case 2:		// Gausian
@@ -1486,8 +1498,18 @@ float LSDRasterModel::get_uplift_rate_at_cell(int i, int j)
 		{
 			case 1:		// Tilt block (SMM: seems to only tilt in one direction)
 			{
-				result = (NRows - i - 1) * get_max_uplift() / ((float) NRows - 1);
-				break;
+			  if (baseline_uplift > 0 && baseline_uplift < max_uplift)
+			  {
+			    // this tilt block is maximum in row 1 and at the baseline_uplift 
+			    // in row NRows-2
+			    float m = (baseline_uplift-get_max_uplift())/(NRows-3);
+			    result = float(i)*m+get_max_uplift()-m;
+        }
+				else
+				{
+          result = (NRows - i - 1) * get_max_uplift() / ((float) NRows - 1);
+        }
+        break;
 			}
 			case 2:		// Gausian
 	    {  
@@ -2353,7 +2375,7 @@ void LSDRasterModel::run_components_combined( void )
   Array2D<float> uplift_field;
   Array2D<float> fluvial_incision_rate_field;
 	
-  // set the fram to the current frame
+  // set the frame to the current frame
   int frame = current_frame;
   int print = 1;
   do 

@@ -724,6 +724,9 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @brief overloaded function, set the array of uplift, but using the uplift mode
 	void set_uplift( int mode, float max_rate )		{ uplift_field = generate_uplift_field( mode, max_rate ); this->max_uplift = max_rate; }
 	
+	/// @brief this sets the baseline uplift rate for the tilt block
+	void set_baseline_uplift( float new_rate )    { baseline_uplift = new_rate; }
+	
   /// @brief set the tolerance for determining steady state
   void set_steady_state_tolerance( float tol )		{ steady_state_tolerance = tol; }
 
@@ -800,6 +803,8 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @brief set the name of the report
 	void set_report_name( string name )			{report_name = name;}
 	
+	/// @brief set current frame, this is used for printing
+	void set_current_frame(int new_frame)  { current_frame = new_frame; }
 
  	// -------------------------------------------------------------------
 	//@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@
@@ -1107,6 +1112,9 @@ class LSDRasterModel: public LSDRasterSpectral
 	
 	/// the maximum uplift rate
 	float			max_uplift;
+	
+	/// the baseline uplift rate (for different uplift modes)
+	float baseline_uplift;
 	
 	/// an iteration tolerance for detemring if a model run is at steady state. 
 	float			steady_state_tolerance;
