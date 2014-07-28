@@ -91,11 +91,13 @@ class LSDFlowInfo
   /// @author SMM
   /// @date 01/016/12
 	LSDFlowInfo()										{ create(); }
+	
 	/// @brief Creates a FlowInfo object from a binary flowinfo data.
 	/// @param fname String of the binary flowinfo data file to be read.
 	/// @author SMM
   /// @date 01/016/12
 	LSDFlowInfo(string fname)							{ create(fname); }
+	
 	/// @brief Creates a FlowInfo object from topography.
 	/// @param BoundaryConditions Vector<string> of the boundary conditions at each edge of the
   /// DEM file. Boundary conditions can start with 'P' or 'p' for periodic,
@@ -273,6 +275,7 @@ class LSDFlowInfo
 	/// @author SMM
   /// @date 01/016/12
   void unpickle(string filename);
+  
   ///@brief Pickles flow information data from a binary file.
   ///@details WARNING!!! This creates HUGE files (sometimes 10x bigger than
   /// original file). Testing indicates reading this file takes
@@ -355,23 +358,68 @@ class LSDFlowInfo
 
 	// algorithms for stream profile analysis
 
-	///@brief This function calculates the chi function for all the nodes upslope
-  ///of a given node.
-  ///@param starting_node Integer index of node to analyse upslope of.
-  ///@param m_over_n
-  ///@param A_0
-  ///@return Vector of chi values.
+	/// @brief This function calculates the chi function for all the nodes upslope
+  /// of a given node.
+  /// @param starting_node Integer index of node to analyse upslope of.
+  /// @param m_over_n
+  /// @param A_0
+  /// @return Vector of chi values. The node indices of these values are those 
+  /// that would be retured from get_uplope_nodes
+  /// @author SMM
+  /// @date 01/16/2012
 	vector<float> get_upslope_chi(int starting_node, float m_over_n, float A_0);
 	
-  ///@brief This function calculates the chi function for all the nodes upslope
-  ///of a given list of nodes.
-  ///@param upslope_pixel_list Vector of nodes to analyse.
-  ///@param m_over_n
-  ///@param A_0
-  ///@return Vector of chi values.
+  /// @brief This function calculates the chi function for a list of nodes
+  /// it isn't really a standalone modules, but is only called from get_upslope_chi
+  /// above
+  /// @param upslope_pixel_list Vector of nodes to analyse.
+  /// @param m_over_n
+  /// @param A_0
+  /// @return Vector of chi values.
   /// @author SMM
   /// @date 01/016/12
   vector<float> get_upslope_chi(vector<int>& upslope_pixel_list, float m_over_n, float A_0);
+
+  /// @brief this function takes a vector that contains the node indices of 
+  /// starting nodes, and then calculates chi upslope of these nodes
+  /// to produce a chi map. A threshold drainage area can be used
+  /// to only map chi where nodes have greater than the threshold drainage area
+  /// @details this function is meant to mimic the function of the Willett et al
+  /// (2014) Science paper. You do need to extract the wanted node indices
+  /// for your starting nodes from a node index map
+  /// @param starting_nodes an integer vector containing all the node indices
+  /// of the node from which you want to start the chi analysis. All of these
+  /// nodes will be considered to have a starting chi of 0
+  /// @param m_over_n the m/n ratio. Chi is quite sensitive to this
+  /// @param A_0 the reference drainage area. This is a but arbitrary. We usually use
+  /// 1000 m^2. Willet et al(2014, Science) used 1m^2. As of 28 July 2014 we've not
+  /// done any detailed sensitivity analysis on this parameter
+  /// @param area_threshold the threshold area (in m^2) that sets the area above
+  /// which chi is recorded in the chi raster
+  /// @return this returns an LSDRaster for the chi values upslope of all of the 
+  /// nodes indicated in starting_nodes
+  /// @author SMM
+  /// @date 28/14/2014
+  LSDRaster get_upslope_chi_from_multiple_starting_nodes(vector<int>& starting_nodes, 
+   float m_over_n, float A_0, float area_threshold);
+
+  /// @brief This function gets the chi upslope of every base level node
+  /// that is, it gets the chi values of the entire DEM, assuming all 
+  /// base level nodes have a chi of 0
+  /// @detail because this assumes all base level nodes have a chi of 0, 
+  /// this function is probably only appropriate for numerical models.
+  /// @param m_over_n the m/n ratio. Chi is quite sensitive to this
+  /// @param A_0 the reference drainage area. This is a but arbitrary. We usually use
+  /// 1000 m^2. Willet et al(2014, Science) used 1m^2. As of 28 July 2014 we've not
+  /// done any detailed sensitivity analysis on this parameter
+  /// @param area_threshold the threshold area (in m^2) that sets the area above
+  /// which chi is recorded in the chi raster
+  /// @return this returns an LSDRaster for the chi values of the entire raster, 
+  /// with base level nodes assumed to have chi = 0
+  /// @author SMM
+  /// @date 28/14/2014
+  LSDRaster get_upslope_chi_from_all_baselevel_nodes(float m_over_n, float A_0, 
+                                                float area_threshold);
 
 	/// @brief Calculates the distance from outlet of all the base level nodes.
 	/// Distance is given in spatial units, not in pixels.
@@ -437,7 +485,8 @@ class LSDFlowInfo
 	/// @param Path Empty raster to store the final trace path.
   /// @author SWDG
   /// @date 20/1/14
-  void D8_Trace(int i, int j, LSDIndexRaster StreamNetwork, float& length, int& receiver_row, int& receiver_col, Array2D<int>& Path);
+  void D8_Trace(int i, int j, LSDIndexRaster StreamNetwork, float& length, 
+                   int& receiver_row, int& receiver_col, Array2D<int>& Path);
 
   /// @brief Hilltop flow routing.
   ///
@@ -487,9 +536,9 @@ class LSDFlowInfo
   /// @author SWDG 
   /// @date 12/2/14
   vector< Array2D<float> > HilltopFlowRouting(LSDRaster Elevation, LSDRaster Hilltops, LSDRaster Slope, 
-                                                         LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir, string Prefix, LSDIndexRaster Basins,
-                                                         bool print_paths_switch, int thinning, string trace_path, bool basin_filter_switch,
-                                                         vector<int> Target_Basin_Vector);
+               LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir, string Prefix, LSDIndexRaster Basins,
+               bool print_paths_switch, int thinning, string trace_path, bool basin_filter_switch,
+               vector<int> Target_Basin_Vector);
 
   /// @brief Hilltop flow routing, modded for use in probabilistic hillslope length measures.
   ///
@@ -541,10 +590,11 @@ class LSDFlowInfo
   /// @author SWDG 
   /// @date 28/4/14
   vector< Array2D<float> > HilltopFlowRouting_probability(LSDRaster Elevation, LSDRaster Hilltops, LSDRaster Slope, 
-                                                         LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir, string Prefix, LSDIndexRaster Basins,
-                                                         bool print_paths_switch, int thinning, string trace_path, bool basin_filter_switch,
-                                                         vector<int> Target_Basin_Vector, int OrderThreshold);
-	protected:
+                LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir, string Prefix, LSDIndexRaster Basins,
+                bool print_paths_switch, int thinning, string trace_path, bool basin_filter_switch,
+                vector<int> Target_Basin_Vector, int OrderThreshold);
+	
+  protected:
 
 	///Number of rows.
   int NRows;
