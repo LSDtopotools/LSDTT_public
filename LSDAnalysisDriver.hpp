@@ -52,6 +52,7 @@
 #include <string>
 #include <map>
 #include "LSDRaster.hpp"
+#include "LSDIndexRaster.hpp"
 #include "LSDFlowInfo.hpp"
 #include "LSDStatsTools.hpp"
 using namespace std;
@@ -103,8 +104,14 @@ class LSDAnalysisDriver
     /// This vector holds various rasters computed during the trun
     vector<LSDRaster> vector_of_LSDRasters;
     
+    /// as above, but these are index rasters
+    vector<LSDIndexRaster> vector_of_LSDIndexRasters;
+    
     /// This holds the flow info object
     LSDFlowInfo FlowInfo;
+    
+    /// the just tells the code if the flow info has already been calculated
+    bool got_flowinfo;
     
     /// index into the vector of rasters for the nodeindex raster
     int nodeindex_index;
@@ -221,6 +228,16 @@ class LSDAnalysisDriver
     /// @author SMM
     /// @date 29/07/2014
     void fill_raster();
+
+    /// @brief This calculates the LSDFlowInfo object
+    /// @author SMM
+    /// @date 29/07/2014
+    void calculate_flowinfo();
+
+    /// @brief This gets the nodeindex from the LSDFlowInfo object
+    /// @author SMM
+    /// @date 29/07/2014
+    void calculate_nodeindex();
 
     /// @brief This checks to see if boundary condtions have been assigned and 
     /// if not defaults to no flux boundaries

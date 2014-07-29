@@ -223,8 +223,30 @@ void LSDAnalysisDriver::run_analyses()
     {
       fill_raster();  
     }
+  } 
+  
+  // get the flow info
+  if(raster_switches.find("need_flowinfo") == raster_switches.end())
+  { 
+    // only calculate flow info if it has not already been calculated
+    if (not got_flowinfo)
+    {  
+      calculate_flowinfo();
+    }
   }  
-
+  
+  // check to see if you need the nodeindex raster
+  if(raster_switches.find("need_nodeindex") == raster_switches.end())
+  {
+    // check to see if it has already been calculated
+    if(raster_indices.find("nodeindex") == raster_indices.end())
+    {
+      // it hasn't been calculates. Calculate it now
+      calculate_nodeindex();
+    }
+  }  
+  
+   
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -233,20 +255,25 @@ void LSDAnalysisDriver::run_analyses()
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDAnalysisDriver::read_base_raster()
 {
-  string full_raster_name = read_path+read_fname;
-  cout <<"Reading the raster: " << endl;
-  cout << full_raster_name + "." + dem_read_extension << endl;
-  LSDRaster BaseRaster(full_raster_name,dem_read_extension);
-  
-  int RV_size = vector_of_LSDRasters.size();
-  int base_raster_index = RV_size;
-  vector_of_LSDRasters.push_back(BaseRaster);
-  raster_indices["base_raster"] =  base_raster_index;
+  // check to see if you've already got the base raster
+  if(raster_indices.find("base_raster") == raster_indices.end())
+  {
+    // you don't have it. Calculate it here. 
+    string full_raster_name = read_path+read_fname;
+    cout <<"Reading the raster: " << endl;
+    cout << full_raster_name + "." + dem_read_extension << endl;
+    LSDRaster BaseRaster(full_raster_name,dem_read_extension);
+    
+    int RV_size = vector_of_LSDRasters.size();
+    int base_raster_index = RV_size;
+    vector_of_LSDRasters.push_back(BaseRaster);
+    raster_indices["base_raster"] =  base_raster_index;
+  }
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// Gest the fill DEM
+// Gets the fill DEM
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDAnalysisDriver::fill_raster()
 {
@@ -280,6 +307,63 @@ void LSDAnalysisDriver::fill_raster()
     cout << "Fill raster exists, its index is " << raster_indices["fill"] << endl;
   }
   
+}
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Calculates the flow info object
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDAnalysisDriver::calculate_flowinfo()
+{
+  // first check to see if this already exists
+  if (not got_flowinfo)
+  {
+    // it doens't exist. Calculate it here. 
+  
+    // this requires the fill raster. See if it exists
+    if(raster_indices.find("fill") == raster_indices.end())
+    {
+      // it doesn't exit. Calculate it. 
+      fill_raster();  
+    }
+    
+    // now the fill exists. Check to see if boundary conditions exist
+    check_boundary_conditions();
+    
+    // okay, everything should be ready for flow info calculation
+    int fill_index =  raster_indices["fill"];
+    LSDFlowInfo temp_FI(boundary_conditions, vector_of_LSDRasters[fill_index]);
+    
+    // set the data members
+    FlowInfo = temp_FI;
+    got_flowinfo = true;
+  } 
+}
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Calculates the nodeindex object
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDAnalysisDriver::calculate_nodeindex()
+{  
+  // see if you've already got this raster
+  if(raster_indices.find("nodeindex") == raster_indices.end())
+  {
+    // you don't have it. Calculate it here.   
+    // this requires the flow info object. See if it exists
+    if(not got_flowinfo)
+    {
+      // it doesn't exit. Calculate it. 
+      calculate_flowinfo(); 
+    }
+  
+    // now you have the LSDFlowInfo object. Spit out the nodeindex raster
+    LSDIndexRaster temp_NI = FlowInfo.write_NodeIndex_to_LSDIndexRaster();
+    
+    int n_IR = int(vector_of_LSDIndexRasters.size());
+    vector_of_LSDIndexRasters.push_back(temp_NI);
+    raster_indices["nodeindex"] =  n_IR;  
+  }  
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
