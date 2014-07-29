@@ -102,8 +102,8 @@ using namespace TNT;
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::create()
 {
-	cout << "You need to initialize with a LSDRaster!" << endl;
-	exit(EXIT_FAILURE);
+	cout << "I am and empty flow info object. " << endl;
+	//exit(EXIT_FAILURE);
 }
 
 
