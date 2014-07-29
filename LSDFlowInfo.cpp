@@ -1861,7 +1861,7 @@ LSDRaster LSDFlowInfo::get_upslope_chi_from_multiple_starting_nodes(vector<int>&
          
          // check to see if the drainage area is greater than the threshold
          // if so, calcualte chi
-         DrainArea = PixelArea*NContributingNodes[cn];
+         DrainArea = PixelArea*NContributingNodes[curr_node];
          if(DrainArea > area_threshold)
          {
            new_chi[curr_row][curr_col]= us_chi[cn];

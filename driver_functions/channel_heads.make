@@ -1,13 +1,13 @@
-# make with make -f channel_heads_part2.make
+# make with make -f chi_map.make
 
 CC=g++
 CFLAGS=-c -Wall -O3 -pg
 OFLAGS = -Wall -O3
 LDFLAGS= -Wall
-SOURCES=channel_heads_driver.cpp ../LSDMostLikelyPartitionsFinder.cpp ../LSDIndexRaster.cpp ../LSDRaster.cpp ../LSDFlowInfo.cpp ../LSDJunctionNetwork.cpp ../LSDIndexChannel.cpp ../LSDChannel.cpp ../LSDIndexChannelTree.cpp ../LSDStatsTools.cpp ../LSDShapeTools.cpp
+SOURCES=chi_map.cpp ../LSDIndexRaster.cpp ../LSDRaster.cpp ../LSDFlowInfo.cpp ../LSDStatsTools.cpp
 LIBS= -lm -lstdc++ -lfftw3
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=channel_heads.out
+EXECUTABLE=chi_map.out
 
 all: $(SOURCES) $(EXECUTABLE)
 
