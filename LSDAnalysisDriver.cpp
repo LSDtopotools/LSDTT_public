@@ -52,10 +52,9 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <map>
 #include "LSDStatsTools.hpp"
-#include "LSDCRNParameters.hpp"
-#include "LSDParticle.hpp"
-#include "LSDParticleColumn.hpp"
+#include "LSDRaster.hpp"
 #include "LSDAnalysisDriver.hpp"
 using namespace std;
 
@@ -125,9 +124,8 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
     else if (lower == "write path")		write_path = value;
     else if (lower == "write fname")		write_fname = value;
     else if (lower == "read path")		read_path = value;
-    else if (lower == "read fname")		read_fname = value;    
-    else if (lower == "write fill")		write_fill 	= (value == "true") ? true : false;
-		else if (lower == "write nodeindex")		write_nodeindex 	= (value == "true") ? true : false;		
+    else if (lower == "read fname")		read_fname = value;  
+    else if (lower == "min slope for fill")	min_slope_for_fill 	= atof(value.c_str());  
 		else if (lower == "boundary conditions")
     {
       // get the boundary value in lowercase
@@ -155,6 +153,30 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
       }
       boundary_conditions = temp_bc;
     }
+    else if (lower == "write fill")
+    {
+      bool temp_bool = (value == "true") ? true : false;
+      analyses_switches["write_fill"] = temp_bool;
+      raster_switches["need_fill"] = temp_bool;
+    } 
+		else if (lower == "write nodeindex")
+    {
+      bool temp_bool = (value == "true") ? true : false;
+      analyses_switches["write_nodeindex"] = temp_bool;
+      raster_switches["need_base_raster"] = temp_bool;
+      raster_switches["need_fill"] = temp_bool;
+      raster_switches["need_flowinfo"] = temp_bool;
+      raster_switches["need_nodeindex"] = temp_bool;
+    } 		    
+		else if (lower == "write chi")
+    {
+      bool temp_bool = (value == "true") ? true : false;
+      analyses_switches["write_chi"] = temp_bool;
+      raster_switches["need_base_raster"] = temp_bool;
+      raster_switches["need_fill"] = temp_bool;
+      raster_switches["need_flowinfo"] = temp_bool;
+      raster_switches["need_chi"] = temp_bool;
+    } 	       
 		else
     {
     	cout << "Line " << __LINE__ << ": No parameter '" 
@@ -164,8 +186,103 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
 	infile.close();
 	
 	check_file_extensions_and_paths();
+	
+	run_analyses();
+	
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// this is a wrapper function that loops through the maps of analyses and
+// gets the desired rasters, and then prints where necessary
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDAnalysisDriver::run_analyses()
+{
+  // read the base raster
+  if(raster_switches.find("need_base_raster") == raster_switches.end())
+  {
+    cout<<"I need to read the base raster!!!"<<endl;
+    read_base_raster();
+  }
+  
+  // get the fill raster  
+  if(raster_switches.find("need_fill") == raster_switches.end())
+  {
+    cout<<"I need to compute fill!!!"<<endl;
+    
+    // check to see if the base raster is loaded
+    if(raster_indices.find("base_raster") == raster_indices.end())
+    {
+      cout << "Base raster hasn't been loaded. Loading it now." << endl;
+      read_base_raster();
+      
+      // now the base raster is in the map
+      fill_raster();  
+    }
+    else
+    {
+      fill_raster();  
+    }
+  }  
+
+}
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Reads the base raster for analysis
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDAnalysisDriver::read_base_raster()
+{
+  string full_raster_name = read_path+read_fname;
+  cout <<"Reading the raster: " << endl;
+  cout << full_raster_name + "." + dem_read_extension << endl;
+  LSDRaster BaseRaster(full_raster_name,dem_read_extension);
+  
+  int RV_size = vector_of_LSDRasters.size();
+  int base_raster_index = RV_size;
+  vector_of_LSDRasters.push_back(BaseRaster);
+  raster_indices["base_raster"] =  base_raster_index;
+}
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Gest the fill DEM
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDAnalysisDriver::fill_raster()
+{
+  // first check to make sure the base raster exists
+  if(raster_indices.find("base_raster") == raster_indices.end())
+  {
+    cout << "Base raster doesn't exist! Reading it now." << endl;
+    read_base_raster();
+  }
+  
+  // if the min_slope_for fill hasn't been initialised, set to default. 
+  if(min_slope_for_fill < 1e-6 || min_slope_for_fill > 1)
+  {
+    min_slope_for_fill = 0.0001;
+  }
+  
+  // now run the fill
+  // first check to see if it has already been calculated
+  if(raster_indices.find("fill") == raster_indices.end())
+  {
+    int base_raster_index =  raster_indices["base_raster"];
+    LSDRaster temp_fill = vector_of_LSDRasters[base_raster_index].fill(min_slope_for_fill);
+  
+    int n_rasters = int(vector_of_LSDRasters.size());
+    int fill_raster_index = n_rasters;
+    vector_of_LSDRasters.push_back(temp_fill);
+    raster_indices["fill"] =  fill_raster_index;    
+  }
+  else
+  {
+    cout << "Fill raster exists, its index is " << raster_indices["fill"] << endl;
+  }
+  
+}
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this is a private function that makes sure the path has a slash at the end

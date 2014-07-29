@@ -49,7 +49,8 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 #include <iostream>
 #include <vector>
-#include <list>
+#include <string>
+#include <map>
 #include "LSDRaster.hpp"
 #include "LSDFlowInfo.hpp"
 #include "LSDStatsTools.hpp"
@@ -59,8 +60,13 @@ using namespace std;
 #define LSDAnalysisDriver_H
 
 
-/// @brief This is a class for a particle that can be tracked through simulations
-/// and retains data about position and chemical content
+/// @brief This is a class to manage running LSDTopoTools. It parses a parameter
+/// file and then manages running of analyses. 
+/// @details The intention of this object is to run analyses via parameter
+/// files and not through numerous compiled driver functions. We eventually
+/// will want some kind of 'recorder' so that any time this object
+/// runs an analysis it gives a full report of what analyses were run so that
+/// results are reproducable
 class LSDAnalysisDriver
 {
 	public:
@@ -100,22 +106,9 @@ class LSDAnalysisDriver
     /// This holds the flow info object
     LSDFlowInfo FlowInfo;
     
-    /// this tells the program if it will need the fill raster
-    bool need_fill;
-    
-    /// this tells the program if it will need a flow info object
-    bool need_flow_info;
-    
-    /// index into the vector of rasters for the fill raster
-    int fill_index;
-    
-    /// index into the vector of rasters for the chi raster
-    int chi_index;
-    
     /// index into the vector of rasters for the nodeindex raster
     int nodeindex_index;
-    
-     
+        
     /// the path to the datafiles
     string pathname;
     
@@ -139,17 +132,47 @@ class LSDAnalysisDriver
     
     /// file prefix of files to be written. Default is the param name prefix 
     string read_fname;       
+
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    //
+    // Parameters for various analyses
+    //
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- 
+    /// the minimum slope for the fill function
+    float min_slope_for_fill;
     
     /// the four boundary conditions on the raster for the flow info object 
     vector<string> boundary_conditions;
+
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    //
+    // Switches for running different analyses
+    //
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-                                
+    /// this tells the program if it will need the fill raster
+    bool need_fill;
     
-                                
+    /// this tells the program if it will need a flow info object
+    bool need_flow_info;
+
     /// This tells the driver whether or not to write the fill raster
     bool write_fill;
 		
     /// This tells the driver whether or not to write the node index raster
     bool write_nodeindex;	
     
+    /// This map holds all the possible analyses
+    map<string,bool> analyses_switches; 
+    
+    /// This is a map that determines if various rasters are needed for the
+    /// analysis. This ensures things like the fill raster are only calculated
+    /// once
+    map<string,bool> raster_switches;
+
+    /// This is a map that tell where the indices into the raster vecs are    
+    map<string,int> raster_indices;
+    
+
     
   private:
 
@@ -180,6 +203,24 @@ class LSDAnalysisDriver
     /// @author SMM
     /// @date 29/07/2014
     void ingest_data(string pname, string p_fname);
+    
+    /// @brief This wraps all the analyses, it first looks in the 
+    /// raster_switces map to see what data it needs, and then
+    /// calculates the necessary rasters. It then goes through and writes the
+    /// rasters requested by the user. 
+    /// @author SMM
+    /// @date 29/07/2014
+    void run_analyses();
+    
+    /// @brief This simply loads the base raster into the vector of rasters
+    /// @author SMM
+    /// @date 29/07/2014
+    void read_base_raster();       
+    
+    /// @brief This calculates the fill raster
+    /// @author SMM
+    /// @date 29/07/2014
+    void fill_raster();
 
     /// @brief This checks to see if boundary condtions have been assigned and 
     /// if not defaults to no flux boundaries
