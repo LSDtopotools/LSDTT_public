@@ -73,6 +73,7 @@ void LSDAnalysisDriver::create()
 
   cout << "Now I need a parameter filename: " << endl;
   cin >> param_fname;
+  got_flowinfo = false;
   
   ingest_data(pathname, param_fname);
 }
@@ -86,6 +87,7 @@ void LSDAnalysisDriver::create(string pname, string fname)
   pathname = pname;
   check_pathname_for_slash();
   param_fname = fname;
+  got_flowinfo = false;
   
   ingest_data(pathname, param_fname);
 }
@@ -124,23 +126,31 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
     if 	(lower == "dem read extension")		dem_read_extension = value;
     else if (lower == "dem write extension")		dem_write_extension = value;
     else if (lower == "write path")		write_path = value;
-    else if (lower == "write fname")		write_fname = value;
+    else if (lower == "write fname")
+    {      
+    	write_fname = value;
+    	//cout << "Got the write name, it is: "  << write_fname << endl;
+    }
     else if (lower == "read path")		read_path = value;
-    else if (lower == "read fname")		read_fname = value; 
- 
-    // parameter for fill
+    else if (lower == "read fname")
+    {    
+      read_fname = value; 
+      //cout << "Got the read name, it is: " << read_fname << endl; 
+    }
+    
+    // paramters for fill
     else if (lower == "min_slope_for_fill")	
     {
       float_parameters["min_slope_for_fill"] = atof(value.c_str());
     }
-    
-    // parameters for flow info
     else if (lower == "boundary conditions")
     {
       // get the boundary value in lowercase
       lower_val = value;
 		  for (unsigned int i=0; i<value.length(); ++i)
+		  {
 			  lower_val[i] = tolower(value[i]);
+			}
       vector<string> temp_bc(4);
       bc 	= lower_val;
       
@@ -148,7 +158,7 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
       for (int i = 0; i<4; i++)
       {
     	  string this_bc = bc.substr(i,1);
-    	  cout << "Component " << i << " of the bc string: " << this_bc << endl;
+    	  //cout << "Component " << i << " of the bc string: " << this_bc << endl;
         if (this_bc.find("p") != 0 && this_bc.find("p") != 0 && this_bc.find("n") != 0)
         {
           cout << "boundary condition not periodic, baselevel or noflux!" << endl;
@@ -162,13 +172,11 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
       }
       boundary_conditions = temp_bc;
     } 
-       
-    // parameters for chi analysis
     else if (lower == "nodeindex fname for chi map")		
     {
       support_file_names["nodeindex_fname_for_chi_map"] = atof(value.c_str());
     }
-    else if (lower == "A_0")	
+    else if (lower == "a_0")	
     {
       float_parameters["A_0"] = atof(value.c_str());
     }
@@ -180,14 +188,10 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
     {
       float_parameters["threshold_area_for_chi"] = atof(value.c_str());
     }
-    
-    // parameters for slope fitting
     else if (lower == "polyfit_window_radius")	
     {
       float_parameters["polyfit_window_radius"] = atof(value.c_str());
     }
-            
-    // now the various functions
     else if (lower == "write fill")
     {
       bool temp_bool = (value == "true") ? true : false;
@@ -217,13 +221,23 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
     	cout << "Line " << __LINE__ << ": No parameter '" 
            << parameter << "' expected.\n\t> Check spelling." << endl;
     }
+
+    //cout << "Got " << lower << " and value is: " << value << endl;
+
   }
   infile.close();
 	
+	cout << "I'm checking to make sure the filenames are compatible now." << endl;
   check_file_extensions_and_paths();
+	cout << "Ingestion of parameter file complete, and pathnames checked.\n"
+	     << "I am now moving on to computing the rasters. \n\n";
 	
   compute_rasters_from_raster_switches();
+	cout << "I've finished computing the rasters.\n"
+	     << "I am now moving on to writing the data. \n\n";
   write_rasters_from_analysis_switches();
+  
+  cout << "All done buddy. Have a nice day." << endl;
 
 	
 }
@@ -235,22 +249,24 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDAnalysisDriver::compute_rasters_from_raster_switches()
 {
+  //cout << "LINE 250, computing rasters" << endl;
+  
   // read the base raster
-  if(raster_switches.find("need_base_raster") == raster_switches.end())
+  if(raster_switches.find("need_base_raster") != raster_switches.end())
   {
-    cout<<"I need to read the base raster!!!"<<endl;
+    //cout<<"LINE 255 I am loading the base raster now"<<endl;
     read_base_raster();
   }
   
   // get the fill raster  
-  if(raster_switches.find("need_fill") == raster_switches.end())
+  if(raster_switches.find("need_fill") != raster_switches.end())
   {
-    cout<<"I need to compute fill!!!"<<endl;
+    //cout<<"LINE 262 I need to compute fill!!!"<<endl;
     
     // check to see if the base raster is loaded
     if(raster_indices.find("base_raster") == raster_indices.end())
     {
-      cout << "Base raster hasn't been loaded. Loading it now." << endl;
+      //cout << "Base raster hasn't been loaded. Loading it now." << endl;
       read_base_raster();
       
       // now the base raster is in the map
@@ -263,8 +279,9 @@ void LSDAnalysisDriver::compute_rasters_from_raster_switches()
   } 
   
   // get the flow info
-  if(raster_switches.find("need_flowinfo") == raster_switches.end())
+  if(raster_switches.find("need_flowinfo") != raster_switches.end())
   { 
+    //cout << "Hey buddy, I need to get the FlowInfo object" << endl;
     // only calculate flow info if it has not already been calculated
     if (not got_flowinfo)
     {  
@@ -273,8 +290,10 @@ void LSDAnalysisDriver::compute_rasters_from_raster_switches()
   }  
   
   // check to see if you need the nodeindex raster
-  if(raster_switches.find("need_nodeindex") == raster_switches.end())
+  if(raster_switches.find("need_nodeindex") != raster_switches.end())
   {
+    //cout << "Hey buddy, I need to get the nodeindex object" << endl;
+  
     // check to see if it has already been calculated
     if(raster_indices.find("nodeindex") == raster_indices.end())
     {
@@ -284,8 +303,9 @@ void LSDAnalysisDriver::compute_rasters_from_raster_switches()
   }  
 
   // check to see if you need the chi raster
-  if(raster_switches.find("need_chi_map") == raster_switches.end())
+  if(raster_switches.find("need_chi_map") != raster_switches.end())
   {
+    //cout << "Hey buddy, I sure can compute the chi map for ya. " << endl;
     // check to see if it has already been calculated
     if(raster_indices.find("chi_map") == raster_indices.end())
     {
@@ -302,11 +322,13 @@ void LSDAnalysisDriver::compute_rasters_from_raster_switches()
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDAnalysisDriver::write_rasters_from_analysis_switches()
 {
-  if(analyses_switches.find("write_fill") == raster_switches.end())
+  if(analyses_switches.find("write_fill") != analyses_switches.end())
   {
+    //cout << "LINE 323, so you want me to write fill? Okay." << endl;
+    
     if(raster_indices.find("fill") == raster_indices.end()) 
     {
-      cout << "You've not run the get raster routine. Running now. " << endl;
+      //cout << "You've not run the get raster routine. Running now. " << endl;
       compute_rasters_from_raster_switches();
     }
 
@@ -317,11 +339,12 @@ void LSDAnalysisDriver::write_rasters_from_analysis_switches()
     vector_of_LSDRasters[fill_index].write_raster(fill_fname,dem_write_extension);
   }
 
-  if(analyses_switches.find("write_nodeindex") == raster_switches.end())
+  if(analyses_switches.find("write_nodeindex") != analyses_switches.end())
   {
+    //cout << "LINE 323, so ou want me to write nodeindex? okay." << endl;
     if(raster_indices.find("nodeindex") == raster_indices.end()) 
     {
-      cout << "You've not run the get raster routine. Running now. " << endl;
+      //cout << "You've not run the get raster routine. Running now. " << endl;
       compute_rasters_from_raster_switches();
     }
 
@@ -329,8 +352,24 @@ void LSDAnalysisDriver::write_rasters_from_analysis_switches()
     string NI_fname = write_path+write_fname+NI_seperator;
 
     int NI_index = raster_indices["nodeindex"];
-    vector_of_LSDRasters[NI_index].write_raster(NI_fname,dem_write_extension);
+    vector_of_LSDIndexRasters[NI_index].write_raster(NI_fname,dem_write_extension);
   }
+
+  if(analyses_switches.find("write_chi_map") != analyses_switches.end())
+  {
+    if(raster_indices.find("chi_map") == raster_indices.end()) 
+    {
+      //cout << "You've not run the get raster routine. Running now. " << endl;
+      compute_rasters_from_raster_switches();
+    }
+
+    string chi_seperator = "_chiMap";
+    string chi_fname = write_path+write_fname+chi_seperator;
+
+    int chi_index = raster_indices["chi_map"];
+    vector_of_LSDRasters[chi_index].write_raster(chi_fname,dem_write_extension);
+  }
+
 
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -344,19 +383,26 @@ void LSDAnalysisDriver::write_rasters_from_analysis_switches()
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDAnalysisDriver::read_base_raster()
 {
+  //cout << "Getting base raster " << endl;
   // check to see if you've already got the base raster
   if(raster_indices.find("base_raster") == raster_indices.end())
   {
+    //cout << "Base raster doesn't exist, loading" << endl;
+  
     // you don't have it. Calculate it here. 
     string full_raster_name = read_path+read_fname;
-    cout <<"Reading the raster: " << endl;
-    cout << full_raster_name + "." + dem_read_extension << endl;
+    //cout <<"Reading the raster: " << endl;
+    //cout << full_raster_name + "." + dem_read_extension << endl;
     LSDRaster BaseRaster(full_raster_name,dem_read_extension);
     
     int RV_size = vector_of_LSDRasters.size();
     int base_raster_index = RV_size;
     vector_of_LSDRasters.push_back(BaseRaster);
     raster_indices["base_raster"] =  base_raster_index;
+  }
+  else
+  {
+    //cout << "Hey dude, I've already got the base raster" << endl;
   }
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -369,9 +415,12 @@ void LSDAnalysisDriver::fill_raster()
   // first check to make sure the base raster exists
   if(raster_indices.find("base_raster") == raster_indices.end())
   {
-    cout << "Base raster doesn't exist! Reading it now." << endl;
+    //cout << "LINE 416 Base raster doesn't exist! Reading it now." << endl;
     read_base_raster();
   }
+  
+  //cout << "Checking base raster, NRows are: "
+  //     << vector_of_LSDRasters[ raster_indices["base_raster"] ].get_NRows() << endl;
   
   // see if the min_slope_for_fill has been initialised
   // If not,  set to default. 
@@ -385,6 +434,7 @@ void LSDAnalysisDriver::fill_raster()
   if(raster_indices.find("fill") == raster_indices.end())
   {
     int base_raster_index =  raster_indices["base_raster"];
+    //cout << "LINE 432, the base raster index is: " << base_raster_index << endl;
     LSDRaster temp_fill = vector_of_LSDRasters[base_raster_index].fill( float_parameters["min_slope_for_fill"] );
   
     int n_rasters = int(vector_of_LSDRasters.size());
@@ -394,7 +444,7 @@ void LSDAnalysisDriver::fill_raster()
   }
   else
   {
-    cout << "Fill raster exists, its index is " << raster_indices["fill"] << endl;
+    //cout << "Fill raster exists, its index is " << raster_indices["fill"] << endl;
   }
   
 }
@@ -409,10 +459,11 @@ void LSDAnalysisDriver::calculate_flowinfo()
   if (not got_flowinfo)
   {
     // it doens't exist. Calculate it here. 
-  
+    //cout << "LINE 457 Flow info doesn't exist. Getting it from the fill raster" << endl;
     // this requires the fill raster. See if it exists
     if(raster_indices.find("fill") == raster_indices.end())
     {
+      //cout << "LINE 461, fill hasn't been computed yet, getting it." << endl;
       // it doesn't exit. Calculate it. 
       fill_raster();  
     }
@@ -422,6 +473,7 @@ void LSDAnalysisDriver::calculate_flowinfo()
     
     // okay, everything should be ready for flow info calculation
     int fill_index =  raster_indices["fill"];
+    //cout << "LINE 471 fill_index is: " << fill_index;
     LSDFlowInfo temp_FI(boundary_conditions, vector_of_LSDRasters[fill_index]);
     
     // set the data members
@@ -462,14 +514,19 @@ void LSDAnalysisDriver::calculate_nodeindex()
 // Calculates chi map
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDAnalysisDriver::calculate_chi_map()
-{  
+{
+  //cout << "I'm calculating chi now LINE 503" << endl;
+  LSDRaster temp_chi;
+  
   // see if you've already got this raster
   if(raster_indices.find("chi_map") == raster_indices.end())
   {
+    //cout << "I don't have the chi_map LINE 509" << endl;
     // you don't have it. Calculate it here.   
     // this requires the flow info object. See if it exists
     if(not got_flowinfo)
     {
+      //cout << "I don't have the flow info line 514" << endl;
       // it doesn't exit. Calculate it. 
       calculate_flowinfo(); 
     }
@@ -493,14 +550,55 @@ void LSDAnalysisDriver::calculate_chi_map()
            << "Defaulting to 0" << endl;
       float_parameters["threshold_area_for_chi"] = 0;
     }   
-      
-    // now you have the LSDFlowInfo object. Spit out the chi raster
-    LSDRaster temp_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes( 
+ 
+    // now check to see if the user has given a nodeindex file
+    if(support_file_names.find("threshold_area_for_chi_map") == support_file_names.end())
+    {
+      // no nodindex file, calculate chi assuming all baselevel nodes have
+      // a chi = 0
+      temp_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes( 
                                  float_parameters["m_over_n"], 
-                                 float_parameters["m_over_n"],
+                                 float_parameters["A_0"],
                                  float_parameters["threshold_area_for_chi"]);
-    
-    int n_chi = int(vector_of_LSDIndexRasters.size());
+    }
+    else
+    {
+      string sf_name =  support_file_names["threshold_area_for_chi_map"];
+      // add the path
+      string full_sf_name = read_path+ sf_name;
+      cout << "reading nodeindices for chi map from file: " 
+           << full_sf_name << endl; 
+      ifstream NI_in;
+      NI_in.open(full_sf_name.c_str());
+      int this_NI;
+      vector<int> NI_for_chi_map;
+      
+      while(NI_in >> this_NI)
+      {
+        NI_for_chi_map.push_back(this_NI);
+      }
+      NI_in.close();
+      
+      if (NI_for_chi_map.size() == 0)
+      {
+        cout << "Calculating chi map. Your node index file appears to be empty\n"
+             << "Running chi from all baselevel nodes" << endl;
+        temp_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes( 
+                                 float_parameters["m_over_n"], 
+                                 float_parameters["A_0"],
+                                 float_parameters["threshold_area_for_chi"]);   
+      }
+      else
+      {
+        temp_chi = FlowInfo.get_upslope_chi_from_multiple_starting_nodes(NI_for_chi_map, 
+                                 float_parameters["m_over_n"], 
+                                 float_parameters["A_0"],
+                                 float_parameters["threshold_area_for_chi"]);  
+      }      
+    }
+      
+    // Copy the chi raster to the vector of rasters  
+    int n_chi = int(vector_of_LSDRasters.size());
     vector_of_LSDRasters.push_back(temp_chi);
     raster_indices["chi_map"] =  n_chi;  
   }  
@@ -588,6 +686,9 @@ void LSDAnalysisDriver::check_file_extensions_and_paths()
       write_path = read_path;
     }    
   }
+  
+  //cout << "CHECKING NAMES, Write fname is: " << write_fname << endl;
+  //cout << "The write fname length is " << write_fname.length() << endl;
   if (write_fname.length() == 0)
   {
     if (read_fname.length() != 0)
@@ -613,7 +714,7 @@ void LSDAnalysisDriver::check_file_extensions_and_paths()
   }
   
   cout << "The full read fname is:\n " << read_path+read_fname << endl;
-  cout << "The full write fname is:\n " << write_path+read_fname << endl;
+  cout << "The full write fname is:\n " << write_path+write_fname << endl;
   cout << "The read and write extensions are: " << dem_read_extension 
        << " " << dem_write_extension << endl;
     
