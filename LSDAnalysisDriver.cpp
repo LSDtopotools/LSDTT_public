@@ -101,32 +101,41 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
   string full_name = pname+p_fname;
 
   ifstream infile;
-	infile.open(full_name.c_str());
-	string parameter, value, lower, lower_val;
-	string bc;
+  infile.open(full_name.c_str());
+  string parameter, value, lower, lower_val;
+  string bc;
 	
-	cout << "Parameter filename is: " << full_name << endl;
+  cout << "Parameter filename is: " << full_name << endl;
 	
-	// now ingest parameters 
-	while (infile.good())
-	{
-		parse_line(infile, parameter, value);
-		lower = parameter;
-		if (parameter == "NULL")
-			continue;
-		for (unsigned int i=0; i<parameter.length(); ++i)
-			lower[i] = tolower(parameter[i]);
+  // now ingest parameters 
+  while (infile.good())
+  {
+    parse_line(infile, parameter, value);
+    lower = parameter;
+    if (parameter == "NULL")
+      continue;
+    for (unsigned int i=0; i<parameter.length(); ++i)
+    {
+      lower[i] = tolower(parameter[i]);
+    }
 	
-	  cout << "parameter is: " << lower << " and value is: " << value << endl;
+    cout << "parameter is: " << lower << " and value is: " << value << endl;
 
-		if 	(lower == "dem read extension")		dem_read_extension = value;
+    if 	(lower == "dem read extension")		dem_read_extension = value;
     else if (lower == "dem write extension")		dem_write_extension = value;
     else if (lower == "write path")		write_path = value;
     else if (lower == "write fname")		write_fname = value;
     else if (lower == "read path")		read_path = value;
-    else if (lower == "read fname")		read_fname = value;  
-    else if (lower == "min slope for fill")	min_slope_for_fill 	= atof(value.c_str());  
-		else if (lower == "boundary conditions")
+    else if (lower == "read fname")		read_fname = value; 
+ 
+    // parameter for fill
+    else if (lower == "min_slope_for_fill")	
+    {
+      float_parameters["min_slope_for_fill"] = atof(value.c_str());
+    }
+    
+    // parameters for flow info
+    else if (lower == "boundary conditions")
     {
       // get the boundary value in lowercase
       lower_val = value;
@@ -136,15 +145,15 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
       bc 	= lower_val;
       
       // now loop through collecting boundary conidtions
-    	for (int i = 0; i<4; i++)
-    	{
+      for (int i = 0; i<4; i++)
+      {
     	  string this_bc = bc.substr(i,1);
     	  cout << "Component " << i << " of the bc string: " << this_bc << endl;
         if (this_bc.find("p") != 0 && this_bc.find("p") != 0 && this_bc.find("n") != 0)
-    		{
-    		  cout << "boundary condition not periodic, baselevel or noflux!" << endl;
-    		  cout << "defaulting to no flux" << endl;
-    		  temp_bc[i] = "n"; 
+        {
+          cout << "boundary condition not periodic, baselevel or noflux!" << endl;
+          cout << "defaulting to no flux" << endl;
+          temp_bc[i] = "n"; 
         }
         else
         {
@@ -152,14 +161,40 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
         }
       }
       boundary_conditions = temp_bc;
+    } 
+       
+    // parameters for chi analysis
+    else if (lower == "nodeindex fname for chi map")		
+    {
+      support_file_names["nodeindex_fname_for_chi_map"] = atof(value.c_str());
     }
+    else if (lower == "A_0")	
+    {
+      float_parameters["A_0"] = atof(value.c_str());
+    }
+    else if (lower == "m_over_n")	
+    {
+      float_parameters["m_over_n"] = atof(value.c_str());
+    }  
+    else if (lower == "threshold_area_for_chi")	
+    {
+      float_parameters["threshold_area_for_chi"] = atof(value.c_str());
+    }
+    
+    // parameters for slope fitting
+    else if (lower == "polyfit_window_radius")	
+    {
+      float_parameters["polyfit_window_radius"] = atof(value.c_str());
+    }
+            
+    // now the various functions
     else if (lower == "write fill")
     {
       bool temp_bool = (value == "true") ? true : false;
       analyses_switches["write_fill"] = temp_bool;
       raster_switches["need_fill"] = temp_bool;
     } 
-		else if (lower == "write nodeindex")
+    else if (lower == "write nodeindex")
     {
       bool temp_bool = (value == "true") ? true : false;
       analyses_switches["write_nodeindex"] = temp_bool;
@@ -168,35 +203,37 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
       raster_switches["need_flowinfo"] = temp_bool;
       raster_switches["need_nodeindex"] = temp_bool;
     } 		    
-		else if (lower == "write chi")
+    else if (lower == "write chi map")
     {
       bool temp_bool = (value == "true") ? true : false;
-      analyses_switches["write_chi"] = temp_bool;
+      analyses_switches["write_chi_map"] = temp_bool;
       raster_switches["need_base_raster"] = temp_bool;
       raster_switches["need_fill"] = temp_bool;
       raster_switches["need_flowinfo"] = temp_bool;
-      raster_switches["need_chi"] = temp_bool;
+      raster_switches["need_chi_map"] = temp_bool;
     } 	       
-		else
+    else
     {
     	cout << "Line " << __LINE__ << ": No parameter '" 
            << parameter << "' expected.\n\t> Check spelling." << endl;
     }
-	}
-	infile.close();
+  }
+  infile.close();
 	
-	check_file_extensions_and_paths();
+  check_file_extensions_and_paths();
 	
-	run_analyses();
+  compute_rasters_from_raster_switches();
+  write_rasters_from_analysis_switches();
+
 	
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// this is a wrapper function that loops through the maps of analyses and
+// this is a wrapper function that loops through the maps of raster switches
 // gets the desired rasters, and then prints where necessary
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDAnalysisDriver::run_analyses()
+void LSDAnalysisDriver::compute_rasters_from_raster_switches()
 {
   // read the base raster
   if(raster_switches.find("need_base_raster") == raster_switches.end())
@@ -241,14 +278,66 @@ void LSDAnalysisDriver::run_analyses()
     // check to see if it has already been calculated
     if(raster_indices.find("nodeindex") == raster_indices.end())
     {
-      // it hasn't been calculates. Calculate it now
+      // it hasn't been calculated. Calculate it now.
       calculate_nodeindex();
     }
   }  
+
+  // check to see if you need the chi raster
+  if(raster_switches.find("need_chi_map") == raster_switches.end())
+  {
+    // check to see if it has already been calculated
+    if(raster_indices.find("chi_map") == raster_indices.end())
+    {
+      // it hasn't been calculated. Calculate it now.
+      calculate_chi_map();
+    }
+  }  
   
-   
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Reads the base raster for analysis
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDAnalysisDriver::write_rasters_from_analysis_switches()
+{
+  if(analyses_switches.find("write_fill") == raster_switches.end())
+  {
+    if(raster_indices.find("fill") == raster_indices.end()) 
+    {
+      cout << "You've not run the get raster routine. Running now. " << endl;
+      compute_rasters_from_raster_switches();
+    }
+
+    string fill_seperator = "_fill";
+    string fill_fname = write_path+write_fname+fill_seperator;
+
+    int fill_index = raster_indices["fill"];
+    vector_of_LSDRasters[fill_index].write_raster(fill_fname,dem_write_extension);
+  }
+
+  if(analyses_switches.find("write_nodeindex") == raster_switches.end())
+  {
+    if(raster_indices.find("nodeindex") == raster_indices.end()) 
+    {
+      cout << "You've not run the get raster routine. Running now. " << endl;
+      compute_rasters_from_raster_switches();
+    }
+
+    string NI_seperator = "_NI";
+    string NI_fname = write_path+write_fname+NI_seperator;
+
+    int NI_index = raster_indices["nodeindex"];
+    vector_of_LSDRasters[NI_index].write_raster(NI_fname,dem_write_extension);
+  }
+
+}
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+    
+
+  
+
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Reads the base raster for analysis
@@ -284,10 +373,11 @@ void LSDAnalysisDriver::fill_raster()
     read_base_raster();
   }
   
-  // if the min_slope_for fill hasn't been initialised, set to default. 
-  if(min_slope_for_fill < 1e-6 || min_slope_for_fill > 1)
+  // see if the min_slope_for_fill has been initialised
+  // If not,  set to default. 
+  if(float_parameters.find("min_slope_for_fill") == float_parameters.end())
   {
-    min_slope_for_fill = 0.0001;
+    float_parameters["min_slope_for_fill"] = 0.0001;  
   }
   
   // now run the fill
@@ -295,7 +385,7 @@ void LSDAnalysisDriver::fill_raster()
   if(raster_indices.find("fill") == raster_indices.end())
   {
     int base_raster_index =  raster_indices["base_raster"];
-    LSDRaster temp_fill = vector_of_LSDRasters[base_raster_index].fill(min_slope_for_fill);
+    LSDRaster temp_fill = vector_of_LSDRasters[base_raster_index].fill( float_parameters["min_slope_for_fill"] );
   
     int n_rasters = int(vector_of_LSDRasters.size());
     int fill_raster_index = n_rasters;
@@ -367,6 +457,55 @@ void LSDAnalysisDriver::calculate_nodeindex()
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Calculates chi map
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDAnalysisDriver::calculate_chi_map()
+{  
+  // see if you've already got this raster
+  if(raster_indices.find("chi_map") == raster_indices.end())
+  {
+    // you don't have it. Calculate it here.   
+    // this requires the flow info object. See if it exists
+    if(not got_flowinfo)
+    {
+      // it doesn't exit. Calculate it. 
+      calculate_flowinfo(); 
+    }
+    
+    // now see if you've got the parameters
+    if(float_parameters.find("A_0") == float_parameters.end())
+    {
+      // you don't have A_0. Replace with default
+      float_parameters["A_0"] = 1000;
+    }
+    if(float_parameters.find("m_over_n") == float_parameters.end())
+    {
+      // you don't have m_over_n. Replace with default
+      cout << "You haven't assigned m/n. Defaulting to 0.45" << endl;
+      float_parameters["m_over_n"] = 0.45;
+    }    
+    if(float_parameters.find("threshold_area_for_chi_map") == float_parameters.end())
+    {
+      // you don't have m_over_n. Replace with default
+      cout << "You haven't assigned the threshold_area_for_chi_map."
+           << "Defaulting to 0" << endl;
+      float_parameters["threshold_area_for_chi"] = 0;
+    }   
+      
+    // now you have the LSDFlowInfo object. Spit out the chi raster
+    LSDRaster temp_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes( 
+                                 float_parameters["m_over_n"], 
+                                 float_parameters["m_over_n"],
+                                 float_parameters["threshold_area_for_chi"]);
+    
+    int n_chi = int(vector_of_LSDIndexRasters.size());
+    vector_of_LSDRasters.push_back(temp_chi);
+    raster_indices["chi_map"] =  n_chi;  
+  }  
+}
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this is a private function that makes sure the path has a slash at the end

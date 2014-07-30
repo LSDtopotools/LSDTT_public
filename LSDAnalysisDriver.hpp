@@ -93,7 +93,92 @@ class LSDAnalysisDriver
     LSDAnalysisDriver(string pname, string pfname)			{ create(pname, pfname); }
  
     
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    //
+    // Main drivers of reading, computation and writing of data 
+    //
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-      
+    /// @brief This is the main function for parsing the parameter file
+    /// @param pathname the path to the paramter file
+    /// @param param_fname the name of the parameter file
+    /// @author SMM
+    /// @date 29/07/2014
+    void ingest_data(string pname, string p_fname);
+    
+    /// @brief This looks through the raster switches, and 
+    /// calculates the necessary rasters. 
+    /// @author SMM
+    /// @date 29/07/2014
+    void compute_rasters_from_raster_switches();
+
+    /// @brief This writes rasters based on the analysis switches
+    /// @author SMM
+    /// @date 29/07/2014
+    void write_rasters_from_analysis_switches();
+
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    //
+    // Functions for getting individual datasets
+    //
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-      
+    /// @brief This simply loads the base raster into the vector of rasters
+    /// @author SMM
+    /// @date 29/07/2014
+    void read_base_raster();       
+    
+    /// @brief This calculates the fill raster
+    /// @author SMM
+    /// @date 29/07/2014
+    void fill_raster();
+
+    /// @brief This calculates the LSDFlowInfo object
+    /// @author SMM
+    /// @date 29/07/2014
+    void calculate_flowinfo();
+
+    /// @brief This gets the nodeindex from the LSDFlowInfo object
+    /// @author SMM
+    /// @date 29/07/2014
+    void calculate_nodeindex();
+
+    /// @brief This calculates the chi map raster
+    /// @author SMM
+    /// @date 29/07/2014
+    void calculate_chi_map();
+
+
 	protected:
+
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    //
+    // Housekeeping functions for making sure the object does not crash
+    //
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- 
+    /// @brief This checks to see if boundary condtions have been assigned and 
+    /// if not defaults to no flux boundaries
+    /// @author SMM
+    /// @date 29/07/2014
+    void check_boundary_conditions();
+
+    /// @brief This check to see if the filenames, paths and extensions have
+    /// been assigned. If not it changes these to defaults
+    /// @author SMM
+    /// @date 29/07/2014
+    void check_file_extensions_and_paths();
+    
+    /// @brief this adds a slash to the end of the pathname
+    /// @author SMM
+    /// @date 29/07/2014
+    void check_pathname_for_slash();	
+
+    /// @brief this returns the string before the last dot in a string. 
+    /// so for example if you gave it paramfile.param it would return paramfile
+    /// @param this_string the string you want truncated
+    /// @return the truncated string
+    /// @author SMM
+    /// @date 29/07/2014
+    string get_string_before_dot(string this_string);
+
 
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     //
@@ -112,9 +197,6 @@ class LSDAnalysisDriver
     
     /// the just tells the code if the flow info has already been calculated
     bool got_flowinfo;
-    
-    /// index into the vector of rasters for the nodeindex raster
-    int nodeindex_index;
         
     /// the path to the datafiles
     string pathname;
@@ -122,8 +204,8 @@ class LSDAnalysisDriver
     /// the name of the parameter file
     string param_fname;
     		
-		/// Extension for reading DEMs. Correspondence with write extensions is checked
-		string dem_read_extension;
+    /// Extension for reading DEMs. Correspondence with write extensions is checked
+    string dem_read_extension;
     
     /// Extension for writing DEMs. Correspondence with read extensions is checked
     string dem_write_extension;
@@ -140,14 +222,11 @@ class LSDAnalysisDriver
     /// file prefix of files to be written. Default is the param name prefix 
     string read_fname;       
 
-    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     //
     // Parameters for various analyses
     //
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- 
-    /// the minimum slope for the fill function
-    float min_slope_for_fill;
-    
     /// the four boundary conditions on the raster for the flow info object 
     vector<string> boundary_conditions;
 
@@ -155,29 +234,25 @@ class LSDAnalysisDriver
     //
     // Switches for running different analyses
     //
-    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-                                
-    /// this tells the program if it will need the fill raster
-    bool need_fill;
-    
-    /// this tells the program if it will need a flow info object
-    bool need_flow_info;
-
-    /// This tells the driver whether or not to write the fill raster
-    bool write_fill;
-		
-    /// This tells the driver whether or not to write the node index raster
-    bool write_nodeindex;	
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     
     /// This map holds all the possible analyses
     map<string,bool> analyses_switches; 
     
-    /// This is a map that determines if various rasters are needed for the
+    /// This is a map  container that determines if various rasters are needed for the
     /// analysis. This ensures things like the fill raster are only calculated
     /// once
     map<string,bool> raster_switches;
 
     /// This is a map that tell where the indices into the raster vecs are    
     map<string,int> raster_indices;
+    
+    /// This holds float parameters
+    map<string,float> float_parameters;
+    
+    /// This holds names of supporting files, for example files that contain
+    /// node of junction indices to be loaded. 
+    map<string,string> support_file_names;
     
 
     
@@ -204,65 +279,7 @@ class LSDAnalysisDriver
     void create(string pname, string fname);	
 
 
-    /// @brief This is the main function for parsing the parameter file
-    /// @param pathname the path to the paramter file
-    /// @param param_fname the name of the parameter file
-    /// @author SMM
-    /// @date 29/07/2014
-    void ingest_data(string pname, string p_fname);
-    
-    /// @brief This wraps all the analyses, it first looks in the 
-    /// raster_switces map to see what data it needs, and then
-    /// calculates the necessary rasters. It then goes through and writes the
-    /// rasters requested by the user. 
-    /// @author SMM
-    /// @date 29/07/2014
-    void run_analyses();
-    
-    /// @brief This simply loads the base raster into the vector of rasters
-    /// @author SMM
-    /// @date 29/07/2014
-    void read_base_raster();       
-    
-    /// @brief This calculates the fill raster
-    /// @author SMM
-    /// @date 29/07/2014
-    void fill_raster();
 
-    /// @brief This calculates the LSDFlowInfo object
-    /// @author SMM
-    /// @date 29/07/2014
-    void calculate_flowinfo();
-
-    /// @brief This gets the nodeindex from the LSDFlowInfo object
-    /// @author SMM
-    /// @date 29/07/2014
-    void calculate_nodeindex();
-
-    /// @brief This checks to see if boundary condtions have been assigned and 
-    /// if not defaults to no flux boundaries
-    /// @author SMM
-    /// @date 29/07/2014
-    void check_boundary_conditions();
-
-    /// @brief This check to see if the filenames, paths and extensions have
-    /// been assigned. If not it changes these to defaults
-    /// @author SMM
-    /// @date 29/07/2014
-    void check_file_extensions_and_paths();
-    
-    /// @brief this adds a slash to the end of the pathname
-    /// @author SMM
-    /// @date 29/07/2014
-    void check_pathname_for_slash();	
-
-    /// @brief this returns the string before the last dot in a string. 
-    /// so for example if you gave it paramfile.param it would return paramfile
-    /// @param this_string the string you want truncated
-    /// @return the truncated string
-    /// @author SMM
-    /// @date 29/07/2014
-    string get_string_before_dot(string this_string);
 
 };
 
