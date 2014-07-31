@@ -105,8 +105,12 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @param NRows Width of raster
 	LSDRasterModel(int NRows, int NCols);
 
+	/// @brief Class destructor
+	~LSDRasterModel( void );
+
 	/// @brief operator
 	LSDRasterModel& operator=(const LSDRasterModel& LSDR);
+
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // @~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@

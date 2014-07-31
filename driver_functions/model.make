@@ -9,7 +9,9 @@ SOURCES = model_driver.cpp \
 		../LSDRaster.cpp \
 		../LSDRasterModel.cpp \
 		../LSDStatsTools.cpp \
-		../LSDFlowInfo.cpp
+		../LSDFlowInfo.cpp \
+		../LSDParticleColumn.cpp \
+		../LSDParticle.cpp
 SCRIPTS = animate.py
 OBJ = $(SOURCES:.cpp=.o)
 #LIBS = -lfftw3 -lpython2.7 -g -O0 -D_GLIBCXX_DEBUG

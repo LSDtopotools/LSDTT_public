@@ -42,6 +42,7 @@
 #include <string>
 #include <math.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <ctime>
 #include <cstdlib>
 #include "TNT/tnt.h"
@@ -77,6 +78,23 @@ LSDRasterModel& LSDRasterModel::operator=(const LSDRasterModel& rhs)
 	 }
 	return *this;
  }
+
+// The destructor method, used to clean up temporary files and dynamic memory
+// Currently only used to delete K/D files
+LSDRasterModel::~LSDRasterModel( void )
+{
+	stringstream ss;
+	if (K_mode == 3)
+	{
+		ss << ".K_file_" << name << ".aux";
+		remove( ss.str().c_str() );
+	}
+	if (D_mode == 3)
+	{
+		ss << ".D_file_" << name << ".aux";
+		remove( ss.str().c_str() );
+	}
+}
 
 // the create function. 
 // This sets up a model domain with a default size and model parameters
@@ -1335,6 +1353,7 @@ LSDRasterModel LSDRasterModel::uplift_surface(Array2D<float> UpliftRate, float d
 // This uplift tool uses the get_uplift_at_cell member function to modify 
 // directly the elevation raster. 
 // Base level nodes are not uplifted
+// Author JAJ
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::uplift_surface( void )
 {	
@@ -5043,17 +5062,23 @@ float LSDRasterModel::filestream_param(ifstream & strm, float &upr_param, float 
 float LSDRasterModel::get_K( void )
 {
 
-  // SMM I'm not sure why this system call to make a writable copy of the K file
-  // is here and not in the get_D function
-	if (K_mode == 3)
+	static bool copied = false;
+
+	if (K_mode == 3 && not copied)
 	{
 		stringstream ss;
-		ss << "cp K_file .K_file_" << name;
-		system(ss.str().c_str());
+		ss << ".K_file_" << name << ".aux";
+		ifstream infile("K_file", ios::binary);
+		ofstream outfile(ss.str().c_str(), ios::binary);
+
+		outfile << infile.rdbuf();
+
+		// This inhibits portablity
 		ss.str("");
-		ss.str("");
-		ss << "chmod -w .K_file_" << name;
+		ss << "chmod -w .K_file_" << name << ".aux";
 		system(ss.str().c_str());
+
+		copied = true;
 	}
 
   // in all of these switches, the ternary operator is used: a constant value
@@ -5096,6 +5121,24 @@ float LSDRasterModel::get_D( void )
   //cout << "LINE 454 Getting D, D mode is: " << D_mode << " and D amp is: " << D_amplitude << endl;
   float thisD;
   //cout << "initial steady state: " << initial_steady_state << endl;
+	static bool copied = false;
+
+ 	if (D_mode == 3 && not copied)
+	{
+		stringstream ss;
+		ss << ".D_file_" << name << ".aux";
+		ifstream infile("D_file", ios::binary);
+		ofstream outfile(ss.str().c_str(), ios::binary);
+
+		outfile << infile.rdbuf();
+
+		// This inhibits portablity
+		ss.str("");
+		ss << "chmod -w .D_file_" << name << ".aux";
+		system(ss.str().c_str());
+
+		copied = true;
+	}
 		
   switch( D_mode )
   {
@@ -5182,7 +5225,7 @@ float LSDRasterModel::stream_K_fluv( void )
 	if (not strm.is_open())
 	{
 		stringstream ss;
-		ss << ".K_file_" << name;
+		ss << ".K_file_" << name << ".aux";
 		strm.open(ss.str().c_str());
 	}
 	
@@ -5230,7 +5273,9 @@ float LSDRasterModel::stream_K_soil( void )
 	static ifstream strm;
 	if (not strm.is_open())
 	{
-		strm.open("D_file");
+		stringstream ss;
+		ss << ".D_file_" << name << ".aux";
+		strm.open(ss.str().c_str());
 	}
 
 	float temp;
