@@ -47,6 +47,7 @@
 #include "LSDRasterSpectral.hpp"
 #include "LSDJunctionNetwork.hpp"
 #include "LSDParticleColumn.hpp"
+#include "LSDCRNParameters.hpp"
 using namespace std;
 using namespace TNT;
 
@@ -484,10 +485,41 @@ class LSDRasterModel: public LSDRasterSpectral
 
   /// @brief This is a wrapper that runs the model but includes CRN columns
   /// fluvial and uplfit fields to the nonlinear solver
+  /// @param CRNColumns the vector of particle columns
+  /// @param eroded_cells this gets replaced, it is the eroded particles
+  /// @param this_end_time the end time of the run
+  /// @param startType the starting type of the particle (doesn't really play a role)
+  /// @param startDepth the starting depth (in m) of the particles
+  /// @param particle_spacing vertical distance between particles in the column
+  /// @param CRNParam the cosmogenic parameter values   
   /// @author SMM
   /// @date 25/07/2014
   void run_components_combined_cell_tracker( vector<LSDParticleColumn>& CRNColumns,
-                      vector<LSDParticleColumn>& eroded_cells, double& this_end_time);
+                      vector<LSDParticleColumn>& eroded_cells, double& this_end_time, 
+                      int startType, double startDepth, double particle_spacing, 
+                      LSDCRNParameters& CRNParam);
+
+  /// @brief This initiates a vector of CRN columns that sit under the model
+  /// @author SMM
+  /// @param column_spacing and integer telling how many nodes between particle columns
+  /// @param CRNcol_rows this is an integer vector that is replaced in this function
+  /// each element indexes the row of the vector of columns
+  /// @param CRNcol_cols this is an integer vector that is replaced in this function
+  /// each element indexes the col of the vector of columns
+  /// @param rho_r the density of the rock in kg/m^3
+  /// @param this_U the uplift rate in m/yr that the particles CRN concentrations
+  /// will be equilibrated to. Note it is only via nucleonic production
+  /// @param startType the starting type of the particle (doesn't really play a role)
+  /// @param startDepth the starting depth (in m) of the particles
+  /// @param particle_spacing vertical distance between particles in the column
+  /// @param CRNParam the cosmogenic parameter values  
+  /// @return a vector of particle columns 
+  /// @author SMM
+  /// @date 31/07/2014
+  vector<LSDParticleColumn> initiate_steady_CRN_columns(int column_spacing,
+                    vector<int>& CRNcol_rows, vector<int>& CRNcol_cols,
+                    double rho_r, double this_U, int startType, double startDepth, 
+                    double particle_spacing, LSDCRNParameters& CRNParam);
 
 
 	/// @brief This method forces the landscape into its steady state profile, by using periodic forcing. 
@@ -582,6 +614,7 @@ class LSDRasterModel: public LSDRasterSpectral
 	///	1   - tilt block
 	///	2   - gaussian
 	///	3   - quadratic
+	/// 4   - periodic
 	/// @param row
 	/// @param column
 	/// @return the uplift (as a distance rather than rate, uses data member timestep)
@@ -600,6 +633,7 @@ class LSDRasterModel: public LSDRasterSpectral
 	///	1   - tilt block
 	///	2   - gaussian
 	///	3   - quadratic
+	/// 4   - periodic
 	/// @param row
 	/// @param column
 	/// @return the uplift rate
@@ -649,6 +683,7 @@ class LSDRasterModel: public LSDRasterSpectral
 	///	1   - tilt block
 	///	2   - gaussian
 	///	3   - quadratic
+	/// 4   - periodic
 	/// @author JAJ commented SMM 26/06/2014
 	/// @date 01/01/2014, commented 26/06/2014
 	void uplift_surface( void );
@@ -722,7 +757,18 @@ class LSDRasterModel: public LSDRasterSpectral
 	void set_uplift( Array2D <float> uplift )		{ uplift_field = uplift; }
 	
 	/// @brief overloaded function, set the array of uplift, but using the uplift mode
+	/// @details uplfit modes are:
+	/// 	(0) - block uplift
+	///	1   - tilt block
+	///	2   - gaussian
+	///	3   - quadratic
+	/// 4   - periodic
 	void set_uplift( int mode, float max_rate )		{ uplift_field = generate_uplift_field( mode, max_rate ); this->max_uplift = max_rate; }
+	
+	
+	/// This sets the uplift amplitude as a fraction of the uplift
+	void set_uplift_amplitude( double uplift_amplitude_fraction) 
+           { uplift_amplitude = max_uplift*uplift_amplitude_fraction; }
 	
 	/// @brief this sets the baseline uplift rate for the tilt block
 	void set_baseline_uplift( float new_rate )    { baseline_uplift = new_rate; }
@@ -1107,11 +1153,15 @@ class LSDRasterModel: public LSDRasterSpectral
   /// default == block uplift
   /// 1 == tilt block
   /// 2 == gaussian
-  /// 3 == quadratic 			
+  /// 3 == quadratic 	
+  /// 4 == periodic		
 	int 			uplift_mode;
 	
 	/// the maximum uplift rate
 	float			max_uplift;
+	
+	/// the amplitude of uplift
+	float uplift_amplitude;
 	
 	/// the baseline uplift rate (for different uplift modes)
 	float baseline_uplift;

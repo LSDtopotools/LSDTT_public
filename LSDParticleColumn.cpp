@@ -68,6 +68,7 @@ void LSDParticleColumn::create()
    Row = 0;
    Col = 0;
    NodeIndex = 0;
+   SoilThickness = 0;
    
    RockDensity = 2000;
    SoilDensity = 1300;
@@ -148,13 +149,14 @@ void LSDParticleColumn::initiate_SS_cosmo_column_3CRN(int start_type,
   int N_particles = double(start_depth/particle_spacing)+1;
 
   // create the list
-  list<LSDCRNParticle> CRN_plist;
+  //list<LSDCRNParticle> CRN_plist;
 
   double this_depth;
 
   // now loop over the depths, inserting particles and setting them to steady state
   double top_depth = start_depth-double(N_particles-1)*particle_spacing;
-  cout << "Inserting particles, top depth is: " << top_depth << endl;
+  //cout << "Inserting particles, top depth is: " << top_depth << endl;
+  //cout << "N_particles are: "  << N_particles << endl;
   for (int p = 0; p< N_particles; p++)
   {
     // first the depth
@@ -167,8 +169,8 @@ void LSDParticleColumn::initiate_SS_cosmo_column_3CRN(int start_type,
 
   // now loop through the particles, setting to steady
   list<LSDCRNParticle>::iterator part_iter;
-  part_iter = CRN_plist.begin();
-  while(part_iter != CRN_plist.end())
+  part_iter = CRNParticleList.begin();
+  while(part_iter != CRNParticleList.end())
   {
     // update the CRN_concntrations
     ( *part_iter ).update_10Be_SSfull(eff_eros_rate,CRN_param);
@@ -177,10 +179,22 @@ void LSDParticleColumn::initiate_SS_cosmo_column_3CRN(int start_type,
  
     part_iter++;   
   }
+  
+  // check the apparent erosion
+  //cout << "eff eros: " << eff_eros_rate << " and eros is: " << 10*eff_eros_rate/RockDensity << endl;
+  //part_iter = CRNParticleList.begin();
+  //while(part_iter != CRNParticleList.end())
+  //{
+  //  // update the CRN_concntrations
+  //  cout << " app eros of part: " << (*part_iter).apparent_erosion_10Be_neutron_only(RockDensity, CRN_param); 
+  //  part_iter++;   
+  //}  
 
-  CRNParticleList = CRN_plist;
+  //CRNParticleList = CRN_plist;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- 
+
+
 	      
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -395,10 +409,15 @@ vector<double> LSDParticleColumn::calculate_app_erosion_3CRN_neutron_rock_only(
   apparent_erosion[1] =(*part_iter).apparent_erosion_14C_neutron_only(RockDensity, CRN_param);
   apparent_erosion[2] =(*part_iter).apparent_erosion_21Ne(RockDensity, CRN_param);
   
+  //cout << "app erosion from particle at "<< (*part_iter).getdLoc() << " depth" << endl;
+    
   return apparent_erosion; 
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
 
 
 #endif

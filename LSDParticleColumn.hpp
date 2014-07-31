@@ -110,49 +110,64 @@ class LSDParticleColumn
     // GETTER FUNCTIONS
     //
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-         
-    /// @getter function for the row
+    /// @brief function for the row
     /// @return Row the row
     int getRow() const { return Row;}
       
-    /// @getter function for the Col
+    /// @brief function for the Col
     /// @return Col the column of the particle column (links to LSDRaster)
     int getCol() const { return Col;}
            
-    /// @getter function for the NodeIndex
+    /// @brief function for the NodeIndex
     /// @return NodeIndex of the particle column (links to LSDRaster)
     int getNodeIndex() const { return NodeIndex;}
     
-    /// @getter function for the SoilDensity
+    /// @brief function for the SoilDensity
     /// @return SoilDensity of the particle column
     double  getSoilDensity() const { return SoilDensity;}    
 
-    /// @getter function for the RockDensity
+    /// @brief function for the RockDensity
     /// @return RockDensity of the particle column
     double  getRockDensity() const { return RockDensity;}        
 
-    /// @getter function for the SoilThickness
+    /// @brief function for the SoilThickness
     /// @return SoilThickness of the particle column
     float getSoilThickness() const { return SoilThickness;}   
     
-    /// @getter function for the DataResolution
+    /// @brief function for the DataResolution
     /// @return DataResolution of the particle column (links to LSDRaster)
     float getDataResolution() const { return DataResolution;}       
 
-    /// @getter function for the UseDenstyProfile;
+    /// @brief function for the UseDenstyProfile;
     /// @return UseDenstyProfile tells object to use density profile
     bool getUseDenstyProfile() const { return UseDenstyProfile;} 
 
-    /// @getter function for the DensityDepths;
+    /// @brief function for the DensityDepths;
     /// @return DensityDepths depth density measurments in the profile
     vector<double> getDensityDepths() const { return DensityDepths;} 
 
-    /// @getter function for the DensityDensities;
+    /// @brief function for the DensityDensities;
     /// @return DensityDensities density measurments in the profile (kg/m^3)
     vector<double> getDensityDensities() const { return DensityDensities;} 
 
-    /// @getter function for the CRNParticleList
+    /// @brief function for the CRNParticleList
     /// @return CRNParticleList the underlying particle list
      list<LSDCRNParticle> getCRNParticleList() const { return CRNParticleList;} 
+
+
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    //
+    // Some setter functions
+    //
+    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    /// @brief set the rock density 
+    void set_RockDensity( double new_rhoR) {RockDensity = new_rhoR;}
+    
+    /// @brief set the soil density
+    void set_SoilDensity( double new_rhoS) {SoilDensity = new_rhoS;}
+    
+    /// @brief set the soil thickness
+    void set_SoilThickness( double new_h)  {SoilThickness = new_h; }
 
 
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

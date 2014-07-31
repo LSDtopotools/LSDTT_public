@@ -57,6 +57,8 @@
 #include "LSDStatsTools.hpp"
 #include "LSDIndexRaster.hpp"
 #include "LSDRasterModel.hpp"
+#include "LSDCRNParameters.hpp"
+#include "LSDParticleColumn.hpp"
 using namespace std;
 using namespace TNT;
 using namespace JAMA;
@@ -382,7 +384,6 @@ void LSDRasterModel::initialize_model(string param_file)
 		else if (lower == "d amplitude")	D_amplitude 	= atof(value.c_str()) * K_soil;
 		else if (lower == "noise")		noise		= atof(value.c_str());
 		else if (lower == "report delay")	report_delay 	= atof(value.c_str());
-
 		else if (lower == "fluvial")		fluvial 	= (value == "on") ? true : false;
 		else if (lower == "hillslope")		hillslope 	= (value == "on") ? true : false;
 		else if (lower == "non-linear")		nonlinear 	= (value == "on") ? true : false;
@@ -392,7 +393,11 @@ void LSDRasterModel::initialize_model(string param_file)
 		else if (lower == "reporting")		reporting	= (value == "on") ? true : false;
 		else if (lower == "print elevation")	print_elevation = (value == "on") ? true : false;
 		else if (lower == "print hillshade")	print_hillshade = (value == "on") ? true : false;
-		else if (lower == "print erosion")	print_erosion   = (value == "on") ? true : false;
+		else if (lower == "print erosion")
+    {
+      print_erosion   = (value == "on") ? true : false;
+      cout << "I will print the erosion!" << endl;
+    }
 		else if (lower == "print erosion cycle") print_erosion_cycle = (value == "on") ? true : false;
 		else if (lower == "print slope-area")	print_slope_area= (value == "on") ? true : false;
 
@@ -1415,6 +1420,7 @@ Array2D <float> LSDRasterModel::generate_uplift_field( void )
 // 1 == tilt block
 // 2 == gaussian
 // 3 == quadratic 
+// 4 == periodic
 // The function is called by the generate_uplift_field  and uplift_surface 
 // member functions
 //
@@ -1461,7 +1467,12 @@ float LSDRasterModel::get_uplift_at_cell(int i, int j)
 				if (result < 0)
 					result = 0;
 				break;
-			}	
+			}
+			case 4:
+			{
+        result = periodic_parameter( get_max_uplift(), uplift_amplitude );        
+        break;      
+      }      	
 			default:
 				result = get_max_uplift();
 				break;
@@ -1482,6 +1493,7 @@ float LSDRasterModel::get_uplift_at_cell(int i, int j)
 // 1 == tilt block
 // 2 == gaussian
 // 3 == quadratic 
+// 4 == periodic
 // The function is called by the generate_uplift_field  and uplift_surface 
 // member functions
 //
@@ -1529,6 +1541,11 @@ float LSDRasterModel::get_uplift_rate_at_cell(int i, int j)
 					result = 0;
 				break;
 			}	
+			case 4:
+			{
+        result = periodic_parameter( get_max_uplift(), uplift_amplitude );        
+        break;      
+      }
 			default:
 				result = get_max_uplift();
 				break;
@@ -2375,7 +2392,7 @@ void LSDRasterModel::run_components_combined( void )
   Array2D<float> uplift_field;
   Array2D<float> fluvial_incision_rate_field;
 	
-  // set the frame to the current frame
+  // set the frame to the current frame plus 1
   int frame = current_frame;
   int print = 1;
   do 
@@ -2479,7 +2496,9 @@ void LSDRasterModel::run_components_combined( void )
 // 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleColumn>& CRNColumns,
-                      vector<LSDParticleColumn>& eroded_cells , double& this_end_time)
+                      vector<LSDParticleColumn>& eroded_cells , double& this_end_time, 
+                      int startType, double startDepth, double particle_spacing, 
+                      LSDCRNParameters& CRNParams)
 {
 
   // first you need to get the locations of the columns
@@ -2545,15 +2564,19 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
       row = row_vec[i];
       col = col_vec[i];
       
+      double startxLoc = double(col)*double(DataResolution);
+      double startyLoc = double(row)*double(DataResolution);
+      
       double this_zeta_old = zeta_old[row][col];
       double this_zeta_new = zeta_old[row][col];
       double this_uplift_rate = get_uplift_at_cell(row,col);
-      LSDCRNColumn this_eroded_column = CRNcolumns[i].update_CRN_list_rock_only_eros_limit_3CRN(
-	                     timeStep, this_plift_rate,
-                             start_type, start_depth,
-                             startxLoc,  startyLoc,
-                             this_zeta_old,this_zeta_new,
-                             particle_spacing, CRN_param);
+      LSDParticleColumn this_eroded_column = 
+                 CRNColumns[i].update_CRN_list_rock_only_eros_limit_3CRN(
+	                     timeStep, this_uplift_rate,
+                       startType, startDepth,
+                       startxLoc,  startyLoc,
+                       this_zeta_old,this_zeta_new,
+                       particle_spacing, CRNParams);
     }    
 
     // write at every print interval
@@ -2573,6 +2596,84 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
   
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function intiates a vector of LSDParticleColumns at steady state
+// the zeta values are distrubuted over the surface
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<LSDParticleColumn> LSDRasterModel::initiate_steady_CRN_columns(int column_spacing,
+                    vector<int>& CRNcol_rows, vector<int>& CRNcol_cols,
+                    double rho_r, double this_U, int startType, double startDepth, 
+                    double particle_spacing, LSDCRNParameters& CRNParam)
+{
+  cout << "Initialising some CRN columns." << endl;
+  
+  vector<LSDParticleColumn> CRNParticleColumns_vec;
+  
+  int NPRows = NRows/column_spacing+1;
+  int NPCols = NCols/column_spacing+1;
+  cout << "Rows: " << NRows << " and NPRows: " << NPRows << endl;
+  cout << "Cols: " << NCols << " and NPCols: " << NPCols << endl;
+  vector<int> rows_vec;
+  vector<int> cols_vec;
+  
+  int this_row, this_col;
+  double this_x,this_y;
+  double zeta;
+  double eff_U = rho_r*this_U/10;     // this converts the uplift to effective 
+                                      // uplift in units g/cm^2/yr, 
+                                      // required by the cosmo particles
+  
+  // loop through the columns, creating steady particles
+  for (int prow = 0; prow<NPRows;  prow++)
+  {
+    this_row = prow*column_spacing;
+    for (int pcol = 0; pcol<NPCols; pcol++)
+    {
+      this_col = pcol*column_spacing;
+      // make sure you dont go out of bounds
+      if(this_row >= NRows)
+      {
+        cout << "Danger, you were about to go out of the raster domain when making a CRN column\n";
+        this_row = NRows-1;
+      }
+      if(this_col >= NCols)
+      {
+        cout << "Danger, you were about to go out of the raster domain when making a CRN column\n";
+        this_col = NCols-1;
+      }     
+    
+      // get the x and y locations      
+      this_x = double(this_col)*DataResolution+XMinimum;
+      this_y = double(NRows-this_row-1)*DataResolution+YMinimum; 
+      
+      // initiate an empty column
+      LSDParticleColumn temp_col;
+      
+      // get the elevation of the surface    
+      zeta = RasterData[this_row][this_col];
+      
+      // make a steady state column
+      temp_col.initiate_SS_cosmo_column_3CRN(startType, this_x, this_y, startDepth, particle_spacing, 
+		            zeta, eff_U, CRNParam); 
+      
+      // make sure this is a rock only simulation          
+      double ST = 0;          
+      temp_col.set_SoilThickness(ST);
+      temp_col.set_RockDensity(rho_r);           
+       
+      // add the column to the vector          
+      CRNParticleColumns_vec.push_back(temp_col);  
+      cout << "Got col, row: " << this_row << " and col: " << this_col << endl;                  
+    } 
+  }
+  
+  
+  CRNcol_rows = rows_vec;
+  CRNcol_cols = cols_vec; 
+  return CRNParticleColumns_vec; 
+}
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -4448,6 +4549,13 @@ void LSDRasterModel::final_report( void )
 void LSDRasterModel::print_rasters( int frame )
 {
 	cout << endl;
+	//cout << "Printing raster, initial steady state: " << initial_steady_state 
+  //     << " and D mode is : " << D_mode << endl;
+  //cout << "current time" << current_time << " td: " << time_delay << " sd: " << switch_delay << endl;
+  //cout << "Time in wave: " << (current_time - time_delay - switch_delay) << endl;
+  //cout << "Periodicity: " << periodicity << " and pi: " << PI << endl;
+  //cout << "input to sine wave: " << (current_time - time_delay - switch_delay) * 2 * PI / periodicity << endl;
+  //cout << "Sin wave:" << sin( (current_time - time_delay - switch_delay) * 2 * PI / periodicity )  << endl;
 	static ofstream outfile;
 	if (not outfile.is_open())
 	{
@@ -4470,6 +4578,9 @@ void LSDRasterModel::print_rasters( int frame )
 	outfile << erosion << "\t";
 	outfile << get_max_uplift() << "\t";
 	outfile << endl;
+
+  //cout << "Printing, print elevation is " << print_elevation 
+  //     << " and erosion is " << print_erosion << endl;
 
 	stringstream ss;
 	if (print_elevation)
@@ -4838,7 +4949,8 @@ void LSDRasterModel::show( void )
 	run_cmd << "animate.run('" << name << "')";
 
 	Py_Initialize();
-	PyObject *sys_path = PySys_GetObject("path");
+	char path_word[] = "path";
+	PyObject *sys_path = PySys_GetObject(path_word);
 	PyList_Append(sys_path, PyString_FromString("."));
 	PyRun_SimpleString("import animate");
 	PyRun_SimpleString(run_cmd.str().c_str());
@@ -5239,6 +5351,10 @@ void LSDRasterModel::MuddPILE_assemble_matrix(Array2D<float>& uplift_rate,
   // i) spatially varying D values
   // ii) time and space varying S_c
   float D_nl = get_D();
+  if(D_mode == 1)
+  {
+    //cout << "Variable D!, D is: " << D_nl << endl;
+  }
   dx_front_term = timeStep*D_nl/(DataResolution*DataResolution);
 
   // get the number of elements in the k vec
@@ -5570,7 +5686,7 @@ void LSDRasterModel::MuddPILE_nl_soil_diffusion_nouplift()
   Array2D<float> zero_uplift(NRows,NCols,0.0);
   Array2D<float> zero_fluvial(NRows,NCols,0.0);
   
-  float default_tolerance = 1e-6;
+  float default_tolerance = 3e-6;
   
   // run a timestep 
   MuddPILE_nonlinear_creep_timestep(zero_uplift, zero_fluvial,default_tolerance);
