@@ -89,13 +89,22 @@ using namespace TNT;
 class LSDJunctionNetwork
 {
 	public:
-	/// @brief This defines a channel network based on a FlowInfo object and a list of source nodes.
+  /// @brief This defines a channel network, is empty
+  /// @author SMM
+  /// @date 30/07/14
+	LSDJunctionNetwork()   { create(); }
+   
+  /// @brief This defines a channel network based on a FlowInfo object and a list of source nodes.
   /// @param FlowInfo LSDFlowInfo object.
   /// @param Sources vector of source nodes.
   /// @author SMM
   /// @date 01/09/12
 	LSDJunctionNetwork(vector<int> Sources, LSDFlowInfo& FlowInfo)
 											{ create(Sources, FlowInfo); }
+
+
+  /// @brief Assignment operator.
+  LSDJunctionNetwork& operator=(const LSDJunctionNetwork& LSDR);
 											
   ///@brief Recursive add_to_stack routine to build the junction tree, from Braun and Willett (2012)
   ///equations 12 and 13.
@@ -898,7 +907,6 @@ class LSDJunctionNetwork
   ///@details It is used in conjunction with the SVectorIndex to build basins upslope of any and all nodes in the junction list.
   vector<int> NContributingJunctions;
 
-
 	// the following arrays are for keeping track of the junctions. For large DEMs this will be quite memory intensive
 	// it might be sensible to try to devise a less data intensive method in the future.
 	// one could do it with much less memory but that would involve searching
@@ -915,6 +923,7 @@ class LSDJunctionNetwork
   Array2D<int> JunctionIndexArray;
 
 	private:
+	void create( void );
 	void create(vector<int> Sources, LSDFlowInfo& FlowInfo);
 };
 

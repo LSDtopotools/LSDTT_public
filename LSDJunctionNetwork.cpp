@@ -95,15 +95,82 @@ using namespace TNT;
 #ifndef LSDJunctionNetwork_CPP
 #define LSDJunctionNetwork_CPP
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+/// @brief the copy constructor 
+LSDJunctionNetwork& LSDJunctionNetwork::operator=(const LSDJunctionNetwork& rhs) 
+{
+  if (&rhs != this)
+  {
+    NRows = rhs.NRows;
+  	NCols = rhs.NCols;
+    XMinimum = rhs.XMinimum;
+  	YMinimum = rhs.YMinimum;
+  	DataResolution = rhs.DataResolution;
+  	NoDataValue = rhs.NoDataValue;
+    NJunctions = rhs.NJunctions;
+
+  	SourcesVector = rhs.SourcesVector;
+    BaseLevelJunctions = rhs.BaseLevelJunctions;
+  	JunctionVector  = rhs.JunctionVector;
+  	StreamOrderVector  = rhs.StreamOrderVector;
+  	BLBasinVector  = rhs.BLBasinVector;
+  	NDonorsVector =  rhs.NDonorsVector;
+    ReceiverVector  = rhs.ReceiverVector;
+  	DeltaVector = rhs.DeltaVector;
+  	DonorStackVector = rhs.DonorStackVector;
+    SVector  = rhs.SVector;
+  	SVectorIndex  = rhs.SVectorIndex;
+  	NContributingJunctions  = rhs.NContributingJunctions;
+  	
+  	StreamOrderArray = rhs.StreamOrderArray.copy();
+    JunctionArray = rhs.JunctionArray.copy();
+  	JunctionIndexArray = rhs.JunctionIndexArray.copy();  
+  
+  }
+  return *this;
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This constructor does nothing but allows copying of these objects
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDJunctionNetwork::create( void ) 
+{
+  cout << "I am an empty LSDJunctionNetwork" << endl;
+/*  
+  vector<int> emptyvec;
+  
+	SourcesVector = emptyvec;
+  BaseLevelJunctions = emptyvec;
+	JunctionVector  = emptyvec;
+	StreamOrderVector  = emptyvec;
+	BLBasinVector  = emptyvec;
+	NDonorsVector =  emptyvec;
+  ReceiverVector  = emptyvec;
+	DeltaVector = emptyvec;
+	DonorStackVector = emptyvec;
+  SVector  = emptyvec;
+	SVectorIndex  = emptyvec;
+	NContributingJunctions  = emptyvec;
+	
+	Array2D<int> emptyarray;
+	StreamOrderArray = emptyarray.copy();
+  JunctionArray = emptyarray.copy();
+	JunctionIndexArray = emptyarray.copy();
+	*/
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // create
 // this defines a channel network based on a FlowInfo object
 // and a list of source nodes
 //
 // SMM 01/09/2012
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDJunctionNetwork::create(vector<int> Sources, LSDFlowInfo& FlowInfo)
 {
 	NRows = FlowInfo.NRows;

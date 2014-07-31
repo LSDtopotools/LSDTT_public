@@ -2548,6 +2548,12 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
       double this_zeta_old = zeta_old[row][col];
       double this_zeta_new = zeta_old[row][col];
       double this_uplift_rate = get_uplift_at_cell(row,col);
+      LSDCRNColumn this_eroded_column = CRNcolumns[i].update_CRN_list_rock_only_eros_limit_3CRN(
+	                     timeStep, this_plift_rate,
+                             start_type, start_depth,
+                             startxLoc,  startyLoc,
+                             this_zeta_old,this_zeta_new,
+                             particle_spacing, CRN_param);
     }    
 
     // write at every print interval

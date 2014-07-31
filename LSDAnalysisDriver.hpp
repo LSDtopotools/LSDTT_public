@@ -55,6 +55,7 @@
 #include "LSDIndexRaster.hpp"
 #include "LSDFlowInfo.hpp"
 #include "LSDStatsTools.hpp"
+#include "LSDJunctionNetwork.hpp"
 using namespace std;
 
 #ifndef LSDAnalysisDriver_H
@@ -82,7 +83,7 @@ class LSDAnalysisDriver
     /// It then opens the paramter file and ingests the information
     /// @author SMM
     /// @date 29/07/2014    
-	  LSDAnalysisDriver()			{ create(); }
+    LSDAnalysisDriver()			{ create(); }
 	
     /// @brief this constructor just reads the param file given by the path and
     /// filename. You must give the parameter file extension!
@@ -131,19 +132,55 @@ class LSDAnalysisDriver
     /// @date 29/07/2014
     void fill_raster();
 
+    /// @brief This calculates the hillshade raster
+    /// @author SMM
+    /// @date 29/07/2014
+    void calculate_hillshade();
+
     /// @brief This calculates the LSDFlowInfo object
     /// @author SMM
     /// @date 29/07/2014
     void calculate_flowinfo();
-
+    
+    /// @brief This calculates the LSDJunctionNetwork object
+    /// @author SMM
+    /// @date 30/07/2014
+    void calculate_JunctionNetwork();    
+    
+    
+    
     /// @brief This gets the nodeindex from the LSDFlowInfo object
+    /// IMPORTANT: this is an LSDIndexRaster so it goes into the 
+    /// LSDIndexRaster vector!    
     /// @author SMM
     /// @date 29/07/2014
     void calculate_nodeindex();
+    
+    /// @brief This gets the ContributingPixels from the LSDFlowInfo object
+    /// IMPORTANT: this is an LSDIndexRaster so it goes into the 
+    /// LSDIndexRaster vector!
+    /// @author SMM
+    /// @date 30/07/2014
+    void calculate_ContributingPixels();
 
+    /// @brief This gets sources for a channel network
+    /// @author SMM
+    /// @date 30/07/2014
+    void calculate_sources();
+
+    /// @brief This calculates Junction index raster
+    /// @author SMM
+    /// @date 30/07/2014
+    void calculate_JunctionIndex();
+
+    /// @brief This calculates stream order raster
+    /// @author SMM
+    /// @date 30/07/2014
+    void calculate_SOArray();
+    
     /// @brief This calculates the chi map raster
     /// @author SMM
-    /// @date 29/07/2014
+    /// @date 30/07/2014
     void calculate_chi_map();
 
 
@@ -197,6 +234,12 @@ class LSDAnalysisDriver
     
     /// the just tells the code if the flow info has already been calculated
     bool got_flowinfo;
+    
+    /// The junction network object
+    //LSDJunctionNetwork JunctionNetwork;
+    
+    /// tells the code if you've got the junction network
+    bool got_JunctionNetwork;
         
     /// the path to the datafiles
     string pathname;
@@ -249,6 +292,9 @@ class LSDAnalysisDriver
     
     /// This holds float parameters
     map<string,float> float_parameters;
+    
+    /// This holds integer vectors. Can be used to get sources
+    map<string, vector<int> > integer_vector_map;
     
     /// This holds names of supporting files, for example files that contain
     /// node of junction indices to be loaded. 
