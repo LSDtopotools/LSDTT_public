@@ -249,33 +249,38 @@ LSDParticleColumn LSDParticleColumn::update_CRN_list_rock_only_eros_limit_3CRN(
 	double zeta_old,double zeta_new,
   double particle_spacing, LSDCRNParameters& CRN_param)
 {
-	double d;                // depth of particle (m)
+  double d;                // depth of particle (m)
   double eff_d;            // effective depth in g/cm^2
   double z_p;              // elevation of particle (m)
   double eff_eros_rate;    // effective erosion rate in g/cm^2/yr
-	int eroded_test;         // used to see if particle has eroded
-	double effective_dt;     // the time of exposure for particles that have eroded
-	double d_frac;           // fraction of depth eroded particles have spent in soil
+  int eroded_test;         // used to see if particle has eroded
+  double effective_dt;     // the time of exposure for particles that have eroded
+  double d_frac;           // fraction of depth eroded particles have spent in soil
 
   // the list and iterators for eroded particles
-	list<LSDCRNParticle> eroded_list;
-	list<LSDCRNParticle>::iterator part_iter;
-	list<LSDCRNParticle>::iterator remove_iter;
+  list<LSDCRNParticle> eroded_list;
+  list<LSDCRNParticle>::iterator part_iter;
+  list<LSDCRNParticle>::iterator remove_iter;
 
   // so first, determine the depth of material lost
   double depth_lost = uplift_rate*dt- (zeta_new-zeta_old);
+  //cout << "YoYoMa, line 267, uplift rate is: " << uplift_rate << endl;
   
   // the elevation of the uplifted old surface, for determining d_frac
   double uplift_surf = zeta_old+uplift_rate*dt;
   
   // now get the effective erosion rate
-	eff_eros_rate = RockDensity*0.1*depth_lost/dt;
+  eff_eros_rate = RockDensity*0.1*depth_lost/dt;
 
-	// go through and update the CRN concentrations
-	// in the list
-	part_iter = CRNParticleList.begin();
-	while(part_iter != CRNParticleList.end())
-	{
+  // print the effective erosion rate for debugging
+  //cout << "Heyjabbajsbba, line 275, effective erosion rate in LSDParticleColumn is: "
+  //     << eff_eros_rate << " and eros is: " << depth_lost/dt << endl;
+
+  // go through and update the CRN concentrations
+  // in the list
+  part_iter = CRNParticleList.begin();
+  while(part_iter != CRNParticleList.end())
+  {
 		
     // get the old zeta location
     z_p = ( *part_iter ).get_zetaLoc();
@@ -283,43 +288,43 @@ LSDParticleColumn LSDParticleColumn::update_CRN_list_rock_only_eros_limit_3CRN(
     // now add the uplift to that location
     z_p =  z_p +  uplift_rate*dt; 
     
-		d = zeta_new-z_p;
-		eff_d = d*RockDensity*0.1;
+    d = zeta_new-z_p;
+    eff_d = d*RockDensity*0.1;
 
-		// check to see if the particle is above the surface, if
-		// it is use an abbreviated exposure
-		if (z_p >= zeta_new)
-		{
-			d_frac = (uplift_surf-z_p)/(depth_lost);
-			effective_dt = d_frac*dt;
+    // check to see if the particle is above the surface, if
+    // it is use an abbreviated exposure
+    if (z_p >= zeta_new)
+    {
+      d_frac = (uplift_surf-z_p)/(depth_lost);
+      effective_dt = d_frac*dt;
 			
-			// it has zero depth (sampled form surface)
-			d = 0;
-			eff_d = 0;
-		}
-		else
-		{
-			effective_dt = dt;
-		}
+      // it has zero depth (sampled form surface)
+      d = 0;
+      eff_d = 0;
+    }
+    else
+    {
+      effective_dt = dt;
+    }
 
-		// update the CRN_concntrations
-		( *part_iter ).update_10Be_conc(effective_dt,eff_eros_rate, CRN_param);
-		( *part_iter ).update_14C_conc(effective_dt,eff_eros_rate, CRN_param);
-		( *part_iter ).update_21Ne_conc(effective_dt,eff_eros_rate, CRN_param);
+    // update the CRN_concntrations
+    ( *part_iter ).update_10Be_conc(effective_dt,eff_eros_rate, CRN_param);
+    ( *part_iter ).update_14C_conc(effective_dt,eff_eros_rate, CRN_param);
+    ( *part_iter ).update_21Ne_conc(effective_dt,eff_eros_rate, CRN_param);
 
-		// update the depths (note, the z_locations arene't updated
-		// because it is a rock system, no 'fluffing' of soil occurs
-		( *part_iter ).update_depths(d, eff_d);
-		part_iter++;
-	}
+    // update the depths (note, the z_locations arene't updated
+    // because it is a rock system, no 'fluffing' of soil occurs
+    ( *part_iter ).update_depths(d, eff_d);
+    part_iter++;
+  }
 
-	// now go through the list and see if the particles
-	// are either eroded or a new particle needs to be added
-	// particles are added to the back of the list and eroded from the front
-	// so first check for erosion
-	eroded_test = 0;
-	do
-	{
+  // now go through the list and see if the particles
+  // are either eroded or a new particle needs to be added
+  // particles are added to the back of the list and eroded from the front
+  // so first check for erosion
+  eroded_test = 0;
+  do
+  {
 		part_iter = CRNParticleList.begin();
 		z_p = ( *part_iter ).get_zetaLoc();
 

@@ -2496,7 +2496,7 @@ void LSDRasterModel::run_components_combined( void )
 // 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleColumn>& CRNColumns,
-                      vector<LSDParticleColumn>& eroded_cells , double& this_end_time, 
+                      vector<LSDParticleColumn>& eroded_cells,
                       int startType, double startDepth, double particle_spacing, 
                       LSDCRNParameters& CRNParams)
 {
@@ -2505,6 +2505,8 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
   int N_pcolumns = CRNColumns.size();
   vector<double> row_vec;
   vector<double> col_vec;
+  
+  vector<LSDParticleColumn> e_cells;
   
   for (int i = 0; i<N_pcolumns; i++)
   {
@@ -2521,7 +2523,7 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
   // set the fram to the current frame
   int frame = current_frame;
   int print = 1;
-  while(current_time < this_end_time) 
+  do 
   {		
     // Record current topography
     zeta_old = RasterData.copy();
@@ -2563,13 +2565,13 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
       int row, col;
       row = row_vec[i];
       col = col_vec[i];
-      
-      double startxLoc = double(col)*double(DataResolution);
-      double startyLoc = double(row)*double(DataResolution);
+
+      double startxLoc = double(col)*DataResolution+XMinimum;
+      double startyLoc = double(NRows-row-1)*DataResolution+YMinimum; 
       
       double this_zeta_old = zeta_old[row][col];
-      double this_zeta_new = zeta_old[row][col];
-      double this_uplift_rate = get_uplift_at_cell(row,col);
+      double this_zeta_new = RasterData[row][col];
+      double this_uplift_rate = get_uplift_rate_at_cell(row,col);
       LSDParticleColumn this_eroded_column = 
                  CRNColumns[i].update_CRN_list_rock_only_eros_limit_3CRN(
 	                     timeStep, this_uplift_rate,
@@ -2577,12 +2579,42 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
                        startxLoc,  startyLoc,
                        this_zeta_old,this_zeta_new,
                        particle_spacing, CRNParams);
+      e_cells.push_back(this_eroded_column);                 
     }    
 
     // write at every print interval
     if ( print_interval > 0 && (print % print_interval) == 0)	
     {
       print_rasters( frame );
+      
+      // also print the cosmo properties
+      string frame_name = itoa(frame);
+      string uscore = "_";
+      string cosmo_fname = "_cosmo.cdata";
+      cosmo_fname = name+uscore+frame_name+cosmo_fname;
+      ofstream cosmo_out;
+      cosmo_out.open(cosmo_fname.c_str());
+      
+      int N_CRNcols = int(CRNColumns.size());
+      for (int cc = 0; cc<N_CRNcols; cc++)
+      {
+
+        // get the actual erosion at the cell
+        double this_erosion = get_erosion_at_cell(row_vec[cc],col_vec[cc]);
+        
+        // get the apparent erosion at the cell
+        vector<double> this_app_erosion = 
+           CRNColumns[cc].calculate_app_erosion_3CRN_neutron_rock_only(CRNParams);
+        
+        // print these things   
+        cosmo_out << current_time << " " << row_vec[cc] << " " << col_vec[cc] 
+                  << " " << this_erosion << " " << this_app_erosion[0] << " "
+                  << " " << this_app_erosion[1] << " " << this_app_erosion[2]
+                  << endl; 
+      }
+      cosmo_out.close();
+      
+      
       ++frame;
     }
     if (not quiet) cout << "\rTime: " << current_time << " years" << flush;
@@ -2591,9 +2623,9 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
     // check to see if steady state has been achieved
     check_steady_state();
 		
-  }
+  }  while (not check_end_condition());
 	
-  
+  eroded_cells = e_cells;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -2611,7 +2643,10 @@ vector<LSDParticleColumn> LSDRasterModel::initiate_steady_CRN_columns(int column
   
   vector<LSDParticleColumn> CRNParticleColumns_vec;
   
-  int NPRows = NRows/column_spacing+1;
+  // get the number of particle rows and columns
+  // note there are less rows since these are boundary nodes that
+  // have zero erosion and are not included
+  int NPRows = (NRows-2)/column_spacing+1;
   int NPCols = NCols/column_spacing+1;
   cout << "Rows: " << NRows << " and NPRows: " << NPRows << endl;
   cout << "Cols: " << NCols << " and NPCols: " << NPCols << endl;
@@ -2628,7 +2663,7 @@ vector<LSDParticleColumn> LSDRasterModel::initiate_steady_CRN_columns(int column
   // loop through the columns, creating steady particles
   for (int prow = 0; prow<NPRows;  prow++)
   {
-    this_row = prow*column_spacing;
+    this_row = prow*column_spacing+1;
     for (int pcol = 0; pcol<NPCols; pcol++)
     {
       this_col = pcol*column_spacing;
@@ -2644,12 +2679,17 @@ vector<LSDParticleColumn> LSDRasterModel::initiate_steady_CRN_columns(int column
         this_col = NCols-1;
       }     
     
+      // push back the row and col vec
+      rows_vec.push_back(this_row);
+      cols_vec.push_back(this_col);
+
       // get the x and y locations      
       this_x = double(this_col)*DataResolution+XMinimum;
       this_y = double(NRows-this_row-1)*DataResolution+YMinimum; 
       
       // initiate an empty column
       LSDParticleColumn temp_col;
+      temp_col.set_Row_and_Col(this_row,this_col);
       
       // get the elevation of the surface    
       zeta = RasterData[this_row][this_col];
@@ -2665,7 +2705,7 @@ vector<LSDParticleColumn> LSDRasterModel::initiate_steady_CRN_columns(int column
        
       // add the column to the vector          
       CRNParticleColumns_vec.push_back(temp_col);  
-      cout << "Got col, row: " << this_row << " and col: " << this_col << endl;                  
+      //cout << "Got col, row: " << this_row << " and col: " << this_col << endl;                  
     } 
   }
   

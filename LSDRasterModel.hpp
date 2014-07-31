@@ -487,7 +487,6 @@ class LSDRasterModel: public LSDRasterSpectral
   /// fluvial and uplfit fields to the nonlinear solver
   /// @param CRNColumns the vector of particle columns
   /// @param eroded_cells this gets replaced, it is the eroded particles
-  /// @param this_end_time the end time of the run
   /// @param startType the starting type of the particle (doesn't really play a role)
   /// @param startDepth the starting depth (in m) of the particles
   /// @param particle_spacing vertical distance between particles in the column
@@ -495,7 +494,7 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @author SMM
   /// @date 25/07/2014
   void run_components_combined_cell_tracker( vector<LSDParticleColumn>& CRNColumns,
-                      vector<LSDParticleColumn>& eroded_cells, double& this_end_time, 
+                      vector<LSDParticleColumn>& eroded_cells, 
                       int startType, double startDepth, double particle_spacing, 
                       LSDCRNParameters& CRNParam);
 

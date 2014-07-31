@@ -169,6 +169,8 @@ class LSDParticleColumn
     /// @brief set the soil thickness
     void set_SoilThickness( double new_h)  {SoilThickness = new_h; }
 
+    /// @brief this sets the row and column data members
+    void set_Row_and_Col(int thisRow, int thisCol) { Row = thisRow; Col = thisCol; }
 
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     //
