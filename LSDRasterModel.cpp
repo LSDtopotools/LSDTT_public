@@ -919,9 +919,9 @@ bool LSDRasterModel::check_end_condition( void )
 		case 3:		// Time specified is after reaching steady state, but waits till a roughly exact number of cycles of periodicty have passed
 		{
 			if (ceil((endTime-time_delay)/periodicity) == 1)
-				endTime_adjusted = (1+ceil((endTime-time_delay) / periodicity)) * periodicity + time_delay;
+		endTime_adjusted = (1+ceil((endTime-time_delay) / periodicity)) * periodicity + time_delay;
 			else
-				endTime_adjusted = (ceil((endTime-time_delay) / periodicity)) * periodicity + time_delay;
+		endTime_adjusted = (ceil((endTime-time_delay) / periodicity)) * periodicity + time_delay;
 		//	if (not quiet)
 		//		cout << "\n" << endTime << " " << time_delay << " " << periodicity << " " <<endTime_adjusted << " hi " << endl;
 			endTime = endTime_adjusted;
@@ -2621,12 +2621,19 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
         // get the actual erosion at the cell
         double this_erosion = get_erosion_at_cell(row_vec[cc],col_vec[cc]);
         
+        // get the uplift rate
+        double this_U = get_uplift_rate_at_cell( row_vec[cc],col_vec[cc] );       
+
+        // get the diffusivity
+        double this_D = get_D();
+
         // get the apparent erosion at the cell
         vector<double> this_app_erosion = 
            CRNColumns[cc].calculate_app_erosion_3CRN_neutron_rock_only(CRNParams);
         
         // print these things   
-        cosmo_out << current_time << " " << row_vec[cc] << " " << col_vec[cc] 
+        cosmo_out << current_time << " "<< row_vec[cc] << " " << col_vec[cc] 
+                  << " " << this_D << " " << this_U
                   << " " << this_erosion << " " << this_app_erosion[0] << " "
                   << " " << this_app_erosion[1] << " " << this_app_erosion[2]
                   << endl; 

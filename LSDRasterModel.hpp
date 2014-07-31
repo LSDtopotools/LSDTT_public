@@ -78,7 +78,8 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @return LSDRasterModel
 	/// @param filename A String, the file to be loaded.
 	/// @param extension A String, the file extension to be loaded.
-	LSDRasterModel(string filename, string extension)	{ create(filename, extension); default_parameters();}
+	LSDRasterModel(string filename, string extension)
+         	{ create(filename, extension); default_parameters();}
 	
 	/// @brief Create an LSDRasterModel from memory.
 	/// @return LSDRasterModel
@@ -92,12 +93,12 @@ class LSDRasterModel: public LSDRasterSpectral
 	///containing the data to be written.
 	LSDRasterModel(int nrows, int ncols, float xmin, float ymin,
 	          float cellsize, float ndv, Array2D<float> data)
-								{ default_parameters(); create(nrows, ncols, xmin, ymin, cellsize, ndv, data); }
+		{ default_parameters(); create(nrows, ncols, xmin, ymin, cellsize, ndv, data); }
 								
 	/// @brief Create an LSDRasterModel from an LSDRaster.
 	/// @return LSDRasterModel
 	/// @param An_LSDRaster LSDRaster object.							
-	LSDRasterModel(LSDRaster& An_LSDRaster) 				{ create(An_LSDRaster); default_parameters();}
+	LSDRasterModel(LSDRaster& An_LSDRaster) { create(An_LSDRaster); default_parameters();}
 
 	/// @brief Create a blank raster nodel
 	/// @return LSDRasterModel
@@ -127,23 +128,23 @@ class LSDRasterModel: public LSDRasterSpectral
 	  Array2D<float>& SlopesBetweenColumns, Array2D<float>& ErosionRate);
 
   /// @brief This module initialises the model runs, calling the required function from
-	/// the initial topography and loads the parameters from the parameter file.
-	/// @param parameter_file the filename of the paramter file (with extension)
-	/// @author JAJ
-	/// @date 01/01/2014
-	void initialize_model( string parameter_file );
+  /// the initial topography and loads the parameters from the parameter file.
+  /// @param parameter_file the filename of the paramter file (with extension)
+  /// @author JAJ
+  /// @date 01/01/2014
+  void initialize_model( string parameter_file );
 
   /// @brief Adds random noise to each pixel in range [min, max]
-	/// @param minium random addition
-	/// @param maximum random addition
-	/// @author JAJ
-	/// @date 01/01/2014
-	void random_surface_noise( float min, float max );
+  /// @param minium random addition
+  /// @param maximum random addition
+  /// @author JAJ
+  /// @date 01/01/2014
+  void random_surface_noise( float min, float max );
 
   /// @brief Adds random noise to each pixel using the noise data member
-	/// @author SMM
-	/// @date 17/06/2014
-	void random_surface_noise();
+  /// @author SMM
+  /// @date 17/06/2014
+  void random_surface_noise();
 
   /// @brief This resets the RasterData array to have a parabolic shape, 
   /// with 0 elevation at the N and S boundaries. It also adds some random
@@ -190,16 +191,16 @@ class LSDRasterModel: public LSDRasterSpectral
   void resize_and_reset( int new_rows, int new_cols, float new_resolution );
 
   /// @brief this ads a pathname to the default names
-	/// @param the name of the path
-	/// @author SMM
-	/// @date 18/06/2014
-	void add_path_to_names( string pathname);
+  /// @param the name of the path
+  /// @author SMM
+  /// @date 18/06/2014
+  void add_path_to_names( string pathname);
 
-	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
-	// TOOLS FOR CHECKING STEADY STATE
-	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
-	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  // @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
+  // TOOLS FOR CHECKING STEADY STATE
+  // @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
+  //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   /// @brief This function checks to see if the model has achieved steady state.
   /// The nature of steady state checked is set by the cycle_steady_check flag
   /// If this is false, it checks if there is simple steady state 
@@ -209,7 +210,7 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @return does not return anything, but instead changes the steady_state flag
   /// @author JAJ     commented SMM
   /// @date 01/01/2014 commented SMM 27/06/2014
-	void check_steady_state( void );
+  void check_steady_state( void );
 
   /// @brief This function checks to see if the model should record results
   /// If initial steady state has not been reached, recording is set to 
@@ -217,7 +218,7 @@ class LSDRasterModel: public LSDRasterSpectral
   /// to steady state. 
   /// @author JAJ
   /// @date 01/01/2014
-	void check_recording( void );
+  void check_recording( void );
 
   /// @brief This checks on the ending condition of the model run
   /// endTime_mode:
@@ -229,7 +230,7 @@ class LSDRasterModel: public LSDRasterSpectral
   /// and false if end time has not been reached
   /// @author JAJ, comments SMM
   /// @date 01/01/2014 comments SMM 27/06/2014
-	bool check_end_condition( void );
+  bool check_end_condition( void );
 
   /// @brief This function checks to see if this is a periodic run. If it is, 
   /// it sets the times to align with the period
@@ -241,16 +242,16 @@ class LSDRasterModel: public LSDRasterSpectral
   /// 4 Same as three, but weightings switch at a given interval (as in 2)  
   /// @author JAJ
   /// @date 01/012014
-	void check_periodicity_switch( void );
+  void check_periodicity_switch( void );
 
   /// @brief If the periodic model cycles over 100 times this returns true
   /// @author JAJ
-	bool check_if_hung( void );
+  bool check_if_hung( void );
   
   /// @brief Reset model - reset erosion values to 0 after a complete model run
-	/// @author JAJ
-	/// @date 01/01/2014
-	void reset_model( void );
+  /// @author JAJ
+  /// @date 01/01/2014
+  void reset_model( void );
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
   // @@@@@@@@@@@@!!!!!!!!!!!!!!!!!!!@@@@@@@@@@@@@@@@@@@@@
@@ -361,8 +362,7 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// this caluclates the fluvial erosion rate at each point
 	///----------------------------------------------------------------------------
 	Array2D<float> calculate_fluvial_erosion_rate(Array2D<float> ChannelWidth, Array2D<float> Q_w,
-							Array2D<float> TopoDivergence, float K, float n, float m, float eros_thresh);                                  
-
+		Array2D<float> TopoDivergence, float K, float n, float m, float eros_thresh);           
 	
 	///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	/// IMPLICIT MODEL COMPONENTS
@@ -386,26 +386,29 @@ class LSDRasterModel: public LSDRasterSpectral
 	void mtl_initiate_assembler_matrix(int& problem_dimension,				     
 			     float& inv_dx_S_c_squared, float& inv_dy_S_c_squared, float& dx_front_term, 
 	             float& dy_front_term, vector<int>& vec_k_value_i_j, vector<int>& vec_k_value_ip1_j,
-			     vector<int>& vec_k_value_im1_j, vector<int>& vec_k_value_i_jp1, vector<int>& vec_k_value_i_jm1);                    					
+			     vector<int>& vec_k_value_im1_j, vector<int>& vec_k_value_i_jp1, 
+            vector<int>& vec_k_value_i_jm1);                    					
 	//------------------------------------------------------------------------------
 	/// mtl_assemble_matrix
 	/// this function assembles the solution matrix for nonlinear creep transport
 	//------------------------------------------------------------------------------
 	void mtl_assemble_matrix(Array2D<float>& zeta_last_iter, Array2D<float>& zeta_last_timestep,
-						 Array2D<float>& zeta_this_iter, Array2D<float>& uplift_rate, Array2D<float>& fluvial_erosion_rate,
+		Array2D<float>& zeta_this_iter, Array2D<float>& uplift_rate, 
+                Array2D<float>& fluvial_erosion_rate,
 	           mtl::compressed2D<float>& mtl_Assembly_matrix, mtl::dense_vector<float>& mtl_b_vector,
-						 float dt, int problem_dimension, float inv_dx_S_c_squared, float inv_dy_S_c_squared, 
+		 float dt, int problem_dimension, float inv_dx_S_c_squared, float inv_dy_S_c_squared, 
 					   float dx_front_term, float dy_front_term,
 	           float South_boundary_elevation, float North_boundary_elevation,
 	           vector<int>& vec_k_value_i_j, vector<int>& vec_k_value_ip1_j,vector<int>& vec_k_value_im1_j,
-						 vector<int>& vec_k_value_i_jp1, vector<int>& vec_k_value_i_jm1);
+		 vector<int>& vec_k_value_i_jp1, vector<int>& vec_k_value_i_jm1);
 	///------------------------------------------------------------------------------
 	/// mtl_solve_assembler_matrix
 	/// this function assembles the solution matrix
 	///------------------------------------------------------------------------------
 	void mtl_solve_assembler_matrix(Array2D<float>& zeta_last_iter, Array2D<float>& zeta_last_timestep,
-						 Array2D<float>& zeta_this_iter, Array2D<float>& uplift_rate, Array2D<float>& fluvial_erosion_rate,
-						 float dt, int problem_dimension, float inv_dx_S_c_squared, float inv_dy_S_c_squared,
+		Array2D<float>& zeta_this_iter, Array2D<float>& uplift_rate, 
+                Array2D<float>& fluvial_erosion_rate,
+		float dt, int problem_dimension, float inv_dx_S_c_squared, float inv_dy_S_c_squared,
 					   float dx_front_term, float dy_front_term,
 	           vector<int>& vec_k_value_i_j, vector<int>& vec_k_value_ip1_j, vector<int>& vec_k_value_im1_j,
 	           vector<int>& vec_k_value_i_jp1, std::vector<int>& vec_k_value_i_jm1,
@@ -562,22 +565,22 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @return A raster containing the erosion rate from fluvial processes
   /// @author JAJ
   /// @date 01/01/2014
-	LSDRaster fluvial_erosion_rate(float timestep, float K, float m, float n, vector <string> boundary);
+  LSDRaster fluvial_erosion_rate(float timestep, float K, float m, float n, vector <string> boundary);
 
-	/// @brief This function is more or less identical to fluvial_incision above, but it
+  /// @brief This function is more or less identical to fluvial_incision above, but it
   /// Returns an array and takes arguments rather reads from data members
   /// @return A 2d float containing the erosion rate from fluvial processes
   /// @author SMM
   /// @date 07/07/2014
-	Array2D<float> fluvial_erosion_rate( void );
+  Array2D<float> fluvial_erosion_rate( void );
   
   /// @brief This assumes that all sediment transported from rivers into 
   /// channels is removed. It checks the raster to see where the channels are
   /// which at this point is determined by a threshold drainage area, 
   /// and then removes all the sediment to those pixels
-	/// @author JAJ
-	/// @date 01/01/2014	
-	void wash_out( void );
+  /// @author JAJ
+  /// @date 01/01/2014	
+  void wash_out( void );
 	
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
@@ -742,39 +745,41 @@ class LSDRasterModel: public LSDRasterSpectral
 	// @~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@
 	// Setter methods
   // @~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@  
-	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	/// @brief this sets the boundary conditions
-  void set_boundary_conditions(vector <string> bc) 	{ for (int i=0; i<4; ++i) {bc[i][0] = tolower(bc[i][0]);} boundary_conditions = bc; }
+  //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  /// @brief this sets the boundary conditions
+  void set_boundary_conditions(vector <string> bc) 
+	{ for (int i=0; i<4; ++i) {bc[i][0] = tolower(bc[i][0]);} boundary_conditions = bc; }
 	
   /// @brief set the time step
   void set_timeStep( float dt )				{ timeStep = dt; }
   
   /// @brief set the ending time
-	void set_endTime( float time )				{ endTime = time; }
+  void set_endTime( float time )				{ endTime = time; }
 	
-	/// @brief set the number of runs. Used for running multiple simulations from
-	/// the same starting conditions
-	void set_num_runs( int num )				{ num_runs = num; }
+  /// @brief set the number of runs. Used for running multiple simulations from
+  /// the same starting conditions
+  void set_num_runs( int num )				{ num_runs = num; }
 	
-	/// @brief overloaded function, set the array of uplift
-	void set_uplift( Array2D <float> uplift )		{ uplift_field = uplift; }
+  /// @brief overloaded function, set the array of uplift
+  void set_uplift( Array2D <float> uplift )		{ uplift_field = uplift; }
 	
-	/// @brief overloaded function, set the array of uplift, but using the uplift mode
-	/// @details uplfit modes are:
-	/// 	(0) - block uplift
-	///	1   - tilt block
-	///	2   - gaussian
-	///	3   - quadratic
-	/// 4   - periodic
-	void set_uplift( int mode, float max_rate )		{ uplift_field = generate_uplift_field( mode, max_rate ); this->max_uplift = max_rate; }
+  /// @brief overloaded function, set the array of uplift, but using the uplift mode
+  /// @details uplfit modes are:
+  /// 	(0) - block uplift
+  ///	1   - tilt block
+  ///	2   - gaussian
+  ///	3   - quadratic
+  /// 4   - periodic
+  void set_uplift( int mode, float max_rate )	
+	{ uplift_field = generate_uplift_field( mode, max_rate ); this->max_uplift = max_rate; }
 	
 	
-	/// This sets the uplift amplitude as a fraction of the uplift
-	void set_uplift_amplitude( double uplift_amplitude_fraction) 
-           { uplift_amplitude = max_uplift*uplift_amplitude_fraction; }
+  /// This sets the uplift amplitude as a fraction of the uplift
+  void set_uplift_amplitude( double uplift_amplitude_fraction) 
+          { uplift_amplitude = max_uplift*uplift_amplitude_fraction; }
 	
-	/// @brief this sets the baseline uplift rate for the tilt block
-	void set_baseline_uplift( float new_rate )    { baseline_uplift = new_rate; }
+  /// @brief this sets the baseline uplift rate for the tilt block
+  void set_baseline_uplift( float new_rate )    { baseline_uplift = new_rate; }
 	
   /// @brief set the tolerance for determining steady state
   void set_steady_state_tolerance( float tol )		{ steady_state_tolerance = tol; }
@@ -782,59 +787,59 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @brief set the amplitude of random noise
   void set_noise( float noise_amp) { this->noise = noise_amp; }
 
-	/// @brief sets fluvial erodibility
-	void set_K( float K )					{ this->K_fluv = K; }
+  /// @brief sets fluvial erodibility
+  void set_K( float K )					{ this->K_fluv = K; }
 	
-	/// @brief sets the hillslope diffusivity
-	void set_D( float D )					{ this->K_soil = D; }
+  /// @brief sets the hillslope diffusivity
+  void set_D( float D )					{ this->K_soil = D; }
 	
-	/// @brief set the flexural rigidity
-	void set_rigidity( float D )				{ this->rigidity = D; }
+  /// @brief set the flexural rigidity
+  void set_rigidity( float D )				{ this->rigidity = D; }
 	
   /// @brief sets the Area exponent in the SPIM
   void set_m( float m )					{ this->m = m; }
   
   /// @brief sets the slope exponent in the SPIM
-	void set_n( float n )					{ this->n = n; }
+  void set_n( float n )					{ this->n = n; }
 	
   /// @brief sets the critical drainage area for channels	
-	void set_threshold_drainage( float area )		{ this->threshold_drainage = area; }
+  void set_threshold_drainage( float area )		{ this->threshold_drainage = area; }
 	
   /// @brief Sets the critical slope
   void set_S_c( float Sc_new )				{ S_c = Sc_new; }
   
   /// @brief Sets the periodicity in years
-	void set_periodicity( float time )			{ periodicity = time; }
+  void set_periodicity( float time )			{ periodicity = time; }
 	
-	/// @brief Sets the 2nd periodicity in years
-	void set_periodicity_2( float time )			{ periodicity_2 = time; }
+  /// @brief Sets the 2nd periodicity in years
+  void set_periodicity_2( float time )			{ periodicity_2 = time; }
 	  
   /// @brief this snaps the periodicity to the timestep to ensure the max
   /// and min values of a varying parameter are reached
   void snap_periodicity( void );
   
   /// set the print interval
-	void set_print_interval( int num_steps )		{ print_interval = num_steps; }
+  void set_print_interval( int num_steps )		{ print_interval = num_steps; }
 	
-	/// @brief this sets the K mode
-	/// @param mode The mode of calculating K
-	/// K_mode == 1 sine wave
+  /// @brief this sets the K mode
+  /// @param mode The mode of calculating K
+  /// K_mode == 1 sine wave
   /// K_mode == 2 square wave
   /// K_mode == 3 read from file
   /// K_mode: default is constant value
   /// @author JAJ
   /// @date 01/01/2014
-	void set_K_mode( short mode )				{ K_mode = mode; }
+  void set_K_mode( short mode )				{ K_mode = mode; }
 	
-	/// @brief this sets the D mode
-	/// @param mode The mode of calculating D
-	/// D_mode == 1 sine wave
+  /// @brief this sets the D mode
+  /// @param mode The mode of calculating D
+  /// D_mode == 1 sine wave
   /// D_mode == 2 square wave
   /// D_mode == 3 read from file
   /// D_mode: default is constant value
   /// @author JAJ
   /// @date 01/01/2014	
-	void set_D_mode( short mode )				{ D_mode = mode; }
+  void set_D_mode( short mode )				{ D_mode = mode; }
 	
   /// @brief This sets the way the periodicity is calculated
   /// @param mode the mode of periodic forcing
@@ -844,16 +849,20 @@ class LSDRasterModel: public LSDRasterSpectral
   /// 4 Same as three, but weightings switch at a given interval (as in 2)	
   /// @author JAJ
   /// @date 01/01/2014	
-	void set_period_mode( short mode )			{ period_mode = mode; }
+  void set_period_mode( short mode )			{ period_mode = mode; }
 	
-	/// @brief set the name of the model run
-	void set_name( string name )				{this->name = name;}
+  /// @brief set the name of the model run
+  void set_name( string name )				{this->name = name;}
 	
-	/// @brief set the name of the report
-	void set_report_name( string name )			{report_name = name;}
+  /// @brief set the name of the report
+  void set_report_name( string name )			{report_name = name;}
 	
-	/// @brief set current frame, this is used for printing
-	void set_current_frame(int new_frame)  { current_frame = new_frame; }
+  /// @brief set current frame, this is used for printing
+  void set_current_frame(int new_frame)  { current_frame = new_frame; }
+
+  /// @brief this just sets the initial steady state to true so that 
+  /// the periodic functions can be run from a starting DEM
+  void force_initial_steady_state()   { initial_steady_state = true; }
 
  	// -------------------------------------------------------------------
 	//@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@
