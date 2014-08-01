@@ -885,7 +885,7 @@ bool LSDRasterModel::check_end_condition( void )
 
   //if (not quiet)
   //{
-  //  cout << "End time mode is: " << endTime_mode 
+  //  cout << "LINE 888 End time mode is: " << endTime_mode 
   //      << " and current time is: " << current_time << endl;
   //}
 	int num_cycles;
@@ -2580,12 +2580,15 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
     // Record current topography
     zeta_old = RasterData.copy();
 		
+		//cout << "/n/nLine 2583, data[10][10]: " << RasterData[10][10] << endl;
+		
     // run active model components    
     // first diffuse the hillslopes. Currently two options. Perhaps a flag could be
     // added so that we don't have to keep adding if statements as more
     // hillslope rules are added?
     if (hillslope)
     {
+      //cout << "Time: " << current_time << " nonlinear: " << nonlinear << endl;
 	    if (nonlinear)
 	    {
 	      //soil_diffusion_fv_nonlinear();
@@ -2594,6 +2597,8 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
 	    else
 	      soil_diffusion_fd_linear();
     }
+
+    //cout << "Line 2600, data[10][10]: " << RasterData[10][10] << endl;
 
     // sediment will have moved into channels. This is assumed to 
     // be immediately removed by fluvial processes, so we use the
@@ -2607,6 +2612,8 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
       // algorithm so there are no choices here
       fluvial_incision_with_uplift();
     }  
+
+
 
     //update the time
     current_time += timeStep;
@@ -2634,10 +2641,17 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
       e_cells.push_back(this_eroded_column);                 
     }    
 
+    //cout << "Line 2643, data[10][10]: " << RasterData[10][10] << endl;
+
     // write at every print interval
     if ( print_interval > 0 && (print % print_interval) == 0)	
     {
+      // acalcualte erosion rate and place it in the erosion data member for
+      // raster printing
+      erosion = get_total_erosion_rate_over_timestep();
       print_rasters( frame );
+      
+      //cout << "Line 2650, data[10][10]: " << RasterData[10][10] << endl;
       
       // also print the cosmo properties
       string frame_name = itoa(frame);
@@ -2678,6 +2692,8 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
     }
     if (not quiet) cout << "\rTime: " << current_time << " years" << flush;
     ++print;
+    
+    //cout << "Line 2693, data[10][10]: " << RasterData[10][10] << endl;
 		
     // check to see if steady state has been achieved
     //check_steady_state();
@@ -5366,19 +5382,19 @@ void LSDRasterModel::MuddPILE_initiate_assembler_matrix(void)
   float dx = DataResolution;
   float D_nl = get_D();
   
-  cout << "LSDRasterModel::MuddPILE_initiate_assembler_matrix, D_nl is: " 
-       << D_nl << " and S_c is: " << S_c << endl;
+  //cout << "LSDRasterModel::MuddPILE_initiate_assembler_matrix, D_nl is: " 
+  //     << D_nl << " and S_c is: " << S_c << endl;
   
   // update data_members
   inv_dx_S_c_squared = 1/(dx*dx*S_c*S_c);
   dx_front_term = timeStep*D_nl/(dx*dx);
   problem_dimension = NRows*NCols;
 
-  cout << "MuddPILE_initiate_assembler_matrix, calling k values" << endl;  
+  //cout << "MuddPILE_initiate_assembler_matrix, calling k values" << endl;  
   // this sets the vector k data members
   MuddPILE_calculate_k_values_for_assembly_matrix();
   
-  cout << "LSDRasterModel::MuddPILE_initiate_assembler_matrix(void) initiated! " << endl;
+  //cout << "LSDRasterModel::MuddPILE_initiate_assembler_matrix(void) initiated! " << endl;
   
   // check that zeta_last_iter has been initiated
   //if(zeta_last_iter.dim1() != NRows || zeta_last_iter.dim2() != NCols)
@@ -5476,6 +5492,10 @@ void LSDRasterModel::MuddPILE_assemble_matrix(Array2D<float>& uplift_rate,
   // i) spatially varying D values
   // ii) time and space varying S_c
   float D_nl = get_D();
+  
+  //cout<< "LINE 5494 D is: " << D_nl << " zti: " << zeta_this_iter[10][10]
+  //    << " zeta_lts: "<< zeta_last_timestep[10][10] << " rd: " << RasterData[10][10] << endl;
+  
   if(D_mode == 1)
   {
     //cout << "Variable D!, D is: " << D_nl << endl;
@@ -5509,6 +5529,7 @@ void LSDRasterModel::MuddPILE_assemble_matrix(Array2D<float>& uplift_rate,
     //cout << "did b vec" << endl;
   }
 
+
   // now assemble the north boundary
   // in this implementation there is no buffered surface
   int starting_north_boundary = (NRows-1)*(NCols);
@@ -5520,6 +5541,8 @@ void LSDRasterModel::MuddPILE_assemble_matrix(Array2D<float>& uplift_rate,
     mtl_b_vector[k] = RasterData[NRows-1][0];
   }
 
+  
+  
   // now assemble the rest
   // we loop through each node
   int counter = NCols;       // the counter starts at NCols because the assumbly
@@ -5657,6 +5680,8 @@ void LSDRasterModel::MuddPILE_assemble_matrix(Array2D<float>& uplift_rate,
 			counter++;
 		}
 	}
+	
+	//cout << "Line 6580 assembled matrix " << endl;
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -5679,13 +5704,45 @@ void LSDRasterModel::MuddPILE_solve_assembler_matrix(Array2D<float>& uplift_rate
 	
 	//cout << "dense vector is: " << mtl_b_vector << endl;
 
+  //cout<< "LINE 5701 zti: " << zeta_this_iter[10][10]
+  //    << " zeta_lts: " << zeta_last_timestep[10][10] << " rd: " << RasterData[10][10] << endl;
+
+  /*
+  if(current_time >= 11000)
+		{
+		  cout <<"YO 5806\n";
+      string asc_name = "asc";
+      string this_time = itoa(int(current_time));
+      string RDfname = "RDassem_t"+this_time;
+      LSDRaster RD(NRows, NCols, XMinimum, YMinimum,
+            DataResolution, NoDataValue, RasterData.copy());
+      RD.write_raster(RDfname,asc_name);  
+
+      string ZTIfname = "ZTIassem_t"+this_time;
+      LSDRaster ZTI(NRows, NCols, XMinimum, YMinimum,
+            DataResolution, NoDataValue, zeta_this_iter.copy());
+      ZTI.write_raster(ZTIfname,asc_name);  
+
+      string LTSfname = "LTSassem_t"+this_time;
+      LSDRaster LTS(NRows, NCols, XMinimum, YMinimum,
+            DataResolution, NoDataValue, RasterData.copy());
+      LTS.write_raster(LTSfname,asc_name);                       
+    }
+  */
+
 	// assemble the matrix
 	//cout << "LINE 5289 assembling matrix 1st time" << endl;
 	//cout << "Line 5309, problem dimension: " << problem_dimension << endl;
 	MuddPILE_assemble_matrix(uplift_rate, fluvial_erosion_rate,mtl_Assembly_matrix, 
                            mtl_b_vector);
   //cout << "LINE 5292 assembled!" << endl;
-  
+
+
+  //cout<< "LINE 5714 zti: " << zeta_this_iter[10][10]
+  //    << " zeta_lts: " << zeta_last_timestep[10][10] << " rd: " << RasterData[10][10] << endl;
+  //cout<< "LINE 5716 zti: [0][10] " << zeta_this_iter[0][10]
+  //    << " zeta_lts: "<< zeta_last_timestep[0][10] << " rd: " << RasterData[0][10] << endl;	  
+            
   // some couts for bug checking
 	//cout << "matrix assembled!" << endl;
 	//ofstream assembly_out;
@@ -5721,6 +5778,29 @@ void LSDRasterModel::MuddPILE_solve_assembler_matrix(Array2D<float>& uplift_rate
 			counter++;
 		}
 	}
+	
+	/*
+  if(current_time >= 11000)
+		{
+		  cout <<"YO 5806\n";
+      string asc_name = "asc";
+      string this_time = itoa(int(current_time));
+      string RDfname = "RDinterm_t"+this_time;
+      LSDRaster RD(NRows, NCols, XMinimum, YMinimum,
+            DataResolution, NoDataValue, RasterData.copy());
+      RD.write_raster(RDfname,asc_name);  
+
+      string ZTIfname = "ZTIinterm_t"+this_time;
+      LSDRaster ZTI(NRows, NCols, XMinimum, YMinimum,
+            DataResolution, NoDataValue, zeta_this_iter.copy());
+      ZTI.write_raster(ZTIfname,asc_name);  
+
+      string LTSfname = "LTSinterm_t"+this_time;
+      LSDRaster LTS(NRows, NCols, XMinimum, YMinimum,
+            DataResolution, NoDataValue, RasterData.copy());
+      LTS.write_raster(LTSfname,asc_name);                       
+    }
+	 */
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -5742,6 +5822,17 @@ void LSDRasterModel::MuddPILE_nonlinear_creep_timestep(Array2D<float>& uplift_ra
     MuddPILE_initiate_assembler_matrix();
   } 
 
+  // make sure that the N and S boundaries are at zero
+  for (int col = 0; col<NCols; col++)
+  {
+    RasterData[0][col] = 0;
+    RasterData[NRows-1][col] = 0;
+    
+    //zeta_last_timestep[0][col] = 0;
+    //zeta_last_timestep[NRows-1][col] = 0;
+    
+  }
+
 	// reset old zeta
 	zeta_last_timestep = RasterData.copy();
 
@@ -5756,9 +5847,15 @@ void LSDRasterModel::MuddPILE_nonlinear_creep_timestep(Array2D<float>& uplift_ra
 	do
 	{
 		residual = 0.0;
+
+    //cout << "Time is: " << current_time << endl;
+    //cout << "LINE 5775 zti[10][10]: " << zeta_this_iter[10][10] << " and uplift: " 
+    //     << uplift_rate[10][10] << " and fluv: " << fluvial_erosion_rate[10][10] << endl;
 		
 		// this solves for zeta_this_iter
 		MuddPILE_solve_assembler_matrix(uplift_rate, fluvial_erosion_rate);
+
+    //cout << "LINE 5784 zti[10][10]: " << zeta_this_iter[10][10] << endl;
 
 		// check the residuals (basically this is the aveage elevation change between intermediate
 		// zeta values
@@ -5814,8 +5911,10 @@ void LSDRasterModel::MuddPILE_nl_soil_diffusion_nouplift()
   float default_tolerance = 3e-6;
   
   // run a timestep 
-  MuddPILE_nonlinear_creep_timestep(zero_uplift, zero_fluvial,default_tolerance);
   
+  //cout << "Line 5841, data[10][10]: " << RasterData[10][10] << endl;
+  MuddPILE_nonlinear_creep_timestep(zero_uplift, zero_fluvial,default_tolerance);
+  //cout << "Line 5843, data[10][10]: " << RasterData[10][10] << endl;
 }
 
 

@@ -290,6 +290,13 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @return the maximum elevation along the boundaty	
 	float find_max_boundary( int boundary_number );
 
+
+
+  //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+  // @@@@@@@@@@@@!!!!!!!!!!!!!!!!!!!@@@@@@@@@@@@@@@@@@@@@
+  // Calculate erosion rates
+  // @@@@@@@@@@@@!!!!!!!!!!!!!!!!!!!@@@@@@@@@@@@@@@@@@@@@
+  //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-	 
 	/// @brief Simple function that creates an array with the erosion rates for a given 
 	/// timestep. It doesn't do anything with NoData cells, and for cells with data
 	/// it calls the get_erosion_at_cell member function
@@ -308,7 +315,11 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @date 01/01/2014
 	float get_erosion_at_cell(int row, int col);
 
-
+  /// @brief this calcualtes the total erosion over a timester
+  /// @return the erosion rate calculated over the last timestep
+  /// @author SMM
+  /// @date 01/08/2014
+  float get_total_erosion_rate_over_timestep();
 
 	///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	/// CREATE PRECIPITION FLUX ARRAY
@@ -911,11 +922,7 @@ class LSDRasterModel: public LSDRasterSpectral
 	//@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@
 	// -------------------------------------------------------------------
 
-  /// @brief this calcualtes the total erosion over a timester
-  /// @return the erosion rate calculated over the last timestep
-  /// @author SMM
-  /// @date 01/08/2014
-  float get_total_erosion_rate_over_timestep();
+
 	
   /// @brief gets the name of the model run from the data members
   /// @return the name of the model run
