@@ -910,12 +910,18 @@ class LSDRasterModel: public LSDRasterSpectral
 	// Getter methods 
 	//@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@
 	// -------------------------------------------------------------------
+
+  /// @brief this calcualtes the total erosion over a timester
+  /// @return the erosion rate calculated over the last timestep
+  /// @author SMM
+  /// @date 01/08/2014
+  float get_total_erosion_rate_over_timestep();
 	
-	/// @brief gets the name of the model run from the data members
-	/// @return the name of the model run
-	/// @author JAJ
-	/// @date 01/01/2014
-	string get_name( void )					{ return name; }
+  /// @brief gets the name of the model run from the data members
+  /// @return the name of the model run
+  /// @author JAJ
+  /// @date 01/01/2014
+  string get_name( void )					{ return name; }
 	
   /// @brief This function gets the fluvial erodability. It has a number of switches
   /// that determine how K is calcualted. 
@@ -925,7 +931,7 @@ class LSDRasterModel: public LSDRasterSpectral
   /// K_mode: default is constant value
   /// @author JAJ
   /// @date 01/01/2014	
-	float get_K( void );
+  float get_K( void );
 	
   /// @brief This function gets the soil transport coefficient erodability. 
   /// It has a number of switches that determine how D is calculated. 

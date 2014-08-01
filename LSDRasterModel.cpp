@@ -1289,6 +1289,39 @@ float LSDRasterModel::get_erosion_at_cell(int i, int j)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This gets the total erosion rate over the last timestep
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDRasterModel::get_total_erosion_rate_over_timestep()
+{
+
+  float erate_total = 0;
+  int N_erate = 0;
+  // first check to see if zeta_old exists
+  if (zeta_old.dim1() != NRows || zeta_old.dim2() != NCols)
+  {
+    cout << "LSDRasterModel::calculate_erosion_rates, WARNING zeta_old doesn't exist" << endl;
+  }
+  else
+  {
+    // loop through all the raster data getting erosion rate using the
+    // get_erosion_at_cell data member
+    for(int row=0; row<NRows; ++row)
+    {
+      for(int col=0; col<NCols; ++col)
+      {
+        if(RasterData[row][col]!=NoDataValue)
+        {
+          erate_total+= get_erosion_at_cell(row, col);
+          N_erate++;
+        }
+      }
+    }
+  }
+  return erate_total/float(N_erate);
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // UPLIFT SURFACE
 // Apply uplift field to the raster.  Overloaded function so that the first
 // simply considers uniform uplift, the second allows user to use a prescribed
@@ -2647,7 +2680,7 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
     ++print;
 		
     // check to see if steady state has been achieved
-    check_steady_state();
+    //check_steady_state();
 		
   }  while (not check_end_condition());
 	
