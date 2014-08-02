@@ -657,6 +657,14 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @author SMM
   /// @date 07/07/2014   commented 26/06/2014
 	float get_uplift_rate_at_cell(int i, int j);
+
+  /// @brief this calcualtes the average uplfit rate over the entire model domain, 
+  /// excluding the N and S boundaries
+  /// @return the average uplift rate in m/yr
+  /// @author SMM
+  /// @date 01/08/2014
+  float get_average_upflit_rate_last_timestep();
+
 	
 	/// @brief Apply uplift field to the raster.  Overloaded function so that the first
 	/// simply considers uniform uplift, the second allows user to use a prescribed
@@ -784,6 +792,9 @@ class LSDRasterModel: public LSDRasterSpectral
   void set_uplift( int mode, float max_rate )	
 	{ uplift_field = generate_uplift_field( mode, max_rate ); this->max_uplift = max_rate; }
 	
+	/// This adjusts the uplift mode
+	void set_periodic_uplift(double uplift_amplitude_fraction) 
+          { uplift_amplitude = max_uplift*uplift_amplitude_fraction; uplift_mode = 4; }
 	
   /// This sets the uplift amplitude as a fraction of the uplift
   void set_uplift_amplitude( double uplift_amplitude_fraction) 
@@ -989,10 +1000,28 @@ class LSDRasterModel: public LSDRasterSpectral
   /// The rasters printed depend on the switches
   /// print_elevation,	print_erosion, print_erosion_cycle, print_hillshade;		
 	/// and print_slope_area
-  /// The filename inculdes the frame_num		
+  /// The filename inculdes the frame_num	
+  /// @param the frame of the rasters to be printed	
 	/// @author JAJ
 	/// @date 01/01/2014  
 	void print_rasters( int frame_num );
+
+  /// @brief This function prints the apparent cosmogenic rates from a collection
+  /// of LSDParticle Columns
+  /// The filename inculdes the frame_num		
+  /// @param frame the frame to be printed
+  /// @CRNColumns the columns of cosmogenic particles
+	/// @author SMM
+	/// @date 01/08/2014  
+	void print_average_erosion_and_apparaent_erosion( int frame, 
+                                 vector<LSDParticleColumn>& CRNColumns, 
+                                 LSDCRNParameters& CRNParams);
+                                 
+                                 
+  /// @brief This function closes some static outfiles used for printing
+  /// @author SMM
+  /// @date 01/08/2014
+  void close_static_outfiles();                            
 
 	/// @brief Print slope area data
 	/// Probably fits better into LSDRaster, but requires LSDFlowInfo

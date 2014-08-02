@@ -312,9 +312,12 @@ LSDParticleColumn LSDParticleColumn::update_CRN_list_rock_only_eros_limit_3CRN(
     ( *part_iter ).update_14C_conc(effective_dt,eff_eros_rate, CRN_param);
     ( *part_iter ).update_21Ne_conc(effective_dt,eff_eros_rate, CRN_param);
 
-    // update the depths (note, the z_locations arene't updated
-    // because it is a rock system, no 'fluffing' of soil occurs
+    // update the depths
     ( *part_iter ).update_depths(d, eff_d);
+
+    // update the zeta locations (these have been advected by uplift
+    ( *part_iter ).update_zetaLoc(z_p);
+
     part_iter++;
   }
 
@@ -325,43 +328,42 @@ LSDParticleColumn LSDParticleColumn::update_CRN_list_rock_only_eros_limit_3CRN(
   eroded_test = 0;
   do
   {
-		part_iter = CRNParticleList.begin();
-		z_p = ( *part_iter ).get_zetaLoc();
+    part_iter = CRNParticleList.begin();
+    z_p = ( *part_iter ).get_zetaLoc();
 
-		// if the elevation of the particle is greater than the elevation
-		// of the surface, it is eroded from the particle list
-		// and eroded_test remains unchanged
-		// if the elevation of the particle is not greater than the surface
-		// elevation, then eroded_test goes to 1 and the loop is exited
-		if (z_p > zeta_new)
-		{
-			//cout << "LINE 82 popping out!" << endl;
-			eroded_list.push_back(*part_iter);
-			CRNParticleList.pop_front();
-		}
-		else
-		{
-			eroded_test = 1;
-		}
-	} while (eroded_test == 0);
+    // if the elevation of the particle is greater than the elevation
+    // of the surface, it is eroded from the particle list
+    // and eroded_test remains unchanged
+    // if the elevation of the particle is not greater than the surface
+    // elevation, then eroded_test goes to 1 and the loop is exited
+    if (z_p > zeta_new)
+    {
+      //cout << "LINE 82 popping out!" << endl;
+      eroded_list.push_back(*part_iter);
+      CRNParticleList.pop_front();
+    }
+    else
+    {
+      eroded_test = 1;
+    }
+  } while (eroded_test == 0);
 
-	// now see if we insert a particle
-	d = (CRNParticleList.back()).getdLoc();
-	//cout << "bottom particle depth is: " << d << endl;
-	if ( (start_depth - d) >= particle_spacing)
-	{
-		//cout << "LINE 95 inserting_particle!" << endl;
-		insert_particle_into_column( start_type,startxLoc, startyLoc,
-	                               d, zeta_new);
-	}
+  // now see if we insert a particle
+  d = (CRNParticleList.back()).getdLoc();
+  //cout << "bottom particle depth is: " << d << endl;
+  if ( (start_depth - d) >= particle_spacing)
+  {
+    //cout << "LINE 95 inserting_particle!" << endl;
+    insert_particle_into_column( start_type,startxLoc, startyLoc,
+                                d, zeta_new);
+  }
 
   // create a column in the same place but with the eroded nodes only
   LSDParticleColumn eroded_column(Row, Col, NodeIndex, SoilDensity, RockDensity,   
         SoilThickness, DataResolution, UseDenstyProfile, 
         DensityDepths, DensityDensities, eroded_list);
 
-
-	return eroded_column;
+  return eroded_column;
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -377,18 +379,18 @@ void LSDParticleColumn::collect_particles(vector<LSDParticleColumn>& ColList_vec
   int N_cols = ColList_vec.size();
   
   // loop through them, aggregating the particles. 
-	list<LSDCRNParticle>::iterator part_iter;
+  list<LSDCRNParticle>::iterator part_iter;
 	
-	for (int i = 0; i<N_cols; i++)
-	{
+  for (int i = 0; i<N_cols; i++)
+  {
     list<LSDCRNParticle> list_from_col = ColList_vec[i].getCRNParticleList();
     
     // loop through the columns, collecting particles
     part_iter =  list_from_col.begin();
     while(part_iter != list_from_col.end())
-	  {  
-	    CRNParticleList.push_back(*part_iter);
-	    part_iter++;
+    {  
+      CRNParticleList.push_back(*part_iter);
+      part_iter++;
     }
   }  
 }
@@ -404,12 +406,12 @@ void LSDParticleColumn::collect_particles(vector<LSDParticleColumn>& ColList_vec
 vector<double> LSDParticleColumn::calculate_app_erosion_3CRN_neutron_rock_only(
                                                    LSDCRNParameters& CRN_param )
 {
-	vector<double> apparent_erosion(3,0.0);
+  vector<double> apparent_erosion(3,0.0);
   list<LSDCRNParticle>::iterator part_iter;
 
-	// first go through and update the CRN concentrations
-	// in the list
-	part_iter = CRNParticleList.begin();
+  // first go through and update the CRN concentrations
+  // in the list
+  part_iter = CRNParticleList.begin();
   apparent_erosion[0] = (*part_iter).apparent_erosion_10Be_neutron_only(RockDensity, CRN_param);
   apparent_erosion[1] =(*part_iter).apparent_erosion_14C_neutron_only(RockDensity, CRN_param);
   apparent_erosion[2] =(*part_iter).apparent_erosion_21Ne(RockDensity, CRN_param);
@@ -421,8 +423,36 @@ vector<double> LSDParticleColumn::calculate_app_erosion_3CRN_neutron_rock_only(
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function is for bug checking. It prints out the particles, and their
+// properties to screen
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDParticleColumn::print_particle_properties_to_screen(LSDCRNParameters& CRNparam)
+{
+
+  cout << "\n\nColumn at ["<<Row<<"]["<<Col<<"]; density is: " << RockDensity << endl;
+  list<LSDCRNParticle>::iterator part_iter;
+  part_iter = CRNParticleList.begin();
+  while(part_iter != CRNParticleList.end())
+  {
+		
+    // get the zeta location
+    double z_p = ( *part_iter ).get_zetaLoc();
+    double d_loc =   ( *part_iter ).getdLoc();
+    double effD =  ( *part_iter ).geteffective_dLoc();
+    double conc10Be = ( *part_iter ).getConc_10Be();
+		      //double conc14C = ( *part_iter ).getConc_14C();
+		      //double conc21Ne = ( *part_iter ).getConc_21Ne();
+    double appEros10Be = ( *part_iter ).apparent_erosion_10Be_neutron_only(RockDensity, CRNparam);
+		      //double appEros14C = ( *part_iter ).apparent_erosion_14C_neutron_only(RockDensity, CRNparam);
+		      //double appEros21Ne = ( *part_iter ).apparent_erosion_21Ne_neutron_only(RockDensity, CRNparam);
 
 
+    cout << z_p << "\t " << d_loc << "\t" << effD << "\t" << conc10Be << "\t" << appEros10Be << endl;
 
+
+    part_iter++;
+  }
+}
 
 #endif

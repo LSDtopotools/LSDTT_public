@@ -254,7 +254,12 @@ class LSDParticleColumn
     /// @date 25/7/2014 
     vector<double> calculate_app_erosion_3CRN_neutron_rock_only(LSDCRNParameters& CRN_param ); 
  
-    
+  /// @brief this prints particles to screen for bug checking
+  /// @param CRNParams the CRN parameter file (for apparent erosion
+  /// @author SMM
+  /// @date 02/08/2014
+  void print_particle_properties_to_screen(LSDCRNParameters& CRNParam);  
+  
 	protected:
 
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

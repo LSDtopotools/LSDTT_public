@@ -94,6 +94,8 @@ LSDRasterModel::~LSDRasterModel( void )
 		ss << ".D_file_" << name << ".aux";
 		remove( ss.str().c_str() );
 	}
+	
+	close_static_outfiles();
 }
 
 // the create function. 
@@ -1608,6 +1610,36 @@ float LSDRasterModel::get_uplift_rate_at_cell(int i, int j)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This gets the average uplift rate. It excludes N and S boundaries. 
+// Can be used to get tectonic fluxes
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDRasterModel::get_average_upflit_rate_last_timestep()
+{
+
+  float avg_uplift_rate;
+  float tot_urate = 0;
+  int N_U = 0;
+  
+  for (int row = 0; row<NRows-1; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      if(RasterData[row][col] != NoDataValue)
+      {
+        tot_urate += get_uplift_rate_at_cell(row, col);
+        N_U++;
+      }
+    }
+  } 
+
+  avg_uplift_rate = tot_urate/float(N_U);
+  return avg_uplift_rate;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // set_uplift_field_to_block_uplift
@@ -2558,7 +2590,7 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
   vector<double> row_vec;
   vector<double> col_vec;
   
-  vector<LSDParticleColumn> e_cells;
+  vector<LSDParticleColumn> e_cells(N_pcolumns);
   
   for (int i = 0; i<N_pcolumns; i++)
   {
@@ -2567,10 +2599,9 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
   }
 
   stringstream ss, ss_root;
-  
-  // some fields for uplift and fluvial incision
-  Array2D<float> uplift_field;
-  Array2D<float> fluvial_incision_rate_field;
+
+
+  //cout << "\n\nLine 2604, data[10][10]: " << RasterData[10][10] << endl;
 	
   // set the fram to the current frame
   int frame = current_frame;
@@ -2613,11 +2644,11 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
       fluvial_incision_with_uplift();
     }  
 
-
-
     //update the time
     current_time += timeStep;
     
+    //cout << "/n/nLine 2604, data[10][10]: " << RasterData[10][10] << endl; 
+       
     // get the erosion rates at the cells
     for (int i = 0; i<N_pcolumns; i++)
     {
@@ -2625,12 +2656,27 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
       row = row_vec[i];
       col = col_vec[i];
 
-      double startxLoc = double(col)*DataResolution+XMinimum;
-      double startyLoc = double(NRows-row-1)*DataResolution+YMinimum; 
+      double startxLoc = double(CRNColumns[i].getCol())*DataResolution+XMinimum;
+      double startyLoc = double(NRows-CRNColumns[i].getRow()-1)*DataResolution+YMinimum; 
       
       double this_zeta_old = zeta_old[row][col];
       double this_zeta_new = RasterData[row][col];
+      
+
+      
+      //double test = RasterData[row][col];
+      //cout << "zo " << this_zeta_old << " RD: " <<  RasterData[row][col] << endl;
+      //test = 5; 
+      //cout << "test is: " << test << " RD: " <<  RasterData[row][col] << endl;
+      
+      
       double this_uplift_rate = get_uplift_rate_at_cell(row,col);
+
+      //cout << "\n\n\nCRN at [" << row << "]["<<col<<"], znew: " << this_zeta_new 
+      //     << " zold: " << this_zeta_old << " uplift rate: " << this_uplift_rate << endl;  
+      //CRNColumns[i].print_particle_properties_to_screen(CRNParams);
+
+
       LSDParticleColumn this_eroded_column = 
                  CRNColumns[i].update_CRN_list_rock_only_eros_limit_3CRN(
 	                     timeStep, this_uplift_rate,
@@ -2638,7 +2684,13 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
                        startxLoc,  startyLoc,
                        this_zeta_old,this_zeta_new,
                        particle_spacing, CRNParams);
-      e_cells.push_back(this_eroded_column);                 
+      e_cells[i] = this_eroded_column;        
+
+      //cout << "\n\n\nAFTER CHANGE!!! CRN at [" << row << "]["<<col<<"], znew: " << this_zeta_new 
+      //     << " zold: " << this_zeta_old << " uplift rate: " << this_uplift_rate << endl;  
+      //CRNColumns[i].print_particle_properties_to_screen(CRNParams);
+
+         
     }    
 
     //cout << "Line 2643, data[10][10]: " << RasterData[10][10] << endl;
@@ -2646,48 +2698,13 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
     // write at every print interval
     if ( print_interval > 0 && (print % print_interval) == 0)	
     {
-      // acalcualte erosion rate and place it in the erosion data member for
+      // calculate erosion rate and place it in the erosion data member for
       // raster printing
       erosion = get_total_erosion_rate_over_timestep();
       print_rasters( frame );
       
-      //cout << "Line 2650, data[10][10]: " << RasterData[10][10] << endl;
-      
-      // also print the cosmo properties
-      string frame_name = itoa(frame);
-      string uscore = "_";
-      string cosmo_fname = "_cosmo.cdata";
-      cosmo_fname = name+uscore+frame_name+cosmo_fname;
-      ofstream cosmo_out;
-      cosmo_out.open(cosmo_fname.c_str());
-      
-      int N_CRNcols = int(CRNColumns.size());
-      for (int cc = 0; cc<N_CRNcols; cc++)
-      {
-
-        // get the actual erosion at the cell
-        double this_erosion = get_erosion_at_cell(row_vec[cc],col_vec[cc]);
-        
-        // get the uplift rate
-        double this_U = get_uplift_rate_at_cell( row_vec[cc],col_vec[cc] );       
-
-        // get the diffusivity
-        double this_D = get_D();
-
-        // get the apparent erosion at the cell
-        vector<double> this_app_erosion = 
-           CRNColumns[cc].calculate_app_erosion_3CRN_neutron_rock_only(CRNParams);
-        
-        // print these things   
-        cosmo_out << current_time << " "<< row_vec[cc] << " " << col_vec[cc] 
-                  << " " << this_D << " " << this_U
-                  << " " << this_erosion << " " << this_app_erosion[0] << " "
-                  << " " << this_app_erosion[1] << " " << this_app_erosion[2]
-                  << endl; 
-      }
-      cosmo_out.close();
-      
-      
+      print_average_erosion_and_apparaent_erosion( frame, CRNColumns, CRNParams);
+            
       ++frame;
     }
     if (not quiet) cout << "\rTime: " << current_time << " years" << flush;
@@ -2730,7 +2747,7 @@ vector<LSDParticleColumn> LSDRasterModel::initiate_steady_CRN_columns(int column
   
   int this_row, this_col;
   double this_x,this_y;
-  double zeta;
+  double zeta_at_cell;
   double eff_U = rho_r*this_U/10;     // this converts the uplift to effective 
                                       // uplift in units g/cm^2/yr, 
                                       // required by the cosmo particles
@@ -2743,10 +2760,10 @@ vector<LSDParticleColumn> LSDRasterModel::initiate_steady_CRN_columns(int column
     {
       this_col = pcol*column_spacing;
       // make sure you dont go out of bounds
-      if(this_row >= NRows)
+      if(this_row >= NRows-1)
       {
         cout << "Danger, you were about to go out of the raster domain when making a CRN column\n";
-        this_row = NRows-1;
+        this_row = NRows-2;
       }
       if(this_col >= NCols)
       {
@@ -2767,11 +2784,11 @@ vector<LSDParticleColumn> LSDRasterModel::initiate_steady_CRN_columns(int column
       temp_col.set_Row_and_Col(this_row,this_col);
       
       // get the elevation of the surface    
-      zeta = RasterData[this_row][this_col];
-      
+      zeta_at_cell = float(RasterData[this_row][this_col]);
+           
       // make a steady state column
       temp_col.initiate_SS_cosmo_column_3CRN(startType, this_x, this_y, startDepth, particle_spacing, 
-		            zeta, eff_U, CRNParam); 
+		            zeta_at_cell, eff_U, CRNParam); 
       
       // make sure this is a rock only simulation          
       double ST = 0;          
@@ -2784,7 +2801,7 @@ vector<LSDParticleColumn> LSDRasterModel::initiate_steady_CRN_columns(int column
     } 
   }
   
-  
+  //cout << "/n/nLine 2788, data[10][10]: " << RasterData[10][10] << endl;
   CRNcol_rows = rows_vec;
   CRNcol_cols = cols_vec; 
   return CRNParticleColumns_vec; 
@@ -4658,6 +4675,111 @@ void LSDRasterModel::final_report( void )
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function writes some averaged information about the erosion and
+// apparent erosion rates
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::print_average_erosion_and_apparaent_erosion( int frame, 
+                                 vector<LSDParticleColumn>& CRNColumns, 
+                                 LSDCRNParameters& CRNParams)
+{
+
+  float avg_uplift = get_average_upflit_rate_last_timestep();
+  float avg_erosion = get_total_erosion_rate_over_timestep();
+
+	static ofstream er_outfile;
+	// Print the cosmo metadata
+	if (not er_outfile.is_open())
+	{
+	  string metadata_fname =  name+".er_frame_metadata";
+	  cout << "Name of raster metadata file is: " <<  metadata_fname << endl;
+          er_outfile.open(metadata_fname.c_str());
+       	  er_outfile << name << endl;
+          er_outfile << "Frame_num\t";
+		er_outfile << "Time\t";
+		er_outfile << "K\t";
+		er_outfile << "D\t";
+		er_outfile << "Erosion\t";
+		er_outfile << "Avg_uplift\t";
+		er_outfile << "10Be_apparent_erosion\t";
+		er_outfile << "14C_apparent_erosion\t";
+		er_outfile << "21Ne_apparent_erosion\t";
+		er_outfile << endl;
+	}
+		
+  // also print the cosmo properties
+  string frame_name = itoa(frame);
+  string uscore = "_";
+  string cosmo_fname = "_cosmo.cdata";
+  cosmo_fname = name+uscore+frame_name+cosmo_fname;
+  ofstream cosmo_out;
+  cosmo_out.open(cosmo_fname.c_str());
+  
+  float tot_weighted_erate_10Be = 0;
+  float tot_weighted_erate_14C = 0;
+  float tot_weighted_erate_21Ne = 0;
+  float tot_erate = 0;
+  
+  int N_CRNcols = int(CRNColumns.size());
+  for (int cc = 0; cc<N_CRNcols; cc++)
+  {
+
+    // get the actual erosion at the cell
+    double this_erosion = get_erosion_at_cell(CRNColumns[cc].getRow(),
+                                              CRNColumns[cc].getCol());
+    
+    // get the uplift rate
+    double this_U = get_uplift_rate_at_cell(  CRNColumns[cc].getRow(),
+                                              CRNColumns[cc].getCol());     
+
+    // get the diffusivity
+    double this_D = get_D();
+
+    // get the apparent erosion at the cell
+    vector<double> this_app_erosion = 
+       CRNColumns[cc].calculate_app_erosion_3CRN_neutron_rock_only(CRNParams);
+    
+    // get the totals for weighted average
+    tot_erate += this_erosion;
+    tot_weighted_erate_10Be += this_erosion*this_app_erosion[0];
+    tot_weighted_erate_14C += this_erosion*this_app_erosion[1];
+    tot_weighted_erate_21Ne += this_erosion*this_app_erosion[2];
+    
+    
+    // print these things   
+    cosmo_out << current_time << " "<< CRNColumns[cc].getRow() 
+              << " " << CRNColumns[cc].getCol() 
+              << " " << this_D << " " << this_U
+              << " " << this_erosion << " " << this_app_erosion[0] << " "
+              << " " << this_app_erosion[1] << " " << this_app_erosion[2]
+              << endl; 
+              
+              
+              
+  }
+  cosmo_out.close();		
+	
+	
+	float weight_10Be =  tot_weighted_erate_10Be/tot_erate;
+	float weight_14C =  tot_weighted_erate_14C/tot_erate;
+	float weight_21Ne =  tot_weighted_erate_21Ne/tot_erate;
+	
+		
+	er_outfile << frame << "\t";
+	er_outfile << current_time << "\t";
+	er_outfile << get_K() << "\t";
+	er_outfile << get_D() << "\t";
+	er_outfile << avg_erosion << "\t";
+	er_outfile << avg_uplift << "\t";
+	er_outfile << weight_10Be << "\t";
+	er_outfile << weight_14C << "\t";
+ 	er_outfile << weight_21Ne << "\t";	
+	er_outfile <<  endl;
+	
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This routine prints rasters according to some internal model switched
 // Used by JAJ's code so DO NOT MODIFY
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -4730,6 +4852,24 @@ void LSDRasterModel::print_rasters( int frame )
 		ss << name << frame << "_sa";
 		slope_area_data( name+"_sa");
 	}
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function cleans the static outfiles
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::close_static_outfiles()
+{
+	static ofstream er_outfile;
+	static ofstream outfile;
+  if (er_outfile.is_open())
+	{
+	  er_outfile.close();
+	}
+	if (outfile.is_open())
+	{
+	  outfile.close();
+	}	
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
