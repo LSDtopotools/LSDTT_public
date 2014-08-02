@@ -307,7 +307,7 @@ LSDParticleColumn LSDParticleColumn::update_CRN_list_rock_only_eros_limit_3CRN(
       effective_dt = dt;
     }
 
-    // update the CRN_concntrations
+    // update the CRN_concentrations
     ( *part_iter ).update_10Be_conc(effective_dt,eff_eros_rate, CRN_param);
     ( *part_iter ).update_14C_conc(effective_dt,eff_eros_rate, CRN_param);
     ( *part_iter ).update_21Ne_conc(effective_dt,eff_eros_rate, CRN_param);
@@ -355,7 +355,7 @@ LSDParticleColumn LSDParticleColumn::update_CRN_list_rock_only_eros_limit_3CRN(
   {
     //cout << "LINE 95 inserting_particle!" << endl;
     insert_particle_into_column( start_type,startxLoc, startyLoc,
-                                d, zeta_new);
+                                start_depth, zeta_new);
   }
 
   // create a column in the same place but with the eroded nodes only

@@ -2693,6 +2693,8 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
          
     }    
 
+    //CRNColumns[1].print_particle_properties_to_screen(CRNParams);
+
     //cout << "Line 2643, data[10][10]: " << RasterData[10][10] << endl;
 
     // write at every print interval
