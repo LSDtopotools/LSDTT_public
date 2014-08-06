@@ -816,6 +816,12 @@ class LSDChiNetwork
 		/// @author Fiona Clubb
 		/// @date 03/09/2013
 		Array2D<float> calculate_channel_heads(int min_seg_length_for_channel_heads);
+		
+		/// @brief This gets the m_means for the channel network
+		/// @return vector of vectors with m means
+		/// @ author FJC
+		/// @date 04/08/14
+		vector< vector<float> > get_m_means();
 
 	protected:
 
