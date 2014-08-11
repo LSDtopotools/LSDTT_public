@@ -60,7 +60,6 @@ int main (int nNumberofArgs,char *argv[])
   string fill_ext = "_fill";
   string sources_ext = "_CH";
 	float pruning_threshold;
-	int threshold;
 	float A_0;
 	int minimum_segment_length;
 	float sigma;
@@ -74,16 +73,14 @@ int main (int nNumberofArgs,char *argv[])
 	float area_thin_frac;
 	int target_skip;
                                                         
-	file_info_in >> DEM_name >> Minimum_Slope >> threshold
-				>> pruning_threshold >> A_0 >> minimum_segment_length >> sigma >> m_over_n
-        >> target_nodes >> n_iterations >> fraction_dchi_for_variation
+	file_info_in >> DEM_name >> Minimum_Slope >> pruning_threshold >> A_0 >> minimum_segment_length
+        >> sigma >> m_over_n >> target_nodes >> n_iterations >> fraction_dchi_for_variation
 				>> vertical_interval >> horizontal_interval >> area_thin_frac >> target_skip;
 
 
 	cout << "Paramters of this run: " << endl
 		   << "DEM ID: " << DEM_name << endl
 	     << "pruning_threshold: " << pruning_threshold << endl
-	     << "threshold: " << threshold << endl
 	     << "A_0: " << A_0 << endl
 	     << "minimum_segment_length: " << minimum_segment_length << endl
 	     << "sigma: " << sigma << endl
@@ -125,11 +122,11 @@ int main (int nNumberofArgs,char *argv[])
 	LSDIndexRaster JIArray = ChanNetwork.JunctionIndexArray_to_LSDIndexRaster();
 	LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
 	
-	string SO_name = "_SO_test";
-	string JI_name = "_JI_test";
+	//string SO_name = "_SO_test";
+	//string JI_name = "_JI_test";
 	
-	SOArray.write_raster((path_name+DEM_name+SO_name),DEM_flt_extension);
-	JIArray.write_raster((path_name+DEM_name+JI_name),DEM_flt_extension);
+	//SOArray.write_raster((path_name+DEM_name+SO_name),DEM_flt_extension);
+	//JIArray.write_raster((path_name+DEM_name+JI_name),DEM_flt_extension);
 	  
     cout << "Reading in the cosmo points" << endl;
   // reading in cosmo points - getting upstream junctions and then extracting basins
@@ -268,32 +265,32 @@ int main (int nNumberofArgs,char *argv[])
   	ChiNetwork_extended.monte_carlo_sample_river_network_for_best_fit_after_breaks(A_0, m_over_n, n_iterations,
   							target_skip, minimum_segment_length, sigma);
   							
-  	vector< vector<float> > m_means = ChiNetwork_extended.get_m_means();
-  	
+    // get the mean m chi, standard deviation and standard error
+  	vector< vector<float> > m_means = ChiNetwork_extended.get_m_means(); 	
   	int n_channels = m_means.size();
   	
   	float total_m = 0;
   	int n_observations = 0;
+  	vector<float> m_chi_means;
     for (int i = 0; i < n_channels; i++)
   	{
       vector<float> m_mean = m_means[i];
-      int n_nodes = m_mean.size();     
-      for (int j = 0; j < n_nodes; j++)
-      {
-          float m_mean_node = m_mean[j];
-          total_m = total_m + m_mean_node;
-          n_observations++;
-      }
+        for (int j = 0; j < m_mean.size(); j++)
+        {
+          m_chi_means.push_back(m_mean[j]);
+        }
     }
-    
-    float avg_m_for_basin = total_m/n_observations;
-    cout << "Mean Mchi of basin: " << avg_m_for_basin << endl;
+    float m_chi_mean = get_mean(m_chi_means);
+    float m_chi_stdev = get_standard_deviation(m_chi_means, m_chi_mean);
+    float m_chi_sterr = get_standard_error(m_chi_means, m_chi_stdev);
+
+    cout << "Mean Mchi of basin: " << m_chi_mean << " Standard deviation: " << m_chi_stdev << " Standard error: " << m_chi_sterr << endl;
     
     int node = ChanNetwork.get_Node_of_Junction(junction_number);
     int ContributingPixels = FlowInfo.retrieve_contributing_pixels_of_node(node);
     float DrainageArea = ContributingPixels * DataResolution * DataResolution;
        
-    m_chi << ErosionRates[i_junction] << " " << Errors[i_junction] << " " << avg_m_for_basin << " " << DrainageArea << endl;
+    m_chi << ErosionRates[i_junction] << " " << Errors[i_junction] << " " << m_chi_mean << " " << m_chi_stdev << " " << m_chi_sterr << " " << DrainageArea << endl;
     
     string fpt_mc = "_fullProfile" + param_str;
     string arc_name = "_fullProfile_for_Arc" + param_str;
