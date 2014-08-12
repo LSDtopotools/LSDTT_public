@@ -16,12 +16,12 @@
 #include <vector>
 #include <fstream>
 #include <math.h>
-#include "../../LSDStatsTools.hpp"
-#include "../../LSDRaster.hpp"
-#include "../../LSDIndexRaster.hpp"
-#include "../../LSDFlowInfo.hpp"
-#include "../../LSDJunctionNetwork.hpp"
-#include "../../TNT/tnt.h"
+//#include "./../LSDStatsTools.hpp"
+#include "./../LSDRaster.hpp"
+#include "./../LSDIndexRaster.hpp"
+#include "./../LSDFlowInfo.hpp"
+#include "./../LSDJunctionNetwork.hpp"
+#include "./../TNT/tnt.h"
 int main (int nNumberofArgs,char *argv[])
 {
 	//Test for correct input arguments
