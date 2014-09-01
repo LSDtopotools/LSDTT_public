@@ -1,32 +1,25 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// LH_Resolution.cpp
+// LH_Prob.cpp
 //
-// Driver created to automate extraction of hillslope lengths and basin metrics at a range of 
-// resolutions to explore data resolution's impact on results.
+// Driver created to automate extraction of hillslope lengths and basin metrics from DEM 
+// files where an accurate channel network cannot be constrained.
 //
 // Driver expects an unfilled DEM in the given directory in flt format with the name format <prefix>_DEM.flt
-//
-// Uses fixed threshold area to generate channel heads, scaled by resample resolution,
-// as the DrEICH method will not work at lower resolutions. Therefore the values generated
-// may not be accurate, however the magnitiude of the changes in measurements between resolutions 
-// is the key factor here so this is fine.
 //
 // Run driver with the following arguments:
 //
 // path to the input files with a trailing slash
 // filename prefix without an underscore
+// window radius value in spatial units for surface fitting
 // basin order the strahler order of basins to be extracted
-// critical slope value to be used in E* R* and in the selection of hilltops 
-// Resample resolution
-// Surface fitting window size
-// Drainage threshold used on high resolution data
+// critical slope value to be used in E* R* and in the selection of hilltops
+// Threshold area to extract estimated drainage network  
 // switch to write rasters 0 == do not write rasters and 1 == write rasters
 //
 // A usage example is:
-// ./LH_Resolution.out /home/s0675405/DataStore/LH_tests/ Oregon 2 1.2 5 7.5 5000 0
+// ./LH_Prob.out /home/s0675405/DataStore/lhtest/ Gabilan 7.5 2 1.2 5000 0
 // 
-//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // Stuart W.D. Grieve
@@ -38,6 +31,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <algorithm> 
 #include "../LSDStatsTools.hpp"
 #include "../LSDRaster.hpp"
 #include "../LSDIndexRaster.hpp"
@@ -53,43 +47,38 @@ int main (int nNumberofArgs,char *argv[])
 {
   
   //Test for correct input arguments
-	if (nNumberofArgs!=9)
+	if (nNumberofArgs!=8)
 	{
-		cout << "FATAL ERROR: wrong number inputs. The program needs the path (with trailing slash), the filename prefix, basin order, critical slope, resample resolution and a switch to write rasters if desired." << endl;
+		cout << "FATAL ERROR: wrong number inputs. The program needs the path (with trailing slash), the filename prefix, window radius, basin order, critical slope and a switch to write rasters if desired." << endl;
 		exit(EXIT_SUCCESS);
 	}
   
   //load input arguments
   string path = argv[1];
 	string filename = argv[2];
-  int BasinOrder = atoi(argv[3]);  //2
-  float CriticalSlope = atof(argv[4]); //1.2
-  float resample_res = atof(argv[5]); //resample resolution
-  float window_radius = atof(argv[6]); //window size
-  int raw_threshold = atoi(argv[7]); //threshold used at 1m resolution
-  int WriteRasters = atoi(argv[8]);  //0 (do not write rasters) or 1 (write rasters)   
-  
+  float window_radius = atof(argv[3]); //6
+  int BasinOrder = atoi(argv[4]);  //2
+  float CriticalSlope = atof(argv[5]); //1.2
+  int threshold = atoi(argv[6]);
+  int WriteRasters = atoi(argv[7]);  //0 (do not write rasters) or 1 (write rasters) 
+    
   //set boundary conditions
   vector<string> BoundaryConditions(4, "No Flux");
 
   //load dem
   LSDRaster DEM((path+filename+"_DEM"), "flt");  
- 	
- 	//add the output resolution to the prefix to make <prefix>_<resolution>
+
+ 	//add the threshold to the prefix to make <prefix>_prob_<threshold>
   stringstream prefixer;
-  prefixer << filename << "_" << resample_res;
+  prefixer << filename << "_prob_" << threshold;
   filename = prefixer.str();
- 	
- 	//resample
- 	LSDRaster ResampleDEM = DEM.Resample(resample_res); 
- 	
+
   //Fill 
   float MinSlope = 0.0001;
-  LSDRaster FilledDEM = ResampleDEM.fill(MinSlope);
+  LSDRaster FilledDEM = DEM.fill(MinSlope);
   
   //surface fitting
   vector<int> raster_selection;
-  window_radius = window_radius * resample_res;
   
   raster_selection.push_back(0);
   raster_selection.push_back(1); //slope 
@@ -109,16 +98,29 @@ int main (int nNumberofArgs,char *argv[])
   // get a flow info object
 	LSDFlowInfo FlowInfo(BoundaryConditions,FilledDEM);
   
-  //get channel heads using a threshold
-  
-  LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
-  int threshold = int(raw_threshold/resample_res);  //uses ~ same area for each resolution to make this as consistent as possible 
-	vector<int> sources = FlowInfo.get_sources_index_threshold(ContributingPixels, threshold);
-  LSDIndexRaster Channel_heads_raster = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(sources);  
-   
-  LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
+  //Get drainage network using given threshold
+  LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();     
+  vector<int> sources = FlowInfo.get_sources_index_threshold(ContributingPixels, threshold);
+	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
   LSDIndexRaster StreamNetwork = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
-                                                         
+   
+  //get highest 2 stream orders
+  vector<int> flat_orders = Flatten_Without_Nodata(StreamNetwork.get_RasterData(), -9999);  
+  
+  vector<int> sorted_orders;
+  vector<size_t> index_map_orders;
+  matlab_int_sort(flat_orders, sorted_orders, index_map_orders);
+  
+  vector<int>::iterator it;
+  it = unique(sorted_orders.begin(), sorted_orders.end());
+  sorted_orders.resize(distance(sorted_orders.begin(),it));
+     
+  int Order_Threshold = sorted_orders[int(sorted_orders.size()-2)]; // upper 2 stream orders found in StreamNetwork
+                        
+                        
+  cout << "Order threshold is: " << Order_Threshold << endl;
+  cout << "Max order is: " << sorted_orders[int(sorted_orders.size()-1)] << endl;                      
+                                                          
   //Extract basins based on input stream order
   vector< int > basin_junctions = ChanNetwork.ExtractBasinJunctionOrder(BasinOrder, FlowInfo);
   LSDIndexRaster Basin_Raster = ChanNetwork.extract_basins_from_junction_vector(basin_junctions, FlowInfo);
@@ -151,7 +153,7 @@ int main (int nNumberofArgs,char *argv[])
   vector<int> Target_Basin_Vector;
 
   //run HFR    
-  vector< Array2D<float> > HFR_Arrays = FlowInfo.HilltopFlowRouting(FilledDEM, hilltops, Surfaces[1], StreamNetwork, dinf_rast, prefix, Basin_Raster, print_paths_switch, thinning, trace_path, basin_filter_switch, Target_Basin_Vector);
+  vector< Array2D<float> > HFR_Arrays = FlowInfo.HilltopFlowRouting_probability(FilledDEM, hilltops, Surfaces[1], StreamNetwork, dinf_rast, prefix, Basin_Raster, print_paths_switch, thinning, trace_path, basin_filter_switch, Target_Basin_Vector, Order_Threshold);
    
   LSDRaster HFR_LH = hilltops.LSDRasterTemplate(HFR_Arrays[1]);
   LSDRaster HFR_Slope = hilltops.LSDRasterTemplate(HFR_Arrays[2]);
@@ -256,17 +258,16 @@ int main (int nNumberofArgs,char *argv[])
   //if the user requests the raster to be written, write the rasters
   if (WriteRasters == 1){
     cout << "Writing Rasters\n" << endl;                                   
-    FilledDEM.write_raster((path+filename+"_Fill"), "flt");
-    Channel_heads_raster.write_raster((path+filename+"_DEM_CH"), "flt");
-    Surfaces[1].write_raster((path+filename+"_Slope"),"flt");
-    Surfaces[2].write_raster((path+filename+"_Aspect"),"flt");
-    Surfaces[3].write_raster((path+filename+"_Curvature"),"flt");
-    StreamNetwork.write_raster((path+filename+"_STNET"), "flt"); 
-    Basin_Raster.write_raster((path+filename+"_Basins"), "flt"); 
-    CHT.write_raster((path+filename+"_CHT"),"flt");
-    HFR_LH.write_raster((path+filename+"_HFR_LH"),"flt"); 
-    HFR_Slope.write_raster((path+filename+"_HFR_SLP"),"flt");
-    relief.write_raster((path+filename+"_Relief"),"flt");
+    FilledDEM.write_raster((path+filename+"_Fill_p"), "flt");
+    Surfaces[1].write_raster((path+filename+"_Slope_p"),"flt");
+    Surfaces[2].write_raster((path+filename+"_Aspect_p"),"flt");
+    Surfaces[3].write_raster((path+filename+"_Curvature_p"),"flt");
+    StreamNetwork.write_raster((path+filename+"_STNET_p"), "flt"); 
+    Basin_Raster.write_raster((path+filename+"_Basins_p"), "flt"); 
+    CHT.write_raster((path+filename+"_CHT_p"),"flt");
+    HFR_LH.write_raster((path+filename+"_HFR_LH_p"),"flt"); 
+    HFR_Slope.write_raster((path+filename+"_HFR_SLP_p"),"flt");
+    relief.write_raster((path+filename+"_Relief_p"),"flt");
   
   }
 

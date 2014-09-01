@@ -14,11 +14,14 @@
 // filename prefix without an underscore
 // window radius value in spatial units for surface fitting
 // basin order the strahler order of basins to be extracted
-// critical slope value to be used in E* R* and in the selection of hilltops  
+// critical slope value to be used in E* R* and in the filtering of hilltops  
 // switch to write rasters 0 == do not write rasters and 1 == write rasters
 //
 // A usage example is:
-// ./LH_Driver.out /home/s0675405/DataStore/LH_tests/ Oregon 6 2 1.1 0
+//nice ./LH_Driver.out /home/s0675405/DataStore/Final_Paper_Data/NC/ NC 7 2 1.2 1
+//nice ./LH_Driver.out /home/s0675405/DataStore/Final_Paper_Data/PA/ PA 5 2 1.2 1
+//nice ./LH_Driver.out /home/s0675405/DataStore/Final_Paper_Data/CA/ CA 12 2 1.2 1
+//nice ./LH_Driver.out /home/s0675405/DataStore/Final_Paper_Data/OR/ OR 7.5 2 1.2 1
 // 
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -58,7 +61,7 @@ int main (int nNumberofArgs,char *argv[])
 	string filename = argv[2];
   float window_radius = atof(argv[3]); //6
   int BasinOrder = atoi(argv[4]);  //2
-  float CriticalSlope = atof(argv[5]); //1.1
+  float CriticalSlope = atof(argv[5]); //1.2
   int WriteRasters = atoi(argv[6]);  //0 (do not write rasters) or 1 (write rasters) 
   
   //set boundary conditions
@@ -104,13 +107,13 @@ int main (int nNumberofArgs,char *argv[])
   cout << "\nExtracting hilltops and hilltop curvature" << endl;
   
   // extract ridges and then hilltops based on critical slope
-  LSDRaster Ridges = ChanNetwork.ExtractRidges(FlowInfo);  
+  LSDRaster Ridges = ChanNetwork.ExtractRidges(FlowInfo);
   LSDRaster hilltops = ChanNetwork.ExtractHilltops(Ridges, Surfaces[1], CriticalSlope);  
    
-  //get hilltop curvature using filter to remove positive curvatures
+  //get hilltop curvature using filter to remove positive curvatures         
   LSDRaster cht_raster = FilledDEM.get_hilltop_curvature(Surfaces[3], hilltops);
-  LSDRaster CHT = FilledDEM.remove_positive_hilltop_curvature(cht_raster);
- 
+  LSDRaster CHT = FilledDEM.remove_positive_hilltop_curvature(cht_raster);  
+  
   //get d infinity flowdirection and flow area
   Array2D<float> dinf = FilledDEM.D_inf_FlowDir();
   LSDRaster dinf_rast = FilledDEM.LSDRasterTemplate(dinf);
@@ -246,5 +249,4 @@ int main (int nNumberofArgs,char *argv[])
     relief.write_raster((path+filename+"_Relief"),"flt");
   
   }
-
 }
