@@ -109,6 +109,7 @@ LSDJunctionNetwork& LSDJunctionNetwork::operator=(const LSDJunctionNetwork& rhs)
   	DataResolution = rhs.DataResolution;
   	NoDataValue = rhs.NoDataValue;
     NJunctions = rhs.NJunctions;
+    GeoReferencingStrings = rhs.GeoReferencingStrings;
 
   	SourcesVector = rhs.SourcesVector;
     BaseLevelJunctions = rhs.BaseLevelJunctions;
@@ -179,6 +180,7 @@ void LSDJunctionNetwork::create(vector<int> Sources, LSDFlowInfo& FlowInfo)
 	YMinimum = FlowInfo.YMinimum;
 	DataResolution = FlowInfo.DataResolution;
 	NoDataValue = FlowInfo.NoDataValue;
+  GeoReferencingStrings =  FlowInfo.GeoReferencingStrings;
 
 	SourcesVector = Sources;
 
@@ -1471,7 +1473,7 @@ LSDIndexRaster LSDJunctionNetwork::ExtractBasinsOrder(int BasinOrder, LSDFlowInf
     }
   }
   // Return raster with all nth order drainage basins.
-  LSDIndexRaster basin_raster(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,basins);
+  LSDIndexRaster basin_raster(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,basins,GeoReferencingStrings);
 	return basin_raster;
 }
 
@@ -2778,7 +2780,7 @@ LSDRaster LSDJunctionNetwork::ExtractRidges(LSDFlowInfo& FlowInfo)
     }     // end loop through row
   }       // end loop through different basin orders.
   // Return raster with all nth order drainage basins.
-  	LSDRaster ridge_raster(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,RidgeNetwork);
+  	LSDRaster ridge_raster(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,RidgeNetwork,GeoReferencingStrings);
 	return ridge_raster;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
@@ -2979,7 +2981,7 @@ LSDRaster LSDJunctionNetwork::ExtractRidges(LSDFlowInfo& FlowInfo, int& min_orde
     }     // end loop through row
   }       // end loop through different basin orders.
   // Return raster with all nth order drainage basins.
-  LSDRaster ridge_raster(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,RidgeNetwork);
+  LSDRaster ridge_raster(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,RidgeNetwork,GeoReferencingStrings);
 	return ridge_raster;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
@@ -3008,7 +3010,7 @@ LSDRaster LSDJunctionNetwork::ExtractHilltops(LSDRaster& RidgeRaster, LSDRaster&
       }
     }
   }
-  LSDRaster hilltop_raster(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,Hilltops);
+  LSDRaster hilltop_raster(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,Hilltops,GeoReferencingStrings);
 	return hilltop_raster;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -3070,7 +3072,7 @@ LSDIndexRaster LSDJunctionNetwork::ChannelIndexer(LSDFlowInfo& flowinfo)
     }
   }
   cout << endl;
-  LSDIndexRaster IndexedChannels(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, StreamOutput);
+  LSDIndexRaster IndexedChannels(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, StreamOutput,GeoReferencingStrings);
   return IndexedChannels;
 
 }
@@ -3151,7 +3153,7 @@ LSDIndexRaster LSDJunctionNetwork::SplitChannel(LSDFlowInfo& FlowInfo, vector<in
       }
     }  
   }
-  LSDIndexRaster ChannelSegmentsRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ChannelSegments);
+  LSDIndexRaster ChannelSegmentsRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ChannelSegments,GeoReferencingStrings);
   return ChannelSegmentsRaster;    
 }      
 
@@ -3253,7 +3255,7 @@ LSDIndexRaster LSDJunctionNetwork::SplitHillslopes(LSDFlowInfo& FlowInfo, LSDInd
       } 
     }
   }
-  LSDIndexRaster HillslopeSegmentsRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, HillslopeSegmentArray);
+  LSDIndexRaster HillslopeSegmentsRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, HillslopeSegmentArray,GeoReferencingStrings);
   return HillslopeSegmentsRaster;          
 }
 
@@ -3368,7 +3370,7 @@ LSDIndexRaster LSDJunctionNetwork::SplitHillslopes(LSDFlowInfo& FlowInfo, LSDInd
       } 
     }
   }
-  LSDIndexRaster HillslopeSegmentsRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, HillslopeSegmentArray);
+  LSDIndexRaster HillslopeSegmentsRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, HillslopeSegmentArray,GeoReferencingStrings);
   return HillslopeSegmentsRaster;          
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
@@ -3420,7 +3422,7 @@ LSDIndexRaster LSDJunctionNetwork::extract_basin_from_junction(int basin_junctio
         FlowInfo.retrieve_current_row_and_col(node,row,col);
         Basin[row][col] = basin_reference_number;
     }
-	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Basin);
+	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Basin,GeoReferencingStrings);
 	return IR;
 }
 
@@ -3494,7 +3496,7 @@ LSDIndexRaster LSDJunctionNetwork::extract_hollow(int CH_junction, LSDFlowInfo& 
   //remove channel head pixel from hollow
   Hollow[channel_head_row][channel_head_col] = NoDataValue;
     
-	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Hollow);
+	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Hollow,GeoReferencingStrings);
 	return IR;
 }  
 
@@ -3550,7 +3552,7 @@ LSDIndexRaster LSDJunctionNetwork::extract_hollow(vector<int> CH_junctions, LSDF
     
   }
     
-	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Hollows);
+	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Hollows,GeoReferencingStrings);
 	return IR;
 }
 
@@ -3605,7 +3607,7 @@ LSDIndexRaster LSDJunctionNetwork::extract_basins_from_junction_vector(vector<in
 
   }
 
-	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Basin);
+	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Basin,GeoReferencingStrings);
 	return IR;
 }
 
@@ -3625,7 +3627,7 @@ LSDIndexRaster LSDJunctionNetwork::extract_basins_from_junction_vector(vector<in
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexRaster LSDJunctionNetwork::StreamOrderArray_to_LSDIndexRaster()
 {
-	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, StreamOrderArray);
+	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, StreamOrderArray,GeoReferencingStrings);
 	return IR;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -3641,7 +3643,7 @@ LSDIndexRaster LSDJunctionNetwork::StreamOrderArray_to_LSDIndexRaster()
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexRaster LSDJunctionNetwork::JunctionArray_to_LSDIndexRaster()
 {
-	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, JunctionArray);
+	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, JunctionArray,GeoReferencingStrings);
 	return IR;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -3657,7 +3659,7 @@ LSDIndexRaster LSDJunctionNetwork::JunctionArray_to_LSDIndexRaster()
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexRaster LSDJunctionNetwork::JunctionIndexArray_to_LSDIndexRaster()
 {
-	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, JunctionIndexArray);
+	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, JunctionIndexArray,GeoReferencingStrings);
 	return IR;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -3691,7 +3693,7 @@ LSDIndexRaster LSDJunctionNetwork::StreamOrderArray_to_BinaryNetwork_LSDIndexRas
 		}
 	}
 
-	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, BinaryNetwork);
+	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, BinaryNetwork,GeoReferencingStrings);
 	return IR;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -3798,7 +3800,7 @@ LSDIndexRaster LSDJunctionNetwork::GetStreams(int order)
     }
   }
 
-  LSDIndexRaster Stream(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, SingleStream);
+  LSDIndexRaster Stream(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, SingleStream,GeoReferencingStrings);
 	return Stream;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -3823,7 +3825,7 @@ LSDIndexRaster LSDJunctionNetwork::GetStreams(int min_order, int max_order)
     }
   }
 
-  LSDIndexRaster Stream(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, SelectedStreams);
+  LSDIndexRaster Stream(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, SelectedStreams,GeoReferencingStrings);
 	return Stream;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

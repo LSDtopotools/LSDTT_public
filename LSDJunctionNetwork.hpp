@@ -818,6 +818,9 @@ class LSDJunctionNetwork
 
 	/// @return No Data Value as an integer.
 	int get_NoDataValue() const			{ return NoDataValue; }
+	
+  /// @return Georeferencing information
+  map<string,string> get_GeoReferencingStrings() const { return GeoReferencingStrings; }	
 
   /// @details Gets the node of a junction
   /// @param junction integer node index.
@@ -864,6 +867,9 @@ class LSDJunctionNetwork
 	float DataResolution;
 	///No data value.
 	int NoDataValue;
+
+	///A map of strings for holding georeferencing information
+  map<string,string> GeoReferencingStrings;
 
 	// Junction information
 	/// The number of junctions

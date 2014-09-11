@@ -116,6 +116,7 @@ void LSDChannel::create_LSDC(LSDIndexChannel& InChann)
 	YMinimum = InChann.get_YMinimum();
 	DataResolution = InChann.get_DataResolution();
 	NoDataValue = InChann.get_NoDataValue();
+	GeoReferencingStrings = InChann.get_GeoReferencingStrings();
 
 	RowSequence =  InChann.get_RowSequence();
 	ColSequence =  InChann.get_ColSequence();
@@ -140,6 +141,7 @@ void LSDChannel::create_LSDC(int SJN, int EJN, float downslope_chi,
 	YMinimum = FlowInfo.get_YMinimum();
 	DataResolution = FlowInfo.get_DataResolution();
 	NoDataValue = FlowInfo.get_NoDataValue();
+  GeoReferencingStrings = FlowInfo.get_GeoReferencingStrings();
 
 	float root2 = 1.41421356;
 	float diag_length = root2*DataResolution;
@@ -274,6 +276,7 @@ void LSDChannel::create_LSDC(float downslope_chi,
 	YMinimum = FlowInfo.get_YMinimum();
 	DataResolution = FlowInfo.get_DataResolution();
 	NoDataValue = FlowInfo.get_NoDataValue();
+	GeoReferencingStrings = FlowInfo.get_GeoReferencingStrings();
 
 	float root2 = 1.41421356;
 	float diag_length = root2*DataResolution;
@@ -384,6 +387,7 @@ void LSDChannel::create_LSDC(int SJN, int EJN, LSDFlowInfo& FlowInfo)
 	YMinimum = FlowInfo.get_YMinimum();
 	DataResolution = FlowInfo.get_DataResolution();
 	NoDataValue = FlowInfo.get_NoDataValue();
+	GeoReferencingStrings = FlowInfo.get_GeoReferencingStrings();
 
 	StartJunction = -1;
 	EndJunction = -1;
@@ -464,6 +468,7 @@ void LSDChannel::create_LSDC(int SJ, int SJN, int EJ, int EJN, LSDFlowInfo& Flow
 	YMinimum = FlowInfo.get_YMinimum();
 	DataResolution = FlowInfo.get_DataResolution();
 	NoDataValue = FlowInfo.get_NoDataValue();
+	GeoReferencingStrings = FlowInfo.get_GeoReferencingStrings();
 
 	StartJunction = SJ;
 	EndJunction = EJ;

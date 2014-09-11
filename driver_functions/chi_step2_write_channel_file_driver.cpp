@@ -44,6 +44,11 @@ int main (int nNumberofArgs,char *argv[])
 	
 	string f_name = argv[2];
 
+  cout << "\nYou are running the write junctions driver." << endl
+       <<"IMPORTANT: this has been updated to load an ENVI DEM, whith extension .bil" << endl
+       <<"You can convert your DEM to this file format using gdal_translate, with -of ENVI" << endl
+       <<"See documentation at: http://www.geos.ed.ac.uk/~smudd/LSDTT_docs/html/gdal_notes.html" << endl << endl;
+       
 	cout << "The path is: " << path_name << " and the filename is: " << f_name << endl;
 
 	string full_name = path_name+f_name;
@@ -109,7 +114,7 @@ int main (int nNumberofArgs,char *argv[])
 	file_info_in.close();
 
 	string DEM_f_name = path_name+DEM_name+fill_ext;
-	string DEM_flt_extension = "flt";
+	string DEM_bil_extension = "bil";
 
 	// set no flux boundary conditions
 	vector<string> boundary_conditions(4);
@@ -120,7 +125,7 @@ int main (int nNumberofArgs,char *argv[])
 
 
 	// load the filled DEM
-	LSDRaster filled_topo_test((path_name+DEM_name+fill_ext), DEM_flt_extension);
+	LSDRaster filled_topo_test((path_name+DEM_name+fill_ext), DEM_bil_extension);
 
 	// get a flow info object
 	LSDFlowInfo FlowInfo(boundary_conditions,filled_topo_test);
@@ -143,7 +148,7 @@ int main (int nNumberofArgs,char *argv[])
 
 	string Basin_name = "_basin";
 	LSDIndexRaster BasinArray = ChanNetwork.extract_basin_from_junction(junction_number,junction_number,FlowInfo);
-	BasinArray.write_raster((path_name+DEM_name+Basin_name+jn_name),DEM_flt_extension);
+	BasinArray.write_raster((path_name+DEM_name+Basin_name+jn_name),DEM_bil_extension);
 
 	// now get the best fit m over n for all the tributaries
 	int organization_switch = 1;

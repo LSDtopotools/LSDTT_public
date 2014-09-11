@@ -130,7 +130,9 @@ class LSDIndexChannel
 	float get_DataResolution() const	{ return DataResolution; }
 	/// @return No Data Value as an integer.
 	int get_NoDataValue() const			{ return NoDataValue; }
-
+  /// @return Georeferencing information
+  map<string,string> get_GeoReferencingStrings() const { return GeoReferencingStrings; }
+  
   /// @return Get vector of row indexes.
 	vector<int> get_RowSequence() const		{ return RowSequence; }
 	/// @return Get vector of column indexes.
@@ -214,6 +216,9 @@ class LSDIndexChannel
 	float DataResolution;
 	///No data value.
 	int NoDataValue;
+	
+	///A map of strings for holding georeferencing information
+  map<string,string> GeoReferencingStrings;
 
   /// The starting junction (numbered within LSDJunctionNetwork object).
 	int StartJunction;

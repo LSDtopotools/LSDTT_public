@@ -120,137 +120,6 @@ void LSDFlowInfo::create(string fname)
 	unpickle(fname);
 }
 
-//
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// algorithms for searching the vectors
-// This gets the reciever of current_node (its node, row, and column)
-//
-// SMM 01/06/2012
-//
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDFlowInfo::retrieve_receiver_information(int current_node,
-                                             int& receiver_node, int& receiver_row,
-                                             int& receiver_col)
-{
-	int rn, rr, rc;
-	rn = ReceiverVector[current_node];
-	rr = RowIndex[rn];
-	rc = ColIndex[rn];
-	receiver_node = rn;
-	receiver_row = rr;
-	receiver_col = rc;
-}
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// algorithms for searching the vectors
-// This gets the row and column of the current node
-//
-// SMM 01/06/2012
-//
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDFlowInfo::retrieve_current_row_and_col(int current_node,int& curr_row,
-                                             int& curr_col)
-{
-	int cr, cc;
-	cr = RowIndex[current_node];
-	cc = ColIndex[current_node];
-	curr_row = cr;
-	curr_col = cc;
-}
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// algorithms for searching the vectors
-// This gets the row and column of the current node
-//
-// SMM 01/06/2012
-//
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDFlowInfo::print_vector_of_nodeindices_to_csv_file(vector<int>& nodeindex_vec, string outfilename)
-{
-
-  // fid the last '.' in the filename to use in the scv filename
-	unsigned dot = outfilename.find_last_of(".");
-
-	string prefix = outfilename.substr(0,dot);
-	//string suffix = str.substr(dot);
-  string insert = "_nodeindices_for_Arc.csv";
-  string outfname = prefix+insert;
-
-  cout << "the Arc filename is: " << outfname << endl;
-
-  int n_nodes = nodeindex_vec.size();
-  int n_nodeindeces = RowIndex.size();
-
-  // open the outfile
-  ofstream csv_out;
-  csv_out.open(outfname.c_str());
-
-  csv_out << "x,y,node,row,col" << endl;
-
-  int current_row, current_col;
-  float x,y;
-
-  // loop through node indices in vector
-  for (int i = 0; i<n_nodes; i++)
-  {
-     int current_node = nodeindex_vec[i];
-
-     // make sure the nodeindex isn't out of bounds
-     if (current_node < n_nodeindeces)
-     {
-        // get the row and column
-        retrieve_current_row_and_col(current_node,current_row,
-                                             current_col);
-
-        // get the x and y location of the node
-        // the last 0.0001*DataResolution is to make sure there are no integer data points
-		    x = XMinimum + float(current_col)*DataResolution + 0.5*DataResolution + 0.0001*DataResolution;
-
-		    // the last 0.0001*DataResolution is to make sure there are no integer data points
-		    // y coord a bit different since the DEM starts from the top corner
-		    y = YMinimum + float(NRows-current_row)*DataResolution - 0.5*DataResolution + 0.0001*DataResolution;;
-        csv_out << x << "," << y << "," << current_node << "," << current_row << "," << current_col << endl;
-     }
-  }
-
-  csv_out.close();
-}
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// this function returns the base level node with the greatest drainage area
-//
-// SMM 01/06/2012
-//
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-int LSDFlowInfo::retrieve_largest_base_level()
-{
-	int n_bl = BaseLevelNodeList.size();		// get the number of baselevel nodes
-	int max_bl = 0;
-	for (int i = 0; i<n_bl; i++)
-	{
-		if(NContributingNodes[ BaseLevelNodeList[i] ] > max_bl)
-		{
-			max_bl = NContributingNodes[ BaseLevelNodeList[i] ];
-		}
-	}
-	return max_bl;
-}
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// Get the node for a cell at a given row and column
-//@author DTM
-//@date 08/11/2013
-int LSDFlowInfo::retrieve_node_from_row_and_column(int row, int column)
-{
-  int Node = NodeIndex[row][column];
-  return Node;
-}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -273,19 +142,30 @@ int LSDFlowInfo::retrieve_node_from_row_and_column(int row, int column)
 // SMM 01/06/2012
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
+void LSDFlowInfo::create(vector<string>& temp_BoundaryConditions,
 										  LSDRaster& TopoRaster)
 {
 
 	// initialize several data members
 	BoundaryConditions = temp_BoundaryConditions;
+  //cout << "TBC" << endl;
+	NRows = TopoRaster.get_NRows();
+	//cout << "Rows: " << NRows << endl;
+	NCols = TopoRaster.get_NCols();
+	//cout << "Cols: " << NCols << endl;
+	XMinimum = TopoRaster.get_XMinimum();
+	//cout << "Xmin: " << XMinimum << endl;
+	YMinimum = TopoRaster.get_YMinimum();
+	//cout << "Ymin: " << YMinimum << endl;
+	NoDataValue = int(TopoRaster.get_NoDataValue());
+	//cout << "NDV: " << NoDataValue << endl;
+	DataResolution = TopoRaster.get_DataResolution();
+	//cout << "Data resolution: " <<DataResolution << endl; 	
+	
+  GeoReferencingStrings = TopoRaster.get_GeoReferencingStrings();
+  //cout << "GRS" << endl;
 
-	NRows = TopoRaster.NRows;
-	NCols = TopoRaster.NCols;
-	XMinimum = TopoRaster.XMinimum;
-	YMinimum = TopoRaster.YMinimum;
-	NoDataValue = int(TopoRaster.NoDataValue);
-	DataResolution = TopoRaster.DataResolution;
+  //cout << "1" << endl;
 
 	// Declare matrices for calculating flow routing
 	float one_ov_root2 = 0.707106781;
@@ -342,6 +222,9 @@ void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 	FlowDirection = ndv_raster.copy();
 	FlowLengthCode = ndv_raster.copy();
 
+
+  //cout << "2" << endl;
+
 	// loop through the topo data finding places where there is actually data
 	for (row = 0; row<NRows; row++)
 	{
@@ -357,6 +240,9 @@ void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 			}
 		}
 	}
+	
+	//cout << "3" << endl;
+	
 	// now the row and col index are populated by the row and col of the node in row i
 	// and the node index has the indeces into the row and col vectors
 	// next up, make d, delta, and D vectors
@@ -618,17 +504,7 @@ void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 		}				// end col loop
 	}					// end row loop
 
-	//cout << "LINE 1015, NDataNodes: " << NDataNodes
-	//     << " and size reciever: " << ReceiverVector.size() << endl;
 
-	//ofstream receiver_out;
-	//receiver_out.open("receiver_out.txt");
-	//cout << "LINE 414 LSDFlow info, writing receiver nodes to file" << endl;
-	//for (int i =0; i<int(ReceiverVector.size()); i++)
-	//{
-	//	receiver_out << ReceiverVector[i] << endl;
-	//}
-	//receiver_out.close();
 
 	// first create the number of donors vector
 	// from braun and willett eq. 5
@@ -636,6 +512,7 @@ void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 	{
 		NDonorsVector[ ReceiverVector[i] ]++;
 	}
+
 
 	// now create the delta vector
 	// this starts on the last element and works its way backwards
@@ -645,6 +522,7 @@ void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 	{
 		DeltaVector[i-1] = DeltaVector[i] -  NDonorsVector[i-1];
 	}
+
 
 	// now the DonorStack and the r vectors. These come from Braun and Willett
 	// equation 9.
@@ -663,6 +541,7 @@ void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 		w_vector[r_index] += 1;
 		//cout << "i: " << i << " r_i: " << r_index << " delta_i: " << delta_index << " w_index: " << w_index << endl;
 	}
+
 
 	// now go through the base level node list, building the drainage tree for each of these nodes as one goes along
 	int n_base_level_nodes;
@@ -716,15 +595,150 @@ void LSDFlowInfo::create(vector<string> temp_BoundaryConditions,
 	calculate_upslope_reference_indices();
 
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// recursive add_to_stack routine, from Braun and Willett eq. 12 and 13
+// algorithms for searching the vectors
+// This gets the reciever of current_node (its node, row, and column)
 //
 // SMM 01/06/2012
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDFlowInfo::retrieve_receiver_information(int current_node,
+                                             int& receiver_node, int& receiver_row,
+                                             int& receiver_col)
+{
+	int rn, rr, rc;
+	rn = ReceiverVector[current_node];
+	rr = RowIndex[rn];
+	rc = ColIndex[rn];
+	receiver_node = rn;
+	receiver_row = rr;
+	receiver_col = rc;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// algorithms for searching the vectors
+// This gets the row and column of the current node
+//
+// SMM 01/06/2012
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDFlowInfo::retrieve_current_row_and_col(int current_node,int& curr_row,
+                                             int& curr_col)
+{
+	int cr, cc;
+	cr = RowIndex[current_node];
+	cc = ColIndex[current_node];
+	curr_row = cr;
+	curr_col = cc;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// algorithms for searching the vectors
+// This gets the row and column of the current node
+//
+// SMM 01/06/2012
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDFlowInfo::print_vector_of_nodeindices_to_csv_file(vector<int>& nodeindex_vec, string outfilename)
+{
+
+  // fid the last '.' in the filename to use in the scv filename
+	unsigned dot = outfilename.find_last_of(".");
+
+	string prefix = outfilename.substr(0,dot);
+	//string suffix = str.substr(dot);
+  string insert = "_nodeindices_for_Arc.csv";
+  string outfname = prefix+insert;
+
+  cout << "the Arc filename is: " << outfname << endl;
+
+  int n_nodes = nodeindex_vec.size();
+  int n_nodeindeces = RowIndex.size();
+
+  // open the outfile
+  ofstream csv_out;
+  csv_out.open(outfname.c_str());
+
+  csv_out << "x,y,node,row,col" << endl;
+
+  int current_row, current_col;
+  float x,y;
+
+  // loop through node indices in vector
+  for (int i = 0; i<n_nodes; i++)
+  {
+     int current_node = nodeindex_vec[i];
+
+     // make sure the nodeindex isn't out of bounds
+     if (current_node < n_nodeindeces)
+     {
+        // get the row and column
+        retrieve_current_row_and_col(current_node,current_row,
+                                             current_col);
+
+        // get the x and y location of the node
+        // the last 0.0001*DataResolution is to make sure there are no integer data points
+		    x = XMinimum + float(current_col)*DataResolution + 0.5*DataResolution + 0.0001*DataResolution;
+
+		    // the last 0.0001*DataResolution is to make sure there are no integer data points
+		    // y coord a bit different since the DEM starts from the top corner
+		    y = YMinimum + float(NRows-current_row)*DataResolution - 0.5*DataResolution + 0.0001*DataResolution;;
+        csv_out << x << "," << y << "," << current_node << "," << current_row << "," << current_col << endl;
+     }
+  }
+
+  csv_out.close();
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// this function returns the base level node with the greatest drainage area
+//
+// SMM 01/06/2012
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+int LSDFlowInfo::retrieve_largest_base_level()
+{
+	int n_bl = BaseLevelNodeList.size();		// get the number of baselevel nodes
+	int max_bl = 0;
+	for (int i = 0; i<n_bl; i++)
+	{
+		if(NContributingNodes[ BaseLevelNodeList[i] ] > max_bl)
+		{
+			max_bl = NContributingNodes[ BaseLevelNodeList[i] ];
+		}
+	}
+	return max_bl;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Get the node for a cell at a given row and column
+//@author DTM
+//@date 08/11/2013
+int LSDFlowInfo::retrieve_node_from_row_and_column(int row, int column)
+{
+  int Node = NodeIndex[row][column];
+  return Node;
+}
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// recursive add_to_stack routine, from Braun and Willett eq. 12 and 13
+//
+// SMM 01/06/2012
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDFlowInfo::add_to_stack(int lm_index, int& j_index, int bl_node)
 {
 	//cout << "j_index: " << j_index << " and s_vec: " << lm_index << endl;
@@ -755,7 +769,7 @@ void LSDFlowInfo::add_to_stack(int lm_index, int& j_index, int bl_node)
 		add_to_stack(l_index, j_index, bl_node);
 	}
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this function pickles the data from the flowInfo object into a binary format
@@ -1271,19 +1285,19 @@ void LSDFlowInfo::print_flow_info_vectors(string filename)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexRaster LSDFlowInfo::write_NodeIndex_to_LSDIndexRaster()
 {
-	LSDIndexRaster temp_nodeindex(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,NodeIndex);
+	LSDIndexRaster temp_nodeindex(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,NodeIndex,GeoReferencingStrings);
 	return temp_nodeindex;
 }
 
 LSDIndexRaster LSDFlowInfo::write_FlowDirection_to_LSDIndexRaster()
 {
-	LSDIndexRaster temp_flowdir(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,FlowDirection);
+	LSDIndexRaster temp_flowdir(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,FlowDirection,GeoReferencingStrings);
 	return temp_flowdir;
 }
 
 LSDIndexRaster LSDFlowInfo::write_FlowLengthCode_to_LSDIndexRaster()
 {
-	LSDIndexRaster temp_flc(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,FlowLengthCode);
+	LSDIndexRaster temp_flc(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,FlowLengthCode,GeoReferencingStrings);
 	return temp_flc;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -1332,7 +1346,7 @@ LSDIndexRaster LSDFlowInfo::write_NodeIndexVector_to_LSDIndexRaster(vector<int>&
 		}
 	}
 
-	LSDIndexRaster temp_chan(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,chan);
+	LSDIndexRaster temp_chan(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,chan,GeoReferencingStrings);
 	return temp_chan;
 }
 
@@ -1367,7 +1381,7 @@ LSDIndexRaster LSDFlowInfo::write_NContributingNodes_to_LSDIndexRaster()
 		contributing_pixels[row][col] = NContributingNodes[node];
 	}
 
-	LSDIndexRaster temp_cp(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,contributing_pixels);
+	LSDIndexRaster temp_cp(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,contributing_pixels,GeoReferencingStrings);
 	return temp_cp;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -1436,7 +1450,7 @@ LSDIndexRaster LSDFlowInfo::write_FlowDirection_to_LSDIndexRaster_Arcformat()
 		}
 	}
 
-	LSDIndexRaster temp_fd(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,FlowDirectionArc);
+	LSDIndexRaster temp_fd(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,FlowDirectionArc,GeoReferencingStrings);
 	return temp_fd;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -1473,7 +1487,7 @@ LSDRaster LSDFlowInfo::write_DrainageArea_to_LSDRaster()
     }
   }
   // create the LSDRaster object
-  LSDRaster DrainageArea(NRows,NCols,XMinimum,YMinimum,DataResolution,ndv,DrainageArea_local);
+  LSDRaster DrainageArea(NRows,NCols,XMinimum,YMinimum,DataResolution,ndv,DrainageArea_local,GeoReferencingStrings);
 	return DrainageArea;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -1536,7 +1550,7 @@ LSDIndexRaster LSDFlowInfo::calculate_n_pixels_contributing_from_upslope()
 		cout << "recieving: " << contributing_pixels[receive_row][receive_col] << endl;
 	}
 
-	LSDIndexRaster temp_cp(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,contributing_pixels);
+	LSDIndexRaster temp_cp(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,contributing_pixels,GeoReferencingStrings);
 	return temp_cp;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -1682,7 +1696,7 @@ LSDRaster LSDFlowInfo::upslope_variable_accumulator(LSDRaster& accum_raster)
     }
     // create the raster
     LSDRaster accumulated_flow(NRows, NCols, XMinimum, YMinimum, 
-                      DataResolution, NoDataValue, accumulated_data_array);
+                      DataResolution, NoDataValue, accumulated_data_array,GeoReferencingStrings);
     return accumulated_flow;      
   }  
 }
@@ -1871,7 +1885,7 @@ LSDRaster LSDFlowInfo::get_upslope_chi_from_multiple_starting_nodes(vector<int>&
   }
 
   LSDRaster chi_map(NRows, NCols, XMinimum, YMinimum, 
-                    DataResolution, NoDataValue, new_chi);
+                    DataResolution, NoDataValue, new_chi,GeoReferencingStrings);
   return chi_map;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1970,7 +1984,7 @@ LSDRaster LSDFlowInfo::distance_from_outlet()
 	}
 	//cout << "LINE 971 FlowInfo Flow distance complete, flow_distance is: " << endl;
 	//cout << flow_distance << endl;
-	LSDRaster FlowLength(NRows,NCols,XMinimum,YMinimum,DataResolution,ndv,flow_distance);
+	LSDRaster FlowLength(NRows,NCols,XMinimum,YMinimum,DataResolution,ndv,flow_distance,GeoReferencingStrings);
 	return FlowLength;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

@@ -114,6 +114,7 @@ void LSDIndexChannel::create(int SJN, int EJN, LSDFlowInfo& FlowInfo)
 	YMinimum = FlowInfo.get_YMinimum();
 	DataResolution = FlowInfo.get_DataResolution();
 	NoDataValue = FlowInfo.get_NoDataValue();
+	GeoReferencingStrings =  FlowInfo.get_GeoReferencingStrings();
 
 	StartJunction = -1;
 	EndJunction = -1;
@@ -188,6 +189,7 @@ void LSDIndexChannel::create(int SJ, int SJN, int EJ, int EJN, LSDFlowInfo& Flow
 	YMinimum = FlowInfo.get_YMinimum();
 	DataResolution = FlowInfo.get_DataResolution();
 	NoDataValue = FlowInfo.get_NoDataValue();
+	GeoReferencingStrings =  FlowInfo.get_GeoReferencingStrings();
 
 	StartJunction = SJ;
 	EndJunction = EJ;
@@ -372,7 +374,7 @@ LSDIndexRaster LSDIndexChannel::print_index_channel_to_index_raster()
 		Channel_array[RowSequence[i]][ColSequence[i]]= 1;
 	}
 
-	LSDIndexRaster Channel_loc(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Channel_array);
+	LSDIndexRaster Channel_loc(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Channel_array,GeoReferencingStrings);
 	return Channel_loc;
 }
 
@@ -395,7 +397,7 @@ void LSDIndexChannel::append_index_channel_to_index_raster(LSDIndexRaster& old_r
 		Channel_array[RowSequence[i]][ColSequence[i]]= 1;
 	}
 
-	LSDIndexRaster Channel_loc(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Channel_array);
+	LSDIndexRaster Channel_loc(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Channel_array,GeoReferencingStrings);
 	old_raster = Channel_loc;
 }
 

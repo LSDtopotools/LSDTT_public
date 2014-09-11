@@ -106,7 +106,7 @@ class LSDFlowInfo
   /// @param TopoRaster LSDRaster object containing the topographic data.
   /// @author SMM
   /// @date 01/016/12
-  LSDFlowInfo(vector<string> BoundaryConditions, LSDRaster& TopoRaster)
+  LSDFlowInfo(vector<string>& BoundaryConditions, LSDRaster& TopoRaster)
 				{ create(BoundaryConditions, TopoRaster); }
 
   /// @brief Copy of the LSDJunctionNetwork description here when written.
@@ -194,7 +194,10 @@ class LSDFlowInfo
   float get_DataResolution() const	{ return DataResolution; }
   /// @return No Data Value as an integer.
   int get_NoDataValue() const			{ return NoDataValue; }
-  /// @return Number of nodes with data as an integer.
+  /// @return Georeferencing information
+  map<string,string> get_GeoReferencingStrings() const { return GeoReferencingStrings; }
+  
+  /// @return Number of nodes with data as an integer.   
   int get_NDataNodes () const			{ return NDataNodes; }
   /// @return Vector of all base level nodes.
   vector<int> get_BaseLevelNodeList () { return BaseLevelNodeList; }
@@ -610,6 +613,9 @@ class LSDFlowInfo
 	float DataResolution;
 	///No data value.
 	int NoDataValue;
+	
+	///A map of strings for holding georeferencing information
+  map<string,string> GeoReferencingStrings;
 
 	/// The number of nodes in the raster that have data.
 	int NDataNodes;
@@ -693,7 +699,7 @@ class LSDFlowInfo
 	private:
 	void create();
 	void create(string fname);
-	void create(vector<string> temp_BoundaryConditions, LSDRaster& TopoRaster);
+	void create(vector<string>& temp_BoundaryConditions, LSDRaster& TopoRaster);
 };
 
 #endif

@@ -32,6 +32,7 @@ void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNetw
 	YMinimum = ChanNet.get_YMinimum();
 	DataResolution = ChanNet.get_DataResolution();
 	NoDataValue = ChanNet.get_NoDataValue();
+	GeoReferencingStrings = ChanNet.get_GeoReferencingStrings();
 
   Junction = JunctionNumber;
   
@@ -702,7 +703,7 @@ LSDIndexRaster LSDBasin::write_integer_data_to_LSDIndexRaster(int Param, LSDFlow
   }
 
   LSDIndexRaster OutputRaster(NRows, NCols, XMinimum, YMinimum, DataResolution,
-                               NoDataValue, Output);
+                               NoDataValue, Output, GeoReferencingStrings);
 
   return OutputRaster;
 
@@ -724,7 +725,7 @@ LSDRaster LSDBasin::write_real_data_to_LSDRaster(float Param, LSDFlowInfo FlowIn
   }
 
   LSDRaster OutputRaster(NRows, NCols, XMinimum, YMinimum, DataResolution,
-                               NoDataValue, Output);
+                               NoDataValue, Output, GeoReferencingStrings);
 
   return OutputRaster;
 
@@ -746,7 +747,7 @@ LSDRaster LSDBasin::write_raster_data_to_LSDRaster(LSDRaster Data, LSDFlowInfo F
   }
 
   LSDRaster OutputRaster(NRows, NCols, XMinimum, YMinimum, DataResolution,
-                               NoDataValue, Output);
+                               NoDataValue, Output, GeoReferencingStrings);
 
   return OutputRaster;
 
@@ -768,7 +769,7 @@ LSDIndexRaster LSDBasin::write_raster_data_to_LSDIndexRaster(LSDIndexRaster Data
   }
 
   LSDIndexRaster OutputRaster(NRows, NCols, XMinimum, YMinimum, DataResolution,
-                               NoDataValue, Output);
+                               NoDataValue, Output, GeoReferencingStrings);
 
   return OutputRaster;
 

@@ -44,6 +44,9 @@ class LSDBasin
 	/// @return No Data Value as an integer.
 	int get_NoDataValue() const			{ return NoDataValue; }
 	
+  /// @return Georeferencing information
+  map<string,string> get_GeoReferencingStrings() const { return GeoReferencingStrings; }
+	
 	/// @return Nodes of the basin.
 	vector<int> get_BasinNodes() const { return BasinNodes; }
 	
@@ -611,6 +614,9 @@ class LSDBasin
 	float DataResolution;
 	///No data value.
 	int NoDataValue;  
+	///A map of strings for holding georeferencing information
+  map<string,string> GeoReferencingStrings;
+  	
   /// Junction Number of the basin, serves as a unique ID of a basin.
   int Junction;
   ///Vector of all nodes in basin.
