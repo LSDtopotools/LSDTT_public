@@ -172,6 +172,14 @@ class LSDFlowInfo
   int get_LocalFlowDirection(int row, int col)
 				{ return FlowDirection[row][col]; }
 
+  /// @brief get the number of donors to a given node
+  /// @param current_node the node index from which to get n donors
+  /// @return the number of donors to this cell
+  /// @author SMM
+  /// @date 19/9/2014
+  int retrieve_ndonors_to_node(int current_node)
+    { return NDonorsVector[current_node]; }
+
   ///@brief Get the node for a cell at a given row and column
   ///@param row index
   ///@param column index
@@ -179,6 +187,14 @@ class LSDFlowInfo
   ///@author DTM
   ///@date 08/11/2013
   int retrieve_node_from_row_and_column(int row, int column);
+
+  /// @brief gets a vector of all the donors to a given node
+  /// @param current_node the node index from which to get n donors
+  /// @return a vector containing all the donors to this node
+  /// @author SMM
+  /// @date 19/9/2014
+  vector<int> retrieve_donors_to_node(int current_node);
+
 
   // get functions
 

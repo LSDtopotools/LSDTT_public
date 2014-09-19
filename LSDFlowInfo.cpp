@@ -102,7 +102,7 @@ using namespace TNT;
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::create()
 {
-	cout << "I am and empty flow info object. " << endl;
+	cout << "I am an empty flow info object. " << endl;
 	//exit(EXIT_FAILURE);
 }
 
@@ -718,18 +718,39 @@ int LSDFlowInfo::retrieve_largest_base_level()
 	}
 	return max_bl;
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Get the node for a cell at a given row and column
 //@author DTM
 //@date 08/11/2013
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 int LSDFlowInfo::retrieve_node_from_row_and_column(int row, int column)
 {
   int Node = NodeIndex[row][column];
   return Node;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// gets a vector of all the donors to a given node
+// @author SMM
+// @date 19/09/2014
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDFlowInfo::retrieve_donors_to_node(int current_node)
+{
+  // get the numver of donors
+  int NDonors = NDonorsVector[current_node];
+  
+  // create the vecotr of donating nodes
+  vector<int> donorvec(NDonors,NoDataValue);
+  
+  // loop over the donating nodes, getting their nodeindicies
+  for(int dnode = 0; dnode<NDonors; dnode++)
+  {
+    donorvec[dnode] = DonorStackVector[ DeltaVector[current_node]+dnode];  
+  }
+  return donorvec;
+}
 
 
 
@@ -1370,7 +1391,7 @@ LSDIndexRaster LSDFlowInfo::write_NodeIndexVector_to_LSDIndexRaster(vector<int>&
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexRaster LSDFlowInfo::write_NContributingNodes_to_LSDIndexRaster()
 {
-	Array2D<int> contributing_pixels(NRows,NCols,NoDataValue);
+  Array2D<int> contributing_pixels(NRows,NCols,NoDataValue);
 	int row,col;
 
 	// loop through the node vector, adding pixels to receiver nodes
@@ -1382,7 +1403,7 @@ LSDIndexRaster LSDFlowInfo::write_NContributingNodes_to_LSDIndexRaster()
 	}
 
 	LSDIndexRaster temp_cp(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,contributing_pixels,GeoReferencingStrings);
-	return temp_cp;
+  return temp_cp;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

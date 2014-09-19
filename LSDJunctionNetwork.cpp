@@ -139,7 +139,7 @@ LSDJunctionNetwork& LSDJunctionNetwork::operator=(const LSDJunctionNetwork& rhs)
 void LSDJunctionNetwork::create( void ) 
 {
   cout << "I am an empty LSDJunctionNetwork" << endl;
-/*  
+  
   vector<int> emptyvec;
   
 	SourcesVector = emptyvec;
@@ -155,11 +155,11 @@ void LSDJunctionNetwork::create( void )
 	SVectorIndex  = emptyvec;
 	NContributingJunctions  = emptyvec;
 	
-	Array2D<int> emptyarray;
+	Array2D<int> emptyarray(0,0);
 	StreamOrderArray = emptyarray.copy();
   JunctionArray = emptyarray.copy();
 	JunctionIndexArray = emptyarray.copy();
-	*/
+	
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

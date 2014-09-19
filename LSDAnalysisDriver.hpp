@@ -207,6 +207,15 @@ class LSDAnalysisDriver
     /// @author SMM
     /// @date 29/07/2014
     void check_pathname_for_slash();	
+ 
+    /// @brief this adds a slash to the end of the pathname
+    /// an overloaded function: this one takes a string and returns the 
+    /// string with a slash at the end
+    /// @param this_pathname the string containing the pathname
+    /// @retun the string with a slash at the end if it hasn't got one already
+    /// @author SMM
+    /// @date 19/09/2014    
+    string check_pathname_for_slash(string this_pathname);   
 
     /// @brief this returns the string before the last dot in a string. 
     /// so for example if you gave it paramfile.param it would return paramfile
@@ -223,20 +232,15 @@ class LSDAnalysisDriver
     //
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     
-    /// This vector holds various rasters computed during the trun
-    vector<LSDRaster> vector_of_LSDRasters;
-    
-    /// as above, but these are index rasters
-    vector<LSDIndexRaster> vector_of_LSDIndexRasters;
-    
+   
     /// This holds the flow info object
     LSDFlowInfo FlowInfo;
     
     /// the just tells the code if the flow info has already been calculated
     bool got_flowinfo;
     
-    /// The junction network object
-    //LSDJunctionNetwork JunctionNetwork;
+    /// Pointer to junction network object
+    LSDJunctionNetwork JunctionNetwork;
     
     /// tells the code if you've got the junction network
     bool got_JunctionNetwork;
@@ -281,14 +285,20 @@ class LSDAnalysisDriver
     
     /// This map holds all the possible analyses
     map<string,bool> analyses_switches; 
+
+    /// This vector holds various rasters computed during the run
+    map<string,LSDRaster> map_of_LSDRasters;
     
+    /// as above, but these are index rasters
+    map<string,LSDIndexRaster> map_of_LSDIndexRasters;
+  
     /// This is a map  container that determines if various rasters are needed for the
     /// analysis. This ensures things like the fill raster are only calculated
     /// once
     map<string,bool> raster_switches;
 
     /// This is a map that tell where the indices into the raster vecs are    
-    map<string,int> raster_indices;
+    //map<string,int> raster_indices;
     
     /// This holds float parameters
     map<string,float> float_parameters;
