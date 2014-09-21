@@ -319,14 +319,14 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
   }
   infile.close();
 	
-	cout << "I'm checking to make sure the filenames are compatible now." << endl;
+  cout << "I'm checking to make sure the filenames are compatible now." << endl;
   check_file_extensions_and_paths();
-	cout << "Ingestion of parameter file complete, and pathnames checked.\n"
-	     << "I am now moving on to computing the rasters. \n\n";
+  cout << "Ingestion of parameter file complete, and pathnames checked.\n"
+       << "I am now moving on to computing the rasters. \n\n";
 	
   compute_rasters_from_raster_switches();
-	cout << "I've finished computing the rasters.\n"
-	     << "I am now moving on to writing the data. \n\n";
+  cout << "I've finished computing the rasters.\n"
+       << "I am now moving on to writing the data. \n\n";
   write_rasters_from_analysis_switches();
   
   cout << "All done buddy. Have a nice day." << endl;
@@ -392,6 +392,8 @@ void LSDAnalysisDriver::compute_rasters_from_raster_switches()
     }
   }  
   
+  LSDJunctionNetwork JN;
+
   // get the junction network
   if(raster_switches.find("need_JunctionNetwork") != raster_switches.end())
   { 
@@ -399,7 +401,7 @@ void LSDAnalysisDriver::compute_rasters_from_raster_switches()
     // only calculate flow info if it has not already been calculated
     if (not got_JunctionNetwork)
     {  
-      calculate_JunctionNetwork();
+      JN = calculate_JunctionNetwork();
     }
   }  
   
@@ -422,7 +424,7 @@ void LSDAnalysisDriver::compute_rasters_from_raster_switches()
     // only calculate flow info if it has not already been calculated
     if(map_of_LSDIndexRasters.find("SOArray") == map_of_LSDIndexRasters.end())
     {  
-      calculate_SOArray();
+      calculate_SOArray(JN);
     }
   }  
 
@@ -433,7 +435,7 @@ void LSDAnalysisDriver::compute_rasters_from_raster_switches()
     // only calculate flow info if it has not already been calculated
     if(map_of_LSDIndexRasters.find("JunctionIndex") == map_of_LSDIndexRasters.end())
     {  
-      calculate_JunctionIndex();
+      calculate_JunctionIndex(JN);
     }
   }  
 
@@ -722,11 +724,11 @@ void LSDAnalysisDriver::calculate_flowinfo()
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Calculates the junction network object
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDAnalysisDriver::calculate_JunctionNetwork()
+LSDJunctionNetwork LSDAnalysisDriver::calculate_JunctionNetwork()
 {
   // first check to see if this already exists
-  if (not got_JunctionNetwork)
-  {
+  //if (not got_JunctionNetwork)
+  //{
     // this needs flowInfo
     if(not got_flowinfo)
     {
@@ -746,10 +748,11 @@ void LSDAnalysisDriver::calculate_JunctionNetwork()
     // okay, everything should be ready for flow info calculation
     LSDJunctionNetwork temp_JN(integer_vector_map["sources"], FlowInfo);
     
-    // set the data members
-    //JunctionNetwork = &temp_JN;
+
+    
     got_JunctionNetwork = true;
-  } 
+    return temp_JN;
+    //} 
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -851,22 +854,22 @@ void LSDAnalysisDriver::calculate_sources()
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Calculates the stream order array object
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDAnalysisDriver::calculate_SOArray()
+void LSDAnalysisDriver::calculate_SOArray(LSDJunctionNetwork& JunctionNetwork)
 {  
   // see if you've already got this raster
   if(map_of_LSDIndexRasters.find("SOArray") == map_of_LSDIndexRasters.end())
   {
     // you don't have it. Calculate it here.   
     // this requires the flow info object. See if it exists
-    if(not got_JunctionNetwork)
-    {
-      // it doesn't exit. Calculate it. 
-      calculate_JunctionNetwork(); 
-    }
+    //if(not got_JunctionNetwork)
+    //{
+    //  // it doesn't exit. Calculate it. 
+    //  calculate_JunctionNetwork(); 
+    //}
   
     // now you have the LSDFlowInfo object. Spit out the nodeindex raster
-    //LSDIndexRaster temp_SO = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
-    //map_of_LSDIndexRasters["SOArray"] = temp_SO;  
+    LSDIndexRaster temp_SO = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
+    map_of_LSDIndexRasters["SOArray"] = temp_SO;  
   }  
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -874,22 +877,22 @@ void LSDAnalysisDriver::calculate_SOArray()
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Calculates the JunctionIndex array object
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDAnalysisDriver::calculate_JunctionIndex()
+void LSDAnalysisDriver::calculate_JunctionIndex(LSDJunctionNetwork& JunctionNetwork)
 {  
   // see if you've already got this raster
   if(map_of_LSDIndexRasters.find("JunctionIndex") == map_of_LSDIndexRasters.end())
   {
     // you don't have it. Calculate it here.   
     // this requires the flow info object. See if it exists
-    if(not got_JunctionNetwork)
-    {
+    //if(not got_JunctionNetwork)
+    //{
       // it doesn't exit. Calculate it. 
-      calculate_JunctionNetwork(); 
-    }
+    //  calculate_JunctionNetwork(); 
+    //}
   
     // now you have the LSDFlowInfo object. Spit out the nodeindex raster
-    //LSDIndexRaster temp_JI = JunctionNetwork.JunctionIndexArray_to_LSDIndexRaster();
-    //map_of_LSDIndexRasters["JunctionIndex"] =  temp_JI;  
+    LSDIndexRaster temp_JI = JunctionNetwork.JunctionIndexArray_to_LSDIndexRaster();
+    map_of_LSDIndexRasters["JunctionIndex"] =  temp_JI;  
   }  
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

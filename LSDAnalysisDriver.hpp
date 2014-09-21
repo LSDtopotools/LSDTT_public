@@ -143,9 +143,10 @@ class LSDAnalysisDriver
     void calculate_flowinfo();
     
     /// @brief This calculates the LSDJunctionNetwork object
+    /// @return JunctionNetork: the junction network
     /// @author SMM
     /// @date 30/07/2014
-    void calculate_JunctionNetwork();    
+    LSDJunctionNetwork calculate_JunctionNetwork();    
     
     
     
@@ -171,12 +172,12 @@ class LSDAnalysisDriver
     /// @brief This calculates Junction index raster
     /// @author SMM
     /// @date 30/07/2014
-    void calculate_JunctionIndex();
+    void calculate_JunctionIndex(LSDJunctionNetwork& JN);
 
     /// @brief This calculates stream order raster
     /// @author SMM
     /// @date 30/07/2014
-    void calculate_SOArray();
+    void calculate_SOArray(LSDJunctionNetwork& JN);
     
     /// @brief This calculates the chi map raster
     /// @author SMM
@@ -240,7 +241,7 @@ class LSDAnalysisDriver
     bool got_flowinfo;
     
     /// Pointer to junction network object
-    LSDJunctionNetwork JunctionNetwork;
+    //LSDJunctionNetwork JunctionNetwork;
     
     /// tells the code if you've got the junction network
     bool got_JunctionNetwork;
