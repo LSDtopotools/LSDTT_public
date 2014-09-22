@@ -2005,15 +2005,84 @@ LSDRaster LSDFlowInfo::distance_from_outlet()
 	}
 	//cout << "LINE 971 FlowInfo Flow distance complete, flow_distance is: " << endl;
 	//cout << flow_distance << endl;
-	LSDRaster FlowLength(NRows,NCols,XMinimum,YMinimum,DataResolution,ndv,flow_distance,GeoReferencingStrings);
+	LSDRaster FlowLength(NRows,NCols,XMinimum,YMinimum,DataResolution,ndv,
+                       flow_distance,GeoReferencingStrings);
 	return FlowLength;
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function get the d8 slope. It points downslope from each node
+//
+// SMM 22/09/2014
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LSDRaster LSDFlowInfo::calculate_d8_slope(LSDRaster& Elevation)
+{
+  float ndv = float(NoDataValue);
+	Array2D<float> d8_slope(NRows,NCols,ndv);
+	
+	// these save a bit of computational expense. 
+  float root_2 = pow(2, 0.5);
+  float dx_root2 = root_2*DataResolution;
+  
+  int this_row;
+  int this_col;
+  int r_row;
+  int r_col;
+  int r_node;
+  float dx;
+	
+  for (int node = 0; node<NDataNodes; node++)
+  {
+    // get the row and column
+    retrieve_current_row_and_col(node,this_row,this_col);
+  
+    // get the distance between nodes. Depends on flow direction		
+    switch (retrieve_flow_length_code_of_node(node))
+    {
+      case 0:
+	      dx = -99;
+	      break;
+      case 1:
+        dx = DataResolution;
+      	break;
+      case 2:
+        dx = dx_root2;
+	      break;
+      default:
+	      dx = -99;
+	      break;
+    } 
+    
+    // get the reciever information
+    retrieve_receiver_information(node,r_node, r_row, r_col);
+    
+    // now calculate the slope
+    if (r_node == node)
+    {
+      d8_slope[this_row][this_col] = 0;  
+    }
+    else
+    {
+      d8_slope[this_row][this_col] = (1/dx)*(Elevation)*
+              (Elevation.get_data_element(this_row,this_col)
+               -Elevation.get_data_element(r_row,r_col));
+    }
+       
+  }
+  
+	LSDRaster d8_slope(NRows,NCols,XMinimum,YMinimum,DataResolution,ndv,
+                       flow_distance,GeoReferencingStrings); 
+  return d8_slope;                      
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 //
 // this finds the node that is farthest upstream from a given node
