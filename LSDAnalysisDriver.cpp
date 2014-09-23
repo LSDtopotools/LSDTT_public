@@ -242,6 +242,8 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
     {
       float_parameters["threshold_area_for_chi"] = atof(value.c_str());
     }
+
+
     
     //=-=-=-=-=-=--=-=-=-=-
     // paramters for polyfit
@@ -249,6 +251,23 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
     else if (lower == "polyfit_window_radius")	
     {
       float_parameters["polyfit_window_radius"] = atof(value.c_str());
+    }
+    else if (lower == "slope_method")
+    {
+      method_map["slope_method"] = value;
+      // get rid of any control characters from the end (if param file was made in DOS)
+    	method_map["slope_method"] = RemoveControlCharactersFromEndOfString(method_map["slope_method"]);
+    }
+
+
+    //=-=-=-=-=-=-=-=-=-=-=-=-
+    // parameters for drainage area extraction
+    //=-=-=-=-=-=-=-=-=-=-=-=-
+    else if (lower == "drainage_area_method")
+    {
+      method_map["drainage_area_method"] = value;
+      // get rid of any control characters from the end (if param file was made in DOS)
+    	method_map["drainage_area_method"] = RemoveControlCharactersFromEndOfString(method_map["drainage_area_method"]);
     }
     
     //=-=-=-=-=-=--=-=-=-=-
@@ -277,7 +296,65 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
       raster_switches["need_fill"] = temp_bool;
       raster_switches["need_hillshade"] = temp_bool;
     }
-    else if (lower == "write channel_net")
+    else if (lower == "write slope")
+    {
+      bool temp_bool = (value == "true") ? true : false;
+      analyses_switches["write_slope"] = temp_bool;
+      raster_switches["need_base_raster"] = temp_bool;
+      raster_switches["need_fill"] = temp_bool;
+      raster_switches["need_slope"] = temp_bool;
+    }
+    else if (lower == "write curvature")
+    {
+      bool temp_bool = (value == "true") ? true : false;
+      analyses_switches["write_curvature"] = temp_bool;
+      raster_switches["need_base_raster"] = temp_bool;
+      raster_switches["need_curvature"] = temp_bool;
+    }   
+    else if (lower == "write planform curvature")
+    {
+      bool temp_bool = (value == "true") ? true : false;
+      analyses_switches["write_planform_curvature"] = temp_bool;
+      raster_switches["need_base_raster"] = temp_bool;
+      raster_switches["need_planform_curvature"] = temp_bool;
+    }       
+    else if (lower == "write tangential curvature")
+    {
+      bool temp_bool = (value == "true") ? true : false;
+      analyses_switches["write_tangential_curvature"] = temp_bool;
+      raster_switches["need_base_raster"] = temp_bool;
+      raster_switches["need_tangential_curvature"] = temp_bool;
+    }      
+    else if (lower == "write profile curvature")
+    {
+      bool temp_bool = (value == "true") ? true : false;
+      analyses_switches["write_profile_curvature"] = temp_bool;
+      raster_switches["need_base_raster"] = temp_bool;
+      raster_switches["need_profile_curvature"] = temp_bool;
+    }     
+    else if (lower == "write aspect")
+    {
+      bool temp_bool = (value == "true") ? true : false;
+      analyses_switches["write_aspect"] = temp_bool;
+      raster_switches["need_base_raster"] = temp_bool;
+      raster_switches["need_aspect"] = temp_bool;
+    }      
+    else if (lower == "write topographic classification")
+    {
+      bool temp_bool = (value == "true") ? true : false;
+      analyses_switches["write_topographic_classification"] = temp_bool;
+      raster_switches["need_base_raster"] = temp_bool;
+      raster_switches["need_topographic_classification"] = temp_bool;
+    }     
+    else if (lower == "write drainage area")
+    {
+      bool temp_bool = (value == "true") ? true : false;
+      analyses_switches["writedrainage_area"] = temp_bool;
+      raster_switches["need_base_raster"] = temp_bool;
+      raster_switches["need_fill"] = temp_bool;
+      raster_switches["need_drainage_area"] = temp_bool;
+    }
+    else if (lower == "write channel net")
     {
       bool temp_bool = (value == "true") ? true : false;
       analyses_switches["write_channel_net"] = temp_bool;
@@ -298,7 +375,16 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
       raster_switches["need_fill"] = temp_bool;
       raster_switches["need_flowinfo"] = temp_bool;
       raster_switches["need_nodeindex"] = temp_bool;
-    } 		    
+    }   
+    else if (lower == "write single thread channel")
+    {
+      bool temp_bool =  (value == "true") ? true : false;
+      analyses_switches["write_single_thread_channel"] = temp_bool;
+      raster_switches["need_base_raster"] = temp_bool;
+      raster_switches["need_fill"] = temp_bool;
+      raster_switches["need_flowinfo"] = temp_bool;
+      raster_switches["need_drainage_area"] = temp_bool;
+    }		    
     else if (lower == "write chi map")
     {
       bool temp_bool = (value == "true") ? true : false;
@@ -379,6 +465,95 @@ void LSDAnalysisDriver::compute_rasters_from_raster_switches()
       // it hasn't been calculated. Calculate it now.
       calculate_hillshade();    
     }  
+  }
+
+  // get the slope
+  if(raster_switches.find("need_slope") != raster_switches.end())
+  {
+    // check to see if it has already been calculated
+    if(map_of_LSDRasters.find("slope") == map_of_LSDRasters.end())
+    {
+      // it hasn't been calculated. Calculate it now.
+      calculate_slope();    
+    }  
+  }
+
+  // get the aspect
+  if(raster_switches.find("need_aspect") != raster_switches.end())
+  {
+    // check to see if it has already been calculated
+    if(map_of_LSDRasters.find("aspect") == map_of_LSDRasters.end())
+    {
+      // it hasn't been calculated. Calculate it now.
+      calculate_polyfit();    
+    }  
+  }
+  
+  // get the curvature
+  if(raster_switches.find("need_curvature") != raster_switches.end())
+  {
+    // check to see if it has already been calculated
+    if(map_of_LSDRasters.find("curvature") == map_of_LSDRasters.end())
+    {
+      // it hasn't been calculated. Calculate it now.
+      calculate_polyfit();    
+    }  
+  }
+
+  // get the planform curvature
+  if(raster_switches.find("need_planform_curvature") != raster_switches.end())
+  {
+    // check to see if it has already been calculated
+    if(map_of_LSDRasters.find("planform_curvature") == map_of_LSDRasters.end())
+    {
+      // it hasn't been calculated. Calculate it now.
+      calculate_polyfit();    
+    }  
+  }  
+
+  // get the profile curvature
+  if(raster_switches.find("need_profile_curvature") != raster_switches.end())
+  {
+    // check to see if it has already been calculated
+    if(map_of_LSDRasters.find("profile_curvature") == map_of_LSDRasters.end())
+    {
+      // it hasn't been calculated. Calculate it now.
+      calculate_polyfit();    
+    }  
+  }  
+
+  // get the tangential curvature
+  if(raster_switches.find("need_tangential_curvature") != raster_switches.end())
+  {
+    // check to see if it has already been calculated
+    if(map_of_LSDRasters.find("tangential_curvature") == map_of_LSDRasters.end())
+    {
+      // it hasn't been calculated. Calculate it now.
+      calculate_polyfit();    
+    }  
+  }  
+
+  // get the classification
+  if(raster_switches.find("need_polyfit_classification") != raster_switches.end())
+  {
+    // check to see if it has already been calculated
+    if(map_of_LSDRasters.find("polyfit_classification") == map_of_LSDRasters.end())
+    {
+      // it hasn't been calculated. Calculate it now.
+      calculate_polyfit();    
+    }  
+  }  
+
+  // get the drainage area
+  if(raster_switches.find("need_drainage_area") != raster_switches.end())
+  { 
+    // check to see if it has already been calculated
+    if(map_of_LSDRasters.find("drainage_area") == map_of_LSDRasters.end())
+    {
+      // it hasn't been calculated. Calculate it now.
+      calculate_drainage_area(); 
+    }
+  
   }
 
   // get the flow info
@@ -514,6 +689,112 @@ void LSDAnalysisDriver::write_rasters_from_analysis_switches()
     map_of_LSDRasters["hillshade"].write_raster(r_fname,dem_write_extension);
   }
 
+  // write slope
+  if(analyses_switches.find("write_slope") != analyses_switches.end())
+  {
+    // check to see if the slope map exists
+    if(map_of_LSDRasters.find("slope") == map_of_LSDRasters.end()) 
+    {
+      //cout << "You've not run the get raster routine. Running now. " << endl;
+      calculate_slope();
+    }
+
+    string slope_seperator = "_slope";
+    string slope_fname = write_path+write_fname+slope_seperator;
+    map_of_LSDRasters["slope"].write_raster(slope_fname,dem_write_extension);
+  }
+
+  // write aspect
+  if(analyses_switches.find("write_aspect") != analyses_switches.end())
+  {
+    // check to see if the slope map exists
+    if(map_of_LSDRasters.find("aspect") == map_of_LSDRasters.end()) 
+    {
+      //cout << "You've not run the get raster routine. Running now. " << endl;
+      calculate_polyfit();
+    }
+
+    string aspect_seperator = "_aspect";
+    string aspect_fname = write_path+write_fname+aspect_seperator;
+    map_of_LSDRasters["aspect"].write_raster(aspect_fname,dem_write_extension);
+  }
+
+  // write curvature
+  if(analyses_switches.find("write_curvature") != analyses_switches.end())
+  {
+    // check to see if the slope map exists
+    if(map_of_LSDRasters.find("curvature") == map_of_LSDRasters.end()) 
+    {
+      //cout << "You've not run the get raster routine. Running now. " << endl;
+      calculate_polyfit();
+    }
+
+    string curvature_seperator = "_curvature";
+    string curvature_fname = write_path+write_fname+curvature_seperator;
+    map_of_LSDRasters["curvature"].write_raster(curvature_fname,dem_write_extension);
+  }
+
+  // write profile curvature
+  if(analyses_switches.find("write_profile_curvature") != analyses_switches.end())
+  {
+    // check to see if the slope map exists
+    if(map_of_LSDRasters.find("profile_curvature") == map_of_LSDRasters.end()) 
+    {
+      //cout << "You've not run the get raster routine. Running now. " << endl;
+      calculate_polyfit();
+    }
+
+    string profile_curvature_seperator = "_profile_curvature";
+    string profile_curvature_fname = write_path+write_fname+profile_curvature_seperator;
+    map_of_LSDRasters["profile_curvature"].write_raster(profile_curvature_fname,dem_write_extension);
+  }
+
+  // write planform curvature
+  if(analyses_switches.find("write planform_curvature") != analyses_switches.end())
+  {
+    // check to see if the slope map exists
+    if(map_of_LSDRasters.find("planform_curvature") == map_of_LSDRasters.end()) 
+    {
+      //cout << "You've not run the get raster routine. Running now. " << endl;
+      calculate_polyfit();
+    }
+
+    string planform_curvature_seperator = "_planform_curvature";
+    string planform_curvature_fname = write_path+write_fname+planform_curvature_seperator;
+    map_of_LSDRasters["planform_curvature"].write_raster(planform_curvature_fname,dem_write_extension);
+  }
+
+  // write tangential curvature
+  if(analyses_switches.find("write tangential_curvature") != analyses_switches.end())
+  {
+    // check to see if the slope map exists
+    if(map_of_LSDRasters.find("tangential_curvature") == map_of_LSDRasters.end()) 
+    {
+      //cout << "You've not run the get raster routine. Running now. " << endl;
+      calculate_polyfit();
+    }
+
+    string tangential_curvature_seperator = "_tangential_curvature";
+    string tangential_curvature_fname = write_path+write_fname+tangential_curvature_seperator;
+    map_of_LSDRasters["tangential_curvature"].write_raster(tangential_curvature_fname,dem_write_extension);
+  }
+  
+  // write classification
+  if(analyses_switches.find("write polyfit_classification") != analyses_switches.end())
+  {
+    // check to see if the slope map exists
+    if(map_of_LSDRasters.find("polyfit_classification") == map_of_LSDRasters.end()) 
+    {
+      //cout << "You've not run the get raster routine. Running now. " << endl;
+      calculate_polyfit();
+    }
+
+    string polyfit_classification_seperator = "_polyfit_classification";
+    string polyfit_classification_fname = write_path+write_fname+polyfit_classification_seperator;
+    map_of_LSDRasters["polyfit_classification"].write_raster(polyfit_classification_fname,dem_write_extension);
+  }
+  
+    
   // write nodeindex
   if(analyses_switches.find("write_nodeindex") != analyses_switches.end())
   {
@@ -553,6 +834,7 @@ void LSDAnalysisDriver::write_rasters_from_analysis_switches()
     map_of_LSDIndexRasters["JunctionIndex"].write_raster(JI_fname,dem_write_extension);      
      
   }
+
 
 
   // write the chi map
@@ -638,7 +920,190 @@ void LSDAnalysisDriver::fill_raster()
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// Gets the hillshade DEM
+// Gets the slope raster
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDAnalysisDriver::calculate_slope()
+{
+
+  // first check the method
+  if(method_map.find("slope_method") == method_map.end())
+  {
+    cout << "You did not choose a slope method. Defaulting to d8" << endl;
+    method_map["slope_method"] = "d8"; 
+  }
+  if(method_map["slope_method"] != "d8" && method_map["slope"] != "polyfit")
+  {
+    cout << "You have not selected a valid slope method. Options are d8 and polyfit" << endl
+         << "note these options are case sensitive. Defualting to d8" << endl;
+    method_map["slope_method"] = "d8";      
+  }
+  
+  if(method_map["slope_method"] == "d8")
+  {
+    // d8 method
+    // first check to make sure the fill raster exists
+    if(map_of_LSDRasters.find("fill") == map_of_LSDRasters.end())
+    {
+      fill_raster();
+    } 
+    if (not got_flowinfo)
+    {    
+      calculate_flowinfo();      
+    }
+    
+    // now calculate d8 slope
+    map_of_LSDRasters["slope"] = FlowInfo.calculate_d8_slope(map_of_LSDRasters["fill"]);
+    
+  } 
+  else if(method_map["slope_method"] == "polyfit")
+  {
+ 
+    // first check to see if the raster has already been calculated
+    if(map_of_LSDRasters.find("slope") == map_of_LSDRasters.end())
+    {   
+      if(integer_vector_map.find("polyfit") == integer_vector_map.end())
+      {
+        check_polyfit();
+      }
+
+      // run the polyfit functions
+      calculate_polyfit();
+    }
+  }
+
+}
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This calculates the drainage area
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDAnalysisDriver::calculate_drainage_area()
+{
+
+  // check to make sure area doesnt already exist
+  if(map_of_LSDRasters.find("drainage_area") == map_of_LSDRasters.end())
+  {
+    // first see if a method has been assigned
+    if(method_map.find("drainage_area_method") != method_map.end())
+    {
+      cout << "You haven't assigned a valid drainage area method" << endl
+           << " These are case sensitive. Options are: " << endl
+           << "d8" << endl << "dinf" << endl << "QuinnMD" << endl
+           << "FreemanMD" << endl << "M2D" <<endl;
+      cout << "Defaulting to dinf" << endl;
+      method_map["drainage_area_method"] = "dinf";  
+    }
+    
+    // check to see if you need the flow info object
+    if(method_map["drainage_area_method"] == "d8")
+    {
+      // only calculate flow info if it has not already been calculated
+      if (not got_flowinfo)
+      {  
+        calculate_flowinfo();
+      }
+      // now get flow area from flowinfo
+    } 
+    else
+    {
+      // make sure you've got a filled raster
+      if(map_of_LSDRasters.find("fill") == map_of_LSDRasters.end())
+      {
+        // now the base raster is in the map
+        fill_raster();  
+      }
+      
+      // now calculate the various area rasters based on the method
+      if(method_map["drainage_area_method"] == "M2D")
+      {
+        map_of_LSDRasters["drainage_area"] = map_of_LSDRasters["fill"].M2DFlow(); 
+      }
+      else if(method_map["drainage_area_method"] == "QuinnMD")
+      {
+        map_of_LSDRasters["drainage_area"] = map_of_LSDRasters["fill"].QuinnMDFlow(); 
+      }      
+      else if(method_map["drainage_area_method"] == "FreemanMD")
+      {
+        map_of_LSDRasters["drainage_area"] = map_of_LSDRasters["fill"].FreemanMDFlow(); 
+      }         
+      else if(method_map["drainage_area_method"] == "dinf")
+      {
+        map_of_LSDRasters["drainage_area"] = map_of_LSDRasters["fill"].D_inf_units(); 
+      }     
+      else
+      {
+        map_of_LSDRasters["drainage_area"] = map_of_LSDRasters["fill"].D_inf_units(); 
+      }                       
+    } 
+  } 
+}
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This calculates the polyfit rasters
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDAnalysisDriver::calculate_polyfit()
+{
+  // check to see if the polyfit vector has been calculated
+  if(integer_vector_map.find("polyfit") == integer_vector_map.end())
+  {
+    check_polyfit();
+  }
+
+  // now get the polyfit rasters
+  if (map_of_LSDRasters.find("base_raster") == map_of_LSDRasters.end())
+  {
+    read_base_raster();
+  }
+  else
+  {
+    vector<LSDRaster> pfit_rasters;
+    
+    float dx = map_of_LSDRasters["base_raster"].get_DataResolution();
+    float WR = float_parameters["polyfit_window_radius"];
+    // check to make sure the window radius is not too small
+    if (WR <= 2*dx)
+    {
+      cout << "Warning, window radius less than twice the data resolution, defaulting 2* window resolution" << endl;
+      WR = 2*dx+0.001;
+    }
+   
+    vector<int> ivs = integer_vector_map["polyfit"];
+    pfit_rasters = map_of_LSDRasters["base_raster"].calculate_polyfit_surface_metrics(WR,ivs);
+
+    if(ivs[1] == 1)
+    {
+      map_of_LSDRasters["slope"] = pfit_rasters[1];
+    }
+    if(ivs[2] == 1)
+    {
+      map_of_LSDRasters["aspect"] = pfit_rasters[2];
+    }
+    if(ivs[3] == 1)
+    {
+      map_of_LSDRasters["curvature"] = pfit_rasters[3];
+    }   
+    if(ivs[4] == 1)
+    {
+      map_of_LSDRasters["planform_curvature"] = pfit_rasters[4];
+    }  
+    if(ivs[5] == 1)
+    {
+      map_of_LSDRasters["profile_curvature"] = pfit_rasters[5];
+    }  
+    if(ivs[6] == 1)
+    {
+      map_of_LSDRasters["tangential_curvature"] = pfit_rasters[6];
+    } 
+    if(ivs[7] == 1)
+    {
+      map_of_LSDRasters["polyfit_classification"] = pfit_rasters[7];
+    } 
+  }
+}
+
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Gets the hillshade raster
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDAnalysisDriver::calculate_hillshade()
 {
@@ -1131,6 +1596,70 @@ void LSDAnalysisDriver::check_file_extensions_and_paths()
     
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This function checks to see which polyfit methods are needed and then
+// creates the correct polyfit vector
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDAnalysisDriver::check_polyfit()
+{
+  // the vector used for the polyfit switches
+  vector<int> polyfit_switches(8,0);
+  
+  // need to check for polyfit window radius here
+  if(float_parameters.find("polyfit_radius") == float_parameters.end())
+  {
+      // you don't have the polyfit radius. Replace with default
+      float_parameters["polyfit_window_radius"] = 7;
+  }  
+  if (raster_switches["need_slope"] == true)
+  {
+    // first check the method
+    if(method_map.find("slope_method") == method_map.end())
+    {
+      cout << "You did not choose a slope method. Defaulting to d8" << endl;
+      method_map["slope_method"] = "d8"; 
+    }
+    if(method_map["slope_method"] != "d8" && method_map["slope"] != "polyfit")
+    {
+      cout << "You have not selected a valid slope method. Options are d8 and polyfit" << endl
+           << "note these options are case sensitive. Defualting to d8" << endl;
+      method_map["slope_method"] = "d8";      
+    }
+    if(method_map["slope_method"] == "polyfit")
+    {
+      polyfit_switches[1] = 1;
+    }
+  }
+  if (raster_switches["need_aspect"] == true)
+  {
+    polyfit_switches[2] = 1;  
+  }    
+  if (raster_switches["need_curvature"] == true)
+  {
+    polyfit_switches[3] = 1;  
+  }
+  if (raster_switches["need_planform_curvature"] == true)
+  {
+    polyfit_switches[4] = 1; 
+  }
+  if (raster_switches["need_profile_curvature"] == true)
+  {
+    polyfit_switches[5] = 1;   
+  }  
+  if (raster_switches["need_tangential_curvature"] == true)
+  {
+    polyfit_switches[6] = 1;   
+  } 
+  if (raster_switches["need_classification"] == true)
+  {
+    polyfit_switches[7] = 1;   
+  }   
+ 
+  integer_vector_map["polyfit"] = polyfit_switches;
+}
+
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // This function strips the text after the final dot in a string

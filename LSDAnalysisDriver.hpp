@@ -137,6 +137,21 @@ class LSDAnalysisDriver
     /// @date 29/07/2014
     void calculate_hillshade();
 
+    /// @brief This calculates the drainage area
+    /// @author SMM
+    /// @date 23/09/2014
+    void calculate_drainage_area();
+    
+    /// @brief This calculates the hillshade raster
+    /// @author SMM
+    /// @date 21/09/2014
+    void calculate_slope();
+
+    /// @brief This calculates the various polyfit rasters
+    /// @author SMM
+    /// @date 21/09/2014
+    void calculate_polyfit();
+
     /// @brief This calculates the LSDFlowInfo object
     /// @author SMM
     /// @date 29/07/2014
@@ -192,6 +207,9 @@ class LSDAnalysisDriver
     // Housekeeping functions for making sure the object does not crash
     //
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- 
+    
+
+        
     /// @brief This checks to see if boundary condtions have been assigned and 
     /// if not defaults to no flux boundaries
     /// @author SMM
@@ -217,6 +235,11 @@ class LSDAnalysisDriver
     /// @author SMM
     /// @date 19/09/2014    
     string check_pathname_for_slash(string this_pathname);   
+
+    /// @brief This checks on the polyfit functions needed
+    /// @author SMM
+    /// @date 22/09/2014
+    void check_polyfit();
 
     /// @brief this returns the string before the last dot in a string. 
     /// so for example if you gave it paramfile.param it would return paramfile
@@ -310,6 +333,10 @@ class LSDAnalysisDriver
     /// This holds names of supporting files, for example files that contain
     /// node of junction indices to be loaded. 
     map<string,string> support_file_names;
+
+    /// This holds names of methods. For example, if the key is drainage_area_method, the string is
+    /// the method which is used to calculate drainage area
+  map<string,string> method_map;
     
 
     
