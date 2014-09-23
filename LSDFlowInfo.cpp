@@ -2068,16 +2068,16 @@ LSDRaster LSDFlowInfo::calculate_d8_slope(LSDRaster& Elevation)
     }
     else
     {
-      d8_slope[this_row][this_col] = (1/dx)*(Elevation)*
+      d8_slope[this_row][this_col] = (1/dx)*
               (Elevation.get_data_element(this_row,this_col)
                -Elevation.get_data_element(r_row,r_col));
     }
        
   }
   
-	LSDRaster d8_slope(NRows,NCols,XMinimum,YMinimum,DataResolution,ndv,
-                       flow_distance,GeoReferencingStrings); 
-  return d8_slope;                      
+	LSDRaster d8_slope_raster(NRows,NCols,XMinimum,YMinimum,DataResolution,ndv,
+                       d8_slope,GeoReferencingStrings); 
+  return d8_slope_raster;                      
 
 }
 

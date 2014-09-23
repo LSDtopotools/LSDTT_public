@@ -455,7 +455,7 @@ class LSDFlowInfo
   /// @return  A raster of the d8 slope
   /// @author SMM
   /// @date 21/09/2014
-  LSDRaster calculate_d8_slope(LSDRaster& Elevation)
+  LSDRaster calculate_d8_slope(LSDRaster& Elevation);
 
   /// @brief This returns the node index of the pixel farthest upslope from the input node.
   /// @param node the node from which you want to find the farthest upslope pixel.
