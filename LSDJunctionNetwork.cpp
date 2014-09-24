@@ -2251,6 +2251,7 @@ vector<int> LSDJunctionNetwork::calculate_pelletier_channel_heads(float tan_curv
   // the node is a channel head
   for (unsigned int node =0; node < channel_nodes.size(); node++)
   {
+     cout << flush << "\t\t node " << node << "/" << channel_nodes.size() << "\r";
      vector<int> tests;
      int current_node = channel_nodes[node];
      for (unsigned int i = 0; i < channel_nodes.size(); i++)
