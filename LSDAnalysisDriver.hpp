@@ -56,6 +56,7 @@
 #include "LSDFlowInfo.hpp"
 #include "LSDStatsTools.hpp"
 #include "LSDJunctionNetwork.hpp"
+#include "LSDChannel.hpp"
 using namespace std;
 
 #ifndef LSDAnalysisDriver_H
@@ -116,6 +117,11 @@ class LSDAnalysisDriver
     /// @author SMM
     /// @date 29/07/2014
     void write_rasters_from_analysis_switches();
+
+    /// @brief This writes other forms of data based on the analysis switches
+    /// @author SMM
+    /// @date 29/07/2014
+    void write_shapes_from_switches();
 
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     //
@@ -201,6 +207,11 @@ class LSDAnalysisDriver
     /// @author SMM
     /// @date 30/07/2014
     void calculate_chi_map();
+    
+    /// @brief This retrieves a single thread channel
+    /// @author SMM
+    /// @date 24/09/2014    
+    LSDChannel get_single_thread_channel();
 
 
 	protected:

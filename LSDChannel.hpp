@@ -151,8 +151,22 @@ class LSDChannel: public LSDIndexChannel
 							{ create_LSDC(StartNode, EndNode, downslope_chi,
                               m_over_n, A_0, FlowInfo, Elevation_Raster); }
 
-
-
+  /// @brief This calculates all the channel areas, elevations and chi parameters based on for a starting node index and ending node index.
+	/// @param StartNode Starting node.
+  /// @param EndNode Ending node.
+  /// @param downslope_chi Downslope Chi value.
+	/// @param m_over_n m over n ratio.
+	/// @param A_0 A_0 value.
+	/// @param FlowInfo LSDFlowInfo object.
+	/// @param Elevation_Raster Elevation LSDRaster object.
+	/// @param DA_raster Drainage area raster LSDRaster object	
+  /// @author SMM
+  /// @date 01/01/12
+  LSDChannel(int StartNode, int EndNode, float downslope_chi,
+                             float m_over_n, float A_0, LSDFlowInfo& FlowInfo,
+                             LSDRaster& Elevation_Raster, LSDRaster& DA)
+							{ create_LSDC(StartNode, EndNode, downslope_chi,
+                              m_over_n, A_0, FlowInfo, Elevation_Raster, DA); }
 
   /// @brief This calculates all the channel areas, elevations and chi parameters based on for a given LSDChannelIndex.
 	/// @param downslope_chi Downslope Chi value.
@@ -161,6 +175,7 @@ class LSDChannel: public LSDIndexChannel
   /// @param InChann LSDIndexChannel object.
 	/// @param FlowInfo LSDFlowInfo object.
 	/// @param Elevation_Raster Elevation LSDRaster object.
+
   /// @author SMM
   /// @date 01/01/12
   LSDChannel(float downslope_chi, float m_over_n, float A_0,
@@ -168,23 +183,6 @@ class LSDChannel: public LSDIndexChannel
                              LSDRaster& Elevation_Raster)
 							{ create_LSDC(downslope_chi, m_over_n, A_0,
 								InChann, FlowInfo, Elevation_Raster); }
-
-
-  /// @brief This calculates all the channel areas, elevations and chi parameters based on for a given LSDChannelIndex.
-	/// @param downslope_chi Downslope Chi value.
-	/// @param m_over_n m over n ratio.
-	/// @param A_0 A_0 value.
-  /// @param InChann LSDIndexChannel object.
-	/// @param FlowInfo LSDFlowInfo object.
-	/// @param Elevation_Raster Elevation LSDRaster object.
-	/// @param DA_raster Drainage area raster LSDRaster object
-  /// @author SMM
-  /// @date 01/01/12
-  LSDChannel(float downslope_chi, float m_over_n, float A_0,
-							LSDIndexChannel& InChann, LSDFlowInfo& FlowInfo,
-                             LSDRaster& Elevation_Raster, LSDRaster& DA_raster)
-							{ create_LSDC(downslope_chi, m_over_n, A_0,
-								InChann, FlowInfo, Elevation_Raster, DA_raster); }
 
 	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -330,7 +328,7 @@ class LSDChannel: public LSDIndexChannel
   /// @param filename the filename of the channel (whithout the .csv)
   /// @author SMM
   /// @date 24/09/14  
-  void write_channel_to_csv(string filename);  
+  void write_channel_to_csv(string path, string filename, LSDRaster& flow_dist);  
 
 	protected:
 
@@ -353,12 +351,15 @@ class LSDChannel: public LSDIndexChannel
 	void create_LSDC(int SJN, int EJN, float downslope_chi,
                              float m_over_n, float A_0, LSDFlowInfo& FlowInfo,
                              LSDRaster& Elevation_Raster);
+  void create_LSDC(int SJN, int EJN, float downslope_chi,
+                             float m_over_n, float A_0, LSDFlowInfo& FlowInfo,
+                             LSDRaster& Elevation_Raster, LSDRaster& Drainage_Area_Raster);                              
 	void create_LSDC(float downslope_chi, float m_over_n, float A_0,
 						LSDIndexChannel& InChann, LSDFlowInfo& FlowInfo,
                         LSDRaster& Elevation_Raster);
-  void create_LSDC(int SJN, int EJN, float downslope_chi,
-                             float m_over_n, float A_0, LSDFlowInfo& FlowInfo,
-                             LSDRaster& Elevation_Raster, LSDRaster& Drainage_Area_Raster);                        
+
+                         
+                                                    
 };
 
 

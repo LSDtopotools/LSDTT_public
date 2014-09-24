@@ -71,6 +71,7 @@
 
 
 #include <vector>
+#include <fstream>
 #include <algorithm>
 #include "TNT/tnt.h"
 #include "LSDFlowInfo.hpp"
@@ -281,9 +282,7 @@ void LSDChannel::create_LSDC(int SJN, int EJN, float downslope_chi,
 	float root2 = 1.41421356;
 	float diag_length = root2*DataResolution;
 	float dx;
-	float pixel_area = DataResolution*DataResolution;
-
-
+	//float pixel_area = DataResolution*DataResolution;
 
 	StartJunction = -1;
 	EndJunction = -1;
@@ -719,7 +718,7 @@ void LSDChannel::calculate_chi(float downslope_chi, float m_over_n, float A_0,
 	float root2 = 1.41421356;
 	float diag_length = root2*DataResolution;
 	float dx;
-	float pixel_area = DataResolution*DataResolution;
+	//float pixel_area = DataResolution*DataResolution;
 	int curr_node;
 	int this_row,this_col;
 
@@ -749,9 +748,9 @@ void LSDChannel::calculate_chi(float downslope_chi, float m_over_n, float A_0,
 		//cout << "dx is: " << dx << endl;
 
     // get the row and columm
-    FlowInfo.retrieve_current_row_and_col(current_node, this_row, this_col);
+    FlowInfo.retrieve_current_row_and_col(curr_node, this_row, this_col);
 
-		chi_temp[ChIndex] = dx*(pow( (A_0/ (FlowAccum.get_data_element(this_row,this_col) ),
+		chi_temp[ChIndex] = dx*(pow( (A_0/FlowAccum.get_data_element(this_row,this_col) ),
 			                    m_over_n))
 		                       + chi_temp[ChIndex+1];
 		//cout << "link 0, node " << curr_node << " and chi: " << chi_temp[ChIndex]
@@ -1049,7 +1048,7 @@ void LSDChannel::write_channel_to_csv(string path, string filename, LSDRaster& f
 {
   
   ofstream chan_out;
-  chan_fname = path+filename+"_chan.csv";
+  string chan_fname = path+filename+"_chan.csv";
   chan_out.open(chan_fname.c_str());
     
   int NNodes = NodeSequence.size();
@@ -1073,7 +1072,6 @@ void LSDChannel::write_channel_to_csv(string path, string filename, LSDRaster& f
  
   
   int this_row,this_col;
-  float this_elev,this_area,this_distance,this_chi;
   float x,y;
   
   int id = 0;

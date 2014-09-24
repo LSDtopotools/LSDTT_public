@@ -57,6 +57,7 @@
 #include "LSDRaster.hpp"
 #include "LSDAnalysisDriver.hpp"
 #include "LSDJunctionNetwork.hpp"
+#include "LSDChannel.hpp"
 using namespace std;
 
 #ifndef LSDAnalysisDriver_CPP
@@ -877,6 +878,15 @@ void LSDAnalysisDriver::write_shapes_from_switches()
   if(analyses_switches.find("write_single_thread_channel") != analyses_switches.end())
   {
     LSDChannel this_channel = get_single_thread_channel();
+    
+    // make sure flow distance exists
+    if( map_of_LSDRasters.find("flow_distance") == map_of_LSDRasters.end())
+    {
+      calculate_flow_distance();
+    }
+    
+    // write the channel
+    this_channel.write_channel_to_csv(write_path,write_fname,map_of_LSDRasters["flow_distance"]);  
   }
 } 
 
@@ -1221,11 +1231,10 @@ void LSDAnalysisDriver::calculate_flow_distance()
     // it doens't exist. Calculate it here. 
     if(not got_flowinfo)
     {
-      calculate_flowinfo
+      calculate_flowinfo();
     }    
     
-    map_of_LSDRasters["flow_distance"] = FlowInfo.distance_from_outlet();
-    
+    map_of_LSDRasters["flow_distance"] = FlowInfo.distance_from_outlet();    
   } 
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -1325,8 +1334,10 @@ void LSDAnalysisDriver::calculate_ContributingPixels()
 LSDChannel LSDAnalysisDriver::get_single_thread_channel()
 {
 
+  LSDChannel return_channel;
+
   // check to see if the method has been set
-  if(method_map.find("single_thread_channel_method") == analyses_switches.end())
+  if(method_map.find("single_thread_channel_method") == method_map.end())
   {
     method_map["single_thread_channel_method"] = "start_and_end_node";
   }
@@ -1342,7 +1353,7 @@ LSDChannel LSDAnalysisDriver::get_single_thread_channel()
   }    
   if( map_of_LSDRasters.find("drainage_area") ==  map_of_LSDRasters.end())
   {
-    drainage_area();
+    calculate_drainage_area();
   }       
   if (not got_flowinfo)
   {    
@@ -1401,9 +1412,17 @@ LSDChannel LSDAnalysisDriver::get_single_thread_channel()
       // you don't have m_over_n. Replace with default
       cout << "You haven't assigned m/n. Defaulting to 0.45" << endl;
       float_parameters["m_over_n"] = 0.45;
-    }         
-        
+    }  
+    
+    float downslope_chi = 0;
+    LSDChannel this_channel(SN, EN, downslope_chi,float_parameters["m_over_n"], 
+                      float_parameters["m_over_nA_0"], FlowInfo,
+                      map_of_LSDRasters["fill"], map_of_LSDRasters["drainage_area"]);  
+                            
+    return_channel = this_channel;     
   }
+  
+  return return_channel;
 }
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
