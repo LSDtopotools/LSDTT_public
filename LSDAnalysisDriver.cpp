@@ -269,6 +269,17 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
       // get rid of any control characters from the end (if param file was made in DOS)
     	method_map["drainage_area_method"] = RemoveControlCharactersFromEndOfString(method_map["drainage_area_method"]);
     }
+
+    //=-=-=-=-=-=-=-=-=-=-=-=-
+    // parameters for single thread channel extraction
+    //=-=-=-=-=-=-=-=-=-=-=-=-
+    else if (lower == "single_thread_channel_method")
+    {
+      method_map["single_thread_channel_method"] = value;
+      // get rid of any control characters from the end (if param file was made in DOS)
+    	method_map["single_thread_channel_method"] = 
+          RemoveControlCharactersFromEndOfString(method_map["single_thread_channel_method"]);
+    }
     
     //=-=-=-=-=-=--=-=-=-=-
     // paramters for area threshold channel network
@@ -349,7 +360,7 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
     else if (lower == "write drainage area")
     {
       bool temp_bool = (value == "true") ? true : false;
-      analyses_switches["writedrainage_area"] = temp_bool;
+      analyses_switches["write_drainage_area"] = temp_bool;
       raster_switches["need_base_raster"] = temp_bool;
       raster_switches["need_fill"] = temp_bool;
       raster_switches["need_drainage_area"] = temp_bool;
@@ -383,6 +394,7 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
       raster_switches["need_base_raster"] = temp_bool;
       raster_switches["need_fill"] = temp_bool;
       raster_switches["need_flowinfo"] = temp_bool;
+      raster_switches["need_flow_distance"] = temp_bool;
       raster_switches["need_drainage_area"] = temp_bool;
     }		    
     else if (lower == "write chi map")
@@ -855,6 +867,19 @@ void LSDAnalysisDriver::write_rasters_from_analysis_switches()
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Writes other data elements from the switches
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDAnalysisDriver::write_shapes_from_switches()
+{
+
+  // write a single thread channel
+  if(analyses_switches.find("write_single_thread_channel") != analyses_switches.end())
+  {
+    LSDChannel this_channel = get_single_thread_channel();
+  }
+} 
+
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Reads the base raster for analysis
@@ -1003,6 +1028,7 @@ void LSDAnalysisDriver::calculate_drainage_area()
         calculate_flowinfo();
       }
       // now get flow area from flowinfo
+      map_of_LSDRasters["drainage_area"] = FlowInfo.write_DrainageArea_to_LSDRaster();
     } 
     else
     {
@@ -1184,7 +1210,25 @@ void LSDAnalysisDriver::calculate_flowinfo()
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Calculates the flow distance
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDAnalysisDriver::calculate_flow_distance()
+{
+  // first check to see if this already exists
+  if (map_of_LSDRasters.find("flow_distance") ==  map_of_LSDRasters.end())
+  {
+    // it doens't exist. Calculate it here. 
+    if(not got_flowinfo)
+    {
+      calculate_flowinfo
+    }    
+    
+    map_of_LSDRasters["flow_distance"] = FlowInfo.distance_from_outlet();
+    
+  } 
+}
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Calculates the junction network object
@@ -1273,6 +1317,94 @@ void LSDAnalysisDriver::calculate_ContributingPixels()
   }  
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This gets a single thread channel
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+LSDChannel LSDAnalysisDriver::get_single_thread_channel()
+{
+
+  // check to see if the method has been set
+  if(method_map.find("single_thread_channel_method") == analyses_switches.end())
+  {
+    method_map["single_thread_channel_method"] = "start_and_end_node";
+  }
+  
+  // now check to see if rasters and flow info exist
+  if( map_of_LSDRasters.find("base_raster") ==  map_of_LSDRasters.end())
+  {
+    read_base_raster();
+  }
+  if( map_of_LSDRasters.find("fill") ==  map_of_LSDRasters.end())
+  {
+    fill_raster();
+  }    
+  if( map_of_LSDRasters.find("drainage_area") ==  map_of_LSDRasters.end())
+  {
+    drainage_area();
+  }       
+  if (not got_flowinfo)
+  {    
+    calculate_flowinfo();      
+  }    
+  
+  // now calculate channel based on these inputs.
+  if (method_map["single_thread_channel_method"] == "start_and_end_node")
+  {
+    // first check to see if nodes exist
+    if(float_parameters.find("starting_channel_node") == float_parameters.end())
+    {
+      cout << "You are trying to extract a channel but haven't assigned a starting" << endl
+           << "channel node."  << endl
+           << "Note that the float paramter keyword is starting_channel_node." << endl
+           << "Enter the starting node now: " << endl;
+      cin >> float_parameters["starting_channel_node"];
+      cout << endl;
+    }
+    // first check to see if nodes exist
+    if(float_parameters.find("ending_channel_node") == float_parameters.end())
+    {
+      cout << "You are trying to extract a channel but haven't assigned an ending" << endl
+           << "channel node."  << endl
+           << "Note that the float paramter keyword is ending_channel_node." << endl
+           << "Enter the ending node now: " << endl;
+      cin >> float_parameters["ending_channel_node"];
+      cout << endl;
+    }   
+    // now make sure the nodes are not out of bounds
+    int NNodes = FlowInfo.get_NDataNodes();    
+    int SN = int(float_parameters["starting_channel_node"]);
+    int EN = int(float_parameters["ending_channel_node"]);    
+    if(SN > NNodes-1)
+    {
+      cout << "You are extracting a channel profile but your starting node" << endl
+           << "is not on the DEM!"  << endl;
+      SN = 0;
+    }
+    if(EN > NNodes-1)
+    {
+      cout << "You are extracting a channel profile but your ending node" << endl
+           << "is not on the DEM!"  << endl;
+      EN = 0;
+    }     
+     
+    // now check to see if the A_0 and m/n paramters are assigned 
+    // now see if you've got the parameters
+    if(float_parameters.find("A_0") == float_parameters.end())
+    {
+      // you don't have A_0. Replace with default
+      float_parameters["A_0"] = 1000;
+    }
+    if(float_parameters.find("m_over_n") == float_parameters.end())
+    {
+      // you don't have m_over_n. Replace with default
+      cout << "You haven't assigned m/n. Defaulting to 0.45" << endl;
+      float_parameters["m_over_n"] = 0.45;
+    }         
+        
+  }
+}
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Calculates sources for channel network
@@ -1398,7 +1530,6 @@ void LSDAnalysisDriver::calculate_chi_map()
     }    
     if(float_parameters.find("threshold_area_for_chi_map") == float_parameters.end())
     {
-      // you don't have m_over_n. Replace with default
       cout << "You haven't assigned the threshold_area_for_chi_map."
            << "Defaulting to 0" << endl;
       float_parameters["threshold_area_for_chi"] = 0;

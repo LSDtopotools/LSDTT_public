@@ -90,6 +90,11 @@ class LSDChannel: public LSDIndexChannel
 {
 	public:
 
+  /// @brief Defualt constructor. Just makes an empty channel
+  /// @author SMM
+  /// @date 24/09/14
+  LSDChannel()  {  cout << "I am an empty LSDChannel" << endl; }
+							
   /// @brief Creates an LSDChannel by copying from an IndexChannel.
   ///
   /// @details The starting node is upstream and the ending node is downstream.
@@ -165,6 +170,22 @@ class LSDChannel: public LSDIndexChannel
 								InChann, FlowInfo, Elevation_Raster); }
 
 
+  /// @brief This calculates all the channel areas, elevations and chi parameters based on for a given LSDChannelIndex.
+	/// @param downslope_chi Downslope Chi value.
+	/// @param m_over_n m over n ratio.
+	/// @param A_0 A_0 value.
+  /// @param InChann LSDIndexChannel object.
+	/// @param FlowInfo LSDFlowInfo object.
+	/// @param Elevation_Raster Elevation LSDRaster object.
+	/// @param DA_raster Drainage area raster LSDRaster object
+  /// @author SMM
+  /// @date 01/01/12
+  LSDChannel(float downslope_chi, float m_over_n, float A_0,
+							LSDIndexChannel& InChann, LSDFlowInfo& FlowInfo,
+                             LSDRaster& Elevation_Raster, LSDRaster& DA_raster)
+							{ create_LSDC(downslope_chi, m_over_n, A_0,
+								InChann, FlowInfo, Elevation_Raster, DA_raster); }
+
 	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	//=-=-=-=-=-=-=INHERITED=-=-=-=-=-
@@ -215,6 +236,21 @@ class LSDChannel: public LSDIndexChannel
   /// @date 01/01/12
 	void calculate_chi(float downslope_chi, float m_over_n, float A_0, LSDFlowInfo& FlowInfo );
 
+
+	/// @brief This function uses a flow info as well as a flow accumulation object
+  /// to calculate the chi values in the channel.
+	/// @param downslope_chi Downslope Chi value.
+	/// @param m_over_n m over n ratio.
+	/// @param A_0 A_0 value.
+	/// @param FlowAccum a raster of flow acucmulation. Usually this will be a drainage 
+	/// area but in some cases it will be discharge so orographic effects can be 
+	/// determined
+  /// @param FlowInfo LSDFlowInfo object.	
+  /// @author SMM
+  /// @date 24/09/14
+  void calculate_chi(float downslope_chi, float m_over_n, float A_0, 
+                              LSDRaster& FlowAccum, LSDFlowInfo& FlowInfo );
+                              #
 	/// @brief Get chi value at channel node.
 	/// @param ch_node Integer node index.
 	/// @return chi value at channel node.
@@ -290,6 +326,12 @@ class LSDChannel: public LSDIndexChannel
   int calculate_channel_heads(int min_seg_length_for_channel_heads, float A_0, 
                                             float m_over_n, LSDFlowInfo& FlowInfo);
 
+  /// @brief This function writes the channel to a csv file
+  /// @param filename the filename of the channel (whithout the .csv)
+  /// @author SMM
+  /// @date 24/09/14  
+  void write_channel_to_csv(string filename);  
+
 	protected:
 
 	// This is an inherited class so
@@ -314,6 +356,9 @@ class LSDChannel: public LSDIndexChannel
 	void create_LSDC(float downslope_chi, float m_over_n, float A_0,
 						LSDIndexChannel& InChann, LSDFlowInfo& FlowInfo,
                         LSDRaster& Elevation_Raster);
+  void create_LSDC(int SJN, int EJN, float downslope_chi,
+                             float m_over_n, float A_0, LSDFlowInfo& FlowInfo,
+                             LSDRaster& Elevation_Raster, LSDRaster& Drainage_Area_Raster);                        
 };
 
 

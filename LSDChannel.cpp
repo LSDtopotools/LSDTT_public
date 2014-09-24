@@ -256,6 +256,141 @@ void LSDChannel::create_LSDC(int SJN, int EJN, float downslope_chi,
 
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// this calculates all the channel areas, elevations and chi parameters based on
+// for a starting node index and ending node index
+// Similar to above but you assign the drainage area so you can use dinfinity
+// or some other method if you want
+//
+// SMM 2014
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDChannel::create_LSDC(int SJN, int EJN, float downslope_chi,
+                             float m_over_n, float A_0, LSDFlowInfo& FlowInfo,
+                             LSDRaster& Elevation_Raster, LSDRaster& Drainage_Area_Raster)
+{
+
+	NRows = FlowInfo.get_NRows();
+	NCols = FlowInfo.get_NCols();
+	XMinimum = FlowInfo.get_XMinimum();
+	YMinimum = FlowInfo.get_YMinimum();
+	DataResolution = FlowInfo.get_DataResolution();
+	NoDataValue = FlowInfo.get_NoDataValue();
+  GeoReferencingStrings = FlowInfo.get_GeoReferencingStrings();
+
+	float root2 = 1.41421356;
+	float diag_length = root2*DataResolution;
+	float dx;
+	float pixel_area = DataResolution*DataResolution;
+
+
+
+	StartJunction = -1;
+	EndJunction = -1;
+	StartNode = SJN;
+	EndNode = EJN;
+
+	vector<int> RowI;
+	vector<int> ColI;
+	vector<int> NdI;
+
+	int curr_node = StartNode;
+
+	// push back the data vecotors with the starting node
+	int curr_row, curr_col;
+	FlowInfo.retrieve_current_row_and_col(curr_node,curr_row,curr_col);
+	NdI.push_back(StartNode);
+	RowI.push_back(curr_row);
+	ColI.push_back(curr_col);
+
+	int receive_node = -99;
+	int receive_row, receive_col;
+
+	// loop through receivers until you get to EndNode
+	while(curr_node != EndNode)
+	{
+		FlowInfo.retrieve_receiver_information(curr_node, receive_node, receive_row,
+                                              receive_col);
+
+		NdI.push_back(receive_node);
+		RowI.push_back(receive_row);
+		ColI.push_back(receive_col);
+
+		if (receive_node == curr_node)
+		{
+			EndNode = curr_node;
+			cout << "Warning, the channel has come to a baselevel node before it has"
+			     << endl << "reached the end node" << endl;
+		}
+		else
+		{
+			curr_node = receive_node;
+		}
+	}
+
+	RowSequence = RowI;
+	ColSequence = ColI;
+	NodeSequence = NdI;
+
+	// get the number of nodes in the channel
+	int n_nodes_in_channel = int(NodeSequence.size());
+
+	// the bottom node is at chi of downslope_chi
+	// initiate the chi vector
+	vector<float> empty_vec;
+
+
+	vector<float> chi_temp(n_nodes_in_channel,downslope_chi);
+
+
+	vector<float> elev_temp(n_nodes_in_channel,float(NoDataValue));
+	vector<float> area_temp(n_nodes_in_channel,float(NoDataValue));
+
+	// get the first node
+	float curr_area;
+
+	curr_node = NodeSequence[n_nodes_in_channel-1];
+	curr_row = RowI[n_nodes_in_channel-1];
+	curr_col = ColI[n_nodes_in_channel-1];
+	curr_area = Drainage_Area_Raster.get_data_element(curr_row,curr_col);
+	area_temp[n_nodes_in_channel-1] = curr_area;
+	elev_temp[n_nodes_in_channel-1] = Elevation_Raster.get_data_element(curr_row,curr_col);
+
+	// now loop up through the channel, adding chi values
+	// note, the channel index are arranges with upstream element first, so you need to go through the channel
+	// in reverse order
+	for (int ChIndex = n_nodes_in_channel-2; ChIndex>=0; ChIndex--)
+	{
+	 	//cout << "ChIndex is: " << ChIndex << endl;
+		curr_node = NodeSequence[ChIndex];
+		FlowInfo.retrieve_current_row_and_col(curr_node,curr_row,
+                                             curr_col);
+		if (FlowInfo.retrieve_flow_length_code_of_node(curr_node) == 2)
+		{
+			dx = diag_length;
+		}
+		else
+		{
+			dx = DataResolution;
+		}
+		//cout << "dx is: " << dx << endl;
+
+		curr_area = Drainage_Area_Raster.get_data_element(curr_row,curr_col);
+		area_temp[ChIndex] = curr_area;
+		elev_temp[ChIndex] = Elevation_Raster.get_data_element(curr_row,curr_col);
+		chi_temp[ChIndex] = dx*(pow( (A_0/curr_area ),
+			                    m_over_n))
+		                       + chi_temp[ChIndex+1];
+		//cout << "link 0, node " << curr_node << " and chi: " << chi_temp[ChIndex]
+		//     << " and chi_temp+1: " << chi_temp[ChIndex+1] << endl;
+	}
+
+	Chi = chi_temp;
+	Elevation = elev_temp;
+	DrainageArea = area_temp;
+
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this calculates all the channel areas, elevations and chi parameters based on
@@ -572,6 +707,61 @@ void LSDChannel::calculate_chi(float downslope_chi, float m_over_n, float A_0, L
 }
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Calculates chi but with a flow accumulation raster
+//
+// SMM 2014
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDChannel::calculate_chi(float downslope_chi, float m_over_n, float A_0, 
+                            LSDRaster& FlowAccum, LSDFlowInfo& FlowInfo )
+{
+	float root2 = 1.41421356;
+	float diag_length = root2*DataResolution;
+	float dx;
+	float pixel_area = DataResolution*DataResolution;
+	int curr_node;
+	int this_row,this_col;
+
+	// get the number of nodes in the channel
+	int n_nodes_in_channel = int(NodeSequence.size());
+
+	// the bottom node is at chi of downslope_chi
+	// initiate the chi vector
+	vector<float> empty_vec;
+	vector<float> chi_temp(n_nodes_in_channel,downslope_chi);
+
+	// now loop up through the channel, adding chi values
+	// note, the channel index are arranges with upstream element first, so you need to go through the channel
+	// in reverse order
+	for (int ChIndex = n_nodes_in_channel-2; ChIndex>=0; ChIndex--)
+	{
+	 	//cout << "ChIndex is: " << ChIndex << endl;
+		curr_node = NodeSequence[ChIndex];
+		if (FlowInfo.retrieve_flow_length_code_of_node(curr_node) == 2)
+		{
+			dx = diag_length;
+		}
+		else
+		{
+			dx = DataResolution;
+		}
+		//cout << "dx is: " << dx << endl;
+
+    // get the row and columm
+    FlowInfo.retrieve_current_row_and_col(current_node, this_row, this_col);
+
+		chi_temp[ChIndex] = dx*(pow( (A_0/ (FlowAccum.get_data_element(this_row,this_col) ),
+			                    m_over_n))
+		                       + chi_temp[ChIndex+1];
+		//cout << "link 0, node " << curr_node << " and chi: " << chi_temp[ChIndex]
+		//     << " and chi_temp+1: " << chi_temp[ChIndex+1] << endl;
+	}
+
+	Chi = chi_temp;
+}
+
+
 // this function gets the most likely channel segments
 //
 // SMM 2013
@@ -733,7 +923,7 @@ void LSDChannel::find_best_fit_m_over_n_with_segments(int n_movern, float d_move
   //  }
 }
 
-///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+///=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 /// Calculate channel head locations using chi segment fitting.
 ///
 /// Fitting segments to the chi-elevation data of the main stem.  We assume that the profile
@@ -747,7 +937,7 @@ void LSDChannel::find_best_fit_m_over_n_with_segments(int n_movern, float d_move
 /// elevation profile, a value of 10 is suggested), A_0, m over n, FlowInfo.
 /// Return value: integer with the node index of the channel head location.
 /// FC 25/09/2013
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 int LSDChannel::calculate_channel_heads(int min_seg_length_for_channel_heads, float A_0,
                                             float m_over_n, LSDFlowInfo& FlowInfo)
 {
@@ -851,5 +1041,58 @@ int LSDChannel::calculate_channel_heads(int min_seg_length_for_channel_heads, fl
 
     return node_index;
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function writes a channel to a CSV file
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChannel::write_channel_to_csv(string path, string filename, LSDRaster& flow_dist)  
+{
+  
+  ofstream chan_out;
+  chan_fname = path+filename+"_chan.csv";
+  chan_out.open(chan_fname.c_str());
+    
+  int NNodes = NodeSequence.size();
+  
+  // make sure elevation chi and area vectors exist
+  if (int(Elevation.size()) !=  NNodes)
+  {
+    vector<float> temp(NNodes,0);
+    Elevation = temp;
+  }
+  if (int(Chi.size()) !=  NNodes)
+  {
+    vector<float> temp(NNodes,0);
+    Chi = temp;
+  } 
+  if (int(DrainageArea.size()) !=  NNodes)
+  {
+    vector<float> temp(NNodes,0);
+    DrainageArea = temp;
+  }  
+ 
+  
+  int this_row,this_col;
+  float this_elev,this_area,this_distance,this_chi;
+  float x,y;
+  
+  int id = 0;
+  
+  chan_out << "id,x,y,row,column,distance_from_outlet,elevation,drainge_area,chi" << endl;
+  for(int node = 0; node<NNodes; node++)
+  {
+    id++;
+    this_row = RowSequence[node];
+    this_col = ColSequence[node];
+		x = XMinimum + float(this_col)*DataResolution + 0.5*DataResolution;
+		y = YMinimum + float(NRows-this_row)*DataResolution - 0.5*DataResolution;		// this is because the DEM starts from the top corner
+    
+    chan_out << id << "," << x << "," << y << "," << this_row << "," 
+             << this_col << "," << flow_dist.get_data_element(this_row,this_col) << ","
+             << Elevation[node] <<"," << DrainageArea[node] <<","<<Chi[node] << endl;
+  }
+  chan_out.close();
+}   
+
 
 #endif

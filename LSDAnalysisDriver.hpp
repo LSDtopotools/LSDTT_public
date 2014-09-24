@@ -156,15 +156,18 @@ class LSDAnalysisDriver
     /// @author SMM
     /// @date 29/07/2014
     void calculate_flowinfo();
+
+    /// @brief This calculates the LSDFlowInfo object distance from the outlet
+    /// @author SMM
+    /// @date 24/09/2014 
+    void calculate_flow_distance(); 
     
     /// @brief This calculates the LSDJunctionNetwork object
     /// @return JunctionNetork: the junction network
     /// @author SMM
     /// @date 30/07/2014
     LSDJunctionNetwork calculate_JunctionNetwork();    
-    
-    
-    
+        
     /// @brief This gets the nodeindex from the LSDFlowInfo object
     /// IMPORTANT: this is an LSDIndexRaster so it goes into the 
     /// LSDIndexRaster vector!    
