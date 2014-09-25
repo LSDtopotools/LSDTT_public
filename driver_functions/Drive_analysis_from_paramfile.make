@@ -17,7 +17,7 @@ SOURCES=Drive_analysis_from_paramfile.cpp \
     ../LSDAnalysisDriver.cpp 
 LIBS= -lm -lstdc++ -lfftw3
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=Analysis_from_paramfile.out
+EXECUTABLE=LSDTT_analysis_from_paramfile.out
 
 all: $(SOURCES) $(EXECUTABLE)
 

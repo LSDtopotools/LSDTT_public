@@ -1,0 +1,17 @@
+# This is a driver file for LSDTopoTools
+# Any lines with the # symbol in the first row will be ignored
+
+# File information
+dem read extension: bil
+dem write extension: bil
+read path: /home/smudd/SMMDataStore/Topographic_Data/NextMap_old/Scotland
+read fname: WhiteadderDEM
+
+# Parameters for various topographic analysis
+min_slope_for_fill: 0.0001
+pixel_threshold_for_channel_net: 200
+
+# The different analyses to be run
+write fill: true
+write hillshade: true
+write channel_net: true
