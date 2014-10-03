@@ -282,6 +282,9 @@ class LSDAnalysisDriver
     
     /// tells the code if you've got the junction network
     bool got_JunctionNetwork;
+    
+    /// tells the code if you've done the polyfit
+    bool got_polyfit;
         
     /// the path to the datafiles
     string pathname;
@@ -350,7 +353,7 @@ class LSDAnalysisDriver
 
     /// This holds names of methods. For example, if the key is drainage_area_method, the string is
     /// the method which is used to calculate drainage area
-  map<string,string> method_map;
+    map<string,string> method_map;
     
 
     

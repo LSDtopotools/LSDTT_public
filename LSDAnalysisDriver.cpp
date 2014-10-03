@@ -76,6 +76,7 @@ void LSDAnalysisDriver::create()
   cout << "Now I need a parameter filename: " << endl;
   cin >> param_fname;
   got_flowinfo = false;
+  got_polyfit = false;
   got_JunctionNetwork = false;
   
   ingest_data(pathname, param_fname);
@@ -91,6 +92,7 @@ void LSDAnalysisDriver::create(string pname, string fname)
   check_pathname_for_slash();
   param_fname = fname;
   got_flowinfo = false;
+  got_polyfit = false;
   got_JunctionNetwork = false;
   
   ingest_data(pathname, param_fname);
@@ -252,12 +254,14 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
     else if (lower == "polyfit_window_radius")	
     {
       float_parameters["polyfit_window_radius"] = atof(value.c_str());
+      cout << "Your polyfit window radius is: "  <<  float_parameters["polyfit_window_radius"] << endl;
     }
     else if (lower == "slope_method")
-    {
-      method_map["slope_method"] = value;
+    {      
+      method_map["slope_method"] = value;      
       // get rid of any control characters from the end (if param file was made in DOS)
     	method_map["slope_method"] = RemoveControlCharactersFromEndOfString(method_map["slope_method"]);
+    	cout << "Your slope method is: "  <<  method_map["slope_method"] << endl;
     }
 
 
@@ -279,7 +283,7 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
       method_map["single_thread_channel_method"] = value;
       // get rid of any control characters from the end (if param file was made in DOS)
     	method_map["single_thread_channel_method"] = 
-          RemoveControlCharactersFromEndOfString(method_map["single_thread_channel_method"]);
+      RemoveControlCharactersFromEndOfString(method_map["single_thread_channel_method"]);
     }
     
     //=-=-=-=-=-=--=-=-=-=-
@@ -966,12 +970,14 @@ void LSDAnalysisDriver::calculate_slope()
     cout << "You did not choose a slope method. Defaulting to d8" << endl;
     method_map["slope_method"] = "d8"; 
   }
-  if(method_map["slope_method"] != "d8" && method_map["slope"] != "polyfit")
+  if(method_map["slope_method"] != "d8" && method_map["slope_method"] != "polyfit")
   {
     cout << "You have not selected a valid slope method. Options are d8 and polyfit" << endl
-         << "note these options are case sensitive. Defualting to d8" << endl;
+         << "You chose: " << method_map["slope_method"] << endl
+         << "note slope options are case sensitive. Defualting to d8" << endl;
     method_map["slope_method"] = "d8";      
   }
+  cout << "Calculating slope, your slope method is: " <<  method_map["slope_method"] << endl;
   
   if(method_map["slope_method"] == "d8")
   {
@@ -1084,56 +1090,71 @@ void LSDAnalysisDriver::calculate_polyfit()
   {
     check_polyfit();
   }
-
-  // now get the polyfit rasters
-  if (map_of_LSDRasters.find("base_raster") == map_of_LSDRasters.end())
+  
+  if (not got_polyfit)
   {
-    read_base_raster();
-  }
-  else
-  {
-    vector<LSDRaster> pfit_rasters;
-    
-    float dx = map_of_LSDRasters["base_raster"].get_DataResolution();
-    float WR = float_parameters["polyfit_window_radius"];
-    // check to make sure the window radius is not too small
-    if (WR <= 2*dx)
+    // now get the polyfit rasters
+    if (map_of_LSDRasters.find("base_raster") == map_of_LSDRasters.end())
     {
-      cout << "Warning, window radius less than twice the data resolution, defaulting 2* window resolution" << endl;
-      WR = 2*dx+0.001;
+      read_base_raster();
     }
-   
-    vector<int> ivs = integer_vector_map["polyfit"];
-    pfit_rasters = map_of_LSDRasters["base_raster"].calculate_polyfit_surface_metrics(WR,ivs);
-
-    if(ivs[1] == 1)
+    else
     {
-      map_of_LSDRasters["slope"] = pfit_rasters[1];
+      vector<LSDRaster> pfit_rasters;
+      vector<int> ivs = integer_vector_map["polyfit"];
+      
+      cout << "Calculating polyfit surfaces." << endl 
+           << "Your designated window radius is: "  << float_parameters["polyfit_window_radius"]
+           << " dx is: " <<  map_of_LSDRasters["base_raster"].get_DataResolution()
+           << " and the polyfit vector is: " << endl;
+      for (int pf = 0; pf<8; pf++)
+      {
+        cout << ivs[pf] << " ";
+      }
+      cout << endl;
+      
+      float dx = map_of_LSDRasters["base_raster"].get_DataResolution();
+      float WR = float_parameters["polyfit_window_radius"];
+      // check to make sure the window radius is not too small
+      if (WR <= 2*dx)
+      {
+        cout << "Warning, window radius less than twice the data resolution, defaulting 2* window resolution" << endl;
+        WR = 2*dx+0.001;
+      }
+     
+      
+      pfit_rasters = map_of_LSDRasters["base_raster"].calculate_polyfit_surface_metrics(WR,ivs);
+  
+      if(ivs[1] == 1)
+      {
+        map_of_LSDRasters["slope"] = pfit_rasters[1];
+      }
+      if(ivs[2] == 1)
+      {
+        map_of_LSDRasters["aspect"] = pfit_rasters[2];
+      }
+      if(ivs[3] == 1)
+      {
+        map_of_LSDRasters["curvature"] = pfit_rasters[3];
+      }   
+      if(ivs[4] == 1)
+      {
+        map_of_LSDRasters["planform_curvature"] = pfit_rasters[4];
+      }  
+      if(ivs[5] == 1)
+      {
+        map_of_LSDRasters["profile_curvature"] = pfit_rasters[5];
+      }  
+      if(ivs[6] == 1)
+      {
+        map_of_LSDRasters["tangential_curvature"] = pfit_rasters[6];
+      } 
+      if(ivs[7] == 1)
+      {
+        map_of_LSDRasters["polyfit_classification"] = pfit_rasters[7];
+      } 
     }
-    if(ivs[2] == 1)
-    {
-      map_of_LSDRasters["aspect"] = pfit_rasters[2];
-    }
-    if(ivs[3] == 1)
-    {
-      map_of_LSDRasters["curvature"] = pfit_rasters[3];
-    }   
-    if(ivs[4] == 1)
-    {
-      map_of_LSDRasters["planform_curvature"] = pfit_rasters[4];
-    }  
-    if(ivs[5] == 1)
-    {
-      map_of_LSDRasters["profile_curvature"] = pfit_rasters[5];
-    }  
-    if(ivs[6] == 1)
-    {
-      map_of_LSDRasters["tangential_curvature"] = pfit_rasters[6];
-    } 
-    if(ivs[7] == 1)
-    {
-      map_of_LSDRasters["polyfit_classification"] = pfit_rasters[7];
-    } 
+    got_polyfit = true;
   }
 }
 
@@ -1758,7 +1779,7 @@ void LSDAnalysisDriver::check_polyfit()
   vector<int> polyfit_switches(8,0);
   
   // need to check for polyfit window radius here
-  if(float_parameters.find("polyfit_radius") == float_parameters.end())
+  if(float_parameters.find("polyfit_window_radius") == float_parameters.end())
   {
       // you don't have the polyfit radius. Replace with default
       float_parameters["polyfit_window_radius"] = 7;
@@ -1771,7 +1792,7 @@ void LSDAnalysisDriver::check_polyfit()
       cout << "You did not choose a slope method. Defaulting to d8" << endl;
       method_map["slope_method"] = "d8"; 
     }
-    if(method_map["slope_method"] != "d8" && method_map["slope"] != "polyfit")
+    if(method_map["slope_method"] != "d8" && method_map["slope_method"] != "polyfit")
     {
       cout << "You have not selected a valid slope method. Options are d8 and polyfit" << endl
            << "note these options are case sensitive. Defualting to d8" << endl;
