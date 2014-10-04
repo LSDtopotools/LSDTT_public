@@ -176,6 +176,11 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
     {
       float_parameters["min_slope_for_fill"] = atof(value.c_str());
     }
+    else if (lower == "fill_method")
+    {
+      method_map["fill_method"] = value;
+      method_map["fill_method"] = RemoveControlCharactersFromEndOfString(method_map["fill_method"]);
+    }
     
     //=-=-=-=-=-=--=-=-=-=-
     // paramters for hillshade
@@ -932,8 +937,7 @@ void LSDAnalysisDriver::fill_raster()
     read_base_raster();
   }
   
-  //cout << "Checking base raster, NRows are: "
-  //     << map_of_LSDRasters["base_raster"].get_NRows() << endl;
+
   
   // see if the min_slope_for_fill has been initialised
   // If not,  set to default. 
@@ -946,14 +950,27 @@ void LSDAnalysisDriver::fill_raster()
   // first check to see if it has already been calculated
   if(map_of_LSDRasters.find("fill") == map_of_LSDRasters.end())
   {
-    //cout << "LINE 432, the base raster index is: " << base_raster_index << endl;
-    LSDRaster temp_fill = map_of_LSDRasters["base_raster"].fill( float_parameters["min_slope_for_fill"] );
-    map_of_LSDRasters["fill"] =  temp_fill;    
+    // check to see if a method has been designated
+    if(method_map["fill_method"] == "old_fill")
+    {
+      cout << "Using the old fill function" << endl;
+      LSDRaster temp_fill = map_of_LSDRasters["base_raster"].fill();  
+      map_of_LSDRasters["fill"] =  temp_fill;  
+    }
+    if(method_map["fill_method"] == "remove_seas") 
+    {
+      map_of_LSDRasters["base_raster"].remove_seas();
+      LSDRaster temp_fill = map_of_LSDRasters["base_raster"].fill( float_parameters["min_slope_for_fill"] );
+      map_of_LSDRasters["fill"] =  temp_fill;         
+    }
+    else
+    {
+      //cout << "LINE 432, the base raster index is: " << base_raster_index << endl;
+      LSDRaster temp_fill = map_of_LSDRasters["base_raster"].fill( float_parameters["min_slope_for_fill"] );
+      map_of_LSDRasters["fill"] =  temp_fill;  
+    }  
   }
-  else
-  {
-    //cout << "Fill raster exists, its index is " << raster_indices["fill"] << endl;
-  }
+
   
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
