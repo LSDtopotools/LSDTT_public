@@ -66,7 +66,8 @@ int main (int nNumberofArgs,char *argv[])
   vector<string> BoundaryConditions(4, "No Flux");
 
   //load dem
-  LSDRaster DEM((path+filename+"_DEM"), "flt");  
+  string f_ext = "flt";
+  LSDRaster DEM((path+filename+"_DEM"), f_ext);  
 
  	//add the threshold to the prefix to make <prefix>_prob_<threshold>
   stringstream prefixer;
@@ -258,16 +259,16 @@ int main (int nNumberofArgs,char *argv[])
   //if the user requests the raster to be written, write the rasters
   if (WriteRasters == 1){
     cout << "Writing Rasters\n" << endl;                                   
-    FilledDEM.write_raster((path+filename+"_Fill_p"), "flt");
-    Surfaces[1].write_raster((path+filename+"_Slope_p"),"flt");
-    Surfaces[2].write_raster((path+filename+"_Aspect_p"),"flt");
-    Surfaces[3].write_raster((path+filename+"_Curvature_p"),"flt");
-    StreamNetwork.write_raster((path+filename+"_STNET_p"), "flt"); 
-    Basin_Raster.write_raster((path+filename+"_Basins_p"), "flt"); 
-    CHT.write_raster((path+filename+"_CHT_p"),"flt");
-    HFR_LH.write_raster((path+filename+"_HFR_LH_p"),"flt"); 
-    HFR_Slope.write_raster((path+filename+"_HFR_SLP_p"),"flt");
-    relief.write_raster((path+filename+"_Relief_p"),"flt");
+    FilledDEM.write_raster((path+filename+"_Fill_p"), f_ext);
+    Surfaces[1].write_raster((path+filename+"_Slope_p"),f_ext);
+    Surfaces[2].write_raster((path+filename+"_Aspect_p"),f_ext);
+    Surfaces[3].write_raster((path+filename+"_Curvature_p"),f_ext);
+    StreamNetwork.write_raster((path+filename+"_STNET_p"), f_ext); 
+    Basin_Raster.write_raster((path+filename+"_Basins_p"), f_ext); 
+    CHT.write_raster((path+filename+"_CHT_p"),f_ext);
+    HFR_LH.write_raster((path+filename+"_HFR_LH_p"),f_ext); 
+    HFR_Slope.write_raster((path+filename+"_HFR_SLP_p"),f_ext);
+    relief.write_raster((path+filename+"_Relief_p"),f_ext);
   
   }
 
