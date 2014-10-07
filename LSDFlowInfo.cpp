@@ -1193,7 +1193,7 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension,
     // use row and column indices to locate source nodes.
     if(input_switch == 1)
     {
-      for(int i = 0; i < rowindex.size(); ++i)
+      for(int i = 0; i < int(rowindex.size()); ++i)
       {
         if(rowindex[i]<NRows && rowindex[i]>=0 && colindex[i]<NCols && colindex[i] >=0 && NodeIndex[rowindex[i]][colindex[i]]!=NoDataValue)
         {
@@ -1208,14 +1208,14 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension,
     else if(input_switch == 2)
     {
       vector<int> Sources_temp;
-      for(int i = 0; i < x_coord.size(); ++i)
+      for(int i = 0; i < int(x_coord.size()); ++i)
       {
         node = get_node_index_of_coordinate_point(x_coord[i], y_coord[i]);
         if (node != NoDataValue) 
         {
           // Test 1 - Check for channel heads that fall in same pixel
           int test1 = 0;
-          for(int i_test=0; i_test<Sources_temp.size();++i_test)
+          for(int i_test=0; i_test<int(Sources_temp.size());++i_test)
           {
             if(node==Sources_temp[i_test]) test1 = 1;
           }
@@ -1224,10 +1224,10 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension,
         }
       }
       // Test 2 - Need to do some extra checks to load sources correctly. 
-      for(int i = 0; i<Sources_temp.size(); ++i)
+      for(int i = 0; i<int(Sources_temp.size()); ++i)
       {
         int test2 = 0;
-        for(int i_test = 0; i_test<Sources_temp.size(); ++i_test)
+        for(int i_test = 0; i_test<int(Sources_temp.size()); ++i_test)
         {
           if(i!=i_test)
           {
@@ -2507,7 +2507,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 
   //create the output filename from the user supplied filename prefix
   stringstream ss_filename;
-  ss_filename << Prefix << "_HilltopData.txt";
+  ss_filename << Prefix << "_HilltopData.csv";
 
   ofs.open(ss_filename.str().c_str());
 
@@ -2515,7 +2515,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 		cout << "\nFATAL ERROR: unable to write to " << ss_filename.str() << endl;
 		exit(EXIT_FAILURE);
 	}
-	ofs << "X Y hilltop_id S R Lh BasinID\n";
+	ofs << "X,Y,hilltop_id,S,R,Lh,BasinID,StreamID\n";
 
 	//calculate northing and easting
 	for (i=0;i<NRows;++i){
@@ -3089,7 +3089,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
             Relief_Array[i][j] = relief;
 
             if (relief > 0){
-					    ofs << X << " " << Y << " " << " " << hilltops[i][j] << " " << mean_slope << " " << relief << " " << length << " " << basin[i][j] << "\n";
+					    ofs << X << "," << Y << "," << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "\n";
             }
             else {
               ++neg_count;
@@ -3252,7 +3252,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 
   //create the output filename from the user supplied filename prefix
   stringstream ss_filename;
-  ss_filename << Prefix << "_HilltopData.txt";
+  ss_filename << Prefix << "_HilltopData.csv";
 
   ofs.open(ss_filename.str().c_str());
 
@@ -3260,7 +3260,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 		cout << "\nFATAL ERROR: unable to write to " << ss_filename.str() << endl;
 		exit(EXIT_FAILURE);
 	}
-	ofs << "X Y hilltop_id S R Lh BasinID StreamID\n";
+	ofs << "X,Y,hilltop_id,S,R,Lh,BasinID,StreamID\n";
 
 	//calculate northing and easting
 	for (i=0;i<NRows;++i){
@@ -3837,7 +3837,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
               Relief_Array[i][j] = relief;
 
               if (relief > 0){
-					      ofs << X << " " << Y << " " << " " << hilltops[i][j] << " " << mean_slope << " " << relief << " " << length << " " << basin[i][j] << " " << stnet[a][b] << "\n";
+					      ofs << X << "," << Y << "," << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "," << stnet[a][b] << "\n";
               }
               else {
                 ++neg_count;
