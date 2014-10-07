@@ -3089,7 +3089,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
             Relief_Array[i][j] = relief;
 
             if (relief > 0){
-					    ofs << X << "," << Y << "," << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "\n";
+					    ofs << X << "," << Y << "," << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "," << stnet[a][b] <<"\n";
             }
             else {
               ++neg_count;
