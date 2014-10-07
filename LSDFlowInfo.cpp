@@ -3089,7 +3089,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
             Relief_Array[i][j] = relief;
 
             if (relief > 0){
-					    ofs << X << "," << Y << "," << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "," << stnet[a][b] <<"\n";
+					    ofs << X << "," << Y << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "," << stnet[a][b] <<"\n";
             }
             else {
               ++neg_count;
@@ -3323,7 +3323,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 					d = abs(1/(2*cosTheta));
 					xi = 0, yi = yo;
 					dir = 1;
-					east_vec[count] = easting[b] + halfDataResolution
+					east_vec[count] = easting[b] + halfDataResolution;
 					north_vec[count] = northing[a] + yo - halfDataResolution;
 					++b;
 				}
@@ -3849,8 +3849,9 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
               Slope_Array[i][j] = mean_slope;
               Relief_Array[i][j] = relief;
 
-              if (relief > 0){
-					      ofs << X << "," << Y << "," << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "," << stnet[a][b] << "\n";
+              if (relief > 0 && length*DataResolution <10000 && length*DataResolution > 0)
+              {
+					      ofs << X << "," << Y << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "," << stnet[a][b] << "\n";
               }
               else {
                 ++neg_count;
