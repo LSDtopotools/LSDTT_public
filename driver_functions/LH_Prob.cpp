@@ -66,12 +66,12 @@ int main (int nNumberofArgs,char *argv[])
   vector<string> BoundaryConditions(4, "No Flux");
 
   //load dem
-  string f_ext = "flt";
+  string f_ext = "bil";
   LSDRaster DEM((path+filename+"_DEM"), f_ext);  
 
- 	//add the threshold to the prefix to make <prefix>_prob_<threshold>
+ 	//add the threshold to the prefix to make <prefix>_prob_<threshold>_<BasinOrder>
   stringstream prefixer;
-  prefixer << filename << "_prob_" << threshold;
+  prefixer << filename << "_prob_" << threshold << "_" << BasinOrder;
   filename = prefixer.str();
 
   //Fill 
@@ -116,11 +116,11 @@ int main (int nNumberofArgs,char *argv[])
   it = unique(sorted_orders.begin(), sorted_orders.end());
   sorted_orders.resize(distance(sorted_orders.begin(),it));
      
-  int Order_Threshold = sorted_orders[int(sorted_orders.size()-2)]; // upper 2 stream orders found in StreamNetwork
+  //int Order_Threshold = sorted_orders[int(sorted_orders.size()-2)]; // upper 2 stream orders found in StreamNetwork
                         
-                        
+  int Order_Threshold = BasinOrder;                      
   cout << "Order threshold is: " << Order_Threshold << endl;
-  cout << "Max order is: " << sorted_orders[int(sorted_orders.size()-1)] << endl;                      
+       << "Max order is: " << sorted_orders[int(sorted_orders.size()-1)] << endl;                      
                                                           
   //Extract basins based on input stream order
   vector< int > basin_junctions = ChanNetwork.ExtractBasinJunctionOrder(BasinOrder, FlowInfo);
@@ -154,7 +154,11 @@ int main (int nNumberofArgs,char *argv[])
   vector<int> Target_Basin_Vector;
 
   //run HFR    
-  vector< Array2D<float> > HFR_Arrays = FlowInfo.HilltopFlowRouting_probability(FilledDEM, hilltops, Surfaces[1], StreamNetwork, dinf_rast, prefix, Basin_Raster, print_paths_switch, thinning, trace_path, basin_filter_switch, Target_Basin_Vector, Order_Threshold);
+  vector< Array2D<float> > HFR_Arrays = FlowInfo.HilltopFlowRouting_probability(FilledDEM, 
+                                         hilltops, Surfaces[1], StreamNetwork, dinf_rast, 
+                                         prefix, Basin_Raster, print_paths_switch, thinning, 
+                                         trace_path, basin_filter_switch, 
+                                         Target_Basin_Vector, Order_Threshold);
    
   LSDRaster HFR_LH = hilltops.LSDRasterTemplate(HFR_Arrays[1]);
   LSDRaster HFR_Slope = hilltops.LSDRasterTemplate(HFR_Arrays[2]);

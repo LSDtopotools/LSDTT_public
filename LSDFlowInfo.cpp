@@ -3848,6 +3848,17 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
               HillslopeLength_Array[i][j] = (length * DataResolution);
               Slope_Array[i][j] = mean_slope;
               Relief_Array[i][j] = relief;
+              
+              if (HillslopeLength_Array[i][j] > 10000 || HillslopeLength_Array[i][j] < 0)
+              {
+                cout << "Something weird has happened with the trace, hillslope length is: "
+                     << HillslopeLength_Array[i][j] << " . Resetting to NDV" << endl;
+                HillslopeLength_Array[i][j] = NoDataValue;
+                Slope_Array[i][j] = NoDataValue;
+                Relief_Array[i][j] = NoDataValue;    
+              }
+              
+              
 
               if (relief > 0 && length*DataResolution <10000 && length*DataResolution > 0)
               {
