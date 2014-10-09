@@ -3280,9 +3280,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 
   // some variables to speed things up
   float halfDataResolution = 0.5*DataResolution;
-  float tanTheta;
-  float sinTheta;
-  float cosTheta;
+
   
 	// cycle through study area, find hilltops and trace downstream
 	for (i=1; i<NRows-1; ++i)
@@ -3310,17 +3308,12 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 				east_vec[0] = easting[b];
 				north_vec[0] = northing[a];
 				s_local = slope[a][b];
-				
-				
-				tanTheta = tan(theta);
-				cosTheta = cos(theta);
-				sinTheta = sin(theta);
 
 				//test direction, calculate outlet coordinates and update indicies
 				// easterly
 				if (degs >= 45 && degs < 135) {
-					xo = 1, yo = (1+tanTheta)/2;
-					d = abs(1/(2*cosTheta));
+					xo = 1, yo = (1+tan(theta))/2;
+					d = abs(1/(2*cos(theta)));
 					xi = 0, yi = yo;
 					dir = 1;
 					east_vec[count] = easting[b] + halfDataResolution;
@@ -3329,7 +3322,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 				}
 				//southerly
 				else if (degs >= 135 && degs < 225) {
-					xo = (1-(1/tanTheta))/2, yo = 0;
+					xo = (1-(1/tan(theta)))/2, yo = 0;
 					d = abs(1/(2*cos((PI/2)-theta)));
 					xi = xo, yi = 1;
 					dir = 2;
@@ -3339,8 +3332,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 				}
 				// westerly
 				else if (degs >= 225 && degs < 315) {
-					xo = 0, yo = (1-tanTheta)/2;
-					d = abs(1/(2*cosTheta));
+					xo = 0, yo = (1-tan(theta))/2;
+					d = abs(1/(2*cos(theta)));
 					xi = 1,	yi = yo;
 					dir = 3;
 					east_vec[count] = easting[b] -halfDataResolution;
@@ -3349,7 +3342,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 				}
 				//northerly
 				else if (degs >= 315 || degs < 45) {
-					xo = (1+(1/tanTheta))/2, yo = 1;
+					xo = (1+(1/tan(theta)))/2, yo = 1;
 					d = abs(1/(2*cos((PI/2) - theta)));
 					xi = xo, yi = 0;
 					dir = 4;
@@ -3387,10 +3380,10 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 
 						//DO NORMAL FLOW PATH
 						//set xo, yo to 0 and 1 in turn and test for true outlet (xi || yi == 0 || 1)
-						temp_yo1 = yi + (1-xi)*tanTheta; 		// xo = 1
-						temp_xo1 = xi + (1-yi)*(1/tanTheta); 	// yo = 1
-						temp_yo2 = yi - xi*tanTheta;			// xo = 0
-						temp_xo2 = xi - yi*tanTheta;			// yo = 0
+						temp_yo1 = yi + (1-xi)*tan(theta); 		// xo = 1
+						temp_xo1 = xi + (1-yi)*(1/tan(theta)); 	// yo = 1
+						temp_yo2 = yi - xi*tan(theta);			// xo = 0
+						temp_xo2 = xi - yi*tan(theta);			// yo = 0
 
        			// can't outlet at same point as inlet
 						if (dir == 1) temp_yo2 = -1;
@@ -3457,7 +3450,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 						if (dir	== 1) {
 							if 	(degs_old <= 90 || degs_new >= 270) {
 								xo = 0.00001, yo = 1;
-								s_edge = abs(s_local*sinTheta);
+								s_edge = abs(s_local*sin(theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
 								xi = xo, yi = 1-yo;
 								dir = 4;
@@ -3493,7 +3486,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 							}
 							else if (degs_old > 180 || degs_new < 360) {
 								xo = 0, yo = 1-0.00001;
-								s_edge = abs(s_local*sinTheta);
+								s_edge = abs(s_local*sin(theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
 								xi = 1-xo, yi = yo;
 								dir = 3;
@@ -3510,7 +3503,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 						else if (dir == 3) {
 							if 	(degs_old <= 270 || degs_new >= 90) {
 								xo = 1-0.00001, yo = 0;
-								s_edge = abs(s_local*sinTheta);
+								s_edge = abs(s_local*sin(theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
 								xi = xo, yi = 1-yo;
 								dir = 2;
@@ -3546,7 +3539,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 							}
 							else if (degs_old > 0 || degs_new < 180) {
 								xo = 1, yo = 0.00001;
-								s_edge = abs(s_local*sinTheta);
+								s_edge = abs(s_local*sin(theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
 								xi = 1-xo, yi = yo;
 								dir = 1;
@@ -3568,7 +3561,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 						if (dir	== 1) {
 							if (degs_old <= 90 || degs_new >= 270) {
 								xo = 0.00001, yo = 1;
-								s_edge = abs(s_local*sinTheta);
+								s_edge = abs(s_local*sin(theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
 								xi = xo, yi = 1-yo;
 								dir = 4;
@@ -3604,7 +3597,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 							}
 							else if (degs_old > 180 || degs_new < 360) {
 								xo = 0, yo = 1-0.00001;
-								s_edge = abs(s_local*sinTheta);
+								s_edge = abs(s_local*sin(theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
 								xi = 1-xo, yi = yo;
 								dir = 3;
@@ -3621,7 +3614,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 						else if (dir == 3) {
 							if 	(degs_old <= 270 || degs_new >= 90) {
 								xo = 1-0.00001, yo = 0;
-								s_edge = abs(s_local*sinTheta);
+								s_edge = abs(s_local*sin(theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
 								xi = xo, yi = 1-yo;
 								dir = 2;
@@ -3657,7 +3650,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 							}
 							else if (degs_old > 0 || degs_new < 180) {
 								xo = 1, yo = 0.00001;
-								s_edge = abs(s_local*sinTheta);
+								s_edge = abs(s_local*sin(theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
 								xi = 1-xo, yi = yo;
 								dir = 1;
@@ -3698,8 +3691,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 			    	//test direction, calculate outlet coordinates and update indicies
 						// easterly
 						if (degs >= 45 && degs < 135) {
-							xo = 1, yo = (1+tanTheta)/2;
-							d = abs(1/(2*cosTheta));
+							xo = 1, yo = (1+tan(theta))/2;
+							d = abs(1/(2*cos(theta)));
 							xi = 0, yi = yo;
 			    		dir = 1;
 			    		east_vec[count] = easting[b] + halfDataResolution;
@@ -3708,7 +3701,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 						}
 						//southerly
 						else if (degs >= 135 && degs < 225) {
-							xo = (1-(1/tanTheta))/2, yo = 0;
+							xo = (1-(1/tan(theta)))/2, yo = 0;
 							d = abs(1/(2*cos((PI/2)-theta)));
 							xi = xo, yi = 1;
 							dir = 2;
@@ -3718,8 +3711,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 						}
 						// westerly
 						else if (degs >= 225 && degs < 315) {
-							xo = 0, yo = (1-tanTheta)/2;
-							d = abs(1/(2*cosTheta));
+							xo = 0, yo = (1-tan(theta))/2;
+							d = abs(1/(2*cos(theta)));
 							xi = 1,	yi = yo;
 							dir = 3;
 							east_vec[count] = easting[b] -halfDataResolution;
@@ -3728,7 +3721,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 						}
 						//northerly
 						else if (degs >= 315 || degs < 45) {
-							xo = (1+(1/tanTheta))/2, yo = 1;
+							xo = (1+(1/tan(theta)))/2, yo = 1;
 							d = abs(1/(2*cos((PI/2) - theta)));
 							xi = xo, yi = 0;
 							dir = 4;
@@ -3765,8 +3758,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 						//test direction, calculate outlet coordinates and update indicies
 						// easterly
 						if (degs >= 45 && degs < 135) {
-							xo = 1, yo = (1+tanTheta)/2;
-							d = abs(1/(2*cosTheta));
+							xo = 1, yo = (1+tan(theta))/2;
+							d = abs(1/(2*cos(theta)));
 							xi = 0, yi = yo;
 							dir = 1;
 							east_vec[count] = easting[b] + halfDataResolution;
@@ -3775,7 +3768,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 						}
 						//southerly
 						else if (degs >= 135 && degs < 225) {
-							xo = (1-(1/tanTheta))/2, yo = 0;
+							xo = (1-(1/tan(theta)))/2, yo = 0;
 							d = abs(1/(2*cos((PI/2)-theta)));
 							xi = xo, yi = 1;
 							dir = 2;
@@ -3785,8 +3778,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 						}
 						// westerly
 						else if (degs >= 225 && degs < 315) {
-							xo = 0, yo = (1-tanTheta)/2;
-							d = abs(1/(2*cosTheta));
+							xo = 0, yo = (1-tan(theta))/2;
+							d = abs(1/(2*cos(theta)));
 							xi = 1,	yi = yo;
 							dir = 3;
 							east_vec[count] = easting[b] -halfDataResolution;
@@ -3795,7 +3788,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 						}
 						//northerly
 						else if (degs >= 315 || degs < 45) {
-							xo = (1+(1/tanTheta))/2, yo = 1;
+							xo = (1+(1/tan(theta)))/2, yo = 1;
 							d = abs(1/(2*cos((PI/2) - theta)));
 					    xi = xo, yi = 0;
 				    	dir = 4;
