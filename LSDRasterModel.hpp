@@ -157,6 +157,15 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @author SMM
   /// @date 1/7/2014
   void initialise_parabolic_surface(float peak_elev, float edge_offset);
+  
+  /// @brief This initialises the raster model to a square model domain
+  /// with a fractal surface using the algorithm from Saupe (1987d)
+  /// @param fractal_D Used to determine the fractal dimension, D by:
+  /// D = 3 - fractal_D. So the fractal dimension should be between
+  /// 2 and 3.
+  /// @author DAV
+  /// @date 20/10/2014
+  void intialise_fourier_fractal_surface(float fractal_D);
 
   /// @brief This initialises a surface with a hillslope
   /// that is the solution to the nonlinear sediment flux equation.

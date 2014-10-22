@@ -64,6 +64,8 @@ using namespace std;
 using namespace TNT;
 using namespace JAMA;
 
+//using std::complex::imag;    // Standard library complex numbers
+
 #define PI 3.14159265358
 #ifndef LSDRasterModel_CPP
 #define LSDRasterModel_CPP
@@ -610,6 +612,172 @@ void LSDRasterModel::initialise_parabolic_surface(float peak_elev, float edge_of
 	}
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Initialies a fractal-based terrain surface with given fractal dimension, D
+// D should be between 2 and 3 for 'reasonable' landscapes
+// This appraoch is known as the Midpoint method
+// More algorithms can be found in Saupe (1987): Algorithms for random fractals
+// (an interesting bedtime read!)
+//
+// DAV 15/10/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//void LSDRasterModel::intialise_MFD_fractal_surface(float fractal_D)
+//{
+	//// set up the length coordinate
+	//float local_x;
+	//float L = DataResolution*(NRows-1);
+	//float row_elev;
+	//float perturb;
+	
+	//// Arguments for the Fractalombulator
+	//float maxlevel;    // maximum number of recursions to use; N = 2^maxlevel
+	//float sigma;		  // intial standard deviation
+	//float H;			  // H is the parameter determining the fractal dimension; D = 3 - H
+	//bool addition;			// boolean paramter that turns random additions on or off
+	//float seed;				// seed for the random number gen
+	
+	//// Variables 
+	//int i, N, stage; 	// i is just a wee counter deely. N is number of recursions, stage is the 
+	//float delta;		// holds the standard deviation
+	//int x, y, y0, D, d; 	// integers for the indexing of arrays
+	
+	////Gaussian functions defined in LSDStatsTools
+	
+	//// Lambda function (new in C++11) to return the gauss random number
+	//// the bit inside the []  are variables we want to 'capture' from the outer function.
+	//// the bit inside the { } is the lambda function itself
+	
+	//double f3 = [delta, x0, x1, x2] { return ((x0 + x1 + x2)/3 + delta * Gauss_rand(100, 0.0, 1.0) }
+	//double f4 = [delta, x0, x1, x2, x3] { return ((x0 + x1 + x2 + x3)/4 + delta * Gauss_rand(100, 0.0, 1.0) }
+	
+	
+	////Fractalombulator
+	
+	//N = pow(2, maxlevel);
+	//delta = sigma;
+	
+	//Array2D<double> X(N+1,N+1);
+	
+	//// set the four corners to random numbers
+	//X[0][0] = delta * Gauss_rand(100, 0.0, 1.0);    // this is a bad way to do it, set them as named global? variables
+	//X[0][N] = delta * Gauss_rand(100, 0.0, 1.0);
+	//X[N][0] = delta * Gauss_rand(100, 0.0, 1.0);
+	//X[N][N] = delta * Gauss_rand(100, 0.0, 1.0);
+	
+	//D = N;
+	//d = N/2;
+	
+	//for (stage = 1, stage <= maxlevel, stage++)
+	//{
+		//delta = delta * pow(0.5, 0.5*H)    // switch to the 45 degree grid type (See Saupe '87)
+		
+		//for (x=d; x <= (N-d); x++)
+		//{
+			//for (y=d; y <= (N-d); y++)
+			//{
+				//X[x][y] = f4(delta...    // TO COMPLETE
+			//}
+		//}
+	//}
+	
+
+//}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This creates a fractal surface DEM using the Fourier filtering method
+// (Saupe 1987)
+//
+// DAV 17/10/2014
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::intialise_fourier_fractal_surface(float fractal_D)
+// 
+// N is size of the array along 1 dimension
+//
+// A[][] is a 2D array of complex variables, size N^2
+{
+	
+int N = NRows;
+//int N = RasterData.get_NRows;
+float H = fractal_D;
+Array2D< std::complex<float> > A;
+Array2D< std::complex<float> > X;
+
+int i0, j0;
+
+double rad, phase;	//Polar coordinates of the Fourier coefficient
+	
+	for (int i = 0; i<=(N/2); i++)
+	{
+		for (int j = 0; j<=(N/2); j++)
+		{
+			phase = 2 * PI * rand();
+			
+			if (i != 0 || j != 0)
+			{
+				rad = pow(i*i + j*j, (-(H+1)/2)) * Gauss_rand(100, 0.0, 1.0);
+			}
+			else
+			{
+				rad = 0;
+			} 
+			
+			A[i][j] = {rad * cos(phase), rad * sin(phase)};     // left of the comma is real part, right of the comma is imaginary part
+			
+			if (i==0)
+			{
+				i0 = 0;
+			}
+			else
+			{
+				i0 = N-i;
+			}
+			
+			if (j==0)
+			{
+				j0 = 0;
+			}
+			else
+			{
+				j0 = N-j;
+			}
+			
+			A[i0][j0] = {rad * cos(phase), -rad * sin(phase)};
+			
+		}
+	}
+	
+	// Now for the *imaginary* numbers part 
+	// We are setting the imaginary parts of the midpoint-edges of the array to zero
+	A[N/2][0].imag(0.0);
+	A[0][N/2].imag(0.0);
+	A[N/2][N/2].imag(0.0);
+	
+	for (int i=1; i<=(N/2)-1; i++)
+	{
+		for (int j=1; j<=(N/2)-1; j++)
+		{
+			phase = 2 * PI * rand();
+			rad = pow(i*i + j*j, -(H+1)/2) * Gauss_rand(100, 0.0, 1.0);
+			
+			A[i][N-j] = {rad * cos(phase), rad * sin(phase)};		// left of the comma is real part, right of the comma is imaginary part
+			A[N-i][j] = {rad * cos(phase), -rad * sin(phase)};
+			
+		}
+	}
+	
+	// Here is the place to do the fast fourier transform: DAV
+	// Note: There looks to be a very similar function in LSDRasterSpectral!
+	// InvFFT2D(A,X,N)
+	
+}
+		
+
+
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this creates a hillslope at steady state for the nonlinear sediment flux law
@@ -1913,7 +2081,7 @@ void LSDRasterModel::mtl_assemble_matrix(Array2D<float>& zeta_last_iter, Array2D
 	mtl_b_vector = 0.0;
 
 	// create the inserter. This is deleted when this function is exited
-	mtl::matrix::inserter< mtl::compressed2D<float> > ins(mtl_Assembly_matrix);
+	mtl::mat::inserter< mtl::compressed2D<float> > ins(mtl_Assembly_matrix);
 
 	// first we assemble the boundary nodes. First the nodes in row 0 (the south boundary)
 	for (int k = 0; k<NCols; k++)
@@ -3069,7 +3237,7 @@ mtl::compressed2D<float> LSDRasterModel::generate_fd_matrix( int dimension, int 
 
 	mtl::compressed2D<float> matrix(size, size);
 	matrix = 0.0;
-	mtl::matrix::inserter< mtl::compressed2D<float> > ins(matrix);
+	mtl::mat::inserter< mtl::compressed2D<float> > ins(matrix);
 
 	for (int i=0; i<size; ++i)
 	{
@@ -3363,7 +3531,7 @@ mtl::compressed2D<float> LSDRasterModel::generate_fv_matrix( int dimension, int 
 	int start_i, start_j, end_i, end_j;
 	mtl::compressed2D <float> matrix(size, size);
 	matrix = 0.0;
-	mtl::matrix::inserter< mtl::compressed2D<float> > ins(matrix);
+	mtl::mat::inserter< mtl::compressed2D<float> > ins(matrix);
 	
 	if (dimension == 0)
 	{
@@ -5655,7 +5823,7 @@ void LSDRasterModel::MuddPILE_assemble_matrix(Array2D<float>& uplift_rate,
   mtl_b_vector = 0.0;
 
   // create the inserter. This is deleted when this function is exited
-  mtl::matrix::inserter< mtl::compressed2D<float> > ins(mtl_Assembly_matrix);
+  mtl::mat::inserter< mtl::compressed2D<float> > ins(mtl_Assembly_matrix);
 
   // first we assemble the boundary nodes. First the nodes in row 0
   //cout << "Line 5180, getting south boundary" << endl;
