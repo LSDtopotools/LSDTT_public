@@ -87,6 +87,7 @@
 #include <iomanip>
 #include <vector>
 #include <string>
+#include <complex>
 #include <math.h>
 #include <string.h>
 #include "TNT/tnt.h"
@@ -494,6 +495,68 @@ void LSDRasterSpectral::dfftw2D_inv(Array2D<float>& InputArrayReal,
   fftw_free(output);
 }
 
+//------------------------------------------------------------------------------
+// FOR INVERSE TRANSFORM: PASSING SINGLE COMPLEX ARRAY
+// USING FLOAT-TYPE ARRAYS
+//    - InputArray = Complex Array2D with real and imaginary components of 2D spectrum
+//    - transform_direction = 1
+//    - OutputArray = reconstructed DEM
+//
+// DAV - 22/10/2014  (Possibly more expensive? - not compared)
+//------------------------------------------------------------------------------
+void LSDRasterSpectral::dfftw2D_inv_complex_float(Array2D< complex< float > >& InputArrayComplex,
+Array2D<float>& OutputArray, int transform_direction)
+{
+  // Note using a float-version: "fftwf_complex" rather than "fftw_complex", which is type double.
+  fftwf_complex *input,*output;     
+  fftwf_plan plan;
+
+  // Declare one_dimensional contiguous arrays of dimension Ly*Lx
+  input = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*Ly*Lx);
+  output = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*Ly*Lx);
+
+  // SET UP PLAN
+  // -forwards => transform_direction==-1, -inverse => transform_direction==1
+  if (transform_direction==1)
+  {
+    cout << "  Running 2D discrete INVERSE fast fourier transform..." << endl;
+    plan = fftwf_plan_dft_2d(Ly,Lx,input,output,transform_direction,FFTW_MEASURE);
+  }
+  else
+  {
+    cout << "\nFATAL ERROR: for the tranform direction\n\t 1 = INVERSE \n\t" << endl;
+		exit(EXIT_FAILURE);
+  }
+
+  // LOAD DATA INTO COMPLEX ARRAY FOR FFT IN ROW MAJOR ORDER
+  for (int i=0;i<Ly;++i)
+  {
+    for (int j=0;j<Lx;++j)
+    {
+	  // In this version, we have passed a full complex array, so at this
+      // point we then access the real and imaginary parts, so as not to change too much code
+      input[Lx*i+j][0] = InputArrayComplex[i][j].real(); 	
+      input[Lx*i+j][1] = InputArrayComplex[i][j].imag();
+    }
+  }
+
+  // EXECUTE PLAN
+  fftwf_execute(plan);
+
+  // RETRIEVE OUTPUT ARRAY
+  for (int i=0;i<Ly;++i)
+  {
+    for (int j=0;j<Lx;++j)
+    {
+      OutputArray[i][j] = output[Lx*i+j][0];
+    }
+  }
+
+  // DEALLOCATE PLAN AND ARRAYS
+  fftwf_destroy_plan(plan);
+  fftwf_free(input);
+  fftwf_free(output);
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // DETREND DATA MODULE

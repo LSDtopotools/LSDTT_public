@@ -72,6 +72,7 @@
 
 #include <string>
 #include <vector>
+#include <complex>
 #include "TNT/tnt.h"
 #include "LSDRaster.hpp"
 using namespace std;
@@ -191,6 +192,17 @@ class LSDRasterSpectral: public LSDRaster
     /// @date 18/12/2012
     void dfftw2D_inv(Array2D<float>& InputArrayReal, Array2D<float>& InputArrayImaginary,
   	                 Array2D<float>& OutputArray, int transform_direction);
+  	                 
+  	                 
+    /// @brief Computes the inverse fast fourier transform of a 2D discrete dataset.
+    /// @param InputArrayComplex = Complex array of a 2D spectrum (real and imaginary parts)
+    /// @param OutputArray = reconstructed DEM.
+    /// @param transform_direction = 1.
+    /// @author DAV
+    /// @date 22/10/2014
+	void dfftw2D_inv_complex_float(Array2D< complex<float> >& InputArrayComplex,
+									Array2D<float>& OutputArray, 
+									int transform_direction);
 
     /// @brief Detrend Data.
     ///
