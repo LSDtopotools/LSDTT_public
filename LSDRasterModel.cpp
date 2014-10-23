@@ -45,6 +45,7 @@
 #include <sys/stat.h>
 #include <ctime>
 #include <cstdlib>
+#include <complex>
 #include "TNT/tnt.h"
 #include "TNT/jama_lu.h"
 #include "TNT/jama_eig.h"
@@ -694,7 +695,7 @@ void LSDRasterModel::initialise_parabolic_surface(float peak_elev, float edge_of
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::intialise_fourier_fractal_surface(float fractal_D)
 // 
-// N is size of the array along 1 dimension
+// N is size of the array along 1 dimension (NRows)
 //
 // A[][] is a 2D array of complex variables, size N^2
 {
@@ -703,11 +704,11 @@ int N = NRows;
 //int N = RasterData.get_NRows;
 float H = fractal_D;
 Array2D< std::complex<float> > A;
-Array2D< std::complex<float> > X;
+Array2D<float> X;
 
 int i0, j0;
 
-double rad, phase;	//Polar coordinates of the Fourier coefficient
+float rad, phase;	//Polar coordinates of the Fourier coefficient
 	
 	for (int i = 0; i<=(N/2); i++)
 	{
@@ -725,6 +726,7 @@ double rad, phase;	//Polar coordinates of the Fourier coefficient
 			} 
 			
 			A[i][j] = {rad * cos(phase), rad * sin(phase)};     // left of the comma is real part, right of the comma is imaginary part
+			// This { } notation may only work in C++11 (i.e. the most recent standard as of 2014)
 			
 			if (i==0)
 			{
@@ -755,6 +757,7 @@ double rad, phase;	//Polar coordinates of the Fourier coefficient
 	A[0][N/2].imag(0.0);
 	A[N/2][N/2].imag(0.0);
 	
+	// Now generate the fractal surface
 	for (int i=1; i<=(N/2)-1; i++)
 	{
 		for (int j=1; j<=(N/2)-1; j++)
@@ -771,6 +774,10 @@ double rad, phase;	//Polar coordinates of the Fourier coefficient
 	// Here is the place to do the fast fourier transform: DAV
 	// Note: There looks to be a very similar function in LSDRasterSpectral!
 	// InvFFT2D(A,X,N)
+	
+	dfftw2D_inv_complex(A, X, 1);
+	
+	RasterData = X;
 	
 }
 		

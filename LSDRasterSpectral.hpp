@@ -200,9 +200,7 @@ class LSDRasterSpectral: public LSDRaster
     /// @param transform_direction = 1.
     /// @author DAV
     /// @date 22/10/2014
-	void dfftw2D_inv_complex_float(Array2D< complex<float> >& InputArrayComplex,
-									Array2D<float>& OutputArray, 
-									int transform_direction);
+	void dfftw2D_inv_complex(Array2D< complex<float> >& InputArrayComplex, Array2D<float>& OutputArray, int transform_direction);
 
     /// @brief Detrend Data.
     ///

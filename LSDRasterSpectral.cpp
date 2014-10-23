@@ -497,30 +497,29 @@ void LSDRasterSpectral::dfftw2D_inv(Array2D<float>& InputArrayReal,
 
 //------------------------------------------------------------------------------
 // FOR INVERSE TRANSFORM: PASSING SINGLE COMPLEX ARRAY
-// USING FLOAT-TYPE ARRAYS
 //    - InputArray = Complex Array2D with real and imaginary components of 2D spectrum
 //    - transform_direction = 1
 //    - OutputArray = reconstructed DEM
 //
-// DAV - 22/10/2014  (Possibly more expensive? - not compared)
+// DAV - 22/10/2014  (Copied from Dave's version above and tweaked)
 //------------------------------------------------------------------------------
-void LSDRasterSpectral::dfftw2D_inv_complex_float(Array2D< complex< float > >& InputArrayComplex,
+void LSDRasterSpectral::dfftw2D_inv_complex(Array2D< complex< float > >& InputArrayComplex,
 Array2D<float>& OutputArray, int transform_direction)
 {
-  // Note using a float-version: "fftwf_complex" rather than "fftw_complex", which is type double.
-  fftwf_complex *input,*output;     
-  fftwf_plan plan;
+  /// Note using a float-version: "fftwf_complex" rather than "fftw_complex", which is type double.
+  fftw_complex *input,*output;     
+  fftw_plan plan;
 
   // Declare one_dimensional contiguous arrays of dimension Ly*Lx
-  input = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*Ly*Lx);
-  output = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*Ly*Lx);
+  input = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*Ly*Lx);
+  output = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*Ly*Lx);
 
   // SET UP PLAN
   // -forwards => transform_direction==-1, -inverse => transform_direction==1
   if (transform_direction==1)
   {
     cout << "  Running 2D discrete INVERSE fast fourier transform..." << endl;
-    plan = fftwf_plan_dft_2d(Ly,Lx,input,output,transform_direction,FFTW_MEASURE);
+    plan = fftw_plan_dft_2d(Ly,Lx,input,output,transform_direction,FFTW_MEASURE);
   }
   else
   {
@@ -541,7 +540,7 @@ Array2D<float>& OutputArray, int transform_direction)
   }
 
   // EXECUTE PLAN
-  fftwf_execute(plan);
+  fftw_execute(plan);
 
   // RETRIEVE OUTPUT ARRAY
   for (int i=0;i<Ly;++i)
@@ -553,9 +552,10 @@ Array2D<float>& OutputArray, int transform_direction)
   }
 
   // DEALLOCATE PLAN AND ARRAYS
-  fftwf_destroy_plan(plan);
-  fftwf_free(input);
-  fftwf_free(output);
+  fftw_destroy_plan(plan);
+  fftw_free(input);
+  fftw_free(output);
+  
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
