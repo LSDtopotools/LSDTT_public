@@ -490,7 +490,7 @@ void LSDJunctionNetwork::create(vector<int> Sources, LSDFlowInfo& FlowInfo)
 					// the stream order of this node is also determined by the node
 					StreamOrderVector.push_back( StreamOrderArray[current_row][current_col] );
 
-					// finally, this is the first time we have vistid this baselevel node.
+					// finally, this is the first time we have visted this baselevel node.
 					// So it gets added to the baselevel vector
 					BaseLevelJunctions.push_back(this_junction);
 
@@ -1286,20 +1286,48 @@ int LSDJunctionNetwork::find_base_level_node_of_junction(int StartingJunction)
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
-// This function gets the stream order of a junction
-// FJC 20/03/14
+// This function gets the stream order of a junction. It samples directly from
+// the stream order vector
+// SMM 26/10/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 int LSDJunctionNetwork::get_StreamOrder_of_Junction(LSDFlowInfo& FlowInfo, int junction)
 {
+  NJunctions = int(JunctionVector.size());
+  if(junction <0 || junction >= NJunctions)
+  {
+    cout << "You have selected a junction that is not in the junction list." << endl
+         << "defaulting to junction 0!" << endl;
+  } 
+
   int StreamOrder;
-  int row, col;
+  int row,col;
   int node = get_Node_of_Junction(junction);
-  
-  FlowInfo.retrieve_current_row_and_col(node, row, col);
+
+  FlowInfo.retrieve_current_row_and_col(node,row,col);
   StreamOrder = StreamOrderArray[row][col];
   
   return StreamOrder;  
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+// This function gets the stream order of a junction. It samples directly from
+// the stream order vector
+// SMM 26/10/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+int LSDJunctionNetwork::get_StreamOrder_of_Junction(int junction)
+{
+  NJunctions = int(JunctionVector.size());
+  if(junction <0 || junction >= NJunctions)
+  {
+    cout << "You have selected a junction that is not in the junction list." << endl
+         << "defaulting to junction 0!" << endl;
+  } 
+  int StreamOrder = StreamOrderVector[junction];
+  
+  return StreamOrder;  
+}
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 // Two getter functions that require bounds checking
