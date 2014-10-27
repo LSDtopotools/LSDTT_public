@@ -71,6 +71,11 @@ contains a number of analysis tools built around drainage networks.
 //DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
 //-----------------------------------------------------------------
 
+
+
+#ifndef LSDJunctionNetwork_H
+#define LSDJunctionNetwork_H
+
 #include <vector>
 #include <string>
 #include "TNT/tnt.h"
@@ -81,9 +86,6 @@ contains a number of analysis tools built around drainage networks.
 #include "LSDStatsTools.hpp"
 using namespace std;
 using namespace TNT;
-
-#ifndef LSDJunctionNetwork_H
-#define LSDJunctionNetwork_H
 
 ///@brief Object to create a channel network from an LSDFlowInfo object.
 class LSDJunctionNetwork
@@ -879,6 +881,9 @@ class LSDJunctionNetwork
   /// @return The Vector of stream orders.
   vector<int> get_StreamOrderVector() const { return StreamOrderVector; }  
 	
+	/// @return The vector of sources. The vector is composed of node indices
+	vector<int> get_SourcesVector() const { return SourcesVector; }
+	
   protected:
 
   ///Number of rows.
@@ -902,10 +907,10 @@ class LSDJunctionNetwork
   /// The number of junctions
   int NJunctions;
 
-  /// @brief A list of the baselevel junctions.
+  /// @brief A list of the node indices that are sources.
   ///
-  /// @details Note: these are not the node indices. 
-  /// To find the node indices one uses these values as an index into the JunctionVector.
+  /// @details Note: are not the node indices not junctions. 
+  /// To find the junctions you need to use the get_Junction_of_Node member function
   vector<int> SourcesVector;
   
   /// This vector lists the node index of the base level nodes that have a source within their catchements.

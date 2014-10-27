@@ -78,6 +78,11 @@
 //DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
 //-----------------------------------------------------------------
 
+
+
+#ifndef LSDJunctionNetwork_CPP
+#define LSDJunctionNetwork_CPP
+
 #include <vector>
 #include <string>
 #include <fstream>
@@ -91,11 +96,6 @@
 #include "LSDStatsTools.hpp"
 using namespace std;
 using namespace TNT;
-
-#ifndef LSDJunctionNetwork_CPP
-#define LSDJunctionNetwork_CPP
-
-
 
 /// @brief the copy constructor 
 LSDJunctionNetwork& LSDJunctionNetwork::operator=(const LSDJunctionNetwork& rhs) 
@@ -1358,11 +1358,11 @@ int LSDJunctionNetwork::get_Next_StreamOrder_Junction(int junction)
     //cout << "this junc: " << this_junc << " next junc: " << next_junc << " next_SO: " << next_SO << endl;
   } 
   
-  cout << "Starting junction: " << junction << " junction SO: " << current_SO << endl;
-  cout << "Finishing junction: " << next_junc << " finishing SO: " << next_SO << endl;
+  //cout << "Starting junction: " << junction << " junction SO: " << current_SO << endl;
+  //cout << "Finishing junction: " << next_junc << " finishing SO: " << next_SO << endl;
   if (next_junc == this_junc)
   {
-    cout << "You reached a baselevel node, returning nodata" << endl;
+    //cout << "You reached a baselevel node, returning nodata" << endl;
     next_junc = int(NoDataValue);
   }
   return next_junc;
