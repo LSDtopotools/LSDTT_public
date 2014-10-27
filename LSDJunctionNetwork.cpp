@@ -1286,9 +1286,8 @@ int LSDJunctionNetwork::find_base_level_node_of_junction(int StartingJunction)
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
-// This function gets the stream order of a junction. It samples directly from
-// the stream order vector
-// SMM 26/10/14
+// This function gets the stream order of a junction. 
+// FJC 01/03/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 int LSDJunctionNetwork::get_StreamOrder_of_Junction(LSDFlowInfo& FlowInfo, int junction)
 {
@@ -1297,6 +1296,7 @@ int LSDJunctionNetwork::get_StreamOrder_of_Junction(LSDFlowInfo& FlowInfo, int j
   {
     cout << "You have selected a junction that is not in the junction list." << endl
          << "defaulting to junction 0!" << endl;
+    junction = 0;
   } 
 
   int StreamOrder;
@@ -1321,12 +1321,52 @@ int LSDJunctionNetwork::get_StreamOrder_of_Junction(int junction)
   {
     cout << "You have selected a junction that is not in the junction list." << endl
          << "defaulting to junction 0!" << endl;
+    junction = 0;
   } 
   int StreamOrder = StreamOrderVector[junction];
   
   return StreamOrder;  
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+// This function finds the next junction that is of higher stream order
+// SMM 26/10/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+int LSDJunctionNetwork::get_Next_StreamOrder_Junction(int junction)
+{
+  // check bounds
+  NJunctions = int(JunctionVector.size());
+  if(junction <0 || junction >= NJunctions)
+  {
+    cout << "You have selected a junction that is not in the junction list." << endl
+         << "defaulting to junction 0!" << endl;
+    junction = 0;
+  } 
+
+  // now follow the receiver junctions until you hit either a baselevel node
+  // or a junction with a higher stream order. 
+  int current_SO = StreamOrderVector[junction];
+  int next_junc = get_Receiver_of_Junction(junction);
+  int next_SO = StreamOrderVector[next_junc]; 
+  int this_junc = junction;
+  //cout << "this junc: " << this_junc << " next junc: " << next_junc << " next_SO: " << next_SO << endl;
+  while (next_junc != this_junc && next_SO == current_SO)
+  {
+    this_junc = next_junc;
+    next_junc = get_Receiver_of_Junction(this_junc);
+    next_SO = StreamOrderVector[next_junc]; 
+    //cout << "this junc: " << this_junc << " next junc: " << next_junc << " next_SO: " << next_SO << endl;
+  } 
+  
+  cout << "Starting junction: " << junction << " junction SO: " << current_SO << endl;
+  cout << "Finishing junction: " << next_junc << " finishing SO: " << next_SO << endl;
+  if (next_junc == this_junc)
+  {
+    cout << "You reached a baselevel node, returning nodata" << endl;
+    next_junc = int(NoDataValue);
+  }
+  return next_junc;
+}
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=

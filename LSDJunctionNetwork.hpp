@@ -854,6 +854,16 @@ class LSDJunctionNetwork
   /// @date 26/10/14
   int get_StreamOrder_of_Junction(int junction);
 
+  /// @details This gets the junction that is at the next
+  /// Strahler stream order from the current junction. 
+  /// @param junction the current junction
+  /// @return the junction that is at the next stream order
+  /// if the next stream order is not reached before baselevel 
+  /// it returns a NoDataValue
+  /// @author SMM
+  /// @date 26/10/2014
+  int get_Next_StreamOrder_Junction(int junction);
+
   /// @return The number of junctions
   int get_NJunctions() const { return int(JunctionVector.size()); }
 										
