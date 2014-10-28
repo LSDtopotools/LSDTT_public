@@ -99,7 +99,9 @@ void LSDStrahlerLinks::create()
        << " a LSDStrahlerLinks object" << endl;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // create function: this makes a new StrahlerLinks object
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDStrahlerLinks::create(LSDJunctionNetwork& JNetwork, LSDFlowInfo& FlowInfo)
 {
   // these data memebers will be replaced later
@@ -225,7 +227,197 @@ void LSDStrahlerLinks::create(LSDJunctionNetwork& JNetwork, LSDFlowInfo& FlowInf
          << " and n receivers: " << ReceiverJunctions[o].size() << endl;
   }
   cout << "Total sources: " << t_sources << endl;
-  
+
+  // now get the nodes of the sources and recievers
+  populate_NodeRowCol_vecvecs(JNetwork, FlowInfo);
+                                
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function is used to get a number of secondary data elements
+// including the node indices of the downstream node in a link. 
+// This is necessary since the downstream junction of a link is at a higher
+// stream order and therefore not part of the individual link. 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDStrahlerLinks::populate_NodeRowCol_vecvecs(LSDJunctionNetwork& JNetwork, 
+                                                   LSDFlowInfo& FlowInfo)
+{
+  // temp vecvecs for holding the data
+  vector< vector<int> > source_nodes;
+  vector< vector<int> > source_rows;
+  vector< vector<int> > source_cols;
+  vector< vector<int> > receiver_nodes;
+  vector< vector<int> > receiver_rows;
+  vector< vector<int> > receiver_cols;
+
+  vector<int> empty_vec;
+  
+  // these data elements hold local nodes, rows and columns
+  vector<int> snodes,srows,scols,rnodes,rrows,rcols;
+  int this_source_node;
+  int this_source_row, this_source_col;
+  int this_receiver_node;
+  int this_receiver_row, this_receiver_col;
+  int rj_node, last_receiver_node, last_receiver_row, last_receiver_col;
+
+  // get the number of orders
+  int NOrders = int(SourceJunctions.size());
+  
+  // loop through orders collecting data
+  for (int order = 0; order<NOrders; order++)
+  {
+    // reset the local vectors
+    snodes = empty_vec;
+    srows = empty_vec;
+    scols = empty_vec;
+    rnodes = empty_vec;
+    rrows = empty_vec;
+    rcols = empty_vec;    
+  
+    // now loop through the starting and ending junctions
+    int n_links_in_order = int(SourceJunctions[order].size());
+    for(int link = 0; link<n_links_in_order; link++)
+    {
+      // get the source nodes
+      this_source_node = JNetwork.get_Node_of_Junction(SourceJunctions[order][link]);
+      FlowInfo.retrieve_current_row_and_col(this_source_node,this_source_row,this_source_col);  
+    
+      // now get the node of the receiver junction. This is one node downstream
+      // of the terminating link node. 
+      rj_node =  JNetwork.get_Node_of_Junction(ReceiverJunctions[order][link]);
+      
+      // look downstream until you hit the reciever node
+      this_receiver_node = this_source_node;
+      this_receiver_row = this_source_row;
+      this_receiver_col = this_source_col;
+      do
+      {
+        last_receiver_node = this_receiver_node;
+        last_receiver_row = this_receiver_row;
+        last_receiver_col = this_receiver_col;      
+        FlowInfo.retrieve_receiver_information(last_receiver_node,this_receiver_node, 
+                                             this_receiver_row, this_receiver_col);                                             
+      } while(this_receiver_node != rj_node);
+      
+      // populate the vectors
+      snodes.push_back(this_source_node);
+      srows.push_back(this_source_row);
+      scols.push_back(this_source_col);
+      rnodes.push_back(last_receiver_node);
+      rrows.push_back(last_receiver_row);
+      rcols.push_back(last_receiver_col);      
+    }
+    
+    // insert the node row and column vectors into the vecvecs
+    source_nodes.push_back(snodes);
+    source_rows.push_back(srows);
+    source_cols.push_back(scols);
+    receiver_nodes.push_back(rnodes);
+    receiver_rows.push_back(rrows);
+    receiver_cols.push_back(rcols);
+  }
+
+  // copy the data members
+  SourceNodes = source_nodes;
+  SourceRows = source_rows;
+  SourceCols = source_cols;
+  ReceiverNodes = receiver_nodes;
+  ReceiverRows = receiver_rows;
+  ReceiverCols = receiver_cols;
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function calcualtes the drop of each link
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDStrahlerLinks::calculate_drops(LSDFlowInfo& FlowInfo, LSDRaster& topo_raster)
+{
+  vector< vector<float> > drops;
+  vector<float> this_drop;
+  vector<float> empty_vec;
+  
+  int srow,scol,rrow,rcol;
+  float source_elev;
+  float receiver_elev;
+  
+  // get the number of orders
+  int NOrders = int(SourceJunctions.size());
+  
+  // loop through orders collecting data
+  for (int order = 0; order<NOrders; order++)
+  { 
+    int n_links_in_order = int(SourceJunctions[order].size());
+    
+    // reset drop vector
+    this_drop = empty_vec;
+    
+    for(int link = 0; link<n_links_in_order; link++)
+    {
+      srow = SourceRows[order][link];
+      scol = SourceCols[order][link];
+      rrow = ReceiverRows[order][link];
+      rcol = ReceiverCols[order][link];
+      
+      // get the elevations of the source and receiver
+      source_elev = topo_raster.get_data_element(srow,scol);  
+      receiver_elev = topo_raster.get_data_element(rrow,rcol); 
+      
+      // add the drop to the drop vector
+      this_drop.push_back(source_elev-receiver_elev);
+      
+    }
+    
+    // add the drop vector to the vecvec
+    drops.push_back(this_drop);
+  }
+  
+  DropData = drops;
+    
+}                                                   
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function prints the drops for assimilation into R or python
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDStrahlerLinks::print_drops(string data_directory, string threshold_string)
+{
+  int NOrders = int(DropData.size()); 
+  string fname;
+  string order_string;
+
+  if (NOrders == 0)
+  {
+    cout << "You haven't calculated the drops yet! Not printing" << endl; 
+  }
+  else
+  {
+    for(int order = 0; order<NOrders; order++)
+    {
+      order_string = itoa(order);
+      fname = data_directory+"Drops_Order_"+order_string+ "_Thresh_"+threshold_string;
+      cout << "fname is: " << fname << endl;
+      
+      ofstream drops_out;
+      drops_out.open(fname.c_str());
+      
+      int n_links_in_order = int(DropData[order].size());
+    
+      for(int link = 0; link<n_links_in_order; link++)
+      {
+        drops_out << DropData[order][link] << endl;
+      }
+      drops_out.close(); 
+    
+    }
+  }
+  
+
+}
+
 
 #endif

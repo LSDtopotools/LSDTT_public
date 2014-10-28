@@ -90,7 +90,12 @@
 #include "LSDStrahlerLinks.hpp"
 using namespace std;
 
-///@brief Object to create a channel network from an LSDFlowInfo object.
+///@brief This object holds information on the Strahler links in a channel network
+/// whereas the LSDJunctionNetwork object stores every junction, this object
+/// stores information about the links that connect different strahelr orders: 
+/// e.g. every 1st order channel, every 2nd order channel, etc. 
+/// @author SMM
+/// @date 28/10/2014
 class LSDStrahlerLinks
 {
 	public:
@@ -99,15 +104,46 @@ class LSDStrahlerLinks
     /// @date 26/10/14
 	  LSDStrahlerLinks()   { create(); }
    
-  /// @brief This creates the LSDStrahlerLinks object
-  /// @param JNetwork a junction network object
-  /// @param FlowInfo LSDFlowInfo object.
-  /// @param Sources vector of source nodes.
-  /// @author SMM
-  /// @date 26/10/14
-	LSDStrahlerLinks(LSDJunctionNetwork& JNetwork, LSDFlowInfo& FlowInfo)
+    /// @brief This creates the LSDStrahlerLinks object
+    /// @param JNetwork a LSDJunctionNetwork object
+    /// @param FlowInfo LSDFlowInfo object.
+    /// @author SMM
+    /// @date 26/10/14
+	  LSDStrahlerLinks(LSDJunctionNetwork& JNetwork, LSDFlowInfo& FlowInfo)
 											{ create(JNetwork, FlowInfo); }
-	
+
+    /// @brief this function is called during the create process 
+    /// it populates the node, row and col vectors with information
+    /// about the location of the source and receiver node, row and column
+    /// @param JNetwork a LSDJunctionNetwork object
+    /// @param FlowInfo LSDFlowInfo object.
+    /// @author SMM
+    /// @date 28/10/14
+    void populate_NodeRowCol_vecvecs(LSDJunctionNetwork& JNetwork, 
+                                                   LSDFlowInfo& FlowInfo);
+
+    /// @brief this function calculates the drops for each link
+    /// @param FlowInfo LSDFlowInfo object
+    /// @param topo_raster LSDRaster object that contains the elevations. 
+    /// @author SMM
+    /// @date 28/10/14
+    void calculate_drops(LSDFlowInfo& FlowInfo, LSDRaster& topo_raster);
+    
+    /// @brief this function calculates drainage area of each link
+    /// @param FlowInfo LSDFlowInfo object
+    /// @author SMM
+    /// @date 28/10/14
+    void calculate_link_area(LSDFlowInfo& FlowInfo);    
+
+    /// @brief this function prints drops
+    /// @param data_directory a string containing the data dierctory. Should be
+    ///  terminated with a slash
+    /// @param threshold_string a string that is used to identify the file
+    ///  (typically this will be the drainage area threshold for the sources)
+    /// @author SMM
+    /// @date 28/10/14
+    void print_drops(string data_directory, string threshold_string);
+       	
 	protected:
     ///Number of rows.
     int NRows;
@@ -132,6 +168,33 @@ class LSDStrahlerLinks
     /// a vec vec containing the end junctions of te Strahler links
     vector< vector<int> > ReceiverJunctions;
     
+    /// a vec vec containing the node indices of the sources
+    vector< vector<int> > SourceNodes;
+    
+    /// a vec vec containing the rows of the sources
+    vector< vector<int> > SourceRows;    
+
+    /// a vec vec containing the cols of the sources
+    vector< vector<int> > SourceCols;  
+ 
+    /// a vec vec containing the node indices of the receivers
+    /// note: this does not extend to the junction of higher order:
+    /// it stops on the last pixel of the channel of this order
+    vector< vector<int> > ReceiverNodes;
+    
+    /// a vec vec containing the rows of the receivers
+    /// note: this does not extend to the junction of higher order:
+    /// it stops on the last pixel of the channel of this order
+    vector< vector<int> > ReceiverRows;    
+
+    /// a vec vec containing the cols of the receivers
+    /// note: this does not extend to the junction of higher order:
+    /// it stops on the last pixel of the channel of this order
+    vector< vector<int> > ReceiverCols;  
+    
+    /// a vec vec containing drops of every link
+    vector< vector<float> > DropData;      
+ 
     	
 	private:
 	  void create();
