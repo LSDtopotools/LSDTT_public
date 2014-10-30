@@ -2609,8 +2609,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 				s_local = slope[a][b];
 
 				//continue trace until a stream node is encountered
-				while (flag == true) {
-
+				while (flag == true && a > 0 && a < NRows-1 && b > 0 && b < NRows-1) {   //added boudary checking to catch cells which flow off the	edge of the DEM tile.
 				  int a_2 = a;
           int b_2 = b;
 
@@ -3360,8 +3359,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 				s_local = slope[a][b];
 
 				//continue trace until a stream node is encountered
-				while (flag == true) {
-
+				while (flag == true && a > 0 && a < NRows-1 && b > 0 && b < NRows-1) {   //added boudary checking to catch cells which flow off the	edge of the DEM tile.
 				  int a_2 = a;
           int b_2 = b;
 
