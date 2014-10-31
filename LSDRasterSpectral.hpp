@@ -71,7 +71,7 @@
 //-----------------------------------------------------------------
 
 #include <string>
-#include <vector>
+#include <vector>   
 #include <complex>
 #include "TNT/tnt.h"
 #include "LSDRaster.hpp"
@@ -162,13 +162,36 @@ class LSDRasterSpectral: public LSDRaster
     ///  3) Scale the tranform (both real and imaginary parts) by 1/f^beta.\n
     ///  4) Perform the inverse DFT.\n
     ///
-    ///  This results in a pseudo fractal surface that can be used in comarison
+    ///  This results in a pseudo fractal surface that can be used in comparison
     ///  with real topography.
     /// @param beta value which is the scaling exponent
     /// @author SMM
     /// @date 20/02/2014
     void generate_fractal_surface_spectral_method(float beta);
-
+    
+    /// @brief FINDS ROLLOVER FREQUENCY.
+    ///
+    /// @details This function finds the rollover frequency in the power spectrum of a landscape, following Perron et al., 2008; Spectral Signatures of characteristic spatial scales and nonfractal structure in landscapes; Journal of Geophysical Research.  
+    /// @param rollover_frequency
+    /// @param rollover_beta fractal scaling of spectrum at frequencies above the rollover frequency
+    /// @param sub_rollover_beta fractal scaling of spectrum at frequencies below the rollover frequency
+    /// @param LogBinWidth Width of the logarithmically spaced bins. For topography, suggest this is 0.1 to start.
+    /// @author David Milodowski
+    /// @date 30/10/2014
+    void find_rollover_frequency(float& rollover_frequency, float& rollover_beta,float& sub_rollover_beta, float log_bin_width);
+    
+    /// @brief CALCULATE BACKGROUND SPECTRUM.
+    ///
+    /// @details This function calculates the background spectrum, following Perron et al., 2008; Spectral Signatures of characteristic spatial scales and nonfractal structure in landscapes; Journal of Geophysical Research.  The background spectrum is produced by creating a number of fractal rasters with the same spectral power as the original dataset and averaging their spectra.  
+    /// @param rollover_frequency
+    /// @param beta fractal scaling
+    /// @param log_bin_width of the logarithmically spaced bins. For topography, suggest this is 0.1 to start.  
+    /// @param N_iterations The number of reference fractal rasters that are produced to create the background spectrum
+    /// @param window_option 0 = unity window (default); 1 = Hann window (recommended); 2 = Hamming window
+    /// @author David Milodowski
+    /// @date 30/10/2014
+    void calculate_background_spectrum(float rollover_frequency, float beta, float log_bin_width, int N_iterations, int window_option=0);
+    
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     // FAST FOURIER TRANSFORM MODULE
     //------------------------------------------------------------------------------
@@ -192,16 +215,15 @@ class LSDRasterSpectral: public LSDRaster
     /// @date 18/12/2012
     void dfftw2D_inv(Array2D<float>& InputArrayReal, Array2D<float>& InputArrayImaginary,
   	                 Array2D<float>& OutputArray, int transform_direction);
-  	                 
-  	                 
+      	                 
     /// @brief Computes the inverse fast fourier transform of a 2D discrete dataset.
     /// @param InputArrayComplex = Complex array of a 2D spectrum (real and imaginary parts)
     /// @param OutputArray = reconstructed DEM.
     /// @param transform_direction = 1.
     /// @author DAV
     /// @date 22/10/2014
-	void dfftw2D_inv_complex(Array2D< complex<float> >& InputArrayComplex, Array2D<float>& OutputArray, int transform_direction);
-
+	  void dfftw2D_inv_complex(Array2D< complex<float> >& InputArrayComplex, Array2D<float>& OutputArray, int transform_direction);
+	
     /// @brief Detrend Data.
     ///
     /// @details Fit plane by least squares regression and use coefficients to determine local slope ax + by + c = z.
@@ -212,6 +234,7 @@ class LSDRasterSpectral: public LSDRaster
     /// @date 18/12/2012
     void detrend2D(Array2D<float>& zeta, Array2D<float>& zeta_detrend, Array2D<float>& trend_plane);
 
+    /// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=REDUNDANT=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     /// @brief Hann Window Module.
     ///
     /// @details Use 2D elliptical Hann (raised cosine) window on data matrix, to reduce spectral leakage and retain good frequency resolution.
@@ -219,9 +242,34 @@ class LSDRasterSpectral: public LSDRaster
     /// @param zeta_Hann2D Output windowed data.
     /// @param Hann2D Output Hann window.
     /// @author David Milodowski
-    /// @date 18/12/2012
+    /// @date 18/12/2012     
     void window_data_Hann2D(Array2D<float>& zeta_detrend, Array2D<float>& zeta_Hann2D, Array2D<float>& Hann2D);
-
+    /// @brief Hamming Window Module.
+    ///
+    /// @details Use 2D elliptical Hamming (raised cosine) window on data matrix, to reduce spectral leakage and retain good frequency resolution.
+    /// @param zeta_detrend Detrended elevation data
+    /// @param zeta_Hamming2D Output windowed data.
+    /// @param Hamming2D Output Hann window.
+    /// @author David Milodowski
+    /// @date 30/10/2014   
+    void window_data_Hamming2D(Array2D<float>& zeta_detrend, Array2D<float>& zeta_Hamming2D, Array2D<float>& Hamming2D);
+    /// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=REDUNDANT=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    
+    /// @brief WINDOW MODULE.
+    ///
+    /// @details This module applies a window to an input raster in order to limit spectral leakage in the Fourier transformation.  A number of windows are available and more can be added as required.  This function can replace the previous windowing functions.
+    /// Currently there are three windows coded up:
+    /// - a unity (box) window, which is the default - window_option = 0
+    /// - a 2D elliptical Hann window - window_option = 1
+    /// - a 2D elliptical Hamming window - window_option = 2.
+    /// @param input The input raster, usually a detrended raster
+    /// @param output The output windowed raster.
+    /// @param window A raster containing the window weights.
+    /// @param window_option An integer to select the desired window function (see details) 
+    /// @author David Milodowski
+    /// @date 30/10/2014
+    void window_data(Array2D<float>& input, Array2D<float>& output, Array2D<float>& window, int window_option = 0);
+    
     /// @brief SHIFT ORIGIN OF SPECTRUM IN FOURIER DOMAIN.
     ///
     /// @details The output of the DFT algorithm must be rearranged to place the zero wavenumber element near the center of the array.
@@ -232,8 +280,18 @@ class LSDRasterSpectral: public LSDRaster
     /// @author David Milodowski
     /// @date 18/12/2012
     void shift_spectrum(Array2D<float>& spectrum_real,  Array2D<float>& spectrum_imaginary,
-  	                    Array2D<float>& spectrum_real_shift, Array2D<float>& spectrum_imaginary_shift);
-
+  	                    Array2D<float>& spectrum_real_shift, Array2D<float>& spectrum_imaginary_shift);  
+  	                    
+    /// @brief SHIFT ORIGIN OF SPECTRUM IN FOURIER DOMAIN.
+    ///
+    /// @details The output of the DFT algorithm must be rearranged to place the zero wavenumber element near the center of the array. This
+    /// version overwrites the original shifted spectrum
+    /// @param spectrum_real
+    /// @param spectrum_imaginary
+    /// @author David Milodowski
+    /// @date 30/10/2014    
+    void shift_spectrum(Array2D<float>& spectrum_real,  Array2D<float>& spectrum_imaginary);
+    
     /// @brief DE-SHIFT ORIGIN OF SPECTRUM.
     ///
     /// @details Inverse process of shift_spectrum() to return filtered spectrum to
@@ -246,7 +304,17 @@ class LSDRasterSpectral: public LSDRaster
     /// @date 18/12/2012
     void shift_spectrum_inv(Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary,
   	                        Array2D<float>& FilteredSpectrumReal_deshift, Array2D<float>& FilteredSpectrumImaginary_deshift);
-
+    /// @brief DE-SHIFT ORIGIN OF SPECTRUM.
+    ///
+    /// @details Inverse process of shift_spectrum() to return filtered spectrum to
+    /// original format required for the inverse fourier transform algorithm. This
+    /// version overwrites the original shifted spectrum
+    /// @param SpectrumReal.
+    /// @param SpectrumImaginary.
+    /// @author David Milodowski
+    /// @date 30/10/2014
+    void shift_spectrum_inv(Array2D<float>& spectrum_real,  Array2D<float>& spectrum_imaginary);
+    
     /// @brief CALCULATE THE DFT PERIODOGRAM.
     ///
     /// @details Multiply fourier analysis output by complex conjugate and normalises.
@@ -255,7 +323,17 @@ class LSDRasterSpectral: public LSDRaster
     /// @author David Milodowski
     /// @date 18/12/2012
     void calculate_2D_PSD(Array2D<float>& spectrum_real_shift, Array2D<float>& spectrum_imaginary_shift);
-
+    
+    /// @brief SCALE SPECTRUM
+    ///
+    /// @details Scales the spectrum by 1/f^beta, where beta is the fractal scaling.
+    /// @param spectrum_real
+    /// @param spectrum_imaginary
+    /// @param beta
+    /// @author David Milodowski
+    /// @date 30/10/2014
+    void scale_spectrum(Array2D<float> SpectrumReal, Array2D<float> SpectrumIm,  float beta);
+    
     /// @brief GET RADIAL POWER SPECTRUM.
     ///
     /// @details Collapse 2D PSD into a radial PSD.
@@ -271,7 +349,18 @@ class LSDRasterSpectral: public LSDRaster
     /// @author David Milodowski
     /// @date 18/12/2012
     void fftw2D_spectral_analysis(char* file_id, float LogBinWidth);
-
+    
+    /// @brief FULL SPECTRAL ANALYSIS.
+    ///
+    /// @details This function is a wrapper function for the forward Fast Fourier Transform and subsequent analysis.  It is designed to replicate the analysis of emergent lengthscales from Perron et al., 2008; Spectral Signatures of characteristic spatial scales and nonfractal structure in landscapes; Journal of Geophysical Research.
+    /// The analysis runs the forward transform on the real dataset, converting the output producing a radial periodogram.  A background spectrum is then produced by creating a number of fractal rasters with the same spectral power and averaging their spectra.  This is then used to produce a normalised spectrum.
+    /// The program outputs are two .txt files containing the power spectrum and log-binned spectrum, that can then be plotted (a python plotting script is available).
+    /// @param LogBinWidth Width of the logarithmically spaced bins. For topography, suggest this is 0.1 to start.
+    /// @param N_iterations The number of reference fractal rasters that are produced to create the background spectrum
+    /// @param window_option 0 = unity window (default); 1 = Hann window (recommended); 2 = Hamming window
+    /// @author David Milodowski
+    /// @date 30/10/2014
+    void full_spectral_analysis(float log_bin_width, int N_iterations, int window_option = 0);
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     // FUNCTIONS TO ADD WEIGHTS TO FOURIER SPECTRA (FOR USE IN SPECTRA FILTERS)
     //------------------------------------------------------------------------------
@@ -305,10 +394,25 @@ class LSDRasterSpectral: public LSDRaster
     void lowpass_filter(Array2D<float>& RawSpectrumReal, Array2D<float>& RawSpectrumImaginary,
   	                    Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary,
   	                    float f1, float f2);
+    
+    /// @brief LOWPASS FILTER REMAINDER.
+    ///
+    /// @details Filter array to retain frequencies above f1 (the remainder from the highpass filter).  The filter edge is a radial gaussian function with a SD of |f2-f1|/3.
+    /// @param RawSpectrumReal
+    /// @param RawSpectrumImaginary
+    /// @param FilteredSpectrumReal
+    /// @param FilteredSpectrumImaginary
+    /// @param f1
+    /// @param f2
+    /// @author David Milodowski
+    /// @date 29/09/2014
+    void lowpass_filter_remainder(Array2D<float>& RawSpectrumReal, Array2D<float>& RawSpectrumImaginary,
+  	                    Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary,
+  	                    float f1, float f2);
 
     /// @brief HIGHPASS FILTER.
     ///
-    /// @details Filter array to retain frequencies above f1.  The filter edge is a radial gaussian function with a SD of |f2-f1|/3.
+    /// @details Filter array to retain frequencies above f2.  The filter edge is a radial gaussian function with a SD of |f2-f1|/3.
     /// @param RawSpectrumReal
     /// @param RawSpectrumImaginary
     /// @param FilteredSpectrumReal
@@ -318,6 +422,21 @@ class LSDRasterSpectral: public LSDRaster
     /// @author David Milodowski
     /// @date 18/12/2012
     void highpass_filter(Array2D<float>& RawSpectrumReal, Array2D<float>& RawSpectrumImaginary,
+  	                     Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary,
+  	                     float f1, float f2);
+  	                     
+    /// @brief HIGHPASS FILTER REMAINDER.
+    ///
+    /// @details Filter array to retaining frequencies below f2 (the remainder from the highpass filter).  The filter edge is a radial gaussian function with a SD of |f2-f1|/3.
+    /// @param RawSpectrumReal
+    /// @param RawSpectrumImaginary
+    /// @param FilteredSpectrumReal
+    /// @param FilteredSpectrumImaginary
+    /// @param f1
+    /// @param f2
+    /// @author David Milodowski
+    /// @date 29/09/2014
+    void highpass_filter_remainder(Array2D<float>& RawSpectrumReal, Array2D<float>& RawSpectrumImaginary,
   	                     Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary,
   	                     float f1, float f2);
 
@@ -362,8 +481,16 @@ class LSDRasterSpectral: public LSDRaster
     /// the filter starts to taper; f1 is the frequency at which the filter tapers to
     /// zero. If f1 = f2, the edge is effectively a step function.
     /// \n\n
+    /// HIGHPASS FILTER REMAINDER(FilterType = 4) \n
+    /// Filter returns the counterpart signal to that filtered using the highpass
+    /// filter (FilterType 1)
+    /// \n\n
+    /// LOWPASS FILTER REMAINDER(FilterType = 5) \n
+    /// Filter returns the counterpart signal to that filtered using the lowpass
+    /// filter (FilterType 2)
+    /// \n\n
     /// A second type of bandpass filter is possible by combining the highpass and
-    /// lowpass filters.
+    /// lowpass filters (using FilterTypes 4 & 5 successively).
     ///
     /// @param FilterType
     /// @param FLow
@@ -415,16 +542,28 @@ class LSDRasterSpectral: public LSDRaster
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     // FUNCTIONS TO PRINT RADIAL SPECTRA
     //------------------------------------------------------------------------------
-    void print_radial_spectrum(float bin_width, string file_id);
+//     void print_radial_spectrum(float bin_width, string file_id);
+    void print_radial_spectrum(string file_id);
+    void print_binned_spectrum(string output_id, float log_bin_width);
 
 
   protected:
     int Lx;
     int Ly;
+    float dfx;
+    float dfy;
+    float NyquistFreq;
     float WSS;
     Array2D<float> P_DFT;
     vector<float> RadialFrequency;
-    vector<float> RadiallyAveragedPSD;
+    vector<float> RadialPSD;
+    vector<float> BackgroundPSD;
+    vector<float> NormalisedPSD;
+    vector<float> CI95;
+    vector<float> normCI95;
+    vector<float> normCI99;
+    vector<float> R_sq;
+    vector<float> beta;
 
   private:
     void create();
