@@ -75,6 +75,11 @@
 //DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
 //-----------------------------------------------------------------
 
+
+
+#ifndef LSDFlowInfo_CPP
+#define LSDFlowInfo_CPP
+
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -90,8 +95,6 @@
 using namespace std;
 using namespace TNT;
 
-#ifndef LSDFlowInfo_CPP
-#define LSDFlowInfo_CPP
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -3933,8 +3936,85 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 
   return OutputArrays;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function makes a mask of all the pixels that recieve flow (d8) 
+// from a pixel that is either nodata or is on the boundary of the DEM
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LSDIndexRaster LSDFlowInfo::find_cells_influenced_by_nodata(LSDIndexRaster& Bordered_mask,
+                                 LSDRaster& Topography)
+{
+
+  // set up the array
+  Array2D<int> influenced_mask(NRows,NCols,int(NoDataValue));
+  for(int row = 0; row <NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      if(Topography.get_data_element(row,col) != NoDataValue)
+      { 
+        influenced_mask[row][col] = 0;
+      } 
+    }
+  }
+  
+  
+  int curr_node;
+  int next_node;
+  int next_row,next_col;
+  
+  // now loop through every node in the array
+  for(int row = 0; row <NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      if(Topography.get_data_element(row,col) != NoDataValue)
+      {
+        // this node has data. 
+        // first see if it has already been tagged 
+        if(influenced_mask[row][col] != 1)
+        {
+        
+          //See if it is borderd by a NDV
+          if(Bordered_mask.get_data_element(row,col) == 1)
+          {
+            // it is bordered by nodata. Work your way down the node list
+            curr_node = retrieve_node_from_row_and_column(row, col);
+            next_node = ReceiverVector[curr_node];
+          
+            influenced_mask[row][col] = 1;
+            retrieve_current_row_and_col(next_node, next_row, next_col);
+            
+            // loop until you hit another influenced node or a baselevel node
+            while(next_node != curr_node && influenced_mask[next_row][next_col] != 1 )
+            {
+              curr_node = next_node;
+              next_node = ReceiverVector[curr_node];
+              
+              // the index here say next row and column but actually this is
+              // preserved from the previous loop so is the current node. 
+              influenced_mask[next_row][next_col] = 1;
+              
+              // get the row and column of the receiver
+              retrieve_current_row_and_col(next_node, next_row, next_col);              
+            }                     
+          }       
+        }
+      }
+    }
+  }
+
+  // now write the mask as an LSDIndexRaster
+  LSDIndexRaster Influence_by_NDV(NRows,NCols,XMinimum,YMinimum,
+                DataResolution,int(NoDataValue),influenced_mask,GeoReferencingStrings);
+	return Influence_by_NDV;
+  
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 #endif

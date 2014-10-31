@@ -71,6 +71,11 @@ It is the object that is used to generate contributing area, etc.
 //DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
 //-----------------------------------------------------------------
 
+
+
+#ifndef LSDFlowInfo_H
+#define LSDFlowInfo_H
+
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -80,8 +85,6 @@ It is the object that is used to generate contributing area, etc.
 using namespace std;
 using namespace TNT;
 
-#ifndef LSDFlowInfo_H
-#define LSDFlowInfo_H
 
 /// @brief Object to perform flow routing.
 class LSDFlowInfo
@@ -622,6 +625,20 @@ class LSDFlowInfo
                 LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir, string Prefix, LSDIndexRaster Basins,
                 bool print_paths_switch, int thinning, string trace_path, bool basin_filter_switch,
                 vector<int> Target_Basin_Vector, int OrderThreshold);
+
+  /// @brief This function creates a mask depicting all cells that are influenced
+  /// by a pixel that is either on the edge of the DEM or adjacent to a
+  /// NoData node
+  /// @param Bordered_mask and LSDIndexRaster that is created by the function
+  /// find_cells_bordered_by_nodata() in LSDRaster
+  /// @param Topography this is the LSDRaster containing topographic data
+  /// @return Influenced_mask the LSDIndexRaster that has values 1 where pixels
+  /// are influenced by a pixel on the border or next to nodata. They have 0 otherwise
+  /// @author SMM
+  /// @date 31/10/14
+  LSDIndexRaster find_cells_influenced_by_nodata(LSDIndexRaster& Bordered_mask,
+                                 LSDRaster& Topography);
+
 	
   protected:
 
