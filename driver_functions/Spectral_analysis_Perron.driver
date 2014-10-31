@@ -1,0 +1,6 @@
+path /home/s1143956/DTMDataStore/data/GabilanMesa/
+RasterID gm_2m_dem
+OutputID test
+N_iterations_fractal_estimation 20
+window 1
+LogBinWidth 0.1
