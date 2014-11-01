@@ -3959,6 +3959,10 @@ LSDIndexRaster LSDFlowInfo::find_cells_influenced_by_nodata(LSDIndexRaster& Bord
       if(Topography.get_data_element(row,col) != NoDataValue)
       { 
         influenced_mask[row][col] = 0;
+      }
+      else
+      {
+        cout << "Nodata at["<<row<<"]["<<col<<"]:" << Topography.get_data_element(row,col) << endl;
       } 
     }
   }
@@ -3989,6 +3993,11 @@ LSDIndexRaster LSDFlowInfo::find_cells_influenced_by_nodata(LSDIndexRaster& Bord
           
             influenced_mask[row][col] = 1;
             retrieve_current_row_and_col(next_node, next_row, next_col);
+            
+            cout << "I am bordered by NDV, entering search loop" << endl;
+            cout << "Row: " << row <<  " col: " << col << " node: " << curr_node 
+                 << " receiver: " << next_node << " next infl mask: "
+                 << influenced_mask[next_row][next_col] << endl;
             
             // loop until you hit another influenced node or a baselevel node
             while(next_node != curr_node && influenced_mask[next_row][next_col] != 1 )
