@@ -143,6 +143,23 @@ class LSDStrahlerLinks
     /// @author SMM
     /// @date 28/10/14
     void print_drops(string data_directory, string threshold_string);
+
+    /// @brief this function calculates calcualtes which basins contain nodes
+    /// that receive flow from nodes on edge or adjacent to nodata
+    /// and masks these basins. 
+    /// @param FI the LSDFlowInfo object
+    /// @param InfluenceMask LSDIndexRaster a mask raster that holds the cells
+    /// that receive flow from the edge. This is generated using the LSDFlowInfo
+    /// member function find_cells_influenced_by_nodata
+    /// @return NotIfluencedByEdgeOrNoData an LSDIndexRaster that has values
+    ///  0 for cells that receive flow from an edge or nodata cell, and 1 for cells
+    ///  that do not receive flow from edge or nodata-adjacent cells 
+    /// @author SMM
+    /// @date 01/11/2014
+    LSDIndexRaster get_outlet_nodes_of_no_edge_influence_basins
+                              (LSDFlowInfo& FI, 
+                               LSDIndexRaster& Influence_Mask);
+
        	
 	protected:
     ///Number of rows.
@@ -165,7 +182,7 @@ class LSDStrahlerLinks
 	  /// a vec vec containing the sources of all the Strahler links
     vector< vector<int> > SourceJunctions;
     
-    /// a vec vec containing the end junctions of te Strahler links
+    /// a vec vec containing the end junctions of the Strahler links
     vector< vector<int> > ReceiverJunctions;
     
     /// a vec vec containing the node indices of the sources

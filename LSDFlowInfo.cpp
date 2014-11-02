@@ -1680,7 +1680,7 @@ vector<int> LSDFlowInfo::get_upslope_nodes(int node_number_outlet)
 
 	if(node_number_outlet < 0 || node_number_outlet > NDataNodes-1)
 	{
-		cout << "the junction number does not exist" << endl;
+		cout << "the node index does not exist" << endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -3960,10 +3960,6 @@ LSDIndexRaster LSDFlowInfo::find_cells_influenced_by_nodata(LSDIndexRaster& Bord
       { 
         influenced_mask[row][col] = 0;
       }
-      else
-      {
-        cout << "Nodata at["<<row<<"]["<<col<<"]:" << Topography.get_data_element(row,col) << endl;
-      } 
     }
   }
   
@@ -3994,10 +3990,10 @@ LSDIndexRaster LSDFlowInfo::find_cells_influenced_by_nodata(LSDIndexRaster& Bord
             influenced_mask[row][col] = 1;
             retrieve_current_row_and_col(next_node, next_row, next_col);
             
-            cout << "I am bordered by NDV, entering search loop" << endl;
-            cout << "Row: " << row <<  " col: " << col << " node: " << curr_node 
-                 << " receiver: " << next_node << " next infl mask: "
-                 << influenced_mask[next_row][next_col] << endl;
+            //cout << "I am bordered by NDV, entering search loop" << endl;
+            //cout << "Row: " << row <<  " col: " << col << " node: " << curr_node 
+            //     << " receiver: " << next_node << " next infl mask: "
+            //     << influenced_mask[next_row][next_col] << endl;
             
             // loop until you hit another influenced node or a baselevel node
             while(next_node != curr_node && influenced_mask[next_row][next_col] != 1 )
@@ -4010,7 +4006,11 @@ LSDIndexRaster LSDFlowInfo::find_cells_influenced_by_nodata(LSDIndexRaster& Bord
               influenced_mask[next_row][next_col] = 1;
               
               // get the row and column of the receiver
-              retrieve_current_row_and_col(next_node, next_row, next_col);              
+              retrieve_current_row_and_col(next_node, next_row, next_col); 
+              
+              //cout << "Looping thought influence, next influenced is: " 
+              //     << influenced_mask[next_row][next_col] << endl;
+                           
             }                     
           }       
         }

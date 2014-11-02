@@ -415,9 +415,91 @@ void LSDStrahlerLinks::print_drops(string data_directory, string threshold_strin
     
     }
   }
-  
-
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function returns an LSDIndex raster of basins
+// that do not receive drainage from nodes bordering the edge or nodes 
+// bordering nodata
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LSDIndexRaster LSDStrahlerLinks::get_outlet_nodes_of_no_edge_influence_basins
+                              (LSDFlowInfo& FI, 
+                               LSDIndexRaster& Influence_Mask)
+{
+  // this array holds the data for the 
+  Array2D<int> NoEdgeInfluence(NRows,NCols,0); 
+  
+  int IM_NDV = Influence_Mask.get_NoDataValue();
+  
+  // set the nodata points to nodata
+  for (int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      if(Influence_Mask.get_data_element(row,col) == IM_NDV)
+      {
+        NoEdgeInfluence[row][col] = IM_NDV;
+      }
+    }
+  }
+  
+  // some parameters for holding data within the loop
+  int this_row,this_col;
+  vector<int> upslope_nodes;
+  int this_us_row,this_us_col;
+  
+  // loop through all the drainage orders, 
+  int NOrders = int(ReceiverNodes.size()); 
+
+  // go in descending order, since you can skip some basins if they are 
+  // in a non-affected channel
+  for (int order = NOrders-1; order>=0; order--)
+  {
+    // get the number of links
+    int NLinks = int(ReceiverNodes[order].size());
+    for(int link = 0; link<NLinks; link++)
+    {
+      // get the location of the outlet
+      this_row = ReceiverRows[order][link];
+      this_col = ReceiverCols[order][link];
+      
+      // see if it is masked. If the Influence mask == 0, then it isn't masked
+      // and we can include the basin in the valid data.
+      if(Influence_Mask.get_data_element(this_row,this_col) == 0)
+      {
+        // check to see if this basin has already been tagged
+        if(NoEdgeInfluence[this_row][this_col] != 1)
+        {
+          
+          // it hasn't been tagged. Tag it. 
+          upslope_nodes = FI.get_upslope_nodes(ReceiverNodes[order][link]); 
+          
+          // loop through the upslope nodes setting the NoEdgeInfuluence value to 1
+          int Nupslope = int(upslope_nodes.size());
+          for(int usn = 0; usn<Nupslope; usn++)
+          {
+            FI.retrieve_current_row_and_col(upslope_nodes[usn],this_us_row,
+                                             this_us_col); 
+            NoEdgeInfluence[this_us_row][this_us_col] = 1;
+          }
+           
+        }
+      
+      }  
+    }
+  
+  }
+  
+  // now write the mask as an LSDIndexRaster
+  LSDIndexRaster notInfluence_by_NDV(NRows,NCols,XMinimum,YMinimum,
+                DataResolution,int(NoDataValue),NoEdgeInfluence,GeoReferencingStrings);
+	return notInfluence_by_NDV;  
+
+}                               
+
 
 
 #endif
