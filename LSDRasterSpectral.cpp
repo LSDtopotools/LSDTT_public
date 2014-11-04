@@ -2237,8 +2237,7 @@ void LSDRasterSpectral::full_spectral_analysis(float log_bin_width, int N_iterat
   cout << "\t Calculating 2D periodogram..." << endl;
   float mean = get_mean_ignore_ndv(zeta_window, NoDataValue);
   float variance_hann =  get_variance_ignore_ndv(zeta_window, NoDataValue, mean);
-  float WSS1 = WSS;
-//   WSS=float(NRows*NCols);
+  
   calculate_2D_PSD(SpectrumReal, SpectrumImaginary);
   // now get the total of the P_DFT
   float total_power = 0;
@@ -2257,7 +2256,7 @@ void LSDRasterSpectral::full_spectral_analysis(float log_bin_width, int N_iterat
   float variance_detrend =  get_variance_ignore_ndv(zeta_detrend, NoDataValue, mean);
   mean = get_mean_ignore_ndv(zeta_padded, NoDataValue);
   float variance_padded =  get_variance_ignore_ndv(zeta_padded, NoDataValue, mean);
-  cout << "variance detrend = " << variance_detrend << "; window = " << variance_hann << "; padded " << variance_padded << "; spectral power = " << total_power << "; variance_window/WSS = " << variance_hann*NRows*NCols/WSS1 << endl << endl << endl;
+  cout << "variance detrend = " << variance_detrend << "; window = " << variance_hann << "; padded " << variance_padded << "; spectral power = " << total_power << "; variance_window/WSS = " << variance_hann*NRows*NCols/WSS << endl << endl << endl;
   
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // GET RADIAL POWER SPECTRUM
@@ -2285,6 +2284,11 @@ void LSDRasterSpectral::full_spectral_analysis(float log_bin_width, int N_iterat
 // spectrum
 void LSDRasterSpectral::print_radial_spectrum(string file_id)
 {
+    // First check that all the output vectors have values. If not, then fill with NoData.  Radial PSD and RadialFrequency are assumed to have been calculated.
+  int N_points = RadialFrequency.size();
+  vector<float> temp_points(N_points,NoDataValue);
+  if(NormalisedPSD.size()==0) NormalisedPSD=temp_points;
+  
   cout << "\n\t Writing radial spectrum to file" << endl;
   ofstream ofs;
   string PSD_suffix = "_radialPSD";
@@ -2303,14 +2307,27 @@ void LSDRasterSpectral::print_radial_spectrum(string file_id)
     ofs << RadialFrequency[i] << " " << 1/RadialFrequency[i] << " " << RadialPSD[i] << " " << NormalisedPSD[i] << " \n";
   }
   ofs.close();
-}
+}   
 // print_binned_spectrum
 void LSDRasterSpectral::print_binned_spectrum(string output_id, float log_bin_width) 
 {
   cout << "\n\t binning the spectrum data into logarithmically spaced bins" << endl;
+    
   vector<float> bin_midpoints, bin_mean_PSD, bin_mean_freq,bin_mean_background, bin_mean_norm, bin_mean_CI, bin_CI_norm, bin_CI_norm99;
   vector< vector<float> > temp;
   log_bin_data(RadialPSD, RadialFrequency, log_bin_width, bin_midpoints, bin_mean_PSD, bin_mean_freq, temp);
+  
+  // First check that all the output vectors have values. If not, then fill with NoData.  Radial PSD and RadialFrequency are assumed to have been calculated.
+  int N_points = RadialFrequency.size();
+  int N_bins = bin_mean_freq.size();
+  vector<float> temp_bins(N_bins,NoDataValue);
+  vector<float> temp_points(N_points,NoDataValue);
+  if(BackgroundPSD.size()==0) BackgroundPSD=temp_points;
+  if(normCI95.size()==0) normCI95=temp_points;
+  if(normCI99.size()==0) normCI99=temp_points;
+  if(beta.size()==0) beta=temp_bins;
+  if(R_sq.size()==0) R_sq=temp_bins;
+  
   log_bin_data(BackgroundPSD, RadialFrequency, log_bin_width, bin_midpoints, bin_mean_background, bin_mean_freq, temp);
   log_bin_data(normCI95, RadialFrequency, log_bin_width, bin_midpoints, bin_CI_norm, bin_mean_freq, temp);
   log_bin_data(normCI99, RadialFrequency, log_bin_width, bin_midpoints, bin_CI_norm99, bin_mean_freq, temp);
@@ -2321,7 +2338,7 @@ void LSDRasterSpectral::print_binned_spectrum(string output_id, float log_bin_wi
     {
       bin_index.push_back(i);
     }
-  }
+  }  
   
   cout << "\t\t\t\t\t Writing log-binned spectrum file" << endl;
   // print test file
@@ -2344,6 +2361,5 @@ void LSDRasterSpectral::print_binned_spectrum(string output_id, float log_bin_wi
   }
   ofs.close();
 }  
-
 
 #endif
