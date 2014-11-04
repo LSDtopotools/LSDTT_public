@@ -297,7 +297,7 @@ void LSDStrahlerLinks::populate_NodeRowCol_vecvecs(LSDJunctionNetwork& JNetwork,
         last_receiver_row = this_receiver_row;
         last_receiver_col = this_receiver_col;      
         FlowInfo.retrieve_receiver_information(last_receiver_node,this_receiver_node, 
-                                             this_receiver_row, this_receiver_col);                                             
+                                             this_receiver_row, this_receiver_col);
       } while(this_receiver_node != rj_node);
       
       // populate the vectors
