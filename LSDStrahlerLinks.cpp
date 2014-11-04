@@ -425,8 +425,7 @@ void LSDStrahlerLinks::print_drops(string data_directory, string threshold_strin
 // bordering nodata
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-LSDIndexRaster LSDStrahlerLinks::get_outlet_nodes_of_no_edge_influence_basins
-                              (LSDFlowInfo& FI, 
+LSDIndexRaster LSDStrahlerLinks::get_no_edge_influence_mask(LSDFlowInfo& FI, 
                                LSDIndexRaster& Influence_Mask)
 {
   // this array holds the data for the 
@@ -485,21 +484,49 @@ LSDIndexRaster LSDStrahlerLinks::get_outlet_nodes_of_no_edge_influence_basins
                                              this_us_col); 
             NoEdgeInfluence[this_us_row][this_us_col] = 1;
           }
-           
         }
-      
       }  
-    }
-  
+    } 
   }
   
   // now write the mask as an LSDIndexRaster
   LSDIndexRaster notInfluence_by_NDV(NRows,NCols,XMinimum,YMinimum,
                 DataResolution,int(NoDataValue),NoEdgeInfluence,GeoReferencingStrings);
-	return notInfluence_by_NDV;  
+  return notInfluence_by_NDV;  
 
 }                               
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function is a one stop function that returns an LSDRaster
+// that has any pixel that has contributing pixels from the edge
+// masked
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LSDRaster LSDStrahlerLinks::get_no_edge_influence_raster(LSDFlowInfo& FI,
+                               LSDRaster& topography)
+{
+  // now look for the masked raster
+  LSDIndexRaster mask = topography.find_cells_bordered_by_nodata();
+  
+  // get the influence mask
+  LSDIndexRaster influence_mask = FI.find_cells_influenced_by_nodata(mask,topography);
+
+  // now get the influence mask
+  LSDIndexRaster NoEdgeInfluence = get_no_edge_influence_mask(FI,
+                                                               influence_mask);
+
+  // now get the masked raster
+  int no_edge_influence_key = 0;
+  LSDRaster masked_topography = topography.mask_to_nodata_with_mask_raster(NoEdgeInfluence, 
+                                      no_edge_influence_key);
+
+  // return this new raster
+  return masked_topography;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 #endif

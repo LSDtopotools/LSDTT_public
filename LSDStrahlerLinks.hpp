@@ -1,4 +1,4 @@
-     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // LSDStrahlerLinks
 // Land Surface Dynamics StrahlerLinks
@@ -98,19 +98,19 @@ using namespace std;
 /// @date 28/10/2014
 class LSDStrahlerLinks
 {
-	public:
+  public:
     /// @brief This defines a Strahler links object, is empty
     /// @author SMM
     /// @date 26/10/14
-	  LSDStrahlerLinks()   { create(); }
+    LSDStrahlerLinks()   { create(); }
    
     /// @brief This creates the LSDStrahlerLinks object
     /// @param JNetwork a LSDJunctionNetwork object
     /// @param FlowInfo LSDFlowInfo object.
     /// @author SMM
     /// @date 26/10/14
-	  LSDStrahlerLinks(LSDJunctionNetwork& JNetwork, LSDFlowInfo& FlowInfo)
-											{ create(JNetwork, FlowInfo); }
+    LSDStrahlerLinks(LSDJunctionNetwork& JNetwork, LSDFlowInfo& FlowInfo)
+               { create(JNetwork, FlowInfo); }
 
     /// @brief this function is called during the create process 
     /// it populates the node, row and col vectors with information
@@ -156,12 +156,25 @@ class LSDStrahlerLinks
     ///  that do not receive flow from edge or nodata-adjacent cells 
     /// @author SMM
     /// @date 01/11/2014
-    LSDIndexRaster get_outlet_nodes_of_no_edge_influence_basins
-                              (LSDFlowInfo& FI, 
+    LSDIndexRaster get_no_edge_influence_mask(LSDFlowInfo& FI, 
                                LSDIndexRaster& Influence_Mask);
 
-       	
-	protected:
+    /// @brief This is a one stop function that masks out all pixels
+    /// that are in basins receiving flow from pixels either on the edge or 
+    /// adjacent to nodata
+    /// @param FI the LSDFlowInfo object
+    /// @param InfluenceMask LSDIndexRaster a mask raster that holds the cells
+    /// that receive flow from the edge. This is generated using the LSDFlowInfo
+    /// member function find_cells_influenced_by_nodata
+    /// @return NotIfluencedByEdgeOrNoData an LSDIndexRaster that has values
+    ///  0 for cells that receive flow from an edge or nodata cell, and 1 for cells
+    ///  that do not receive flow from edge or nodata-adjacent cells 
+    /// @author SMM
+    /// @date 01/11/2014
+    LSDRaster get_no_edge_influence_raster(LSDFlowInfo& FI, LSDRaster& topography);
+
+
+  protected:
     ///Number of rows.
     int NRows;
     ///Number of columns.
@@ -179,7 +192,7 @@ class LSDStrahlerLinks
     ///A map of strings for holding georeferencing information
     map<string,string> GeoReferencingStrings;
     
-	  /// a vec vec containing the sources of all the Strahler links
+    /// a vec vec containing the sources of all the Strahler links
     vector< vector<int> > SourceJunctions;
     
     /// a vec vec containing the end junctions of the Strahler links
@@ -212,10 +225,10 @@ class LSDStrahlerLinks
     /// a vec vec containing drops of every link
     vector< vector<float> > DropData;      
  
-    	
-	private:
-	  void create();
-	  void create(LSDJunctionNetwork& JN, LSDFlowInfo& FI);
+    
+  private:
+    void create();
+    void create(LSDJunctionNetwork& JN, LSDFlowInfo& FI);
 };
 
 #endif
