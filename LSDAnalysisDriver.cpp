@@ -126,26 +126,29 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
     {
       lower[i] = tolower(parameter[i]);
     }
-	
+
     cout << "parameter is: " << lower << " and value is: " << value << endl;
 
-    if 	(lower == "dem read extension")
+    // get rid of control characters
+    value = RemoveControlCharactersFromEndOfString(value);
+
+    if (lower == "dem read extension")
     {
-    	dem_read_extension = value;
-    	// get rid of any control characters from the end (if param file was made in DOS)
-    	dem_read_extension = RemoveControlCharactersFromEndOfString(dem_read_extension);
+      dem_read_extension = value;
+      // get rid of any control characters from the end (if param file was made in DOS)
+      dem_read_extension = RemoveControlCharactersFromEndOfString(dem_read_extension);
     }
     else if (lower == "dem write extension")
-    {		
+    {
       dem_write_extension = value;
-    	// get rid of any control characters from the end (if param file was made in DOS)
-    	dem_write_extension = RemoveControlCharactersFromEndOfString(dem_write_extension);
+      // get rid of any control characters from the end (if param file was made in DOS)
+      dem_write_extension = RemoveControlCharactersFromEndOfString(dem_write_extension);
     }     
     else if (lower == "write path")
     {
-    	write_path = value;
-    	// get rid of any control characters from the end (if param file was made in DOS)
-    	write_path = RemoveControlCharactersFromEndOfString(write_path);
+      write_path = value;
+      // get rid of any control characters from the end (if param file was made in DOS)
+      write_path = RemoveControlCharactersFromEndOfString(write_path);
     }         	
     else if (lower == "write fname")
     {      
