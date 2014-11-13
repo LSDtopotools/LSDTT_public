@@ -148,10 +148,21 @@ class LSDAnalysisDriver
     /// @date 23/09/2014
     void calculate_drainage_area();
     
-    /// @brief This calculates the hillshade raster
+    /// @brief This calculates the slope raster
     /// @author SMM
     /// @date 21/09/2014
     void calculate_slope();
+
+    /// @brief This calculates the slope angle raster
+    /// @author SMM
+    /// @date 13/11/2014
+    void calculate_slope_angle();
+
+    /// @brief This calculates the Factor of safety when the hillslopes
+    /// are saturated
+    /// @author SMM
+    /// @date 13/11/2014
+    void calculate_FS_sat();
 
     /// @brief This calculates the various polyfit rasters
     /// @author SMM
