@@ -792,6 +792,22 @@ void LSDAnalysisDriver::write_rasters_from_analysis_switches()
     map_of_LSDRasters["slope"].write_raster(slope_fname,dem_write_extension);
   }
 
+  // write slope
+  if(analyses_switches.find("write_FS_sat") != analyses_switches.end())
+  {
+    // check to see if the slope map exists
+    if(map_of_LSDRasters.find("FS_sat") == map_of_LSDRasters.end())
+    {
+      //cout << "You've not run the get raster routine. Running now. " << endl;
+      calculate_FS_sat();
+    }
+
+    string slope_seperator = "_FSsat";
+    string slope_fname = write_path+write_fname+slope_seperator;
+    map_of_LSDRasters["FS_sat"].write_raster(slope_fname,dem_write_extension);
+  }
+
+
   // write aspect
   if(analyses_switches.find("write_aspect") != analyses_switches.end())
   {
@@ -1320,9 +1336,49 @@ void LSDAnalysisDriver::calculate_hillshade()
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDAnalysisDriver::calculate_FS_sat()
 {
-  cout << "Hey buddy, I've not written this yet" << endl;
+  
+  // check to see if this has already been calculated
+  if(map_of_LSDRasters.find("FS_sat") == map_of_LSDRasters.end())
+  {
+    // it hasn't. calculate it
+    
+    // check to see if the slope_angle raster is present
+    if(map_of_LSDRasters.find("slope_angle") == map_of_LSDRasters.end())
+    {
+      calculate_slope_angle();
+    }
+    
+
+    // see if the parameters for FS calculation have been set. If not use default values
+    if(float_parameters.find("root_cohesion") == float_parameters.end())
+    {
+      cout << "You didn't define root_cohesion. Defaulting to 10000 N/m^2" << endl;
+      float_parameters["root_cohesion"] = 10000;
+    }
+    if(float_parameters.find("soil_density") == float_parameters.end())
+    {
+      cout << "You didn't define soil_density, degfaulting to 1300 kg/m^3" << endl;
+      float_parameters["soil_density"] = 1300;
+    }
+    if(float_parameters.find("soil_thickness") == float_parameters.end())
+    {
+      cout << "You didn't define soil_thickness, defaulting to 1m" << endl;
+      float_parameters["soil_thickness"] = 1;
+    }  
+    if(float_parameters.find("tan_phi") == float_parameters.end())
+    {
+      cout << "You didn't define tan_phi, defaulting to 0.8" << endl;
+      float_parameters["tan_phi"] = 0.8;
+    }
+    
+    map_of_LSDRasters["FS_sat"] 
+     = map_of_LSDRasters["SlopeAngle"].calculate_factor_of_safety_at_saturation(
+            float_parameters["root_cohesion"], float_parameters["soil_density"],
+            float_parameters["soil_thickness"], float_parameters["tan_phi"],     
+            map_of_LSDRasters["SlopeAngle"]);        
 
 }
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Calculates the flow info object
