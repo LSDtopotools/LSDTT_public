@@ -3869,7 +3869,8 @@ LSDIndexRaster LSDJunctionNetwork::GetStreams(int order)
     }
   }
 
-  LSDIndexRaster Stream(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, SingleStream,GeoReferencingStrings);
+  LSDIndexRaster Stream(NRows,NCols, XMinimum, YMinimum, DataResolution, 
+                        NoDataValue, SingleStream,GeoReferencingStrings);
 	return Stream;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -3894,7 +3895,8 @@ LSDIndexRaster LSDJunctionNetwork::GetStreams(int min_order, int max_order)
     }
   }
 
-  LSDIndexRaster Stream(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, SelectedStreams,GeoReferencingStrings);
+  LSDIndexRaster Stream(NRows,NCols, XMinimum, YMinimum, DataResolution,
+                        NoDataValue, SelectedStreams,GeoReferencingStrings);
   return Stream;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -4027,7 +4029,8 @@ vector<int> LSDJunctionNetwork::get_BaseLevel_DonorJunctions()
 // DTM 17/10/2013
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-int LSDJunctionNetwork::get_receiver_junction_for_specified_coordinates(float X_coordinate, float Y_coordinate, LSDFlowInfo& FlowInfo)
+int LSDJunctionNetwork::get_receiver_junction_for_specified_coordinates(float X_coordinate, 
+                                  float Y_coordinate, LSDFlowInfo& FlowInfo)
 {
   // Shift origin to that of dataset
   float X_coordinate_shifted_origin = X_coordinate - XMinimum;
@@ -4069,7 +4072,7 @@ int LSDJunctionNetwork::get_receiver_junction_for_specified_coordinates(float X_
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 int LSDJunctionNetwork::get_nodeindex_of_nearest_channel_for_specified_coordinates(float X_coordinate,
-                            float Y_coordinate, int search_radius_nodes, int threshold_stream_order, LSDFlowInfo& FlowInfo)
+             float Y_coordinate, int search_radius_nodes, int threshold_stream_order, LSDFlowInfo& FlowInfo)
 {
 
   // variables neighbor search
@@ -4088,7 +4091,8 @@ int LSDJunctionNetwork::get_nodeindex_of_nearest_channel_for_specified_coordinat
   int row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/DataResolution));
 
   bool is_in_raster = true;
-
+  int NearestChannel;
+  
   if(col_point < 0 || col_point > NCols-1 || row_point < 0 || row_point > NRows -1)
   {
     is_in_raster = false;
@@ -4109,7 +4113,7 @@ int LSDJunctionNetwork::get_nodeindex_of_nearest_channel_for_specified_coordinat
 
 
     // make sure you are not at base level
-    int NearestChannel = NoDataValue;
+    NearestChannel = NoDataValue;
 
     // check to see if this node has a stream order >= 1
     if(StreamOrderArray[CurrentRow][CurrentCol] >= threshold_stream_order)
