@@ -3778,73 +3778,73 @@ LSDIndexRaster LSDJunctionNetwork::StreamOrderArray_to_BinaryNetwork_LSDIndexRas
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDJunctionNetwork::print_junction_info_vectors(string filename)
 {
-	string string_filename;
-	string dot = ".";
-	string extension = "txt";
-	string_filename = filename+dot+extension;
-	cout << "The filename is " << string_filename << endl;
+  string string_filename;
+  string dot = ".";
+  string extension = "txt";
+  string_filename = filename+dot+extension;
+  cout << "The filename is " << string_filename << endl;
 
-	// print out all the donor, reciever and stack info
-	ofstream donor_info_out;
-	donor_info_out.open(string_filename.c_str());
-	for(int i = 0; i<NJunctions; i++)
-	{
-		donor_info_out << i << " ";
-	}
-	donor_info_out << endl;
-	for(int i = 0; i<NJunctions; i++)
-	{
-		donor_info_out << JunctionVector[i] << " ";
-	}
-	donor_info_out << endl;
-	for(int i = 0; i<NJunctions; i++)
-	{
-		donor_info_out << StreamOrderVector[i] << " ";
-	}
-	donor_info_out << endl;
-	for(int i = 0; i<NJunctions; i++)
-	{
-		donor_info_out << ReceiverVector[i] << " ";
-	}
-	donor_info_out << endl;
-	for(int i = 0; i<NJunctions; i++)
-	{
-		donor_info_out << NDonorsVector[i] << " ";
-	}
-	donor_info_out << endl;
-	for(int i = 0; i<NJunctions+1; i++)
-	{
-		donor_info_out << DeltaVector[i] << " ";
-	}
-	donor_info_out << endl;
-	for(int i = 0; i<NJunctions; i++)
-	{
-		donor_info_out << DonorStackVector[i] << " ";
-	}
-	donor_info_out << endl;
-	for(int i = 0; i<NJunctions; i++)
-	{
-		donor_info_out << SVector[i] << " ";
-	}
-	donor_info_out << endl;
+  // print out all the donor, reciever and stack info
+  ofstream donor_info_out;
+  donor_info_out.open(string_filename.c_str());
+  for(int i = 0; i<NJunctions; i++)
+  {
+    donor_info_out << i << " ";
+  }
+  donor_info_out << endl;
+  for(int i = 0; i<NJunctions; i++)
+  {
+    donor_info_out << JunctionVector[i] << " ";
+  }
+  donor_info_out << endl;
+  for(int i = 0; i<NJunctions; i++)
+  {
+    donor_info_out << StreamOrderVector[i] << " ";
+  }
+  donor_info_out << endl;
+  for(int i = 0; i<NJunctions; i++)
+  {
+    donor_info_out << ReceiverVector[i] << " ";
+  }
+  donor_info_out << endl;
+  for(int i = 0; i<NJunctions; i++)
+  {
+    donor_info_out << NDonorsVector[i] << " ";
+  }
+  donor_info_out << endl;
+  for(int i = 0; i<NJunctions+1; i++)
+  {
+    donor_info_out << DeltaVector[i] << " ";
+  }
+  donor_info_out << endl;
+  for(int i = 0; i<NJunctions; i++)
+  {
+    donor_info_out << DonorStackVector[i] << " ";
+  }
+  donor_info_out << endl;
+  for(int i = 0; i<NJunctions; i++)
+  {
+    donor_info_out << SVector[i] << " ";
+  }
+  donor_info_out << endl;
 
-	if( int(SVectorIndex.size()) == NJunctions)
-	{
-		for(int i = 0; i<NJunctions; i++)
-		{
-			donor_info_out << SVectorIndex[i] << " ";
-		}
-		donor_info_out << endl;
-		for(int i = 0; i<NJunctions; i++)
-		{
-			donor_info_out << NContributingJunctions[i] << " ";
-		}
-		donor_info_out << endl;
-	}
+  if( int(SVectorIndex.size()) == NJunctions)
+  {
+    for(int i = 0; i<NJunctions; i++)
+    {
+      donor_info_out << SVectorIndex[i] << " ";
+    }
+    donor_info_out << endl;
+    for(int i = 0; i<NJunctions; i++)
+    {
+      donor_info_out << NContributingJunctions[i] << " ";
+    }
+    donor_info_out << endl;
+  }
 
-	cout << "LINE 746 " << endl;
-	donor_info_out.close();
-	cout << "LINE 749" << endl;
+  cout << "LINE 746 " << endl;
+  donor_info_out.close();
+  cout << "LINE 749" << endl;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -3895,7 +3895,7 @@ LSDIndexRaster LSDJunctionNetwork::GetStreams(int min_order, int max_order)
   }
 
   LSDIndexRaster Stream(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, SelectedStreams,GeoReferencingStrings);
-	return Stream;
+  return Stream;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -3998,22 +3998,22 @@ bool LSDJunctionNetwork::node_tester(LSDFlowInfo& FlowInfo, int input_junction)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 vector<int> LSDJunctionNetwork::get_BaseLevel_DonorJunctions()
 {
-	vector<int> BL_Donor_junctions;
+  vector<int> BL_Donor_junctions;
 
-	//loope through baselevel junctions and get junction immediately upstrea,
-	for (int junc = 0; junc< int(BaseLevelJunctions.size()); ++junc)
-	{
-		if(BaseLevelJunctions[junc] < 0 || BaseLevelJunctions[junc] > NJunctions-1)
-		{
-			cout << " Tried LSDJunctionNetwork::get_BaseLevel_DonorJunctions but the"
-			     << " junction number does not exist" << endl;
-			exit(0);
-		}
+  //loope through baselevel junctions and get junction immediately upstrea,
+  for (int junc = 0; junc< int(BaseLevelJunctions.size()); ++junc)
+  {
+    if(BaseLevelJunctions[junc] < 0 || BaseLevelJunctions[junc] > NJunctions-1)
+    {
+      cout << " Tried LSDJunctionNetwork::get_BaseLevel_DonorJunctions but the"
+           << " junction number does not exist" << endl;
+      exit(0);
+    }
 
-		int SVector_junction = SVectorIndex[BaseLevelJunctions[junc]];
-		BL_Donor_junctions.push_back(SVector[SVector_junction+1]);
-	}
-	return BL_Donor_junctions;
+    int SVector_junction = SVectorIndex[BaseLevelJunctions[junc]];
+    BL_Donor_junctions.push_back(SVector[SVector_junction+1]);
+  }
+  return BL_Donor_junctions;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -4072,98 +4072,106 @@ int LSDJunctionNetwork::get_nodeindex_of_nearest_channel_for_specified_coordinat
                             float Y_coordinate, int search_radius_nodes, int threshold_stream_order, LSDFlowInfo& FlowInfo)
 {
 
-	// variables neighbor search
-	int kernal_size = search_radius_nodes*2+1;
-	int this_krow, this_kcol;
-	int largest_SO_in_kernal;
-	int this_SO;
-	int largest_SO_row, largest_SO_col;
+  // variables neighbor search
+  int kernal_size = search_radius_nodes*2+1;
+  int this_krow, this_kcol;
+  int largest_SO_in_kernal;
+  int this_SO;
+  int largest_SO_row, largest_SO_col;
 
-	// Shift origin to that of dataset
-  	float X_coordinate_shifted_origin = X_coordinate - XMinimum;
-  	float Y_coordinate_shifted_origin = Y_coordinate - YMinimum;
+  // Shift origin to that of dataset
+  float X_coordinate_shifted_origin = X_coordinate - XMinimum;
+  float Y_coordinate_shifted_origin = Y_coordinate - YMinimum;
 
-  	// Get row and column of point
-  	int col_point = int(X_coordinate_shifted_origin/DataResolution);
-  	int row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/DataResolution));
+  // Get row and column of point
+  int col_point = int(X_coordinate_shifted_origin/DataResolution);
+  int row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/DataResolution));
 
-  	// Find first downstream junction by running through receiver nodes until you
-  	// find a junction.
-  	int CurrentNode = FlowInfo.NodeIndex[row_point][col_point];
-  	int ReceiverRow, ReceiverCol, ReceiverNode, CurrentCol, CurrentRow;
+  bool is_in_raster = true;
 
-  	// get the current row and column
-  	FlowInfo.retrieve_current_row_and_col(CurrentNode,CurrentRow,CurrentCol);
+  if(col_point < 0 || col_point > NCols-1 || row_point < 0 || row_point > NRows -1)
+  {
+    is_in_raster = false;
+  }
+  
+  if (is_in_raster)
+  {
+    // Find first downstream junction by running through receiver nodes until you
+    // find a junction.
+    int CurrentNode = FlowInfo.NodeIndex[row_point][col_point];
+    int ReceiverRow, ReceiverCol, ReceiverNode, CurrentCol, CurrentRow;
 
-	// get the first receiver
-	FlowInfo.retrieve_receiver_information(CurrentNode, ReceiverNode, ReceiverRow, ReceiverCol);
+    // get the current row and column
+    FlowInfo.retrieve_current_row_and_col(CurrentNode,CurrentRow,CurrentCol);
+
+    // get the first receiver
+    FlowInfo.retrieve_receiver_information(CurrentNode, ReceiverNode, ReceiverRow, ReceiverCol);
 
 
-  	// make sure you are not at base level
-  	int NearestChannel = NoDataValue;
+    // make sure you are not at base level
+    int NearestChannel = NoDataValue;
 
-	// check to see if this node has a stream order >= 1
-	if(StreamOrderArray[CurrentRow][CurrentCol] >= threshold_stream_order)
-	{
-		NearestChannel = CurrentNode;
-	}
+    // check to see if this node has a stream order >= 1
+    if(StreamOrderArray[CurrentRow][CurrentCol] >= threshold_stream_order)
+    {
+      NearestChannel = CurrentNode;
+    }
 
-	//cout << "Node: " << CurrentNode << " Row: " << CurrentRow << " Col: "
-	//	 << CurrentCol << " SO: " << StreamOrderArray[CurrentRow][CurrentCol] << endl;
+    // loop until you find a channel
+    while(NearestChannel == NoDataValue && CurrentNode != ReceiverNode)
+    {
+      // now move down one node
+      CurrentNode = ReceiverNode;
 
-	// loop until you find a channel
-	while(NearestChannel == NoDataValue && CurrentNode != ReceiverNode)
-	{
-		// now move down one node
-		CurrentNode = ReceiverNode;
+      // get the current row and column
+      FlowInfo.retrieve_current_row_and_col(CurrentNode,CurrentRow,CurrentCol);
 
-		// get the current row and column
-		FlowInfo.retrieve_current_row_and_col(CurrentNode,CurrentRow,CurrentCol);
+      // now search the kernal
+      largest_SO_in_kernal = NoDataValue;
+      largest_SO_row = NoDataValue;
+      largest_SO_col = NoDataValue;
+      for (int krow = 0; krow<kernal_size; krow++)
+      {
+        for (int kcol = 0; kcol<kernal_size; kcol++)
+        {
+          // get the row and column
+          this_krow = CurrentRow-search_radius_nodes+krow;
+          this_kcol = CurrentCol-search_radius_nodes+kcol;
 
-		//cout << "Node: " << CurrentNode << " Row: " << CurrentRow << " Col: "
-		//     << CurrentCol << " SO: " << StreamOrderArray[CurrentRow][CurrentCol] << endl;
+          // only test if it within size of the Stream Order array
+          if(this_krow >= 0 && this_krow < NRows-1 && this_kcol >= 0 && this_kcol < NCols-1)
+          {
+            this_SO = StreamOrderArray[this_krow][this_kcol];
+            if (this_SO >= threshold_stream_order && this_SO > largest_SO_in_kernal)
+            {
+              largest_SO_in_kernal = this_SO;
+              largest_SO_row = this_krow;
+              largest_SO_col = this_kcol;
+            }
+          }
+        }
+      }
+    
+    
+      // check to if the kernal returned a channel node
+      if(largest_SO_in_kernal != NoDataValue)
+      {
+        NearestChannel = FlowInfo.NodeIndex[largest_SO_row][largest_SO_col];
+      }
+      else    // get the next node
+      {
+        FlowInfo.retrieve_receiver_information(CurrentNode, ReceiverNode, ReceiverRow, ReceiverCol);
+        //cout << "CurrentNode: " << CurrentNode << " RN: " << ReceiverNode << endl;
+      }
+    }
+  }
+  else
+  {
+    NearestChannel = NoDataValue;
+  }
 
-		// now search the kernal
-		largest_SO_in_kernal = NoDataValue;
-		largest_SO_row = NoDataValue;
-		largest_SO_col = NoDataValue;
-		for (int krow = 0; krow<kernal_size; krow++)
-		{
-			for (int kcol = 0; kcol<kernal_size; kcol++)
-			{
-				// get the row and column
-				this_krow = CurrentRow-search_radius_nodes+krow;
-				this_kcol = CurrentCol-search_radius_nodes+kcol;
-
-				// only test if it within size of the Stream Order array
-				if(this_krow >= 0 && this_krow < NRows-1 && this_kcol >= 0 && this_kcol < NCols-1)
-				{
-					this_SO = StreamOrderArray[this_krow][this_kcol];
-					if (this_SO >= threshold_stream_order && this_SO > largest_SO_in_kernal)
-					{
-						largest_SO_in_kernal = this_SO;
-						largest_SO_row = this_krow;
-						largest_SO_col = this_kcol;
-					}
-				}
-			}
-		}
-
-		// check to if the kernal returned a channel node
-		if(largest_SO_in_kernal != NoDataValue)
-		{
-			NearestChannel = FlowInfo.NodeIndex[largest_SO_row][largest_SO_col];
-		}
-		else		// get the next node
-		{
-			FlowInfo.retrieve_receiver_information(CurrentNode, ReceiverNode, ReceiverRow, ReceiverCol);
-			//cout << "CurrentNode: " << CurrentNode << " RN: " << ReceiverNode << endl;
-		}
-
-	}
-
-	//cout << "Nearest_channel is: " << NearestChannel << endl;
-	return NearestChannel;
+  //cout << "Nearest_channel is: " << NearestChannel << endl;
+  return NearestChannel;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
