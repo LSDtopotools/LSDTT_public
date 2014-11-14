@@ -117,6 +117,15 @@ class LSDFlowInfo
 
   // some functions for retrieving information out of the data vectors
 
+
+  /// @brief this check to see if a point is within the raster
+  /// @param X_coordinate the x location of the point
+  /// @param Y_coordinate the y location of the point
+  /// @return is_in_raster a boolean telling if the point is in the raster
+  /// @author SMM
+  /// @date 13/11/2014
+  bool check_if_point_is_in_raster(float X_coordinate,float Y_coordinate);
+
   ///@brief Gives the reciever information for a given node.
   ///@param current_node Integer
   ///@param reveiver_node Empty integer to be assigned the index of the reciever

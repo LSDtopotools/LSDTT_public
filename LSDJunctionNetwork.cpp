@@ -4177,89 +4177,141 @@ int LSDJunctionNetwork::get_nodeindex_of_nearest_channel_for_specified_coordinat
   //cout << "Nearest_channel is: " << NearestChannel << endl;
   return NearestChannel;
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Find upstream junction from channel nodeindex
 //
 // This function takes a nodeindex, checks to see if it is a channel, and if so
 // it marches upstream until it finds a junction
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-int LSDJunctionNetwork::find_upstream_junction_from_channel_nodeindex(int ChannelNodeIndex, LSDFlowInfo& FlowInfo)
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+int LSDJunctionNetwork::find_upstream_junction_from_channel_nodeindex(int ChannelNodeIndex, 
+                                                   LSDFlowInfo& FlowInfo)
 {
-	int UpstreamJunction = NoDataValue;
-	int CurrentNode = ChannelNodeIndex;
-	int CurrentRow, CurrentCol;
-	//int DonorRow, DonorCol;
-	int junction;
-	int donor_channel_order;
+  int UpstreamJunction = NoDataValue;
+  int CurrentNode = ChannelNodeIndex;
+  int CurrentRow, CurrentCol;
+  //int DonorRow, DonorCol;
+  int junction;
+  int donor_channel_order;
 
-	// get the current row and column
-	FlowInfo.retrieve_current_row_and_col(CurrentNode,CurrentRow,CurrentCol);
+  // get the current row and column
+  FlowInfo.retrieve_current_row_and_col(CurrentNode,CurrentRow,CurrentCol);
 
-	// get the stream order
-	int this_channel_order = StreamOrderArray[CurrentRow][CurrentCol];
+  // get the stream order
+  int this_channel_order = StreamOrderArray[CurrentRow][CurrentCol];
 
-	if (this_channel_order != NoDataValue)
-	{
-		// first test if this is a junction
-		junction = retrieve_junction_number_at_row_and_column(CurrentRow,CurrentCol);
-		if(junction != NoDataValue)
-		{
-			UpstreamJunction = junction;
-		}
-
-
-
-		while (UpstreamJunction == NoDataValue)
-		{
-			// get the donors
-			vector<int> donors = FlowInfo.get_donor_nodes(CurrentNode);
-
-			// now loop through the donors looking for a channel of the same order
-			int n_donors = donors.size();
-			int this_donor = 0;
-			do
-			{
-				//cout << "this donor: " << this_donor << " and the donor NI: " << donors[this_donor] << endl;
-
-				FlowInfo.retrieve_current_row_and_col(donors[this_donor],CurrentRow,CurrentCol);
-
-				donor_channel_order = StreamOrderArray[CurrentRow][CurrentCol];
-
-				//cout << "donor_channel_order: " << donor_channel_order << " and tcho: " << this_channel_order << endl;
-
-				this_donor++;
-
-			} while( donor_channel_order != this_channel_order && this_donor<n_donors);
-
-			// now check if the donor is a junction
-			junction = retrieve_junction_number_at_row_and_column(CurrentRow,CurrentCol);
-			//cout << "Junction is: " << junction << endl;
-
-			if(junction != NoDataValue)		// if it is, set the junction
-			{
-				UpstreamJunction = junction;
-			}
-			else			// if it isn't, go upslope
-			{
-				CurrentNode = donors[this_donor-1];
-			}
-
-			//cout << "Current node yo1: " << CurrentNode << endl;
-		}
+  if (this_channel_order != NoDataValue)
+  {
+    // first test if this is a junction
+    junction = retrieve_junction_number_at_row_and_column(CurrentRow,CurrentCol);
+    if(junction != NoDataValue)
+    {
+      UpstreamJunction = junction;
+    }
 
 
-	}
 
+    while (UpstreamJunction == NoDataValue)
+    {
+      // get the donors
+      vector<int> donors = FlowInfo.get_donor_nodes(CurrentNode);
 
-	return UpstreamJunction;
+      // now loop through the donors looking for a channel of the same order
+      int n_donors = donors.size();
+      int this_donor = 0;
+      do
+      {
+        //cout << "this donor: " << this_donor << " and the donor NI: " << donors[this_donor] << endl;
+
+        FlowInfo.retrieve_current_row_and_col(donors[this_donor],CurrentRow,CurrentCol);
+
+        donor_channel_order = StreamOrderArray[CurrentRow][CurrentCol];
+
+        //cout << "donor_channel_order: " << donor_channel_order << " and tcho: " << this_channel_order << endl;
+
+        this_donor++;
+
+      } while( donor_channel_order != this_channel_order && this_donor<n_donors);
+
+      // now check if the donor is a junction
+      
+      //cout << "Junction is: " << junction << endl;
+
+      if(junction != NoDataValue)		// if it is, set the junction
+      {
+        UpstreamJunction = junction;
+      }
+      else      // if it isn't, go upslope
+      {
+        CurrentNode = donors[this_donor-1];
+      }
+
+      //cout << "Current node yo1: " << CurrentNode << endl;
+    }
+  }
+
+  return UpstreamJunction;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function takes a CRN file and returns the node index and the junction
+// index of the nearest channels
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDJunctionNetwork::snap_point_locations_to_channels(vector<float> x_locs, 
+                vector<float> y_locs, 
+                int search_radius_nodes, int threshold_stream_order, 
+                LSDFlowInfo& FlowInfo, vector<int>& valid_cosmo_points, 
+                vector<int>& snapped_node_indices, vector<int>& snapped_junction_indices)
+{
+  // First reset the vectors that will be copied
+  vector<int> empty_vec;
+  valid_cosmo_points = empty_vec;
+  snapped_node_indices = empty_vec;
+  snapped_junction_indices = empty_vec;
+  
+  
+  vector<int> reciever_junc;
+  int this_junc, this_chan_node;
+
+  float x_loc,y_loc;
+
+  // now loop through cosmo points recording the junctions
+  int n_cosmo_points = int(x_locs.size());
+  for (int samp = 0; samp<n_cosmo_points; samp++)
+  //for (int samp = 0; samp<1; samp++)
+  {
+    x_loc = x_locs[samp];
+    y_loc = y_locs[samp];
+    
+    // check to see if the node is in the raster
+    bool is_in_raster = FlowInfo.check_if_point_is_in_raster(x_loc,y_loc);
+    
+    if(is_in_raster)
+    {
+      this_chan_node = get_nodeindex_of_nearest_channel_for_specified_coordinates(x_loc, y_loc,
+                       threshold_stream_order, search_radius_nodes,
+                       FlowInfo);
+                       
+      this_junc = find_upstream_junction_from_channel_nodeindex(this_chan_node, FlowInfo);
+      snapped_node_indices.push_back(this_chan_node);
+      snapped_node_indices.push_back(this_junc);
+      valid_cosmo_points.push_back(samp);
+      
+      cout << "channel node index is: " << this_chan_node << " and receiver_junc is: " 
+           << this_junc << endl;
+    }
+  }
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 #endif

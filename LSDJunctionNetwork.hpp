@@ -800,6 +800,36 @@ class LSDJunctionNetwork
   /// @date 21/10/2013
   int find_upstream_junction_from_channel_nodeindex(int ChannelNodeIndex, LSDFlowInfo& FlowInfo);
 
+  /// @brief this function is a wrapper that takes a list of x and y locations, 
+  ///  filters them to make sure they are in the data bounds, 
+  ///  and then calculates the nearest channel and junction. 
+  ///  It is primarily used to snap cosmo data to the channel network
+  /// @param x_locs the x locations of the points
+  /// @param y_locs the y locations of the points
+  /// @param search_radius_nodes the number of nodes around the point to search
+  ///  for a channel
+  /// @param threshold_stream_order the minimum stream order to which the point
+  ///  will snap
+  /// @param FlowInfo the LSDFlowInfo object
+  /// @param valid_cosmo_points a vector<int> of indices into the x and y vectors. 
+  ///  for example if the only valid points were at x_loc[12] and x_loc[34] this
+  ///  would return a vector with two elements, 12 and 34. This vector is overwritten
+  ///  by this function
+  /// @param snapped_node_indices a vector containing the node indices of the 
+  ///  points snapped to the nearest channel (within search radius and over the 
+  ///  drainage order threshold). This is overwritten by this method.
+  /// @param snapped_junction_indices a vector<int> continaing the junction numbers
+  ///  downstream of the nearest channel node. This is overwritten by this method.
+  /// @author SMM
+  /// @date 14/11/2014
+  void snap_point_locations_to_channels(vector<float> x_locs, 
+                vector<float> y_locs, 
+                int search_radius_nodes, int threshold_stream_order, 
+                LSDFlowInfo& FlowInfo, vector<int>& valid_cosmo_points, 
+                vector<int>& snapped_node_indices, vector<int>& snapped_junction_indices);
+
+
+
   /// @brief This functions takes a junction number and then follwos the receiver
   /// junctions until it hits a baselevel junction. 
   /// @param a junction node to start from. 
@@ -868,8 +898,8 @@ class LSDJunctionNetwork
 
   /// @return The number of junctions
   int get_NJunctions() const { return int(JunctionVector.size()); }
-										
-  /// @return The Vector of Junctions.									
+  
+  /// @return The Vector of Junctions.  
   vector<int> get_JunctionVector() const { return JunctionVector; }		
   
   /// @return Get the baselevel junstions
