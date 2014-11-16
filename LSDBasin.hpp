@@ -1,5 +1,10 @@
 //beginning of the LSDBasin object
 
+
+
+#ifndef LSDBasin_H
+#define LSDBasin_H
+
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -11,9 +16,6 @@
 #include "LSDStatsTools.hpp"
 using namespace std;
 using namespace TNT;
-
-#ifndef LSDBasin_H
-#define LSDBasin_H
 
 ///@brief Object to store information about drainage basins and generate basin average metrics..
 class LSDBasin

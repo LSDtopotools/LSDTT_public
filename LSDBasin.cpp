@@ -1,3 +1,8 @@
+
+
+#ifndef LSDBasin_CPP
+#define LSDBasin_CPP
+
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -12,13 +17,8 @@
 #include "LSDJunctionNetwork.hpp"
 #include "LSDStatsTools.hpp"
 #include "LSDBasin.hpp"
-
 using namespace std;
 using namespace TNT;
-
-#ifndef LSDBasin_CPP
-#define LSDBasin_CPP
-
 
 void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChanNet){
 
