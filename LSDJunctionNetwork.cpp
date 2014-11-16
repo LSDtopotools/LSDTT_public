@@ -4226,17 +4226,17 @@ int LSDJunctionNetwork::find_upstream_junction_from_channel_nodeindex(int Channe
       int this_donor = 0;
       do
       {
-        cout << "this donor: " << this_donor << " and the donor NI: " << donors[this_donor] << endl;
+        //cout << "this donor: " << this_donor << " and the donor NI: " << donors[this_donor] << endl;
         FlowInfo.retrieve_current_row_and_col(donors[this_donor],CurrentRow,CurrentCol);
         donor_channel_order = StreamOrderArray[CurrentRow][CurrentCol];
-        cout << "donor_channel_order: " << donor_channel_order << " and tcho: " << this_channel_order << endl;
+        //cout << "donor_channel_order: " << donor_channel_order << " and tcho: " << this_channel_order << endl;
 
         this_donor++;
       } while( donor_channel_order != this_channel_order && this_donor<n_donors);
 
       // now check if the donor is a junction
       junction = retrieve_junction_number_at_row_and_column(CurrentRow,CurrentCol);
-      cout << "Junction is: " << junction << endl;
+      //cout << "Junction is: " << junction << endl;
 
       if(junction != NoDataValue)		// if it is, set the junction
       {
@@ -4247,7 +4247,7 @@ int LSDJunctionNetwork::find_upstream_junction_from_channel_nodeindex(int Channe
         CurrentNode = donors[this_donor-1];
       }
 
-      cout << "Current node yo1: " << CurrentNode << endl;
+      //cout << "Current node yo1: " << CurrentNode << endl;
     }
   }
 
@@ -4280,8 +4280,8 @@ void LSDJunctionNetwork::snap_point_locations_to_channels(vector<float> x_locs,
 
   float x_loc,y_loc;
   
-  cout << "JN LINE 4287, XMinimum is: " << XMinimum << " YMinimum is: " 
-       << YMinimum << endl;
+  //cout << "JN LINE 4287, XMinimum is: " << XMinimum << " YMinimum is: " 
+  //     << YMinimum << endl;
 
   // now loop through cosmo points recording the junctions
   int n_cosmo_points = int(x_locs.size());
@@ -4296,24 +4296,22 @@ void LSDJunctionNetwork::snap_point_locations_to_channels(vector<float> x_locs,
     // check to see if the node is in the raster
     bool is_in_raster = FlowInfo.check_if_point_is_in_raster(x_loc,y_loc);
     
-    
-    
     if(is_in_raster)
     {
-      cout << "JN 4307 This point is in the raster!" << endl;
+      //cout << "JN 4307 This point is in the raster!" << endl;
       this_chan_node = get_nodeindex_of_nearest_channel_for_specified_coordinates(x_loc, y_loc,
                        threshold_stream_order, search_radius_nodes,
                        FlowInfo);
-      cout << "JN 431 Got channel!, channel node is: " << this_chan_node << endl;                 
+      //cout << "JN 431 Got channel!, channel node is: " << this_chan_node << endl;                 
                        
       this_junc = find_upstream_junction_from_channel_nodeindex(this_chan_node, FlowInfo);
-      cout << "JN line 4314, got_this_junc!" << endl;
+      //cout << "JN line 4314, got_this_junc!" << endl;
       snapped_node_indices.push_back(this_chan_node);
       snapped_junction_indices.push_back(this_junc);
       valid_cosmo_points.push_back(samp);
       
-      cout << "channel node index is: " << this_chan_node << " and receiver_junc is: " 
-           << this_junc << endl;
+      //cout << "channel node index is: " << this_chan_node << " and receiver_junc is: " 
+      //     << this_junc << endl;
     }
   }
 }
