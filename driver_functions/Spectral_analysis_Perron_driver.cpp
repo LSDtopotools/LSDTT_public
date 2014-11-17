@@ -124,7 +124,7 @@ int main (int nNumberofArgs,char *argv[])
   string Trim_name = "_TRIM";
   trimmed.write_raster((DEM_f_name+Trim_name),raster_ext);
 
-  cout << "Now performaing spectral analysis" << endl;
+  cout << "Now performing spectral analysis" << endl;
    
   // Perform full spectral analysis  
   LSDRasterSpectral SpectralRaster(trimmed);
