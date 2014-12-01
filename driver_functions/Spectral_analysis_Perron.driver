@@ -1,7 +1,7 @@
-path /home/smudd/SMMDataStore/analysis_for_papers/Chile_paper/Aster_data/Small_tiles/Site_lat26p0/
-RasterID Site_lat26p0_UTM19_DEM
+path /home/smudd/SMMDataStore/analysis_for_papers/Chile_paper/Aster_data/Small_tiles/Site_lat26p4/
+RasterID Site_lat26p4_UTM19_DEM
 OutputID test
 N_iterations_fractal_estimation 20
 window 1
-LogBinWidth 0.1
+LogBinWidth 0.05
 RasterExtension bil

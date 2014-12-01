@@ -1120,9 +1120,168 @@ void LSDCRNParticle::update_zetaLoc_with_new_surface(double new_zeta)
 {
 	zetaLoc = new_zeta-dLoc;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// !!!FUNCTIONS FOR SCALINF
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// for Deselits 2006 scaling
+// -------- function definition for denominator of DZ2006 Eqns. 4 and 7 -------
+//that is, the integral of the expression for Beta
+// Modified from Greg Balco's code:
+//  http://hess.ess.washington.edu/math
+//
+// x integrating variable
+// Rc is cutoff rigidity (GV)
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+double LSDCRNParticle::intOfBeta(double x, double Rc)
+{
+
+  // coefficients from 2006 paper
+  double n = 1.0177e-2;
+  double alpha = 1.0207e-1;
+  double k = -3.9527e-1;
+  double a0 = 8.5236e-6;
+  double a1 = -6.3670e-7;
+  double a2 = -7.0814e-9;
+  double a3 = -9.9182e-9;
+  double a4 = 9.9250e-10;
+  double a5 = 2.4925e-11;
+  double a6 = 3.8615e-12;
+  double a7 = -4.8194e-13;
+  double a8 = -1.5371e-14;
+
+  double out = n*x/(1 + exp(-alpha*(pow(Rc,-k)))) + (0.5)*(a0+a1*Rc+a2*Rc*Rc)*(x*x)+
+    (1/3.0)*(a3+a4*Rc+a5*Rc*Rc)*(x*x*x) + (0.25)*(a6+a7*Rc+a8*Rc*Rc)*(x*x*x*x);
+
+  return out;
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// The deselits 2006 sclaing
+// Modified from Greg Balco's code:
+//  http://hess.ess.washington.edu/math
+//
+// h is atmospheric pressure (hPa)
+// Rc is cutoff rigidity (GV)
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+double LSDCRNParticle::desilets2006sp(double h,double Rc)
+{
+  double x = h*1.019716;
+
+  // enforce rigidity knee at 2 GV;
+  if (Rc < 2.0)
+  {
+    Rc = 2.0;
+  }
+
+  // reference atmospheric depth at SL
+  double sld = 1033.0;
+
+  //get altitude scaling factor
+  // first get attenuation length
+  double L = (sld - x)/(intOfBeta(sld,Rc) - intOfBeta(x,Rc));
+
+  // apply attenuation length
+  double fofx = exp((sld-x)/L);
+
+  // get latitude scaling factor
+  double alpha = 10.275;
+  double k = 0.9615;
+
+  double fofRc = 1 - exp(-alpha*( pow(Rc,-k)));
+
+  // now the total scaling factor
+  double out = fofRc*fofx;
+  return out;
+
+
+}
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This gets the Dunai Scaling
+// Modified from Greg Balco's code:
+//  http://hess.ess.washington.edu/math
+//
+// h is atmospheric pressure (hPa)
+// Rc is cutoff rigidity (GV)
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+double LSDCRNParticle::dunai2001sp(double h, double Rc)
+{
+  double delz = (1013.25-h)*1.019716;
+
+  // constants
+  double A = 0.5221;
+  double B = -1.7211;
+  double C = 0.3345;
+  double X = 4.2822;
+  double Y = 0.4952;
+
+  double a = 17.183;
+  double b = 2.060;
+  double c = 5.9164;
+  double x = 2.2964;
+  double y = 130.11;
+
+  // sea level scaling factor
+  double N1030 = Y + A/( pow( (1 + exp(-(Rc-X)/B)),C));
+
+  // attenuation length
+  double L = y + a/( pow((1 + exp(-(Rc-x)/b)),c));
+
+  //total scaling factor
+  double out = N1030*exp(delz/L);
+
+  return out;
+}
+
+// the lifton 2006 scaling
+double lifton2006sp(double h,double Rc,double S)
+{
+  // convert pressure to atmospheric depth
+  double X = h*1.019716;
+
+  // flatten low rigidities. The value of 1.907 comes from the source paper.
+  if (Rc < 1.907)
+  {
+    Rc = 1.907;
+  }
+
+  //define constants
+  vector<double> c;
+  c.push_back(1.8399);
+  c.push_back(-1.1854e2);
+  c.push_back(-4.9420e-2);
+  c.push_back(8.0139e-1);
+  c.push_back(1.2708e-4);
+  c.push_back(9.4647e-1);
+  c.push_back(-3.2208e-2);
+  c.push_back(1.2688);
+
+  double t1 = c[0]*log(X*S);
+  double t2 = -S*exp( (c[1]*S)/(   pow((Rc + 5.0*S),(2.0*S)) ) );
+  double t3 = c[2]*(pow(X,c[3]));
+  double t4 = c[4]*( pow( (Rc + 4.0*S)*X,c[5]));
+  double t5 = c[6]*( pow( (Rc + 4.0*S),c[7]));
+
+  double out = exp(t1 + t2 + t3 + t4 + t5);
+  return out;
+}
 
 
 #endif

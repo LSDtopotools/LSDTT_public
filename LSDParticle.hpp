@@ -414,20 +414,20 @@ class LSDCRNParticle: public LSDParticle
 
   /// @brief returns the mass of the particle
   /// @return the mass
-	double getMass() const  				{ return Mass; }
-	
+  double getMass() const  				{ return Mass; }
+
   /// @brief returns the starting mass of the particle
   /// @return the starting mass
-	double getStartingMass() const			{ return StartingMass; }
-	
+  double getStartingMass() const			{ return StartingMass; }
+
   /// @brief returns the surface area of the particle
   /// @return the surface area	
-	double getSurfaceArea()	const			{ return SurfaceArea; }
-	
+  double getSurfaceArea()	const			{ return SurfaceArea; }
+
   /// @brief returns the GSDType of the particle, which is an index into a 
   /// LSDVolumeParticleInfo object
   /// @return the surface GSDType	
-	int getGSDType()	const				{ return GSDType; }
+  int getGSDType()	const				{ return GSDType; }
 
 
   /// @brief update the 10Be concentration based on a constant erosion rate
@@ -579,7 +579,7 @@ class LSDCRNParticle: public LSDParticle
   /// @param C_21Ne the 21Ne concentration
   /// @param C_3He the 3He concentration
   void update_cosmo_conc_const(double C_10Be, double C_26Al, double C_36Cl,
-		       		 double C_14C, double C_21Ne, double C_3He);
+                          double C_14C, double C_21Ne, double C_3He);
 
   /// @brief Bring the 10Be concentration to steady state based
   /// on a constant erosion rate using full muogenic production.  
@@ -746,8 +746,8 @@ class LSDCRNParticle: public LSDParticle
 
 
   void update_fallout10Be_simple_density_2exp(double dt, double M_supply_surface,
-		double rho_skg, double k1_f10Be, double k2_f10Be, double chi_f10Be,
-		double deltad_m, LSDCRNParameters& CRNp);
+    double rho_skg, double k1_f10Be, double k2_f10Be, double chi_f10Be,
+    double deltad_m, LSDCRNParameters& CRNp);
 
   /// @brief This assignes depths. Note: it does not check if the
   /// effective depth is compatible with the depth!
@@ -764,6 +764,42 @@ class LSDCRNParticle: public LSDParticle
   void erode_mass_only(double dt, double mass_erosion_rate);
   
   void erode_mass_only_linear_increase(double dt, double mass_erosion_rate, double alpha);
+
+  //##################
+  // !!!!!! SCALING
+  //##################
+
+  /// @brief This integrates over beta for Deselits scaling (see the paper)
+  /// Modified from Greg Balco's code:
+  ///  http://hess.ess.washington.edu/math
+  /// @param x integrating variable
+  /// @param Rc is cutoff rigidity (GV)
+  ///  @return the scaling factor
+  /// @author SMM
+  /// @date 1/12/2014
+  double intOfBeta(double x, double Rc);
+
+  /// @brief This gets the deselits 2006 scaling
+  /// Modified from Greg Balco's code:
+  ///  http://hess.ess.washington.edu/math
+  /// @param h is atmospheric pressure (hPa)
+  /// @param Rc is cutoff rigidity (GV)
+  ///  @return the scaling factor
+  /// @author SMM
+  /// @date 1/12/2014
+  double desilets2006sp(double h,double Rc);  
+
+  /// @brief This gets the Dunai Scaling
+  /// Modified from Greg Balco's code:
+  ///  http://hess.ess.washington.edu/math
+  /// @param h is atmospheric pressure (hPa)
+  /// @param Rc is cutoff rigidity (GV)
+  ///  @return the scaling factor
+  /// @author SMM
+  /// @date 1/12/2014
+  double dunai2001sp(double h, double Rc);     
+
+
 
   protected:
 
@@ -865,11 +901,17 @@ class LSDCRNParticle: public LSDParticle
           double startAge, double startOSLAge,
           double startxLoc,double startyLoc,double startdLoc, double startefdLoc,
           double startzLoc, double start_C10Be, double start_C26Al,
-	        double start_C36Cl, double start_C14C,
-	        double start_C21Ne, double start_C3He,
-	        double start_Cf7Be, double start_Cf10Be,
-	        double start_Cf210Pb, double start_Cf137Cs, 
-	        double start_Mass, double start_StartingMass,double startSurfaceArea);
+          double start_C36Cl, double start_C14C,
+          double start_C21Ne, double start_C3He,
+          double start_Cf7Be, double start_Cf10Be,
+          double start_Cf210Pb, double start_Cf137Cs, 
+          double start_Mass, double start_StartingMass,double startSurfaceArea);
+          
+
+
+
+   
+
 };
 
 

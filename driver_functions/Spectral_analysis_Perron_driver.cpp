@@ -76,7 +76,11 @@ int main (int nNumberofArgs,char *argv[])
   raster_format = RemoveControlCharactersFromEndOfString(raster_format);
   
   file_info_in.close();
-
+  
+  // print the spectral data to the data folder. 
+  output_id = data_path+output_id;
+  
+  
   // now check the raster format
   string lower = raster_format;
   for (unsigned int i=0; i<raster_format.length(); ++i)
@@ -111,13 +115,20 @@ int main (int nNumberofArgs,char *argv[])
   // Load in data
   string DEM_f_name = data_path+raster_name;
   LSDRaster raw_raster(DEM_f_name, raster_ext);
+  
+  // convert to float by using the polyfit function
+  //float window_radius = 61.0;
+  //vector<int> raster_selection(8,0);
+  //raster_selection[0] = 1;                    // set to return the smoothed surface
+  //vector<LSDRaster> polyfit_rasters = 
+  //    raw_raster.calculate_polyfit_surface_metrics(window_radius, raster_selection);
 
   // remove the seas
-  //float sea_threshold = 1.0;
-  //raw_raster.mask_to_nodata_below_threshold(sea_threshold);
+  float sea_threshold = 1.0;
+  raw_raster.mask_to_nodata_below_threshold(sea_threshold);
 
   // now trim the raster
-  LSDRaster trimmed = raw_raster.RasterTrimmerSpiral();
+  LSDRaster trimmed = polyfit_rasters[0].RasterTrimmerSpiral();
   
   cout << "Trimmed raster, printing" << endl;
   
