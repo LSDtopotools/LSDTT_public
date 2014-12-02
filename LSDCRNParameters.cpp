@@ -56,9 +56,11 @@
 #include <math.h>
 #include <iostream>
 #include <vector>
+#include "TNT/tnt.h"
 #include "LSDStatsTools.hpp"
 #include "LSDCRNParameters.hpp"
 using namespace std;
+using namespace TNT;
 
 #ifndef LSDCRNParameters_CPP
 #define LSDCRNParameters_CPP
@@ -121,6 +123,8 @@ void LSDCRNParameters::create()
 // pressure
 void LSDCRNParameters::load_parameters_for_atmospheric_scaling(string path_to_data)
 {
+  cout.precision(8);
+  
   // first load the levels
   levels.push_back(1000);
   levels.push_back(925);
@@ -135,16 +139,18 @@ void LSDCRNParameters::load_parameters_for_atmospheric_scaling(string path_to_da
   int n_levels = 8;
   int NRows = 73;
   int NCols = 145;
-  
+  Array2D<double> new_slp(NRows,NCols,0.0);
+  Array2D<double> new_meant(NRows,NCols,0.0);
+    
   // now load the mean sea level pressure
-  string filename = meanslp.bin;
+  string filename = "NCEP2.bin";
   filename = path_to_data+filename;
   cout << "Loading mean sea level, file is: " << endl << filename << endl;
-  Array2D<double> new_slp(NRows,NCols,0.0);
-  ifstream ifs_data(string_filename.c_str(), ios::in | ios::binary);
+
+  ifstream ifs_data(filename.c_str(), ios::in | ios::binary);
   if( ifs_data.fail() )
   {
-    cout << "\nFATAL ERROR: the data file \"" << string_filename
+    cout << "\nFATAL ERROR: the data file \"" << filename
          << "\" doesn't exist" << endl;
     exit(EXIT_FAILURE);
   }  
@@ -152,20 +158,108 @@ void LSDCRNParameters::load_parameters_for_atmospheric_scaling(string path_to_da
 
   double temp;
   cout << "The size of a double is: " << sizeof(temp) << endl;
-  for (int i=0; i<NRows; ++i)
+  for (int i=0; i<NCols; ++i)
   {
-    for (int j=0; j<NCols; ++j)
+    for (int j=0; j<NRows; ++j)
     {
       ifs_data.read(reinterpret_cast<char*>(&temp), sizeof(temp));
-      new_slp[i][j] = temp;
+      new_slp[j][i] = temp;
+      //cout << "new_slp["<<j+1<<"]["<<i+1<<"]: " << new_slp[j][i] << endl;
     }
   }
+  
+  for (int i=0; i<NCols; ++i)
+  {
+    for (int j=0; j<NRows; ++j)
+    {
+      ifs_data.read(reinterpret_cast<char*>(&temp), sizeof(temp));
+      new_meant[j][i] = temp;
+      //cout << "new_meant100["<<j+1<<"]["<<i+1<<"]: " << new_meant[j][i] << endl;
+    }
+  }  
+  
+  // now get the indices
+  
+  
+  
+  
+  vector<double> temp_lat(NRows,0.0);
+  for (int i=0; i<NRows; ++i)
+  {
+    ifs_data.read(reinterpret_cast<char*>(&temp), sizeof(temp));
+    temp_lat[i] = temp;
+    cout << "Lat["<<i+1<<"]: " << temp_lat[i] << endl;
+  }
+  vector<double> temp_long(NCols,0.0);
+  for (int i=0; i<NCols; ++i)
+  {
+    ifs_data.read(reinterpret_cast<char*>(&temp), sizeof(temp));
+    temp_long[i] = temp;
+    cout << "Long["<<i+1<<"]: " << temp_long[i] << endl;
+  }  
+  
   ifs_data.close();
   
-  cout << "10,20: " << new_slp[10][20] << endl;
-  cout << "70,120: " << new_slp[70][120] << endl;
   
- 
+  // now the data with levels
+  filename = "NCEP_hgt.bin";
+  filename = path_to_data+filename;
+  cout << "Loading hgt, file is: " << endl << filename << endl;
+
+  ifstream ifs_data2(filename.c_str(), ios::in | ios::binary);
+  if( ifs_data2.fail() )
+  {
+    cout << "\nFATAL ERROR: the data file \"" << filename
+         << "\" doesn't exist" << endl;
+    exit(EXIT_FAILURE);
+  }  
+  
+
+  // get the gm heights
+  vector< Array2D<double> > vec_hgt_gm_array;
+  for (int lvl = 0; lvl < n_levels; lvl++)
+  {
+    Array2D<double> current_hgt_array(NRows,NCols,0.0);
+    for (int i=0; i<NCols; ++i)
+    {
+      for (int j=0; j<NRows; ++j)
+      {
+        ifs_data2.read(reinterpret_cast<char*>(&temp), sizeof(temp));
+        current_hgt_array[j][i] = temp;
+        //cout << "new_slp["<<lvl<<"]["<<j+1<<"]["<<i+1<<"]: " << current_hgt_array[j][i] << endl;
+      }
+    }
+    //cout << "new_slp["<<j+1<<"]["<<i+1<<"]: " << new_slp[j][i] << endl;
+    vec_hgt_gm_array.push_back(current_hgt_array.copy());
+  }
+
+  // now the gp heights
+  vector< Array2D<double> > vec_hgt_gp_array;
+  for (int lvl = 0; lvl < n_levels; lvl++)
+  {
+    Array2D<double> current_hgt_array(NRows,NCols,0.0);
+    for (int i=0; i<NCols; ++i)
+    {
+      for (int j=0; j<NRows; ++j)
+      {
+        ifs_data2.read(reinterpret_cast<char*>(&temp), sizeof(temp));
+        current_hgt_array[j][i] = temp;
+        //cout << "new_slp["<<lvl<<"]["<<j+1<<"]["<<i+1<<"]: " << current_hgt_array[j][i] << endl;
+      }
+    }
+    //cout << "new_slp["<<j+1<<"]["<<i+1<<"]: " << new_slp[j][i] << endl;
+    vec_hgt_gp_array.push_back(current_hgt_array.copy());
+  }
+  ifs_data2.close();
+  
+  // now update the data elements
+  NCEPlat = temp_lat;
+  NCEPlon = temp_long;
+  
+  meanslp = new_slp.copy();
+  mean1000 = new_meant.copy();
+  gp_hgt = vec_hgt_gp_array;
+  gm_hgt = vec_hgt_gp_array;  
   
 
 }

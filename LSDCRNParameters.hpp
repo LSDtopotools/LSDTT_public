@@ -54,7 +54,9 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 #include <iostream>
 #include <vector>
+#include "TNT/tnt.h"
 using namespace std;
+using namespace TNT;
 
 #ifndef LSDCRNParameters_H
 #define LSDCRNParameters_H
@@ -77,7 +79,7 @@ class LSDCRNParameters
   /// from elevation
   /// @author SMM
   /// @date 02/12/2014
-  void load_parameters_for_atmospheric_scaling();
+  void load_parameters_for_atmospheric_scaling(string path_to_params);
   
   // functions for altering the parameter values
   
@@ -201,10 +203,10 @@ class LSDCRNParameters
   Array2D<double> mean1000;
   
   /// This is a vector of arrays holding something called gp_hgt;
-  vector<Array2D<double>> gp_hgt;
+  vector< Array2D<double> > gp_hgt;
   
   /// This is a vector of arrays holding something called gp_hgt;
-  vector<Array2D<double>> gm_hgt;  
+  vector< Array2D<double> > gm_hgt;  
   
   
 };
