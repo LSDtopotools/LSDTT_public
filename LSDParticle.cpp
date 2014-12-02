@@ -148,29 +148,29 @@ void LSDParticle::incrementAge(double dt)
 
 void LSDParticle::setCellIndex(int tempCI)
 {
-	CellIndex = tempCI;
+  CellIndex = tempCI;
 }
 
 void LSDParticle::OSLexpose()
  {
-	 OSLage = 0;
+   OSLage = 0;
  }
 
  void LSDParticle::SoilAgeExpose()
-  {
- 	 Age = 0;
- }
+{
+  Age = 0;
+}
 
 // update the x location 
 void LSDParticle::update_xLoc(double new_xLoc)
 {
-	xLoc = new_xLoc;
+  xLoc = new_xLoc;
 }
 
 // update the y location
 void LSDParticle::update_yLoc(double new_yLoc)
 {
-	yLoc = new_yLoc;
+  yLoc = new_yLoc;
 }
 
 
@@ -228,109 +228,109 @@ int  LSDParticle::test_domain(double lambda)
 // functions for the CRN loaded tracer particle
 void LSDCRNParticle::create()
  {
-	double rho_r = 2650;		// in kg/m^3
+  double rho_r = 2650;		// in kg/m^3
 
-	Type = 0;
-	CellIndex = -1;
-	Age = 0;
-	OSLage = 0;
-	xLoc = 0;			// in metres
-	yLoc = 0;     // in metres
-	dLoc = 5;			// in metres
-	zetaLoc = 100;
-    Conc_10Be = 0.0;
-	Conc_26Al = 0.0;
-	Conc_36Cl = 0.0;
-	Conc_14C = 0.0;
-	Conc_21Ne = 0.0;
-	Conc_3He = 0.0;
-	Conc_f7Be = 0.0;
-	Conc_f10Be = 0.0;
-	Conc_f210Pb = 0.0;
-	Conc_f137Cs = 0.0;
-	effective_dLoc = rho_r*dLoc*0.1;	// the 0.1
-	 									// converts between kg/m^2
-	 									// to g/cm^2
+  Type = 0;
+  CellIndex = -1;
+  Age = 0;
+  OSLage = 0;
+  xLoc = 0;			// in metres
+  yLoc = 0;     // in metres
+  dLoc = 5;			// in metres
+  zetaLoc = 100;
+  Conc_10Be = 0.0;
+  Conc_26Al = 0.0;
+  Conc_36Cl = 0.0;
+  Conc_14C = 0.0;
+  Conc_21Ne = 0.0;
+  Conc_3He = 0.0;
+  Conc_f7Be = 0.0;
+  Conc_f10Be = 0.0;
+  Conc_f210Pb = 0.0;
+  Conc_f137Cs = 0.0;
+  effective_dLoc = rho_r*dLoc*0.1;	// the 0.1
+                    // converts between kg/m^2
+                    // to g/cm^2
  }
 
 void LSDCRNParticle::create(int startType, double startxLoc,
-	            double startzLoc)
+              double startzLoc)
 {
-	double rho_r = 2650;		// in kg/m^3
+  double rho_r = 2650;		// in kg/m^3
 
-	Type = startType;
-	CellIndex = -1;
-	Age = 0;
-	OSLage = 0;
-	xLoc = startxLoc;			// in meters
-	yLoc = 0;
-	dLoc = 0;			// in meters
-	zetaLoc = startzLoc;
-    Conc_10Be = 0.0;
-	Conc_26Al = 0.0;
-	Conc_36Cl = 0.0;
-	Conc_14C = 0.0;
-	Conc_21Ne = 0.0;
-	Conc_3He = 0.0;
-	Conc_f7Be = 0.0;
-	Conc_f10Be = 0.0;
-	Conc_f210Pb = 0.0;
-	Conc_f137Cs = 0.0;
-	effective_dLoc = rho_r*dLoc*0.1;	// the 0.1
-	 									// converts between kg/m^2
-	 									// to g/cm^2
+  Type = startType;
+  CellIndex = -1;
+  Age = 0;
+  OSLage = 0;
+  xLoc = startxLoc;			// in meters
+  yLoc = 0;
+  dLoc = 0;			// in meters
+  zetaLoc = startzLoc;
+  Conc_10Be = 0.0;
+  Conc_26Al = 0.0;
+  Conc_36Cl = 0.0;
+  Conc_14C = 0.0;
+  Conc_21Ne = 0.0;
+  Conc_3He = 0.0;
+  Conc_f7Be = 0.0;
+  Conc_f10Be = 0.0;
+  Conc_f210Pb = 0.0;
+  Conc_f137Cs = 0.0;
+  effective_dLoc = rho_r*dLoc*0.1;	// the 0.1
+                    // converts between kg/m^2
+                    // to g/cm^2
  }
 
 void LSDCRNParticle::create(int startType, double startxLoc,
-	            double startdLoc, double start_effdloc,
-	            double startzLoc)
+              double startdLoc, double start_effdloc,
+              double startzLoc)
 {
-	Type = startType;
-	CellIndex = -1;
-	Age = -99;
-	OSLage = -99;
-	xLoc = startxLoc;			// in meters
-	yLoc = 0;
-	dLoc = startdLoc;			// in meters
-	zetaLoc = startzLoc;
-    Conc_10Be = 0.0;
-	Conc_26Al = 0.0;
-	Conc_36Cl = 0.0;
-	Conc_14C = 0.0;
-	Conc_21Ne = 0.0;
-	Conc_3He = 0.0;
-	Conc_f7Be = 0.0;
-	Conc_f10Be = 0.0;
-	Conc_f210Pb = 0.0;
-	Conc_f137Cs = 0.0;
-	effective_dLoc = start_effdloc;
+  Type = startType;
+  CellIndex = -1;
+  Age = -99;
+  OSLage = -99;
+  xLoc = startxLoc;			// in meters
+  yLoc = 0;
+  dLoc = startdLoc;			// in meters
+  zetaLoc = startzLoc;
+  Conc_10Be = 0.0;
+  Conc_26Al = 0.0;
+  Conc_36Cl = 0.0;
+  Conc_14C = 0.0;
+  Conc_21Ne = 0.0;
+  Conc_3He = 0.0;
+  Conc_f7Be = 0.0;
+  Conc_f10Be = 0.0;
+  Conc_f210Pb = 0.0;
+  Conc_f137Cs = 0.0;
+  effective_dLoc = start_effdloc;
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParticle::create(int startType, double startxLoc, double startyLoc,
-	            double startdLoc, double start_effdloc,
-	            double startzLoc)
+              double startdLoc, double start_effdloc,
+              double startzLoc)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-	            
 {
-	Type = startType;
-	CellIndex = -1;
-	Age = -99;
-	OSLage = -99;
-	xLoc = startxLoc;			// in meters
-	yLoc = startyLoc;
-	dLoc = startdLoc;			// in meters
-	zetaLoc = startzLoc;
-    Conc_10Be = 0.0;
-	Conc_26Al = 0.0;
-	Conc_36Cl = 0.0;
-	Conc_14C = 0.0;
-	Conc_21Ne = 0.0;
-	Conc_3He = 0.0;
-	Conc_f7Be = 0.0;
-	Conc_f10Be = 0.0;
-	Conc_f210Pb = 0.0;
-	Conc_f137Cs = 0.0;
-	effective_dLoc = start_effdloc;
+  Type = startType;
+  CellIndex = -1;
+  Age = -99;
+  OSLage = -99;
+  xLoc = startxLoc;			// in meters
+  yLoc = startyLoc;
+  dLoc = startdLoc;			// in meters
+  zetaLoc = startzLoc;
+  Conc_10Be = 0.0;
+  Conc_26Al = 0.0;
+  Conc_36Cl = 0.0;
+  Conc_14C = 0.0;
+  Conc_21Ne = 0.0;
+  Conc_3He = 0.0;
+  Conc_f7Be = 0.0;
+  Conc_f10Be = 0.0;
+  Conc_f210Pb = 0.0;
+  Conc_f137Cs = 0.0;
+  effective_dLoc = start_effdloc;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -338,34 +338,35 @@ void LSDCRNParticle::create(int startType, double startxLoc, double startyLoc,
 // a create function for a volume particle
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParticle::create(int startType, int startGSDType,
-				double startxLoc,
-	            double startdLoc, double start_effdloc,
-	            double startzLoc, double startMass,
-	            double startSurfaceArea)
+                            double startxLoc,
+                            double startdLoc, double start_effdloc,
+                            double startzLoc, double startMass,
+                            double startSurfaceArea)
 {
-	Mass = startMass;					// in kg
-	StartingMass = startMass;			// in kg
-	SurfaceArea = startSurfaceArea;
-										// in m^2/kg
+  Mass = startMass;					// in kg
+  StartingMass = startMass;			// in kg
+  SurfaceArea = startSurfaceArea;
+                      // in m^2/kg
 
-	Type = startType;
-	GSDType = startGSDType;
-	CellIndex = -1;
-	Age = -99;
-	OSLage = -99;
-	xLoc = startxLoc;			// in meters
-	dLoc = startdLoc;			// in meters
-	zetaLoc = startzLoc;
-	Conc_26Al = 0.0;
-	Conc_36Cl = 0.0;
-	Conc_14C = 0.0;
-	Conc_21Ne = 0.0;
-	Conc_3He = 0.0;
-	Conc_f7Be = 0.0;
-	Conc_f10Be = 0.0;
-	Conc_f210Pb = 0.0;
-	Conc_f137Cs = 0.0;
-	effective_dLoc = start_effdloc;
+  Type = startType;
+  GSDType = startGSDType;
+  CellIndex = -1;
+  Age = -99;
+  OSLage = -99;
+  xLoc = startxLoc;			// in meters
+  dLoc = startdLoc;			// in meters
+  zetaLoc = startzLoc;
+  Conc_10Be = 0.0;
+  Conc_26Al = 0.0;
+  Conc_36Cl = 0.0;
+  Conc_14C = 0.0;
+  Conc_21Ne = 0.0;
+  Conc_3He = 0.0;
+  Conc_f7Be = 0.0;
+  Conc_f10Be = 0.0;
+  Conc_f210Pb = 0.0;
+  Conc_f137Cs = 0.0;
+  effective_dLoc = start_effdloc;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -377,30 +378,31 @@ void LSDCRNParticle::create(int startType, int startGSDType, double startxLoc, d
 	            double startzLoc, double startMass,
 	            double startSurfaceArea)	 
 {
-	Mass = startMass;					// in kg
-	StartingMass = startMass;			// in kg
-	SurfaceArea = startSurfaceArea;
-										// in m^2/kg
+  Mass = startMass;                   // in kg
+  StartingMass = startMass;           // in kg
+  SurfaceArea = startSurfaceArea;
+                        // in m^2/kg
 
-	Type = startType;
-	GSDType = startGSDType;
-	CellIndex = -1;
-	Age = -99;
-	OSLage = -99;
-	xLoc = startxLoc;			// in meters
-	yLoc = startyLoc;     // in metres
-	dLoc = startdLoc;			// in meters
-	zetaLoc = startzLoc;
-	Conc_26Al = 0.0;
-	Conc_36Cl = 0.0;
-	Conc_14C = 0.0;
-	Conc_21Ne = 0.0;
-	Conc_3He = 0.0;
-	Conc_f7Be = 0.0;
-	Conc_f10Be = 0.0;
-	Conc_f210Pb = 0.0;
-	Conc_f137Cs = 0.0;
-	effective_dLoc = start_effdloc;
+  Type = startType;
+  GSDType = startGSDType;
+  CellIndex = -1;
+  Age = -99;
+  OSLage = -99;
+  xLoc = startxLoc;			// in meters
+  yLoc = startyLoc;     // in metres
+  dLoc = startdLoc;			// in meters
+  zetaLoc = startzLoc;
+  Conc_10Be = 0.0;
+  Conc_26Al = 0.0;
+  Conc_36Cl = 0.0;
+  Conc_14C = 0.0;
+  Conc_21Ne = 0.0;
+  Conc_3He = 0.0;
+  Conc_f7Be = 0.0;
+  Conc_f10Be = 0.0;
+  Conc_f210Pb = 0.0;
+  Conc_f137Cs = 0.0;
+  effective_dLoc = start_effdloc;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -409,27 +411,28 @@ void LSDCRNParticle::create(int startType, int startGSDType, double startxLoc, d
 // contains posiution and CRN information
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParticle::create(int startType, double startxLoc,double startzeta_Loc,
- 					double startdLoc, double start_effdLoc,
-					double start_C10Be,double start_C14C)
+                            double startdLoc, double start_effdLoc,
+                            double start_C10Be,double start_C14C)
 {
-	Type = startType;
-	CellIndex = -1;
-	Age = -99;
-	OSLage = -99;
-	xLoc = startxLoc;			// in meters
-	dLoc = startdLoc;			// in meters
-	effective_dLoc = start_effdLoc;
-	zetaLoc = startzeta_Loc;
-    Conc_10Be = start_C10Be;
-	Conc_26Al = 0;
-	Conc_36Cl = 0;
-	Conc_14C = start_C14C;
-	Conc_21Ne = 0;
-	Conc_3He = 0;
-	Conc_f7Be = 0.0;
-	Conc_f10Be = 0.0;
-	Conc_f210Pb = 0.0;
-	Conc_f137Cs = 0.0;
+  Type = startType;
+  CellIndex = -1;
+  Age = -99;
+  OSLage = -99;
+  xLoc = startxLoc;			// in meters
+  dLoc = startdLoc;			// in meters
+  effective_dLoc = start_effdLoc;
+  zetaLoc = startzeta_Loc;
+  Conc_10Be = 0.0;
+  Conc_26Al = 0.0;
+  Conc_36Cl = 0.0;
+  Conc_14C = 0.0;
+  Conc_21Ne = 0.0;
+  Conc_3He = 0.0;
+  Conc_f7Be = 0.0;
+  Conc_f10Be = 0.0;
+  Conc_f210Pb = 0.0;
+  Conc_f137Cs = 0.0;
+
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -1249,9 +1252,22 @@ double LSDCRNParticle::dunai2001sp(double h, double Rc)
 
   return out;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-// the lifton 2006 scaling
-double lifton2006sp(double h,double Rc,double S)
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This gets the Lifton 2006 Scaling
+// Modified from Greg Balco's code:
+//  http://hess.ess.washington.edu/math
+//
+// h is atmospheric pressure (hPa)
+// Rc is cutoff rigidity (GV)
+// S solar modulation factor (nondimensional, see source paper)
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+double LSDCRNParticle::lifton2006sp(double h,double Rc,double S)
 {
   // convert pressure to atmospheric depth
   double X = h*1.019716;
@@ -1282,6 +1298,9 @@ double lifton2006sp(double h,double Rc,double S)
   double out = exp(t1 + t2 + t3 + t4 + t5);
   return out;
 }
+
+
+
 
 
 #endif

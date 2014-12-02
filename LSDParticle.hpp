@@ -799,7 +799,16 @@ class LSDCRNParticle: public LSDParticle
   /// @date 1/12/2014
   double dunai2001sp(double h, double Rc);     
 
-
+  /// @brief This gets the Lifton Scaling
+  /// Modified from Greg Balco's code:
+  ///  http://hess.ess.washington.edu/math
+  /// @param h is atmospheric pressure (hPa)
+  /// @param Rc is cutoff rigidity (GV)
+  /// @param S solar modulation factor (nondimensional, see source paper)
+  ///  @return the scaling factor
+  /// @author SMM
+  /// @date 2/12/2014
+  double lifton2006sp(double h, double Rc, double S);     
 
   protected:
 
