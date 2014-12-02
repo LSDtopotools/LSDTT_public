@@ -65,34 +65,34 @@ using namespace std;
 /// Seperating the object in this way reduces memory redundancy 
 class LSDCRNParameters
 {
-	public:
-	
-	/// @brief The default constructor. It is the only possible constructor
-	LSDCRNParameters()			{ create(); }
-	
-	/// This is a friend class so that it can be called from the particle 
-	friend class LSDCRNParticle;
+  public:
+  
+  /// @brief The default constructor. It is the only possible constructor
+  LSDCRNParameters()			{ create(); }
+  
+  /// This is a friend class so that it can be called from the particle 
+  friend class LSDCRNParticle;
 
-	// functions for altering the parameter values
-	
-	/// @brief This resets the F, Gamma and P0 values so that they conform to 
-	/// Granger scaling. Adopted from from Vermeesh 2007
-	/// @author SMM
-	/// @date 01/01/2010
-	void set_Granger_parameters();
-	
-	/// @brief This resets the F, Gamma and P0 values so that they conform to 
-	/// Schaller (2009) scaling. Adopted from from Vermeesh 2007
-	/// @author SMM
-	/// @date 01/01/2010	
-	void set_Schaller_parameters();
+  // functions for altering the parameter values
+  
+  /// @brief This resets the F, Gamma and P0 values so that they conform to 
+  /// Granger scaling. Adopted from from Vermeesh 2007
+  /// @author SMM
+  /// @date 01/01/2010
+  void set_Granger_parameters();
+  
+  /// @brief This resets the F, Gamma and P0 values so that they conform to 
+  /// Schaller (2009) scaling. Adopted from from Vermeesh 2007
+  /// @author SMM
+  /// @date 01/01/2010	
+  void set_Schaller_parameters();
 
   /// @brief This sets the F values to use neutron only production
   /// @details F0 == 1, all other F values == 0
   /// @author SMM
-	/// @date 14/07/2014	
+  /// @date 14/07/2014	
   void set_Neutron_only_parameters();
-	
+  
   /// @brief this function takes a single scaling factor for
   /// elevation scaling, self shielding, snow shielding,
   /// and latitude scaling and produces scaling factors
@@ -103,80 +103,83 @@ class LSDCRNParameters
   /// @param single_scaling a lumped scaling factor	
   /// @author SMM
   /// @date 01/01/2010
-	void scale_F_values(double single_scaling);	// parameter values
-	
-	/// @brief this changes the 10Be decay. It is here because
-	/// 10Be decay rates reported in the literature have changed
-	/// @author SMM
-	/// @date 01/01/2010
-	void update_10Be_decay(double new_decay)	{ lambda_10Be = new_decay; }
-	
-	/// @brief this changes the 10Be P0 value. It is here because
-	/// 10Be decay rates reported in the literature have changed
-	/// @author SMM
-	/// @date 01/01/2010	
-	void update_10Be_P0(double new_P0)			{ P0_10Be = new_P0; }
+  void scale_F_values(double single_scaling);	// parameter values
+  
+  /// @brief this changes the 10Be decay. It is here because
+  /// 10Be decay rates reported in the literature have changed
+  /// @author SMM
+  /// @date 01/01/2010
+  void update_10Be_decay(double new_decay)	{ lambda_10Be = new_decay; }
+  
+  /// @brief this changes the 10Be P0 value. It is here because
+  /// 10Be decay rates reported in the literature have changed
+  /// @author SMM
+  /// @date 01/01/2010	
+  void update_10Be_P0(double new_P0)			{ P0_10Be = new_P0; }
 
-	private:	
-	/// @brief This is called by the default constructor. 
+  private:	
+  /// @brief This is called by the default constructor. 
   /// It is the only possible constructor
-	void create();
+  void create();
 
   /// The attenudation lengths in g/cm^2. Each element in the array
   /// refers to a different production mechanism
-	double Gamma[4];			// attenuation legths in g/cm^2
+  double Gamma[4];			// attenuation legths in g/cm^2
 
-	/// F values allocating production to spallation and muon production for 10Be
-	double F_10Be[4];
-	
-	/// F values allocating production to spallation and muon production for 14C
-	double F_14C[4];
-	
+  /// F values allocating production to spallation and muon production for 10Be
+  double F_10Be[4];
+  
+  /// F values allocating production to spallation and muon production for 14C
+  double F_14C[4];
+  
   /// F values allocating production to spallation and muon production for 26Al
-	double F_26Al[4];
-	
+  double F_26Al[4];
+  
   /// F values allocating production to spallation and muon production for 36Cl
-	double F_36Cl[4];
-	
-	/// F values allocating production to spallation and muon production for 21Ne
-	double F_21Ne[4];
-	
-	/// F values allocating production to spallation and muon production for 3He
-	double F_3He[4];
+  double F_36Cl[4];
+  
+  /// F values allocating production to spallation and muon production for 21Ne
+  double F_21Ne[4];
+  
+  /// F values allocating production to spallation and muon production for 3He
+  double F_3He[4];
 
-	/// topographic shielding
-	/// other shielding and scaling calucalted using the scale_F_values function
-	double S_t;
+  /// topographic shielding
+  /// other shielding and scaling calucalted using the scale_F_values function
+  double S_t;
 
-	/// decay rate for 10Be in yr-1
-	double lambda_10Be;	
+  /// decay rate for 10Be in yr-1
+  double lambda_10Be;	
   
   /// decay rate for 26Al in yr-1	
-	double lambda_26Al;	
-	
-	/// decay rate for 14C in yr-1	
-	double lambda_14C;	
+  double lambda_26Al;	
+  
+  /// decay rate for 14C in yr-1	
+  double lambda_14C;	
   
   /// decay rate for 36Cl in yr-1	
-	double lambda_36Cl;		
+  double lambda_36Cl;		
 
-	/// production rate for 10Be in a/g/yr
-	double P0_10Be;	
+  /// production rate for 10Be in a/g/yr
+  double P0_10Be;	
   
   /// production rate for 26Al in a/g/yr		
-	double P0_26Al;		
-	
-	/// production rate for 14C in a/g/yr
-	double P0_14C;			
-	
-	/// production rate for 36Cl in a/g/yr
-	double P0_36Cl;		
-	
-	/// production rate for 21Ne in a/g/yr
-	double P0_21Ne;			
-	
-	/// production rate for 3He in a/g/yr
-	double P0_3He;			
+  double P0_26Al;		
+  
+  /// production rate for 14C in a/g/yr
+  double P0_14C;			
+  
+  /// production rate for 36Cl in a/g/yr
+  double P0_36Cl;		
+  
+  /// production rate for 21Ne in a/g/yr
+  double P0_21Ne;			
+  
+  /// production rate for 3He in a/g/yr
+  double P0_3He;			
+  
+  
+  
 };
 
 #endif
