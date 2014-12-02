@@ -73,6 +73,12 @@ class LSDCRNParameters
   /// This is a friend class so that it can be called from the particle 
   friend class LSDCRNParticle;
 
+  /// @brief function for loading parameters that allow pressure calculation
+  /// from elevation
+  /// @author SMM
+  /// @date 02/12/2014
+  void load_parameters_for_atmospheric_scaling();
+  
   // functions for altering the parameter values
   
   /// @brief This resets the F, Gamma and P0 values so that they conform to 
@@ -178,6 +184,27 @@ class LSDCRNParameters
   /// production rate for 3He in a/g/yr
   double P0_3He;			
   
+  
+  /// levels: the levels for the atmospheric scaling of pressure
+  vector<double> levels;
+  
+  /// This is an index for the latitudes for atmospheric scaling
+  vector<double> NCEPlat;
+  
+  /// This is an index for the longitudes for atmospheric scaling
+  vector<double> NCEPlon;
+  
+  /// This is an array holding sea level perssures
+  Array2D<double> meanslp;
+  
+  /// This is an array healing mean temperatures
+  Array2D<double> mean1000;
+  
+  /// This is a vector of arrays holding something called gp_hgt;
+  vector<Array2D<double>> gp_hgt;
+  
+  /// This is a vector of arrays holding something called gp_hgt;
+  vector<Array2D<double>> gm_hgt;  
   
   
 };
