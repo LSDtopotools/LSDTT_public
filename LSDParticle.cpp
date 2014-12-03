@@ -1299,8 +1299,175 @@ double LSDCRNParticle::lifton2006sp(double h,double Rc,double S)
   return out;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Scaling from the Stone 2000 paper
+// Units:
+// latitude in decimal degrees
+// pressure in hPa
+// fsp is the fraction (between 0 and 1) of production at sea level
+// and high latitude due to spallation (as opposed to muons).
+// This argument is optional and defaults to 0.978, which is the value
+// used by Stone (2000) for Be-10. The corresponding value for Al-26
+// is 0.974. Note that using 0.844 for Be-10 and 0.826 for Al-26 will
+// closely reproduce the Lal, 1991 scaling factors as long as the standard
+// atmosphere is used to convert sample elevation to atmospheric pressure.
+// Also note that this function will yield the scaling factor for spallation
+// only when fsp=1, and that for muons only when fsp=0.
+//
+// Elevation can be converted to pressure with the functions
+// stdatm.m (general use) and antatm.m (Antarctica).
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+double stone2000(double lat,double P, double Fsp=0.978)
+{
+  if (fabs(lat) > 90)
+  {
+    cout << "Your latitude is > 90! Defaulting to 45 degrees" << endl;
+    lat = 45;
+  }
 
 
+
+  // Spallogenic production at index latitudes;
+  // enter constants from Table 1
+  vector<double> a;
+  a.push_back(31.8518);
+  a.push_back(34.3699);
+  a.push_back(40.3153);
+  a.push_back(42.0983);
+  a.push_back(56.7733);
+  a.push_back(69.0720);
+  a.push_back(71.8733);
+
+  vector<double> b;
+  b.push_back(250.3193);
+  b.push_back(258.4759);
+  b.push_back(308.9894);
+  b.push_back(512.6857);
+  b.push_back(649.1343);
+  b.push_back(832.4566);
+  b.push_back(863.1927);
+
+  vector<double> c;
+  c.push_back(-0.083393);
+  c.push_back(-0.089807);
+  c.push_back(-0.106248);
+  c.push_back(-0.120551);
+  c.push_back(-0.160859);
+  c.push_back(-0.199252);
+  c.push_back(-0.207069);
+
+  vector<double> d;
+  d.push_back(7.4260e-5);
+  d.push_back(7.9457e-5);
+  d.push_back(9.4508e-5);
+  d.push_back(1.1752e-4);
+  d.push_back(1.5463e-4);
+  d.push_back(1.9391e-4);
+  d.push_back(2.0127e-4);
+
+  vector<double> e;
+  e.push_back(-2.2397e-8);
+  e.push_back(-2.3697e-8);
+  e.push_back(-2.8234e-8);
+  e.push_back(-3.8809e-8);
+  e.push_back(-5.0330e-8);
+  e.push_back(-6.3653e-8);
+  e.push_back(-6.6043e-8);
+
+  vector<int> ilats;
+  ilats.push_back(0);
+  ilats.push_back(10);
+  ilats.push_back(20);
+  ilats.push_back(30);
+  ilats.push_back(40);
+  ilats.push_back(50);
+  ilats.push_back(60);
+
+  // calculate index latitudes at given P's
+  double lat0  = a[0] + (b[0] * exp(P/(-150.0))) + (c[0]*P) + (d[0]*(P*P)) + (e[0]*(P*P*P));
+  double lat10 = a[1] + (b[1] * exp(P/(-150.0))) + (c[1]*P) + (d[1]*(P*P)) + (e[1]*(P*P*P));
+  double lat20 = a[2] + (b[2] * exp(P/(-150.0))) + (c[2]*P) + (d[2]*(P*P)) + (e[2]*(P*P*P));
+  double lat30 = a[3] + (b[3] * exp(P/(-150.0))) + (c[3]*P) + (d[3]*(P*P)) + (e[3]*(P*P*P));
+  double lat40 = a[4] + (b[4] * exp(P/(-150.0))) + (c[4]*P) + (d[4]*(P*P)) + (e[4]*(P*P*P));
+  double lat50 = a[5] + (b[5] * exp(P/(-150.0))) + (c[5]*P) + (d[5]*(P*P)) + (e[5]*(P*P*P));
+  double lat60 = a[6] + (b[6] * exp(P/(-150.0))) + (c[6]*P) + (d[6]*(P*P)) + (e[6]*(P*P*P));
+
+  //initialize output
+  double correction = 0.0;
+
+  //northernize southern-hemisphere inputs
+  lat = fabs(lat);
+
+  //set high lats to 60;
+  if(lat > 60)
+  {
+    lat = 60.0;
+  }
+
+  //loop
+/*
+b =1;
+
+while b <= length(lat);
+
+	%interpolate for actual elevation:
+
+	S(b) = interp1(ilats,[lat0(b) lat10(b) lat20(b) lat30(b) lat40(b) lat50(b) lat60(b)], lat(b));
+
+	% continue loop
+
+	b = b+1;
+
+end;
+
+% Production by muons
+
+% constants
+
+mk = [0.587 0.600 0.678 0.833 0.933 1.000 1.000];
+
+% index latitudes at given P's
+
+ml0 = mk(1) .* exp((1013.25 - P)./242);
+ml10 = mk(2) .* exp((1013.25 - P)./242);
+ml20 = mk(3) .* exp((1013.25 - P)./242);
+ml30 = mk(4) .* exp((1013.25 - P)./242);
+ml40 = mk(5) .* exp((1013.25 - P)./242);
+ml50 = mk(6) .* exp((1013.25 - P)./242);
+ml60 = mk(7) .* exp((1013.25 - P)./242);
+
+% loop
+
+b =1;
+
+while b <= length(lat);
+
+	%interpolate for actual elevation:
+
+	M(b) = interp1(ilats,[ml0(b) ml10(b) ml20(b) ml30(b) ml40(b) ml50(b) ml60(b)], lat(b));
+
+	% continue loop
+
+	b = b+1;
+
+end;
+
+% Combine spallogenic and muogenic production; return
+
+Fm = 1 - Fsp;
+
+out_1 = ((S .* Fsp) + (M .* Fm));
+
+% make vectors horizontal
+
+if size(out_1,1) > size(out_1,2);
+	out = out_1';
+else;
+	out = out_1;
+end;
+
+*/
+}
 
 
 #endif

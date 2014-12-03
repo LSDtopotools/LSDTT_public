@@ -179,10 +179,6 @@ void LSDCRNParameters::load_parameters_for_atmospheric_scaling(string path_to_da
   }  
   
   // now get the indices
-  
-  
-  
-  
   vector<double> temp_lat(NRows,0.0);
   for (int i=0; i<NRows; ++i)
   {
@@ -240,7 +236,7 @@ void LSDCRNParameters::load_parameters_for_atmospheric_scaling(string path_to_da
     Array2D<double> current_hgt_array(NRows,NCols,0.0);
     for (int i=0; i<NCols; ++i)
     {
-      for (int j=0; j<NRows; ++j)
+      for (int j=0; j<NRows; ++j)            
       {
         ifs_data2.read(reinterpret_cast<char*>(&temp), sizeof(temp));
         current_hgt_array[j][i] = temp;
