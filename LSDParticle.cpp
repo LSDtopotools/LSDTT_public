@@ -1317,7 +1317,7 @@ double LSDCRNParticle::lifton2006sp(double h,double Rc,double S)
 // Elevation can be converted to pressure with the functions
 // stdatm.m (general use) and antatm.m (Antarctica).
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-double stone2000(double lat,double P, double Fsp=0.978)
+double LSDCRNParticle::stone2000sp(double lat,double P, double Fsp=0.978)
 {
   if (fabs(lat) > 90)
   {
@@ -1374,7 +1374,7 @@ double stone2000(double lat,double P, double Fsp=0.978)
   e.push_back(-6.3653e-8);
   e.push_back(-6.6043e-8);
 
-  vector<int> ilats;
+  vector<double> ilats;
   ilats.push_back(0);
   ilats.push_back(10);
   ilats.push_back(20);
@@ -1392,6 +1392,15 @@ double stone2000(double lat,double P, double Fsp=0.978)
   double lat50 = a[5] + (b[5] * exp(P/(-150.0))) + (c[5]*P) + (d[5]*(P*P)) + (e[5]*(P*P*P));
   double lat60 = a[6] + (b[6] * exp(P/(-150.0))) + (c[6]*P) + (d[6]*(P*P)) + (e[6]*(P*P*P));
 
+  vector<double> lat_at_specifics(7,0.0);
+  lat_at_specifics[0] = lat0;
+  lat_at_specifics[1] = lat10;
+  lat_at_specifics[2] = lat20;
+  lat_at_specifics[3] = lat30;
+  lat_at_specifics[4] = lat40;
+  lat_at_specifics[5] = lat50;
+  lat_at_specifics[6] = lat60;
+
   //initialize output
   double correction = 0.0;
 
@@ -1404,70 +1413,177 @@ double stone2000(double lat,double P, double Fsp=0.978)
     lat = 60.0;
   }
 
-  //loop
-/*
-b =1;
+  // interpoloate elevation
+  double S = interp1_ordered(ilats,lat_at_specifics, lat);
 
-while b <= length(lat);
+  // Production by muons
 
-	%interpolate for actual elevation:
+  //constants
+  vector<double> mk;
+  mk.push_back(0.587);
+  mk.push_back(0.600);
+  mk.push_back(0.678);
+  mk.push_back(0.833);
+  mk.push_back(0.933);
+  mk_push_back(1.000);
+  mk_push_back(1.000);
 
-	S(b) = interp1(ilats,[lat0(b) lat10(b) lat20(b) lat30(b) lat40(b) lat50(b) lat60(b)], lat(b));
+  // index latitudes at given P's
+  vector<double> m_index_at_given_P;
+  m_index_at_given_P.push_back(mk[0]*exp( (1013.25-P)/242.0);
+  m_index_at_given_P.push_back(mk[1]*exp( (1013.25-P)/242.0);
+  m_index_at_given_P.push_back(mk[2]*exp( (1013.25-P)/242.0);
+  m_index_at_given_P.push_back(mk[3]*exp( (1013.25-P)/242.0);
+  m_index_at_given_P.push_back(mk[4]*exp( (1013.25-P)/242.0);
+  m_index_at_given_P.push_back(mk[5]*exp( (1013.25-P)/242.0);
+  m_index_at_given_P.push_back(mk[6]*exp( (1013.25-P)/242.0);
+   
 
-	% continue loop
+  // interpolate for actual elevation
+  double M = interp1D_ordered(ilats, m_index_at_given_P, lat);
 
-	b = b+1;
+  // Combine spallogenic and muogenic production; return
+  double Fm = 1 - Fsp;
+  double out = ((S * Fsp) + (M * Fm));
 
-end;
-
-% Production by muons
-
-% constants
-
-mk = [0.587 0.600 0.678 0.833 0.933 1.000 1.000];
-
-% index latitudes at given P's
-
-ml0 = mk(1) .* exp((1013.25 - P)./242);
-ml10 = mk(2) .* exp((1013.25 - P)./242);
-ml20 = mk(3) .* exp((1013.25 - P)./242);
-ml30 = mk(4) .* exp((1013.25 - P)./242);
-ml40 = mk(5) .* exp((1013.25 - P)./242);
-ml50 = mk(6) .* exp((1013.25 - P)./242);
-ml60 = mk(7) .* exp((1013.25 - P)./242);
-
-% loop
-
-b =1;
-
-while b <= length(lat);
-
-	%interpolate for actual elevation:
-
-	M(b) = interp1(ilats,[ml0(b) ml10(b) ml20(b) ml30(b) ml40(b) ml50(b) ml60(b)], lat(b));
-
-	% continue loop
-
-	b = b+1;
-
-end;
-
-% Combine spallogenic and muogenic production; return
-
-Fm = 1 - Fsp;
-
-out_1 = ((S .* Fsp) + (M .* Fm));
-
-% make vectors horizontal
-
-if size(out_1,1) > size(out_1,2);
-	out = out_1';
-else;
-	out = out_1;
-end;
-
-*/
+  return out;
 }
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This implements a cutoff-rigidity rather than latitude based scaling
+// scheme based on the Lal spallation polynomials. For use in
+// paleomagnetically-corrected exposure-age calculations. 
+//
+//   h = atmospheric pressure (hPa)
+//   Rc = cutoff rigidity (GV)
+//
+// Original version Written by Greg Balco -- UW Cosmogenic Nuclide Lab
+// balcs@u.washington.edu
+// March, 2007
+// Part of the CRONUS-Earth online calculators: 
+//      http://hess.ess.washington.edu/math
+//
+// Updated for c++ by Simon Mudd
+// 05/12/2014
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+double stone2000Rcsp(double h, double Rc)
+{
+
+  if (Rc > 21)
+  {
+    cout << "Your cutoff rigidity is greater than 21GV. " << endl;
+    cout << "Defaulting to 21 GV" << endl;
+    cout << Rc = 21;
+  }
+
+  // Build the scaling factor = f(rigidity) function up to 14.9 GV
+  vector<double> ilats_degree(7,0.0);
+  vector<double> ilats_radians(7,0.0);
+  ilats_degree[0] = 0;
+  ilats_radians[0] = ilats_degree[0]*M_PI/180.0;
+  ilats_degree[1] = 0;
+  ilats_radians[1] = ilats_degree[1]*M_PI/180.0;
+  ilats_degree[2] = 0;
+  ilats_radians[2] = ilats_degree[2]*M_PI/180.0;
+  ilats_degree[3] = 0;
+  ilats_radians[3] = ilats_degree[3]*M_PI/180.0;
+  ilats_degree[4] = 0;
+  ilats_radians[4] = ilats_degree[4]*M_PI/180.0;
+  ilats_degree[5] = 0;
+  ilats_radians[5] = ilats_degree[5]*M_PI/180.0;
+  ilats_degree[6] = 0;
+  ilats_radians[6] = ilats_degree[6]*M_PI/180.0;            
+
+  // Convert latitude to rigidity using Elsasser formula (from Sandstrom)
+  // Rigidity Rc = Rc(0)cos^4(latitude)
+  // where Rc(0) = rigidity at equator, that is, 14.9 GV
+  vector<double> iRCs(7,0.0);
+  for(int i = 0; i<7; i++)
+  {
+    iRcs[i] = 14.9*(cos(ilats_r[i])*cos(ilats_r[i])*cos(ilats_r[i])*cos(ilats_r[i]));
+  }
+ 
+  // Now Spallogenic production at index rigidities;
+  // Constants from Table 1 of Stone(2000)
+  vector<double> a(7,0.0);
+  vector<double> b(7,0.0);
+  vector<double> c(7,0.0);
+  vector<double> d(7,0.0);
+  vector<double> e(7,0.0);
+  
+  a[0] = 31.8518;
+  a[1] = 34.3699;
+  a[2] = 40.3153;
+  a[3] = 42.0983;
+  a[4] = 56.7733;
+  a[5] = 69.0720;
+  a[6] = 71.8733;
+  
+  b[0] = 250.3193;
+  b[1] = 258.4759;
+  b[2] = 308.9894;
+  b[3] = 512.6857;
+  b[4] = 649.1343;
+  b[5] = 832.4566;
+  b[6] = 863.1927;
+  
+  c[0] = -0.083393;
+  c[1] = -0.089807;
+  c[2] = -0.106248;
+  c[3] = -0.120551;
+  c[4] = -0.160859;
+  c[5] = -0.199252;
+  c[6] = -0.207069;
+  
+  d[0] = 7.4260e-5;
+  d[1] = 7.9457e-5;
+  d[2] = 9.4508e-5;
+  d[3] = 1.1752e-4;
+  d[4] = 1.5463e-4;
+  d[5] = 1.9391e-4;
+  d[6] = 2.0127e-4;
+  
+  e[0] = -2.2397e-8;
+  e[1] = -2.3697e-8; 
+  e[2] = -2.8234e-8;
+  e[3] = -3.8809e-8;
+  e[4] = -5.0330e-8;
+  e[5] = -6.3653e-8;
+  e[6] = -6.6043e-8];
+
+  // Apply Eqn. (2) of Stone (2000);
+  vector<double> sf(7,0.0);
+  sf[0] = a[0] + ( b[0]*exp(h/(-150.0)) + c[0]*h + d[0]*h*h + e[0]*h*h*h);
+  sf[1] = a[1] + ( b[1]*exp(h/(-150.0)) + c[1]*h + d[1]*h*h + e[1]*h*h*h);
+  sf[2] = a[2] + ( b[2]*exp(h/(-150.0)) + c[2]*h + d[2]*h*h + e[2]*h*h*h);
+  sf[3] = a[3] + ( b[3]*exp(h/(-150.0)) + c[3]*h + d[3]*h*h + e[3]*h*h*h);
+  sf[4] = a[4] + ( b[4]*exp(h/(-150.0)) + c[4]*h + d[4]*h*h + e[4]*h*h*h);
+  sf[5] = a[5] + ( b[5]*exp(h/(-150.0)) + c[5]*h + d[5]*h*h + e[5]*h*h*h);
+  sf[6] = a[6] + ( b[6]*exp(h/(-150.0)) + c[6]*h + d[6]*h*h + e[6]*h*h*h);
+  
+  // Extend to zero rigidity - scaling factor does not change from that at 60
+  // degrees --
+
+iRcs(8) = 0; sf(8) = sf(7);
+
+% Extend to 21 GV by fitting a log-log line to the latitude 0-20 values,
+% i.e. where rigidity is greater than 10 GV. According to Quemby and Wenk, 
+% as summarized  in Sandstrom, log(rigidity) vs. log(nucleon intensity) 
+% ought to be linear above 10 GV. Note that this is speculative, but 
+% relatively unimportant, as the approximation is pretty much only used 
+% for low latides for a short time in the Holocene. 
+
+fits = polyfit(log(iRcs(1:3)),log(sf(1:3)),1 );
+add_sf = exp( log(sf(1)) + fits(1).*( log(21:-1:16) - log(iRcs(1)) ) ) ;
+sf = [add_sf sf];
+iRcs = [21 20 19 18 17 16 iRcs];
+
+% Interpolate, return
+
+out = interp1(iRcs,sf,Rc);
+
+
 
 
 #endif

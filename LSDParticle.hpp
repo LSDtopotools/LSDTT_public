@@ -799,7 +799,7 @@ class LSDCRNParticle: public LSDParticle
   /// @date 1/12/2014
   double dunai2001sp(double h, double Rc);     
 
-  /// @brief This gets the Lifton Scaling
+  /// @brief This gets the Stone scaling
   /// Modified from Greg Balco's code:
   ///  http://hess.ess.washington.edu/math
   /// @param h is atmospheric pressure (hPa)
@@ -809,6 +809,28 @@ class LSDCRNParticle: public LSDParticle
   /// @author SMM
   /// @date 2/12/2014
   double lifton2006sp(double h, double Rc, double S);     
+
+  /// @brief This gets the Lifton Scaling
+  /// Modified from Greg Balco's code:
+  ///  http://hess.ess.washington.edu/math
+  /// @param latitude in decimal degrees
+  /// @param pressure in hPa
+  /// @param fsp is the fraction (between 0 and 1) of production at sea level
+  ///  and high latitude due to spallation (as opposed to muons).
+  ///  This argument is optional and defaults to 0.978, which is the value
+  ///  used by Stone (2000) for Be-10. The corresponding value for Al-26
+  ///  is 0.974. Note that using 0.844 for Be-10 and 0.826 for Al-26 will
+  ///  closely reproduce the Lal, 1991 scaling factors as long as the standard
+  ///  atmosphere is used to convert sample elevation to atmospheric pressure.
+  ///  Also note that this function will yield the scaling factor for spallation
+  ///  only when fsp=1, and that for muons only when fsp=0.
+  ///  @return the scaling factor
+  /// @author SMM
+  /// @date 5/12/2014
+  double stone2000sp(double lat,double P, double Fsp=0.978);
+
+
+
 
   protected:
 
