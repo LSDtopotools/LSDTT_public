@@ -827,9 +827,25 @@ class LSDCRNParticle: public LSDParticle
   ///  @return the scaling factor
   /// @author SMM
   /// @date 5/12/2014
-  double stone2000sp(double lat,double P, double Fsp=0.978);
+  double stone2000sp(double lat,double P, double Fsp);
 
-
+  /// @brief This implements a cutoff-rigidity rather than latitude based scaling
+  /// scheme based on the Lal spallation polynomials. For use in
+  /// paleomagnetically-corrected exposure-age calculations. 
+  /// @detail Original version Written by Greg Balco -- UW Cosmogenic Nuclide Lab
+  ///  balcs@u.washington.edu
+  ///  March, 2007
+  ///  Part of the CRONUS-Earth online calculators: 
+  ///  http://hess.ess.washington.edu/math
+  /// @param h = tmospheric pressure (hPa)
+  /// @param Rc cutoff rigidity (GV)
+  /// @return scaling factor
+  /// @author SMM
+  /// @date 5/12/2014
+  double stone2000Rcsp(double h, double Rc);
+//
+// Updated for c++ by Simon Mudd
+// 05/12/2014
 
 
   protected:
