@@ -731,11 +731,11 @@ double LSDCRNParameters::NCEPatm_2(double site_lat, double site_lon, double site
   
   // now, interpolate sea level pressure and temperature
   double site_slp = interp2D_bilinear(NCEPlat, NCEPlon, meanslp, 
-                        site_lon, site_lat);
+                        site_lat, site_lon);
   double site_T = interp2D_bilinear(NCEPlat, NCEPlon, meant1000, 
                         site_lat, site_lon);
                         
-  cout << "Site sea level pressure: " << site_slp << " and site Temp: "<< site_T << endl;
+  
   
   double site_T_degK = site_T + 273.15;
 
@@ -746,7 +746,15 @@ double LSDCRNParameters::NCEPatm_2(double site_lat, double site_lon, double site
   // Calculate site pressure using the site-specific SLP and T1000 with the
   // standard atmosphere equation.
 
-  double out = site_slp * exp( (gmr/dtdz) * ( log(site_T_degK) - log(site_T_degK - (site_elev*dtdz)) ) );
+  //cout << site_T_degK << endl;
+  //cout << "Log term: " << log(site_T_degK) - log(site_T_degK - (site_elev*dtdz)) << endl;
+  //cout << "Exp term: " << exp( (gmr/dtdz)*( log(site_T_degK) - log(site_T_degK - (site_elev*dtdz)) ) ) << endl;
+
+  double out = site_slp*exp( (gmr/dtdz)*( log(site_T_degK) - log(site_T_degK - (site_elev*dtdz)) ) );
+  
+  cout << endl;
+  //cout << "Site sea level pressure: " << site_slp << " and site Temp: "<< site_T 
+  //     << " and pressure: " << out << endl << endl <<endl;
   return out;
 
 
