@@ -184,14 +184,14 @@ void LSDCRNParameters::load_parameters_for_atmospheric_scaling(string path_to_da
   {
     ifs_data.read(reinterpret_cast<char*>(&temp), sizeof(temp));
     temp_lat[i] = temp;
-    cout << "Lat["<<i+1<<"]: " << temp_lat[i] << endl;
+    //cout << "Lat["<<i+1<<"]: " << temp_lat[i] << endl;
   }
   vector<double> temp_long(NCols,0.0);
   for (int i=0; i<NCols; ++i)
   {
     ifs_data.read(reinterpret_cast<char*>(&temp), sizeof(temp));
     temp_long[i] = temp;
-    cout << "Long["<<i+1<<"]: " << temp_long[i] << endl;
+    //cout << "Long["<<i+1<<"]: " << temp_long[i] << endl;
   }  
   
   ifs_data.close();
@@ -253,9 +253,13 @@ void LSDCRNParameters::load_parameters_for_atmospheric_scaling(string path_to_da
   NCEPlon = temp_long;
   
   meanslp = new_slp.copy();
-  mean1000 = new_meant.copy();
+  meant1000 = new_meant.copy();
   gp_hgt = vec_hgt_gp_array;
   gm_hgt = vec_hgt_gp_array;  
+  
+  cout << "Size lat: " << NCEPlat.size() << " size long: " << NCEPlon.size() << endl;
+  cout << "size slp:" << meanslp.dim1() << " " << meanslp.dim2() << endl;
+  cout << "size t1000: " << meant1000.dim1() << " " << meant1000.dim2() << endl;
   
 
 }
@@ -662,5 +666,92 @@ void LSDCRNParameters::scale_F_values(double single_scaling)
 	//cout << "FINISHED 14C x is: " << x << " and test_scaling is: " << test_scaling << endl;
 	//cout << F_14C[0] << endl << F_14C[1] << endl << F_14C[2] << endl << F_14C[3] << endl;
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function converts elevation to atmospheric pressure
+// It follows the cronus calculator NCEPatm_2 function
+// written by Greg Balco
+// SMM
+// 4/12/2014
+//
+// Looks up surface pressure and 1000 mb temp from NCEP reanalysis
+// and calculates site atmospheric pressures using these as inputs to the
+// standard atmosphere equation. 
+//
+// Syntax: pressure = NCEPatm_2(site_lat,site_lon,site_elv);
+// 
+// Requires:
+///       site_lat: latitude (DD). Southern hemisphere is negative.
+//       site_lon: longitude (DD). Western hemisphere is negative.
+//           Tries to deal with 0-360 longitudes gracefully.
+//       site_elv: elevation (m).
+//
+// Returns site pressure in hPa.
+//
+// Vectorized. Send vectors of equal length.
+//
+// Note: this must load the data file NCEP2.mat whenever called. 
+// Repeated calls to this function will be slow for this reason. 
+//
+// Also: This function is OK but not great for Antarctica.
+// Use antatm.m instead. 
+//
+// Remember: it is always better to estimate the average pressure at your 
+// site using a pressure-altitude relation obtained from nearby station
+// data.
+//
+// Original m code Written by Greg Balco -- UW Cosmogenic Nuclide Lab
+// balcs@u.washington.edu
+// October, 2007
+// Part of the CRONUS-Earth online calculators: 
+//      http://hess.ess.washington.edu/math
+//
+// Copyright 2001-2007, University of Washington
+// All rights reserved
+// Developed in part with funding from the National Science Foundation.
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+double LSDCRNParameters::NCEPatm_2(double site_lat, double site_lon, double site_elev)
+{
+  // deal with negative loingitudes
+  if(site_lon < 0)
+  {
+    site_lon = site_lon+360.0;
+  }
+  
+  // check to see if data is loaded:
+  if (int(gm_hgt.size()) != 8)
+  {
+    string path_to_data;
+    cout << "You didn't load the NCEP data. Doing that now. " << endl;
+    cout << "Enter path to data files: " << endl;
+    cin >> path_to_data;
+    load_parameters_for_atmospheric_scaling(path_to_data);
+  }
+  
+  // now, interpolate sea level pressure and temperature
+  double site_slp = interp2D_bilinear(NCEPlat, NCEPlon, meanslp, 
+                        site_lon, site_lat);
+  double site_T = interp2D_bilinear(NCEPlat, NCEPlon, meant1000, 
+                        site_lat, site_lon);
+                        
+  cout << "Site sea level pressure: " << site_slp << " and site Temp: "<< site_T << endl;
+  
+  double site_T_degK = site_T + 273.15;
+
+  // Some More parameters
+  double gmr = -0.03417; // Assorted constants (this has come from Greg Balco's code)
+  double dtdz = 0.0065;  // Lapse rate from standard atmosphere 
+  
+  // Calculate site pressure using the site-specific SLP and T1000 with the
+  // standard atmosphere equation.
+
+  double out = site_slp * exp( (gmr/dtdz) * ( log(site_T_degK) - log(site_T_degK - (site_elev*dtdz)) ) );
+  return out;
+
+
+}
+
+
 
 #endif

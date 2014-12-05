@@ -125,6 +125,30 @@ class LSDCRNParameters
   /// @date 01/01/2010	
   void update_10Be_P0(double new_P0)			{ P0_10Be = new_P0; }
 
+  /// @brief This calcualtes the atmospheric pressure given latidude, longitude
+  /// and elevation
+  /// @details Looks up surface pressure and 1000 mb temp from NCEP reanalysis
+  /// and calculates site atmospheric pressures using these as inputs to the
+  /// standard atmosphere equation. 
+  /// Also: This function is OK but not great for Antarctica.
+  /// Use antatm.m instead. 
+  /// Remember: it is always better to estimate the average pressure at your 
+  /// site using a pressure-altitude relation obtained from nearby station
+  /// data.
+  ///
+  /// Original m code Written by Greg Balco -- UW Cosmogenic Nuclide Lab
+  /// @param site_lat latitude (DD). Southern hemisphere is negative.
+  /// @param site_lon longitude (DD). Western hemisphere is negative.
+  ///       Tries to deal with 0-360 longitudes gracefully.
+  /// @param site_elv elevation (m).
+  /// @return site pressure in hPa.
+  /// @author SMM
+  /// @date 04/12/2014
+  double NCEPatm_2(double site_lat, double site_lon, double site_elev);
+  
+  
+  
+  
   private:	
   /// @brief This is called by the default constructor. 
   /// It is the only possible constructor
@@ -200,7 +224,7 @@ class LSDCRNParameters
   Array2D<double> meanslp;
   
   /// This is an array healing mean temperatures
-  Array2D<double> mean1000;
+  Array2D<double> meant1000;
   
   /// This is a vector of arrays holding something called gp_hgt;
   vector< Array2D<double> > gp_hgt;
