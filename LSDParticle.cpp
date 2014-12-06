@@ -1599,7 +1599,7 @@ double LSDCRNParticle::stone2000Rcsp(double h, double Rc)
   
   for(int i = 0; i< 6; i++)
   {
-    new_sf[i] = exp( log(sf[0] + double(linfit[0])*log(21.0-double(i)) - log(iRcs[0])));
+    new_sf[i] = exp( log(sf[0] + double(linfit[0])*(log(21.0-double(i)) - log(iRcs[0]))));
     new_iRcs[i] = 21.0-double(i);
   }
   for(int i = 0; i<8; i++)
@@ -1614,8 +1614,10 @@ double LSDCRNParticle::stone2000Rcsp(double h, double Rc)
     cout << "i: " << i << " iRcs: " << new_iRcs[i] << " sf: " << new_sf[i] <<  endl;
   }
 
+  cout << "Entering interp1D" << endl;
+
   // Interpolate, return
-  double out = interp1D_unordered(iRcs,sf,Rc);
+  double out = interp1D_unordered(new_iRcs,new_sf,Rc);
   cout << "Scaling is: " << out << endl;
   
   return out;
