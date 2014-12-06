@@ -452,7 +452,8 @@ void LSDCRNParameters::set_CRONUS_data_maps()
   // al_be_consts.S = S; 
   // al_be_consts.SInf = 0.95; % Long-term mean S value;
 
-
+  // set the data member map
+  CRONUS_data_map = temp_map;
 }
 
 
@@ -641,222 +642,222 @@ void LSDCRNParameters::scale_F_values(double single_scaling)
     test_scaling = 1;
   }
 
-	while (fabs(test_scaling - single_scaling) > tol)
-	//for (int i = 0; i< 100; i++)
-	{
-		x = new_x;
-		new_x = x+dx;
+  while (fabs(test_scaling - single_scaling) > tol)
+  //for (int i = 0; i< 100; i++)
+  {
+    x = new_x;
+    new_x = x+dx;
 
-		// calcualte the new scaling
-		test_scaling = exp(-new_x/Gamma[0])*F_10Be[0]+
-					   exp(-new_x/Gamma[1])*F_10Be[1]+
-					   exp(-new_x/Gamma[2])*F_10Be[2]+
-					   exp(-new_x/Gamma[3])*F_10Be[3];
+    // calcualte the new scaling
+    test_scaling = exp(-new_x/Gamma[0])*F_10Be[0]+
+                   exp(-new_x/Gamma[1])*F_10Be[1]+
+                   exp(-new_x/Gamma[2])*F_10Be[2]+
+                   exp(-new_x/Gamma[3])*F_10Be[3];
 
-		// if you have overshot, halve dx and reset new_x
-		if (single_scaling > 1)
-		{
-			if (test_scaling > single_scaling)
-			{
-				dx = 0.5*dx;
-				new_x = x;
-			}
-		}
-		else if (single_scaling < 1)
-		{
-			if (test_scaling < single_scaling)
-			{
-				dx = 0.5*dx;
-				new_x = x;
-			}
-		}
-	}
+    // if you have overshot, halve dx and reset new_x
+    if (single_scaling > 1)
+    {
+      if (test_scaling > single_scaling)
+      {
+        dx = 0.5*dx;
+        new_x = x;
+      }
+    }
+    else if (single_scaling < 1)
+    {
+      if (test_scaling < single_scaling)
+      {
+        dx = 0.5*dx;
+        new_x = x;
+      }
+    }
+  }
 
-	// now reset the F_values
-	F_10Be[0] = exp(-new_x/Gamma[0])*F_10Be[0];
-	F_10Be[1] = exp(-new_x/Gamma[1])*F_10Be[1];
-	F_10Be[2] = exp(-new_x/Gamma[2])*F_10Be[2];
-	F_10Be[3] = exp(-new_x/Gamma[3])*F_10Be[3];
+  // now reset the F_values
+  F_10Be[0] = exp(-new_x/Gamma[0])*F_10Be[0];
+  F_10Be[1] = exp(-new_x/Gamma[1])*F_10Be[1];
+  F_10Be[2] = exp(-new_x/Gamma[2])*F_10Be[2];
+  F_10Be[3] = exp(-new_x/Gamma[3])*F_10Be[3];
 
-	//cout << "FINISHED 10Be x is: " << x << " and test_scaling is: " << test_scaling << endl;
-	//cout << F_10Be[0] << endl << F_10Be[1] << endl << F_10Be[2] << endl << F_10Be[3] << endl;
+  //cout << "FINISHED 10Be x is: " << x << " and test_scaling is: " << test_scaling << endl;
+  //cout << F_10Be[0] << endl << F_10Be[1] << endl << F_10Be[2] << endl << F_10Be[3] << endl;
 
-	// now do 26Al
-	x = 0;
-	new_x = 0;
-	test_scaling = 1e8;
-	dx =-10;
-	if (single_scaling > 1)
-	{
-		dx = -10;
-	}
-	else if (single_scaling < 1)
-	{
-		dx = 10;
-	}
-	else if (single_scaling == 1)
-	{
-		dx = 10;
-		test_scaling = 1;
-	}
+  // now do 26Al
+  x = 0;
+  new_x = 0;
+  test_scaling = 1e8;
+  dx =-10;
+  if (single_scaling > 1)
+  {
+    dx = -10;
+  }
+  else if (single_scaling < 1)
+  {
+    dx = 10;
+  }
+  else if (single_scaling == 1)
+  {
+    dx = 10;
+    test_scaling = 1;
+  }
 
-	while (fabs(test_scaling - single_scaling) > tol)
-	//for (int i = 0; i< 100; i++)
-	{
-		x = new_x;
-		new_x = x+dx;
+  while (fabs(test_scaling - single_scaling) > tol)
+  //for (int i = 0; i< 100; i++)
+  {
+    x = new_x;
+    new_x = x+dx;
 
-		// calcualte the new scaling
-		test_scaling = exp(-new_x/Gamma[0])*F_26Al[0]+
-					   exp(-new_x/Gamma[1])*F_26Al[1]+
-					   exp(-new_x/Gamma[2])*F_26Al[2]+
-					   exp(-new_x/Gamma[3])*F_26Al[3];
+    // calcualte the new scaling
+    test_scaling = exp(-new_x/Gamma[0])*F_26Al[0]+
+                   exp(-new_x/Gamma[1])*F_26Al[1]+
+                   exp(-new_x/Gamma[2])*F_26Al[2]+
+                   exp(-new_x/Gamma[3])*F_26Al[3];
 
-		// if you have overshot, halve dx and reset new_x
-		if (single_scaling > 1)
-		{
-			if (test_scaling > single_scaling)
-			{
-				dx = 0.5*dx;
-				new_x = x;
-			}
-		}
-		else if (single_scaling < 1)
-		{
-			if (test_scaling < single_scaling)
-			{
-				dx = 0.5*dx;
-				new_x = x;
-			}
-		}
-	}
+    // if you have overshot, halve dx and reset new_x
+    if (single_scaling > 1)
+    {
+      if (test_scaling > single_scaling)
+      {
+        dx = 0.5*dx;
+        new_x = x;
+      }
+    }
+    else if (single_scaling < 1)
+    {
+      if (test_scaling < single_scaling)
+      {
+        dx = 0.5*dx;
+        new_x = x;
+      }
+    }
+  }
 
-	// now reset the F_values
-	F_26Al[0] = exp(-new_x/Gamma[0])*F_26Al[0];
-	F_26Al[1] = exp(-new_x/Gamma[1])*F_26Al[1];
-	F_26Al[2] = exp(-new_x/Gamma[2])*F_26Al[2];
-	F_26Al[3] = exp(-new_x/Gamma[3])*F_26Al[3];
+  // now reset the F_values
+  F_26Al[0] = exp(-new_x/Gamma[0])*F_26Al[0];
+  F_26Al[1] = exp(-new_x/Gamma[1])*F_26Al[1];
+  F_26Al[2] = exp(-new_x/Gamma[2])*F_26Al[2];
+  F_26Al[3] = exp(-new_x/Gamma[3])*F_26Al[3];
 
-	//cout << "FINISHED 26Al x is: " << x << " and test_scaling is: " << test_scaling << endl;
-	//cout << F_26Al[0] << endl << F_26Al[1] << endl << F_26Al[2] << endl << F_26Al[3] << endl;
+  //cout << "FINISHED 26Al x is: " << x << " and test_scaling is: " << test_scaling << endl;
+  //cout << F_26Al[0] << endl << F_26Al[1] << endl << F_26Al[2] << endl << F_26Al[3] << endl;
 
-	// now do 36Cl
-	x = 0;
-	new_x = 0;
-	test_scaling = 1e8;
-	dx =-10;
-	if (single_scaling > 1)
-	{
-		dx = -10;
-	}
-	else if (single_scaling < 1)
-	{
-		dx = 10;
-	}
-	else if (single_scaling == 1)
-	{
-		dx = 10;
-		test_scaling = 1;
-	}
+  // now do 36Cl
+  x = 0;
+  new_x = 0;
+  test_scaling = 1e8;
+  dx =-10;
+  if (single_scaling > 1)
+  {
+    dx = -10;
+  }
+  else if (single_scaling < 1)
+  {
+    dx = 10;
+  }
+  else if (single_scaling == 1)
+  {
+    dx = 10;
+    test_scaling = 1;
+  }
 
-	while (fabs(test_scaling - single_scaling) > tol)
-	//for (int i = 0; i< 100; i++)
-	{
-		x = new_x;
-		new_x = x+dx;
+  while (fabs(test_scaling - single_scaling) > tol)
+  //for (int i = 0; i< 100; i++)
+  {
+    x = new_x;
+    new_x = x+dx;
 
-		// calcualte the new scaling
-		test_scaling = exp(-new_x/Gamma[0])*F_36Cl[0]+
-					   exp(-new_x/Gamma[1])*F_36Cl[1]+
-					   exp(-new_x/Gamma[2])*F_36Cl[2]+
-					   exp(-new_x/Gamma[3])*F_36Cl[3];
+    // calcualte the new scaling
+    test_scaling = exp(-new_x/Gamma[0])*F_36Cl[0]+
+                   exp(-new_x/Gamma[1])*F_36Cl[1]+
+                   exp(-new_x/Gamma[2])*F_36Cl[2]+
+                   exp(-new_x/Gamma[3])*F_36Cl[3];
 
-		// if you have overshot, halve dx and reset new_x
-		if (single_scaling > 1)
-		{
-			if (test_scaling > single_scaling)
-			{
-				dx = 0.5*dx;
-				new_x = x;
-			}
-		}
-		else if (single_scaling < 1)
-		{
-			if (test_scaling < single_scaling)
-			{
-				dx = 0.5*dx;
-				new_x = x;
-			}
-		}
-	}
+    // if you have overshot, halve dx and reset new_x
+    if (single_scaling > 1)
+    {
+      if (test_scaling > single_scaling)
+      {
+        dx = 0.5*dx;
+        new_x = x;
+      }
+    }
+    else if (single_scaling < 1)
+    {
+      if (test_scaling < single_scaling)
+      {
+        dx = 0.5*dx;
+        new_x = x;
+      }
+    }
+  }
 
-	// now reset the F_values
-	F_36Cl[0] = exp(-new_x/Gamma[0])*F_36Cl[0];
-	F_36Cl[1] = exp(-new_x/Gamma[1])*F_36Cl[1];
-	F_36Cl[2] = exp(-new_x/Gamma[2])*F_36Cl[2];
-	F_36Cl[3] = exp(-new_x/Gamma[3])*F_36Cl[3];
+  // now reset the F_values
+  F_36Cl[0] = exp(-new_x/Gamma[0])*F_36Cl[0];
+  F_36Cl[1] = exp(-new_x/Gamma[1])*F_36Cl[1];
+  F_36Cl[2] = exp(-new_x/Gamma[2])*F_36Cl[2];
+  F_36Cl[3] = exp(-new_x/Gamma[3])*F_36Cl[3];
 
-	//cout << "FINISHED 36Cl x is: " << x << " and test_scaling is: " << test_scaling << endl;
-	//cout << F_36Cl[0] << endl << F_36Cl[1] << endl << F_36Cl[2] << endl << F_36Cl[3] << endl;
+  //cout << "FINISHED 36Cl x is: " << x << " and test_scaling is: " << test_scaling << endl;
+  //cout << F_36Cl[0] << endl << F_36Cl[1] << endl << F_36Cl[2] << endl << F_36Cl[3] << endl;
 
-	// now do 14C
-	x = 0;
-	new_x = 0;
-	test_scaling = 1e8;
-	dx =-10;
-	if (single_scaling > 1)
-	{
-		dx = -10;
-	}
-	else if (single_scaling < 1)
-	{
-		dx = 10;
-	}
-	else if (single_scaling == 1)
-	{
-		dx = 10;
-		test_scaling = 1;
-	}
+  // now do 14C
+  x = 0;
+  new_x = 0;
+  test_scaling = 1e8;
+  dx =-10;
+  if (single_scaling > 1)
+  {
+    dx = -10;
+  }
+  else if (single_scaling < 1)
+  {
+    dx = 10;
+  }
+  else if (single_scaling == 1)
+  {
+    dx = 10;
+    test_scaling = 1;
+  }
 
-	while (fabs(test_scaling - single_scaling) > tol)
-	//for (int i = 0; i< 100; i++)
-	{
-		x = new_x;
-		new_x = x+dx;
+  while (fabs(test_scaling - single_scaling) > tol)
+  //for (int i = 0; i< 100; i++)
+  {
+    x = new_x;
+    new_x = x+dx;
 
-		// calcualte the new scaling
-		test_scaling = exp(-new_x/Gamma[0])*F_14C[0]+
-					   exp(-new_x/Gamma[1])*F_14C[1]+
-					   exp(-new_x/Gamma[2])*F_14C[2]+
-					   exp(-new_x/Gamma[3])*F_14C[3];
+    // calcualte the new scaling
+    test_scaling = exp(-new_x/Gamma[0])*F_14C[0]+
+                   exp(-new_x/Gamma[1])*F_14C[1]+
+                   exp(-new_x/Gamma[2])*F_14C[2]+
+                   exp(-new_x/Gamma[3])*F_14C[3];
 
-		// if you have overshot, halve dx and reset new_x
-		if (single_scaling > 1)
-		{
-			if (test_scaling > single_scaling)
-			{
-				dx = 0.5*dx;
-				new_x = x;
-			}
-		}
-		else if (single_scaling < 1)
-		{
-			if (test_scaling < single_scaling)
-			{
-				dx = 0.5*dx;
-				new_x = x;
-			}
-		}
-	}
+    // if you have overshot, halve dx and reset new_x
+    if (single_scaling > 1)
+    {
+      if (test_scaling > single_scaling)
+      {
+        dx = 0.5*dx;
+        new_x = x;
+      }
+    }
+    else if (single_scaling < 1)
+    {
+      if (test_scaling < single_scaling)
+      {
+        dx = 0.5*dx;
+        new_x = x;
+      }
+    }
+  }
 
-	// now reset the F_values
-	F_14C[0] = exp(-new_x/Gamma[0])*F_14C[0];
-	F_14C[1] = exp(-new_x/Gamma[1])*F_14C[1];
-	F_14C[2] = exp(-new_x/Gamma[2])*F_14C[2];
-	F_14C[3] = exp(-new_x/Gamma[3])*F_14C[3];
+  // now reset the F_values
+  F_14C[0] = exp(-new_x/Gamma[0])*F_14C[0];
+  F_14C[1] = exp(-new_x/Gamma[1])*F_14C[1];
+  F_14C[2] = exp(-new_x/Gamma[2])*F_14C[2];
+  F_14C[3] = exp(-new_x/Gamma[3])*F_14C[3];
 
-	//cout << "FINISHED 14C x is: " << x << " and test_scaling is: " << test_scaling << endl;
-	//cout << F_14C[0] << endl << F_14C[1] << endl << F_14C[2] << endl << F_14C[3] << endl;
+  //cout << "FINISHED 14C x is: " << x << " and test_scaling is: " << test_scaling << endl;
+  //cout << F_14C[0] << endl << F_14C[1] << endl << F_14C[2] << endl << F_14C[3] << endl;
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
