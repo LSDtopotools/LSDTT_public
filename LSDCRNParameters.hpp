@@ -54,6 +54,7 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 #include <iostream>
 #include <vector>
+#include <map>
 #include "TNT/tnt.h"
 using namespace std;
 using namespace TNT;
@@ -80,6 +81,19 @@ class LSDCRNParameters
   /// @author SMM
   /// @date 02/12/2014
   void load_parameters_for_atmospheric_scaling(string path_to_params);
+  
+  /// @brief This function sets a numer of parameters that are used
+  /// to replicate the CRONUS calculator.
+  /// @details the original parameters are derived from the 
+  /// make_al_be_consts_v22
+  /// Written by Greg Balco -- Berkeley Geochronology Center
+  ///  balcs@u.washington.edu -- balcs@bgc.org
+  ///  February, 2008
+  ///  Part of the CRONUS-Earth online calculators: 
+  ///     http://hess.ess.washington.edu/math
+  /// @author SMM
+  /// @date 06/12/2014
+  void set_CRONUS_data_maps();
   
   // functions for altering the parameter values
   
@@ -210,6 +224,8 @@ class LSDCRNParameters
   /// production rate for 3He in a/g/yr
   double P0_3He;			
   
+  /// This is a data map used for storing CRONUS calcluator parameters
+  map<string,double> CRONUS_data_map;
   
   /// levels: the levels for the atmospheric scaling of pressure
   vector<double> levels;

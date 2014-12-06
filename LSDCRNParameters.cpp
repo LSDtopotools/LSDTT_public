@@ -56,6 +56,7 @@
 #include <math.h>
 #include <iostream>
 #include <vector>
+#include <map>
 #include "TNT/tnt.h"
 #include "LSDStatsTools.hpp"
 #include "LSDCRNParameters.hpp"
@@ -263,10 +264,201 @@ void LSDCRNParameters::load_parameters_for_atmospheric_scaling(string path_to_da
   
 
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function sets a number of paramters that are used for acalucaltion
+// of scaling and error propigation
+//
+// They are constants used in the CRONUS caluclator, and have been ported
+// from make_al_be_consts_v22.m written by Greg Balco
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParameters::set_CRONUS_data_maps()
+{
+  map<string,double> temp_map;
+  
+  // 10Be decay: this is specific to the CRONUS calculator
+  temp_map["l10"] = -log(0.5)/1.387e6; // Chmeleff/Korschinek value
+  // Al-26 decay constant -- value compatible with Nishiizumi standards
+  temp_map["l26"] = 9.83e-7;
+  
+
+  // Note that the uncertainty is not used in exposure-age or erosion-rate
+  // calculators. Here only for development purposes
+  double dldt = -log(0.5)*(1/(1.387e6*1.387e6));
+  temp_map["dell10"] = sqrt((dldt*1/(0.012e6*0.012e6)));
+  temp_map["dell26"] = 2.5e-8;
+
+  //Effective attenuation length for spallation in rock
+  // Commonly accepted value: 160 g/cm2
+  // For discussion see Gosse and Phillips (2000)
+  temp_map["Lsp"] = 160.0;
+
+  // Fsp - fraction of total production by spallation rather than muons
+  // For use with Lal/Stone scaling scheme in exposure age calculation
+  // For details, see Stone (2000)
+  // This aspect of Stone(2000) is de-emphasized in version 2. These constants
+  // are only in use for historical comparisons and quick initial guesses for 
+  // the exposure age and erosion rate solvers. 
+
+  // Note that they are probably incorrect WRT Be-10 restandardization. Don't
+  // use these for anything important. 
+  temp_map["Fsp10"] = 0.978;
+  temp_map["Fsp26"] = 0.974;
+
+  // Be-10 standardization info.
+  // Standards comparison/conversion lookup table
+  temp_map["Be_std_07KNSTD"] = 1.0000;
+  temp_map["Be_std_KNSTD"] = 0.9042;
+  temp_map["Be_std_NIST_Certified"] = 1.0425;
+  temp_map["Be_std_LLNL31000"] =  0.8761;
+  temp_map["Be_std_LLNL10000"] = 0.9042;
+  temp_map["Be_std_LLNL3000"] = 0.8644;
+  temp_map["Be_std_LLNL1000"] = 0.9313;
+  temp_map["Be_std_LLNL300"] = 0.8562;
+  temp_map["Be_std_NIST_30000"] =  0.9313;
+  temp_map["Be_std_NIST_30200"] = 0.9251;
+  temp_map["Be_std_NIST_30300"] = 0.9221;
+  temp_map["Be_std_NIST_30600"] = 0.9130;
+  temp_map["Be_std_NIST_27900"] = 1;
+  temp_map["Be_std_S555"] = 0.9124;
+  temp_map["Be_std_S2007"] = 0.9124;
+  temp_map["Be_std_BEST433"] = 0.9124;
+  temp_map["Be_std_BEST433N"] = 1;
+  temp_map["Be_std_S555N"] = 1;
+  temp_map["Be_std_S2007N"] = 1;;
+
+  // Same for Al-26. A zero placeholder is
+  // also allowed. 
+  temp_map["Al_std_KNSTD"] = 1.0;
+  temp_map["Al_std_ZAL94"] = 0.9134;
+  temp_map["Al_std_SMAL11"] = 1.021;
+  temp_map["Al_std_0"] = 1.0;
+  temp_map["Al_std_ZAL94N"] = 1.0;
+  temp_map["Al_std_ASTER"] = 1.021;
+  temp_map["Al_std_Z92-0222"] = 1;
+
+  // Reference production rates at SLHL for spallation according to various
+  // scaling schemes. Letter codes De, Du, Li, and St refer to
+  // scaling schemes of Desilets et al. (2006), Dunai (2001), Lifton (2006),
+  // and Stone (2000) respectively. The final letter code Lm refers to the
+  // paleomagnetically corrected version of the Lal 1991/Stone 2000 scaling
+  // factors.
+
+  // These reference production rates are derived using the current version of
+  // get_al_be_age.m. 
+
+  // Al-26 and Be-10 production rates are linked by the production ratio,
+  // not determined independently. This is because there are not very
+  // many geological-calibration sites for Al-26. See the calibration data
+  // sets and the accompanying paper for more information. 
+
+  // This reflects the v 2.1 air pressure upgrade.
+  // Also the update to 07KNSTD in version 2.2. 
+
+  // Be-10 production rates. Brent's values. Greg agrees. 
+  temp_map["P10_ref_St"] = 4.49;
+  temp_map["delP10_ref_St"] = 0.39;
+
+  temp_map["P10_ref_Lm"] = 4.39; 
+  temp_map["delP10_ref_Lm"] = 0.37;
+
+  temp_map["P10_ref_De"] = 4.41;
+  temp_map["delP10_ref_De"] = 0.52;
+
+  temp_map["P10_ref_Du"] = 4.43;
+  temp_map["delP10_ref_Du"] = 0.52;
+
+  temp_map["P10_ref_Li"] = 4.87;
+  temp_map["delP10_ref_Li"] = 0.48;
+
+  // Al-26 production rates are derived from Be-10 production rates 
+  double R2610 = 6.1*1.106; // Update assumed production ratio
+  temp_map["P26_ref_St"] = temp_map["P10_ref_St"]*R2610;
+  temp_map[".delP26_ref_St"] = temp_map["delP10_ref_St"]*R2610;
+  temp_map["P26_ref_Lm"] = temp_map["P10_ref_Lm"]*R2610; 
+  temp_map["delP26_ref_Lm"] = temp_map["delP10_ref_Lm"]*R2610;
+  temp_map["P26_ref_De"] = temp_map["P10_ref_De"]*R2610;
+  temp_map["delP26_ref_De"] = temp_map["delP10_ref_De"]*R2610;
+  temp_map["P26_ref_Du"] = temp_map["P10_ref_Du"]*R2610;
+  temp_map["delP26_ref_Du"] = temp_map["delP10_ref_Du"]*R2610;
+  temp_map["P26_ref_Li"] = temp_map["P10_ref_Li"]*R2610;
+  temp_map["delP26_ref_Li"] = temp_map["delP10_ref_Li"]*R2610;
+
+  // Muon interaction cross-sections. All follow Heisinger (2002a,b).
+  // Note that the energy-dependence-of-muon-interaction-cross-section
+  // exponent alpha is treated as model-dependent -- it's internal to 
+  // P_mu_total.m and can't be passed.  
+
+  temp_map["Natoms10"] = 2.006e22;
+  temp_map["Natoms26"] = 1.003e22;
+
+  // Be-10 interaction cross-sections
+  // Restandardized by ETH-07KNSTD factor for version 2.2.1. 
+  temp_map["k_neg10"] = (0.704 * 0.1828 * 0.0043)/1.096;
+  temp_map["delk_neg10"] = (0.704 * 0.1828 * 0.0003)/1.096;
+  temp_map["sigma190_10"] = (0.094e-27)/1.096;
+  temp_map["delsigma190_10"] = (0.013e-27)/1.096;
+
+  // Al-26 interaction cross-sections
+  temp_map["k_neg26"] = 0.296 * 0.6559 * 0.022;
+  temp_map["delk_neg26"] = 0.296 * 0.6559 * 0.002;
+  temp_map["sigma190_26"] = 1.41e-27;
+  temp_map["delsigma190_26"] = 0.17e-27;
+
+  // Paleomagnetic records for use in time-dependent production rate schemes
+  // Derived from Nat Lifton's compilation of paleomagnetic data from
+  // various sources. See Lifton et al. (2006) and Pigati and Lifton (2005).
+
+  // Load the magnetic field data
+  // load PMag_Mar07
+  // Relative dipole moment and time vector
+  // al_be_consts.M = MM0; 
+  // al_be_consts.t_M = t_M; 
+  // These start at 7500 yr -- time slices are 7500,8500,9500,10500,11500
+  // in order to use data from Yang et al; subsequent time slices are 
+  // 12000:1000:800000 for SINT800 data; final two time points are 801000
+  // and Inf. 
+
+  // Cutoff rigidity blocks for past 6900 yr. 
+  // TTRc and IHRC are lon x lat x time blocks of Rc values for the past 
+  // 6900 years.
+  // Both are derived by Nat Lifton from the magnetic field reconstructions of
+  // Korte and Constable. 
+  // TTRC has cutoff rigidity obtained by trajectory tracing -- these are for
+  // the Lifton and Desilets scaling factors. IHRc has cutoff rigidity
+  // obtained by finding magnetic inclination and horizontal field strength
+  // from the field model, then applying Equation 2 of Dunai(2001). 
+  // al_be_consts.TTRc = TTRc; % data block
+  // al_be_consts.IHRc = IHRc; % data block
+  // al_be_consts.lat_Rc = lat_Rc; % lat and lon indices for Rc data block
+  // al_be_consts.lon_Rc = lon_Rc;
+  // al_be_consts.t_Rc = t_Rc; % time vector for Rc data block
+
+  // Effective pole positions and field strengths inferred from K and C field
+  // reconstructions for last 7000 yr. These are used in the
+  // paleomagnetically-corrected implementation of the Lal SF. They are for
+  // the same times as the RC slices in the data block above. Again,
+  // generated by Nat Lifton -- hence KCL = Korte-Constable-Lifton. 
+
+  // al_be_consts.MM0_KCL = MM0_KCL;
+  // al_be_consts.lat_pp_KCL = lat_pp_KCL;
+  // al_be_consts.lon_pp_KCL = lon_pp_KCL;
+
+  // Solar variability from Lifton et al. 2005
+  // Has been averaged and resampled to the same time slices as everything
+  // else. 
+
+  // al_be_consts.S = S; 
+  // al_be_consts.SInf = 0.95; % Long-term mean S value;
 
 
+}
 
-// This sets the parameters to those used by Grange (need reference year!)
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This sets the parameters to those used by Granger (need reference year!)
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParameters::set_Granger_parameters()
 {
   S_t = 1;
