@@ -94,6 +94,46 @@ class LSDCRNParameters
   /// @author SMM
   /// @date 06/12/2014
   void set_CRONUS_data_maps();
+
+  /// @brief alculates the production rate of Al-26 or Be-10 by muons
+  /// @detail This uses the scheme in Heisinger and others (2002, 2 papers). The
+  ///  vertically traveling muon flux is scaled to the site elevation using
+  ///  energy-dependent attenuation lengths from Boezio et al. (2000). See the 
+  ///  hard-copy documentation for detailed citations and a full discussion of
+  ///  the calculation. 
+  ///  Note that some constants are internal to the function. The only ones that
+  ///  get passed from upstream are the ones that a) are nuclide-specific, or b) 
+  ///  actually have quoted uncertainties in Heisinger's papers. 
+  ///  The fraction of muons that are negative is internal; so is the
+  ///  energy-dependence exponent alpha.
+  ///  Original Written by Greg Balco -- UW Cosmogenic Nuclide Lab
+  ///  balcs@u.washington.edu
+  ///  March, 2006
+  ///  Part of the CRONUS-Earth online calculators: 
+  ///      http://hess.ess.washington.edu/math
+  /// @param z depth below the surface z (g/cm2)
+  /// @param h atmospheric pressure (hPa)
+  /// @author SMM
+  /// @date 06/12/2014
+  void P_mu_total(double z,double h);
+ 
+  /// @brief this subfunction returns the stopping rate of vertically traveling muons
+  /// as a function of depth z at sea level and high latitude.
+  /// @detail Modified from Greg Balco's CRONUS calculator
+  /// @param z is the depth below the surface in g/cm^2
+  /// @return Rv0 the muon stopping rate
+  /// @author SMM
+  /// @date 06/12/2014
+  double Rv0(double z); 
+
+  /// @brief this subfunction returns the effective atmospheric attenuation length for
+  /// muons of range Z
+  /// @detail Original by Greg Balco as part of the CRONUS calculator
+  /// @param z is the depth in g/cm^2
+  /// @return effective atmospheric attenuation length in g/cm^2
+  /// @author SMM
+  /// @date 06/12/2014
+  double LZ(double z);
   
   // functions for altering the parameter values
   
@@ -226,6 +266,9 @@ class LSDCRNParameters
   
   /// This is a data map used for storing CRONUS calcluator parameters
   map<string,double> CRONUS_data_map;
+  
+  /// This is a data map used for storing CRONUS muon parameters
+  map<string,double> CRONUS_muon_data;
   
   /// levels: the levels for the atmospheric scaling of pressure
   vector<double> levels;

@@ -455,6 +455,292 @@ void LSDCRNParameters::set_CRONUS_data_maps()
   // set the data member map
   CRONUS_data_map = temp_map;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//  
+// This function sets CRONUS muon production paramteters
+//
+// Calculates the production rate of Al-26 or Be-10 by muons
+// as a function of depth below the surface z (g/cm2) and
+// site atmospheric pressure h (hPa).
+//
+// out.phi_vert_slhl muons/cm2/s/sr
+// out.R_vert_slhl muons/g/s/sr
+// out.R_vert_site muons/g/s/sr
+// out.phi_vert_site muons/cm2/s/sr
+// out.phi muons/cm2/yr
+// out.R muons/g/yr
+// out.P_fast atoms/g/yr
+// out.P_neg atoms/g/yr
+// out.Beta nondimensional
+// out.Ebar GeV
+// out.H g/cm2
+// out.LZ g/cm2
+//
+// This uses the scheme in Heisinger and others (2002, 2 papers). The
+// vertically traveling muon flux is scaled to the site elevation using
+// energy-dependent attenuation lengths from Boezio et al. (2000). See the 
+// hard-copy documentation for detailed citations and a full discussion of
+// the calculation. 
+//
+// Note that some constants are internal to the function. The only ones that
+// get passed from upstream are the ones that a) are nuclide-specific, or b) 
+// actually have quoted uncertainties in Heisinger's papers. 
+// The fraction of muons that are negative is internal; so is the
+// energy-dependence exponent alpha.
+//
+// Original Written by Greg Balco -- UW Cosmogenic Nuclide Lab
+// balcs@u.washington.edu
+// March, 2006
+// Part of the CRONUS-Earth online calculators: 
+//      http://hess.ess.washington.edu/math
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParameters::P_mu_total(double z,double h)
+{
+  map<string,double> temp_data_map;
+
+  // calculator the atmospheric depth in g/cm2
+  double H = (1013.25 - h)*1.019716;
+
+  // find the vertical flux at SLHL
+  double a = 258.5*(pow(100,2.66));
+  double b = 75*(pow(100,1.66));
+  double phi_vert_slhl = (a/((z+21000.0)*((pow((z+1000),1.66)) + b)))
+                            *exp(-5.5e-6* z);
+
+  // The above expression is only good to 2e5 g/cm2. We don't ever consider production
+  // below that depth. The full-depth scheme appears in the comments below.
+  // ------ begin full-depth flux equations -------
+  //phiz_1 = (a./((z+21000).*(((z+1000).^1.66) + b))).*exp(-5.5e-6 .* z);
+  //phiz_2 = 1.82e-6.*((121100./z).^2).*exp(-z./121100) + 2.84e-13;
+  //out(find(z<200000)) = phiz_1(find(z<200000));
+  //out(find(z>=200000)) = phiz_2(find(z>=200000));
+  // ------ end full-depth flux equations -------
+
+  // find the stopping rate of vertical muons at SLHL
+  // this is done in a subfunction Rv0, because it gets integrated later.
+  double R_vert_slhl = Rv0(z);
+
+  // find the stopping rate of vertical muons at site
+  double R_vert_site = R_vert_slhl*exp(H/LZ(z));
+
+  // find the flux of vertical muons at site
+  // integrate
+  // ends at 200,001 g/cm2 to avoid being asked for an zero
+  // range of integration -- 
+  // get integration tolerance -- want relative tolerance around
+  // 1 part in 10^4. 
+  double tol = phi_vert_slhl*1e-4;
+  double temp = tol;
+  
+  cout << "YO YOU HAVE NOT FINISHED YOU NEED TO NUMERICALLY INTEGRATE ON LINE 538 OF LSDCRNPARAMETERS" << endl;
+  //  [temp,fcnt] = quad(@(x) Rv0(x).*exp(H./LZ(x)),z(a),(2e5+1),tol);
+  //  % second variable assignment here to preserve fcnt if needed
+  double phi_vert_site = temp;
+   
+  // invariant flux at 2e5 g/cm2 depth - constant of integration
+  // calculated using commented-out formula above
+  double phi_200k = (a/((2.0e5+21000.0)*((pow((2.0e5+1000.0),1.66)) + b)))
+                      *exp(-5.5e-6 * 2.0e5);
+  phi_vert_site = phi_vert_site + phi_200k;
+
+  // find the total flux of muons at site
+  // angular distribution exponent
+  double nofz = 3.21 - 0.297*log((z+H)/100.0 + 42.0) + 1.21e-5*(z+H);
+  // derivative of same
+  double dndz = (-0.297/100.0)/((z+H)/100.0 + 42.0) + 1.21e-5;
+
+  // caluculate phi in muons/cm2/s
+  double phi_temp = (phi_vert_site*2* M_PI) / (nofz+1.0);
+
+  // convert to muons/cm2/yr
+  double phi = phi_temp*60.0*60.0*24.0*365.0;
+
+  // find the total stopping rate of muons at site in muons/g/s
+  double R_temp = (2*M_PI/(nofz+1.0))*R_vert_site 
+                  - phi_vert_site*(-2*M_PI*(1/((nofz+1.0)*(nofz+1.0))))*dndz;
+    
+  // convert to negative muons/g/yr
+  double R = R_temp*0.44*60.0*60.0*24.0*365.0;
+
+  // Now calculate the production rates. 
+  // Depth-dependent parts of the fast muon reaction cross-section
+  double Beta = 0.846 - 0.015 * log((z/100.0)+1.0) 
+                      + 0.003139 * (log((z/100.0)+1.0)*log((z/100.0)+1.0));
+  double Ebar = 7.6 + 321.7*(1 - exp(-8.059e-6*z)) 
+                    + 50.7*(1-exp(-5.05e-7*z));
+
+  // internally defined constants
+  double aalpha = 0.75;
+  
+  // this needs some logic for the isotope type
+  double sigma0_Be10 = CRONUS_data_map["sigma190_10"]/(pow(190.0,aalpha));
+  double sigma0_Al26 = CRONUS_data_map["sigma190_26"]/(pow(190.0,aalpha));
+  
+  // fast muon production
+  double P_fast_Be10 = phi*Beta*(pow(Ebar,aalpha))
+                          *sigma0_Be10*CRONUS_data_map["Natoms10"];
+  double P_fast_Al26 = phi*Beta*(pow(Ebar,aalpha))
+                          *sigma0_Al26*CRONUS_data_map["Natoms26"];
+  
+  // negative muon capture
+  double P_neg_Be10 = R*CRONUS_data_map["k_neg10"];
+  double P_neg_Al26 = R*CRONUS_data_map["k_neg26"];
+
+  temp_data_map["phi_vert_slhl"] = phi_vert_slhl;
+  temp_data_map["R_vert_slhl"] = R_vert_slhl;
+  temp_data_map["phi_vert_site"] = phi_vert_site;
+  temp_data_map["R_vert_site"] = R_vert_site;
+  temp_data_map["phi"] = phi;
+  temp_data_map["R"] = R;
+  temp_data_map["Beta"] = Beta;
+  temp_data_map["Ebar"] = Ebar;
+  temp_data_map["P_fast_10Be"] = P_fast_Be10;
+  temp_data_map["P_fast_26Al"] = P_fast_Al26;
+  temp_data_map["P_neg_10Be"] = P_neg_Be10;
+  temp_data_map["P_neg_26Al"] = P_neg_Al26;
+  temp_data_map["H"] = H;
+  temp_data_map["LZ"] = LZ(z);
+
+  CRONUS_muon_data = temp_data_map;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// this subfunction returns the stopping rate of vertically traveling muons
+// as a function of depth z at sea level and high latitude.
+// Modified from Greg Balco's CRONUS calculator
+// z is the depth below the surface in g/cm^2
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+double LSDCRNParameters::Rv0(double z)
+{
+  double a = exp(-5.5e-6*z);
+  double b = z + 21000.0;
+  double c = pow((z + 1000.0),1.66) + 1.567e5;
+  double dadz = -5.5e-6 * exp(-5.5e-6*z);
+  double dbdz = 1.0;
+  double dcdz = 1.66*(pow((z + 1000),0.66));
+  
+  double out = -5.401e7*(b*c*dadz-a*(c*dbdz+b*dcdz))/(b*b*c*c);
+  return out;
+
+  // full depth calculation appears in comments below
+  // testing indicates this isn't really necessary
+  //R_1 = -5.401e7 .* (b.*c.*dadz - a.*(c.*dbdz + b.*dcdz))./(b.^2 .* c.^2);
+  //f = (121100./z).^2;
+  //g = exp(-z./121100);
+  //dfdz = (-2.*(121100.^2))./(z.^3);
+  //dgdz = -exp(-z./121100)./121100;
+  //R_2 = -1.82e-6.*(g.*dfdz + f.*dgdz);
+  //out(find(z<200000)) = R_1(find(z<200000));
+  //out(find(z>=200000)) = R_2(find(z>=200000));
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// this subfunction returns the effective atmospheric attenuation length for
+// muons of range Z
+// z is the depth in g/cm^2
+//
+// Original by Greg Balco as part of the CRONUS calculator
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+double LSDCRNParameters::LZ(double z)
+{
+
+  //define range/momentum relation
+  // table for muons in standard rock in Groom and others 2001
+  // units are range in g cm-2 (column 2)
+  //momentum in MeV/c (column 1)
+  vector<double> data_for_LZ_range;
+  vector<double> data_for_LZ_momentum;
+  data_for_LZ_momentum.push_back(4.704e1);
+  data_for_LZ_range.push_back(8.516e-1);
+  data_for_LZ_momentum.push_back(5.616e1); 
+  data_for_LZ_range.push_back(1.542e0);
+  data_for_LZ_momentum.push_back(6.802e1); 
+  data_for_LZ_range.push_back(2.866e0);
+  data_for_LZ_momentum.push_back(8.509e1);
+  data_for_LZ_range.push_back(5.698e0);
+  data_for_LZ_momentum.push_back(1.003e2);
+  data_for_LZ_range.push_back(9.145e0);
+  data_for_LZ_momentum.push_back(1.527e2);
+  data_for_LZ_range.push_back(2.676e1);
+  data_for_LZ_momentum.push_back(1.764e2); 
+  data_for_LZ_range.push_back(3.696e1);
+  data_for_LZ_momentum.push_back(2.218e2);
+  data_for_LZ_range.push_back(5.879e1);
+  data_for_LZ_momentum.push_back(2.868e2);
+  data_for_LZ_range.push_back(9.332e1);
+  data_for_LZ_momentum.push_back(3.917e2);
+  data_for_LZ_range.push_back(1.524e2);
+  data_for_LZ_momentum.push_back(0.945e2);
+  data_for_LZ_range.push_back(2.115e2);
+  data_for_LZ_momentum.push_back(8.995e2);
+  data_for_LZ_range.push_back(4.418e2);
+  data_for_LZ_momentum.push_back(1.101e3);
+  data_for_LZ_range.push_back(5.534e2);
+  data_for_LZ_momentum.push_back(1.502e3);
+  data_for_LZ_range.push_back(7.712e2);
+  data_for_LZ_momentum.push_back(2.103e3);
+  data_for_LZ_range.push_back(1.088e3);
+  data_for_LZ_momentum.push_back(3.104e3);
+  data_for_LZ_range.push_back(1.599e3);
+  data_for_LZ_momentum.push_back(4.104e3);
+  data_for_LZ_range.push_back(2.095e3);
+  data_for_LZ_momentum.push_back(8.105e3);
+  data_for_LZ_range.push_back(3.998e3);
+  data_for_LZ_momentum.push_back(1.011e4);
+  data_for_LZ_range.push_back(4.920e3);
+  data_for_LZ_momentum.push_back(1.411e4);
+  data_for_LZ_range.push_back(6.724e3);
+  data_for_LZ_momentum.push_back(2.011e4);
+  data_for_LZ_range.push_back(9.360e3);
+  data_for_LZ_momentum.push_back(3.011e4);
+  data_for_LZ_range.push_back(1.362e4);
+  data_for_LZ_momentum.push_back(4.011e4);
+  data_for_LZ_range.push_back(1.776e4);
+  data_for_LZ_momentum.push_back(8.011e4);
+  data_for_LZ_range.push_back(3.343e4);
+  data_for_LZ_momentum.push_back(1.001e5);
+  data_for_LZ_range.push_back(4.084e4);
+  data_for_LZ_momentum.push_back(1.401e5);
+  data_for_LZ_range.push_back(5.495e4);
+  data_for_LZ_momentum.push_back(2.001e5);
+  data_for_LZ_range.push_back(7.459e4);
+  data_for_LZ_momentum.push_back(3.001e5); 
+  data_for_LZ_range.push_back(1.040e5);
+  data_for_LZ_momentum.push_back(4.001e5);
+  data_for_LZ_range.push_back(1.302e5);
+  data_for_LZ_momentum.push_back(8.001e5);
+  data_for_LZ_range.push_back(2.129e5);
+
+  // deal with zero situation
+  if(z < 1)
+  {
+    z = 1.0;
+  }
+
+  // obtain momenta
+  // use log-linear interpolation
+  int n_momentum_dpoints = int(data_for_LZ_momentum.size());
+  vector<double> log_momentum;
+  vector<double> log_range;
+  for(int i = 0; i<n_momentum_dpoints; i++)
+  {
+    log_momentum.push_back(log(data_for_LZ_momentum[i]));
+    log_range.push_back(log(data_for_LZ_range[i]));
+  }
+  double P_MeVc = exp(interp1D_ordered(log_range,log_momentum,z));
+
+  // obtain attenuation lengths
+  double out = 263.0 + 150*(P_MeVc/1000.0);
+  return out;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

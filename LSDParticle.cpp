@@ -1314,6 +1314,9 @@ double LSDCRNParticle::lifton2006sp(double h,double Rc,double S)
 // Also note that this function will yield the scaling factor for spallation
 // only when fsp=1, and that for muons only when fsp=0.
 //
+// IMPORTANT: This (and the Rc version) is probably the best scaling method!
+// See https://cosmognosis.wordpress.com/2014/01/07/high-altitude-low-latitude-calibration-sites-i/
+//
 // Elevation can be converted to pressure with the functions
 // stdatm.m (general use) and antatm.m (Antarctica).
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1465,6 +1468,9 @@ double LSDCRNParticle::stone2000sp(double lat,double P, double Fsp)
 // March, 2007
 // Part of the CRONUS-Earth online calculators: 
 //      http://hess.ess.washington.edu/math
+//
+// IMPORTANT: This (and the stonesp version) is probably the best scaling method!
+// See https://cosmognosis.wordpress.com/2014/01/07/high-altitude-low-latitude-calibration-sites-i/
 //
 // Updated for c++ by Simon Mudd
 // 05/12/2014
