@@ -86,7 +86,7 @@ class LSDParticle
     /// @param StartdLoc the starting depth
     LSDParticle( int StartType, int StartCI, double StartAge, double StartOSLage, 
                 double StartxLoc, double StartdLoc)
-    						{ create(StartType, StartCI, StartAge, StartOSLage, StartxLoc, StartdLoc); }
+                { create(StartType, StartCI, StartAge, StartOSLage, StartxLoc, StartdLoc); }
 
     /// @brief Constructor. Assignes all data members
     /// @param StartType the type of the particle 
@@ -98,16 +98,15 @@ class LSDParticle
     /// @param StartdLoc the starting depth
     LSDParticle( int StartType, int StartCI, double StartAge, double StartOSLage, 
                 double StartxLoc, double StartyLoc, double StartdLoc)
-    						{ create(StartType, StartCI, StartAge, StartOSLage, StartxLoc, StartyLoc,StartdLoc); }
+                { create(StartType, StartCI, StartAge, StartOSLage, StartxLoc, StartyLoc,StartdLoc); }
 
-    						
     /// @brief Constructor. Assignes type, x location and d location. 
     /// other parameters are default
     /// @param StartType the type of the particle 
     /// @param StartxLoc the starting x location
     /// @param StartdLoc the starting depth    						
     LSDParticle( int StartType, double StartxLoc, double StartdLoc)
-    						{ create(StartType, StartxLoc, StartdLoc); }
+                { create(StartType, StartxLoc, StartdLoc); }
 
     /// @brief Get the type
     /// @return Type the type of the particle

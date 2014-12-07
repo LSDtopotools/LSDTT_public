@@ -134,7 +134,18 @@ class LSDCRNParameters
   /// @author SMM
   /// @date 06/12/2014
   double LZ(double z);
-  
+
+  /// @brief subroutine for integrating the muon flux
+  /// @detail uses simplsons rule, keeps refining nodes until a tolerance is 
+  ///  reached. 
+  /// @param z the depth of the sample in g/cm^2
+  /// @param H the atmospheric depth in g/cm^2
+  /// @param the tolerance; successive refined meshes must exceed this tolerance
+  ///  in order for the iteration to be sucessfull
+  /// @author SMM
+  /// @date 07/12/2014
+  double integrate_muon_flux(double z, double H, double tolerance);
+ 
   // functions for altering the parameter values
   
   /// @brief This resets the F, Gamma and P0 values so that they conform to 

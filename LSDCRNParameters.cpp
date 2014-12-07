@@ -533,12 +533,7 @@ void LSDCRNParameters::P_mu_total(double z,double h)
   // get integration tolerance -- want relative tolerance around
   // 1 part in 10^4. 
   double tol = phi_vert_slhl*1e-4;
-  double temp = tol;
-  
-  cout << "YO YOU HAVE NOT FINISHED YOU NEED TO NUMERICALLY INTEGRATE ON LINE 538 OF LSDCRNPARAMETERS" << endl;
-  //  [temp,fcnt] = quad(@(x) Rv0(x).*exp(H./LZ(x)),z(a),(2e5+1),tol);
-  //  % second variable assignment here to preserve fcnt if needed
-  double phi_vert_site = temp;
+  double phi_vert_site = integrate_muon_flux(z, H, tol);
    
   // invariant flux at 2e5 g/cm2 depth - constant of integration
   // calculated using commented-out formula above
@@ -607,6 +602,80 @@ void LSDCRNParameters::P_mu_total(double z,double h)
   CRONUS_muon_data = temp_data_map;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// this subfunction does the integration of muon sotpping to get the total
+// muon flux
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+double LSDCRNParameters::integrate_muon_flux(double z, double H, double tolerance)
+{
+  // we just use a simple simpsons rule but we keep fining the grid until there 
+  // is no difference in the solution
+  int n_nodes = 101;
+  double start_z = z;
+  double end_z = 2.0e5+1.0;
+  double spacing = (end_z-z)/double(n_nodes-1);
+  double a,b, intermediate;
+  double fa,fb,fi,sum, last_sum;
+  double integral_difference;
+  
+  // get the inital guess
+  b = start_z;
+  fb = Rv0(b)*exp(H/LZ(b));
+  sum = 0;
+  for(int i = 1; i< n_nodes; i++)
+  {
+    // locations of spacings
+    a = b;
+    b = a+spacing; 
+    intermediate = (b-a)/2.0;
+    
+    // functions evaluated at spacings
+    fa = fb;
+    fi = Rv0(intermediate)*exp(H/LZ(intermediate));
+    fb = Rv0(b)*exp(H/LZ(b));
+    
+    sum+= ((b-a)/6.0)*(fa+4.0*fi+fb);
+  }
+  last_sum = sum;
+  
+  // now loop until the error tolerance is reached
+  do
+  {
+    // increase the density of the nodes
+    n_nodes = n_nodes*2;
+    spacing = (end_z-z)/double(n_nodes-1);
+    
+    b = start_z;
+    fb = Rv0(b)*exp(H/LZ(b));
+    sum = 0;
+    for(int i = 1; i< n_nodes; i++)
+    {
+      // locations of spacings
+      a = b;
+      b = a+spacing; 
+      intermediate = (b-a)/2.0;
+    
+      // functions evaluated at spacings
+      fa = fb;
+      fi = Rv0(intermediate)*exp(H/LZ(intermediate));
+      fb = Rv0(b)*exp(H/LZ(b));
+    
+      sum+= ((b-a)/6.0)*(fa+4.0*fi+fb);
+      
+      
+    }
+    // compare this integral with the last one
+    integral_difference = fabs(last_sum-sum);
+    
+    // reset the last sum
+    last_sum = sum;
+  
+  } while(integral_difference>tolerance);
+  
+  // now return the integral
+  return last_sum;
+}
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
