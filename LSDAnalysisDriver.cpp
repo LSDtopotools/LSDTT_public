@@ -152,23 +152,23 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
     }
     else if (lower == "write fname")
     {
-    	write_fname = value;
-    	// get rid of any control characters from the end (if param file was made in DOS)
-    	write_fname = RemoveControlCharactersFromEndOfString(write_fname);
-    	//cout << "Got the write name, it is: "  << write_fname << endl;
+      write_fname = value;
+      // get rid of any control characters from the end (if param file was made in DOS)
+      write_fname = RemoveControlCharactersFromEndOfString(write_fname);
+      //cout << "Got the write name, it is: "  << write_fname << endl;
     }
     else if (lower == "read path")
     {
       read_path = value;
-    	// get rid of any control characters from the end (if param file was made in DOS)
-    	read_path = RemoveControlCharactersFromEndOfString(read_path);
-    	//cout << "Got the write name, it is: "  << write_fname << endl;
+      // get rid of any control characters from the end (if param file was made in DOS)
+      read_path = RemoveControlCharactersFromEndOfString(read_path);
+      //cout << "Got the write name, it is: "  << write_fname << endl;
     }
     else if (lower == "read fname")
     {
       read_fname = value;
-    	// get rid of any control characters from the end (if param file was made in DOS)
-    	read_fname = RemoveControlCharactersFromEndOfString(read_fname);
+      // get rid of any control characters from the end (if param file was made in DOS)
+      read_fname = RemoveControlCharactersFromEndOfString(read_fname);
       //cout << "Got the read name, it is: " << read_fname << endl;
     }
 
@@ -268,8 +268,8 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
     {
       method_map["slope_method"] = value;
       // get rid of any control characters from the end (if param file was made in DOS)
-    	method_map["slope_method"] = RemoveControlCharactersFromEndOfString(method_map["slope_method"]);
-    	cout << "Your slope method is: "  <<  method_map["slope_method"] << endl;
+      method_map["slope_method"] = RemoveControlCharactersFromEndOfString(method_map["slope_method"]);
+      cout << "Your slope method is: "  <<  method_map["slope_method"] << endl;
     }
 
 
@@ -280,7 +280,7 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
     {
       method_map["drainage_area_method"] = value;
       // get rid of any control characters from the end (if param file was made in DOS)
-    	method_map["drainage_area_method"] = RemoveControlCharactersFromEndOfString(method_map["drainage_area_method"]);
+      method_map["drainage_area_method"] = RemoveControlCharactersFromEndOfString(method_map["drainage_area_method"]);
     }
 
     //=-=-=-=-=-=-=-=-=-=-=-=-
@@ -290,7 +290,7 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
     {
       method_map["single_thread_channel_method"] = value;
       // get rid of any control characters from the end (if param file was made in DOS)
-    	method_map["single_thread_channel_method"] =
+      method_map["single_thread_channel_method"] =
       RemoveControlCharactersFromEndOfString(method_map["single_thread_channel_method"]);
     }
 
@@ -461,7 +461,7 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
     }
     else
     {
-    	cout << "Line " << __LINE__ << ": No parameter '"
+      cout << "Line " << __LINE__ << ": No parameter '"
            << parameter << "' expected.\n\t> Check spelling." << endl;
     }
 
@@ -1336,18 +1336,18 @@ void LSDAnalysisDriver::calculate_hillshade()
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDAnalysisDriver::calculate_FS_sat()
 {
-  
+
   // check to see if this has already been calculated
   if(map_of_LSDRasters.find("FS_sat") == map_of_LSDRasters.end())
   {
     // it hasn't. calculate it
-    
+
     // check to see if the slope_angle raster is present
     if(map_of_LSDRasters.find("slope_angle") == map_of_LSDRasters.end())
     {
       calculate_slope_angle();
     }
-    
+
 
     // see if the parameters for FS calculation have been set. If not use default values
     if(float_parameters.find("root_cohesion") == float_parameters.end())
@@ -1364,19 +1364,19 @@ void LSDAnalysisDriver::calculate_FS_sat()
     {
       cout << "You didn't define soil_thickness, defaulting to 1m" << endl;
       float_parameters["soil_thickness"] = 1;
-    }  
+    }
     if(float_parameters.find("tan_phi") == float_parameters.end())
     {
       cout << "You didn't define tan_phi, defaulting to 0.8" << endl;
       float_parameters["tan_phi"] = 0.8;
     }
-    
-    map_of_LSDRasters["FS_sat"] 
+
+    map_of_LSDRasters["FS_sat"]
      = map_of_LSDRasters["SlopeAngle"].calculate_factor_of_safety_at_saturation(
             float_parameters["root_cohesion"], float_parameters["soil_density"],
-            float_parameters["soil_thickness"], float_parameters["tan_phi"],     
-            map_of_LSDRasters["SlopeAngle"]);        
-
+            float_parameters["soil_thickness"], float_parameters["tan_phi"],
+            map_of_LSDRasters["SlopeAngle"]);
+  }
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
