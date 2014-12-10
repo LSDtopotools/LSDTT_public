@@ -200,6 +200,19 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
     {
       float_parameters["hs_z_factor"] = atof(value.c_str());
     }
+    else if (lower == "hs_use_fill")
+    {
+      //cout << "Use hs bool: " << value << endl;
+      bool temp_bool = (value == "true") ? true : false;
+      //cout << "Temp bool: " << temp_bool << endl;
+      //bool tbool = true;
+      //bool fbool = false;
+      //cout << "True is " << tbool << " and false is: " << fbool << endl;
+      analyses_switches["hs_use_fill"] = temp_bool;
+      cout << "You have set use of the fill raster for the hillshade to " 
+           << analyses_switches["hs_use_fill"] << endl;
+    }
+
 
     //=-=-=-=-=-=--=-=-=-=-
     // parameters for flow info
@@ -331,6 +344,16 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
       cout << "Your tan_phi is: "  <<  float_parameters["tan_phi"] << endl;
     }
 
+    //=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+    // parameters for nodata hole filling
+    //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+    else if (lower == "nodata_hole_filling_window_width")
+    {
+      float_parameters["nodata_hole_filling_window_width"] = atof(value.c_str());
+      cout << "Your hole_filling_window is: "  
+           <<  float_parameters["nodata_hole_filling_window_width"] <<  " pixels" << endl;
+    }
+
 
     //=-=-=-=-=-=--=-=-=-=-
     // what to write
@@ -347,7 +370,6 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
       bool temp_bool = (value == "true") ? true : false;
       analyses_switches["write_hillshade"] = temp_bool;
       raster_switches["need_base_raster"] = temp_bool;
-      raster_switches["need_fill"] = temp_bool;
       raster_switches["need_hillshade"] = temp_bool;
     }
     else if (lower == "write slope")
@@ -1020,7 +1042,6 @@ void LSDAnalysisDriver::fill_raster()
   }
 
 
-
   // see if the min_slope_for_fill has been initialised
   // If not,  set to default.
   if(float_parameters.find("min_slope_for_fill") == float_parameters.end())
@@ -1032,6 +1053,8 @@ void LSDAnalysisDriver::fill_raster()
   // first check to see if it has already been calculated
   if(map_of_LSDRasters.find("fill") == map_of_LSDRasters.end())
   {
+      cout << "Filling raster"  << endl;
+  
     // check to see if a method has been designated
     if(method_map["fill_method"] == "old_fill")
     {
@@ -1287,12 +1310,6 @@ void LSDAnalysisDriver::calculate_polyfit()
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDAnalysisDriver::calculate_hillshade()
 {
-  // first check to make sure the fill raster exists
-  if(map_of_LSDRasters.find("fill") == map_of_LSDRasters.end())
-  {
-    fill_raster();
-  }
-
   // see if the parameters for hillshade hace been set. If not use default values
   if(float_parameters.find("hs_altitude") == float_parameters.end())
   {
@@ -1300,33 +1317,49 @@ void LSDAnalysisDriver::calculate_hillshade()
   }
   if(float_parameters.find("hs_azimuth") == float_parameters.end())
   {
-    float_parameters["hs_azimouth"] = 315;
+    float_parameters["hs_azimuth"] = 315;
   }
   if(float_parameters.find("hs_z_factor") == float_parameters.end())
   {
     float_parameters["hs_z_factor"] = 1;
   }
 
-  // now run the hillshade
-  // first check to see if it has already been calculated
-  if(map_of_LSDRasters.find("hillshade") == map_of_LSDRasters.end())
+  // see if you need the fill
+  if(analyses_switches["hs_use_fill"] == true)
   {
-    LSDRaster temp_hs = map_of_LSDRasters["fill"].hillshade(
+    // first check to make sure the fill raster exists
+    if(map_of_LSDRasters.find("fill") == map_of_LSDRasters.end())
+    {
+      cout << "The fill raster doesn't exist. Calculating." << endl;
+      fill_raster();
+    }
+    
+    // now run the hillshade
+    // first check to see if it has already been calculated
+    if(map_of_LSDRasters.find("hillshade") == map_of_LSDRasters.end())
+    {
+      cout << "Hillshading from fill raster " << endl;
+      LSDRaster temp_hs = map_of_LSDRasters["fill"].hillshade(
                               float_parameters["hs_altitude"],
-                              float_parameters["hs_azimouth"],
+                              float_parameters["hs_azimuth"],
                               float_parameters["hs_z_factor"] );
 
-    map_of_LSDRasters["hillshade"] =  temp_hs;
-
-    cout << "Checking hs raster, NRows are: "
-         << map_of_LSDRasters["hillshade"].get_NRows() << endl;
-
+      map_of_LSDRasters["hillshade"] =  temp_hs;
+    }
   }
   else
   {
-    //cout << "Hillshade raster exists, its index is " << raster_indices["hillshade"] << endl;
-  }
+    if(map_of_LSDRasters.find("hillshade") == map_of_LSDRasters.end())
+    {
+      cout << "Hillshading from base raster " << endl;
+      LSDRaster temp_hs = map_of_LSDRasters["base_raster"].hillshade(
+                              float_parameters["hs_altitude"],
+                              float_parameters["hs_azimuth"],
+                              float_parameters["hs_z_factor"] );
 
+      map_of_LSDRasters["hillshade"] =  temp_hs;
+    }    
+  }
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -1803,7 +1836,7 @@ void LSDAnalysisDriver::calculate_chi_map()
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDAnalysisDriver::check_pathname_for_slash()
 {
-  string lchar = pathname.substr(pathname.length()-2,1);
+  string lchar = pathname.substr(pathname.length()-1,1);
   string slash = "/";
   //cout << "lchar is " << lchar << " and slash is " << slash << endl;
 
@@ -1822,8 +1855,9 @@ void LSDAnalysisDriver::check_pathname_for_slash()
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 string LSDAnalysisDriver::check_pathname_for_slash(string this_pathname)
 {
-  string lchar = this_pathname.substr(this_pathname.length()-2,1);
+  string lchar = this_pathname.substr(this_pathname.length()-1,1);
   string slash = "/";
+  //cout << "Checking pathname, pathname is: " << this_pathname << endl;
   //cout << "lchar is " << lchar << " and slash is " << slash << endl;
 
   if (lchar != slash)

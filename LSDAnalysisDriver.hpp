@@ -355,6 +355,9 @@ class LSDAnalysisDriver
     /// This holds float parameters
     map<string,float> float_parameters;
     
+    /// This holds integer parameters
+    map<string,int> int_parameters;
+    
     /// This holds integer vectors. Can be used to get sources
     map<string, vector<int> > integer_vector_map;
     
