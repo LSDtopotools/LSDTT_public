@@ -138,6 +138,11 @@ class LSDAnalysisDriver
     /// @date 29/07/2014
     void fill_raster();
 
+    /// @brief This calculates the trimmed and hole filled raster
+    /// @author SMM
+    /// @date 10/12/2014
+    void calculate_trimmed_and_nodata_filled();
+
     /// @brief This calculates the hillshade raster
     /// @author SMM
     /// @date 29/07/2014

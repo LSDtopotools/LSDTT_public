@@ -365,6 +365,13 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
       raster_switches["need_base_raster"] = temp_bool;
       raster_switches["need_fill"] = temp_bool;
     }
+    else if (lower == "write trimmed and nodata filled")
+    {
+      bool temp_bool = (value == "true") ? true : false;
+      analyses_switches["write_trim_ndfill"] = temp_bool;
+      raster_switches["need_base_raster"] = temp_bool;
+      raster_switches["need_trimmed_hole_filled"] = temp_bool;
+    }
     else if (lower == "write hillshade")
     {
       bool temp_bool = (value == "true") ? true : false;
@@ -540,6 +547,16 @@ void LSDAnalysisDriver::compute_rasters_from_raster_switches()
     else
     {
       fill_raster();
+    }
+  }
+
+  // get trimmed and nodata filled raster
+  if(raster_switches.find("need_trimmed_hole_filled") != raster_switches.end())
+  {
+
+    if(map_of_LSDRasters.find("trimmed_hole_filled") == map_of_LSDRasters.end())
+    {
+      calculate_trimmed_and_nodata_filled();
     }
   }
 
@@ -781,6 +798,19 @@ void LSDAnalysisDriver::write_rasters_from_analysis_switches()
     string fill_seperator = "_fill";
     string fill_fname = write_path+write_fname+fill_seperator;
     map_of_LSDRasters["fill"].write_raster(fill_fname,dem_write_extension);
+  }
+
+  // write the trimmed and no data filled
+  if(analyses_switches.find("write_trim_ndfill") != analyses_switches.end())
+  {
+    if(map_of_LSDRasters.find("trimmed_hole_filled") == map_of_LSDRasters.end())
+    {
+      calculate_trimmed_and_nodata_filled();
+    }
+    
+    string ndh_fill_seperator = "_trim_ndf";
+    string ndh_fill_fname = write_path+write_fname+ndh_fill_seperator;
+    map_of_LSDRasters["trimmed_hole_filled"].write_raster(ndh_fill_fname,dem_write_extension);  
   }
 
   // write the hillshade
@@ -1079,6 +1109,34 @@ void LSDAnalysisDriver::fill_raster()
 
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+void LSDAnalysisDriver::calculate_trimmed_and_nodata_filled()
+{
+  // first check to make sure the base raster exists
+  if(map_of_LSDRasters.find("base_raster") == map_of_LSDRasters.end())
+  {
+    //cout << "LINE 416 Base raster doesn't exist! Reading it now." << endl;
+    read_base_raster();
+  }
+
+  // see if the min_slope_for_fill has been initialised
+  // If not,  set to default.
+  if(float_parameters.find("nodata_hole_filling_window_width") == float_parameters.end())
+  {
+    float_parameters["nodata_hole_filling_window_width"] = 1;
+  }
+  
+  if(map_of_LSDRasters.find("trimmed_hole_filled") == map_of_LSDRasters.end())
+  {
+    LSDRaster temp_hole_filled = 
+        map_of_LSDRasters["base_raster"].alternating_direction_nodata_fill_with_trimmer( 
+                    int(float_parameters["nodata_hole_filling_window_width"]));
+    map_of_LSDRasters["trimmed_hole_filled"] = temp_hole_filled;
+  }
+  
+}
+
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Gets the slope raster
