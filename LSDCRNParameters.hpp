@@ -95,6 +95,33 @@ class LSDCRNParameters
   /// @date 06/12/2014
   void set_CRONUS_data_maps();
 
+  /// @param This function returns the stone production prescalings
+  ///  for 10Be and 26Al
+  /// @return Prefs a vector<double> that holds:
+  ///  Prefs[0] = stone prescaling of 10Be preduction 
+  ///  Prefs[1] = stone prescaling of 26Be preduction 
+  /// @author SMM
+  /// @date 14/10/2014
+  vector<double> get_Stone_Pref();
+
+  /// @brief This function wraps the CRONUS muon production function
+  ///  It returns a vector with elements
+  ///  Muon_production[0] = 10Be fast
+  ///  Muon_production[1] = 26Al fast
+  ///  Muon_production[2] = 10Be neg
+  ///  Muon_production[3] = 26Al neg
+  /// @param z depth below the surface z (g/cm2)
+  /// @param h atmospheric pressure (hPa)
+  /// @return a four element vector containing:
+  ///   Muon_production[0] = 10Be fast
+  ///   Muon_production[1] = 26Al fast
+  ///   Muon_production[2] = 10Be neg
+  ///   Muon_production[3] = 26Al neg
+  /// @author SMM
+  /// @date 14/10/2014
+  vector<double> calculate_muon_production_CRONUS(double z, double h);
+
+
   /// @brief alculates the production rate of Al-26 or Be-10 by muons
   /// @detail This uses the scheme in Heisinger and others (2002, 2 papers). The
   ///  vertically traveling muon flux is scaled to the site elevation using
@@ -211,8 +238,25 @@ class LSDCRNParameters
   /// @date 04/12/2014
   double NCEPatm_2(double site_lat, double site_lon, double site_elev);
   
+  /// @brief This gets the attenuation depth in g/cm^2
+  ///  You tell it if you want the CRONUS values
+  /// @param use_CRONUS a bool that allows you to select the CRONUS
+  ///  value
+  /// @return the spallation attenuation length in g/cm^2
+  /// @author SMM
+  /// @date 14/12/2014
+  double get_spallation_attenuation_length(bool use_CRONUS);
   
-  
+  /// @brief This gets the decay coefficnets for both 10Be and 26Al
+  ///  You tell it if you want the CRONUS values
+  /// @param use_CRONUS a bool that allows you to select the CRONUS
+  ///  value
+  /// @return the decay coefficients decay_coeff in vector<double>
+  ///   decay_coeff[0] = 10Be decay in yr^-1
+  ///   decay_coeff[1] = 26Al decay in yr^-1
+  /// @author SMM
+  /// @date 14/12/2014
+  vector<double> get_decay_coefficients(bool use_CRONUS);
   
   private:	
   /// @brief This is called by the default constructor. 

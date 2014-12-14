@@ -469,6 +469,52 @@ void LSDCRNParameters::set_CRONUS_data_maps()
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function retrieves the Stone production reference values for 10Be and 
+// 26Al
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<double> LSDCRNParameters::get_Stone_Pref()
+{
+  // first check to see if CRONUS data maps are set
+  if(CRONUS_data_map.find("l10") == CRONUS_data_map.end())
+  {
+    cout << "You haven't set the CRONUS data map. I'm doing that for you now!" << endl;
+    set_CRONUS_data_maps();
+  }
+  
+  vector<double> Stone_pref(2,0.0);
+  Stone_pref[0] = CRONUS_data_map["P10_ref_St"];
+  Stone_pref[1] = CRONUS_data_map["P26_ref_St"];  
+  
+  return Stone_pref;
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function wraps the CRONUS muon production function
+// It returns a vector with elements
+// Muon_production[0] = 10Be fast
+// Muon_production[1] = 26Al fast
+// Muon_production[2] = 10Be neg
+// Muon_production[3] = 26Al neg
+// 14/10/2014
+// SMM
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<double> LSDCRNParameters::calculate_muon_production_CRONUS(double z, double h)
+{
+  vector<double> Muon_production(4,0.0);
+  P_mu_total(z,h);
+  
+  
+  Muon_production[0] = CRONUS_muon_data["P_fast_10Be"];
+  Muon_production[1] = CRONUS_muon_data["P_fast_26Al"];
+  Muon_production[2] = CRONUS_muon_data["P_neg_10Be"];
+  Muon_production[3] = CRONUS_muon_data["P_neg_26Al"];
+
+  return Muon_production;
+  
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //  
 // This function sets CRONUS muon production paramteters
 //
@@ -1366,9 +1412,67 @@ double LSDCRNParameters::NCEPatm_2(double site_lat, double site_lon, double site
   //cout << "Site sea level pressure: " << site_slp << " and site Temp: "<< site_T 
   //     << " and pressure: " << out << endl << endl <<endl;
   return out;
-
-
 }
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This functioon gets the spallation attenuation lenth in g/cm^2
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+double LSDCRNParameters::get_spallation_attenuation_length(bool use_CRONUS)
+{
+  
+  double att_length = 160;
+  if(use_CRONUS == true)
+  {
+    // first check to see if CRONUS data maps are set
+    if(CRONUS_data_map.find("l10") == CRONUS_data_map.end())
+    {
+      //cout << "You haven't set the CRONUS data map. I'm doing that for you now!" << endl;
+      set_CRONUS_data_maps();
+      att_length = CRONUS_data_map["Lsp"];
+    }    
+  
+  }
+  else
+  {
+    att_length = Gamma[0];
+  }
+
+  return att_length;
+}
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This functioon gets the cosmogenic decay coefficients
+// for 10Be and 26Al
+// It has a boolean to choose the CRONUS or Cosmocalc values
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+vector<double> LSDCRNParameters::get_decay_coefficients(bool use_CRONUS)
+{
+  
+  vector<double> decay_constants(2,0.0);
+  if(use_CRONUS == true)
+  {
+    // first check to see if CRONUS data maps are set
+    if(CRONUS_data_map.find("l10") == CRONUS_data_map.end())
+    {
+      //cout << "You haven't set the CRONUS data map. I'm doing that for you now!" << endl;
+      set_CRONUS_data_maps();
+      
+      decay_constants[0] = CRONUS_data_map["l10"];
+      decay_constants[1] = CRONUS_data_map["l26"];
+    }    
+  
+  }
+  else
+  {
+    decay_constants[0] = lambda_10Be;
+    decay_constants[1] = lambda_26Al;
+  }
+
+  return decay_constants;
+}
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 
 

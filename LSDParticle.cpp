@@ -1629,6 +1629,88 @@ double LSDCRNParticle::stone2000Rcsp(double h, double Rc)
   return out;
 }
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function computes the length scaling
+// It is from the CRONUS calculator but includes a flag that uses the
+// Lambda data members
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+double LSDCRNParticle::thickness_scaling_factor(LSDCRNParameters& LSDCRNP, bool use_CRONUS)
+{
+  double this_Gamma;
+  double thick_scale;
+  if(effective_dLoc > 0)
+  {
+    this_Gamma = LSDCRNP.get_spallation_attenuation_length(use_CRONUS);
+    thick_scale = (this_Gamma/effective_dLoc)*
+                        (1- exp(-effective_dLoc/this_Gamma));
+  }
+  else
+  {
+    thick_scale = 1;
+  }
+  return thick_scale;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function is the initial guess of erosion rate
+// that repicates the initial guesss component of the CRONUS 
+// erosion rate function
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<double> LSDCRNParticle::CRONUS_initial_guess(LSDCRNParameters& LSDCRNP, double pressure,
+                                 double lat, double N_10Be, double N_26Al, 
+                                 double topo_scale, double snow_scale)
+{
+
+  // get the other shielding correction
+  double other_shielding = topo_scale*snow_scale;
+  
+  // get the muon production
+  double test_elev = 0.0;
+  vector<double> muon_prod 
+             = LSDCRNP.calculate_muon_production_CRONUS(test_elev, pressure);
+  vector<double> Prefs_st = LSDCRNP.get_Stone_Pref();
+  
+  // get the Stone scaling
+  double Fsp = 0.978;
+  double stoneP = stone2000sp(lat, pressure, Fsp);
+  
+  // retrieve the pre-scaling factors
+  double P_ref_St_10 = Prefs_st[0];
+  double P_ref_St_26 = Prefs_st[1];
+  
+  // get the scaling from thickness
+  bool use_CRONUS = true;
+  double this_thickSF = thickness_scaling_factor(LSDCRNP, use_CRONUS);
+  
+  double P_temp_10 = (P_ref_St_10*stoneP*this_thickSF*other_shielding)
+                       + muon_prod[0] + muon_prod[2];
+  double P_temp_26 = (P_ref_St_26*stoneP*this_thickSF*other_shielding)
+                       + muon_prod[1] + muon_prod[3];                       
+
+  double Gamma = LSDCRNP.get_spallation_attenuation_length(use_CRONUS);
+  vector<double> decay_coeff = LSDCRNP.get_decay_coefficients(use_CRONUS);
+  double E_lal_10 = 0.0;
+  double E_lal_26 = 0.0;
+  if(N_10Be > 0)
+  {
+    E_lal_10 = Gamma*(P_temp_10/N_10Be - decay_coeff[0]);
+  }
+  if(N_26Al > 0)
+  {
+    E_lal_26 = Gamma*(P_temp_26/N_26Al - decay_coeff[1]);
+  }
+
+  vector<double> erosion_guess(2,0.0);
+  erosion_guess[0] =  E_lal_10;
+  erosion_guess[1] =  E_lal_26;
+  
+  return erosion_guess;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 #endif
 
 

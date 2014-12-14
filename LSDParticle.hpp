@@ -842,6 +842,37 @@ class LSDCRNParticle: public LSDParticle
   /// @author SMM
   /// @date 5/12/2014
   double stone2000Rcsp(double h, double Rc);
+
+  /// @brief this calculates a thickness scaling factor that is used in the
+  ///  CRONUS calculator calculations
+  /// @param LSDCRNP an LSDCRNParameters object
+  /// @param use_CRONUS a boolean that if true uses the attenuation depth
+  ///  of the CRONUS calculator (at the moment this makes no difference)
+  /// @return The thickness scaling factor (between 0 and 1)
+  /// @author SMM
+  /// @date 14/12/2014
+  double thickness_scaling_factor(LSDCRNParameters& LSDCRNP, bool use_CRONUS);
+
+  /// @brief This function is the initial guess of erosion rate
+  ///  that repicates the initial guesss component of the CRONUS 
+  ///  erosion rate function
+  /// @detail This replicates the 'initial guess' stage in Greg Balco's 
+  ///  CRONUS calculator code get_al_be_erosion.m
+  /// @param LSDCRNP and LSDCRNParameters object
+  /// @param pressure the atmospheric pressure in hPa
+  /// @param lat the latitude  
+  /// @param N_10Be the number of 10Be atoms
+  /// @param N_26 the number of 26Al atoms
+  /// @param topo_scale the topographic scaling (between 0 and 1)
+  /// @param snow_scale the snow scaling (between 0 and 1)
+  /// @return Erosion_rates a vector<double> Eguess
+  ///  Eguess[0] = 10Be
+  ///  Eguess[1] = 26Al
+  /// @author SMM
+  /// @date 14/12/2014
+  vector<double> CRONUS_initial_guess(LSDCRNParameters& LSDCRNP, double pressure,
+                                 double lat, double N_10Be, double N_26Al, 
+                                 double topo_scale, double snow_scale);
 //
 // Updated for c++ by Simon Mudd
 // 05/12/2014
