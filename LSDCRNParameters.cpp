@@ -275,6 +275,8 @@ void LSDCRNParameters::load_parameters_for_atmospheric_scaling(string path_to_da
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParameters::set_CRONUS_data_maps()
 {
+  //cout << "Line 278, creating the CRONUS data maps" << endl;
+  
   map<string,double> temp_map;
   
   // 10Be decay: this is specific to the CRONUS calculator
@@ -375,7 +377,7 @@ void LSDCRNParameters::set_CRONUS_data_maps()
   // Al-26 production rates are derived from Be-10 production rates 
   double R2610 = 6.1*1.106; // Update assumed production ratio
   temp_map["P26_ref_St"] = temp_map["P10_ref_St"]*R2610;
-  temp_map[".delP26_ref_St"] = temp_map["delP10_ref_St"]*R2610;
+  temp_map["delP26_ref_St"] = temp_map["delP10_ref_St"]*R2610;
   temp_map["P26_ref_Lm"] = temp_map["P10_ref_Lm"]*R2610; 
   temp_map["delP26_ref_Lm"] = temp_map["delP10_ref_Lm"]*R2610;
   temp_map["P26_ref_De"] = temp_map["P10_ref_De"]*R2610;
@@ -399,12 +401,20 @@ void LSDCRNParameters::set_CRONUS_data_maps()
   temp_map["delk_neg10"] = (0.704 * 0.1828 * 0.0003)/1.096;
   temp_map["sigma190_10"] = (0.094e-27)/1.096;
   temp_map["delsigma190_10"] = (0.013e-27)/1.096;
+  temp_map["Be10_Natoms_times_sigma190"] =  1.7205e-6;
+  temp_map["Be10_Natoms_times_delsigma190"] =  2.37938e-7;
+  temp_map["Be10_Natoms_sigma_modified_for_fast"] = 3.361886e-8;
+  //cout << "LINE 405, be10 prod: " <<  temp_map["Be10_Natoms_sigma_modified_for_fast"] << endl;
 
   // Al-26 interaction cross-sections
   temp_map["k_neg26"] = 0.296 * 0.6559 * 0.022;
   temp_map["delk_neg26"] = 0.296 * 0.6559 * 0.002;
   temp_map["sigma190_26"] = 1.41e-27;
   temp_map["delsigma190_26"] = 0.17e-27;
+  temp_map["Al26_Natoms_times_sigma190"] =  1.41423e-5;
+  temp_map["Al26_Natoms_times_delsigma190"] =  1.7051e-6;
+  temp_map["Al26_Natoms_sigma_modified_for_fast"] =  2.76347e-8;
+  
 
   // Paleomagnetic records for use in time-dependent production rate schemes
   // Derived from Nat Lifton's compilation of paleomagnetic data from
@@ -501,8 +511,20 @@ void LSDCRNParameters::P_mu_total(double z,double h)
 {
   map<string,double> temp_data_map;
 
+  //cout << "CHECKING MUON FLUX, Line 504 " << endl;
+
+  // first check to see if CRONUS data maps are set
+  if(CRONUS_data_map.find("l10") == CRONUS_data_map.end())
+  {
+    cout << "You haven't set the CRONUS data map. I'm doing that for you now!" << endl;
+    set_CRONUS_data_maps();
+  }
+
+
   // calculator the atmospheric depth in g/cm2
   double H = (1013.25 - h)*1.019716;
+  //cout << "Atmospheric depth is: " << H << " g/cm^2" << endl;
+  
 
   // find the vertical flux at SLHL
   double a = 258.5*(pow(100,2.66));
@@ -525,6 +547,8 @@ void LSDCRNParameters::P_mu_total(double z,double h)
 
   // find the stopping rate of vertical muons at site
   double R_vert_site = R_vert_slhl*exp(H/LZ(z));
+  //cout << "LZ(" << z << "): " << LZ(z) << endl;
+  //cout << "R_vert_slhl: " << R_vert_slhl << " R_vert_site: " << R_vert_site << endl;
 
   // find the flux of vertical muons at site
   // integrate
@@ -534,13 +558,16 @@ void LSDCRNParameters::P_mu_total(double z,double h)
   // 1 part in 10^4. 
   double tol = phi_vert_slhl*1e-4;
   double phi_vert_site = integrate_muon_flux(z, H, tol);
-   
+  
   // invariant flux at 2e5 g/cm2 depth - constant of integration
   // calculated using commented-out formula above
   double phi_200k = (a/((2.0e5+21000.0)*((pow((2.0e5+1000.0),1.66)) + b)))
                       *exp(-5.5e-6 * 2.0e5);
+  //double test_balco_error = (1.0/((2.0e5+21000.0)*((pow((2.0e5+1000.0),1.66)) + b)))
+  //                    *exp(-5.5e-6 * 2.0e5);
+                      
   phi_vert_site = phi_vert_site + phi_200k;
-
+  
   // find the total flux of muons at site
   // angular distribution exponent
   double nofz = 3.21 - 0.297*log((z+H)/100.0 + 42.0) + 1.21e-5*(z+H);
@@ -567,10 +594,14 @@ void LSDCRNParameters::P_mu_total(double z,double h)
   double Ebar = 7.6 + 321.7*(1 - exp(-8.059e-6*z)) 
                     + 50.7*(1-exp(-5.05e-7*z));
 
+
   // internally defined constants
   double aalpha = 0.75;
   
   // this needs some logic for the isotope type
+  // IMPORTANT: this doens't work because the sigmas default to zero
+  // will need to recaluclate the product of natoms times the sigmas!!
+  
   double sigma0_Be10 = CRONUS_data_map["sigma190_10"]/(pow(190.0,aalpha));
   double sigma0_Al26 = CRONUS_data_map["sigma190_26"]/(pow(190.0,aalpha));
   
@@ -580,9 +611,25 @@ void LSDCRNParameters::P_mu_total(double z,double h)
   double P_fast_Al26 = phi*Beta*(pow(Ebar,aalpha))
                           *sigma0_Al26*CRONUS_data_map["Natoms26"];
   
+  //cout << "Phi: " << phi << " Beta " << Beta << " Ebar: " << Ebar << endl
+  //     << "aalpha: " << aalpha << endl
+  //     << " prod10: " << CRONUS_data_map["Be10_Natoms_sigma_modified_for_fast"] << endl
+  //     << " prod26: " << CRONUS_data_map["Al26_Natoms_sigma_modified_for_fast"] << endl;
+       
+         
+  //double P2_10Be = phi*Beta*(pow(Ebar,aalpha))*
+  //                  CRONUS_data_map["Be10_Natoms_sigma_modified_for_fast"];
+  //double P2_26Al = phi*Beta*(pow(Ebar,aalpha))*
+  //                  CRONUS_data_map["Al26_Natoms_sigma_modified_for_fast"];                    
+  
+  //cout << "Pfast10be: " << P_fast_Be10 << " P2: " << P2_10Be << endl;
+  //cout << "Pfast26Al: " << P_fast_Al26 << " P2: " << P2_26Al << endl;
+  
   // negative muon capture
   double P_neg_Be10 = R*CRONUS_data_map["k_neg10"];
   double P_neg_Al26 = R*CRONUS_data_map["k_neg26"];
+
+  //cout << "Sig0: " << sigma0_Be10 << " Pfast: " << P_fast_Be10 << " P_neg: " << P_neg_Be10 << endl;
 
   temp_data_map["phi_vert_slhl"] = phi_vert_slhl;
   temp_data_map["R_vert_slhl"] = R_vert_slhl;
@@ -628,7 +675,9 @@ double LSDCRNParameters::integrate_muon_flux(double z, double H, double toleranc
     // locations of spacings
     a = b;
     b = a+spacing; 
-    intermediate = (b-a)/2.0;
+    intermediate = (b+a)/2.0;
+    
+    //cout << "z["<<i<<"]: " << a << " i+1/2: " << intermediate << " i+1: " << b << endl;
     
     // functions evaluated at spacings
     fa = fb;
@@ -639,12 +688,16 @@ double LSDCRNParameters::integrate_muon_flux(double z, double H, double toleranc
   }
   last_sum = sum;
   
+  //cout << "LINE 660, integrating muon flux, initial guess: " << last_sum << endl;
+  
   // now loop until the error tolerance is reached
   do
   {
     // increase the density of the nodes
     n_nodes = n_nodes*2;
     spacing = (end_z-z)/double(n_nodes-1);
+    
+    //cout << "Nodes: " << n_nodes << " and spacing: " << spacing << endl;
     
     b = start_z;
     fb = Rv0(b)*exp(H/LZ(b));
@@ -654,7 +707,7 @@ double LSDCRNParameters::integrate_muon_flux(double z, double H, double toleranc
       // locations of spacings
       a = b;
       b = a+spacing; 
-      intermediate = (b-a)/2.0;
+      intermediate = (b+a)/2.0;
     
       // functions evaluated at spacings
       fa = fb;
@@ -670,6 +723,8 @@ double LSDCRNParameters::integrate_muon_flux(double z, double H, double toleranc
     
     // reset the last sum
     last_sum = sum;
+    
+    //cout << "this sum: " << last_sum << endl;
   
   } while(integral_difference>tolerance);
   
@@ -793,6 +848,10 @@ double LSDCRNParameters::LZ(double z)
     z = 1.0;
   }
 
+  double log_z = log(z);
+  //cout << "z is:" << z << " and log z is: " << log_z << endl;
+
+
   // obtain momenta
   // use log-linear interpolation
   int n_momentum_dpoints = int(data_for_LZ_momentum.size());
@@ -802,8 +861,11 @@ double LSDCRNParameters::LZ(double z)
   {
     log_momentum.push_back(log(data_for_LZ_momentum[i]));
     log_range.push_back(log(data_for_LZ_range[i]));
+    //cout << "Momentum: " << log_momentum[i] << " range: " << log_range[i] << endl;
   }
-  double P_MeVc = exp(interp1D_ordered(log_range,log_momentum,z));
+  double P_MeVc = exp(interp1D_ordered(log_range,log_momentum,log_z));
+  //cout << "log_z: " <<  log_z << " interp: " 
+  //     << interp1D_ordered(log_range,log_momentum,log_z) << " P_MeVc: " << P_MeVc << endl;
 
   // obtain attenuation lengths
   double out = 263.0 + 150*(P_MeVc/1000.0);
