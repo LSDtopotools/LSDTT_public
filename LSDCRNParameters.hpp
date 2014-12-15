@@ -122,7 +122,7 @@ class LSDCRNParameters
   vector<double> calculate_muon_production_CRONUS(double z, double h);
 
 
-  /// @brief alculates the production rate of Al-26 or Be-10 by muons
+  /// @brief calculates the production rate of Al-26 or Be-10 by muons
   /// @detail This uses the scheme in Heisinger and others (2002, 2 papers). The
   ///  vertically traveling muon flux is scaled to the site elevation using
   ///  energy-dependent attenuation lengths from Boezio et al. (2000). See the 
@@ -143,6 +143,19 @@ class LSDCRNParameters
   /// @author SMM
   /// @date 06/12/2014
   void P_mu_total(double z,double h);
+ 
+  /// @brief A wrapper for the P_mu_total function that replaces 
+  ///  total production for 10Be and 26Al due to muons
+  /// @param z depth below the surface z (g/cm2)
+  /// @param h atmospheric pressure (hPa)
+  /// @param Be10_total_mu the total muon production for 10Be. This
+  ///  is replaced by the function. 
+  /// @param 26Al_total_mu the total muon production for 26Al. This
+  ///  is replaced by the function.  
+  /// @author SMM
+  /// @date 15/12/2014
+  void P_mu_total_return_nuclides(double z,double h, double& Be10_total_mu,
+                                     double& Al26_total_mu);
  
   /// @brief this subfunction returns the stopping rate of vertically traveling muons
   /// as a function of depth z at sea level and high latitude.
@@ -257,6 +270,23 @@ class LSDCRNParameters
   /// @author SMM
   /// @date 14/12/2014
   vector<double> get_decay_coefficients(bool use_CRONUS);
+  
+  /// @brief This function calculates the CRONUS version 
+  ///  of the mu production vector
+  /// @param pressure takes atmospheric pressure in HPa
+  /// @param effective_depth and the effective depth in g/cm^2
+  /// @param z_mu a vector<double> that is replaced in the function with the 
+  ///  muon production depths
+  /// @param P_mu_z_10Be a vector<double> that is replaced in the function with 
+  ///  muon production at the depths in z_mu. This one for 10Be.
+  /// @param P_mu_z_10Be a vector<double> that is replaced in the function with 
+  ///  muon production at the depths in z_mu. This one for 26Al.  
+  /// @author SMM
+  /// @date 15/12/2014
+  void get_CRONUS_P_mu_vectors(double pressure, double sample_effective_depth,
+                               vector<double>& z_mu, vector<double>& P_mu_z_10Be,
+                               vector<double>& P_mu_z_26Al);
+  
   
   private:	
   /// @brief This is called by the default constructor. 

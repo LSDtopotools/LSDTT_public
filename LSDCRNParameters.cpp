@@ -693,8 +693,27 @@ void LSDCRNParameters::P_mu_total(double z,double h)
   temp_data_map["LZ"] = LZ(z);
 
   CRONUS_muon_data = temp_data_map;
+  
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function wraps the P_mu_tot function and replaces the 10Be and
+// 26Al production rates
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParameters::P_mu_total_return_nuclides(double z,double h, 
+                                   double& Be10_total_mu, double& Al26_total_mu)
+{
+  // get the muon roduction
+  P_mu_total(z,h);
+  
+  double p10 = CRONUS_muon_data["P_fast_10Be"]+CRONUS_muon_data["P_neg_10Be"];
+  double p26 = CRONUS_muon_data["P_fast_26Al"]+CRONUS_muon_data["P_neg_26Al"];
+  
+  Be10_total_mu = p10;
+  Al26_total_mu = p26;
+}                                   
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this subfunction does the integration of muon sotpping to get the total
@@ -1474,6 +1493,53 @@ vector<double> LSDCRNParameters::get_decay_coefficients(bool use_CRONUS)
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This function calculates the CRONUS version of the mu production vector
+// takes atmospheric pressure in HPa
+// and the effective depth in g/cm^2
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDCRNParameters::get_CRONUS_P_mu_vectors(double pressure, double sample_effective_depth,
+                               vector<double>& z_mu, vector<double>& P_mu_z_10Be,
+                               vector<double>&  P_mu_z_26Al)
+{
+  // parameters for setting up the log vector
+  int n_z = 101;
+  double end_log = 5.3;
+  double spacing = end_log/(double(n_z-1));
+  double this_log10;
+  
+  // set up vectors to hold production rates
+  vector<double> zz_mu;
+  vector<double> zP_mu_z_10Be;
+  vector<double> zP_mu_z_26Al;
+  
+  // get the top values of the vectors
+  double this_z = 0.5*sample_effective_depth;
+  double this_P_mu_10Be =0;
+  double this_P_mu_26Al =0;
+  P_mu_total_return_nuclides(this_z,pressure, this_P_mu_10Be, this_P_mu_26Al);
+  
+  zz_mu.push_back(this_z);
+  zP_mu_z_10Be.push_back(this_P_mu_10Be);
+  zP_mu_z_26Al.push_back(this_P_mu_26Al);
+  
+  // first build the vector of depths
+  for(int i = 0; i<101; i++)
+  {
+    this_log10 = double(i)*spacing;
+    this_z = pow(10.0,this_log10)+0.5*sample_effective_depth;
+    P_mu_total_return_nuclides(this_z,pressure, this_P_mu_10Be, this_P_mu_26Al);
+    
+    zz_mu.push_back(this_z);
+    zP_mu_z_10Be.push_back(this_P_mu_10Be);
+    zP_mu_z_26Al.push_back(this_P_mu_26Al); 
+  }
+
+  z_mu=zz_mu;
+  P_mu_z_10Be = zP_mu_z_10Be;
+  P_mu_z_26Al = zP_mu_z_26Al;
+}
 
 
 #endif
