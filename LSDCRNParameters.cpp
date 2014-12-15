@@ -1542,4 +1542,74 @@ void LSDCRNParameters::get_CRONUS_P_mu_vectors(double pressure, double sample_ef
 }
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Integrate muons flux as as a function of erosion rate
+// Note this is different from CRONUS calculator since this uses Simpson's
+// Rule whereas CRONUS uses trapezoid rule
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParameters::integrate_muon_flux_for_erosion(double E, 
+                           vector<double> z_mu, vector<double> P_mu_10Be,
+                           vector<double> P_mu_26Al,
+                           double& Be10_mu_N, double& Al26_mu_N)
+{                          
+  
+  if(E == 0)
+  {
+    cout << "Warning, you are about to divide by zero in" << endl
+         << "LSDCRNParameters::integrate_muon_flux_for_erosion" << endl;
+  }
+  
+  // get the decay coefficients
+  bool use_CRONUS = true;
+  vector<double> decay_coeff = get_decay_coefficients(use_CRONUS);
+  
+  // get the time vector, given by dividing depth by erosion. 
+  // !!IMPORTANT Erosion is in g/cm^2/yr!!
+  int n_z_nodes = int(z_mu.size());
+  vector<double> t_mu(n_z_nodes,0.0);
+  for(int i = 0; i<n_z_nodes; i++)
+  {
+    t_mu[i] = z_mu[i]/E;
+  
+  }
+
+  // now integrate over this vector using simpsons rule
+  double a,b, intermediate;
+  double fa10,fb10,fi10,sum10;
+  double fa26,fb26,fi26,sum26;
+  
+  // set up the locations to evaluate the integral
+  b = t_mu[0];
+  
+  fb10 = P_mu_10Be[0]*(exp(-decay_coeff[0]*t_mu[0]));
+  fb26 = P_mu_26Al[0]*(exp(-decay_coeff[1]*t_mu[0]));
+  sum10 = 0;
+  sum26 = 0;
+  for(int i = 1; i< n_z_nodes; i++)
+  {
+    // locations of spacings
+    a = b;
+    b = t_mu[i]; 
+    intermediate = (b+a)/2.0;
+    
+    // functions evaluated at spacings
+    fa10 = fb10;
+    fa26 = fb26;
+    
+    fi10 = P_mu_10Be[0]*(exp(-decay_coeff[0]*intermediate));
+    fi26 = P_mu_26Al[0]*(exp(-decay_coeff[1]*intermediate));
+    
+    fb10 = P_mu_10Be[0]*(exp(-decay_coeff[0]*b));
+    fb26 = P_mu_26Al[0]*(exp(-decay_coeff[1]*b));
+    
+    sum10+= ((b-a)/6.0)*(fa10+4.0*fi10+fb10);
+    sum26+= ((b-a)/6.0)*(fa26+4.0*fi26+fb26);
+  }
+
+  // now return the integral
+  Be10_mu_N = sum10;
+  Al26_mu_N = sum26;
+}
+
+
 #endif

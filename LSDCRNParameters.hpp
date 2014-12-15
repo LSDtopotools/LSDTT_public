@@ -156,6 +156,9 @@ class LSDCRNParameters
   /// @date 15/12/2014
   void P_mu_total_return_nuclides(double z,double h, double& Be10_total_mu,
                                      double& Al26_total_mu);
+                                     
+                                     
+                                     
  
   /// @brief this subfunction returns the stopping rate of vertically traveling muons
   /// as a function of depth z at sea level and high latitude.
@@ -287,7 +290,26 @@ class LSDCRNParameters
                                vector<double>& z_mu, vector<double>& P_mu_z_10Be,
                                vector<double>& P_mu_z_26Al);
   
-  
+  /// @brief subroutine for integrating the muon flux for a given erosion rate
+  /// @detail uses simplsons rule, keeps refining nodes until a tolerance is 
+  ///  reached. 
+  /// @detail Note this is a little different from the CRONUS calculator since
+  ///  CRONUS uses trapezoid rule and this uses Simpson's rule so this function
+  ///  is a little bit more accurate.
+  /// @param E the target erosion rate
+  /// @param z_mu a vector of effective depths over which to integrate. 
+  ///  comes from the get_CRONUS_P_mu_vectors
+  /// @param P_mu_z_10Be a vector<double> that is muon production at the depths 
+  ///   in z_mu. This one for 10Be.
+  /// @param P_mu_z_10Be a vector<double> that is muon production at the depths 
+  ///   in z_mu. This one for 26Al.
+  /// @param Be10_mu_N atoms producted of 10Be. Is replaced in the function.
+  /// @param Al26_mu_N atoms produced of 26Al. Is replaced in the function
+  /// @author SMM
+  /// @date 15/12/2014
+  void integrate_muon_flux_for_erosion(double E, vector<double> z_mu,
+                           vector<double> P_mu_10Be, vector<double> P_mu_26Al,
+                           double& Be10_mu_N, double& Al26_mu_N);
   private:	
   /// @brief This is called by the default constructor. 
   /// It is the only possible constructor
