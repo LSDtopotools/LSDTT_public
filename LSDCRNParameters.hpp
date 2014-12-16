@@ -310,6 +310,25 @@ class LSDCRNParameters
   void integrate_muon_flux_for_erosion(double E, vector<double> z_mu,
                            vector<double> P_mu_10Be, vector<double> P_mu_26Al,
                            double& Be10_mu_N, double& Al26_mu_N);
+  
+  /// @brief this function calculates the total atoms from spallation
+  /// for a given erosion rate that replicates the CRONUS calculator
+  /// @param E the erosion rate in g/cm^2/yr
+  /// @param thick_SF the thickness scaling factor (between 0 and 1)
+  /// @param P_sp_10Be The production rate of 10Be. Includes shielding corrections
+  /// @param P_sp_26Al The production rate of 26Al. Includes shielding corrections
+  /// @param Be10_sp_N The number of atoms from spallation of Be10
+  ///  replaced within this function
+  /// @param Al26_sp_N The number of atoms from spallation of Al26
+  ///  replaced within this function
+  /// @author SMM
+  /// @date 15/12/2014
+  void integrate_nonTD_spallation_flux_for_erosion(double E, 
+                                   double thick_SF,
+                                   double P_sp_10Be, double P_sp_26Al, 
+                                   double& Be10_sp_N,double& Al26_sp_N);
+  
+                           
   private:	
   /// @brief This is called by the default constructor. 
   /// It is the only possible constructor

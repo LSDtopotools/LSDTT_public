@@ -1341,6 +1341,9 @@ void LSDCRNParameters::scale_F_values(double single_scaling)
   //cout << "FINISHED 14C x is: " << x << " and test_scaling is: " << test_scaling << endl;
   //cout << F_14C[0] << endl << F_14C[1] << endl << F_14C[2] << endl << F_14C[3] << endl;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
@@ -1540,7 +1543,7 @@ void LSDCRNParameters::get_CRONUS_P_mu_vectors(double pressure, double sample_ef
   P_mu_z_10Be = zP_mu_z_10Be;
   P_mu_z_26Al = zP_mu_z_26Al;
 }
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Integrate muons flux as as a function of erosion rate
@@ -1610,6 +1613,29 @@ void LSDCRNParameters::integrate_muon_flux_for_erosion(double E,
   Be10_mu_N = sum10;
   Al26_mu_N = sum26;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function gets the spallation flux for a given erosion rate
+// for non-time dependant production
+// It is used in the CRONUS emulator
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParameters::integrate_nonTD_spallation_flux_for_erosion(double E, 
+                                   double thick_SF,
+                                   double P_sp_10Be, double P_sp_26Al, 
+                                   double& Be10_sp_N,double& Al26_sp_N)
+{
+  // get analysitcal solution of spallation production
+  bool use_CRONUS = true;
+  vector<double> decay = get_decay_coefficients(use_CRONUS);
+  double A_10Be =  decay[0]+E/get_spallation_attenuation_length(use_CRONUS);
+  double A_26Al =  decay[1]+E/get_spallation_attenuation_length(use_CRONUS);
 
+  Be10_sp_N = thick_SF*P_sp_10Be/A_10Be;
+  Al26_sp_N = thick_SF*P_sp_26Al/A_26Al;
+
+} 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+                                         
 #endif

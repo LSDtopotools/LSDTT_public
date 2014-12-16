@@ -873,9 +873,27 @@ class LSDCRNParticle: public LSDParticle
   vector<double> CRONUS_initial_guess(LSDCRNParameters& LSDCRNP, double pressure,
                                  double lat, double N_10Be, double N_26Al, 
                                  double topo_scale, double snow_scale);
-//
-// Updated for c++ by Simon Mudd
-// 05/12/2014
+
+  /// @brief This function wraps the functions for getting the erosion rate 
+  ///  from Al and Be data. 
+  /// @detail The function emulates the get_al_be_erosion.m from the
+  ///  CRONUS calculator, written by Greg Balco
+  /// @param LSDCRNP and LSDCRNParameters object
+  /// @param pressure the atmospheric pressure in hPa
+  /// @param lat the latitude  
+  /// @param N_10Be the number of 10Be atoms
+  /// @param N_26 the number of 26Al atoms
+  /// @param topo_scale the topographic scaling (between 0 and 1)
+  /// @param snow_scale the snow scaling (between 0 and 1)
+  /// @return Erosion_rates a vector<double> Eguess
+  ///  Eguess[0] = 10Be
+  ///  Eguess[1] = 26Al
+  /// @author SMM
+  /// @date 16/12/2014
+  void CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRNP, double pressure,
+                      double lat, double N_10Be, double N_26Al, 
+                      double topo_scale, double snow_scale);
+
 
 
   protected:

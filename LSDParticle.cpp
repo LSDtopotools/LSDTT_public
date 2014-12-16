@@ -1711,6 +1711,23 @@ vector<double> LSDCRNParticle::CRONUS_initial_guess(LSDCRNParameters& LSDCRNP, d
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// CRONUS Get erosion
+// This function emulates the CroNUS calculator
+// get_al_be_erosion.m
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRNP, double pressure,
+                      double lat, double N_10Be, double N_26Al, 
+                      double topo_scale, double snow_scale)
+{
+  // First get the initial guess
+  vector<double> initial_guess = CRONUS_initial_guess(LSDCRNP, pressure, lat, 
+                                         N_10Be, N_26Al, topo_scale, snow_scale);
+
+
+}
+
+
 #endif
 
 
