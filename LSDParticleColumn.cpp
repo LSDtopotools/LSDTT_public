@@ -281,7 +281,6 @@ LSDParticleColumn LSDParticleColumn::update_CRN_list_rock_only_eros_limit_3CRN(
   part_iter = CRNParticleList.begin();
   while(part_iter != CRNParticleList.end())
   {
-		
     // get the old zeta location
     z_p = ( *part_iter ).get_zetaLoc();
     
@@ -297,7 +296,7 @@ LSDParticleColumn LSDParticleColumn::update_CRN_list_rock_only_eros_limit_3CRN(
     {
       d_frac = (uplift_surf-z_p)/(depth_lost);
       effective_dt = d_frac*dt;
-			
+
       // it has zero depth (sampled form surface)
       d = 0;
       eff_d = 0;
@@ -380,7 +379,7 @@ void LSDParticleColumn::collect_particles(vector<LSDParticleColumn>& ColList_vec
   
   // loop through them, aggregating the particles. 
   list<LSDCRNParticle>::iterator part_iter;
-	
+
   for (int i = 0; i<N_cols; i++)
   {
     list<LSDCRNParticle> list_from_col = ColList_vec[i].getCRNParticleList();
@@ -435,17 +434,16 @@ void LSDParticleColumn::print_particle_properties_to_screen(LSDCRNParameters& CR
   part_iter = CRNParticleList.begin();
   while(part_iter != CRNParticleList.end())
   {
-		
     // get the zeta location
     double z_p = ( *part_iter ).get_zetaLoc();
     double d_loc =   ( *part_iter ).getdLoc();
     double effD =  ( *part_iter ).geteffective_dLoc();
     double conc10Be = ( *part_iter ).getConc_10Be();
-		      //double conc14C = ( *part_iter ).getConc_14C();
-		      //double conc21Ne = ( *part_iter ).getConc_21Ne();
+          //double conc14C = ( *part_iter ).getConc_14C();
+          //double conc21Ne = ( *part_iter ).getConc_21Ne();
     double appEros10Be = ( *part_iter ).apparent_erosion_10Be_neutron_only(RockDensity, CRNparam);
-		      //double appEros14C = ( *part_iter ).apparent_erosion_14C_neutron_only(RockDensity, CRNparam);
-		      //double appEros21Ne = ( *part_iter ).apparent_erosion_21Ne_neutron_only(RockDensity, CRNparam);
+          //double appEros14C = ( *part_iter ).apparent_erosion_14C_neutron_only(RockDensity, CRNparam);
+          //double appEros21Ne = ( *part_iter ).apparent_erosion_21Ne_neutron_only(RockDensity, CRNparam);
 
 
     cout << z_p << "\t " << d_loc << "\t" << effD << "\t" << conc10Be << "\t" << appEros10Be << endl;

@@ -1014,31 +1014,28 @@ void LSDCRNParticle::update_all_CRN_neutron_only(double dt, double erosion_rate,
 void LSDCRNParticle::update_fallout10Be_simple_density(double dt, double M_supply_surface,
 					double rho_skg, double k_f10Be, double deltad_m, LSDCRNParameters& CRNp)
 {
-	// first find which depth interval the particle is in
-	int depth_interval = int(dLoc/deltad_m);
-	double d_top = double(depth_interval)*deltad_m*100;
-	double d_bottom = double(depth_interval+1)*deltad_m*100;
-	double deltad = deltad_m*100;
-	// the factor of 100 is to convert to cm
+  // first find which depth interval the particle is in
+  int depth_interval = int(dLoc/deltad_m);
+  double d_top = double(depth_interval)*deltad_m*100;
+  double d_bottom = double(depth_interval+1)*deltad_m*100;
+  double deltad = deltad_m*100;
+  // the factor of 100 is to convert to cm
 
-	// convert density to g/cm^3
-	double rho_s = rho_skg/1000;
+  // convert density to g/cm^3
+  double rho_s = rho_skg/1000;
 
-	// get the cutoff depth
-	double cutoff_depth = 5/(rho_s*k_f10Be);
+  // get the cutoff depth
+  double cutoff_depth = 5/(rho_s*k_f10Be);
 
-	if (dLoc*100 > cutoff_depth)
-	{
-		Conc_f10Be += - Conc_f10Be*CRNp.lambda_10Be;
-	}
-	else
-	{
-		Conc_f10Be += dt*M_supply_surface*( exp(-k_f10Be*rho_s*d_top) -exp(-k_f10Be*rho_s*d_bottom) )/
-		              (deltad*rho_s*one_min_exp_neg_5) - Conc_f10Be*CRNp.lambda_10Be;
-		//		cout << " added conc: " <<  dt*M_supply_surface*( exp(-k_f10Be*rho_s*d_top)
-		//						-exp(-k_f10Be*rho_s*d_bottom) )/
-		//		              (deltad*rho_s*one_min_exp_neg_5) << endl;
-	}
+  if (dLoc*100 > cutoff_depth)
+  {
+    Conc_f10Be += - Conc_f10Be*CRNp.lambda_10Be;
+  }
+  else
+  {
+    Conc_f10Be += dt*M_supply_surface*( exp(-k_f10Be*rho_s*d_top) -exp(-k_f10Be*rho_s*d_bottom) )/
+                  (deltad*rho_s*one_min_exp_neg_5) - Conc_f10Be*CRNp.lambda_10Be;
+  }
 }
 
 // this updates fallout radionuclides
@@ -1051,77 +1048,109 @@ void LSDCRNParticle::update_fallout10Be_simple_density(double dt, double M_suppl
 // the units of k_f10Be here are cm^2/g
 // chi_f10Be is the fraction of shallow fallout 10Be
 void LSDCRNParticle::update_fallout10Be_simple_density_2exp(double dt, double M_supply_surface,
-					double rho_skg, double k1_f10Be, double k2_f10Be, double chi_f10Be, double deltad_m, LSDCRNParameters& CRNp)
+                              double rho_skg, double k1_f10Be, double k2_f10Be, 
+                              double chi_f10Be, double deltad_m, LSDCRNParameters& CRNp)
 {
-	// first find which depth interval the particle is in
-	int depth_interval = int(dLoc/deltad_m);
-	double d_top = double(depth_interval)*deltad_m*100;
-	double d_bottom = double(depth_interval+1)*deltad_m*100;
-	double deltad = deltad_m*100;
-	// the factor of 100 is to convert to cm
+  // first find which depth interval the particle is in
+  int depth_interval = int(dLoc/deltad_m);
+  double d_top = double(depth_interval)*deltad_m*100;
+  double d_bottom = double(depth_interval+1)*deltad_m*100;
+  double deltad = deltad_m*100;
+  // the factor of 100 is to convert to cm
 
 	// convert density to g/cm^3
 	double rho_s = rho_skg/1000;
 
-	// get the cutoff depth for k1
-	double cutoff_depth1 = 5/(rho_s*k1_f10Be);
-	double cutoff_depth2 = 5/(rho_s*k2_f10Be);
+  // get the cutoff depth for k1
+  double cutoff_depth1 = 5/(rho_s*k1_f10Be);
+  double cutoff_depth2 = 5/(rho_s*k2_f10Be);
 
-	if (dLoc*100 > cutoff_depth2)
-	{
-		Conc_f10Be += - Conc_f10Be*CRNp.lambda_10Be;
-	}
-	if (dLoc*100 < cutoff_depth2 && dLoc*100 > cutoff_depth1)
-	{
-		Conc_f10Be += dt*M_supply_surface*(1-chi_f10Be)*( exp(-k2_f10Be*rho_s*d_top) -exp(-k2_f10Be*rho_s*d_bottom) )/
-		              (deltad*rho_s*one_min_exp_neg_5) - Conc_f10Be*CRNp.lambda_10Be;
-	}
-	else
-	{
-		Conc_f10Be += dt*M_supply_surface*(1-chi_f10Be)*( exp(-k2_f10Be*rho_s*d_top) -exp(-k2_f10Be*rho_s*d_bottom) )/
-		               (deltad*rho_s*one_min_exp_neg_5) +
-		              dt*M_supply_surface*chi_f10Be*( exp(-k1_f10Be*rho_s*d_top) -exp(-k1_f10Be*rho_s*d_bottom) )/
-		               (deltad*rho_s*one_min_exp_neg_5) -
-		              Conc_f10Be*CRNp.lambda_10Be;
-		//		cout << " added conc: " <<  dt*M_supply_surface*( exp(-k_f10Be*rho_s*d_top)
-		//						-exp(-k_f10Be*rho_s*d_bottom) )/
-		//		              (deltad*rho_s*one_min_exp_neg_5) << endl;
-	}
+  if (dLoc*100 > cutoff_depth2)
+  {
+    Conc_f10Be += - Conc_f10Be*CRNp.lambda_10Be;
+  }
+  if (dLoc*100 < cutoff_depth2 && dLoc*100 > cutoff_depth1)
+  {
+    Conc_f10Be += dt*M_supply_surface*(1-chi_f10Be)*( exp(-k2_f10Be*rho_s*d_top) -exp(-k2_f10Be*rho_s*d_bottom) )/
+                  (deltad*rho_s*one_min_exp_neg_5) - Conc_f10Be*CRNp.lambda_10Be;
+  }
+  else
+  {
+    Conc_f10Be += dt*M_supply_surface*(1-chi_f10Be)*( exp(-k2_f10Be*rho_s*d_top) -exp(-k2_f10Be*rho_s*d_bottom) )/
+                   (deltad*rho_s*one_min_exp_neg_5) +
+                  dt*M_supply_surface*chi_f10Be*( exp(-k1_f10Be*rho_s*d_top) -exp(-k1_f10Be*rho_s*d_bottom) )/
+                   (deltad*rho_s*one_min_exp_neg_5) -
+                  Conc_f10Be*CRNp.lambda_10Be;
+  }
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function resets the depth and effective depth
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParticle::update_depths(double d, double ed)
 {
-	dLoc=d;
-	effective_dLoc=ed;
+  dLoc=d;
+  effective_dLoc=ed;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// this function resets the depth and calculates the effective depth
+// based on a 1 layer model
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParticle::calculate_effective_depth_one_layer(double d, double rho)
+{
+  dLoc=d;
+  
+  // now get the effective depth
+  // the 0.1 is because effective depth is in g.cm^2
+  // depth is in metres, rho is in kg/m^3
+  // so a factor of 0.1 is to convert kg/m^2 to g/cm^2
+  effective_dLoc = rho*0.1*d;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function changes the effective depth (i.e., the shielding depth)
 // for a constant rate of erosion
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParticle::erode_mass_only(double dt, double mass_erosion_rate)
 {
-	effective_dLoc-= mass_erosion_rate*dt;
+  effective_dLoc-= mass_erosion_rate*dt;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function changes the effective depth (i.e., the shielding depth)
 // for erosion that is changing linearly in time
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParticle::erode_mass_only_linear_increase(double dt, double mass_erosion_rate, double alpha)
 {
-	effective_dLoc-= 0.5*dt*(alpha*dt+2*mass_erosion_rate);
+  effective_dLoc-= 0.5*dt*(alpha*dt+2*mass_erosion_rate);
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function simply resets zeta
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParticle::update_zetaLoc(double new_zeta)
 {
-	zetaLoc = new_zeta;
+  zetaLoc = new_zeta;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function resets the zeta locations using an updated
 // surface elevation that preserves the d and effective d locations
 // it is only for use with a model that has no soil
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParticle::update_zetaLoc_with_new_surface(double new_zeta)
 {
-	zetaLoc = new_zeta-dLoc;
+  zetaLoc = new_zeta-dLoc;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -1168,6 +1197,9 @@ double LSDCRNParticle::intOfBeta(double x, double Rc)
   return out;
 
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // The deselits 2006 sclaing
@@ -1207,9 +1239,8 @@ double LSDCRNParticle::desilets2006sp(double h,double Rc)
   // now the total scaling factor
   double out = fofRc*fofx;
   return out;
-
-
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 
@@ -1298,6 +1329,8 @@ double LSDCRNParticle::lifton2006sp(double h,double Rc,double S)
   double out = exp(t1 + t2 + t3 + t4 + t5);
   return out;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Scaling from the Stone 2000 paper
@@ -1453,6 +1486,7 @@ double LSDCRNParticle::stone2000sp(double lat,double P, double Fsp)
 
   return out;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1638,12 +1672,17 @@ double LSDCRNParticle::stone2000Rcsp(double h, double Rc)
 double LSDCRNParticle::thickness_scaling_factor(LSDCRNParameters& LSDCRNP, bool use_CRONUS)
 {
   double this_Gamma;
+  //double gamma_metric;
   double thick_scale;
   if(effective_dLoc > 0)
   {
     this_Gamma = LSDCRNP.get_spallation_attenuation_length(use_CRONUS);
+    
+    //cout << "gamma: " << this_Gamma << " and eff d: "<< effective_dLoc << endl;
+    
     thick_scale = (this_Gamma/effective_dLoc)*
                         (1- exp(-effective_dLoc/this_Gamma));
+    //cout << "Thick scale is: " << thick_scale << endl;                    
   }
   else
   {

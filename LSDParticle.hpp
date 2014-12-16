@@ -754,6 +754,15 @@ class LSDCRNParticle: public LSDParticle
   /// @param delta_ed the new effective depth in g/cm^2
   void update_depths(double delta_d, double delta_ed);
 
+  /// @brief Updates the depth and calculates and updates the effective depth
+  ///  for a one layer density model (that is, all material has the same density)
+  /// @param d the depth of the particle in metres
+  /// @param rho the density of the material in kg/m^3
+  /// @author SMM
+  /// @date 16/12/2014
+  void calculate_effective_depth_one_layer(double d, double rho);
+
+
   /// @brief This assigns a new value for zeta
   /// @param new_zeta the new zeta, which is elevation above an arbitrary datum
   void update_zetaLoc(double new_zeta);
@@ -899,26 +908,26 @@ class LSDCRNParticle: public LSDParticle
   protected:
 
   /// The effective depth of the particle in g/cm^2
-  double effective_dLoc;	
+  double effective_dLoc;
 
   /// the elevation (in metres) relative to an arbitrary datum (used to interface with 
   /// landscape evolution)
-  double zetaLoc;			
+  double zetaLoc;
 
   /// concentration of 10Be in atoms/g
   double Conc_10Be;
 
   /// concentration of 26Al in atoms/g	
-  double Conc_26Al;			// a/g
+  double Conc_26Al;      // a/g
 
   /// concentration of 36Cl in atoms/g
-  double Conc_36Cl;			// a/g
+  double Conc_36Cl;      // a/g
 
   /// concentration of 14C in atoms/g
-  double Conc_14C;			// a/g
+  double Conc_14C;      // a/g
 
   /// concentration of 21Ne in atoms/g
-  double Conc_21Ne;			// a/g
+  double Conc_21Ne;      // a/g
 
   /// concentration of 3He in atoms/g
   double Conc_3He;			// a/g
