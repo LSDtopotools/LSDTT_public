@@ -1780,6 +1780,19 @@ void LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRNP, double 
   // Now get the initial guess
   vector<double> initial_guess = CRONUS_initial_guess(LSDCRNP, pressure, lat, 
                                          N_10Be, N_26Al, topo_scale, snow_scale);
+
+  // get some parameters for Stone production
+  vector<double> Prefs_st = LSDCRNP.get_Stone_Pref();
+  
+  // get the Stone scaling
+  double Fsp = 1.0;     // for the initial guess we don't adjust Fsp (as in CRONUS)
+  double stoneP = stone2000sp(lat, pressure, Fsp);
+  //cout << "LINE 1718 Lat: " << lat << " pressure: " << pressure << " stone: " << stoneP << endl;
+  
+  // retrieve the pre-scaling factors
+  double P_ref_St_10 = Prefs_st[0];
+  double P_ref_St_26 = Prefs_st[1];
+
   
   // precalculate the P_mu vectors
   vector<double> z_mu;
@@ -1788,13 +1801,24 @@ void LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRNP, double 
   LSDCRNP.get_CRONUS_P_mu_vectors(pressure, effective_dLoc, z_mu, 
                                   P_mu_z_10Be,P_mu_z_26Al);
                                   
-  //int n_zmu = int(z_mu.size());
-  //for(int i = 0; i<n_zmu; i++)
-  //{
-  //  cout << "z_mu["<<i+1<<"]: " << z_mu[i] << " P10:" << P_mu_z_10Be[i] << " P26: " << P_mu_z_26Al[i] << endl; 
-  //}                                                                                      
   
-  cout << "Initial 10Be guess: " << initial_guess[0] << " and 26Al: " << initial_guess[1] << endl;
+  // get the initial fluxes from muons and spallation
+  double Be10_mu_N;
+  double Al26_mu_N;
+  LSDCRNP.integrate_muon_flux_for_erosion(initial_guess[0],z_mu, P_mu_z_10Be,
+                           P_mu_z_26Al, Be10_mu_N, Al26_mu_N);
+                           
+  cout << "Initial muon production guess 10Be: " << Be10_mu_N << " Al26: " << Al26_mu_N << endl;
+
+  double Be10_sp_N;
+  double Al26_sp_N;
+  double P_sp_10Be = P_ref_St_10*stoneP*topo_scale*snow_scale;
+  double P_sp_26Al = P_ref_St_26*stoneP*topo_scale*snow_scale;
+  LSDCRNP.integrate_nonTD_spallation_flux_for_erosion(initial_guess[0],thickSF,
+                           P_sp_10Be, P_sp_26Al,Be10_sp_N, Al26_sp_N);
+                           
+   cout << "Initial spallation production guess 10Be: " << Be10_sp_N << " Al26: " << Al26_sp_N << endl;                                                                                                                             
+  
 }
 
 
