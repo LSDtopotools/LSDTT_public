@@ -608,6 +608,14 @@ void LSDCRNParameters::P_mu_total(double z,double h)
   double tol = phi_vert_slhl*1e-4;
   double phi_vert_site = integrate_muon_flux(z, H, tol);
   
+  //=====================
+  // I THINK below here is an error in Balco's code
+  // The below equation uses a which is calculated above, 
+  // but in balco's code a is then used as an index, so the below
+  // equation takes the index value rather than the precalculated 
+  // value of a
+  //=======================
+  
   // invariant flux at 2e5 g/cm2 depth - constant of integration
   // calculated using commented-out formula above
   double phi_200k = (a/((2.0e5+21000.0)*((pow((2.0e5+1000.0),1.66)) + b)))
@@ -643,13 +651,8 @@ void LSDCRNParameters::P_mu_total(double z,double h)
   double Ebar = 7.6 + 321.7*(1 - exp(-8.059e-6*z)) 
                     + 50.7*(1-exp(-5.05e-7*z));
 
-
   // internally defined constants
   double aalpha = 0.75;
-  
-  // this needs some logic for the isotope type
-  // IMPORTANT: this doens't work because the sigmas default to zero
-  // will need to recaluclate the product of natoms times the sigmas!!
   
   double sigma0_Be10 = CRONUS_data_map["sigma190_10"]/(pow(190.0,aalpha));
   double sigma0_Al26 = CRONUS_data_map["sigma190_26"]/(pow(190.0,aalpha));
@@ -1514,7 +1517,7 @@ void LSDCRNParameters::get_CRONUS_P_mu_vectors(double pressure, double sample_ef
   // parameters for setting up the log vector
   int n_z = 101;
   double end_log = 5.3;
-  double spacing = end_log/(double(n_z-1));
+  double spacing = end_log/(double(n_z-2));
   double this_log10;
   
   // set up vectors to hold production rates
@@ -1533,7 +1536,7 @@ void LSDCRNParameters::get_CRONUS_P_mu_vectors(double pressure, double sample_ef
   zP_mu_z_26Al.push_back(this_P_mu_26Al);
   
   // first build the vector of depths
-  for(int i = 0; i<101; i++)
+  for(int i = 0; i<n_z-1; i++)
   {
     this_log10 = double(i)*spacing;
     this_z = pow(10.0,this_log10)+0.5*sample_effective_depth;

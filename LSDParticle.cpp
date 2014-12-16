@@ -1781,6 +1781,19 @@ void LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRNP, double 
   vector<double> initial_guess = CRONUS_initial_guess(LSDCRNP, pressure, lat, 
                                          N_10Be, N_26Al, topo_scale, snow_scale);
   
+  // precalculate the P_mu vectors
+  vector<double> z_mu;
+  vector<double> P_mu_z_10Be;
+  vector<double> P_mu_z_26Al;
+  LSDCRNP.get_CRONUS_P_mu_vectors(pressure, effective_dLoc, z_mu, 
+                                  P_mu_z_10Be,P_mu_z_26Al);
+                                  
+  //int n_zmu = int(z_mu.size());
+  //for(int i = 0; i<n_zmu; i++)
+  //{
+  //  cout << "z_mu["<<i+1<<"]: " << z_mu[i] << " P10:" << P_mu_z_10Be[i] << " P26: " << P_mu_z_26Al[i] << endl; 
+  //}                                                                                      
+  
   cout << "Initial 10Be guess: " << initial_guess[0] << " and 26Al: " << initial_guess[1] << endl;
 }
 
