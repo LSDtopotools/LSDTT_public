@@ -284,6 +284,9 @@ void LSDCRNParameters::set_CRONUS_data_maps()
   // Al-26 decay constant -- value compatible with Nishiizumi standards
   temp_map["l26"] = 9.83e-7;
   
+  
+  //cout << "Creating CRONUS data maps, lambda 10: " << temp_map["l10"]
+  //     << " and lambda 26: " << temp_map["l26"] << endl;
 
   // Note that the uncertainty is not used in exposure-age or erosion-rate
   // calculators. Here only for development purposes
@@ -1451,8 +1454,8 @@ double LSDCRNParameters::get_spallation_attenuation_length(bool use_CRONUS)
     {
       //cout << "You haven't set the CRONUS data map. I'm doing that for you now!" << endl;
       set_CRONUS_data_maps();
-      att_length = CRONUS_data_map["Lsp"];
-    }    
+    }
+    att_length = CRONUS_data_map["Lsp"];    
   
   }
   else
@@ -1480,10 +1483,12 @@ vector<double> LSDCRNParameters::get_decay_coefficients(bool use_CRONUS)
     {
       //cout << "You haven't set the CRONUS data map. I'm doing that for you now!" << endl;
       set_CRONUS_data_maps();
+    }  
+    decay_constants[0] = CRONUS_data_map["l10"];
+    decay_constants[1] = CRONUS_data_map["l26"];
       
-      decay_constants[0] = CRONUS_data_map["l10"];
-      decay_constants[1] = CRONUS_data_map["l26"];
-    }    
+    //cout << "Getting lambda, it is for 10Be: " << CRONUS_data_map["l10"] << endl;
+        
   
   }
   else

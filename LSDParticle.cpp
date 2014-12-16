@@ -1478,11 +1478,13 @@ double LSDCRNParticle::stone2000sp(double lat,double P, double Fsp)
   // interpolate for actual elevation
   double M = interp1D_ordered(ilats, m_index_at_given_P, lat);
 
+  //cout << "S: " << S << " M: " << M << " Fsp: " << Fsp << endl;
+
   // Combine spallogenic and muogenic production; return
   double Fm = 1 - Fsp;
   double out = ((S * Fsp) + (M * Fm));
   
-  cout << "Stone 2000 scaling is: "  << out << endl;
+  //cout << "Stone 2000 scaling is: "  << out << endl;
 
   return out;
 }
@@ -1696,6 +1698,7 @@ double LSDCRNParticle::thickness_scaling_factor(LSDCRNParameters& LSDCRNP, bool 
 // This function is the initial guess of erosion rate
 // that repicates the initial guesss component of the CRONUS 
 // erosion rate function
+// The erosion returned is in g/cm^2/yr
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 vector<double> LSDCRNParticle::CRONUS_initial_guess(LSDCRNParameters& LSDCRNP, double pressure,
                                  double lat, double N_10Be, double N_26Al, 
@@ -1712,13 +1715,15 @@ vector<double> LSDCRNParticle::CRONUS_initial_guess(LSDCRNParameters& LSDCRNP, d
   vector<double> Prefs_st = LSDCRNP.get_Stone_Pref();
   
   // get the Stone scaling
-  double Fsp = 0.978;
+  double Fsp = 1.0;     // for the initial guess we don't adjust Fsp (as in CRONUS)
   double stoneP = stone2000sp(lat, pressure, Fsp);
+  //cout << "LINE 1718 Lat: " << lat << " pressure: " << pressure << " stone: " << stoneP << endl;
   
   // retrieve the pre-scaling factors
   double P_ref_St_10 = Prefs_st[0];
   double P_ref_St_26 = Prefs_st[1];
   
+
   // get the scaling from thickness
   bool use_CRONUS = true;
   double this_thickSF = thickness_scaling_factor(LSDCRNP, use_CRONUS);
@@ -1728,8 +1733,16 @@ vector<double> LSDCRNParticle::CRONUS_initial_guess(LSDCRNParameters& LSDCRNP, d
   double P_temp_26 = (P_ref_St_26*stoneP*this_thickSF*other_shielding)
                        + muon_prod[1] + muon_prod[3];                       
 
+  //cout << "10Be fast: "  << muon_prod[0] << " 10Be neg" << muon_prod[2] << endl;
+  //cout << "P temp 10: " << P_temp_10 << endl;
+
+
   double Gamma = LSDCRNP.get_spallation_attenuation_length(use_CRONUS);
   vector<double> decay_coeff = LSDCRNP.get_decay_coefficients(use_CRONUS);
+  
+  //cout << "Gamma: " << Gamma << " N_10Be" << N_10Be << " lambda: " << decay_coeff[0] << endl;
+  
+  
   double E_lal_10 = 0.0;
   double E_lal_26 = 0.0;
   if(N_10Be > 0)
@@ -1759,11 +1772,16 @@ void LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRNP, double 
                       double lat, double N_10Be, double N_26Al, 
                       double topo_scale, double snow_scale)
 {
-  // First get the initial guess
+  bool use_CRONUS = true;
+  
+  // first scale the thickness
+  double thickSF = thickness_scaling_factor(LSDCRNP, use_CRONUS);
+  
+  // Now get the initial guess
   vector<double> initial_guess = CRONUS_initial_guess(LSDCRNP, pressure, lat, 
                                          N_10Be, N_26Al, topo_scale, snow_scale);
-
-
+  
+  cout << "Initial 10Be guess: " << initial_guess[0] << " and 26Al: " << initial_guess[1] << endl;
 }
 
 
