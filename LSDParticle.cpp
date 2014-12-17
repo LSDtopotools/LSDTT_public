@@ -540,6 +540,36 @@ LSDCRNParticle& LSDCRNParticle::operator=(LSDCRNParticle& rhs)
     return *this;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Unit conversion utilities
+// length units are in metres or g/cm^2
+// density is in kg/m^3
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+double LSDCRNParticle::convert_m_to_gpercm2(double l_in_m, double rho)
+{
+  if(rho < 500)
+  {
+    cout << "Density should be in kg/m^3, your density is: " << rho << endl;
+    cout << "Are you sure you have the correct units?" << endl;
+  }
+  
+  double l_in_gpercm2 = l_in_m*rho*0.1;
+  return l_in_gpercm2;
+}
+
+double LSDCRNParticle::convert_gpercm2_to_m(double l_in_gpercm2, double rho)
+{
+  if(rho < 500)
+  {
+    cout << "Density should be in kg/m^3, your density is: " << rho << endl;
+    cout << "Are you sure you have the correct units?" << endl;
+  }
+  
+  double l_in_m = l_in_gpercm2*10/rho;
+  return l_in_m;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 // this function just sets the concentration of cosmogenic in situ nuclides
 void LSDCRNParticle::update_cosmo_conc_const(double C_10Be, double C_26Al, double C_36Cl,
 								 double C_14C, double C_21Ne, double C_3He)
@@ -1781,6 +1811,12 @@ void LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRNP, double 
   vector<double> initial_guess = CRONUS_initial_guess(LSDCRNP, pressure, lat, 
                                          N_10Be, N_26Al, topo_scale, snow_scale);
 
+  // variable for holding the number of atoms per gram
+  double N10_this_step;
+  double N10;
+  double N26_this_step;
+  double N26;
+  
   // get some parameters for Stone production
   vector<double> Prefs_st = LSDCRNP.get_Stone_Pref();
   
@@ -1817,6 +1853,9 @@ void LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRNP, double 
   LSDCRNP.integrate_nonTD_spallation_flux_for_erosion(initial_guess[0],thickSF,
                            P_sp_10Be, P_sp_26Al,Be10_sp_N, Al26_sp_N);
                            
+   // test the 
+   
+   
    cout << "Initial spallation production guess 10Be: " << Be10_sp_N << " Al26: " << Al26_sp_N << endl;                                                                                                                             
   
 }

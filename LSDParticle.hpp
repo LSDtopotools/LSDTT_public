@@ -428,7 +428,21 @@ class LSDCRNParticle: public LSDParticle
   /// @return the surface GSDType	
   int getGSDType()	const				{ return GSDType; }
 
+  /// @brief a utility function to convert between metres and g/cm^2
+  /// @param l_in_m the length in metres
+  /// @param rho the density in kg/m^3
+  /// @author SMM
+  /// @date 17/12/2014
+  double convert_m_to_gpercm2(double l_in_m, double rho);
 
+  /// @brief a utility function to convert between metres and g/cm^2
+  /// @param l_in_gpercm2 the length in g per cm^2
+  /// @param rho the density in kg/m^3
+  /// @author SMM
+  /// @date 17/12/2014
+  double convert_gpercm2_to_m(double l_in_gpercm2, double rho);
+  
+  
   /// @brief update the 10Be concentration based on a constant erosion rate
   /// using the full production range, including muons. 
   /// @details This function solves for the updated concentration assuming

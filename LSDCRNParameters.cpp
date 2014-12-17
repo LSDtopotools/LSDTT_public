@@ -724,6 +724,11 @@ void LSDCRNParameters::P_mu_total_return_nuclides(double z,double h,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this subfunction does the integration of muon sotpping to get the total
 // muon flux
+//
+// NOTE: THIS IS RATE LIMITING
+// Will probably need to come back and try to speed up. 
+// The best way is to retain previously calculated balues, so at new
+// node spacings only the intermediate values are recalculated. 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 double LSDCRNParameters::integrate_muon_flux(double z, double H, double tolerance)
 {
@@ -760,12 +765,19 @@ double LSDCRNParameters::integrate_muon_flux(double z, double H, double toleranc
   last_sum = sum;
   
   //cout << "LINE 660, integrating muon flux, initial guess: " << last_sum << endl;
-  
+  double log_error_ratio = 0.5;
+  double node_multiplier;
   // now loop until the error tolerance is reached
   do
   {
+    // this implements and adaptive spacing between nodes, determined by the 
+    // ratio between the error and the tolerance in an attempt to speed up
+    // the integration
+    node_multiplier = 1.0+log_error_ratio;
+    
     // increase the density of the nodes
-    n_nodes = n_nodes*2;
+    n_nodes = int(double(n_nodes)*node_multiplier);
+    //cout << "Looping for simpsons, n_nodes: " << n_nodes << endl;
     spacing = (end_z-z)/double(n_nodes-1);
     
     //cout << "Nodes: " << n_nodes << " and spacing: " << spacing << endl;
@@ -791,6 +803,9 @@ double LSDCRNParameters::integrate_muon_flux(double z, double H, double toleranc
     }
     // compare this integral with the last one
     integral_difference = fabs(last_sum-sum);
+    
+    log_error_ratio = log(integral_difference/tolerance);
+    //cout << "log error_ratio: " << log_error_ratio << endl;
     
     // reset the last sum
     last_sum = sum;
@@ -1547,6 +1562,15 @@ void LSDCRNParameters::get_CRONUS_P_mu_vectors(double pressure, double sample_ef
     zP_mu_z_26Al.push_back(this_P_mu_26Al); 
   }
 
+  // we then need to take away some component of z_mu
+  // so this is matched in the ET objective function
+  // (see section 4 in get_al_be_erosion.m)
+  int n_nodes = int(zz_mu.size());
+  for(int i = 0; i<n_nodes; i++)
+  {
+    zz_mu[i] =  zz_mu[i] - sample_effective_depth*0.5;
+  }
+  
   z_mu=zz_mu;
   P_mu_z_10Be = zP_mu_z_10Be;
   P_mu_z_26Al = zP_mu_z_26Al;
@@ -1581,6 +1605,7 @@ void LSDCRNParameters::integrate_muon_flux_for_erosion(double E,
   for(int i = 0; i<n_z_nodes; i++)
   {
     t_mu[i] = z_mu[i]/E;
+    //cout << "t_mu["<<i+1<<"]: " << t_mu[i] << endl;
   
   }
 
@@ -1607,16 +1632,44 @@ void LSDCRNParameters::integrate_muon_flux_for_erosion(double E,
     fa10 = fb10;
     fa26 = fb26;
     
-    fi10 = P_mu_10Be[0]*(exp(-decay_coeff[0]*intermediate));
-    fi26 = P_mu_26Al[0]*(exp(-decay_coeff[1]*intermediate));
+    fi10 = P_mu_10Be[i]*(exp(-decay_coeff[0]*intermediate));
+    fi26 = P_mu_26Al[i]*(exp(-decay_coeff[1]*intermediate));
     
-    fb10 = P_mu_10Be[0]*(exp(-decay_coeff[0]*b));
-    fb26 = P_mu_26Al[0]*(exp(-decay_coeff[1]*b));
+    fb10 = P_mu_10Be[i]*(exp(-decay_coeff[0]*b));
+    fb26 = P_mu_26Al[i]*(exp(-decay_coeff[1]*b));
     
     sum10+= ((b-a)/6.0)*(fa10+4.0*fi10+fb10);
     sum26+= ((b-a)/6.0)*(fa26+4.0*fi26+fb26);
   }
-
+  
+  /*
+  // for error checking, try trapezoid rule
+  double sum_trap10 = 0;
+  double sum_trap26 = 0;
+  b = t_mu[0];
+  
+  fb10 = P_mu_10Be[0]*(exp(-decay_coeff[0]*t_mu[0]));
+  fb26 = P_mu_26Al[0]*(exp(-decay_coeff[1]*t_mu[0]));
+  for(int i = 1; i< n_z_nodes; i++)
+  {
+    // locations of spacings
+    a = b;
+    b = t_mu[i]; 
+    
+    // functions evaluated at spacings
+    fa10 = fb10;
+    fa26 = fb26;
+    
+    fb10 = P_mu_10Be[i]*(exp(-decay_coeff[0]*b));
+    fb26 = P_mu_26Al[i]*(exp(-decay_coeff[1]*b));
+    
+    sum_trap10+= (b-a)*0.5*(fb10+fa10);
+    sum_trap26+= (b-a)*0.5*(fb26+fa26);
+  }
+  //cout << "Simpsons  10: " << sum10 << " 26: " << sum26 << endl;
+  //cout << "Trapezoid 10: " << sum_trap10 << " 26: " << sum_trap26 << endl;
+  */
+  
   // now return the integral
   Be10_mu_N = sum10;
   Al26_mu_N = sum26;
@@ -1635,9 +1688,15 @@ void LSDCRNParameters::integrate_nonTD_spallation_flux_for_erosion(double E,
 {
   // get analysitcal solution of spallation production
   bool use_CRONUS = true;
+  
   vector<double> decay = get_decay_coefficients(use_CRONUS);
   double A_10Be =  decay[0]+E/get_spallation_attenuation_length(use_CRONUS);
   double A_26Al =  decay[1]+E/get_spallation_attenuation_length(use_CRONUS);
+
+  //cout << "Integrating spallation, LINE 1675" << endl;
+  //cout << "Psp10: " << P_sp_10Be << " Psp26: " << P_sp_26Al << endl;
+  //cout << "decay10: " << decay[0] << " decay26: " << decay[1] << endl;
+  //cout << "A10: " << A_10Be << " A26: " << A_26Al << endl;
 
   Be10_sp_N = thick_SF*P_sp_10Be/A_10Be;
   Al26_sp_N = thick_SF*P_sp_26Al/A_26Al;
