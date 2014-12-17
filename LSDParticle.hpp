@@ -255,76 +255,76 @@ class LSDCRNParticle: public LSDParticle
 {
   public:
   /// default constructor
-  LSDCRNParticle()			{ create(); }
+  LSDCRNParticle()          { create(); }
 
   /// @ brief constructor with starting x location, depth and z location
   LSDCRNParticle(int startType, double startxLoc,double startdLoc,
-					double start_effdloc, double startzloc)
-							{ create(startType,startxLoc,startdLoc,
-							  start_effdloc,startzloc); }
+          double start_effdloc, double startzloc)
+              { create(startType,startxLoc,startdLoc,
+                start_effdloc,startzloc); }
 
   /// @ brief constructor with starting location information
   LSDCRNParticle(int startType, double startxLoc, double startyLoc,
                double startdLoc, double start_effdloc, double startzloc)
-							{ create(startType,startxLoc,startyLoc,startdLoc,
-							  start_effdloc,startzloc); }
-							  
+            { create(startType,startxLoc,startyLoc,startdLoc,
+              start_effdloc,startzloc); }
+  
   LSDCRNParticle(int startType, double startxLoc,double startzeta_Loc)
-							{ create(startType,startxLoc,startzeta_Loc); }
+            { create(startType,startxLoc,startzeta_Loc); }
 
   /// @brief a create function for a volume particle
   LSDCRNParticle(int startType, int startGSDType,
-				      double startxLoc,
-	            double startdLoc, double start_effdloc,
-	            double startzLoc, double startMass,
-	            double startSurfaceArea)
-	            { create(startType, startGSDType,startxLoc,
-	                     startdLoc, start_effdloc, startzLoc, startMass,
-	                     startSurfaceArea); }
-	            
-	/// @brief a create function for a volume particle  with y loc          
+              double startxLoc,
+              double startdLoc, double start_effdloc,
+              double startzLoc, double startMass,
+              double startSurfaceArea)
+              { create(startType, startGSDType,startxLoc,
+                       startdLoc, start_effdloc, startzLoc, startMass,
+                       startSurfaceArea); }
+              
+  /// @brief a create function for a volume particle  with y loc          
   LSDCRNParticle(int startType, int startGSDType, double startxLoc, double startyLoc,
-	            double startdLoc, double start_effdloc,
-	            double startzLoc, double startMass,
-	            double startSurfaceArea)
+              double startdLoc, double start_effdloc,
+              double startzLoc, double startMass,
+              double startSurfaceArea)
               { create(startType, startGSDType, startxLoc, startyLoc,
-	                     startdLoc, start_effdloc, startzLoc, startMass,
-	                     startSurfaceArea); } 
+                       startdLoc, start_effdloc, startzLoc, startMass,
+                       startSurfaceArea); } 
 
   /// @brief constructor that includes some CRN information
   LSDCRNParticle(int startType, double startxLoc,double startzeta_Loc,
-					double startdLoc, double start_effdLoc,
-					double start_C10Be,double start_C14C)
-							{ create(startType,startxLoc,startzeta_Loc,
-								startdLoc, start_effdLoc,
-								start_C10Be, start_C14C); }
+              double startdLoc, double start_effdLoc,
+              double start_C10Be,double start_C14C)
+              { create(startType,startxLoc,startzeta_Loc,
+                startdLoc, start_effdLoc, start_C10Be,start_C14C); }
+                
   
   /// @brief constructor that includes CRN information with many nuclides
   LSDCRNParticle(int startType, double startxLoc,double startzeta_Loc,
-					double startdLoc, double start_effdLoc,
-					double start_C10Be,double start_C14C, double start_21Ne)
-							{ create(startType,startxLoc,startzeta_Loc,
-								startdLoc, start_effdLoc,
-								start_C10Be, start_C14C, start_21Ne); }
+              double startdLoc, double start_effdLoc,
+              double start_C10Be,double start_C14C, double start_21Ne)
+              { create(startType,startxLoc,startzeta_Loc,
+                startdLoc, start_effdLoc,
+                start_C10Be, start_C14C, start_21Ne); }
   
   /// @brief constructor that retains all data 
   LSDCRNParticle(int startType, int startGSDType, int startCellIndex, double startAge, double startOSLAge,
-					double startxLoc,double startyLoc, double startdLoc, double startefdLoc,
-					double startzLoc, double start_C10Be, double start_C26Al,
-					double start_C36Cl, double start_C14C,
-					double start_C21Ne, double start_C3He,
-					double start_Cf7Be, double start_Cf10Be,
-					double start_Cf210Pb, double start_Cf137Cs, 
-          double start_Mass, double start_StartingMass,
-					double start_SurfaceArea)
-							{ create(startType, startGSDType, startCellIndex, startAge, startOSLAge,
-								startxLoc, startyLoc,startdLoc, startefdLoc,
-								startzLoc, start_C10Be, start_C26Al,
-								start_C36Cl, start_C14C,
-								start_C21Ne, start_C3He,
-								start_Cf7Be, start_Cf10Be,
-								start_Cf210Pb, start_Cf137Cs,
-								start_Mass, start_StartingMass,start_SurfaceArea); }
+              double startxLoc,double startyLoc, double startdLoc, double startefdLoc,
+              double startzLoc, double start_C10Be, double start_C26Al,
+              double start_C36Cl, double start_C14C,
+              double start_C21Ne, double start_C3He,
+              double start_Cf7Be, double start_Cf10Be,
+              double start_Cf210Pb, double start_Cf137Cs, 
+              double start_Mass, double start_StartingMass,
+              double start_SurfaceArea)
+              { create(startType, startGSDType, startCellIndex, startAge, startOSLAge,
+                startxLoc, startyLoc,startdLoc, startefdLoc,
+                startzLoc, start_C10Be, start_C26Al,
+                start_C36Cl, start_C14C,
+                start_C21Ne, start_C3He,
+                start_Cf7Be, start_Cf10Be,
+                start_Cf210Pb, start_Cf137Cs,
+                start_Mass, start_StartingMass,start_SurfaceArea); }
 
 
   /// @brief The copy constructor
@@ -332,30 +332,30 @@ class LSDCRNParticle: public LSDParticle
   /// @author SMM
   /// @date 01/01/2010
   LSDCRNParticle(const LSDCRNParticle& tP)
-    	{ create(tP.getType(), tP.getGSDType(), tP.getCellIndex(), tP.getAge(),tP.getOSLage(),
+      { create(tP.getType(), tP.getGSDType(), tP.getCellIndex(), tP.getAge(),tP.getOSLage(),
                tP.getxLoc(),tP.getyLoc(),tP.getdLoc(),
-    	         tP.geteffective_dLoc(),tP.get_zetaLoc(),tP.getConc_10Be(),
-    	         tP.getConc_26Al(), tP.getConc_36Cl(), tP.getConc_14C(),
-    	         tP.getConc_21Ne(), tP.getConc_3He(),
-    	         tP.getConc_f7Be(), tP.getConc_f10Be(),
-    	         tP.getConc_f210Pb(), tP.getConc_f137Cs(),
+               tP.geteffective_dLoc(),tP.get_zetaLoc(),tP.getConc_10Be(),
+               tP.getConc_26Al(), tP.getConc_36Cl(), tP.getConc_14C(),
+               tP.getConc_21Ne(), tP.getConc_3He(),
+               tP.getConc_f7Be(), tP.getConc_f10Be(),
+               tP.getConc_f210Pb(), tP.getConc_f137Cs(),
                tP.getMass(), tP.getStartingMass(),
-				       tP.getSurfaceArea()); }
+               tP.getSurfaceArea()); }
 
   /// @brief The copy constructor
   /// @param tP a constant LSDCRNParticle object
   /// @author SMM
   /// @date 01/01/2010
   LSDCRNParticle(LSDCRNParticle& tP)
-    	{ create(tP.getType(), tP.getGSDType(), tP.getCellIndex(), tP.getAge(),tP.getOSLage(),
+      { create(tP.getType(), tP.getGSDType(), tP.getCellIndex(), tP.getAge(),tP.getOSLage(),
                tP.getxLoc(),tP.getyLoc(),tP.getdLoc(),
-    	         tP.geteffective_dLoc(),tP.get_zetaLoc(),tP.getConc_10Be(),
-    	         tP.getConc_26Al(), tP.getConc_36Cl(), tP.getConc_14C(),
-    	         tP.getConc_21Ne(), tP.getConc_3He(),
-    	         tP.getConc_f7Be(), tP.getConc_f10Be(),
-    	         tP.getConc_f210Pb(), tP.getConc_f137Cs(),
+               tP.geteffective_dLoc(),tP.get_zetaLoc(),tP.getConc_10Be(),
+               tP.getConc_26Al(), tP.getConc_36Cl(), tP.getConc_14C(),
+               tP.getConc_21Ne(), tP.getConc_3He(),
+               tP.getConc_f7Be(), tP.getConc_f10Be(),
+               tP.getConc_f210Pb(), tP.getConc_f137Cs(),
                tP.getMass(), tP.getStartingMass(),
-				       tP.getSurfaceArea());   }
+               tP.getSurfaceArea());   }
 
   /// @brief the copy constructor for constant LSDCRNParticle objects  
   LSDCRNParticle& operator=(const LSDCRNParticle& tP);
