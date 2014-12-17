@@ -965,7 +965,7 @@ double LSDCRNParameters::LZ(double z)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParameters::set_Granger_parameters()
 {
-  S_t = 1;
+  //S_t = 1;
 
   // from Vermeesh 2007
   lambda_10Be = 456e-9;		// in yr-1
@@ -1011,13 +1011,16 @@ void LSDCRNParameters::set_Granger_parameters()
   F_36Cl[2] = 0.05023;
   F_36Cl[3] = 0.0;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // function to set CRN parameters
 // based on the Vermeesch approximation of the Schaller et al (2000)
 // formulation
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParameters::set_Schaller_parameters()
 {
-  S_t =1;
+  //S_t =1;
 
   // from Vermeesh 2007
   lambda_10Be = 456e-9;		// in yr-1
@@ -1063,11 +1066,31 @@ void LSDCRNParameters::set_Schaller_parameters()
   F_36Cl[2] = 0.0177;
   F_36Cl[3] = 0.0;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This sets the production rates to mimic those of CRONUS
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParameters::set_CRONUS_stone_parameters()
+{
+  //S_t =1;
+
+  // from the CRONUS calculator
+  lambda_10Be = 499.75e-9;     // in yr-1
+  lambda_26Al = 983e-9;     // in yr-1
+
+
+  // from the CRONUS calculator
+  P0_10Be = 4.49;          // in a/g/yr
+  P0_26Al = 30.2922;       // in a/g/yr
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this forces a neutron only calculation
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParameters::set_Neutron_only_parameters()
 {
-  S_t =1;
+  //S_t =1;
 
   // from Vermeesh 2007
   lambda_10Be = 456e-9;		// in yr-1
@@ -1113,6 +1136,17 @@ void LSDCRNParameters::set_Neutron_only_parameters()
   F_36Cl[2] = 0;
   F_36Cl[3] = 0;
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// this function sets the total scaling value
+// It is a product of the scaling, topographic shielding and snow shielding. 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParameters::set_scaling(double scaling, double topo_shield, double snow_shield)
+{
+  S_t = scaling*topo_shield*snow_shield;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 
 // this function takes a single scaling factor for
@@ -1581,6 +1615,10 @@ void LSDCRNParameters::get_CRONUS_P_mu_vectors(double pressure, double sample_ef
 // Integrate muons flux as as a function of erosion rate
 // Note this is different from CRONUS calculator since this uses Simpson's
 // Rule whereas CRONUS uses trapezoid rule
+//
+// This seems to produce much more muon activity than the vermeesh/grange/schaller
+// equations!!
+// Will need to work out why. 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParameters::integrate_muon_flux_for_erosion(double E, 
                            vector<double> z_mu, vector<double> P_mu_10Be,
@@ -1686,18 +1724,19 @@ void LSDCRNParameters::integrate_nonTD_spallation_flux_for_erosion(double E,
                                    double P_sp_10Be, double P_sp_26Al, 
                                    double& Be10_sp_N,double& Al26_sp_N)
 {
-  // get analysitcal solution of spallation production
+  // get analytical solution of spallation production
   bool use_CRONUS = true;
   
   vector<double> decay = get_decay_coefficients(use_CRONUS);
   double A_10Be =  decay[0]+E/get_spallation_attenuation_length(use_CRONUS);
   double A_26Al =  decay[1]+E/get_spallation_attenuation_length(use_CRONUS);
 
-  //cout << "Integrating spallation, LINE 1675" << endl;
-  //cout << "Psp10: " << P_sp_10Be << " Psp26: " << P_sp_26Al << endl;
-  //cout << "decay10: " << decay[0] << " decay26: " << decay[1] << endl;
-  //cout << "A10: " << A_10Be << " A26: " << A_26Al << endl;
-
+  cout << "Integrating spallation, LINE 1719" << endl;
+  cout << "ThickSF: " << thick_SF << endl;
+  cout << "Psp10: " << P_sp_10Be << " Psp26: " << P_sp_26Al << endl;
+  cout << "decay10: " << decay[0] << " decay26: " << decay[1] << endl;
+  cout << "A10: " << A_10Be << " A26: " << A_26Al << endl;
+  cout << "thick/A: " <<  thick_SF/A_10Be << endl;
   Be10_sp_N = thick_SF*P_sp_10Be/A_10Be;
   Al26_sp_N = thick_SF*P_sp_26Al/A_26Al;
 

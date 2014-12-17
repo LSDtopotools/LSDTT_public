@@ -200,15 +200,34 @@ class LSDCRNParameters
   /// @brief This resets the F, Gamma and P0 values so that they conform to 
   /// Schaller (2009) scaling. Adopted from from Vermeesh 2007
   /// @author SMM
-  /// @date 01/01/2010	
+  /// @date 01/01/2010
   void set_Schaller_parameters();
+  
+  /// @brief this resets the production and decay coefficients of 10Be and 26Al
+  ///  to mimic the parameters for stone scaling in CRONUS calculator
+  /// @detail IMPORTANT the F and Gamma numbers are not changed so you will 
+  ///  need to set granger or schaller parameters beforehand. 
+  /// @author SMM
+  /// @date 17/12/2014
+  void set_CRONUS_stone_parameters();
 
   /// @brief This sets the F values to use neutron only production
   /// @details F0 == 1, all other F values == 0
   /// @author SMM
   /// @date 14/07/2014	
   void set_Neutron_only_parameters();
-  
+
+  /// @brief This sets the internal scaling for the particle. It includes
+  ///  topographic shielding, snow shielding and scaling from latitude and
+  ///  other factors
+  /// @param scaling the lat-magnetic scaling 
+  /// @param topo_shield the topograpgic shielding
+  /// @param snow_shield shielding from snow
+  /// @author SMM
+  /// @date 17/12/2014
+  void set_scaling(double scaling, double topo_shield, double snow_shield);
+
+
   /// @brief this function takes a single scaling factor for
   /// elevation scaling, self shielding, snow shielding,
   /// and latitude scaling and produces scaling factors

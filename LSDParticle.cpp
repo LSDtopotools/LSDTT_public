@@ -668,21 +668,39 @@ void LSDCRNParticle::update_10Be_conc_neutron_only(double dt,double erosion_rate
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// This updates the 10Be concetration if erosion is steady using the full
+// This updates the 10Be concentration if erosion is steady using the full
 // 4 attenuation depth model of Vermeesch (2007)
+// The erosion rate should be in g/cm^2/yr
+//
+// NOTE This produces far less muon production than cosmo calc 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParticle::update_10Be_SSfull(double erosion_rate, LSDCRNParameters& CRNp)
 {
-  double sum_term = 0;
+  double sum_term1 = 0;
+  //double sum_term2 = 0;
+  
+  
+  
   for (int i = 0; i<4; i++)
   {
-    sum_term+= (CRNp.F_10Be[i]*exp(-effective_dLoc/CRNp.Gamma[i])*CRNp.Gamma[i])/
-               (erosion_rate+CRNp.Gamma[i]*CRNp.lambda_10Be);
+    //cout << "ThickSF: " <<  CRNp.F_10Be[i]*(1-exp(-effective_dLoc/CRNp.Gamma[i]))*
+    //                        (CRNp.Gamma[i]/effective_dLoc) << endl;
+    //cout << "A: " <<  (CRNp.lambda_10Be+erosion_rate/CRNp.Gamma[i]) << endl;
+  
+    //sum_term1+= (CRNp.F_10Be[i]*exp(-effective_dLoc/CRNp.Gamma[i])*CRNp.Gamma[i])/
+    //           (erosion_rate+CRNp.Gamma[i]*CRNp.lambda_10Be);
+    sum_term1+= (CRNp.F_10Be[i]*(1-exp(-effective_dLoc/CRNp.Gamma[i]))*
+                (CRNp.Gamma[i]/effective_dLoc))/
+                (CRNp.lambda_10Be+erosion_rate/CRNp.Gamma[i]);
+    cout << "Thick/A:" << (CRNp.F_10Be[i]*(1-exp(-effective_dLoc/CRNp.Gamma[i]))*
+                (CRNp.Gamma[i]/effective_dLoc))/
+                (CRNp.lambda_10Be+erosion_rate/CRNp.Gamma[i]) << endl;
   }
 
-    //cout << "and sum term is: " << sum_term << endl;
-
-  Conc_10Be = CRNp.S_t*CRNp.P0_10Be*sum_term;
+  //cout << "and sum term is: " << sum_term1 << " " << sum_term2 << endl;
+  //double Pref =  CRNp.S_t*CRNp.P0_10Be;
+  //cout << "Pref is: " << Pref << endl;
+  Conc_10Be = CRNp.S_t*CRNp.P0_10Be*sum_term1;
   //cout << "and ending 10Be conc is: " << Conc_10Be <<endl;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -760,6 +778,11 @@ double LSDCRNParticle::apparent_erosion_26Al_neutron_only(double rho, LSDCRNPara
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Gets steady concentration
+// The erosion rate should be in g/cm^2/yr
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParticle::update_26Al_SSfull(double erosion_rate, LSDCRNParameters& CRNp)
 {
   double sum_term = 0;
@@ -823,6 +846,8 @@ double LSDCRNParticle::apparent_erosion_14C_neutron_only(double rho, LSDCRNParam
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+// The erosion rate should be in g/cm^2/yr
 void LSDCRNParticle::update_14C_SSfull(double erosion_rate, LSDCRNParameters& CRNp)
 {
   double sum_term = 0;
@@ -889,7 +914,7 @@ double LSDCRNParticle::apparent_erosion_36Cl_neutron_only(double rho, LSDCRNPara
 
 
 
-
+// The erosion rate should be in g/cm^2/yr
 void LSDCRNParticle::update_36Cl_SSfull(double erosion_rate, LSDCRNParameters& CRNp)
 {
   double sum_term = 0;
@@ -932,6 +957,8 @@ double LSDCRNParticle::apparent_erosion_21Ne(double rho, LSDCRNParameters& CRNp)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+
+// The erosion rate should be in g/cm^2/yr
 void LSDCRNParticle::update_21Ne_SSfull(double erosion_rate, LSDCRNParameters& CRNp)
 {
   double Gamma_neutron = CRNp.Gamma[0];					// in g/cm^2
@@ -977,7 +1004,7 @@ double LSDCRNParticle::apparent_erosion_3He(double rho, LSDCRNParameters& CRNp)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-
+// The erosion rate should be in g/cm^2/yr
 void LSDCRNParticle::update_3He_SSfull(double erosion_rate, LSDCRNParameters& CRNp)
 {
   double Gamma_neutron = CRNp.Gamma[0];	// in g/cm^2
@@ -1003,6 +1030,8 @@ void LSDCRNParticle::update_all_CRN(double dt, double erosion_rate, LSDCRNParame
   update_3He_conc(dt,erosion_rate, CRNp);
 }
 
+
+// The erosion rate should be in g/cm^2/yr
 void LSDCRNParticle::update_all_CRN_SSfull(double erosion_rate, LSDCRNParameters& CRNp)
 {
   //cout << "LINE 445 LSDCRNParticle.cpp updating CRN" << endl;
@@ -1115,6 +1144,8 @@ void LSDCRNParticle::update_depths(double d, double ed)
   effective_dLoc=ed;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function resets the depth and calculates the effective depth
@@ -1819,7 +1850,7 @@ void LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRNP, double 
   // retrieve the pre-scaling factors
   double P_ref_St_10 = Prefs_st[0];
   double P_ref_St_26 = Prefs_st[1];
-
+  //cout << "P ref stone 10: " <<  P_ref_St_10 <<  " P_ref_St_26: " << P_ref_St_26 << endl;
   
   // precalculate the P_mu vectors
   vector<double> z_mu;
@@ -1828,28 +1859,66 @@ void LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRNP, double 
   LSDCRNP.get_CRONUS_P_mu_vectors(pressure, effective_dLoc, z_mu, 
                                   P_mu_z_10Be,P_mu_z_26Al);
                                   
+  // get the scaled production rates
+  double P_sp_10Be = P_ref_St_10*stoneP*topo_scale*snow_scale;
+  double P_sp_26Al = P_ref_St_26*stoneP*topo_scale*snow_scale;
   
+  // now enter search for the correct erosion rate. 
+  
+  
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function returns the number of atoms given an effective erosion rate
+// (this is the erosion rate in g/cm^2/yr)
+// It is used in an optimisation loop (equivalent to fzero in matlab)
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParticle::CRONUS_calculate_N_forward(double effective_erosion_rate, 
+                            LSDCRNParameters& LSDCRNP,
+                            vector<double>& z_mu, vector<double>& P_mu_z_10Be, 
+                            vector<double>& P_mu_z_26Al, double thickSF, 
+                            double P_sp_10Be, double P_sp_26Al,
+                            double& N_Be10, double& N_Al26)
+{                            
   // get the initial fluxes from muons and spallation
   double Be10_mu_N;
   double Al26_mu_N;
-  LSDCRNP.integrate_muon_flux_for_erosion(initial_guess[0],z_mu, P_mu_z_10Be,
+  LSDCRNP.integrate_muon_flux_for_erosion(effective_erosion_rate,z_mu, P_mu_z_10Be,
                            P_mu_z_26Al, Be10_mu_N, Al26_mu_N);
                            
-  cout << "Initial muon production guess 10Be: " << Be10_mu_N << " Al26: " << Al26_mu_N << endl;
+  //cout << "Initial muon production guess 10Be: " << Be10_mu_N << " Al26: " << Al26_mu_N << endl;
 
   double Be10_sp_N;
   double Al26_sp_N;
-  double P_sp_10Be = P_ref_St_10*stoneP*topo_scale*snow_scale;
-  double P_sp_26Al = P_ref_St_26*stoneP*topo_scale*snow_scale;
-  LSDCRNP.integrate_nonTD_spallation_flux_for_erosion(initial_guess[0],thickSF,
+  LSDCRNP.integrate_nonTD_spallation_flux_for_erosion(effective_erosion_rate,thickSF,
                            P_sp_10Be, P_sp_26Al,Be10_sp_N, Al26_sp_N);
-                           
-   // test the 
-   
-   
-   cout << "Initial spallation production guess 10Be: " << Be10_sp_N << " Al26: " << Al26_sp_N << endl;                                                                                                                             
+
+  N_Be10 = Be10_sp_N+Be10_mu_N;
+  N_Al26 = Al26_sp_N+Al26_mu_N;
+  //cout << "Initial spallation production guess 10Be: " << Be10_sp_N << " Al26: " << Al26_sp_N << endl;                                                                                                                             
+  
+  //============================================================================
+  // test these against the nuclides from analytical muons (e.g., based
+  // on the granger or Schaller equations)
+  //double erate_m_yr = convert_gpercm2_to_m(initial_guess[0]);
+  //LSDCRNP.set_Neutron_only_parameters();
+  //LSDCRNP.set_CRONUS_stone_parameters();
+  //LSDCRNP.set_scaling(stoneP, topo_scale, snow_scale);
+  //update_10Be_SSfull(initial_guess[0],LSDCRNP);
+  //update_26Al_SSfull(initial_guess[0],LSDCRNP);
+  //cout << "Analytical solution 10: " << Conc_10Be << " and 26: " << Conc_26Al << endl;
+  //============================================================================
+  // I'VE DONE THIS AND CRONUS CALC PREDICTS WAY MORE MUON PRODUCTION (sometimes
+  // as much as 50% of total) that analytical solution based on 4 part exponential
+  // SMM, 17/12/2014
+  //============================================================================
+
+  
   
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 
 #endif
