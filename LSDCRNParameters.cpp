@@ -1652,6 +1652,8 @@ void LSDCRNParameters::integrate_muon_flux_for_erosion(double E,
   double fa10,fb10,fi10,sum10;
   double fa26,fb26,fi26,sum26;
   
+  
+  /*
   // set up the locations to evaluate the integral
   b = t_mu[0];
   
@@ -1679,8 +1681,8 @@ void LSDCRNParameters::integrate_muon_flux_for_erosion(double E,
     sum10+= ((b-a)/6.0)*(fa10+4.0*fi10+fb10);
     sum26+= ((b-a)/6.0)*(fa26+4.0*fi26+fb26);
   }
+  */
   
-  /*
   // for error checking, try trapezoid rule
   double sum_trap10 = 0;
   double sum_trap26 = 0;
@@ -1706,11 +1708,11 @@ void LSDCRNParameters::integrate_muon_flux_for_erosion(double E,
   }
   //cout << "Simpsons  10: " << sum10 << " 26: " << sum26 << endl;
   //cout << "Trapezoid 10: " << sum_trap10 << " 26: " << sum_trap26 << endl;
-  */
+  
   
   // now return the integral
-  Be10_mu_N = sum10;
-  Al26_mu_N = sum26;
+  Be10_mu_N = sum_trap10;
+  Al26_mu_N = sum_trap26;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -1731,12 +1733,13 @@ void LSDCRNParameters::integrate_nonTD_spallation_flux_for_erosion(double E,
   double A_10Be =  decay[0]+E/get_spallation_attenuation_length(use_CRONUS);
   double A_26Al =  decay[1]+E/get_spallation_attenuation_length(use_CRONUS);
 
-  cout << "Integrating spallation, LINE 1719" << endl;
-  cout << "ThickSF: " << thick_SF << endl;
-  cout << "Psp10: " << P_sp_10Be << " Psp26: " << P_sp_26Al << endl;
-  cout << "decay10: " << decay[0] << " decay26: " << decay[1] << endl;
-  cout << "A10: " << A_10Be << " A26: " << A_26Al << endl;
-  cout << "thick/A: " <<  thick_SF/A_10Be << endl;
+  //cout << "Integrating spallation, LINE 1719" << endl;
+  //cout << "ThickSF: " << thick_SF << endl;
+  //cout << "Psp10: " << P_sp_10Be << " Psp26: " << P_sp_26Al << endl;
+  //cout << "decay10: " << decay[0] << " decay26: " << decay[1] << endl;
+  //cout << "A10: " << A_10Be << " A26: " << A_26Al << endl;
+  //cout << "thick/A: " <<  thick_SF/A_10Be << endl;
+  
   Be10_sp_N = thick_SF*P_sp_10Be/A_10Be;
   Al26_sp_N = thick_SF*P_sp_26Al/A_26Al;
 

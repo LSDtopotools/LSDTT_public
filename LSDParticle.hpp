@@ -909,14 +909,18 @@ class LSDCRNParticle: public LSDParticle
   /// @param N_26 the number of 26Al atoms
   /// @param topo_scale the topographic scaling (between 0 and 1)
   /// @param snow_scale the snow scaling (between 0 and 1)
-  /// @return Erosion_rates a vector<double> Eguess
+  /// @param eff_e_10Be the effective erosion rate (g/cm^2/yr) from 10Be.
+  ///   This parameter is replaced by the function.
+  /// @param eff_e_26Al the effective erosion rate (g/cm^2/yr) from 26Al.
+  ///   This parameter is replaced by the function.
   ///  Eguess[0] = 10Be
   ///  Eguess[1] = 26Al
   /// @author SMM
   /// @date 16/12/2014
   void CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRNP, double pressure,
                       double lat, double N_10Be, double N_26Al, 
-                      double topo_scale, double snow_scale);
+                      double topo_scale, double snow_scale, 
+                      double& eff_e_10Be, double& eff_e_26Al);
 
   /// @brief This function returns the number of atoms given an effective erosion rate
   ///   (this is the erosion rate in g/cm^2/yr)

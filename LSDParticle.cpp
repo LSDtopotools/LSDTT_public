@@ -1822,7 +1822,8 @@ vector<double> LSDCRNParticle::CRONUS_initial_guess(LSDCRNParameters& LSDCRNP, d
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRNP, double pressure,
                       double lat, double N_10Be, double N_26Al, 
-                      double topo_scale, double snow_scale)
+                      double topo_scale, double snow_scale, 
+                      double& eff_e_10Be, double& eff_e_26Al)
 {
   bool use_CRONUS = true;
   
@@ -1834,10 +1835,17 @@ void LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRNP, double 
                                          N_10Be, N_26Al, topo_scale, snow_scale);
 
   // variable for holding the number of atoms per gram
-  double N10_this_step;
-  double N10;
-  double N26_this_step;
-  double N26;
+  double N10_this_step,N10_displace;
+  //double N10;
+  double N26_this_step,N26_displace;
+  //double N26;
+  double N_derivative;        // derivative of the function describing N as a fxn of erosion
+  double e_displace = 0.0001;   // how far one moves erosion rate to calculate derivative
+  double e_new,e_change;      // the erosion rate in the Newton-Raphson iteration
+  double tolerance = 1e-6;
+  double f_x;                 // we call this the 'function' where we need to find
+                              // a root. It is just the N atoms minus the target atoms
+  double f_x_displace;                           
   
   // get some parameters for Stone production
   vector<double> Prefs_st = LSDCRNP.get_Stone_Pref();
@@ -1864,8 +1872,89 @@ void LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRNP, double 
   double P_sp_26Al = P_ref_St_26*stoneP*topo_scale*snow_scale;
   
   // now enter search for the correct erosion rate. 
+  // first do 10Be
+  // get the initial concentrations
+  e_new = initial_guess[0];
+  cout << endl << endl << "10Be initial guess is: " << e_new << endl;
+  // now iterate using newton-raphson
+  do
+  {
+    
+    // get the new values
+    CRONUS_calculate_N_forward(e_new, LSDCRNP,z_mu, 
+                        P_mu_z_10Be, P_mu_z_26Al, thickSF, P_sp_10Be, P_sp_26Al,
+                        N10_this_step, N26_this_step);
+     f_x =  N10_this_step-N_10Be;                  
+                        
+    // now get the derivative
+    CRONUS_calculate_N_forward(e_new+e_displace, LSDCRNP,z_mu, 
+                        P_mu_z_10Be, P_mu_z_26Al, thickSF, P_sp_10Be, P_sp_26Al,
+                        N10_displace, N26_displace);
+    f_x_displace =  N10_displace-N_10Be;                    
+                        
+    N_derivative = (f_x_displace-f_x)/e_displace;
+    
+    //cout << "N10: " << N10_this_step << " + displace: " << N10_displace  << endl;
+    //cout << "fx: " <<  f_x << " f_x_displace: " << f_x_displace << " fprimex: " << N_derivative << endl;
+    
+    if(N_derivative != 0)
+    {
+      e_new = e_new-f_x/N_derivative;
+    
+      // check to see if the difference in erosion rates meet a tolerance
+      e_change = f_x/N_derivative;
+      cout << "Change is: " << e_change << " and erosion rate is: " << e_new << endl;
+    }
+    else
+    {
+      e_change = 0;
+    }
   
+  } while(fabs(e_change) > tolerance);
+  eff_e_10Be = e_new; 
+
+  // now enter search for the correct erosion rate. 
+  // now do 26Al
+  // get the initial concentrations
+  e_new = initial_guess[1];
+  cout << endl << endl << "26Al initial guess is: " << e_new << endl;
+  // now iterate using newton-raphson
+  do
+  {
+    
+    // get the new values
+    CRONUS_calculate_N_forward(e_new, LSDCRNP,z_mu, 
+                        P_mu_z_10Be, P_mu_z_26Al, thickSF, P_sp_10Be, P_sp_26Al,
+                        N10_this_step, N26_this_step);
+     f_x =  N26_this_step-N_26Al;                  
+                        
+    // now get the derivative
+    CRONUS_calculate_N_forward(e_new+e_displace, LSDCRNP,z_mu, 
+                        P_mu_z_10Be, P_mu_z_26Al, thickSF, P_sp_10Be, P_sp_26Al,
+                        N10_displace, N26_displace);
+    f_x_displace =  N26_displace-N_26Al;                    
+                        
+    N_derivative = (f_x_displace-f_x)/e_displace;
+    
+    //cout << "N10: " << N10_this_step << " + displace: " << N10_displace  << endl;
+    //cout << "fx: " <<  f_x << " f_x_displace: " << f_x_displace << " fprimex: " << N_derivative << endl;
+    
+    if(N_derivative != 0)
+    {
+      e_new = e_new-f_x/N_derivative;
+    
+      // check to see if the difference in erosion rates meet a tolerance
+      e_change = f_x/N_derivative;
+      cout << "Change is: " << e_change << " and erosion rate is: " << e_new << endl;
+    }
+    else
+    {
+      e_change = 0;
+    }
   
+  } while(fabs(e_change) > tolerance);
+  eff_e_26Al = e_new;
+
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
