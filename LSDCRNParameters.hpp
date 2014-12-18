@@ -347,8 +347,35 @@ class LSDCRNParameters
                                    double P_sp_10Be, double P_sp_26Al, 
                                    double& Be10_sp_N,double& Al26_sp_N);
   
-                           
-  private:	
+  /// @brief THis gets parameters for uncertainty analysis for muogenic 
+  ///  production. It is part of the CRONUS calculator replication
+  /// @param pressure the atmospheric pressure in HPa
+  /// @return a vector<double> with the uncertanty parameters. These are:
+  ///  uncert_params[0]=delPfast_10;
+  ///  uncert_params[1]=delPfast_26;
+  ///  uncert_params[2]=delPneg_10;
+  ///  uncert_params[3]=delPneg_26;
+  ///  uncert_params[4]=delPmu0_10;
+  ///  uncert_params[5]=delPmu0_26;
+  /// @author SMM
+  /// @date 15/12/2014
+  vector<double> CRONUS_get_muon_uncertainty_params(double pressure);                         
+  
+  /// @brief Gets the uncertanty of spallation and muon production as
+  ///  a ratio of the total production
+  /// @detail used in error propagation for the CRONUS calculator
+  /// @param scaling_name a string containing the scaling scheme you want
+  ///  choices are:
+  ///  St  for Stone scaling
+  ///  Li  for Lifton scaling
+  ///  De  for Deselits scaling
+  ///  Du  for Dunai scaling
+  ///  Lm  for Lal magnetic scaling
+  /// @author SMM
+  /// @date 18/12/2014
+  vector<double> CRONUS_get_uncert_production_ratios(string scaling_name);
+  
+  private:
   /// @brief This is called by the default constructor. 
   /// It is the only possible constructor
   void create();

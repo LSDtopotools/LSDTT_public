@@ -1648,14 +1648,18 @@ void LSDCRNParameters::integrate_muon_flux_for_erosion(double E,
   }
 
   // now integrate over this vector using simpsons rule
-  double a,b, intermediate;
-  double fa10,fb10,fi10,sum10;
-  double fa26,fb26,fi26,sum26;
+  double a,b;
+  double fa10,fb10;
+  double fa26,fb26;
   
   
   /*
   // set up the locations to evaluate the integral
   b = t_mu[0];
+  
+  double intermediate;
+  double fi10,fi26;
+  double sum10,sum26;
   
   fb10 = P_mu_10Be[0]*(exp(-decay_coeff[0]*t_mu[0]));
   fb26 = P_mu_26Al[0]*(exp(-decay_coeff[1]*t_mu[0]));
@@ -1683,7 +1687,8 @@ void LSDCRNParameters::integrate_muon_flux_for_erosion(double E,
   }
   */
   
-  // for error checking, try trapezoid rule
+  // for error checking, try trapezoid rule: this is not as accurate as simpsons
+  // but is used by CRONUS calculator
   double sum_trap10 = 0;
   double sum_trap26 = 0;
   b = t_mu[0];
@@ -1746,5 +1751,93 @@ void LSDCRNParameters::integrate_nonTD_spallation_flux_for_erosion(double E,
 } 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-                                         
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//  This calculates some muogenic paramters for the uncertainty analysis
+// returns the uncertainty parameters in the form of a vector
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<double> LSDCRNParameters::CRONUS_get_muon_uncertainty_params(double pressure)
+{
+  // first check to see if CRONUS data maps are set
+  if(CRONUS_data_map.find("l10") == CRONUS_data_map.end())
+  {
+    cout << "You haven't set the CRONUS data map. I'm doing that for you now!" << endl;
+    set_CRONUS_data_maps();
+  }
+  
+  // now get the production parameters
+  double test_elev = 0.0;
+  vector<double> muon_prod 
+             = calculate_muon_production_CRONUS(test_elev, pressure);
+  
+  // calculate the parameters
+  double delPfast_10 = muon_prod[0]*(CRONUS_data_map["delsigma190_10"]/
+                                     CRONUS_data_map["sigma190_10"]);
+  double delPfast_26 = muon_prod[1]*(CRONUS_data_map["delk_neg10"]/
+                                     CRONUS_data_map["k_neg10"]);
+  double delPneg_10 = muon_prod[2]*(CRONUS_data_map["delsigma190_26"]/
+                                     CRONUS_data_map["sigma190_26"]);
+  double delPneg_26 = muon_prod[3]*(CRONUS_data_map["delk_neg26"]/
+                                     CRONUS_data_map["k_neg26"]);;
+  double delPmu0_10 = sqrt(delPfast_10*delPfast_10 + delPneg_10*delPneg_10);
+  double delPmu0_26 = sqrt(delPfast_26*delPfast_26 + delPneg_26*delPneg_26);
+  
+  // return the vector with the paramters
+  vector<double> uncert_params(6,0.0);
+  uncert_params[0]=delPfast_10;
+  uncert_params[1]=delPfast_26;
+  uncert_params[2]=delPneg_10;
+  uncert_params[3]=delPneg_26;
+  uncert_params[4]=delPmu0_10;
+  uncert_params[5]=delPmu0_26;
+  
+  return uncert_params;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// 
+// This function gets relative scaling errors
+// Used in the CRONUS uncertanty analysis
+// 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<double> LSDCRNParameters::CRONUS_get_uncert_production_ratios(string scaling_name)
+{
+  // first check to see if CRONUS data maps are set
+  if(CRONUS_data_map.find("l10") == CRONUS_data_map.end())
+  {
+    cout << "You haven't set the CRONUS data map. I'm doing that for you now!" << endl;
+    set_CRONUS_data_maps();
+  }
+
+  // vector to hold the uncertainty of relative production
+  vector<double> rel_delP(2,0.0);
+
+  // get the strings for entry into the data map
+  string P10_map_string = "P10_ref_"+scaling_name;
+  string delP10_map_string = "delP10_ref_"+scaling_name;
+  string P26_map_string = "P26_ref_"+scaling_name;
+  string delP26_map_string = "delP26_ref_"+scaling_name;
+  if (scaling_name == "St" || scaling_name == "Lm" || scaling_name == "Du" ||
+      scaling_name == "Li" || scaling_name == "De")
+  {
+    rel_delP[0] = CRONUS_data_map[delP10_map_string]/CRONUS_data_map[P10_map_string];
+    rel_delP[1] = CRONUS_data_map[delP26_map_string]/CRONUS_data_map[P26_map_string];
+  }
+  else
+  {
+    cout << "Warning: you have not selected a valid scaling name, options are: " << endl;
+    cout << "St  for Stone scaling" << endl;
+    cout << "Li  for Lifton scaling" << endl;
+    cout << "De  for Deselits scaling" << endl;
+    cout << "Du  for Dunai scaling" << endl;
+    cout << "Lm  for Lal magnetic scaling" << endl;
+    cout << "You selected: " << scaling_name << endl;
+  }
+  return rel_delP;
+}
+
+
 #endif

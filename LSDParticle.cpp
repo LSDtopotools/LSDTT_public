@@ -2002,14 +2002,194 @@ void LSDCRNParticle::CRONUS_calculate_N_forward(double effective_erosion_rate,
   // as much as 50% of total) that analytical solution based on 4 part exponential
   // SMM, 17/12/2014
   //============================================================================
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function returns the number of atoms given an effective erosion rate
+// (this is the erosion rate in g/cm^2/yr)
+// It is used in an optimisation loop (equivalent to fzero in matlab)
+// Overloaded, this one returns the spallation and muon contributions
+// to the total atoms
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParticle::CRONUS_calculate_N_forward(double effective_erosion_rate, 
+                            LSDCRNParameters& LSDCRNP,
+                            vector<double>& z_mu, vector<double>& P_mu_z_10Be, 
+                            vector<double>& P_mu_z_26Al, double thickSF, 
+                            double P_sp_10Be, double P_sp_26Al,
+                            double& N_Be10, double& N_Al26, 
+                            double& Be10_mu_N, double& Al26_mu_N,
+                            double& Be10_sp_N, double& Al26_sp_N)
+{                            
+  // get the initial fluxes from muons and spallation
+  LSDCRNP.integrate_muon_flux_for_erosion(effective_erosion_rate,z_mu, P_mu_z_10Be,
+                           P_mu_z_26Al, Be10_mu_N, Al26_mu_N);
+                           
+  //cout << "Initial muon production guess 10Be: " << Be10_mu_N << " Al26: " << Al26_mu_N << endl;
+  LSDCRNP.integrate_nonTD_spallation_flux_for_erosion(effective_erosion_rate,thickSF,
+                           P_sp_10Be, P_sp_26Al,Be10_sp_N, Al26_sp_N);
+
+  N_Be10 = Be10_sp_N+Be10_mu_N;
+  N_Al26 = Al26_sp_N+Al26_mu_N;
+  //cout << "Initial spallation production guess 10Be: " << Be10_sp_N << " Al26: " << Al26_sp_N << endl;                                                                                                                             
   
-  
+
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// this function does the error propigation from the CRONUS calculator
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParticle::CRONUS_error_propagation(double pressure, 
+                            LSDCRNParameters& LSDCRNP, double thickSF,
+                            vector<double>& z_mu, vector<double>& P_mu_z_10Be, 
+                            vector<double>& P_mu_z_26Al,
+                            double P_sp_10Be, double P_sp_26Al, 
+                            double eff_e_10, double eff_e_26)
+{
+
+  // get some paramters about production
+  double Pmu0_10 = P_mu_z_10Be[0];
+  double Pmu0_26 = P_mu_z_26Al[0];
+  
+  // get the decay coefficients
+  bool use_CRONUS = true;
+  vector<double> decay_coeff =  LSDCRNP.get_decay_coefficients(use_CRONUS);
+  double GammaSp = LSDCRNP.get_spallation_attenuation_length(use_CRONUS);
+  
+  // get uncertanty parameters for muons
+  vector<double> muon_uncertanty_params = 
+         LSDCRNP.CRONUS_get_muon_uncertainty_params(pressure);
+
+  // get the relative scalings
+  string scaling_name = "St";
+  vector<double> rel_delP =
+        LSDCRNP.CRONUS_get_uncert_production_ratios(scaling_name);
+
+  double Lmu_10, Lmu_26;
+  double Be10_mu_N, Al26_mu_N;
+  double Psp0_10, Psp0_26;
+  double delPsp0_10, delPsp0_26;
+  //double dEdN_10, dEdN_26;
+  //double dEdsp0_10, dEdsp0_26;
+  //double dEdPmu0_10, dEdPmu0_26;
+
+  // number of atoms determined by the erosion rate function N forward
+  double N_Be10, N_Al26, Be10_sp_N, Al26_sp_N;
+
+  // first do 10Be
+  if (eff_e_10 > 0)
+  {
+    // get the contributions from spallation and muons
+    CRONUS_calculate_N_forward(eff_e_10, LSDCRNP, z_mu, P_mu_z_10Be, P_mu_z_26Al, 
+                               thickSF, P_sp_10Be, P_sp_26Al, N_Be10, N_Al26, 
+                               Be10_mu_N, Al26_mu_N, Be10_sp_N, Al26_sp_N);
+                               
+    // get the length scale for muons
+    Lmu_10 = eff_e_10/((Pmu0_10/Be10_mu_N)-decay_coeff[0]); 
+    
+    // get the production scaling
+    Psp0_10 = Be10_mu_N*(decay_coeff[0]+(eff_e_10/GammaSp));
+    delPsp0_10 = Psp0_10*rel_delP[0];
+  }
+  // then do 26
+  if (eff_e_26 > 0)
+  {
+    // get the contributions from spallation and muons
+    CRONUS_calculate_N_forward(eff_e_26, LSDCRNP, z_mu, P_mu_z_10Be, P_mu_z_26Al, 
+                               thickSF, P_sp_10Be, P_sp_26Al, N_Be10, N_Al26, 
+                               Be10_mu_N, Al26_mu_N, Be10_sp_N, Al26_sp_N);
+                               
+    // get the length scale for muons
+    Lmu_26 = eff_e_26/((Pmu0_26/Al26_mu_N)-decay_coeff[1]); 
+    
+    // get the production scaling
+    Psp0_26 = Al26_mu_N*(decay_coeff[1]+(eff_e_26/GammaSp));
+    delPsp0_26 = Psp0_26*rel_delP[1];
+  }  
+  
+
+
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// THis finds the root of the simple erosion rate finder, used to 
+// Replicate CRONUS uncertanty analysis
+// The function uses Newton-Raphs, so may give slightly different answers than
+// the CRONUS version, which uses Matlab's fzero function
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+double LSDCRNParticle::CRONUS_simple_N_findroots(double inital_erate, double target,
+                                           double Psp, double Pmu, double GammaSp,  
+                                           double GammaMu,double decay)
+{
+  // paramters controlling the erosion rates
+  double e_new;
+  double this_erate;
+  e_new = inital_erate;
+  double e_displace = 1e-5;
+  double displace_erate;
+  double e_change;
+  
+  // parameters for Newton-Raphson
+  double f_x;
+  double f_x_displace;
+  double e_derivative;
+  double tolerance = 1e-5;
+
+  // now iterate using newton-raphson
+  do
+  {
+    
+    this_erate = CRONUS_simple_N_forward(e_new, Psp, Pmu, GammaSp, GammaMu, decay);
+
+     f_x =  this_erate-target;                  
+                        
+    // now get the derivative
+    displace_erate = CRONUS_simple_N_forward(e_new+e_displace, Psp, Pmu, GammaSp, 
+                                             GammaMu, decay);
+    f_x_displace =  displace_erate-target;                    
+                        
+    e_derivative = (f_x_displace-f_x)/e_displace;
+    
+    //cout << "N10: " << N10_this_step << " + displace: " << N10_displace  << endl;
+    //cout << "fx: " <<  f_x << " f_x_displace: " << f_x_displace << " fprimex: " << N_derivative << endl;
+    
+    if(e_derivative != 0)
+    {
+      e_new = e_new-f_x/e_derivative;
+    
+      // check to see if the difference in erosion rates meet a tolerance
+      e_change = f_x/e_derivative;
+      cout << "Change is: " << e_change << " and erosion rate is: " << e_new << endl;
+    }
+    else
+    {
+      e_change = 0;
+    }
+  
+  } while(fabs(e_change) > tolerance);
+  return e_new; 
+
+}                             
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Simple N forward: a function for calculating erosion that is used in the 
+// error propagation routines
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+double LSDCRNParticle::CRONUS_simple_N_forward(double eff_eros, double Psp, double Pmu,
+                                      double GammaSp, double GammaMu, double decay)
+{
+  double N = (Psp/(decay + eff_eros/GammaSp)) 
+              + (Pmu/(decay + eff_eros/GammaMu));
+  return N;            
+
+}                                      
 #endif
 
 
