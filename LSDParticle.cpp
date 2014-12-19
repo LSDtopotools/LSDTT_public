@@ -1841,6 +1841,9 @@ vector<double> LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRN
   vector<double> initial_guess = CRONUS_initial_guess(LSDCRNP, pressure, lat, 
                                          N_10Be, N_26Al, topo_scale, snow_scale);
 
+  cout << endl <<endl;
+  cout << "Initial guess 10Be: " << N_10Be << " 26Al: " << N_26Al << endl;
+  
   // variable for holding the number of atoms per gram
   double N10_this_step,N10_displace;
   //double N10;
@@ -1865,7 +1868,7 @@ vector<double> LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRN
   // retrieve the pre-scaling factors
   double P_ref_St_10 = Prefs_st[0];
   double P_ref_St_26 = Prefs_st[1];
-  //cout << "P ref stone 10: " <<  P_ref_St_10 <<  " P_ref_St_26: " << P_ref_St_26 << endl;
+  cout << "P ref stone 10: " <<  P_ref_St_10 <<  " P_ref_St_26: " << P_ref_St_26 << endl;
   
   // precalculate the P_mu vectors
   vector<double> z_mu;
@@ -1877,6 +1880,8 @@ vector<double> LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRN
   // get the scaled production rates
   double P_sp_10Be = P_ref_St_10*stoneP*topo_scale*snow_scale;
   double P_sp_26Al = P_ref_St_26*stoneP*topo_scale*snow_scale;
+  
+  cout << "P_sp_10Be: " << P_sp_10Be << " P_sp_26Al: " << P_sp_26Al << endl;
   
   if(N_10Be > 0)
   {
@@ -1979,13 +1984,13 @@ vector<double> LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRN
   erate_consts[2] = uncertainties[1];
   erate_consts[3] = uncertainties[0];
   erate_consts[4] = uncertainties[3];
-  erate_consts[5] = uncertainties[2];
-  erate_consts[6] = eff_e_10Be;
-  erate_consts[7] = eff_e_10Be*1.0e7/rho;
+  erate_consts[5] = P_sp_10Be;
+  erate_consts[6] = eff_e_26Al;
+  erate_consts[7] = eff_e_26Al*1.0e7/rho;
   erate_consts[8] = uncertainties[5];
   erate_consts[9] = uncertainties[4];
   erate_consts[10] = uncertainties[7];
-  erate_consts[11] = uncertainties[6]; 
+  erate_consts[11] = P_sp_26Al; 
   
   return erate_consts;
 }
@@ -2106,7 +2111,7 @@ void LSDCRNParticle::CRONUS_calculate_N_forward(double effective_erosion_rate,
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// this function does the error propigation from the CRONUS calculator
+// this function does the error propagation from the CRONUS calculator
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 vector<double> LSDCRNParticle::CRONUS_error_propagation(double pressure, 
                             LSDCRNParameters& LSDCRNP, double thickSF, double rho,
