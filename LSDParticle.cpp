@@ -1820,11 +1820,18 @@ vector<double> LSDCRNParticle::CRONUS_initial_guess(LSDCRNParameters& LSDCRNP, d
 // This function emulates the CroNUS calculator
 // get_al_be_erosion.m
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRNP, double pressure,
-                      double lat, double N_10Be, double N_26Al, 
-                      double topo_scale, double snow_scale, 
-                      double& eff_e_10Be, double& eff_e_26Al)
+vector<double> LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRNP, double pressure,
+                      double lat, double rho, double N_10Be, double N_26Al, 
+                      double sample_del10, double sample_del26,
+                      double topo_scale, double snow_scale)
 {
+  // some erosion parameters that will be determined by this function 
+  // erate_consts holds all the information that replicates the CRONUS calculator
+  // e.g., erosion rate, production rates and uncertainties. 
+  double eff_e_10Be = 0;
+  double eff_e_26Al = 0;
+  vector<double> erate_consts(12,0.0);
+  
   bool use_CRONUS = true;
   
   // first scale the thickness
@@ -1842,7 +1849,7 @@ void LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRNP, double 
   double N_derivative;        // derivative of the function describing N as a fxn of erosion
   double e_displace = 0.0001;   // how far one moves erosion rate to calculate derivative
   double e_new,e_change;      // the erosion rate in the Newton-Raphson iteration
-  double tolerance = 1e-6;
+  double tolerance = 1e-10;
   double f_x;                 // we call this the 'function' where we need to find
                               // a root. It is just the N atoms minus the target atoms
   double f_x_displace;                           
@@ -1871,92 +1878,151 @@ void LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRNP, double 
   double P_sp_10Be = P_ref_St_10*stoneP*topo_scale*snow_scale;
   double P_sp_26Al = P_ref_St_26*stoneP*topo_scale*snow_scale;
   
-  // now enter search for the correct erosion rate. 
-  // first do 10Be
-  // get the initial concentrations
-  e_new = initial_guess[0];
-  cout << endl << endl << "10Be initial guess is: " << e_new << endl;
-  // now iterate using newton-raphson
-  do
+  if(N_10Be > 0)
   {
-    
-    // get the new values
-    CRONUS_calculate_N_forward(e_new, LSDCRNP,z_mu, 
-                        P_mu_z_10Be, P_mu_z_26Al, thickSF, P_sp_10Be, P_sp_26Al,
-                        N10_this_step, N26_this_step);
-     f_x =  N10_this_step-N_10Be;                  
-                        
-    // now get the derivative
-    CRONUS_calculate_N_forward(e_new+e_displace, LSDCRNP,z_mu, 
-                        P_mu_z_10Be, P_mu_z_26Al, thickSF, P_sp_10Be, P_sp_26Al,
-                        N10_displace, N26_displace);
-    f_x_displace =  N10_displace-N_10Be;                    
-                        
-    N_derivative = (f_x_displace-f_x)/e_displace;
-    
-    //cout << "N10: " << N10_this_step << " + displace: " << N10_displace  << endl;
-    //cout << "fx: " <<  f_x << " f_x_displace: " << f_x_displace << " fprimex: " << N_derivative << endl;
-    
-    if(N_derivative != 0)
+    // now enter search for the correct erosion rate. 
+    // first do 10Be
+    // get the initial concentrations
+    e_new = initial_guess[0];
+    //cout << endl << endl << "10Be initial guess is: " << e_new << endl;
+    // now iterate using newton-raphson
+    do
     {
-      e_new = e_new-f_x/N_derivative;
+      
+      // get the new values
+      CRONUS_calculate_N_forward(e_new, LSDCRNP,z_mu, 
+                          P_mu_z_10Be, P_mu_z_26Al, thickSF, P_sp_10Be, P_sp_26Al,
+                          N10_this_step, N26_this_step);
+       f_x =  N10_this_step-N_10Be;                  
+                          
+      // now get the derivative
+      CRONUS_calculate_N_forward(e_new+e_displace, LSDCRNP,z_mu, 
+                          P_mu_z_10Be, P_mu_z_26Al, thickSF, P_sp_10Be, P_sp_26Al,
+                          N10_displace, N26_displace);
+      f_x_displace =  N10_displace-N_10Be;                    
+                          
+      N_derivative = (f_x_displace-f_x)/e_displace;
+      
+      //cout << "N10: " << N10_this_step << " + displace: " << N10_displace  << endl;
+      //cout << "fx: " <<  f_x << " f_x_displace: " << f_x_displace << " fprimex: " << N_derivative << endl;
+      
+      if(N_derivative != 0)
+      {
+        e_new = e_new-f_x/N_derivative;
+      
+        // check to see if the difference in erosion rates meet a tolerance
+        e_change = f_x/N_derivative;
+        //cout << "Change is: " << e_change << " and erosion rate is: " << e_new << endl;
+      }
+      else
+      {
+        e_change = 0;
+      }
     
-      // check to see if the difference in erosion rates meet a tolerance
-      e_change = f_x/N_derivative;
-      cout << "Change is: " << e_change << " and erosion rate is: " << e_new << endl;
-    }
-    else
-    {
-      e_change = 0;
-    }
-  
-  } while(fabs(e_change) > tolerance);
-  eff_e_10Be = e_new; 
+    } while(fabs(e_change) > tolerance);
+    eff_e_10Be = e_new; 
+  }
 
   // now enter search for the correct erosion rate. 
   // now do 26Al
-  // get the initial concentrations
-  e_new = initial_guess[1];
-  cout << endl << endl << "26Al initial guess is: " << e_new << endl;
-  // now iterate using newton-raphson
-  do
-  {
-    
-    // get the new values
-    CRONUS_calculate_N_forward(e_new, LSDCRNP,z_mu, 
-                        P_mu_z_10Be, P_mu_z_26Al, thickSF, P_sp_10Be, P_sp_26Al,
-                        N10_this_step, N26_this_step);
-     f_x =  N26_this_step-N_26Al;                  
-                        
-    // now get the derivative
-    CRONUS_calculate_N_forward(e_new+e_displace, LSDCRNP,z_mu, 
-                        P_mu_z_10Be, P_mu_z_26Al, thickSF, P_sp_10Be, P_sp_26Al,
-                        N10_displace, N26_displace);
-    f_x_displace =  N26_displace-N_26Al;                    
-                        
-    N_derivative = (f_x_displace-f_x)/e_displace;
-    
-    //cout << "N10: " << N10_this_step << " + displace: " << N10_displace  << endl;
-    //cout << "fx: " <<  f_x << " f_x_displace: " << f_x_displace << " fprimex: " << N_derivative << endl;
-    
-    if(N_derivative != 0)
-    {
-      e_new = e_new-f_x/N_derivative;
-    
-      // check to see if the difference in erosion rates meet a tolerance
-      e_change = f_x/N_derivative;
-      cout << "Change is: " << e_change << " and erosion rate is: " << e_new << endl;
-    }
-    else
-    {
-      e_change = 0;
-    }
   
-  } while(fabs(e_change) > tolerance);
-  eff_e_26Al = e_new;
-
+  if(N_26Al > 0)
+  {
+    // get the initial concentrations
+    e_new = initial_guess[1];
+    //cout << endl << endl << "26Al initial guess is: " << e_new << endl;
+    // now iterate using newton-raphson
+    do
+    {
+      
+      // get the new values
+      CRONUS_calculate_N_forward(e_new, LSDCRNP,z_mu, 
+                          P_mu_z_10Be, P_mu_z_26Al, thickSF, P_sp_10Be, P_sp_26Al,
+                          N10_this_step, N26_this_step);
+       f_x =  N26_this_step-N_26Al;                  
+                          
+      // now get the derivative
+      CRONUS_calculate_N_forward(e_new+e_displace, LSDCRNP,z_mu, 
+                          P_mu_z_10Be, P_mu_z_26Al, thickSF, P_sp_10Be, P_sp_26Al,
+                          N10_displace, N26_displace);
+      f_x_displace =  N26_displace-N_26Al;                    
+                          
+      N_derivative = (f_x_displace-f_x)/e_displace;
+      
+      //cout << "N10: " << N10_this_step << " + displace: " << N10_displace  << endl;
+      //cout << "fx: " <<  f_x << " f_x_displace: " << f_x_displace << " fprimex: " << N_derivative << endl;
+      
+      if(N_derivative != 0)
+      {
+        e_new = e_new-f_x/N_derivative;
+      
+        // check to see if the difference in erosion rates meet a tolerance
+        e_change = f_x/N_derivative;
+        //cout << "Change is: " << e_change << " and erosion rate is: " << e_new << endl;
+      }
+      else
+      {
+        e_change = 0;
+      }
+    
+    } while(fabs(e_change) > tolerance);
+    eff_e_26Al = e_new;
+  }
+  
+  vector<double> uncertainties = 
+           CRONUS_error_propagation(pressure, LSDCRNP, thickSF,rho,N_10Be, N_26Al,
+                      sample_del10, sample_del26, z_mu,  P_mu_z_10Be, P_mu_z_26Al,
+                      P_sp_10Be, P_sp_26Al, eff_e_10Be, eff_e_26Al);
+  
+  erate_consts[0] = eff_e_10Be;
+  erate_consts[1] = eff_e_10Be*1.0e7/rho;
+  erate_consts[2] = uncertainties[1];
+  erate_consts[3] = uncertainties[0];
+  erate_consts[4] = uncertainties[3];
+  erate_consts[5] = uncertainties[2];
+  erate_consts[6] = eff_e_10Be;
+  erate_consts[7] = eff_e_10Be*1.0e7/rho;
+  erate_consts[8] = uncertainties[5];
+  erate_consts[9] = uncertainties[4];
+  erate_consts[10] = uncertainties[7];
+  erate_consts[11] = uncertainties[6]; 
+  
+  return erate_consts;
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function produces a screen report similar to that in CRONUS calculator
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParticle::CRONUS_screen_report(vector<double> erate_consts)
+{
+
+  cout << endl << endl << endl;
+  cout << "||==============================================================================================||" << endl;
+  cout << "|| Reporting 10Be results for non-time dependent Stone scaling.                                 ||" << endl;
+  cout << "||______________________________________________________________________________________________||" << endl;
+  cout << "|| Muon Prod \t|| Internal\t||Erate    \t||Erate    \t|| External\t|| Spallation\t||" << endl;
+  cout << "|| rate      \t|| Uncert. \t||g/cm^2/yr\t||m/Myr    \t|| Uncert. \t|| prod rate \t||" << endl;
+  cout << "|| atoms/g/yr\t|| m/Myr   \t||         \t||         \t|| m/Myr   \t|| atoms/g/yr \t||" << endl;
+  cout << "||-----------\t||---------\t||---------\t||---------\t||---------\t||------------\t||" << endl;
+  cout << "|| " << erate_consts[4] << "\t|| " << erate_consts[2] << "\t|| " << erate_consts[0] 
+       << " || " << erate_consts[1] << "\t|| " << erate_consts[3] << "\t|| " 
+       << erate_consts[5] << "\t||" << endl;
+  cout << "||==============================================================================================||" << endl;
+  cout << "||==============================================================================================||" << endl;  
+  cout << "|| Reporting 26Al results for non-time dependent Stone scaling.                                 ||" << endl;
+  cout << "||______________________________________________________________________________________________||" << endl;
+  cout << "|| Muon Prod \t|| Internal\t||Erate    \t||Erate    \t|| External\t|| Spallation \t||" << endl;
+  cout << "|| rate      \t|| Uncert. \t||g/cm^2/yr\t||m/Myr    \t|| Uncert. \t|| prod rate  \t||" << endl;
+  cout << "|| atoms/g/yr\t|| m/Myr   \t||         \t||         \t|| m/Myr   \t|| atoms/g/yr \t||" << endl;
+  cout << "||-----------\t||---------\t||---------\t||---------\t||---------\t||------------\t||" << endl;
+  cout << "|| " << erate_consts[10] << "\t|| " << erate_consts[8] << "\t|| " 
+       << erate_consts[6] << "\t|| " << erate_consts[7] << "\t|| " 
+       << erate_consts[9] << "\t|| " << erate_consts[11] << "\t||" <<endl;
+  cout << "||==============================================================================================||" << endl;  
+  cout << endl << endl;
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function returns the number of atoms given an effective erosion rate
@@ -2042,13 +2108,17 @@ void LSDCRNParticle::CRONUS_calculate_N_forward(double effective_erosion_rate,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function does the error propigation from the CRONUS calculator
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDCRNParticle::CRONUS_error_propagation(double pressure, 
-                            LSDCRNParameters& LSDCRNP, double thickSF,
+vector<double> LSDCRNParticle::CRONUS_error_propagation(double pressure, 
+                            LSDCRNParameters& LSDCRNP, double thickSF, double rho,
+                            double sample_N10, double sample_N26,
+                            double sample_del10, double sample_del26,
                             vector<double>& z_mu, vector<double>& P_mu_z_10Be, 
                             vector<double>& P_mu_z_26Al,
                             double P_sp_10Be, double P_sp_26Al, 
                             double eff_e_10, double eff_e_26)
 {
+  // the vector for holding the uncertainties
+  vector<double> uncertainties(8,0.0);
 
   // get some paramters about production
   double Pmu0_10 = P_mu_z_10Be[0];
@@ -2068,16 +2138,31 @@ void LSDCRNParticle::CRONUS_error_propagation(double pressure,
   vector<double> rel_delP =
         LSDCRNP.CRONUS_get_uncert_production_ratios(scaling_name);
 
-  double Lmu_10, Lmu_26;
+  //cout << endl << endl << endl << "Entering error checking routine" << endl;
+  //cout << "Pmu0_10: " << Pmu0_10 << " Pmu0_26: " << Pmu0_26  << endl;
+  //cout << "rel_delP10: " << rel_delP[0] << " rel_delP26: " <<  rel_delP[1] << endl;
+
+  // paramters to calculate individual uncertainties of AMS and production
+  double GammaMu_10, GammaMu_26;
   double Be10_mu_N, Al26_mu_N;
   double Psp0_10, Psp0_26;
   double delPsp0_10, delPsp0_26;
-  //double dEdN_10, dEdN_26;
-  //double dEdsp0_10, dEdsp0_26;
-  //double dEdPmu0_10, dEdPmu0_26;
+  double dEdN_10, dEdN_26;
+  double dEdsp0_10, dEdsp0_26;
+  double dEdPmu0_10, dEdPmu0_26;
+  
+  // parameters for error terms
+  double delE_ext_10 = 0;
+  double delE_int_10 = 0;
+  double delE_ext_26 = 0;
+  double delE_int_26 = 0;
 
   // number of atoms determined by the erosion rate function N forward
   double N_Be10, N_Al26, Be10_sp_N, Al26_sp_N;
+  
+  // variables that are the erosion rate about the centred value
+  // used for differencing
+  double E_minus, E_plus; 
 
   // first do 10Be
   if (eff_e_10 > 0)
@@ -2086,13 +2171,76 @@ void LSDCRNParticle::CRONUS_error_propagation(double pressure,
     CRONUS_calculate_N_forward(eff_e_10, LSDCRNP, z_mu, P_mu_z_10Be, P_mu_z_26Al, 
                                thickSF, P_sp_10Be, P_sp_26Al, N_Be10, N_Al26, 
                                Be10_mu_N, Al26_mu_N, Be10_sp_N, Al26_sp_N);
+    
+    //cout << "effective e: " << eff_e_10 << " N_Be10: " << N_Be10 
+    //     << " N_mu10: " << Be10_mu_N << " N_sp10: " << Be10_sp_N << endl;
                                
     // get the length scale for muons
-    Lmu_10 = eff_e_10/((Pmu0_10/Be10_mu_N)-decay_coeff[0]); 
+    GammaMu_10 = eff_e_10/((Pmu0_10/Be10_mu_N)-decay_coeff[0]);
+    
     
     // get the production scaling
-    Psp0_10 = Be10_mu_N*(decay_coeff[0]+(eff_e_10/GammaSp));
+    Psp0_10 = Be10_sp_N*(decay_coeff[0]+(eff_e_10/GammaSp));
     delPsp0_10 = Psp0_10*rel_delP[0];
+    //cout << "GammaMu_10: " << GammaMu_10 << " Psp0_10: " << Psp0_10 
+    //     << " delPsp0_10: "<< delPsp0_10 << endl;
+    
+    // get the values of erosion to do the central difference.
+    // This one is for uncertanty in the number of atoms 
+    E_plus = CRONUS_simple_N_findroots(eff_e_10, sample_N10+sample_del10,
+                              Psp0_10, Pmu0_10, GammaSp, GammaMu_10, decay_coeff[0]);
+    E_minus = CRONUS_simple_N_findroots(eff_e_10, sample_N10-sample_del10,
+                              Psp0_10, Pmu0_10, GammaSp, GammaMu_10, decay_coeff[0]);
+                              
+    // NOTE in Greg Balco's code this is multiplied by 10^4 rather than 10^7: the 
+    // difference is because Greg's rho is in g/cm^3 and I use kg/m^3
+    
+    // Greg's code introduces rho here. Presumably this is to convert to m/yr. 
+    // WHY???? Everything before has been in g/cm^2 or g/cm^2/yr
+    dEdN_10 = (1e7/(2.0*rho*sample_del10))*(E_plus-E_minus);
+    
+    //cout << "10Be, dN, Eplus: " << E_plus << " E_minus: " << E_minus 
+    //     << " dEdn_10: " << dEdN_10 << endl;
+
+    // get the values of erosion to do the central difference. 
+    // This one is for the uncertainty in spallation production rate
+    E_plus = CRONUS_simple_N_findroots(eff_e_10, sample_N10,
+                              Psp0_10+delPsp0_10, Pmu0_10, GammaSp, 
+                              GammaMu_10, decay_coeff[0]);
+    E_minus = CRONUS_simple_N_findroots(eff_e_10, sample_N10,
+                              Psp0_10-delPsp0_10, Pmu0_10, GammaSp, 
+                              GammaMu_10, decay_coeff[0]);
+
+    dEdsp0_10 = (1e7/(2.0*rho*delPsp0_10))*(E_plus-E_minus);
+    //cout << "10Be, spP0, Eplus: " << E_plus << " E_minus: " << E_minus 
+    //     << " dEdps0_10: " << dEdsp0_10 << endl;
+
+    // get the values of erosion to do the central difference. 
+    // This one is for the uncertainty in muon production rate
+    E_plus = CRONUS_simple_N_findroots(eff_e_10, sample_N10,
+                              Psp0_10, Pmu0_10+muon_uncertanty_params[0], GammaSp, 
+                              GammaMu_10, decay_coeff[0]);
+    E_minus = CRONUS_simple_N_findroots(eff_e_10, sample_N10,
+                              Psp0_10, Pmu0_10-muon_uncertanty_params[0], GammaSp, 
+                              GammaMu_10, decay_coeff[0]);
+
+    dEdPmu0_10 = (1e7/(2.0*rho*muon_uncertanty_params[0]))*(E_plus-E_minus);
+    //cout << "10Be, spP0, Eplus: " << E_plus << " E_minus: " << E_minus 
+    //     << " dEdPmu0_10: " << dEdPmu0_10 << endl;
+         
+         
+    delE_ext_10 = sqrt( (dEdsp0_10*delPsp0_10)*(dEdsp0_10*delPsp0_10)
+                      + (dEdPmu0_10*muon_uncertanty_params[0])*
+                        (dEdPmu0_10*muon_uncertanty_params[0])
+                      + (dEdN_10*sample_del10)*(dEdN_10*sample_del10) );
+    delE_int_10 = fabs(dEdN_10*sample_del10); 
+    
+    //cout << "delE_ext_10: " << delE_ext_10 << " delE_int_10: " << delE_int_10 << endl;
+    uncertainties[0] = delE_ext_10;
+    uncertainties[1] = delE_int_10;
+    uncertainties[2] = Psp0_10;
+    uncertainties[3] = Pmu0_10;
+        
   }
   // then do 26
   if (eff_e_26 > 0)
@@ -2101,15 +2249,72 @@ void LSDCRNParticle::CRONUS_error_propagation(double pressure,
     CRONUS_calculate_N_forward(eff_e_26, LSDCRNP, z_mu, P_mu_z_10Be, P_mu_z_26Al, 
                                thickSF, P_sp_10Be, P_sp_26Al, N_Be10, N_Al26, 
                                Be10_mu_N, Al26_mu_N, Be10_sp_N, Al26_sp_N);
+
+    //cout << "effective e: " << eff_e_26 << " N_Al26: " << N_Al26 
+    //     << " N_mu26: " << Al26_mu_N << " N_sp26: " << Al26_sp_N << endl;
                                
     // get the length scale for muons
-    Lmu_26 = eff_e_26/((Pmu0_26/Al26_mu_N)-decay_coeff[1]); 
+    GammaMu_26 = eff_e_26/((Pmu0_26/Al26_mu_N)-decay_coeff[1]); 
     
     // get the production scaling
-    Psp0_26 = Al26_mu_N*(decay_coeff[1]+(eff_e_26/GammaSp));
+    Psp0_26 = Al26_sp_N*(decay_coeff[1]+(eff_e_26/GammaSp));
     delPsp0_26 = Psp0_26*rel_delP[1];
+    
+    // get the values of erosion to do the central difference.
+    // This one is for uncertanty in the number of atoms  
+    E_plus = CRONUS_simple_N_findroots(eff_e_26, sample_N26+sample_del26,
+                            Psp0_26, Pmu0_26, GammaSp, GammaMu_26, decay_coeff[1]);
+    E_minus = CRONUS_simple_N_findroots(eff_e_26, sample_N26-sample_del26,
+                            Psp0_26, Pmu0_26, GammaSp, GammaMu_26, decay_coeff[1]);
+                            
+    // NOTE in Greg Balco's code this is multiplied by 10^4 rather than 10: the 
+    // difference is because Greg's rho is in g/cm^3 and I use kg/m^3
+    dEdN_26 = (1.0e7/(2.0*rho*sample_del26))*(E_plus-E_minus);
+    
+    //cout << "dN, 26AlEplus: " << E_plus << " E_minus: " << E_minus 
+    //     << " dEdn_10: " << dEdN_10 << endl;
+
+    // get the values of erosion to do the central difference. 
+    // This one is for the uncertainty in the production rate
+    E_plus = CRONUS_simple_N_findroots(eff_e_26, sample_N26,
+                              Psp0_26+delPsp0_26, Pmu0_26, GammaSp, 
+                              GammaMu_26, decay_coeff[1]);
+    E_minus = CRONUS_simple_N_findroots(eff_e_26, sample_N26,
+                              Psp0_26-delPsp0_26, Pmu0_26, GammaSp, 
+                              GammaMu_26, decay_coeff[1]);
+    
+    dEdsp0_26 = (1e7/(2.0*rho*delPsp0_26))*(E_plus-E_minus);
+    //cout << "26Al, spP0, Eplus: " << E_plus << " E_minus: " << E_minus 
+    //     << " dEdsp_26: " << dEdsp0_26 << endl;
+
+    // get the values of erosion to do the central difference. 
+    // This one is for the uncertainty in muon production rate
+    E_plus = CRONUS_simple_N_findroots(eff_e_26, sample_N26,
+                              Psp0_26, Pmu0_26+muon_uncertanty_params[1], GammaSp, 
+                              GammaMu_26, decay_coeff[1]);
+    E_minus = CRONUS_simple_N_findroots(eff_e_26, sample_N26,
+                              Psp0_26, Pmu0_26-muon_uncertanty_params[1], GammaSp, 
+                              GammaMu_26, decay_coeff[1]);
+
+    dEdPmu0_26 = (1e7/(2.0*rho*muon_uncertanty_params[1]))*(E_plus-E_minus);
+    //cout << "26Be, spP0, Eplus: " << E_plus << " E_minus: " << E_minus 
+    //     << " dEdPmu0_26: " << dEdPmu0_26 << endl;
+         
+    delE_ext_26 = sqrt( (dEdsp0_26*delPsp0_26)*(dEdsp0_26*delPsp0_26)
+                      + (dEdPmu0_26*muon_uncertanty_params[1])*
+                        (dEdPmu0_26*muon_uncertanty_params[1])
+                      + (dEdN_26*sample_del26)*(dEdN_26*sample_del26) );
+    delE_int_26 = fabs(dEdN_26*sample_del26);           
+    //cout << "delE_ext_26: " << delE_ext_26 << " delE_int_26: " << delE_int_26 << endl;   
+
+    uncertainties[4] = delE_ext_26;
+    uncertainties[5] = delE_int_26; 
+    uncertainties[6] = Psp0_26;
+    uncertainties[7] = Pmu0_26;
+
   }  
   
+  return uncertainties;
 
 
 
@@ -2138,7 +2343,7 @@ double LSDCRNParticle::CRONUS_simple_N_findroots(double inital_erate, double tar
   double f_x;
   double f_x_displace;
   double e_derivative;
-  double tolerance = 1e-5;
+  double tolerance = 1e-10;
 
   // now iterate using newton-raphson
   do
@@ -2164,7 +2369,7 @@ double LSDCRNParticle::CRONUS_simple_N_findroots(double inital_erate, double tar
     
       // check to see if the difference in erosion rates meet a tolerance
       e_change = f_x/e_derivative;
-      cout << "Change is: " << e_change << " and erosion rate is: " << e_new << endl;
+      //cout << "Change is: " << e_change << " and erosion rate is: " << e_new << endl;
     }
     else
     {
