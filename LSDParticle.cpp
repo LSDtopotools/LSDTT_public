@@ -1840,9 +1840,6 @@ vector<double> LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRN
   // Now get the initial guess
   vector<double> initial_guess = CRONUS_initial_guess(LSDCRNP, pressure, lat, 
                                          N_10Be, N_26Al, topo_scale, snow_scale);
-
-  cout << endl <<endl;
-  cout << "Initial guess 10Be: " << N_10Be << " 26Al: " << N_26Al << endl;
   
   // variable for holding the number of atoms per gram
   double N10_this_step,N10_displace;
@@ -1868,7 +1865,7 @@ vector<double> LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRN
   // retrieve the pre-scaling factors
   double P_ref_St_10 = Prefs_st[0];
   double P_ref_St_26 = Prefs_st[1];
-  cout << "P ref stone 10: " <<  P_ref_St_10 <<  " P_ref_St_26: " << P_ref_St_26 << endl;
+  //cout << "P ref stone 10: " <<  P_ref_St_10 <<  " P_ref_St_26: " << P_ref_St_26 << endl;
   
   // precalculate the P_mu vectors
   vector<double> z_mu;
@@ -1881,7 +1878,7 @@ vector<double> LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRN
   double P_sp_10Be = P_ref_St_10*stoneP*topo_scale*snow_scale;
   double P_sp_26Al = P_ref_St_26*stoneP*topo_scale*snow_scale;
   
-  cout << "P_sp_10Be: " << P_sp_10Be << " P_sp_26Al: " << P_sp_26Al << endl;
+  //cout << "P_sp_10Be: " << P_sp_10Be << " P_sp_26Al: " << P_sp_26Al << endl;
   
   if(N_10Be > 0)
   {
@@ -2145,6 +2142,8 @@ vector<double> LSDCRNParticle::CRONUS_error_propagation(double pressure,
 
   //cout << endl << endl << endl << "Entering error checking routine" << endl;
   //cout << "Pmu0_10: " << Pmu0_10 << " Pmu0_26: " << Pmu0_26  << endl;
+  //cout << "delPmu_10: " << muon_uncertanty_params[4] << " delPmu_26: " << muon_uncertanty_params[5] << endl;
+  //cout << "delPmu_10: " << muon_uncertanty_params[4] << " delPmu_26: " << muon_uncertanty_params[5] << endl;
   //cout << "rel_delP10: " << rel_delP[0] << " rel_delP26: " <<  rel_delP[1] << endl;
 
   // paramters to calculate individual uncertainties of AMS and production
@@ -2223,20 +2222,20 @@ vector<double> LSDCRNParticle::CRONUS_error_propagation(double pressure,
     // get the values of erosion to do the central difference. 
     // This one is for the uncertainty in muon production rate
     E_plus = CRONUS_simple_N_findroots(eff_e_10, sample_N10,
-                              Psp0_10, Pmu0_10+muon_uncertanty_params[0], GammaSp, 
+                              Psp0_10, Pmu0_10+muon_uncertanty_params[4], GammaSp, 
                               GammaMu_10, decay_coeff[0]);
     E_minus = CRONUS_simple_N_findroots(eff_e_10, sample_N10,
-                              Psp0_10, Pmu0_10-muon_uncertanty_params[0], GammaSp, 
+                              Psp0_10, Pmu0_10-muon_uncertanty_params[4], GammaSp, 
                               GammaMu_10, decay_coeff[0]);
 
-    dEdPmu0_10 = (1e7/(2.0*rho*muon_uncertanty_params[0]))*(E_plus-E_minus);
+    dEdPmu0_10 = (1e7/(2.0*rho*muon_uncertanty_params[4]))*(E_plus-E_minus);
     //cout << "10Be, spP0, Eplus: " << E_plus << " E_minus: " << E_minus 
     //     << " dEdPmu0_10: " << dEdPmu0_10 << endl;
          
          
     delE_ext_10 = sqrt( (dEdsp0_10*delPsp0_10)*(dEdsp0_10*delPsp0_10)
-                      + (dEdPmu0_10*muon_uncertanty_params[0])*
-                        (dEdPmu0_10*muon_uncertanty_params[0])
+                      + (dEdPmu0_10*muon_uncertanty_params[4])*
+                        (dEdPmu0_10*muon_uncertanty_params[4])
                       + (dEdN_10*sample_del10)*(dEdN_10*sample_del10) );
     delE_int_10 = fabs(dEdN_10*sample_del10); 
     
@@ -2265,6 +2264,9 @@ vector<double> LSDCRNParticle::CRONUS_error_propagation(double pressure,
     Psp0_26 = Al26_sp_N*(decay_coeff[1]+(eff_e_26/GammaSp));
     delPsp0_26 = Psp0_26*rel_delP[1];
     
+    //cout << "GammaMu_26: " << GammaMu_26 << " Psp0_26: " << Psp0_26 
+    //     << " delPsp0_26: " << delPsp0_26 << endl;
+    
     // get the values of erosion to do the central difference.
     // This one is for uncertanty in the number of atoms  
     E_plus = CRONUS_simple_N_findroots(eff_e_26, sample_N26+sample_del26,
@@ -2277,7 +2279,7 @@ vector<double> LSDCRNParticle::CRONUS_error_propagation(double pressure,
     dEdN_26 = (1.0e7/(2.0*rho*sample_del26))*(E_plus-E_minus);
     
     //cout << "dN, 26AlEplus: " << E_plus << " E_minus: " << E_minus 
-    //     << " dEdn_10: " << dEdN_10 << endl;
+    //     << " dEdn_10: " << dEdN_26 << endl;
 
     // get the values of erosion to do the central difference. 
     // This one is for the uncertainty in the production rate
@@ -2295,19 +2297,19 @@ vector<double> LSDCRNParticle::CRONUS_error_propagation(double pressure,
     // get the values of erosion to do the central difference. 
     // This one is for the uncertainty in muon production rate
     E_plus = CRONUS_simple_N_findroots(eff_e_26, sample_N26,
-                              Psp0_26, Pmu0_26+muon_uncertanty_params[1], GammaSp, 
+                              Psp0_26, Pmu0_26+muon_uncertanty_params[5], GammaSp, 
                               GammaMu_26, decay_coeff[1]);
     E_minus = CRONUS_simple_N_findroots(eff_e_26, sample_N26,
-                              Psp0_26, Pmu0_26-muon_uncertanty_params[1], GammaSp, 
+                              Psp0_26, Pmu0_26-muon_uncertanty_params[5], GammaSp, 
                               GammaMu_26, decay_coeff[1]);
 
-    dEdPmu0_26 = (1e7/(2.0*rho*muon_uncertanty_params[1]))*(E_plus-E_minus);
+    dEdPmu0_26 = (1e7/(2.0*rho*muon_uncertanty_params[5]))*(E_plus-E_minus);
     //cout << "26Be, spP0, Eplus: " << E_plus << " E_minus: " << E_minus 
     //     << " dEdPmu0_26: " << dEdPmu0_26 << endl;
          
     delE_ext_26 = sqrt( (dEdsp0_26*delPsp0_26)*(dEdsp0_26*delPsp0_26)
-                      + (dEdPmu0_26*muon_uncertanty_params[1])*
-                        (dEdPmu0_26*muon_uncertanty_params[1])
+                      + (dEdPmu0_26*muon_uncertanty_params[5])*
+                        (dEdPmu0_26*muon_uncertanty_params[5])
                       + (dEdN_26*sample_del26)*(dEdN_26*sample_del26) );
     delE_int_26 = fabs(dEdN_26*sample_del26);           
     //cout << "delE_ext_26: " << delE_ext_26 << " delE_int_26: " << delE_int_26 << endl;   
@@ -2316,7 +2318,6 @@ vector<double> LSDCRNParticle::CRONUS_error_propagation(double pressure,
     uncertainties[5] = delE_int_26; 
     uncertainties[6] = Psp0_26;
     uncertainties[7] = Pmu0_26;
-
   }  
   
   return uncertainties;

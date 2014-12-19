@@ -1774,10 +1774,10 @@ vector<double> LSDCRNParameters::CRONUS_get_muon_uncertainty_params(double press
   // calculate the parameters
   double delPfast_10 = muon_prod[0]*(CRONUS_data_map["delsigma190_10"]/
                                      CRONUS_data_map["sigma190_10"]);
-  double delPfast_26 = muon_prod[1]*(CRONUS_data_map["delk_neg10"]/
-                                     CRONUS_data_map["k_neg10"]);
-  double delPneg_10 = muon_prod[2]*(CRONUS_data_map["delsigma190_26"]/
+  double delPfast_26 = muon_prod[1]*(CRONUS_data_map["delsigma190_26"]/
                                      CRONUS_data_map["sigma190_26"]);
+  double delPneg_10 = muon_prod[2]*(CRONUS_data_map["delk_neg10"]/
+                                     CRONUS_data_map["k_neg10"]);
   double delPneg_26 = muon_prod[3]*(CRONUS_data_map["delk_neg26"]/
                                      CRONUS_data_map["k_neg26"]);;
   double delPmu0_10 = sqrt(delPfast_10*delPfast_10 + delPneg_10*delPneg_10);
