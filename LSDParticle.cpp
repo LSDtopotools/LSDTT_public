@@ -672,14 +672,16 @@ void LSDCRNParticle::update_10Be_conc_neutron_only(double dt,double erosion_rate
 // 4 attenuation depth model of Vermeesch (2007)
 // The erosion rate should be in g/cm^2/yr
 //
-// NOTE This produces far less muon production than cosmo calc 
+// NOTE This produces far less muon production than CRONUS
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParticle::update_10Be_SSfull(double erosion_rate, LSDCRNParameters& CRNp)
 {
+  double this_term;
   double sum_term1 = 0;
   //double sum_term2 = 0;
   
-  
+  double spall_tot = 0; 
+  double muon_tot = 0;
   
   for (int i = 0; i<4; i++)
   {
@@ -689,18 +691,36 @@ void LSDCRNParticle::update_10Be_SSfull(double erosion_rate, LSDCRNParameters& C
   
     //sum_term1+= (CRNp.F_10Be[i]*exp(-effective_dLoc/CRNp.Gamma[i])*CRNp.Gamma[i])/
     //           (erosion_rate+CRNp.Gamma[i]*CRNp.lambda_10Be);
-    sum_term1+= (CRNp.F_10Be[i]*(1-exp(-effective_dLoc/CRNp.Gamma[i]))*
-                (CRNp.Gamma[i]/effective_dLoc))/
-                (CRNp.lambda_10Be+erosion_rate/CRNp.Gamma[i]);
-    cout << "Thick/A:" << (CRNp.F_10Be[i]*(1-exp(-effective_dLoc/CRNp.Gamma[i]))*
-                (CRNp.Gamma[i]/effective_dLoc))/
-                (CRNp.lambda_10Be+erosion_rate/CRNp.Gamma[i]) << endl;
+    //sum_term1+= (CRNp.F_10Be[i]*(1-exp(-effective_dLoc/CRNp.Gamma[i]))*
+    //            (CRNp.Gamma[i]/effective_dLoc))/
+    //            (CRNp.lambda_10Be+erosion_rate/CRNp.Gamma[i]);
+    //cout << "Thick/A:" << (CRNp.F_10Be[i]*(1-exp(-effective_dLoc/CRNp.Gamma[i]))*
+    //            (CRNp.Gamma[i]/effective_dLoc))/
+    //            (CRNp.lambda_10Be+erosion_rate/CRNp.Gamma[i]) << endl;
+    this_term = (exp(-effective_dLoc/CRNp.Gamma[i])*CRNp.F_10Be[i]*CRNp.Gamma[i])/
+                 (erosion_rate+CRNp.Gamma[i]*CRNp.lambda_10Be);
+    sum_term1 += this_term;
+    if(i == 0)
+    {
+      spall_tot+=this_term;
+    }             
+    else
+    {
+      muon_tot+=this_term;
+    }
   }
 
   //cout << "and sum term is: " << sum_term1 << " " << sum_term2 << endl;
   //double Pref =  CRNp.S_t*CRNp.P0_10Be;
   //cout << "Pref is: " << Pref << endl;
+  cout << "Scaling is: " << CRNp.S_t << " P0 is: " << CRNp.P0_10Be 
+       << " and Pref is: " << CRNp.S_t*CRNp.P0_10Be << endl;
   Conc_10Be = CRNp.S_t*CRNp.P0_10Be*sum_term1;
+  spall_tot = CRNp.S_t*CRNp.P0_10Be*spall_tot;
+  muon_tot =  CRNp.S_t*CRNp.P0_10Be*muon_tot;
+  cout << "Line 717, Conc 10Be is: " << Conc_10Be << " from spallation: " << spall_tot
+       << " and muons: " << muon_tot << endl;
+  
   //cout << "and ending 10Be conc is: " << Conc_10Be <<endl;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -785,14 +805,34 @@ double LSDCRNParticle::apparent_erosion_26Al_neutron_only(double rho, LSDCRNPara
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParticle::update_26Al_SSfull(double erosion_rate, LSDCRNParameters& CRNp)
 {
+  double this_sum;
   double sum_term = 0;
+  double spall_tot = 0; 
+  double muon_tot = 0;
   for (int i = 0; i<4; i++)
   {
-    sum_term+= (CRNp.F_26Al[i]*exp(-effective_dLoc/CRNp.Gamma[i])*CRNp.Gamma[i])/
-           (erosion_rate+CRNp.Gamma[i]*CRNp.lambda_26Al);
+    //sum_term+= (CRNp.F_26Al[i]*exp(-effective_dLoc/CRNp.Gamma[i])*CRNp.Gamma[i])/
+    //     (erosion_rate+CRNp.Gamma[i]*CRNp.lambda_26Al);
+    this_sum = (exp(-effective_dLoc/CRNp.Gamma[i])*CRNp.F_26Al[i]*CRNp.Gamma[i])/
+                 (erosion_rate+CRNp.Gamma[i]*CRNp.lambda_26Al);
+    sum_term+=this_sum;
+    if(i == 0)
+    {
+      spall_tot+=this_sum;
+      //cout << "Stot: " << spall_tot << endl;
+    }             
+    else
+    {
+      muon_tot+=this_sum;
+      //cout << "Mtot: " << muon_tot << endl;
+    }                 
   }
 
   Conc_26Al = CRNp.S_t*CRNp.P0_26Al*sum_term;
+  spall_tot = CRNp.S_t*CRNp.P0_26Al*spall_tot;
+  muon_tot =  CRNp.S_t*CRNp.P0_26Al*muon_tot;
+  cout << "Line 717, Conc 26Al is: " << Conc_26Al << " from spallation: " << spall_tot
+       << " and muons: " << muon_tot << endl;
 }
 
 void LSDCRNParticle::update_14C_conc(double dt,double erosion_rate, LSDCRNParameters& CRNp)
@@ -1976,6 +2016,12 @@ vector<double> LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRN
                       sample_del10, sample_del26, z_mu,  P_mu_z_10Be, P_mu_z_26Al,
                       P_sp_10Be, P_sp_26Al, eff_e_10Be, eff_e_26Al);
   
+  cout << "10Be atoms from spallation: " << uncertainties[8] 
+       << " and muons: " << uncertainties[9]  << endl;
+  cout << "26Al atoms from spallation: " << uncertainties[10] 
+       << " and muons: " << uncertainties[11]  << endl;       
+  
+  
   erate_consts[0] = eff_e_10Be;
   erate_consts[1] = eff_e_10Be*1.0e7/rho;
   erate_consts[2] = uncertainties[1];
@@ -2120,7 +2166,7 @@ vector<double> LSDCRNParticle::CRONUS_error_propagation(double pressure,
                             double eff_e_10, double eff_e_26)
 {
   // the vector for holding the uncertainties
-  vector<double> uncertainties(8,0.0);
+  vector<double> uncertainties(12,0.0);
 
   // get some paramters about production
   double Pmu0_10 = P_mu_z_10Be[0];
@@ -2174,7 +2220,10 @@ vector<double> LSDCRNParticle::CRONUS_error_propagation(double pressure,
     // get the contributions from spallation and muons
     CRONUS_calculate_N_forward(eff_e_10, LSDCRNP, z_mu, P_mu_z_10Be, P_mu_z_26Al, 
                                thickSF, P_sp_10Be, P_sp_26Al, N_Be10, N_Al26, 
-                               Be10_mu_N, Al26_mu_N, Be10_sp_N, Al26_sp_N);
+                               Be10_mu_N, Al26_mu_N, Be10_sp_N, Al26_sp_N);  
+     
+    uncertainties[8] = Be10_sp_N;
+    uncertainties[9] = Be10_mu_N;                         
     
     //cout << "effective e: " << eff_e_10 << " N_Be10: " << N_Be10 
     //     << " N_mu10: " << Be10_mu_N << " N_sp10: " << Be10_sp_N << endl;
@@ -2253,6 +2302,10 @@ vector<double> LSDCRNParticle::CRONUS_error_propagation(double pressure,
     CRONUS_calculate_N_forward(eff_e_26, LSDCRNP, z_mu, P_mu_z_10Be, P_mu_z_26Al, 
                                thickSF, P_sp_10Be, P_sp_26Al, N_Be10, N_Al26, 
                                Be10_mu_N, Al26_mu_N, Be10_sp_N, Al26_sp_N);
+
+    // get seperate spallation and muon production for bug checking     
+    uncertainties[10] = Al26_sp_N;
+    uncertainties[11] = Al26_mu_N; 
 
     //cout << "effective e: " << eff_e_26 << " N_Al26: " << N_Al26 
     //     << " N_mu26: " << Al26_mu_N << " N_sp26: " << Al26_sp_N << endl;

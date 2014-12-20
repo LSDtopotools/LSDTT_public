@@ -1081,8 +1081,11 @@ void LSDCRNParameters::set_CRONUS_stone_parameters()
 
 
   // from the CRONUS calculator
-  P0_10Be = 4.49;          // in a/g/yr
-  P0_26Al = 30.2922;       // in a/g/yr
+  // the numbers are divided by the scaling factor that determines neutron
+  // spallation. The intended effect is to replicate the neutron production of 
+  // the CRONUS calculator
+  P0_10Be = 4.49/F_10Be[0];          // in a/g/yr
+  P0_26Al = 30.2922/F_26Al[0];       // in a/g/yr
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1740,7 +1743,7 @@ void LSDCRNParameters::integrate_nonTD_spallation_flux_for_erosion(double E,
 
   //cout << "Integrating spallation, LINE 1719" << endl;
   //cout << "ThickSF: " << thick_SF << endl;
-  //cout << "Psp10: " << P_sp_10Be << " Psp26: " << P_sp_26Al << endl;
+  cout << "Psp10: " << P_sp_10Be << " Psp26: " << P_sp_26Al << endl;
   //cout << "decay10: " << decay[0] << " decay26: " << decay[1] << endl;
   //cout << "A10: " << A_10Be << " A26: " << A_26Al << endl;
   //cout << "thick/A: " <<  thick_SF/A_10Be << endl;

@@ -1033,12 +1033,16 @@ void CRONUS_calculate_N_forward(double effective_erosion_rate,
   /// @return errors a vector<double> of the errors in the erosion rate
   ///   errors[0] = external 10Be error
   ///   errors[1] = internal 10Be error (i.e., from the ams)
-  ///   errors[2] = Production from spallation for 10Be in atoms/g/yr
-  ///   errors[3] = Production from muons for 10Be in atoms/g/yr
+  ///   errors[2] = Production from spallation at surface for 10Be in atoms/g/yr
+  ///   errors[3] = Production from muons at surface for 10Be in atoms/g/yr
   ///   errors[4] = external 10Be error
   ///   errors[5] = internal 10Be error (i.e., from the ams)
-  ///   errors[6] = Production from spallation for 26Al in atoms/g/yr
-  ///   errors[7] = Production from muons for 26Al in atoms/g/yr
+  ///   errors[6] = Production from spallation at surface for 26Al in atoms/g/yr
+  ///   errors[7] = Production from muons at surface for 26Al in atoms/g/yr
+  ///   errors[8] = Atoms from spallation of 10Be in atoms/g
+  ///   errors[9] = Atoms from muons of 10Be in atoms/g
+  ///   errors[10] = Atoms from spallation of 26Al in atoms/g
+  ///   errors[11] = Atoms from muons of 26Al in atoms/g
   /// @author SMM
   /// @date 17/12/2014
   vector<double> CRONUS_error_propagation(double pressure, 
