@@ -1082,8 +1082,11 @@ void LSDChannel::write_channel_to_csv(string path, string filename, LSDRaster& f
     id++;
     this_row = RowSequence[node];
     this_col = ColSequence[node];
-		x = XMinimum + float(this_col)*DataResolution + 0.5*DataResolution;
-		y = YMinimum + float(NRows-this_row)*DataResolution - 0.5*DataResolution;		// this is because the DEM starts from the top corner
+    x = XMinimum + float(this_col)*DataResolution + 0.5*DataResolution;
+    
+    // Slightly different logic for y because the DEM starts from the top corner
+    y = YMinimum + float(NRows-this_row)*DataResolution - 0.5*DataResolution;
+    
     
     chan_out << id << "," << x << "," << y << "," << this_row << "," 
              << this_col << "," << flow_dist.get_data_element(this_row,this_col) << ","

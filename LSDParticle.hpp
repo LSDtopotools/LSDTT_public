@@ -997,7 +997,7 @@ class LSDCRNParticle: public LSDParticle
   /// @param Al26_sp_N atoms of 26Al from spallation
   /// @author SMM
   /// @date 17/12/2014
-void CRONUS_calculate_N_forward(double effective_erosion_rate, 
+  void CRONUS_calculate_N_forward(double effective_erosion_rate, 
                             LSDCRNParameters& LSDCRNP,
                             vector<double>& z_mu, vector<double>& P_mu_z_10Be, 
                             vector<double>& P_mu_z_26Al, double thickSF, 

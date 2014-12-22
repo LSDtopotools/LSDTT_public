@@ -940,8 +940,6 @@ void LSDCosmoBasin::populate_scaling_vectors(LSDFlowInfo& FlowInfo,
                                                string path_to_atmospheric_data)
 {
   int row,col;
-  float TotalData = 0;
-  int CountNDV = 0;
   
   // variables for converting location and elevation
   double this_elevation, this_pressure, this_tshield;
@@ -964,12 +962,13 @@ void LSDCosmoBasin::populate_scaling_vectors(LSDFlowInfo& FlowInfo,
   LSDRaster T_shield = Elevation_Data.TopoShield(theta_step, phi_step);
   
   // a function for scaling stone production, defaults to 1
-  double Fsp = 1.0
+  double Fsp = 1.0;
   
-  // initiate a UTM to lat-long converter
+  // the latitude and longitude
+  float lat,longitude;
+  
+  // decalre converter object
   LSDCoordinateConverterLLandUTM Converter;
-  
-  float lat,long;
   
   for (int q = 0; q < int(BasinNodes.size()); ++q)
   {
@@ -977,19 +976,21 @@ void LSDCosmoBasin::populate_scaling_vectors(LSDFlowInfo& FlowInfo,
     FlowInfo.retrieve_current_row_and_col(BasinNodes[q], row, col);
     
     //exclude NDV from average
-    if (Data.get_data_element(row,col) != NoDataValue)
+    if (Elevation_Data.get_data_element(row,col) != NoDataValue)
     {
       // To get pressure, first get the lat and long
-      Elevation_Data.get_lat_and_long_locations(row, col, lat, long, Converter);
+      Elevation_Data.get_lat_and_long_locations(row, col, lat, longitude, Converter);
+      //Elevation_Data.get_lat_and_long_locations(row, col, lat, longitude);
       
       // now the elevation
       this_elevation = Elevation_Data.get_data_element(row,col);
       
       // now the pressure
-      this_pressure = NCEPatm_2(double(lat), double(long), double(this_elevation));
+      this_pressure = LSDCRNP.NCEPatm_2(double(lat), double(longitude), 
+                                        double(this_elevation));
       
       // now get the scaling
-      prod_temp.push_back(stone2000sp(lat,this_pressure, Fsp));
+      prod_temp.push_back(LSDCRNP.stone2000sp(lat,this_pressure, Fsp));
       
       // Now get topographic shielding
       this_tshield = double(T_shield.get_data_element(row,col));
@@ -1018,7 +1019,7 @@ void LSDCosmoBasin::populate_scaling_vectors(LSDFlowInfo& FlowInfo,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function returns the concentration of a nuclide as  function of erosion rate
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-double LSDCosmoBasin::predict_mean_Conc_10Be(double erosion_rate, string Nuclide)
+double LSDCosmoBasin::predict_mean_CRN_conc(double erosion_rate, string Nuclide)
 {
   
   // the average atoms per gram of the nuclide
@@ -1030,19 +1031,23 @@ double LSDCosmoBasin::predict_mean_Conc_10Be(double erosion_rate, string Nuclide
   // the total atomic concentration of the nuclude in question
   double Total_N = 0;
   
+  int count_samples;
+  
   // initiate a particle. We'll just repeatedly call this particle
   // for the sample. 
   int startType = 0; 
-  int samp = 0;
   double Xloc = 0;
   double Yloc = 0;
   double  startdLoc = 0.0;
   double  start_effdloc = 0.0;
   double startzLoc = 0.0;
   
+  // create a particle at zero depth
   LSDCRNParticle eroded_particle(startType, Xloc, Yloc,
                                startdLoc, start_effdloc, startzLoc);
-  
+
+  // now create the CRN parameters object
+  LSDCRNParameters LSDCRNP;  
 
   // loop through the elevation data
   for (int q = 0; q < int(BasinNodes.size()); ++q)
@@ -1061,7 +1066,7 @@ double LSDCosmoBasin::predict_mean_Conc_10Be(double erosion_rate, string Nuclide
       // the elevation, snow shielding, topographic shielding
       // and production scaling are all independent of the erosion rate
       // and are calculated seperately. 
-      total_shielding = production_scaling[q]*topographic_shielding[q]*
+      total_shielding = production_shielding[q]*topographic_shielding[q]*
                         snow_shielding[q];
                       
       // now recalculate F values to match the total shielding
@@ -1070,22 +1075,27 @@ double LSDCosmoBasin::predict_mean_Conc_10Be(double erosion_rate, string Nuclide
       // get the nuclide concentration from this node
       if (Nuclide == "Be10")
       {
-        Total_N+=eroded_particle.update_10Be_SSfull(erosion_rate,LSDCRNP);
+        
+        eroded_particle.update_10Be_SSfull(erosion_rate,LSDCRNP);
+        Total_N+=eroded_particle.getConc_10Be();
       }
-      else if (Nuclide = "Al26")
+      else if (Nuclide == "Al26")
       {
-        Total_N+=eroded_particle.update_26Al_SSfull(erosion_rate,LSDCRNP);
+        eroded_particle.update_26Al_SSfull(erosion_rate,LSDCRNP);
+        Total_N+=eroded_particle.getConc_26Al();
       }
       else
       {
         cout << "You didn't give a valid nuclide. You chose: " << Nuclide << endl;
         cout << "Choices are 10Be, 26Al.  Note these case sensitive and cannot" << endl;
         cout << "contain spaces or control characters. Defaulting to 10Be." << endl;
-        Total_N+=eroded_particle.update_10Be_SSfull(erosion_rate,LSDCRNP);
-      }                    
+        eroded_particle.update_10Be_SSfull(erosion_rate,LSDCRNP);
+        Total_N+=eroded_particle.getConc_10Be();
+      }
+    }                    
   }
 
-  BasinAverage = TotalN/double(count_samples);
+  BasinAverage = Total_N/double(count_samples);
 
   return BasinAverage;
 }
