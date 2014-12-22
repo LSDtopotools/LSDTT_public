@@ -1140,6 +1140,166 @@ void LSDCRNParameters::set_Neutron_only_parameters()
   F_36Cl[3] = 0;
 }
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Scaling from the Stone 2000 paper
+// Units:
+// latitude in decimal degrees
+// pressure in hPa
+// fsp is the fraction (between 0 and 1) of production at sea level
+// and high latitude due to spallation (as opposed to muons).
+// This argument is optional and defaults to 0.978, which is the value
+// used by Stone (2000) for Be-10. The corresponding value for Al-26
+// is 0.974. Note that using 0.844 for Be-10 and 0.826 for Al-26 will
+// closely reproduce the Lal, 1991 scaling factors as long as the standard
+// atmosphere is used to convert sample elevation to atmospheric pressure.
+// Also note that this function will yield the scaling factor for spallation
+// only when fsp=1, and that for muons only when fsp=0.
+//
+// IMPORTANT: This (and the Rc version) is probably the best scaling method!
+// See https://cosmognosis.wordpress.com/2014/01/07/high-altitude-low-latitude-calibration-sites-i/
+//
+// Elevation can be converted to pressure with the functions
+// stdatm.m (general use) and antatm.m (Antarctica).
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+double LSDCRNParameters::stone2000sp(double lat,double P, double Fsp)
+{
+  if (Fsp > 1)
+  {
+    Fsp = 0.978;
+  }
+  
+  if (fabs(lat) > 90)
+  {
+    cout << "Your latitude is > 90! Defaulting to 45 degrees" << endl;
+    lat = 45;
+  }
+
+  // Spallogenic production at index latitudes;
+  // enter constants from Table 1
+  vector<double> a;
+  a.push_back(31.8518);
+  a.push_back(34.3699);
+  a.push_back(40.3153);
+  a.push_back(42.0983);
+  a.push_back(56.7733);
+  a.push_back(69.0720);
+  a.push_back(71.8733);
+
+  vector<double> b;
+  b.push_back(250.3193);
+  b.push_back(258.4759);
+  b.push_back(308.9894);
+  b.push_back(512.6857);
+  b.push_back(649.1343);
+  b.push_back(832.4566);
+  b.push_back(863.1927);
+
+  vector<double> c;
+  c.push_back(-0.083393);
+  c.push_back(-0.089807);
+  c.push_back(-0.106248);
+  c.push_back(-0.120551);
+  c.push_back(-0.160859);
+  c.push_back(-0.199252);
+  c.push_back(-0.207069);
+
+  vector<double> d;
+  d.push_back(7.4260e-5);
+  d.push_back(7.9457e-5);
+  d.push_back(9.4508e-5);
+  d.push_back(1.1752e-4);
+  d.push_back(1.5463e-4);
+  d.push_back(1.9391e-4);
+  d.push_back(2.0127e-4);
+
+  vector<double> e;
+  e.push_back(-2.2397e-8);
+  e.push_back(-2.3697e-8);
+  e.push_back(-2.8234e-8);
+  e.push_back(-3.8809e-8);
+  e.push_back(-5.0330e-8);
+  e.push_back(-6.3653e-8);
+  e.push_back(-6.6043e-8);
+
+  vector<double> ilats;
+  ilats.push_back(0);
+  ilats.push_back(10);
+  ilats.push_back(20);
+  ilats.push_back(30);
+  ilats.push_back(40);
+  ilats.push_back(50);
+  ilats.push_back(60);
+
+  // calculate index latitudes at given P's
+  double lat0  = a[0] + (b[0] * exp(P/(-150.0))) + (c[0]*P) + (d[0]*(P*P)) + (e[0]*(P*P*P));
+  double lat10 = a[1] + (b[1] * exp(P/(-150.0))) + (c[1]*P) + (d[1]*(P*P)) + (e[1]*(P*P*P));
+  double lat20 = a[2] + (b[2] * exp(P/(-150.0))) + (c[2]*P) + (d[2]*(P*P)) + (e[2]*(P*P*P));
+  double lat30 = a[3] + (b[3] * exp(P/(-150.0))) + (c[3]*P) + (d[3]*(P*P)) + (e[3]*(P*P*P));
+  double lat40 = a[4] + (b[4] * exp(P/(-150.0))) + (c[4]*P) + (d[4]*(P*P)) + (e[4]*(P*P*P));
+  double lat50 = a[5] + (b[5] * exp(P/(-150.0))) + (c[5]*P) + (d[5]*(P*P)) + (e[5]*(P*P*P));
+  double lat60 = a[6] + (b[6] * exp(P/(-150.0))) + (c[6]*P) + (d[6]*(P*P)) + (e[6]*(P*P*P));
+
+  vector<double> lat_at_specifics(7,0.0);
+  lat_at_specifics[0] = lat0;
+  lat_at_specifics[1] = lat10;
+  lat_at_specifics[2] = lat20;
+  lat_at_specifics[3] = lat30;
+  lat_at_specifics[4] = lat40;
+  lat_at_specifics[5] = lat50;
+  lat_at_specifics[6] = lat60;
+
+  //northernize southern-hemisphere inputs
+  lat = fabs(lat);
+
+  //set high lats to 60;
+  if(lat > 60)
+  {
+    lat = 60.0;
+  }
+
+  // interpoloate elevation
+  double S = interp1D_ordered(ilats,lat_at_specifics, lat);
+
+  // Production by muons
+
+  //constants
+  vector<double> mk;
+  mk.push_back(0.587);
+  mk.push_back(0.600);
+  mk.push_back(0.678);
+  mk.push_back(0.833);
+  mk.push_back(0.933);
+  mk.push_back(1.000);
+  mk.push_back(1.000);
+
+  // index latitudes at given P's
+  vector<double> m_index_at_given_P;
+  m_index_at_given_P.push_back(mk[0]*exp( (1013.25-P)/242.0));
+  m_index_at_given_P.push_back(mk[1]*exp( (1013.25-P)/242.0));
+  m_index_at_given_P.push_back(mk[2]*exp( (1013.25-P)/242.0));
+  m_index_at_given_P.push_back(mk[3]*exp( (1013.25-P)/242.0));
+  m_index_at_given_P.push_back(mk[4]*exp( (1013.25-P)/242.0));
+  m_index_at_given_P.push_back(mk[5]*exp( (1013.25-P)/242.0));
+  m_index_at_given_P.push_back(mk[6]*exp( (1013.25-P)/242.0));
+   
+
+  // interpolate for actual elevation
+  double M = interp1D_ordered(ilats, m_index_at_given_P, lat);
+
+  //cout << "S: " << S << " M: " << M << " Fsp: " << Fsp << endl;
+
+  // Combine spallogenic and muogenic production; return
+  double Fm = 1 - Fsp;
+  double out = ((S * Fsp) + (M * Fm));
+  
+  //cout << "Stone 2000 scaling is: "  << out << endl;
+
+  return out;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function sets the total scaling value
 // It is a product of the scaling, topographic shielding and snow shielding. 
@@ -1449,7 +1609,7 @@ void LSDCRNParameters::scale_F_values(double single_scaling)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 double LSDCRNParameters::NCEPatm_2(double site_lat, double site_lon, double site_elev)
 {
-  // deal with negative loingitudes
+  // deal with negative longitudes
   if(site_lon < 0)
   {
     site_lon = site_lon+360.0;

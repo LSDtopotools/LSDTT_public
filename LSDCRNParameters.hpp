@@ -227,6 +227,25 @@ class LSDCRNParameters
   /// @date 17/12/2014
   void set_scaling(double scaling, double topo_shield, double snow_shield);
 
+  /// @brief This gets the Lifton Scaling
+  /// Modified from Greg Balco's code:
+  ///  http://hess.ess.washington.edu/math
+  /// @param latitude in decimal degrees
+  /// @param pressure in hPa
+  /// @param fsp is the fraction (between 0 and 1) of production at sea level
+  ///  and high latitude due to spallation (as opposed to muons).
+  ///  This argument is optional and defaults to 0.978, which is the value
+  ///  used by Stone (2000) for Be-10. The corresponding value for Al-26
+  ///  is 0.974. Note that using 0.844 for Be-10 and 0.826 for Al-26 will
+  ///  closely reproduce the Lal, 1991 scaling factors as long as the standard
+  ///  atmosphere is used to convert sample elevation to atmospheric pressure.
+  ///  Also note that this function will yield the scaling factor for spallation
+  ///  only when fsp=1, and that for muons only when fsp=0.
+  ///  @return the scaling factor
+  /// @author SMM
+  /// @date 5/12/2014
+  double stone2000sp(double lat,double P, double Fsp);
+
 
   /// @brief this function takes a single scaling factor for
   /// elevation scaling, self shielding, snow shielding,
