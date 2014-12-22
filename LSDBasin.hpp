@@ -14,6 +14,8 @@
 #include "LSDIndexRaster.hpp"
 #include "LSDJunctionNetwork.hpp"
 #include "LSDStatsTools.hpp"
+#include "LSDParticle.hpp"
+#include "LSDCRNParameters.hpp"
 using namespace std;
 using namespace TNT;
 
@@ -607,16 +609,16 @@ class LSDBasin
   ///Number of rows.
   int NRows;
   ///Number of columns.
-	int NCols;
-	///Minimum X coordinate.
+  int NCols;
+  ///Minimum X coordinate.
   float XMinimum;
-	///Minimum Y coordinate.
-	float YMinimum;
-	///Data resolution.
-	float DataResolution;
-	///No data value.
-	int NoDataValue;  
-	///A map of strings for holding georeferencing information
+  ///Minimum Y coordinate.
+  float YMinimum;
+  ///Data resolution.
+  float DataResolution;
+  ///No data value.
+  int NoDataValue;  
+  ///A map of strings for holding georeferencing information
   map<string,string> GeoReferencingStrings;
   	
   /// Junction Number of the basin, serves as a unique ID of a basin.
@@ -689,10 +691,79 @@ class LSDBasin
   float EStar;
   /// Basin R* value.
   float RStar;
- 											
+
   private:
-	void create(int Junction, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChanNet);
+  void create(int Junction, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChanNet);
 
 };
+
+
+/// @brief A derived class that is used to compute erosion rates based on 
+///  concentrations of in-situ cosmogenic nuclides such as 10Be and 26Al
+class LSDCosmoBasin: public LSDBasin
+{
+  public:
+  
+    
+    /// @brief This function populates the scaling vectors that are used to set 
+    ///  the production scaling, topographic shielding and snow shielding
+    ///  for specific nodes
+    /// @detail THis is the default scaling that assumes no snow shielding (i.e., 
+    ///  snow_shielding == 1). The assumptions are Stone scaling with Fsp = 1
+    ///  and that the DEM has a WGS84 ellipsoid
+    /// @param FlowInfo the LSDFlowInfo object
+    /// @param Elevation_Data the DEM, an LSDRaster object. IMPORTANT!! This needs
+    ///  to contain georeferencing information for this to work!!!
+    /// @param path_to_atmospheric_data THis is a path to binary NCEP data. 
+    /// @author SMM
+    /// @date 22/12/2014
+    void populate_scaling_vectors(LSDFlowInfo& FlowInfo, LSDRaster& Elevation_Data,
+                                               string path_to_atmospheric_data);
+                                               
+    /// @brief this predicts the mean concentration of a nuclide within 
+    /// a basin
+    /// @param eff_erosion rate The erosion rate in g/cm^2/yr
+    /// @param Nuclide a string with the nuclide name. At the moment the options are:
+    ///   Be10
+    ///   Al26
+    ///  These are case sensitive
+    /// @return the concentration of the nuclide averaged across the DEM
+    /// @author SMM
+    /// @date 22/12/2014
+    double predict_mean_CRN_conc(double eff_erosion_rate, string Nuclide);
+  
+  protected:
+    /// The measured 10Be concentration    
+    double measured_N_10Be;
+    
+    /// The measured 26Al concentration
+    double measured_N_26Al;
+    
+    /// The measured uncertainty in the 10Be concentration
+    double delN_10Be;
+    
+    /// The measured uncertainty in the 10Be concentration
+    double delN_26Al;
+    
+    /// A vector holding the elevations of the data within the basin
+    vector<double> snow_shielding;
+    
+    /// A vector holding the topographic shielding of nodes within the basin
+    vector<double> topographic_shielding;
+    
+    /// A vector holding the production scaling of nodes within the basin
+    vector<double> production_shielding;
+    
+    /// a vector holding the CRNparticles
+    vector<LSDCRNParticle> CRN_particle_vec;
+  
+  private:
+    void create(int JunctionNumber, LSDFlowInfo& FlowInfo, 
+                           LSDJunctionNetwork& ChanNet, 
+                           double N10Be, double delN10Be, 
+                           double N26Al, double delN26Al);
+  
+};
+
 
 #endif

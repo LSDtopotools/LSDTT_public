@@ -17,22 +17,25 @@
 #include "LSDJunctionNetwork.hpp"
 #include "LSDStatsTools.hpp"
 #include "LSDBasin.hpp"
+#include "LSDParticle.hpp"
+#include "LSDCRNParameters.hpp"
 using namespace std;
 using namespace TNT;
 
-void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChanNet){
+void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChanNet)
+{
 
   //NO BOUNDS CHECKING ON JunctionNumber
 
   //setting all of the instance variables for the given junction
 
   NRows = ChanNet.get_NRows();
-	NCols = ChanNet.get_NCols();
-	XMinimum = ChanNet.get_XMinimum();
-	YMinimum = ChanNet.get_YMinimum();
-	DataResolution = ChanNet.get_DataResolution();
-	NoDataValue = ChanNet.get_NoDataValue();
-	GeoReferencingStrings = ChanNet.get_GeoReferencingStrings();
+  NCols = ChanNet.get_NCols();
+  XMinimum = ChanNet.get_XMinimum();
+  YMinimum = ChanNet.get_YMinimum();
+  DataResolution = ChanNet.get_DataResolution();
+  NoDataValue = ChanNet.get_NoDataValue();
+  GeoReferencingStrings = ChanNet.get_GeoReferencingStrings();
 
   Junction = JunctionNumber;
   
@@ -791,5 +794,301 @@ int LSDBasin::is_node_in_basin(int test_node)
   }  
   return node_checker;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//  +++++++++++++++++
+//  +++++++++++++++++
+//  +++++++++++++++++
+//  +++++++++++++++++
+//  +++++++++++++++++
+//  COSMOGENIC BASIN
+//  +++++++++++++++++
+//  +++++++++++++++++
+//  +++++++++++++++++
+//  +++++++++++++++++
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This creates a cosmogenic basin. Similar to a normal basin but just has the 
+// 10Be and 26Al concentrations
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, 
+                           LSDJunctionNetwork& ChanNet, 
+                           double N10Be, double delN10Be, 
+                           double N26Al, double delN26Al)
+{
+
+  // The measured 10Be concentration    
+  measured_N_10Be = N10Be;
+    
+  // The measured 26Al concentration
+  measured_N_26Al = N26Al;
+    
+  // The measured uncertainty in the 10Be concentration
+  delN_10Be = delN10Be;
+    
+  // The measured uncertainty in the 10Be concentration
+  delN_26Al = delN26Al;
+
+  //NO BOUNDS CHECKING ON JunctionNumber
+
+  //setting all of the instance variables for the given junction
+
+  NRows = ChanNet.get_NRows();
+  NCols = ChanNet.get_NCols();
+  XMinimum = ChanNet.get_XMinimum();
+  YMinimum = ChanNet.get_YMinimum();
+  DataResolution = ChanNet.get_DataResolution();
+  NoDataValue = ChanNet.get_NoDataValue();
+  GeoReferencingStrings = ChanNet.get_GeoReferencingStrings();
+
+  Junction = JunctionNumber;
+  
+  vector <int> JunctionVector = ChanNet.get_JunctionVector();
+  vector <int> ReceiverVector = ChanNet.get_ReceiverVector();
+  
+  LSDIndexChannel StreamLinkVector = LSDIndexChannel(Junction, JunctionVector[Junction],
+                                                     ReceiverVector[Junction], JunctionVector[ReceiverVector[Junction]], FlowInfo);
+
+  int n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
+  int basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
+  BasinNodes = FlowInfo.get_upslope_nodes(basin_outlet);
+                                                                                     
+  NumberOfCells = int(BasinNodes.size());
+  Area = NumberOfCells * (DataResolution*DataResolution);
+  
+  Beheaded = ChanNet.node_tester(FlowInfo, Junction);
+
+  FlowInfo.retrieve_current_row_and_col(ChanNet.get_Node_of_Junction(Junction), Outlet_i, Outlet_j);
+    
+  vector<int> StreamOrderVector = ChanNet.get_StreamOrderVector();
+  
+  BasinOrder = StreamOrderVector[Junction];
+
+
+  int i_max = 0;
+  int i_min = 9999999; //a very large number
+  int j_max = 0;
+  int j_min = 9999999; //a very large number
+  
+  int i = 0;
+  int j = 0;
+
+  for (int q = 0; q < int(BasinNodes.size()); ++q){
+    
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    
+    if (i > i_max){i_max = i;}
+    else if (i < i_min){i_min = i;}
+    if (j > j_max){j_max = j;}
+    else if (j < j_min){j_min = j;}
+    
+  }
+  
+  Centroid_i = i_min + ((i_max - i_min)/2);
+  Centroid_j = j_min + ((j_max - j_min)/2);   //how do these handle 0.5s ??
+
+
+  //finished setting all the instance variables
+  
+  
+  // now we set up empty variables to store properties of the basin
+  // these are populated as they are required using the set methods in LSDBasin
+    
+  SlopeMean = NoDataValue;
+  ElevationMean = NoDataValue;
+  AspectMean = NoDataValue;
+  ReliefMean = NoDataValue;
+  PlanCurvMean = NoDataValue;
+  ProfileCurvMean = NoDataValue;
+  TotalCurvMean = NoDataValue;
+  PlanCurvMax = NoDataValue;
+  ProfileCurvMax = NoDataValue;
+  TotalCurvMax = NoDataValue;
+  HillslopeLength_HFR = NoDataValue;
+  HillslopeLength_Binned = NoDataValue;
+  HillslopeLength_Spline = NoDataValue;
+  HillslopeLength_Density = NoDataValue;
+  FlowLength = NoDataValue;
+  DrainageDensity = NoDataValue;  
+  Perimeter_i = vector<int>(1,NoDataValue);
+  Perimeter_j =  vector<int>(1,NoDataValue);
+  CosmoErosionRate = NoDataValue;
+  OtherErosionRate = NoDataValue;
+  CHTMean = NoDataValue;
+  EStar = NoDataValue;
+  RStar = NoDataValue;
+   
+  //finished creating empty variables 
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//  This function populates the topographic and production shielding
+// It sets the snow sheilding to a default of 1
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoBasin::populate_scaling_vectors(LSDFlowInfo& FlowInfo, 
+                                               LSDRaster& Elevation_Data,
+                                               string path_to_atmospheric_data)
+{
+  int row,col;
+  float TotalData = 0;
+  int CountNDV = 0;
+  
+  // variables for converting location and elevation
+  double this_elevation, this_pressure, this_tshield;
+
+  vector<double> tshield_temp;
+  vector<double> prod_temp;
+  vector<double> snow_temp;
+  
+  // now create the CRN parameters object
+  LSDCRNParameters LSDCRNP;
+  
+  // get the atmospheric parameters
+  LSDCRNP.load_parameters_for_atmospheric_scaling(path_to_atmospheric_data);
+  
+  // get the topographic shielding
+  // the values of theta and phi step are based on testing by S. Grieve 
+  // Note that Codilian reccomends 5,5 but 10,15 leads to minimal errors
+  int theta_step = 10;
+  int phi_step = 15;
+  LSDRaster T_shield = Elevation_Data.TopoShield(theta_step, phi_step);
+  
+  // a function for scaling stone production, defaults to 1
+  double Fsp = 1.0
+  
+  // initiate a UTM to lat-long converter
+  LSDCoordinateConverterLLandUTM Converter;
+  
+  float lat,long;
+  
+  for (int q = 0; q < int(BasinNodes.size()); ++q)
+  {
+    
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], row, col);
+    
+    //exclude NDV from average
+    if (Data.get_data_element(row,col) != NoDataValue)
+    {
+      // To get pressure, first get the lat and long
+      Elevation_Data.get_lat_and_long_locations(row, col, lat, long, Converter);
+      
+      // now the elevation
+      this_elevation = Elevation_Data.get_data_element(row,col);
+      
+      // now the pressure
+      this_pressure = NCEPatm_2(double(lat), double(long), double(this_elevation));
+      
+      // now get the scaling
+      prod_temp.push_back(stone2000sp(lat,this_pressure, Fsp));
+      
+      // Now get topographic shielding
+      this_tshield = double(T_shield.get_data_element(row,col));
+      
+      // now set the snow sheilding to 1
+      snow_temp.push_back(1.0);
+      
+    }
+    else 
+    {
+      prod_temp.push_back(double(NoDataValue));
+      tshield_temp.push_back(double(NoDataValue));
+      snow_temp.push_back(double(NoDataValue));
+    }
+  }
+
+  // set the shielding vectors
+  topographic_shielding = tshield_temp;
+  production_shielding =  prod_temp;
+  snow_shielding = snow_temp;
+  
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// this function returns the concentration of a nuclide as  function of erosion rate
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+double LSDCosmoBasin::predict_mean_Conc_10Be(double erosion_rate, string Nuclide)
+{
+  
+  // the average atoms per gram of the nuclide
+  double BasinAverage;
+  
+  // the total shielding. A product of snow, topographic and production scaling
+  double total_shielding;
+  
+  // the total atomic concentration of the nuclude in question
+  double Total_N = 0;
+  
+  // initiate a particle. We'll just repeatedly call this particle
+  // for the sample. 
+  int startType = 0; 
+  int samp = 0;
+  double Xloc = 0;
+  double Yloc = 0;
+  double  startdLoc = 0.0;
+  double  start_effdloc = 0.0;
+  double startzLoc = 0.0;
+  
+  LSDCRNParticle eroded_particle(startType, Xloc, Yloc,
+                               startdLoc, start_effdloc, startzLoc);
+  
+
+  // loop through the elevation data
+  for (int q = 0; q < int(BasinNodes.size()); ++q)
+  {
+    
+    //exclude NDV from average
+    if(topographic_shielding[q] != NoDataValue)
+    {
+      count_samples++;
+      
+      // reset the scaling parameters for the LSDCRNParameters
+      // ...
+      // CODE HERE
+      // ...
+      
+      // the elevation, snow shielding, topographic shielding
+      // and production scaling are all independent of the erosion rate
+      // and are calculated seperately. 
+      total_shielding = production_scaling[q]*topographic_shielding[q]*
+                        snow_shielding[q];
+                      
+      // now recalculate F values to match the total shielding
+      LSDCRNP.scale_F_values(total_shielding);
+      
+      // get the nuclide concentration from this node
+      if (Nuclide == "Be10")
+      {
+        Total_N+=eroded_particle.update_10Be_SSfull(erosion_rate,LSDCRNP);
+      }
+      else if (Nuclide = "Al26")
+      {
+        Total_N+=eroded_particle.update_26Al_SSfull(erosion_rate,LSDCRNP);
+      }
+      else
+      {
+        cout << "You didn't give a valid nuclide. You chose: " << Nuclide << endl;
+        cout << "Choices are 10Be, 26Al.  Note these case sensitive and cannot" << endl;
+        cout << "contain spaces or control characters. Defaulting to 10Be." << endl;
+        Total_N+=eroded_particle.update_10Be_SSfull(erosion_rate,LSDCRNP);
+      }                    
+  }
+
+  BasinAverage = TotalN/double(count_samples);
+
+  return BasinAverage;
+}
+
 
 #endif
