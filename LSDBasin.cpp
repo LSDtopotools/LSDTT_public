@@ -22,6 +22,41 @@
 using namespace std;
 using namespace TNT;
 
+void LSDBasin::create()
+{
+  
+  
+  // now we set up empty variables to store properties of the basin
+  // these are populated as they are required using the set methods in LSDBasin
+    
+  SlopeMean = NoDataValue;
+  ElevationMean = NoDataValue;
+  AspectMean = NoDataValue;
+  ReliefMean = NoDataValue;
+  PlanCurvMean = NoDataValue;
+  ProfileCurvMean = NoDataValue;
+  TotalCurvMean = NoDataValue;
+  PlanCurvMax = NoDataValue;
+  ProfileCurvMax = NoDataValue;
+  TotalCurvMax = NoDataValue;
+  HillslopeLength_HFR = NoDataValue;
+  HillslopeLength_Binned = NoDataValue;
+  HillslopeLength_Spline = NoDataValue;
+  HillslopeLength_Density = NoDataValue;
+  FlowLength = NoDataValue;
+  DrainageDensity = NoDataValue;  
+  Perimeter_i = vector<int>(1,NoDataValue);
+  Perimeter_j =  vector<int>(1,NoDataValue);
+  CosmoErosionRate = NoDataValue;
+  OtherErosionRate = NoDataValue;
+  CHTMean = NoDataValue;
+  EStar = NoDataValue;
+  RStar = NoDataValue;
+   
+  //finished creating empty variables 
+
+}
+
 void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChanNet)
 {
 
@@ -850,15 +885,12 @@ void LSDCosmoBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo,
 
   Junction = JunctionNumber;
   
-  vector <int> JunctionVector = ChanNet.get_JunctionVector();
-  vector <int> ReceiverVector = ChanNet.get_ReceiverVector();
+  //cout << "LSDCosmoBasin, line 888, Junction is: " << Junction << endl; 
   
-  LSDIndexChannel StreamLinkVector = LSDIndexChannel(Junction, JunctionVector[Junction],
-                                                     ReceiverVector[Junction], JunctionVector[ReceiverVector[Junction]], FlowInfo);
-
-  int n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
-  int basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
+  int basin_outlet = ChanNet.get_Node_of_Junction(Junction);
   BasinNodes = FlowInfo.get_upslope_nodes(basin_outlet);
+  
+  //cout << "LSDCosmoBasin, Line 893, basin outlet is: " << basin_outlet << endl;
                                                                                      
   NumberOfCells = int(BasinNodes.size());
   Area = NumberOfCells * (DataResolution*DataResolution);
@@ -880,7 +912,8 @@ void LSDCosmoBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo,
   int i = 0;
   int j = 0;
 
-  for (int q = 0; q < int(BasinNodes.size()); ++q){
+  for (int q = 0; q < int(BasinNodes.size()); ++q)
+  {
     
     FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
     
@@ -896,36 +929,7 @@ void LSDCosmoBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo,
 
 
   //finished setting all the instance variables
-  
-  
-  // now we set up empty variables to store properties of the basin
-  // these are populated as they are required using the set methods in LSDBasin
-    
-  SlopeMean = NoDataValue;
-  ElevationMean = NoDataValue;
-  AspectMean = NoDataValue;
-  ReliefMean = NoDataValue;
-  PlanCurvMean = NoDataValue;
-  ProfileCurvMean = NoDataValue;
-  TotalCurvMean = NoDataValue;
-  PlanCurvMax = NoDataValue;
-  ProfileCurvMax = NoDataValue;
-  TotalCurvMax = NoDataValue;
-  HillslopeLength_HFR = NoDataValue;
-  HillslopeLength_Binned = NoDataValue;
-  HillslopeLength_Spline = NoDataValue;
-  HillslopeLength_Density = NoDataValue;
-  FlowLength = NoDataValue;
-  DrainageDensity = NoDataValue;  
-  Perimeter_i = vector<int>(1,NoDataValue);
-  Perimeter_j =  vector<int>(1,NoDataValue);
-  CosmoErosionRate = NoDataValue;
-  OtherErosionRate = NoDataValue;
-  CHTMean = NoDataValue;
-  EStar = NoDataValue;
-  RStar = NoDataValue;
-   
-  //finished creating empty variables 
+
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -937,6 +941,7 @@ void LSDCosmoBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCosmoBasin::populate_scaling_vectors(LSDFlowInfo& FlowInfo, 
                                                LSDRaster& Elevation_Data,
+                                               LSDRaster& T_Shield,
                                                string path_to_atmospheric_data)
 {
   int row,col;
@@ -953,19 +958,15 @@ void LSDCosmoBasin::populate_scaling_vectors(LSDFlowInfo& FlowInfo,
   
   // get the atmospheric parameters
   LSDCRNP.load_parameters_for_atmospheric_scaling(path_to_atmospheric_data);
+  LSDCRNP.set_CRONUS_data_maps();
   
-  // get the topographic shielding
-  // the values of theta and phi step are based on testing by S. Grieve 
-  // Note that Codilian reccomends 5,5 but 10,15 leads to minimal errors
-  int theta_step = 10;
-  int phi_step = 15;
-  LSDRaster T_shield = Elevation_Data.TopoShield(theta_step, phi_step);
+
   
   // a function for scaling stone production, defaults to 1
   double Fsp = 1.0;
   
   // the latitude and longitude
-  float lat,longitude;
+  double lat,longitude;
   
   // decalre converter object
   LSDCoordinateConverterLLandUTM Converter;
@@ -982,18 +983,25 @@ void LSDCosmoBasin::populate_scaling_vectors(LSDFlowInfo& FlowInfo,
       Elevation_Data.get_lat_and_long_locations(row, col, lat, longitude, Converter);
       //Elevation_Data.get_lat_and_long_locations(row, col, lat, longitude);
       
+
+      
       // now the elevation
       this_elevation = Elevation_Data.get_data_element(row,col);
       
       // now the pressure
       this_pressure = LSDCRNP.NCEPatm_2(double(lat), double(longitude), 
                                         double(this_elevation));
+
+      //cout << "r: " << row << " c: " << col << " lat: " << lat << " long: " << longitude
+      //     << " elevation: " << this_elevation << " pressure: " << this_pressure << endl;
+           
       
       // now get the scaling
       prod_temp.push_back(LSDCRNP.stone2000sp(lat,this_pressure, Fsp));
       
       // Now get topographic shielding
-      this_tshield = double(T_shield.get_data_element(row,col));
+      this_tshield = double(T_Shield.get_data_element(row,col));
+      tshield_temp.push_back(this_tshield);
       
       // now set the snow sheilding to 1
       snow_temp.push_back(1.0);
@@ -1031,7 +1039,7 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double erosion_rate, string Nuclide)
   // the total atomic concentration of the nuclude in question
   double Total_N = 0;
   
-  int count_samples;
+  int count_samples = 0;
   
   // initiate a particle. We'll just repeatedly call this particle
   // for the sample. 
@@ -1098,6 +1106,85 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double erosion_rate, string Nuclide)
   BasinAverage = Total_N/double(count_samples);
 
   return BasinAverage;
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function prints the information, node by node, in the basin.
+// Information is printed as a csv file
+// It is used for bug checking
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoBasin::print_particle_csv(string path_to_file, string filename, 
+                                       LSDFlowInfo& FlowInfo, 
+                                       LSDRaster& Elevation_Data,
+                                       LSDRaster& T_Shield,
+                                       string path_to_atmospheric_data)
+{
+  string full_name = path_to_file+filename+".csv";
+  ofstream cosmo_out;
+  cosmo_out.open(full_name.c_str());
+  cosmo_out.precision(8);
+  
+  cosmo_out << "fID,Easting,Northing,Latitude,Longitude,Elevation,Pressure,TopoShield,Production_scaling,Snowshield" << endl;
+  
+  // check to see if scaling vecotrs have been made
+  int n_nodes = int(BasinNodes.size());
+  
+  if (n_nodes != int(production_shielding.size()))
+  {
+    cout << "LSDCosmoBasin Line 1119, printing node info to csv but am getting shielding first." << endl;
+    populate_scaling_vectors(FlowInfo, Elevation_Data, T_Shield, path_to_atmospheric_data);
+  }
+
+  // the latitude and longitude
+  double lat,longitude;
+  float Easting, Northing;
+  double this_pressure,this_elevation,this_SShield,this_TShield,this_PShield;
+  int row,col;
+  
+  // decalre converter object
+  LSDCoordinateConverterLLandUTM Converter;
+  
+  // get the CRN parameters
+  LSDCRNParameters LSDCRNP;
+  
+  // get the atmospheric parameters
+  LSDCRNP.load_parameters_for_atmospheric_scaling(path_to_atmospheric_data);
+  LSDCRNP.set_CRONUS_data_maps();
+  
+  // now loop through nodes, printing the location and scaling
+  for(int n = 0; n < n_nodes; n++)
+  {
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[n], row, col);
+    
+    //exclude NDV from average
+    if (Elevation_Data.get_data_element(row,col) != NoDataValue)
+    {
+      // To get pressure, first get the lat and long
+      Elevation_Data.get_lat_and_long_locations(row, col, lat, longitude, Converter);
+      Elevation_Data.get_x_and_y_locations(row, col, Easting, Northing);
+      //Elevation_Data.get_lat_and_long_locations(row, col, lat, longitude);
+
+
+      // now the pressure
+      this_elevation = Elevation_Data.get_data_element(row,col);
+      this_pressure = LSDCRNP.NCEPatm_2(double(lat), double(longitude), 
+                                        double(this_elevation));
+
+      // get the shielding
+      this_TShield = topographic_shielding[n];
+      this_SShield = snow_shielding[n];
+      this_PShield = production_shielding[n];      
+
+      // now print to file
+      cosmo_out << n+1 << ","<<Easting<<","<<Northing<<","<<lat<<","<<longitude
+                <<","<<this_elevation<<","<<this_pressure<<","<<this_TShield<<","
+                <<this_PShield<<","<<this_SShield<< endl;
+    }
+  }
+
+
+
 }
 
 

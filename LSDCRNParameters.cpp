@@ -158,7 +158,7 @@ void LSDCRNParameters::load_parameters_for_atmospheric_scaling(string path_to_da
   
 
   double temp;
-  cout << "The size of a double is: " << sizeof(temp) << endl;
+  //cout << "The size of a double is: " << sizeof(temp) << endl;
   for (int i=0; i<NCols; ++i)
   {
     for (int j=0; j<NRows; ++j)
@@ -258,9 +258,9 @@ void LSDCRNParameters::load_parameters_for_atmospheric_scaling(string path_to_da
   gp_hgt = vec_hgt_gp_array;
   gm_hgt = vec_hgt_gp_array;  
   
-  cout << "Size lat: " << NCEPlat.size() << " size long: " << NCEPlon.size() << endl;
-  cout << "size slp:" << meanslp.dim1() << " " << meanslp.dim2() << endl;
-  cout << "size t1000: " << meant1000.dim1() << " " << meant1000.dim2() << endl;
+  //cout << "Size lat: " << NCEPlat.size() << " size long: " << NCEPlon.size() << endl;
+  //cout << "size slp:" << meanslp.dim1() << " " << meanslp.dim2() << endl;
+  //cout << "size t1000: " << meant1000.dim1() << " " << meant1000.dim2() << endl;
   
 
 }
@@ -1615,6 +1615,8 @@ double LSDCRNParameters::NCEPatm_2(double site_lat, double site_lon, double site
     site_lon = site_lon+360.0;
   }
   
+  //cout << "LSDCRNP, line 1618, Site lat: " << site_lat << " and long: " << site_lon << endl;
+  
   // check to see if data is loaded:
   if (int(gm_hgt.size()) != 8)
   {
@@ -1626,11 +1628,13 @@ double LSDCRNParameters::NCEPatm_2(double site_lat, double site_lon, double site
   }
   
   // now, interpolate sea level pressure and temperature
+  //cout << "interpolating pressure " << endl;
   double site_slp = interp2D_bilinear(NCEPlat, NCEPlon, meanslp, 
                         site_lat, site_lon);
+  //cout << "Did pressure, now temp:" << endl;                      
   double site_T = interp2D_bilinear(NCEPlat, NCEPlon, meant1000, 
                         site_lat, site_lon);
-                        
+  //cout << "Did temp" << endl;                      
   
   
   double site_T_degK = site_T + 273.15;
@@ -1648,7 +1652,7 @@ double LSDCRNParameters::NCEPatm_2(double site_lat, double site_lon, double site
 
   double out = site_slp*exp( (gmr/dtdz)*( log(site_T_degK) - log(site_T_degK - (site_elev*dtdz)) ) );
   
-  cout << endl;
+  //cout << endl;
   //cout << "Site sea level pressure: " << site_slp << " and site Temp: "<< site_T 
   //     << " and pressure: " << out << endl << endl <<endl;
   return out;

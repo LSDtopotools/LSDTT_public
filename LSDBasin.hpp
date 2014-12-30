@@ -24,8 +24,15 @@ class LSDBasin
 {
 
   public:
-  
+
   /// @brief Default constructor method used to create a basin object.
+  /// @detail This is necessary since there is a derived class and with derived
+  ///  classes the default constructor of the parent class is automatically called
+  /// @author SMM
+  /// @date 28/12/14
+  LSDBasin()        { create(); }
+  
+  /// @brief Constructor method used to create a basin object.
   /// @param Junction outlet junction of the basin to be constructed.
   /// @param FlowInfo LSDFlowInfo object.
   /// @param ChanNet Channel network object.
@@ -693,6 +700,7 @@ class LSDBasin
   float RStar;
 
   private:
+  void create();
   void create(int Junction, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChanNet);
 
 };
@@ -703,7 +711,20 @@ class LSDBasin
 class LSDCosmoBasin: public LSDBasin
 {
   public:
-  
+    /// @brief Default constructor method used to create a  cosmo basin object.
+    /// @param Junction outlet junction of the basin to be constructed.
+    /// @param FlowInfo LSDFlowInfo object.
+    /// @param ChanNet Channel network object.
+    /// @param N10 concentration of 10Be in basin (atoms/g).
+    /// @param del_N10 analytical uncertainty of 10Be in basin (atoms/g).
+    /// @param N26 concentration of 10Be in basin (atoms/g).
+    /// @param del_N26 analytical uncertainty of 10Be in basin (atoms/g).    
+    /// @author SMM
+    /// @date 27/12/14
+    LSDCosmoBasin(int Junction, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChanNet, 
+             double N10, double del_N10, double N26, double del_N26)
+                   { create(Junction, FlowInfo, ChanNet, N10,del_N10, 
+                               N26, del_N26); }
     
     /// @brief This function populates the scaling vectors that are used to set 
     ///  the production scaling, topographic shielding and snow shielding
@@ -714,11 +735,12 @@ class LSDCosmoBasin: public LSDBasin
     /// @param FlowInfo the LSDFlowInfo object
     /// @param Elevation_Data the DEM, an LSDRaster object. IMPORTANT!! This needs
     ///  to contain georeferencing information for this to work!!!
+    /// @param Topo_Shield an LSDRaster with the topographic shielding
     /// @param path_to_atmospheric_data THis is a path to binary NCEP data. 
     /// @author SMM
     /// @date 22/12/2014
     void populate_scaling_vectors(LSDFlowInfo& FlowInfo, LSDRaster& Elevation_Data,
-                                               string path_to_atmospheric_data);
+                                  LSDRaster& Topo_Shield, string path_to_atmospheric_data);
                                                
     /// @brief this predicts the mean concentration of a nuclide within 
     /// a basin
@@ -731,7 +753,31 @@ class LSDCosmoBasin: public LSDBasin
     /// @author SMM
     /// @date 22/12/2014
     double predict_mean_CRN_conc(double eff_erosion_rate, string Nuclide);
-  
+
+    /// @brief Prints a csv with information about the nodes in a basin that
+    ///  relate to cosmogenic paramters
+    /// @detail the csv file out has the format:
+    ///  fID,Easting,Northing,Latitude,Longitude,Elevation,Pressure,...
+    ///  TopoShield,Production_scaling,Snowshield
+    ///  IMPORTANT: In the normal basin, the outlet is the penultamite node
+    ///  in the channel drainaing from the junction. This is so that the basin
+    ///  will drain to a node just before the next stram order. However in the
+    ///  cosmo basin this is not the case because the cosmo was selected from a
+    ///  specific location so we use the closest junction. 
+    /// @param path_to_file the path to the outfile. Needs a / at the end.
+    /// @param filename. This does not have an extension because .csv will be added
+    /// @param FlowInfo the LSDFlowInfo object
+    /// @param Elevation_Data the DEM, an LSDRaster object. IMPORTANT!! This needs
+    ///  to contain georeferencing information for this to work!!!
+    /// @param Topo_Shield an LSDRaster with the topographic shielding
+    /// @param path_to_atmospheric_data THis is a path to binary NCEP data. 
+    /// @return the concentration of the nuclide averaged across the DEM
+    /// @author SMM
+    /// @date 27/12/2014
+    void print_particle_csv(string path_to_file, string filename, 
+                            LSDFlowInfo& FlowInfo, LSDRaster& Elevation_Data,
+                            LSDRaster& T_Shield,
+                            string path_to_atmospheric_data);
   protected:
     /// The measured 10Be concentration    
     double measured_N_10Be;
