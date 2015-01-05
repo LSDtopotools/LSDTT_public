@@ -363,17 +363,25 @@ class LSDCRNParticle: public LSDParticle
   /// @brief the copy constructor 
   LSDCRNParticle& operator=(LSDCRNParticle& tP);
 
+  /// @brief this sets 10Be conc
+  /// @param the new 10Be conc in atoms per gram
+  void setConc_10Be(double new_10BeConc) { Conc_10Be = new_10BeConc; }
+
+  /// @brief this sets 26Al conc
+  /// @param the new 26Al conc in atoms per gram
+  void setConc_26Al(double new_26AlConc) { Conc_26Al = new_26AlConc; }
+
   /// @brief Retrieves the concentration of 10Be
   /// @return concentration of 10Be
-  double getConc_10Be() const			{ return Conc_10Be; }
+  double getConc_10Be() const      { return Conc_10Be; }
 
   /// @brief Retrieves the concentration of 26Al
   /// @return concentration of 26Al
-  double getConc_26Al() const			{ return Conc_26Al; }
+  double getConc_26Al() const      { return Conc_26Al; }
 
   /// @brief Retrieves the concentration of 36Cl
   /// @return concentration of 36Cl
-  double getConc_36Cl() const			{ return Conc_36Cl; }
+  double getConc_36Cl() const      { return Conc_36Cl; }
 
   /// @brief Retrieves the concentration of 14C
   /// @return concentration of 14C

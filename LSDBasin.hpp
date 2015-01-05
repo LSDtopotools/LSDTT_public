@@ -741,6 +741,23 @@ class LSDCosmoBasin: public LSDBasin
     /// @date 22/12/2014
     void populate_scaling_vectors(LSDFlowInfo& FlowInfo, LSDRaster& Elevation_Data,
                                   LSDRaster& Topo_Shield, string path_to_atmospheric_data);
+
+    /// @brief this uses Newton Raphson iteration to retrieve the erosion rate
+    ///  from a basin given a nuclide concentration
+    /// @param eff_erosion rate The erosion rate in g/cm^2/yr
+    /// @param Nuclide a string with the nuclide name. At the moment the options are:
+    ///   Be10
+    ///   Al26
+    ///  These are case sensitive
+    /// @param prod_uncert_factor production uncertainty factor is a multiplier that sets the production 
+    ///  certainty. If it is 1.1, there is 10% production rate uncertainty, or
+    ///  if it is 0.9 there is -10% unvertainty. The reason why it is implemented
+    ///  like this is that this allows gaussian error propigation.
+    /// @return The effective erosion rate in g/cm^-2/yr
+    /// @author SMM
+    /// @date 03/01/2015
+    double predict_CRN_erosion(double Nuclide_conc, string Nuclide, 
+                                            double prod_uncert_factor);
                                                
     /// @brief this predicts the mean concentration of a nuclide within 
     /// a basin
@@ -749,10 +766,15 @@ class LSDCosmoBasin: public LSDBasin
     ///   Be10
     ///   Al26
     ///  These are case sensitive
+    /// @param prod_uncert_factor production uncertainty factor is a multiplier that sets the production 
+    ///  certainty. If it is 1.1, there is 10% production rate uncertainty, or
+    ///  if it is 0.9 there is -10% unvertainty. The reason why it is implemented
+    ///  like this is that this allows gaussian error propigation.
     /// @return the concentration of the nuclide averaged across the DEM
     /// @author SMM
     /// @date 22/12/2014
-    double predict_mean_CRN_conc(double eff_erosion_rate, string Nuclide);
+    double predict_mean_CRN_conc(double eff_erosion_rate, string Nuclide, 
+                                 double prod_uncert_factor);
 
     /// @brief Prints a csv with information about the nodes in a basin that
     ///  relate to cosmogenic paramters
@@ -798,7 +820,7 @@ class LSDCosmoBasin: public LSDBasin
     vector<double> topographic_shielding;
     
     /// A vector holding the production scaling of nodes within the basin
-    vector<double> production_shielding;
+    vector<double> production_scaling;
     
     /// a vector holding the CRNparticles
     vector<LSDCRNParticle> CRN_particle_vec;

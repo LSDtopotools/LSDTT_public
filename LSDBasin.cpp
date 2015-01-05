@@ -960,8 +960,6 @@ void LSDCosmoBasin::populate_scaling_vectors(LSDFlowInfo& FlowInfo,
   LSDCRNP.load_parameters_for_atmospheric_scaling(path_to_atmospheric_data);
   LSDCRNP.set_CRONUS_data_maps();
   
-
-  
   // a function for scaling stone production, defaults to 1
   double Fsp = 1.0;
   
@@ -982,8 +980,6 @@ void LSDCosmoBasin::populate_scaling_vectors(LSDFlowInfo& FlowInfo,
       // To get pressure, first get the lat and long
       Elevation_Data.get_lat_and_long_locations(row, col, lat, longitude, Converter);
       //Elevation_Data.get_lat_and_long_locations(row, col, lat, longitude);
-      
-
       
       // now the elevation
       this_elevation = Elevation_Data.get_data_element(row,col);
@@ -1017,18 +1013,132 @@ void LSDCosmoBasin::populate_scaling_vectors(LSDFlowInfo& FlowInfo,
 
   // set the shielding vectors
   topographic_shielding = tshield_temp;
-  production_shielding =  prod_temp;
+   production_scaling =  prod_temp;
   snow_shielding = snow_temp;
   
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function is used to get the erosion rate using Newton-Raphson
+// method of root finding
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- 
+double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide, 
+                                            double prod_uncert_factor)
+{
+  // effective erosion rates (in g/cm^2/yr) for running the Newton Raphson
+  // iterations
+  double eff_erate_guess;
+  double this_eff_erosion_rate;
+  double d_eff_erosion_rate;
+  
+  
+  double rho = 2000;  // this is the rock density but in fact it doesn't 
+                      // really play a role since it is factored into the
+                      // apparent erosion to get erosion in mm/yr but the divided
+                      // out again. 
+
+  // production uncertainty factor is a multiplier that sets the production 
+  // certainty. If it is 1.1, there is 10% production rate uncertainty, or
+  // if it is 0.9 there is -10% unvertainty. The reason why it is implemented
+  // like this is that this allows gaussian error propigation.
+  if (prod_uncert_factor <=0)
+  {
+    cout << "You have set an unrealistic production uncertainty factor." << endl;
+    cout << "Defaulting to 1." << endl;
+    prod_uncert_factor = 1;
+  }
+
+  
+  // initiate a particle. We'll just repeatedly call this particle
+  // for the sample. 
+  int startType = 0; 
+  double Xloc = 0;
+  double Yloc = 0;
+  double  startdLoc = 0.0;
+  double  start_effdloc = 0.0;
+  double startzLoc = 0.0;
+  // create a particle at zero depth
+  LSDCRNParticle eroded_particle(startType, Xloc, Yloc,
+                               startdLoc, start_effdloc, startzLoc);
+
+  // now create the CRN parameters object
+  LSDCRNParameters LSDCRNP;
+  
+  // now set the scaling parameters
+  // we'll set to schaller and then stone parameters.
+  LSDCRNP.set_Schaller_parameters();
+  // now overwrite SLHL production with CRONUS Stone values, 
+  // and add the CRONUS decay parameters
+  LSDCRNP.set_CRONUS_stone_parameters();
+  
+  
+  // now get the guess from the particle
+  // the initial guess just takes scaling from the outlet, and then 
+  // uses that for the entire basin. This guess will probably be quite
+  // far off, but provides a useful starting point
+  
+  // the elevation, snow shielding, topographic shielding
+  // and production scaling are all independent of the erosion rate
+  // and are calculated seperately. 
+  // IMPORTANT populate scaling vectors must be called in advance!
+  if(  production_scaling.size() < 1 )
+  {
+    cout << "LSDCosmoBasin, trying to precalculate erosion rate." << endl
+         << "Scaling vectors have not been set! You are about to get a seg fault" << endl;
+  }
+  double total_shielding =  production_scaling[0]*topographic_shielding[0]*
+                        snow_shielding[0];
+                      
+  // now recalculate F values to match the total shielding
+  LSDCRNP.scale_F_values(total_shielding);
+  
+  // get the nuclide concentration from this node
+  if (Nuclide == "Be10")
+  {
+    eroded_particle.setConc_10Be(Nuclide_conc);
+    eff_erate_guess = eroded_particle.apparent_erosion_10Be_neutron_only(rho, LSDCRNP);
+  }
+  else if (Nuclide == "Al26")
+  {
+    eroded_particle.setConc_26Al(Nuclide_conc);
+    eff_erate_guess = eroded_particle.apparent_erosion_26Al_neutron_only(rho, LSDCRNP);
+  }
+  else
+  {
+    cout << "You didn't give a valid nuclide. You chose: " << Nuclide << endl;
+    cout << "Choices are 10Be, 26Al.  Note these case sensitive and cannot" << endl;
+    cout << "contain spaces or control characters. Defaulting to 10Be." << endl;
+    eroded_particle.setConc_10Be(Nuclide_conc);
+    eff_erate_guess = eroded_particle.apparent_erosion_10Be_neutron_only(rho, LSDCRNP);
+  }
+  
+  
+  
+  return eff_erate_guess;
+}
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function returns the concentration of a nuclide as  function of erosion rate
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-double LSDCosmoBasin::predict_mean_CRN_conc(double erosion_rate, string Nuclide)
+double LSDCosmoBasin::predict_mean_CRN_conc(double erosion_rate, string Nuclide,
+                                            double prod_uncert_factor)
 {
+  // production uncertainty factor is a multiplier that sets the production 
+  // certainty. If it is 1.1, there is 10% production rate uncertainty, or
+  // if it is 0.9 there is -10% unvertainty. The reason why it is implemented
+  // like this is that this allows gaussian error propigation.
+  if (prod_uncert_factor <=0)
+  {
+    cout << "You have set an unrealistic production uncertainty factor." << endl;
+    cout << "Defaulting to 1." << endl;
+    prod_uncert_factor = 1;
+  }
   
   // the average atoms per gram of the nuclide
   double BasinAverage;
@@ -1055,7 +1165,9 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double erosion_rate, string Nuclide)
                                startdLoc, start_effdloc, startzLoc);
 
   // now create the CRN parameters object
-  LSDCRNParameters LSDCRNP;  
+  LSDCRNParameters LSDCRNP;
+  
+
 
   // loop through the elevation data
   for (int q = 0; q < int(BasinNodes.size()); ++q)
@@ -1066,16 +1178,18 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double erosion_rate, string Nuclide)
     {
       count_samples++;
       
-      // reset the scaling parameters for the LSDCRNParameters
-      // ...
-      // CODE HERE
-      // ...
+      // reset scaling parameters
+      // we'll set to schaller and then stone parameters.
+      LSDCRNP.set_Schaller_parameters();
+      // now overwrite SLHL production with CRONUS Stone values, 
+      // and add the CRONUS decay parameters
+      LSDCRNP.set_CRONUS_stone_parameters();
       
       // the elevation, snow shielding, topographic shielding
       // and production scaling are all independent of the erosion rate
       // and are calculated seperately. 
-      total_shielding = production_shielding[q]*topographic_shielding[q]*
-                        snow_shielding[q];
+      total_shielding = prod_uncert_factor* production_scaling[q]*
+                        topographic_shielding[q]*snow_shielding[q];
                       
       // now recalculate F values to match the total shielding
       LSDCRNP.scale_F_values(total_shielding);
@@ -1130,7 +1244,7 @@ void LSDCosmoBasin::print_particle_csv(string path_to_file, string filename,
   // check to see if scaling vecotrs have been made
   int n_nodes = int(BasinNodes.size());
   
-  if (n_nodes != int(production_shielding.size()))
+  if (n_nodes != int(production_scaling.size()))
   {
     cout << "LSDCosmoBasin Line 1119, printing node info to csv but am getting shielding first." << endl;
     populate_scaling_vectors(FlowInfo, Elevation_Data, T_Shield, path_to_atmospheric_data);
@@ -1174,7 +1288,7 @@ void LSDCosmoBasin::print_particle_csv(string path_to_file, string filename,
       // get the shielding
       this_TShield = topographic_shielding[n];
       this_SShield = snow_shielding[n];
-      this_PShield = production_shielding[n];      
+      this_PShield = production_scaling[n];      
 
       // now print to file
       cosmo_out << n+1 << ","<<Easting<<","<<Northing<<","<<lat<<","<<longitude
