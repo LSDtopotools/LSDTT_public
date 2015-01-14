@@ -1298,6 +1298,38 @@ void LSDCosmoBasin::print_particle_csv(string path_to_file, string filename,
   }
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Method to merge a vector of LSDRaster basins generated using LSDBasin into
+// a single LSDRaster for visualisation.
+//
+// 50% less computationally expesnive than the old method, but still very 
+// inefficient. Does not test for overlaps in the data, will simply overwrite
+// so that the last value to occupy a cell will be written. 
+//
+// SWDG 07/12/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LSDRaster LSDBasin::Merge_Basins(vector<LSDRaster> Basins){
+  
+  Array2D<float> Output(NRows,NCols,NoDataValue);
+  
+  for (int q = 0; q < int(Basins.size()); ++q){
+  
+    for (int i = 0; i < NRows; ++i){
+      for (int j = 0; j < NCols; ++j){
+        if (Basins[q].get_data_element(i,j) != NoDataValue){
+          Output[i][j] = Basins[q].get_data_element(i,j);
+        }      
+      }      
+    }
+                                 
+  }
+  
+  LSDRaster OutputRaster(NRows, NCols, XMinimum, YMinimum, DataResolution,
+                               NoDataValue, Output, GeoReferencingStrings);
+                               
+  return OutputRaster;
+}
+
 
 }
 
