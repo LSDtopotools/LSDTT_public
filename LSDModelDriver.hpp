@@ -84,7 +84,7 @@
 /// will want some kind of 'recorder' so that any time this object
 /// runs an analysis it gives a full report of what analyses were run so that
 /// results are reproducable
-class LSDModelDriver //: public LSDCatchmentModel  (not sure about this - perhaps keep them totally separate for now?)
+class LSDModelDriver : public LSDCatchmentModel, LSDRasterModel  //(not sure about this - perhaps keep them totally separate for now?)
 {
 	public:
 	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
