@@ -1,6 +1,6 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// LSDAnalysisDriver
+// LSDAnalysisDriver.hpp
 // Land Surface Dynamics Analysis Driver
 //
 // This object parses parameter files and drives analysis. Its purpose is

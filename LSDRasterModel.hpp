@@ -1151,6 +1151,36 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @author SMM
   /// @date 03/07/2014 
   void MuddPILE_nl_soil_diffusion_nouplift();
+  
+	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	//
+	// Maps holding parameters and switches read from input paramter files
+	//
+	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	// DAV - I am not sure whether these should be public or protected data members
+	// LSDModelDriver needs read/write access to them, so my guess would be public?
+
+	// RM = LSDRasterModel specific
+	// (CM = LSDCatchmentModel specific)
+
+	/// This map holds all the possible model switches
+	map<string,bool> RM_model_switches; 
+
+	/// This holds names of methods. For example, if the key is 'sed_transport_law', the string is
+	/// the method which is used to calculate sediment transport (such as 'wilcock' or 'einstein')
+	map<string,string> RM_method_map;
+
+	/// This holds float parameters
+	map<string,float> RM_float_parameters;
+
+	/// This holds integer parameters
+	map<string,int> RM_int_parameters;
+
+	/// This holds names of supporting files, for example files that contain
+	/// node of junction indices to be loaded. 
+	map<string,string> RM_support_file_names;
+
+
 		
 	protected:
 	// Various parameters used in throughout the model run
