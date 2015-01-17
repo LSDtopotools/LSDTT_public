@@ -64,24 +64,33 @@ class LSDRasterModel: public LSDRasterSpectral
 	// CONSTRUCTORS AND CREATE FUNCTIONS
 	// @!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@!@
 	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-	
-	/// @brief Create a deafult LSDRasterModel (100x100)
+	/// @brief Constructor. Create a deafult LSDRasterModel (100x100)
 	/// @return An instance of LSDRasterModel
-	LSDRasterModel() { create(); }
+	LSDRasterModel() 
+	{ 
+		create();
+	}
 
-	/// @brief Create a LSDRasterModel from a parameter file
+	/// @brief Constructor. Create a LSDRasterModel from a parameter file
 	/// @return An instance of LSDRasterModel
 	/// @param master_param A filenam for the master parameter file
-	LSDRasterModel( string master_param )  { create(master_param); }
+	LSDRasterModel( string master_param )  
+	{
+		create(master_param); 
+	}
 	
-	/// @brief Create an LSDRasterModel from a file.
+	/// @brief Constructor. Create an LSDRasterModel from a file.
 	/// Uses a filename and file extension
 	/// @return LSDRasterModel
 	/// @param filename A String, the file to be loaded.
 	/// @param extension A String, the file extension to be loaded.
 	LSDRasterModel(string filename, string extension)
-         	{ create(filename, extension); default_parameters();}
+    { 	
+		create(filename, extension); 
+		default_parameters();
+	}
 	
-	/// @brief Create an LSDRasterModel from memory.
+	/// @brief Constructor. Create an LSDRasterModel from memory.
 	/// @return LSDRasterModel
 	/// @param nrows An integer of the number of rows.
 	/// @param ncols An integer of the number of columns.
@@ -93,14 +102,21 @@ class LSDRasterModel: public LSDRasterSpectral
 	///containing the data to be written.
 	LSDRasterModel(int nrows, int ncols, float xmin, float ymin,
 	          float cellsize, float ndv, Array2D<float> data)
-		{ default_parameters(); create(nrows, ncols, xmin, ymin, cellsize, ndv, data); }
+	{ 
+		default_parameters();
+		create(nrows, ncols, xmin, ymin, cellsize, ndv, data); 
+	}
 								
-	/// @brief Create an LSDRasterModel from an LSDRaster.
+	/// @brief Constructor. Create an LSDRasterModel from an LSDRaster.
 	/// @return LSDRasterModel
 	/// @param An_LSDRaster LSDRaster object.							
-	LSDRasterModel(LSDRaster& An_LSDRaster) { create(An_LSDRaster); default_parameters();}
+	LSDRasterModel(LSDRaster& An_LSDRaster) 
+	{ 
+		create(An_LSDRaster); 
+		default_parameters();
+	}
 
-	/// @brief Create a blank raster nodel
+	/// @brief Constructor. Create a blank raster nodel
 	/// @return LSDRasterModel
 	/// @param NCols Height of raster
 	/// @param NRows Width of raster
@@ -109,7 +125,7 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @brief Class destructor
 	~LSDRasterModel( void );
 
-	/// @brief operator
+	/// @brief operator assignment
 	LSDRasterModel& operator=(const LSDRasterModel& LSDR);
 
 
@@ -133,6 +149,13 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @author JAJ
   /// @date 01/01/2014
   void initialize_model( string parameter_file );
+  
+  /// @brief This module initialises the model using the maps that have been read
+  /// in from the parameter file via the param file parser function.
+  /// @param nowt
+  /// @author DAV
+  /// @date 2015-01-17
+  void initialise_model();
 
   /// @brief Adds random noise to each pixel in range [min, max]
   /// @param minium random addition
