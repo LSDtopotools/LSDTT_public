@@ -96,7 +96,7 @@
 #include "LSDRasterSpectral.hpp"
 #include "LSDStatsTools.hpp"
 #include "LSDIndexRaster.hpp"
-#include "fftw-3.3.1/api/fftw3.h"
+#include "fftw-3.3.4/api/fftw3.h"
 using namespace std;
 using namespace TNT;
 using namespace JAMA;
