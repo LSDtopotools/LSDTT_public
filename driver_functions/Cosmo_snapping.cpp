@@ -73,7 +73,7 @@ int main (int nNumberofArgs,char *argv[])
   string f_name = argv[2];
   string s_threshold = argv[3];
   
-  string path_to_atmospheric_data = "c:\\code\\devel_projects\\LSDTopoTools\\trunk\\driver_functions\\";
+  string path_to_atmospheric_data = "./";
 
   int threshold = atoi(s_threshold.c_str());
 
@@ -234,8 +234,8 @@ int main (int nNumberofArgs,char *argv[])
   // get the topographic shielding
   // the values of theta and phi step are based on testing by S. Grieve 
   // Note that Codilian reccomends 5,5 but 10,15 leads to minimal errors
-  int theta_step = 10;
-  int phi_step = 15;
+  int theta_step = 30;
+  int phi_step = 30;
   cout << "LINE 963, LSDBasin, performing shielding" << endl;
   LSDRaster T_shield = filled_raster.TopoShield(theta_step, phi_step);
   cout << "LINE 965, LSDBasin, did shielding" << endl;
