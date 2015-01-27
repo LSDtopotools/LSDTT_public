@@ -608,7 +608,20 @@ class LSDBasin
   /// @author SWDG
   /// @date 12/12/13 
   LSDRaster write_RStar(LSDFlowInfo FlowInfo) { return write_real_data_to_LSDRaster(RStar, FlowInfo); }
-   
+
+  /// @brief Method to merge a vector of LSDRaster basins generated using LSDBasin into
+  /// a single LSDRaster for visualisation.
+  ///
+  /// @details 50% less computationally expesnive than the old method, but still very 
+  /// inefficient. Does not test for overlaps in the data, will simply overwrite
+  /// so that the last value to occupy a cell will be written. 
+  ///
+  /// @param Basins vector of LSDRasters of basins.
+  /// @return LSDRaster of all the merged basins.
+  /// @author SWDG 
+  /// @date 07/12/14
+  LSDRaster Merge_Basins(vector<LSDRaster> Basins);
+
   protected:
   
   //These instance variables are set at initialisation
@@ -801,19 +814,7 @@ class LSDCosmoBasin: public LSDBasin
                             LSDRaster& T_Shield,
                             string path_to_atmospheric_data);
 
-  /// @brief Method to merge a vector of LSDRaster basins generated using LSDBasin into
-  /// a single LSDRaster for visualisation.
-  ///
-  /// @details 50% less computationally expesnive than the old method, but still very 
-  /// inefficient. Does not test for overlaps in the data, will simply overwrite
-  /// so that the last value to occupy a cell will be written. 
-  ///
-  /// @param Basins vector of LSDRasters of basins.
-  /// @return LSDRaster of all the merged basins.
-  /// @author SWDG 
-  /// @date 07/12/14
-  LSDRaster Merge_Basins(vector<LSDRaster> Basins);                             
-                            
+
                             
   protected:
     /// The measured 10Be concentration    
