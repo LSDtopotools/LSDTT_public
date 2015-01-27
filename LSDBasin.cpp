@@ -1044,7 +1044,7 @@ void LSDCosmoBasin::populate_scaling_vectors(LSDFlowInfo& FlowInfo,
 
   // set the shielding vectors
   topographic_shielding = tshield_temp;
-   production_scaling =  prod_temp;
+  production_scaling =  prod_temp;
   snow_shielding = snow_temp;
   
 }
@@ -1063,6 +1063,7 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
 {
   // effective erosion rates (in g/cm^2/yr) for running the Newton Raphson
   // iterations
+  double erate_guess;
   double eff_erate_guess;
   double this_eff_erosion_rate;
   double d_eff_erosion_rate;
@@ -1107,7 +1108,6 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
   // and add the CRONUS decay parameters
   LSDCRNP.set_CRONUS_stone_parameters();
   
-  
   // now get the guess from the particle
   // the initial guess just takes scaling from the outlet, and then 
   // uses that for the entire basin. This guess will probably be quite
@@ -1124,20 +1124,28 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
   }
   double total_shielding =  production_scaling[0]*topographic_shielding[0]*
                         snow_shielding[0];
+                        
+  //cout << "LSDBasin line 1128 Prod scaling is: " << production_scaling[0] << endl;
+                        
+  //cout << "LSDBasin line 1129; total scaling is: " << total_shielding << endl;
                       
   // now recalculate F values to match the total shielding
   LSDCRNP.scale_F_values(total_shielding);
+  LSDCRNP.set_neutron_scaling(production_scaling[0],topographic_shielding[0],
+                             snow_shielding[0]);
   
   // get the nuclide concentration from this node
   if (Nuclide == "Be10")
   {
+    //cout << "LINE 1134 LSDBasin Nuclide conc is: " << Nuclide_conc << endl;
     eroded_particle.setConc_10Be(Nuclide_conc);
-    eff_erate_guess = eroded_particle.apparent_erosion_10Be_neutron_only(rho, LSDCRNP);
+    erate_guess = eroded_particle.apparent_erosion_10Be_neutron_only(rho, LSDCRNP);
+    //cout << "Be10, initial erate guess: " << erate_guess << endl;
   }
   else if (Nuclide == "Al26")
   {
     eroded_particle.setConc_26Al(Nuclide_conc);
-    eff_erate_guess = eroded_particle.apparent_erosion_26Al_neutron_only(rho, LSDCRNP);
+    erate_guess = eroded_particle.apparent_erosion_26Al_neutron_only(rho, LSDCRNP);
   }
   else
   {

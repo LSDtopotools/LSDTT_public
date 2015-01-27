@@ -732,13 +732,17 @@ void LSDCRNParticle::update_10Be_SSfull(double erosion_rate, LSDCRNParameters& C
 double LSDCRNParticle::apparent_erosion_10Be_neutron_only(double rho, LSDCRNParameters& CRNp)
 {
   // a few constants, all computed from Vermeesh 2007
-  double Gamma_neutron=CRNp.Gamma[0];			// in g/cm^2
+  double Gamma_neutron=CRNp.Gamma[0];     // in g/cm^2
   double app_eff_eros;                    // in g/cm2/yr
   double app_eros;                        // in m/yr
   
   double exp_term = exp(-effective_dLoc/Gamma_neutron);
 
-  app_eff_eros = Gamma_neutron*(exp_term*CRNp.S_t*CRNp.P0_10Be
+  cout << "LSDCRNParticle line 741, S_t: " << CRNp.neutron_S_t << " P0: " << CRNp.P0_10Be 
+       << " total spallation: " << CRNp.S_t*CRNp.P0_10Be << endl 
+       << " and the F_0: " << CRNp.F_10Be[0] << endl;
+
+  app_eff_eros = Gamma_neutron*(exp_term*CRNp.neutron_S_t*CRNp.P0_10Be
                                 /Conc_10Be-CRNp.lambda_10Be);
   app_eros = app_eff_eros*10/rho;                              
   return app_eros;
@@ -791,7 +795,7 @@ double LSDCRNParticle::apparent_erosion_26Al_neutron_only(double rho, LSDCRNPara
   
   double exp_term = exp(-effective_dLoc/Gamma_neutron);
 
-  app_eff_eros = Gamma_neutron*(exp_term*CRNp.S_t*CRNp.P0_26Al
+  app_eff_eros = Gamma_neutron*(exp_term*CRNp.neutron_S_t*CRNp.P0_26Al
                                 /Conc_26Al-CRNp.lambda_26Al);
   app_eros = app_eff_eros*10/rho;                              
   return app_eros;

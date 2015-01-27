@@ -74,6 +74,7 @@ using namespace TNT;
 void LSDCRNParameters::create()
 {
   S_t = 1;
+  neutron_S_t = 1;
 
   // from Vermeesh 2007
   lambda_10Be = 456e-9;		// in yr-1
@@ -1310,8 +1311,18 @@ void LSDCRNParameters::set_scaling(double scaling, double topo_shield, double sn
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// this function sets the total scaling value for use with neutron only 
+// It is a product of the scaling, topographic shielding and snow shielding. 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParameters::set_neutron_scaling(double scaling, double topo_shield, 
+                                           double snow_shield)
+{
+  neutron_S_t = scaling*topo_shield*snow_shield;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function takes a single scaling factor for
 // elevation scaling, self shielding, snow shielding,
 // and latitude scaling and produces scaling factors
@@ -1319,6 +1330,7 @@ void LSDCRNParameters::set_scaling(double scaling, double topo_shield, double sn
 // the scaling follows the approach of vermeesch 2008
 // it uses a 'virstual' shielding depth to calcualte
 // the updated scaling factors
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParameters::scale_F_values(double single_scaling)
 {
   double tol = 1e-7;

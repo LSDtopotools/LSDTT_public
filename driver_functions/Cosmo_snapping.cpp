@@ -268,6 +268,13 @@ int main (int nNumberofArgs,char *argv[])
     thisBasin.print_particle_csv(path_name, this_filename, FlowInfo, filled_raster,
                                  T_shield, path_to_atmospheric_data);
     
+    // now get the cosmo erosion rate
+    cout << "Line 272, cosmo snapping; getting erate, 10Be conc: " << test_N10 << endl;
+    double erate;
+    string String_10Be = "Be10";
+    string String_26Al = "Al26";
+    double prod_uncert_factor = 1;
+    erate = thisBasin.predict_CRN_erosion(test_N10, String_10Be,prod_uncert_factor);
     
   }
   

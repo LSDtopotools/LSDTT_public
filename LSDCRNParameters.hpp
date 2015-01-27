@@ -71,7 +71,7 @@ class LSDCRNParameters
   public:
   
   /// @brief The default constructor. It is the only possible constructor
-  LSDCRNParameters()			{ create(); }
+  LSDCRNParameters()         { create(); }
   
   /// This is a friend class so that it can be called from the particle 
   friend class LSDCRNParticle;
@@ -226,6 +226,16 @@ class LSDCRNParameters
   /// @author SMM
   /// @date 17/12/2014
   void set_scaling(double scaling, double topo_shield, double snow_shield);
+
+  /// @brief This sets the internal scaling for the particle. It includes
+  ///  topographic shielding, snow shielding and scaling from latitude and
+  ///  other factors. It is for use with neutron only calculations
+  /// @param scaling the lat-magnetic scaling 
+  /// @param topo_shield the topograpgic shielding
+  /// @param snow_shield shielding from snow
+  /// @author SMM
+  /// @date 17/12/2014
+  void set_neutron_scaling(double scaling, double topo_shield, double snow_shield);
 
   /// @brief This gets the Lifton Scaling
   /// Modified from Greg Balco's code:
@@ -424,12 +434,16 @@ class LSDCRNParameters
   /// topographic shielding
   /// other shielding and scaling calucalted using the scale_F_values function
   double S_t;
+  
+  /// other shielding and scaling calucalted using the scale_F_values function
+  /// for neutrons only
+  double neutron_S_t;
 
   /// decay rate for 10Be in yr-1
-  double lambda_10Be;	
+  double lambda_10Be;
   
   /// decay rate for 26Al in yr-1	
-  double lambda_26Al;	
+  double lambda_26Al;
   
   /// decay rate for 14C in yr-1	
   double lambda_14C;	
