@@ -1,0 +1,67 @@
+# LSDCatchmentModel (DAV Version) Parameter File
+# 04/10/2014
+
+# File Information
+dem_name:	boscastle
+dem_extension:	.asc
+read_path:	./
+write_path:	./output
+
+# Supplementary Files
+hydroindex_file:	bos_rain_index.asc
+rainfall_data_file:	bos_rain_data.txt
+grain_data_file:
+bedrock_data_file:
+
+# Numerical
+no_of_iterations:
+min_time_step:
+max_time_step:
+run_time_start:
+max_run_duration:
+memory_limit:
+
+# Sediment
+transport_law:		WILCOCK  #EINSTEIN
+max_tau_velocity:	
+max_erode_limit:
+active_layer_thickness:
+recirculate_proportion:
+lateral_erosion_on:	yes	#no
+lateral_ero_rate:
+edge_filter_passes:
+cells_shift_lat:
+max_diff_cross_chan:
+
+# Hydrology
+m_value:
+rain_data_time_step:
+spatial_var_rain:	yes	#no
+allow_in_out_diff	yes	#no
+min_Q_for_depth:	
+depth_ero_threshold:
+slope_on_edge_cell:
+evaporation_rate:
+courant_number:
+hflow_threshold:
+froude_num_limit:
+mannings_n:
+
+# Vegetation
+vegetation_on:		yes	#no
+grass_grow_rate:
+vegetation_crit_shear:
+veg_erosion_prop:
+
+# Hillslope
+creep_rate:		
+slope_failure_thresh:
+soil_erosion_rate:
+soil_j_mean_depends:	yes	#no
+call_muddpile_model:	yes	#no
+
+
+
+
+
+	
