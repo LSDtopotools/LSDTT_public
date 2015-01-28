@@ -192,7 +192,7 @@ class LSDCRNParameters
   // functions for altering the parameter values
   
   /// @brief This resets the F, Gamma and P0 values so that they conform to 
-  /// Granger scaling. Adopted from from Vermeesh 2007
+  /// Granger and Smith 2000 scaling. Adopted from from Vermeesh 2007
   /// @author SMM
   /// @date 01/01/2010
   void set_Granger_parameters();
@@ -202,11 +202,21 @@ class LSDCRNParameters
   /// @author SMM
   /// @date 01/01/2010
   void set_Schaller_parameters();
+
+  /// @brief This resets the F, Gamma and P0 values so that they conform to 
+  /// Braucher et al (2009) scaling. Adopted from from Vermeesh 2007, 
+  /// @detail From version 2.0 of cosmocalc
+  /// @author SMM
+  /// @date 27/01/2015
+  void LSDCRNParameters::set_Braucher_parameters();
+  
   
   /// @brief this resets the production and decay coefficients of 10Be and 26Al
   ///  to mimic the parameters for stone scaling in CRONUS calculator
   /// @detail IMPORTANT the F and Gamma numbers are not changed so you will 
   ///  need to set granger or schaller parameters beforehand. 
+  ///  ALSO this is no longer necessary due to changes in Vermeesch's reported
+  ///  values which now correspond to the CRONUS values
   /// @author SMM
   /// @date 17/12/2014
   void set_CRONUS_stone_parameters();

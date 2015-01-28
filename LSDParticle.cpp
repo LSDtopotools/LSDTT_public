@@ -570,7 +570,9 @@ double LSDCRNParticle::convert_gpercm2_to_m(double l_in_gpercm2, double rho)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function just sets the concentration of cosmogenic in situ nuclides
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParticle::update_cosmo_conc_const(double C_10Be, double C_26Al, double C_36Cl,
                           double C_14C, double C_21Ne, double C_3He)
 {
@@ -581,8 +583,10 @@ void LSDCRNParticle::update_cosmo_conc_const(double C_10Be, double C_26Al, doubl
   Conc_21Ne = C_21Ne;
   Conc_3He  = C_3He;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function updates the concentration of CRNs in a particle
 // the model assumes that during the timestep the change in the
 // 'depth' of the particle occurs ofver a constant rate.
@@ -590,17 +594,18 @@ void LSDCRNParticle::update_cosmo_conc_const(double C_10Be, double C_26Al, doubl
 // proportional to depth if overlying density is constant, but
 // really represetnt the mass per area above a point in the subsurface
 // thus the erosion rate represent a mass removal rate.
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParticle::update_10Be_conc(double dt,double erosion_rate, LSDCRNParameters& CRNp)
 {
   // fist berillium
   double Be_exp = exp(-dt*CRNp.lambda_10Be);
   //double Be_depth_exp = exp(-d_0/Gamma_Be1);
 
-    //cout << "LINE 236 LSDParticle.cpp " << endl;
-    //cout << lambda_10Be << " " << Be_exp << endl;
-    //cout << "starting conc: " << Conc_10Be << endl;
-    //cout << "starting depth: " << effective_dLoc << endl;
-    //cout << "erosion_rate: "<< erosion_rate << endl;
+  //cout << "LINE 236 LSDParticle.cpp " << endl;
+  //cout << lambda_10Be << " " << Be_exp << endl;
+  //cout << "starting conc: " << Conc_10Be << endl;
+  //cout << "starting depth: " << effective_dLoc << endl;
+  //cout << "erosion_rate: "<< erosion_rate << endl;
   double sum_term = 0;
   for (int i = 0; i<4; i++)
   {
@@ -611,7 +616,11 @@ void LSDCRNParticle::update_10Be_conc(double dt,double erosion_rate, LSDCRNParam
   //cout << "F_10Be["<<i<<"]: " << CRNp.F_10Be[i] << " and sum_term: " << sum_term <<endl;
   }
 
-    //cout << "and sum term is: " << sum_term << endl;
+  //cout << "and sum term is: " << sum_term << endl;
+  
+  // Note: Scaling is either done by modifying S_t or by scaling the F factors
+  // for the basinwide cosmogenic tool S_t is set to 1 and the scaling is done
+  // with the F factors.   
   Conc_10Be = Conc_10Be*Be_exp +  CRNp.S_t*CRNp.P0_10Be*sum_term;
   //cout << "and ending 10Be conc is: " << Conc_10Be <<endl;
 }
