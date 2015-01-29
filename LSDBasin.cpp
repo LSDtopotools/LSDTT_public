@@ -1133,20 +1133,21 @@ void LSDCosmoBasin::get_atmospheric_pressure(LSDFlowInfo& FlowInfo,
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- 
 double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide, 
-                                            double prod_uncert_factor)
+                                          double prod_uncert_factor,
+                                          string Muon_scaling)
 {
   // effective erosion rates (in g/cm^2/yr) for running the Newton Raphson
   // iterations
   double erate_guess;
   double eff_erate_guess;
-  double this_eff_erosion_rate;
-  double d_eff_erosion_rate;
+  //double this_eff_erosion_rate;
+  //double d_eff_erosion_rate;
   
-  
-  double rho = 2000;  // this is the rock density but in fact it doesn't 
+  double rho = 2650;  // this is the rock density but in fact it doesn't 
                       // really play a role since it is factored into the
                       // apparent erosion to get erosion in mm/yr but the divided
                       // out again. 
+                      // The value 2650 is used because this is the default in cosmocalc
 
   // production uncertainty factor is a multiplier that sets the production 
   // certainty. If it is 1.1, there is 10% production rate uncertainty, or
@@ -1176,12 +1177,27 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
   LSDCRNParameters LSDCRNP;
   
   // now set the scaling parameters
-  // we'll set to schaller and then stone parameters.
-  LSDCRNP.set_Braucher_parameters();
-  // now overwrite SLHL production with CRONUS Stone values, 
-  // and add the CRONUS decay parameters
-  //LSDCRNP.set_CRONUS_stone_parameters();
-  
+  if (Muon_scaling == "Schaller" )
+  {
+    LSDCRNP.set_Schaller_parameters();
+  }
+  else if (Muon_scaling == "Braucher" )
+  {
+    LSDCRNP.set_Braucher_parameters();
+  }
+  else if (Muon_scaling == "Granger" )
+  {
+    LSDCRNP.set_Granger_parameters();
+  }
+  else
+  {
+    cout << "You didn't set the muon scaling." << endl
+         << "Options are Schaller, Braucher and Granger." << endl
+         << "You chose: " << Muon_scaling << endl
+         << "Defaulting to Braucher et al (2009) scaling" << endl;
+    LSDCRNP.set_Braucher_parameters();     
+  }
+
   // now get the guess from the particle
   // the initial guess just takes scaling from the outlet, and then 
   // uses that for the entire basin. This guess will probably be quite
@@ -1208,13 +1224,16 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
   LSDCRNP.set_neutron_scaling(production_scaling[0],topographic_shielding[0],
                              snow_shielding[0]);
   
+  // make sure we get the entire basin
+  bool data_from_outlet_only = false;
+  
   // get the nuclide concentration from this node
   if (Nuclide == "Be10")
   {
     //cout << "LINE 1134 LSDBasin Nuclide conc is: " << Nuclide_conc << endl;
     eroded_particle.setConc_10Be(Nuclide_conc);
     erate_guess = eroded_particle.apparent_erosion_10Be_neutron_only(rho, LSDCRNP);
-    //cout << "Be10, initial erate guess: " << erate_guess << endl;
+    cout << "Be10, initial erate guess in m/yr with density " << rho << ": " << erate_guess << endl;
   }
   else if (Nuclide == "Al26")
   {
@@ -1227,20 +1246,70 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
     cout << "Choices are 10Be, 26Al.  Note these case sensitive and cannot" << endl;
     cout << "contain spaces or control characters. Defaulting to 10Be." << endl;
     eroded_particle.setConc_10Be(Nuclide_conc);
-    eff_erate_guess = eroded_particle.apparent_erosion_10Be_neutron_only(rho, LSDCRNP);
+    erate_guess = eroded_particle.apparent_erosion_10Be_neutron_only(rho, LSDCRNP);
   }
   
+  // convert to  g/cm^2/yr
+  eff_erate_guess = 0.1*erate_guess*rho;
   
+  // now using this as the initial guess, use Newton-Raphson to zero in on the
+  // correct erosion rate
+  double eff_e_new = eff_erate_guess; // the erosion rate upon which we iterate
+  double eff_e_change;                // the change in erosion rate between iterations
+  double tolerance = 1e-10;           // tolerance for a change in the erosion rate
+                                      // between Newton-Raphson iterations
+  double eff_e_displace = 1e-6;       // A small displacment in the erosion rate used
+                                      // to calculate the derivative
+  double N_this_step;                 // the concentration of the nuclide reported this step
+  double N_displace;                  // the concentration at the displaced erosion rate
+  double N_derivative;                // dN/de derivative for Newton-Raphson
+  double f_x;                         // the function being tested by newton raphson
+  double f_x_displace;                // the displaced function (for calculating the derivative)
+  do
+  {
+      
+    // get the new values
+    N_this_step = predict_mean_CRN_conc(eff_e_new, Nuclide,prod_uncert_factor,
+                                        Muon_scaling,data_from_outlet_only);
+    
+    f_x =  N_this_step-Nuclide_conc;
+    
+    // now get the derivative
+    N_displace = predict_mean_CRN_conc(eff_e_new+eff_e_displace,Nuclide,
+                                       prod_uncert_factor,Muon_scaling, 
+                                       data_from_outlet_only);
+    f_x_displace =  N_displace-Nuclide_conc;
+    
+    N_derivative = (f_x_displace-f_x)/eff_e_displace;
+      
+    if(N_derivative != 0)
+    {
+      eff_e_new = eff_e_new-f_x/N_derivative;
+      
+      // check to see if the difference in erosion rates meet a tolerance
+      eff_e_change = f_x/N_derivative;
+      cout << "Change is: " << eff_e_change << " and erosion rate is: " << eff_e_new << endl;
+    }
+    else
+    {
+      eff_e_change = 0;
+    }
   
+  } while(fabs(eff_e_change) > tolerance);
+
+
+
   return eff_erate_guess;
 }
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function returns the concentration of a nuclide as  function of erosion rate
+// The erosion rate should be in g/cm^2/yr
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-double LSDCosmoBasin::predict_mean_CRN_conc(double erosion_rate, string Nuclide,
-                                            double prod_uncert_factor)
+double LSDCosmoBasin::predict_mean_CRN_conc(double eff_erosion_rate, string Nuclide,
+                                            double prod_uncert_factor, string Muon_scaling,
+                                            bool data_from_outlet_only)
 {
   // production uncertainty factor is a multiplier that sets the production 
   // certainty. If it is 1.1, there is 10% production rate uncertainty, or
@@ -1280,10 +1349,19 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double erosion_rate, string Nuclide,
   // now create the CRN parameters object
   LSDCRNParameters LSDCRNP;
   
-
-
+  // set a special case if the outlet flag is true
+  int end_node;
+  if (data_from_outlet_only)
+  {
+    end_node = 1;
+  }
+  else
+  {
+    end_node =  int(BasinNodes.size());
+  }
+  
   // loop through the elevation data
-  for (int q = 0; q < int(BasinNodes.size()); ++q)
+  for (int q = 0; q < end_node; ++q)
   {
     
     //exclude NDV from average
@@ -1291,12 +1369,28 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double erosion_rate, string Nuclide,
     {
       count_samples++;
       
-      // reset scaling parameters
-      // we'll set to schaller and then stone parameters.
-      LSDCRNP.set_Schaller_parameters();
-      // now overwrite SLHL production with CRONUS Stone values, 
-      // and add the CRONUS decay parameters
-      LSDCRNP.set_CRONUS_stone_parameters();
+      // reset scaling parameters. This is necessary since the F values are
+      // reset for local scaling
+      if (Muon_scaling == "Schaller" )
+      {
+        LSDCRNP.set_Schaller_parameters();
+      }
+      else if (Muon_scaling == "Braucher" )
+      {
+        LSDCRNP.set_Braucher_parameters();
+      }
+      else if (Muon_scaling == "Granger" )
+      {
+        LSDCRNP.set_Granger_parameters();
+      }
+      else
+      {
+        cout << "You didn't set the muon scaling." << endl
+             << "Options are Schaller, Braucher and Granger." << endl
+             << "You chose: " << Muon_scaling << endl
+             << "Defaulting to Braucher et al (2009) scaling" << endl;
+        LSDCRNP.set_Braucher_parameters();     
+      }
       
       // the elevation, snow shielding, topographic shielding
       // and production scaling are all independent of the erosion rate
@@ -1311,12 +1405,12 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double erosion_rate, string Nuclide,
       if (Nuclide == "Be10")
       {
         
-        eroded_particle.update_10Be_SSfull(erosion_rate,LSDCRNP);
+        eroded_particle.update_10Be_SSfull(eff_erosion_rate,LSDCRNP);
         Total_N+=eroded_particle.getConc_10Be();
       }
       else if (Nuclide == "Al26")
       {
-        eroded_particle.update_26Al_SSfull(erosion_rate,LSDCRNP);
+        eroded_particle.update_26Al_SSfull(eff_erosion_rate,LSDCRNP);
         Total_N+=eroded_particle.getConc_26Al();
       }
       else
@@ -1324,7 +1418,7 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double erosion_rate, string Nuclide,
         cout << "You didn't give a valid nuclide. You chose: " << Nuclide << endl;
         cout << "Choices are 10Be, 26Al.  Note these case sensitive and cannot" << endl;
         cout << "contain spaces or control characters. Defaulting to 10Be." << endl;
-        eroded_particle.update_10Be_SSfull(erosion_rate,LSDCRNP);
+        eroded_particle.update_10Be_SSfull(eff_erosion_rate,LSDCRNP);
         Total_N+=eroded_particle.getConc_10Be();
       }
     }                    

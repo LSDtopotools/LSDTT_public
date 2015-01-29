@@ -277,7 +277,18 @@ int main (int nNumberofArgs,char *argv[])
     string String_10Be = "Be10";
     string String_26Al = "Al26";
     double prod_uncert_factor = 1;
-    erate = thisBasin.predict_CRN_erosion(test_N10, String_10Be,prod_uncert_factor);
+    //erate = thisBasin.predict_CRN_erosion(test_N10, String_10Be,prod_uncert_factor);
+    
+    string Muon_scaling = "Braucher";
+    bool data_from_outlet_only = true;
+    double rho = 2650;
+    double erosion_rate = 0.001;    // in m/yr
+    double eff_erosion_rate = rho*0.1*erosion_rate;
+    double predicted_N;
+    predicted_N = thisBasin.predict_mean_CRN_conc(eff_erosion_rate, String_10Be,prod_uncert_factor, 
+                          Muon_scaling, data_from_outlet_only);
+    
+    
     
   }
   

@@ -778,11 +778,14 @@ class LSDCosmoBasin: public LSDBasin
     ///  certainty. If it is 1.1, there is 10% production rate uncertainty, or
     ///  if it is 0.9 there is -10% unvertainty. The reason why it is implemented
     ///  like this is that this allows gaussian error propigation.
+    /// @param Muon_scaling a string that gives the muon scaling scheme. 
+    ///  options are Schaller, Braucher and Granger
     /// @return The effective erosion rate in g/cm^-2/yr
     /// @author SMM
     /// @date 03/01/2015
     double predict_CRN_erosion(double Nuclide_conc, string Nuclide, 
-                                            double prod_uncert_factor);
+                                            double prod_uncert_factor,
+                                            string Muon_scaling);
                                                
     /// @brief this predicts the mean concentration of a nuclide within 
     /// a basin
@@ -795,11 +798,16 @@ class LSDCosmoBasin: public LSDBasin
     ///  certainty. If it is 1.1, there is 10% production rate uncertainty, or
     ///  if it is 0.9 there is -10% unvertainty. The reason why it is implemented
     ///  like this is that this allows gaussian error propigation.
+    /// @param Muon_scaling a string that gives the muon scaling scheme. 
+    ///  options are Schaller, Braucher and Granger
+    /// @param data_from_outlet_only boolean that is true of you want 
+    ///  concentration calculated frm the outlet onle
     /// @return the concentration of the nuclide averaged across the DEM
     /// @author SMM
     /// @date 22/12/2014
     double predict_mean_CRN_conc(double eff_erosion_rate, string Nuclide, 
-                                 double prod_uncert_factor);
+                                 double prod_uncert_factor,
+                                 string Muon_scaling, bool data_from_outlet_only);
 
     /// @brief Prints a csv with information about the nodes in a basin that
     ///  relate to cosmogenic paramters
