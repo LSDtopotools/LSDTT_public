@@ -1051,6 +1051,80 @@ void LSDCosmoBasin::populate_scaling_vectors(LSDFlowInfo& FlowInfo,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function poplates the atmospheric pressure vector. 
+// It is used for bug-checking and comparison with other cosmo calculators
+// Other function do not require this to be called
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoBasin::get_atmospheric_pressure(LSDFlowInfo& FlowInfo, 
+                    LSDRaster& Elevation_Data, string path_to_atmospheric_data)
+{
+  int row,col;
+  
+  // variables for converting location and elevation
+  double this_elevation, this_pressure;
+
+  vector<double> pressure_temp;
+
+  
+  // now create the CRN parameters object
+  LSDCRNParameters LSDCRNP;
+  
+  // get the atmospheric parameters
+  LSDCRNP.load_parameters_for_atmospheric_scaling(path_to_atmospheric_data);
+  LSDCRNP.set_CRONUS_data_maps();
+  
+  // a function for scaling stone production, defaults to 1
+  double Fsp = 1.0;
+  
+  // the latitude and longitude
+  double lat,longitude;
+  
+  // decalre converter object
+  LSDCoordinateConverterLLandUTM Converter;
+  
+  for (int q = 0; q < int(BasinNodes.size()); ++q)
+  {
+    
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], row, col);
+    
+    //exclude NDV from average
+    if (Elevation_Data.get_data_element(row,col) != NoDataValue)
+    {
+      // To get pressure, first get the lat and long
+      Elevation_Data.get_lat_and_long_locations(row, col, lat, longitude, Converter);
+      //Elevation_Data.get_lat_and_long_locations(row, col, lat, longitude);
+      
+      // now the elevation
+      this_elevation = Elevation_Data.get_data_element(row,col);
+      
+      // now the pressure
+      this_pressure = LSDCRNP.NCEPatm_2(double(lat), double(longitude), 
+                                        double(this_elevation));
+
+      //cout << "r: " << row << " c: " << col << " lat: " << lat << " long: " << longitude
+      //     << " elevation: " << this_elevation << " pressure: " << this_pressure << endl;
+           
+      
+      // now get the scaling
+      pressure_temp.push_back(this_pressure);
+      
+    }
+    else 
+    {
+      pressure_temp.push_back(double(NoDataValue));
+    }
+  }
+
+  // set the pressure vector
+  atmospheric_pressure = pressure_temp;
+  
+  // print pressure at outlet
+  cout << "the pressure at the outlet is: "  << atmospheric_pressure[0] << " mbar" << endl;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
@@ -1103,10 +1177,10 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
   
   // now set the scaling parameters
   // we'll set to schaller and then stone parameters.
-  LSDCRNP.set_Schaller_parameters();
+  LSDCRNP.set_Braucher_parameters();
   // now overwrite SLHL production with CRONUS Stone values, 
   // and add the CRONUS decay parameters
-  LSDCRNP.set_CRONUS_stone_parameters();
+  //LSDCRNP.set_CRONUS_stone_parameters();
   
   // now get the guess from the particle
   // the initial guess just takes scaling from the outlet, and then 
@@ -1127,7 +1201,7 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
                         
   //cout << "LSDBasin line 1128 Prod scaling is: " << production_scaling[0] << endl;
                         
-  //cout << "LSDBasin line 1129; total scaling is: " << total_shielding << endl;
+  cout << "LSDBasin line 1129; total scaling is: " << total_shielding << endl;
                       
   // now recalculate F values to match the total shielding
   LSDCRNP.scale_F_values(total_shielding);

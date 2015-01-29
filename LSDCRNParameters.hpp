@@ -208,7 +208,7 @@ class LSDCRNParameters
   /// @detail From version 2.0 of cosmocalc
   /// @author SMM
   /// @date 27/01/2015
-  void LSDCRNParameters::set_Braucher_parameters();
+  void set_Braucher_parameters();
   
   
   /// @brief this resets the production and decay coefficients of 10Be and 26Al

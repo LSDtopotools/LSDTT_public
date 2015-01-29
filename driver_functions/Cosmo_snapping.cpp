@@ -259,6 +259,9 @@ int main (int nNumberofArgs,char *argv[])
     thisBasin.populate_scaling_vectors(FlowInfo, filled_raster, T_shield,
                                        path_to_atmospheric_data);
     
+    // get the atmospheric pressure for bug checking. THis will print to screen
+    thisBasin.get_atmospheric_pressure(FlowInfo, filled_raster, path_to_atmospheric_data);
+    
     BasinVec.push_back(thisBasin);
     
     // now print the data to file

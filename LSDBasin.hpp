@@ -39,31 +39,31 @@ class LSDBasin
   /// @author SWDG
   /// @date 11/12/12
   LSDBasin(int Junction, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChanNet)
-											{ create(Junction, FlowInfo, ChanNet); }
+                { create(Junction, FlowInfo, ChanNet); }
 
 
   /// @return Number of rows as an integer.
-	int get_NRows() const				{ return NRows; }
-	/// @return Number of columns as an integer.
+  int get_NRows() const				{ return NRows; }
+  /// @return Number of columns as an integer.
   int get_NCols() const				{ return NCols; }
   /// @return Minimum X coordinate as an integer.
-	float get_XMinimum() const			{ return XMinimum; }
-	/// @return Minimum Y coordinate as an integer.
-	float get_YMinimum() const			{ return YMinimum; }
-	/// @return Data resolution as an integer.
-	float get_DataResolution() const	{ return DataResolution; }
-	/// @return No Data Value as an integer.
-	int get_NoDataValue() const			{ return NoDataValue; }
-	
+  float get_XMinimum() const			{ return XMinimum; }
+  /// @return Minimum Y coordinate as an integer.
+  float get_YMinimum() const			{ return YMinimum; }
+  /// @return Data resolution as an integer.
+  float get_DataResolution() const	{ return DataResolution; }
+  /// @return No Data Value as an integer.
+  int get_NoDataValue() const			{ return NoDataValue; }
+  
   /// @return Georeferencing information
   map<string,string> get_GeoReferencingStrings() const { return GeoReferencingStrings; }
-	
-	/// @return Nodes of the basin.
-	vector<int> get_BasinNodes() const { return BasinNodes; }
-	
-	/// @return Number of cells in the basin.
-	int get_NumberOfCells() const { return NumberOfCells; }
-	
+  
+  /// @return Nodes of the basin.
+  vector<int> get_BasinNodes() const { return BasinNodes; }
+  
+  /// @return Number of cells in the basin.
+  int get_NumberOfCells() const { return NumberOfCells; }
+  
   /// @return Area of basin in spataial units.
   float get_Area() const { return Area; }
   
@@ -755,6 +755,18 @@ class LSDCosmoBasin: public LSDBasin
     void populate_scaling_vectors(LSDFlowInfo& FlowInfo, LSDRaster& Elevation_Data,
                                   LSDRaster& Topo_Shield, string path_to_atmospheric_data);
 
+    /// @brief This is a utility function that populates the atmospheric pressure
+    ///  vector. It uses the CRONUS calculator scheme
+    /// @detail The function is mainly used for bug checking
+    /// @param FlowInfo the LSDFlowInfo object
+    /// @param Elevation_Data the DEM, an LSDRaster object. IMPORTANT!! This needs
+    ///  to contain georeferencing information for this to work!!!
+    /// @param path_to_atmospheric_data THis is a path to binary NCEP data. 
+    /// @author SMM
+    /// @date 28/01/2015   
+    void get_atmospheric_pressure(LSDFlowInfo& FlowInfo, LSDRaster& Elevation_Data, 
+                                  string path_to_atmospheric_data);
+
     /// @brief this uses Newton Raphson iteration to retrieve the erosion rate
     ///  from a basin given a nuclide concentration
     /// @param eff_erosion rate The erosion rate in g/cm^2/yr
@@ -840,6 +852,9 @@ class LSDCosmoBasin: public LSDBasin
     
     /// a vector holding the CRNparticles
     vector<LSDCRNParticle> CRN_particle_vec;
+  
+    /// a vector holding the atmospheric pressure
+    vector<double> atmospheric_pressure;
   
   private:
     void create(int JunctionNumber, LSDFlowInfo& FlowInfo, 
