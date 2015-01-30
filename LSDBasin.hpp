@@ -801,13 +801,37 @@ class LSDCosmoBasin: public LSDBasin
     /// @param Muon_scaling a string that gives the muon scaling scheme. 
     ///  options are Schaller, Braucher and Granger
     /// @param data_from_outlet_only boolean that is true of you want 
-    ///  concentration calculated frm the outlet onle
+    ///  concentration calculated from the outlet only.
     /// @return the concentration of the nuclide averaged across the DEM
     /// @author SMM
     /// @date 22/12/2014
     double predict_mean_CRN_conc(double eff_erosion_rate, string Nuclide, 
                                  double prod_uncert_factor,
                                  string Muon_scaling, bool data_from_outlet_only);
+
+    /// @brief this predicts the mean concentration of a nuclide within 
+    ///  a basin, using the production scaling of the centroid
+    ///  It replicates the technique used by many authors. This function
+    ///  is mainly here to show how far off this method is compared to 
+    ///  the pixel-by-pixel production scaling
+    /// @param eff_erosion rate The erosion rate in g/cm^2/yr
+    /// @param Nuclide a string with the nuclide name. At the moment the options are:
+    ///   Be10
+    ///   Al26
+    ///  These are case sensitive
+    /// @param prod_uncert_factor production uncertainty factor is a multiplier that sets the production 
+    ///  certainty. If it is 1.1, there is 10% production rate uncertainty, or
+    ///  if it is 0.9 there is -10% unvertainty. The reason why it is implemented
+    ///  like this is that this allows gaussian error propigation.
+    /// @param Muon_scaling a string that gives the muon scaling scheme. 
+    ///  options are Schaller, Braucher and Granger.
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @return the concentration of the nuclide averaged across the DEM.
+    /// @author SMM
+    /// @date 28/01/2015
+    double predict_mean_CRN_conc_centroid(double eff_erosion_rate, string Nuclide,
+                                    double prod_uncert_factor, string Muon_scaling,
+                                    LSDFlowInfo& FlowInfo);
 
     /// @brief Prints a csv with information about the nodes in a basin that
     ///  relate to cosmogenic paramters

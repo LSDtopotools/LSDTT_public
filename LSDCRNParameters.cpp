@@ -980,12 +980,12 @@ void LSDCRNParameters::set_Granger_parameters()
   // Also linke to the nishizumii standards
   // These come with Cosmocalc version 2.0
   // http://www.ucl.ac.uk/~ucfbpve/cosmocalc/updates.html
-  P0_10Be = 4.32;          // in a/g/yr
+  P0_10Be = 4.31;          // in a/g/yr
   P0_26Al = 31.10;         // in a/g/yr
   P0_14C = 15.21;          // in a/g/yr
   P0_36Cl = 58.95;         // in a/g/yr
-  P0_21Ne = 18.27;         // in a/g/yr
-  P0_3He = 121.62;         // in a/g/yr
+  P0_21Ne = 18.23;         // in a/g/yr
+  P0_3He = 121.59;         // in a/g/yr
 
   // in g/cm^2
   Gamma[0] = 160;
@@ -1040,12 +1040,12 @@ void LSDCRNParameters::set_Schaller_parameters()
   // Also linke to the nishizumii standards
   // These come with Cosmocalc version 2.0
   // http://www.ucl.ac.uk/~ucfbpve/cosmocalc/updates.html
-  P0_10Be = 4.32;          // in a/g/yr
+  P0_10Be = 4.31;          // in a/g/yr
   P0_26Al = 31.10;         // in a/g/yr
   P0_14C = 15.21;          // in a/g/yr
   P0_36Cl = 58.95;         // in a/g/yr
-  P0_21Ne = 18.27;         // in a/g/yr
-  P0_3He = 121.62;         // in a/g/yr
+  P0_21Ne = 18.23;         // in a/g/yr
+  P0_3He = 121.59;         // in a/g/yr
 
   // in g/cm^2
   Gamma[0] = 160;
@@ -1100,12 +1100,12 @@ void LSDCRNParameters::set_Braucher_parameters()
   // Also linke to the nishizumii standards
   // These come with Cosmocalc version 2.0
   // http://www.ucl.ac.uk/~ucfbpve/cosmocalc/updates.html
-  P0_10Be = 4.32;          // in a/g/yr
+  P0_10Be = 4.31;          // in a/g/yr
   P0_26Al = 31.10;         // in a/g/yr
   P0_14C = 15.21;          // in a/g/yr
   P0_36Cl = 58.95;         // in a/g/yr
-  P0_21Ne = 18.27;         // in a/g/yr
-  P0_3He = 121.62;         // in a/g/yr
+  P0_21Ne = 18.23;         // in a/g/yr
+  P0_3He = 121.59;         // in a/g/yr
 
   // in g/cm^2
   Gamma[0] = 160;
@@ -1170,19 +1170,19 @@ void LSDCRNParameters::set_Neutron_only_parameters()
 {
   //S_t =1;
 
-  // from Vermeesh 2007
-  lambda_10Be = 456e-9;		// in yr-1
-  lambda_26Al = 980e-9;		// in yr-1
-  lambda_14C = 121e-6;		// in yr-1
-  lambda_36Cl = 230e-8;		// in yr-1
+  // 10Be from Chmeleff/Korschinek 10Be decay constant;
+  lambda_10Be = 500e-9;    // in yr-1
+  lambda_26Al = 980e-9;    // in yr-1
+  lambda_14C = 121e-6;     // in yr-1
+  lambda_36Cl = 230e-8;    // in yr-1
 
   // from Vermeesh 2007
-  P0_10Be = 5.11;					// in a/g/yr
-  P0_26Al = 30.31;				// in a/g/yr
-  P0_14C = 5.86;					// in a/g/yr
-  P0_36Cl = 55.45;				// in a/g/yr
-  P0_21Ne = 20.29;				// in a/g/yr
-  P0_3He = 97.40;					// in a/g/yr
+  P0_10Be = 4.31;          // in a/g/yr
+  P0_26Al = 31.10;         // in a/g/yr
+  P0_14C = 15.21;          // in a/g/yr
+  P0_36Cl = 58.95;         // in a/g/yr
+  P0_21Ne = 18.23;         // in a/g/yr
+  P0_3He = 121.59;         // in a/g/yr
 
   // in g/cm^2
   Gamma[0] = 160;

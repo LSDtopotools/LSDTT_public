@@ -722,8 +722,8 @@ void LSDCRNParticle::update_10Be_SSfull(double erosion_rate, LSDCRNParameters& C
   //cout << "and sum term is: " << sum_term1 << " " << sum_term2 << endl;
   //double Pref =  CRNp.S_t*CRNp.P0_10Be;
   //cout << "Pref is: " << Pref << endl;
-  cout << "Scaling is: " << CRNp.S_t << " P0 is: " << CRNp.P0_10Be 
-       << " and Pref is: " << CRNp.S_t*CRNp.P0_10Be << endl;
+  //cout << "Scaling is: " << CRNp.S_t << " P0 is: " << CRNp.P0_10Be 
+  //     << " and Pref is: " << CRNp.S_t*CRNp.P0_10Be << endl;
   Conc_10Be = CRNp.S_t*CRNp.P0_10Be*sum_term1;
   spall_tot = CRNp.S_t*CRNp.P0_10Be*spall_tot;
   muon_tot =  CRNp.S_t*CRNp.P0_10Be*muon_tot;

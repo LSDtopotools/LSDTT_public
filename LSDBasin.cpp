@@ -1074,9 +1074,6 @@ void LSDCosmoBasin::get_atmospheric_pressure(LSDFlowInfo& FlowInfo,
   LSDCRNP.load_parameters_for_atmospheric_scaling(path_to_atmospheric_data);
   LSDCRNP.set_CRONUS_data_maps();
   
-  // a function for scaling stone production, defaults to 1
-  double Fsp = 1.0;
-  
   // the latitude and longitude
   double lat,longitude;
   
@@ -1368,7 +1365,7 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double eff_erosion_rate, string Nucl
     if(topographic_shielding[q] != NoDataValue)
     {
       count_samples++;
-      
+            
       // reset scaling parameters. This is necessary since the F values are
       // reset for local scaling
       if (Muon_scaling == "Schaller" )
@@ -1395,8 +1392,16 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double eff_erosion_rate, string Nucl
       // the elevation, snow shielding, topographic shielding
       // and production scaling are all independent of the erosion rate
       // and are calculated seperately. 
+      
+      if(  production_scaling.size() < 1 )
+      {
+        cout << "LSDCosmoBasin, trying to precalculate erosion rate." << endl
+             << "Scaling vectors have not been set! You are about to get a seg fault" << endl;
+      }
       total_shielding = prod_uncert_factor* production_scaling[q]*
                         topographic_shielding[q]*snow_shielding[q];
+
+      //cout << "LSDBasin line 1407; total scaling is: " << total_shielding << endl;
                       
       // now recalculate F values to match the total shielding
       LSDCRNP.scale_F_values(total_shielding);
@@ -1428,6 +1433,157 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double eff_erosion_rate, string Nucl
 
   return BasinAverage;
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// this function returns the concentration of a nuclide as  function of erosion rate
+// It calculates this based on the elevation scaling of the centroid
+// The erosion rate should be in g/cm^2/yr
+// NOTE: This is extremely inefficient: it is only here as a test to compare
+//  how bad it is vs the full production scaling, but if we start using this more
+// the averaging needs to be seperated from the concentration calculations
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+double LSDCosmoBasin::predict_mean_CRN_conc_centroid(double eff_erosion_rate, string Nuclide,
+                                            double prod_uncert_factor, string Muon_scaling,
+                                            LSDFlowInfo& FlowInfo)
+{
+  // production uncertainty factor is a multiplier that sets the production 
+  // certainty. If it is 1.1, there is 10% production rate uncertainty, or
+  // if it is 0.9 there is -10% unvertainty. The reason why it is implemented
+  // like this is that this allows gaussian error propigation.
+  if (prod_uncert_factor <=0)
+  {
+    cout << "You have set an unrealistic production uncertainty factor." << endl;
+    cout << "Defaulting to 1." << endl;
+    prod_uncert_factor = 1;
+  }
+  
+  // the average atoms per gram of the nuclide
+  double AverageTopo;
+  double AverageSnow;
+  double AverageProd;
+  
+  // the total shielding. A product of snow, topographic and production scaling
+  double total_shielding;
+  
+  // the total atomic concentration of the nuclude in question
+  double Total_N = 0;
+  
+  int count_samples = 0;
+  
+  // initiate a particle. We'll just repeatedly call this particle
+  // for the sample. 
+  int startType = 0; 
+  double Xloc = 0;
+  double Yloc = 0;
+  double  startdLoc = 0.0;
+  double  start_effdloc = 0.0;
+  double startzLoc = 0.0;
+  
+  // create a particle at zero depth
+  LSDCRNParticle eroded_particle(startType, Xloc, Yloc,
+                               startdLoc, start_effdloc, startzLoc);
+
+  // now create the CRN parameters object
+  LSDCRNParameters LSDCRNP;
+
+  // loop through the elevation data, averaging the snow and topo shielding
+  double snow_shield_total = 0;
+  double topo_shield_total = 0;
+  double total_prod_scaling = 0;
+  int centroid_node = 0;   // if the centroid is not in the basin, the 'centroid'
+                           // node defaults to the outlet
+  int row,col;      // the row and column of the current node
+  int end_node = int(BasinNodes.size());
+  for (int q = 0; q < end_node; ++q)
+  {
+    
+    //exclude NDV from average
+    if(topographic_shielding[q] != NoDataValue)
+    {
+      count_samples++;
+      
+      // check to see if this is the centroid
+      FlowInfo.retrieve_current_row_and_col(BasinNodes[q], row, col);
+      
+      if(row == Centroid_i && col == Centroid_j)
+      {
+        centroid_node = q;
+      }
+      
+      if(  production_scaling.size() < 1 )
+      {
+        cout << "LSDCosmoBasin, trying to precalculate erosion rate." << endl
+             << "Scaling vectors have not been set! You are about to get a seg fault" << endl;
+      }
+      snow_shield_total+= snow_shielding[q];
+      topo_shield_total+= topographic_shielding[q];
+      total_prod_scaling+= production_scaling[q];
+    }
+  }
+
+  AverageSnow = snow_shield_total/double(count_samples);
+  AverageTopo = topo_shield_total/double(count_samples);
+  AverageProd = total_prod_scaling/double(count_samples);
+  
+  // at this stage we will try to replicate the basin averaging that goes on in 
+  // most paper
+  // set scaling parameters. This is necessary since the F values are
+  // reset for local scaling
+  if (Muon_scaling == "Schaller" )
+  {
+    LSDCRNP.set_Schaller_parameters();
+  }
+    else if (Muon_scaling == "Braucher" )
+  {
+    LSDCRNP.set_Braucher_parameters();
+  }
+  else if (Muon_scaling == "Granger" )
+  {
+    LSDCRNP.set_Granger_parameters();
+  }
+  else
+  {
+    cout << "You didn't set the muon scaling." << endl
+         << "Options are Schaller, Braucher and Granger." << endl
+         << "You chose: " << Muon_scaling << endl
+         << "Defaulting to Braucher et al (2009) scaling" << endl;
+    LSDCRNP.set_Braucher_parameters();     
+  }
+  
+  // now get the shielding. This is based on the average snow sheilding, 
+  // the average topo shielding, and the production scaling of the centroid
+  total_shielding = prod_uncert_factor*AverageSnow*AverageTopo*
+                    production_scaling[centroid_node];  
+                        
+                                          
+  // now recalculate F values to match the total shielding
+  LSDCRNP.scale_F_values(total_shielding);
+      
+  // get the nuclide concentration from this node
+  if (Nuclide == "Be10")
+  {
+    
+    eroded_particle.update_10Be_SSfull(eff_erosion_rate,LSDCRNP);
+    Total_N+=eroded_particle.getConc_10Be();
+  }
+  else if (Nuclide == "Al26")
+  {
+    eroded_particle.update_26Al_SSfull(eff_erosion_rate,LSDCRNP);
+    Total_N+=eroded_particle.getConc_26Al();
+  }
+  else
+  {
+    cout << "You didn't give a valid nuclide. You chose: " << Nuclide << endl;
+    cout << "Choices are 10Be, 26Al.  Note these case sensitive and cannot" << endl;
+    cout << "contain spaces or control characters. Defaulting to 10Be." << endl;
+    eroded_particle.update_10Be_SSfull(eff_erosion_rate,LSDCRNP);
+    Total_N+=eroded_particle.getConc_10Be();
+  }
+
+  return Total_N;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
