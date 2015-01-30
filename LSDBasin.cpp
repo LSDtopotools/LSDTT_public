@@ -1221,8 +1221,9 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
   LSDCRNP.set_neutron_scaling(production_scaling[0],topographic_shielding[0],
                              snow_shielding[0]);
   
-  // make sure we get the entire basin
-  bool data_from_outlet_only = false;
+  // at the moment do only the outlet
+  bool data_from_outlet_only = true;
+  cout << "LSDBasin line 1226 WARNING YOU ARE ONLY CALCULATING THE OUTLET " << endl;
   
   // get the nuclide concentration from this node
   if (Nuclide == "Be10")
@@ -1262,12 +1263,15 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
   double N_derivative;                // dN/de derivative for Newton-Raphson
   double f_x;                         // the function being tested by newton raphson
   double f_x_displace;                // the displaced function (for calculating the derivative)
+  
   do
   {
-      
     // get the new values
+    cout << "Taking a step, eff_e: " << eff_e_new << " data_outlet? " <<  data_from_outlet_only;
     N_this_step = predict_mean_CRN_conc(eff_e_new, Nuclide,prod_uncert_factor,
                                         Muon_scaling,data_from_outlet_only);
+    cout << " Conc: " << N_this_step << endl;
+    
     
     f_x =  N_this_step-Nuclide_conc;
     
@@ -1296,7 +1300,7 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
 
 
 
-  return eff_erate_guess;
+  return eff_e_new;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

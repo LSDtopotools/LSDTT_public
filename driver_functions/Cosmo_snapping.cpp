@@ -289,7 +289,14 @@ int main (int nNumberofArgs,char *argv[])
     predicted_N = thisBasin.predict_mean_CRN_conc(eff_erosion_rate, String_10Be,prod_uncert_factor, 
                           Muon_scaling, data_from_outlet_only);
     
-    
+    // now test the Newton-Raphson routine
+    double effective_erate;
+    effective_erate = thisBasin.predict_CRN_erosion(test_N10, String_10Be, 
+                                              prod_uncert_factor, Muon_scaling);
+    cout << endl << endl << "LINE 296, cosmo_snapping.cpp, the effective erate is: " 
+         << effective_erate << endl << "The erosion rate for rho = 2650 is: " 
+         << effective_erate*10/rho << "m/yr and " 
+         << effective_erate*1e6/rho << "cm/kyr" << endl << endl;
     
   }
   
