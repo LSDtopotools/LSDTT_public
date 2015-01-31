@@ -279,15 +279,29 @@ int main (int nNumberofArgs,char *argv[])
     double prod_uncert_factor = 1;
     //erate = thisBasin.predict_CRN_erosion(test_N10, String_10Be,prod_uncert_factor);
     
-    string Muon_scaling = "Schaller";
+    string Muon_scaling = "Braucher";
     bool data_from_outlet_only = true;
     double rho = 2650;
-    double erosion_rate_in_cm_kyr = 100;
-    double erosion_rate = erosion_rate_in_cm_kyr*1.0e-5;    // in m/yr
-    double eff_erosion_rate = rho*0.1*erosion_rate;
-    double predicted_N;
-    predicted_N = thisBasin.predict_mean_CRN_conc(eff_erosion_rate, String_10Be,prod_uncert_factor, 
-                          Muon_scaling, data_from_outlet_only);
+    double erosion_rate_in_cm_kyr = 10;
+    if (samp == 0)
+    {
+      erosion_rate_in_cm_kyr = 100;
+    }
+    else if (samp == 1)
+    {
+      erosion_rate_in_cm_kyr = 3;
+    }    
+    
+    // Some routines for testing the forward model
+    //double erosion_rate = erosion_rate_in_cm_kyr*1.0e-5;    // in m/yr
+    //double eff_erosion_rate = rho*0.1*erosion_rate;
+    //double predicted_N;
+    //cout << endl << endl << "LINE 298 Predicting N" << endl;
+    //predicted_N = thisBasin.predict_mean_CRN_conc(eff_erosion_rate, String_10Be,prod_uncert_factor, 
+    //                      Muon_scaling, data_from_outlet_only);
+    //cout << endl << endl << "Line 301 Testing predicted N, erosion rate: " <<  erosion_rate_in_cm_kyr 
+    //     << " and N: " << predicted_N  << endl;
+                          
     
     // now test the Newton-Raphson routine
     double effective_erate;

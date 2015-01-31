@@ -1231,7 +1231,7 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
     //cout << "LINE 1134 LSDBasin Nuclide conc is: " << Nuclide_conc << endl;
     eroded_particle.setConc_10Be(Nuclide_conc);
     erate_guess = eroded_particle.apparent_erosion_10Be_neutron_only(rho, LSDCRNP);
-    cout << "Be10, initial erate guess in m/yr with density " << rho << ": " << erate_guess << endl;
+    //cout << "Be10, initial erate guess in m/yr with density " << rho << ": " << erate_guess << endl;
   }
   else if (Nuclide == "Al26")
   {
@@ -1267,10 +1267,10 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
   do
   {
     // get the new values
-    cout << "Taking a step, eff_e: " << eff_e_new << " data_outlet? " <<  data_from_outlet_only;
+    //cout << "Taking a step, eff_e: " << eff_e_new << " data_outlet? " <<  data_from_outlet_only;
     N_this_step = predict_mean_CRN_conc(eff_e_new, Nuclide,prod_uncert_factor,
                                         Muon_scaling,data_from_outlet_only);
-    cout << " Conc: " << N_this_step << endl;
+    //cout << " Conc: " << N_this_step << endl;
     
     
     f_x =  N_this_step-Nuclide_conc;
@@ -1289,7 +1289,7 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
       
       // check to see if the difference in erosion rates meet a tolerance
       eff_e_change = f_x/N_derivative;
-      cout << "Change is: " << eff_e_change << " and erosion rate is: " << eff_e_new << endl;
+      //cout << "Change is: " << eff_e_change << " and erosion rate is: " << eff_e_new << endl;
     }
     else
     {
@@ -1408,6 +1408,8 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double eff_erosion_rate, string Nucl
       //cout << "LSDBasin line 1407; total scaling is: " << total_shielding << endl;
                       
       // now recalculate F values to match the total shielding
+      //cout << "LINE 1411 WARNING, testing sheilding == 1" << endl;
+      //total_shielding = 1;
       LSDCRNP.scale_F_values(total_shielding);
       
       // get the nuclide concentration from this node

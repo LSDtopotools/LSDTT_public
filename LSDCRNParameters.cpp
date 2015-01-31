@@ -980,7 +980,7 @@ void LSDCRNParameters::set_Granger_parameters()
   // Also linke to the nishizumii standards
   // These come with Cosmocalc version 2.0
   // http://www.ucl.ac.uk/~ucfbpve/cosmocalc/updates.html
-  P0_10Be = 4.31;          // in a/g/yr
+  P0_10Be = 4.30;          // in a/g/yr
   P0_26Al = 31.10;         // in a/g/yr
   P0_14C = 15.21;          // in a/g/yr
   P0_36Cl = 58.95;         // in a/g/yr
@@ -1040,7 +1040,7 @@ void LSDCRNParameters::set_Schaller_parameters()
   // Also linke to the nishizumii standards
   // These come with Cosmocalc version 2.0
   // http://www.ucl.ac.uk/~ucfbpve/cosmocalc/updates.html
-  P0_10Be = 4.31;          // in a/g/yr
+  P0_10Be = 4.30;          // in a/g/yr
   P0_26Al = 31.10;         // in a/g/yr
   P0_14C = 15.21;          // in a/g/yr
   P0_36Cl = 58.95;         // in a/g/yr
@@ -1100,7 +1100,7 @@ void LSDCRNParameters::set_Braucher_parameters()
   // Also linke to the nishizumii standards
   // These come with Cosmocalc version 2.0
   // http://www.ucl.ac.uk/~ucfbpve/cosmocalc/updates.html
-  P0_10Be = 4.31;          // in a/g/yr
+  P0_10Be = 4.30;          // in a/g/yr
   P0_26Al = 31.10;         // in a/g/yr
   P0_14C = 15.21;          // in a/g/yr
   P0_36Cl = 58.95;         // in a/g/yr
@@ -1467,6 +1467,9 @@ void LSDCRNParameters::scale_F_values(double single_scaling)
 
   //cout << "FINISHED 10Be x is: " << x << " and test_scaling is: " << test_scaling << endl;
   //cout << F_10Be[0] << endl << F_10Be[1] << endl << F_10Be[2] << endl << F_10Be[3] << endl;
+  
+  //cout << "Total scaling is: " << single_scaling << " and sum is: " 
+  //     << F_10Be[0]+F_10Be[1]+F_10Be[2]+F_10Be[3] << endl;
 
   // now do 26Al
   x = 0;
