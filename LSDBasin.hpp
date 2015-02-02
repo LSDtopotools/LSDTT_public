@@ -755,6 +755,24 @@ class LSDCosmoBasin: public LSDBasin
     void populate_scaling_vectors(LSDFlowInfo& FlowInfo, LSDRaster& Elevation_Data,
                                   LSDRaster& Topo_Shield, string path_to_atmospheric_data);
 
+    /// @brief This function populates the scaling vectors that are used to set 
+    ///  the production scaling, topographic shielding and snow shielding
+    ///  for specific nodes
+    /// @detail The snow shiedling in inculded in this function
+    ///  The assumptions are Stone scaling with Fsp = 1
+    ///  and that the DEM has a WGS84 ellipsoid
+    /// @param FlowInfo the LSDFlowInfo object
+    /// @param Elevation_Data the DEM, an LSDRaster object. IMPORTANT!! This needs
+    ///  to contain georeferencing information for this to work!!!
+    /// @param Topo_Shield an LSDRaster with the topographic shielding
+    /// @param Snow_Shield  an LSDRaster containing the snow shielding.
+    /// @param path_to_atmospheric_data THis is a path to binary NCEP data. 
+    /// @author SMM
+    /// @date 22/12/2014
+    void populate_scaling_vectors(LSDFlowInfo& FlowInfo, LSDRaster& Elevation_Data,
+                                  LSDRaster& Topo_Shield, LSDRaster& Snow_shield,
+                                  string path_to_atmospheric_data);
+
     /// @brief This is a utility function that populates the atmospheric pressure
     ///  vector. It uses the CRONUS calculator scheme
     /// @detail The function is mainly used for bug checking
@@ -766,6 +784,24 @@ class LSDCosmoBasin: public LSDBasin
     /// @date 28/01/2015   
     void get_atmospheric_pressure(LSDFlowInfo& FlowInfo, LSDRaster& Elevation_Data, 
                                   string path_to_atmospheric_data);
+
+    /// @brief This function wraps the erosion rate calculator, and returns 
+    ///  both the erosion rate as well as the uncertainties
+    /// @param Nuclide_conc Concetration of the nuclide
+    /// @param Nuclide a string denoting the name of the nuclide (at the moment
+    ///  options are 10Be and 26Al)
+    /// @param Nuclide_conc_err The instrument error in the nuclide concentration
+    /// @param prod_uncert_fracton This is a fraction of the total uncertainty
+    ///  for the production rates. It is a lumped parameter that can be used
+    ///  for just production, or for snow, topo and porduction uncertainty
+    /// @param Muon_scaling string that gives the muon scaling scheme
+    ///  options are Schaller, Granger and Braucher
+    /// @return  a vector of both the erosion rates and the uncertainties of the sample
+    /// @author SMM
+    /// @date 01/02/2015
+    vector<double> full_CRN_erosion_analysis(double Nuclide_conc, string Nuclide, 
+                            double Nuclide_conc_err, double prod_uncert_factor,
+                            string Muon_scaling);
 
     /// @brief this uses Newton Raphson iteration to retrieve the erosion rate
     ///  from a basin given a nuclide concentration
@@ -780,12 +816,16 @@ class LSDCosmoBasin: public LSDBasin
     ///  like this is that this allows gaussian error propigation.
     /// @param Muon_scaling a string that gives the muon scaling scheme. 
     ///  options are Schaller, Braucher and Granger
+    /// @param production_uncertainty this gives the uncertainty in the production
+    ///  rates based on the production_uncert_factor; it is used in gaussian
+    ///  error propigation. The parameter is replaced within the function.    
     /// @return The effective erosion rate in g/cm^-2/yr
     /// @author SMM
     /// @date 03/01/2015
     double predict_CRN_erosion(double Nuclide_conc, string Nuclide, 
                                             double prod_uncert_factor,
-                                            string Muon_scaling);
+                                            string Muon_scaling,
+                                            double& production_uncertainty);
                                                
     /// @brief this predicts the mean concentration of a nuclide within 
     /// a basin
@@ -802,12 +842,16 @@ class LSDCosmoBasin: public LSDBasin
     ///  options are Schaller, Braucher and Granger
     /// @param data_from_outlet_only boolean that is true of you want 
     ///  concentration calculated from the outlet only.
+    /// @param production_uncertainty this gives the uncertainty in the production
+    ///  rates based on the production_uncert_factor; it is used in gaussian
+    ///  error propigation. The parameter is replaced within the function.
     /// @return the concentration of the nuclide averaged across the DEM
     /// @author SMM
     /// @date 22/12/2014
     double predict_mean_CRN_conc(double eff_erosion_rate, string Nuclide, 
                                  double prod_uncert_factor,
-                                 string Muon_scaling, bool data_from_outlet_only);
+                                 string Muon_scaling, bool data_from_outlet_only,
+                                 double& production_uncertainty);
 
     /// @brief this predicts the mean concentration of a nuclide within 
     ///  a basin, using the production scaling of the centroid
@@ -826,12 +870,15 @@ class LSDCosmoBasin: public LSDBasin
     /// @param Muon_scaling a string that gives the muon scaling scheme. 
     ///  options are Schaller, Braucher and Granger.
     /// @param FlowInfo an LSDFlowInfo object
+    /// @param production_uncertainty this gives the uncertainty in the production
+    ///  rates based on the production_uncert_factor; it is used in gaussian
+    ///  error propigation. The parameter is replaced within the function.
     /// @return the concentration of the nuclide averaged across the DEM.
     /// @author SMM
     /// @date 28/01/2015
     double predict_mean_CRN_conc_centroid(double eff_erosion_rate, string Nuclide,
                                     double prod_uncert_factor, string Muon_scaling,
-                                    LSDFlowInfo& FlowInfo);
+                                    LSDFlowInfo& FlowInfo, double& production_uncertainty);
 
     /// @brief Prints a csv with information about the nodes in a basin that
     ///  relate to cosmogenic paramters

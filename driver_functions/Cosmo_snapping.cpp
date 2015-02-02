@@ -273,7 +273,7 @@ int main (int nNumberofArgs,char *argv[])
     
     // now get the cosmo erosion rate
     cout << "Line 272, cosmo snapping; getting erate, 10Be conc: " << test_N10 << endl;
-    double erate;
+    //double erate;
     string String_10Be = "Be10";
     string String_26Al = "Al26";
     double prod_uncert_factor = 1;
@@ -305,12 +305,24 @@ int main (int nNumberofArgs,char *argv[])
     
     // now test the Newton-Raphson routine
     double effective_erate;
-    effective_erate = thisBasin.predict_CRN_erosion(test_N10, String_10Be, 
-                                              prod_uncert_factor, Muon_scaling);
-    cout << endl << endl << "LINE 296, cosmo_snapping.cpp, the effective erate is: " 
-         << effective_erate << endl << "The erosion rate for rho = 2650 is: " 
-         << effective_erate*10/rho << "m/yr and " 
-         << effective_erate*1e6/rho << "cm/kyr" << endl << endl;
+    double production_uncertainty;
+
+         
+    cout << "=======================================================" << endl;
+    cout << "And now for the full analysis" << endl;
+    vector<double> erate_analysis = thisBasin.full_CRN_erosion_analysis(test_N10, 
+                                        String_10Be, test_dN10, prod_uncert_factor,
+                                        Muon_scaling);
+    cout << "LINE 323, cosmo_snapping.cpp, the effective erate is: " 
+         <<  erate_analysis[0] << endl << "The erosion rate for rho = 2650 is: " 
+         << erate_analysis[0]*10/rho << "m/yr and " 
+         << erate_analysis[0]*1e6/rho << "cm/kyr" << endl;
+    cout << "LINE 323, cosmo_snapping.cpp, the error is: " 
+         <<  erate_analysis[1] << endl << "The erosion rate error for rho = 2650 is: " 
+         << erate_analysis[1]*10/rho << "m/yr and " 
+         << erate_analysis[1]*1e6/rho << "cm/kyr" << endl;
+    cout << "============================================================" << endl;
+    cout << endl << endl << endl;     
     
   }
   
@@ -329,6 +341,20 @@ int main (int nNumberofArgs,char *argv[])
 
   
   LSDCRNParameters LSDCRNP;
+  
+  double test_scaling;
+  vector<bool> scalings(4,true);
+  
+  for (int i = 0; i<5; i++)
+  {
+    test_scaling = 0.4+ double(i)*0.3;
+    cout << endl << endl << endl << "Scaling is: " << test_scaling << endl;
+    LSDCRNP.set_Schaller_parameters();
+    LSDCRNP.scale_F_values(test_scaling);
+    LSDCRNP.set_Schaller_parameters();
+    LSDCRNP.scale_F_values(test_scaling,scalings);
+    
+  }
   
   //string path_to_files = "/exports/csce/datastore/geos/users/smudd/devel_projects/Cosmo_scripts/";
   //string path_to_files = "c:/code/CRONUS_calculators/";
