@@ -266,7 +266,6 @@ class LSDCRNParameters
   /// @date 5/12/2014
   double stone2000sp(double lat,double P, double Fsp);
 
-
   /// @brief this function takes a single scaling factor for
   /// elevation scaling, self shielding, snow shielding,
   /// and latitude scaling and produces scaling factors
@@ -277,8 +276,26 @@ class LSDCRNParameters
   /// @param single_scaling a lumped scaling factor	
   /// @author SMM
   /// @date 01/01/2010
-  void scale_F_values(double single_scaling);	// parameter values
-  
+  void scale_F_values(double single_scaling);
+
+  /// @brief this function takes a single scaling factor for
+  /// elevation scaling, self shielding, snow shielding,
+  /// and latitude scaling and produces scaling factors
+  /// for each production mechamism.
+  /// the scaling follows the approach of vermeesch 2008
+  /// it uses a 'virtual' shielding depth to calculate
+  /// the updated scaling factors
+  /// @param single_scaling a lumped scaling factor
+  /// @param nuclides_for_scaling this is a vector of bool telling the code 
+  ///  which nuclides to calculate. The values are:
+  ///  nuclides_for_scaling[0] = true: calculate 10Be
+  ///  nuclides_for_scaling[1] = true: calculate 26Al
+  ///  nuclides_for_scaling[2] = true: calculate 36Cl
+  ///  nuclides_for_scaling[3] = true: calculate 14C
+  /// @author SMM
+  /// @date 01/02/2015
+  void scale_F_values(double single_scaling, vector<bool> nuclides_for_scaling);
+
   /// @brief this changes the 10Be decay. It is here because
   /// 10Be decay rates reported in the literature have changed
   /// @author SMM

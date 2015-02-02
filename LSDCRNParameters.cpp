@@ -1407,6 +1407,10 @@ void LSDCRNParameters::set_neutron_scaling(double scaling, double topo_shield,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCRNParameters::scale_F_values(double single_scaling)
 {
+
+  cout << "Line 1411 LSDCRNParameters THIS scaling is very slow! I suggest " 
+       << "using the Newton-Raphson version!" << endl;
+
   double tol = 1e-7;
   double x = 0;
   double new_x = 0;
@@ -1428,9 +1432,12 @@ void LSDCRNParameters::scale_F_values(double single_scaling)
     test_scaling = 1;
   }
 
+
+  //int iterations = 0;
   while (fabs(test_scaling - single_scaling) > tol)
   //for (int i = 0; i< 100; i++)
   {
+    //iterations ++;
     x = new_x;
     new_x = x+dx;
 
@@ -1458,6 +1465,7 @@ void LSDCRNParameters::scale_F_values(double single_scaling)
       }
     }
   }
+  //cout << "Iterations were: " << iterations << endl;
 
   // now reset the F_values
   F_10Be[0] = exp(-new_x/Gamma[0])*F_10Be[0];
@@ -1465,9 +1473,11 @@ void LSDCRNParameters::scale_F_values(double single_scaling)
   F_10Be[2] = exp(-new_x/Gamma[2])*F_10Be[2];
   F_10Be[3] = exp(-new_x/Gamma[3])*F_10Be[3];
 
+  //cout << "============================================================" << endl;
+  //cout << "LSDCRNP OLD SCALING" << endl;
   //cout << "FINISHED 10Be x is: " << x << " and test_scaling is: " << test_scaling << endl;
   //cout << F_10Be[0] << endl << F_10Be[1] << endl << F_10Be[2] << endl << F_10Be[3] << endl;
-  
+  //cout << "============================================================" << endl;
   //cout << "Total scaling is: " << single_scaling << " and sum is: " 
   //     << F_10Be[0]+F_10Be[1]+F_10Be[2]+F_10Be[3] << endl;
 
@@ -1651,7 +1661,296 @@ void LSDCRNParameters::scale_F_values(double single_scaling)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function is similar to the scaling function for total nuclides but
+// it allows the user to pick the nuclides they want scaled, and
+// also uses a faster newton raphson iterator to get the correct scaling
+//
+// The bool vector nuclides_for_scaling has four elements
+// nuclides_for_scaling[0] = true: calculate 10Be
+// nuclides_for_scaling[1] = true: calculate 26Al
+// nuclides_for_scaling[2] = true: calculate 36Cl
+// nuclides_for_scaling[3] = true: calculate 14C
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParameters::scale_F_values(double single_scaling, vector<bool> nuclides_for_scaling)
+{
+  // first check the boolean vector. If it is an incorrect size, print a warning
+  // and then default to all true
+  if(nuclides_for_scaling.size() != 4)
+  {
+    cout << "nulides for scaling vector is the wrong size! Defaulting to a " << endl;
+    cout << "vector that calculates all nuclides" << endl;
+    vector<bool> temp_vec(4,true);
+    nuclides_for_scaling = temp_vec;
+  }
 
+  // set up the parameters for the newton-raphson iteration
+  double initial_guess = 0;         // an initial test depth
+  double new_x;                 // the new test depth
+  double displace_x = 1e-6;     // how far you diplace the test depth
+  double displace_scaling;      // the scaling after displacement
+  double scaling_this_step;     // the scaling at the current step
+  double fx;                    // function for Newton Raphson to find root
+  double fx_displace;           // function after displacement
+  double fx_derivative;         // derivative of the root finding function
+  double x_change;              // the change in the scaling
+  vector<double> F(4,0.0);      // holds the F values, cycles between nuclides
+  double tolerance = 1e-7;      // the tolerance over which the scaling can change
+
+  // go through the nuclides, selecting each based on the booleans fed to 
+  // the routine  
+  // first 10Be  
+  if(nuclides_for_scaling[0])
+  {
+    // replace the F values
+    F[0] =  F_10Be[0];
+    F[1] =  F_10Be[1];
+    F[2] =  F_10Be[2];
+    F[3] =  F_10Be[3];
+    new_x = initial_guess;
+  
+    //int iterations = 0;
+  
+    do
+    {
+      //iterations++;
+      // get the scaling this step
+      scaling_this_step =  exp(-new_x/Gamma[0])*F[0]+
+                           exp(-new_x/Gamma[1])*F[1]+
+                           exp(-new_x/Gamma[2])*F[2]+
+                           exp(-new_x/Gamma[3])*F[3];
+                           
+      // create the function for root finding
+      fx = scaling_this_step-single_scaling;
+      
+      // now displace the test
+      displace_scaling =  exp(-(new_x+displace_x)/Gamma[0])*F[0]+
+                           exp(-(new_x+displace_x)/Gamma[1])*F[1]+
+                           exp(-(new_x+displace_x)/Gamma[2])*F[2]+
+                           exp(-(new_x+displace_x)/Gamma[3])*F[3];
+
+      fx_displace =  displace_scaling-single_scaling;
+    
+      fx_derivative = (fx_displace-fx)/displace_x;
+      
+      if(fx_derivative != 0)
+      {
+        new_x = new_x-fx/fx_derivative;
+      
+        // check to see if the difference in erosion rates meet a tolerance
+        x_change = fx/fx_derivative;
+        //cout << "Change is: " << eff_e_change << " and erosion rate is: " << eff_e_new << endl;
+      }
+      else
+      {
+        x_change = 0;
+      }
+  
+    } while(fabs(x_change) > tolerance);      
+    
+    //cout << "========================================================" << endl;
+    //cout << "TESTING SCALING IN LSDCRNP" << endl;
+    //cout << "LINE 1742, scaling is: " << new_x << endl;
+    //cout << "Iterations were: " << iterations << endl;
+    //cout << "========================================================" << endl;
+    
+    // now reset the F_values
+    F_10Be[0] = exp(-new_x/Gamma[0])*F_10Be[0];
+    F_10Be[1] = exp(-new_x/Gamma[1])*F_10Be[1];
+    F_10Be[2] = exp(-new_x/Gamma[2])*F_10Be[2];
+    F_10Be[3] = exp(-new_x/Gamma[3])*F_10Be[3];  
+  }
+
+  // now 26Al
+  if(nuclides_for_scaling[1])
+  {
+    // replace the F values
+    F[0] =  F_26Al[0];
+    F[1] =  F_26Al[1];
+    F[2] =  F_26Al[2];
+    F[3] =  F_26Al[3];
+    new_x = initial_guess;
+  
+    //int iterations = 0;
+  
+    do
+    {
+      //iterations++;
+      // get the scaling this step
+      scaling_this_step =  exp(-new_x/Gamma[0])*F[0]+
+                           exp(-new_x/Gamma[1])*F[1]+
+                           exp(-new_x/Gamma[2])*F[2]+
+                           exp(-new_x/Gamma[3])*F[3];
+                           
+      // create the function for root finding
+      fx = scaling_this_step-single_scaling;
+      
+      // now displace the test
+      displace_scaling =  exp(-(new_x+displace_x)/Gamma[0])*F[0]+
+                           exp(-(new_x+displace_x)/Gamma[1])*F[1]+
+                           exp(-(new_x+displace_x)/Gamma[2])*F[2]+
+                           exp(-(new_x+displace_x)/Gamma[3])*F[3];
+
+      fx_displace =  displace_scaling-single_scaling;
+    
+      fx_derivative = (fx_displace-fx)/displace_x;
+      
+      if(fx_derivative != 0)
+      {
+        new_x = new_x-fx/fx_derivative;
+      
+        // check to see if the difference in erosion rates meet a tolerance
+        x_change = fx/fx_derivative;
+        //cout << "Change is: " << eff_e_change << " and erosion rate is: " << eff_e_new << endl;
+      }
+      else
+      {
+        x_change = 0;
+      }
+  
+    } while(fabs(x_change) > tolerance);      
+    
+    //cout << "========================================================" << endl;
+    //cout << "TESTING SCALING IN LSDCRNP" << endl;
+    //cout << "LINE 1742, scaling is: " << new_x << endl;
+    //cout << "Iterations were: " << iterations << endl;
+    //cout << "========================================================" << endl;
+    
+    // now reset the F_values
+    F_26Al[0] = exp(-new_x/Gamma[0])*F_26Al[0];
+    F_26Al[1] = exp(-new_x/Gamma[1])*F_26Al[1];
+    F_26Al[2] = exp(-new_x/Gamma[2])*F_26Al[2];
+    F_26Al[3] = exp(-new_x/Gamma[3])*F_26Al[3];  
+  }
+
+  // now 36Cl
+  if(nuclides_for_scaling[2])
+  {
+    // replace the F values
+    F[0] =  F_36Cl[0];
+    F[1] =  F_36Cl[1];
+    F[2] =  F_36Cl[2];
+    F[3] =  F_36Cl[3];
+    new_x = initial_guess;
+  
+    //int iterations = 0;
+  
+    do
+    {
+      //iterations++;
+      // get the scaling this step
+      scaling_this_step =  exp(-new_x/Gamma[0])*F[0]+
+                           exp(-new_x/Gamma[1])*F[1]+
+                           exp(-new_x/Gamma[2])*F[2]+
+                           exp(-new_x/Gamma[3])*F[3];
+                           
+      // create the function for root finding
+      fx = scaling_this_step-single_scaling;
+      
+      // now displace the test
+      displace_scaling =  exp(-(new_x+displace_x)/Gamma[0])*F[0]+
+                           exp(-(new_x+displace_x)/Gamma[1])*F[1]+
+                           exp(-(new_x+displace_x)/Gamma[2])*F[2]+
+                           exp(-(new_x+displace_x)/Gamma[3])*F[3];
+
+      fx_displace =  displace_scaling-single_scaling;
+    
+      fx_derivative = (fx_displace-fx)/displace_x;
+      
+      if(fx_derivative != 0)
+      {
+        new_x = new_x-fx/fx_derivative;
+      
+        // check to see if the difference in erosion rates meet a tolerance
+        x_change = fx/fx_derivative;
+        //cout << "Change is: " << eff_e_change << " and erosion rate is: " << eff_e_new << endl;
+      }
+      else
+      {
+        x_change = 0;
+      }
+  
+    } while(fabs(x_change) > tolerance);      
+    
+    //cout << "========================================================" << endl;
+    //cout << "TESTING SCALING IN LSDCRNP" << endl;
+    //cout << "LINE 1742, scaling is: " << new_x << endl;
+    //cout << "Iterations were: " << iterations << endl;
+    //cout << "========================================================" << endl;
+    
+    // now reset the F_values
+    F_36Cl[0] = exp(-new_x/Gamma[0])*F_36Cl[0];
+    F_36Cl[1] = exp(-new_x/Gamma[1])*F_36Cl[1];
+    F_36Cl[2] = exp(-new_x/Gamma[2])*F_36Cl[2];
+    F_36Cl[3] = exp(-new_x/Gamma[3])*F_36Cl[3];  
+  }
+
+  // now 14C
+  if(nuclides_for_scaling[3])
+  {
+    // replace the F values
+    F[0] =  F_14C[0];
+    F[1] =  F_14C[1];
+    F[2] =  F_14C[2];
+    F[3] =  F_14C[3];
+    new_x = initial_guess;
+  
+    //int iterations = 0;
+  
+    do
+    {
+      //iterations++;
+      // get the scaling this step
+      scaling_this_step =  exp(-new_x/Gamma[0])*F[0]+
+                           exp(-new_x/Gamma[1])*F[1]+
+                           exp(-new_x/Gamma[2])*F[2]+
+                           exp(-new_x/Gamma[3])*F[3];
+                           
+      // create the function for root finding
+      fx = scaling_this_step-single_scaling;
+      
+      // now displace the test
+      displace_scaling =  exp(-(new_x+displace_x)/Gamma[0])*F[0]+
+                           exp(-(new_x+displace_x)/Gamma[1])*F[1]+
+                           exp(-(new_x+displace_x)/Gamma[2])*F[2]+
+                           exp(-(new_x+displace_x)/Gamma[3])*F[3];
+
+      fx_displace =  displace_scaling-single_scaling;
+    
+      fx_derivative = (fx_displace-fx)/displace_x;
+      
+      if(fx_derivative != 0)
+      {
+        new_x = new_x-fx/fx_derivative;
+      
+        // check to see if the difference in erosion rates meet a tolerance
+        x_change = fx/fx_derivative;
+        //cout << "Change is: " << eff_e_change << " and erosion rate is: " << eff_e_new << endl;
+      }
+      else
+      {
+        x_change = 0;
+      }
+  
+    } while(fabs(x_change) > tolerance);      
+    
+    //cout << "========================================================" << endl;
+    //cout << "TESTING SCALING IN LSDCRNP" << endl;
+    //cout << "LINE 1742, scaling is: " << new_x << endl;
+    //cout << "Iterations were: " << iterations << endl;
+    //cout << "========================================================" << endl;
+    
+    // now reset the F_values
+    F_14C[0] = exp(-new_x/Gamma[0])*F_14C[0];
+    F_14C[1] = exp(-new_x/Gamma[1])*F_14C[1];
+    F_14C[2] = exp(-new_x/Gamma[2])*F_14C[2];
+    F_14C[3] = exp(-new_x/Gamma[3])*F_14C[3];  
+  }
+
+
+}
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // This function converts elevation to atmospheric pressure
