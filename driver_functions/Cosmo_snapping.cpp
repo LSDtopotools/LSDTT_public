@@ -340,21 +340,20 @@ int main (int nNumberofArgs,char *argv[])
 
 
   
-  LSDCRNParameters LSDCRNP;
+  //LSDCRNParameters LSDCRNP;
   
-  double test_scaling;
-  vector<bool> scalings(4,true);
+  //double test_scaling;
+  //vector<bool> scalings(4,true);
   
-  for (int i = 0; i<5; i++)
-  {
-    test_scaling = 0.4+ double(i)*0.3;
-    cout << endl << endl << endl << "Scaling is: " << test_scaling << endl;
-    LSDCRNP.set_Schaller_parameters();
-    LSDCRNP.scale_F_values(test_scaling);
-    LSDCRNP.set_Schaller_parameters();
-    LSDCRNP.scale_F_values(test_scaling,scalings);
-    
-  }
+  //for (int i = 0; i<5; i++)
+  //{
+    //test_scaling = 0.4+ double(i)*0.3;
+    //cout << endl << endl << endl << "Scaling is: " << test_scaling << endl;
+    //LSDCRNP.set_Schaller_parameters();
+    //LSDCRNP.scale_F_values(test_scaling);
+    //LSDCRNP.set_Schaller_parameters();
+    //LSDCRNP.scale_F_values(test_scaling,scalings);
+  //}
   
   //string path_to_files = "/exports/csce/datastore/geos/users/smudd/devel_projects/Cosmo_scripts/";
   //string path_to_files = "c:/code/CRONUS_calculators/";

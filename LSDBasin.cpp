@@ -1234,7 +1234,14 @@ vector<double> LSDCosmoBasin::full_CRN_erosion_analysis(double Nuclide_conc, str
   
   double average_production_rate; // The average production rate, used in uncertainty
                                   // calculations
+  double erate_muon_scheme_schaller;  // erosion rate using schaller scheme
+  double erate_muon_scheme_braucher;  // erosion rate using braucher scheme
   
+  double dEdMuonScheme;           // change in erosion rate for change in Muon Scheme
+  double Muon_uncert;             // uncertainty of effective erosion rate 
+                                  // in g/cm^2/yr for different muon schemes
+  
+   
   // first get the prediction of the erosion rate
   erate = predict_CRN_erosion(Nuclide_conc, Nuclide, prod_uncert_factor, 
                               Muon_scaling, production_uncertainty,
@@ -1259,6 +1266,54 @@ vector<double> LSDCosmoBasin::full_CRN_erosion_analysis(double Nuclide_conc, str
   
   erate_uncert_vec.push_back(erate);
   erate_uncert_vec.push_back(External_uncert);
+  
+  // now calculate uncertainty from different muon scaling schemes. 
+  // The end members are Braucher and Schaller
+  string braucher_string = "Braucher";
+  string schaller_string = "Schaller";
+  
+  // get the difference in the pair
+  LSDCRNParameters LSDCRNP;
+  int pair_key = 0;       // this is for braucher-schaller
+  vector<double> muon_uncert_diff = LSDCRNP.get_uncertainty_scaling_pair(pair_key);
+  
+  double this_muon_uncert_dif;
+  if(Nuclide == "Be10")
+  {
+    this_muon_uncert_dif = muon_uncert_diff[0];
+  }
+  else if (Nuclide == "Al26")
+  {
+    this_muon_uncert_dif = muon_uncert_diff[1];
+  }
+  else
+  {
+    cout << "LINE 1295 LSDBasin you did not supply a valid nuclide, defaulting to 10Be" << endl;
+    Nuclide = "Be10";
+    this_muon_uncert_dif = muon_uncert_diff[0];
+  }
+  
+  // now get the muon uncertainty
+  erate_muon_scheme_schaller = predict_CRN_erosion(Nuclide_conc, Nuclide, 
+                                             no_prod_uncert, schaller_string,
+                                             production_uncertainty,
+                                             average_production_rate);
+  erate_muon_scheme_braucher = predict_CRN_erosion(Nuclide_conc, Nuclide, 
+                                             no_prod_uncert, braucher_string,
+                                             production_uncertainty,
+                                             average_production_rate);
+  dEdMuonScheme = (erate_muon_scheme_schaller-erate_muon_scheme_braucher)/
+                  this_muon_uncert_dif;
+  Muon_uncert = fabs(dEdMuonScheme*this_muon_uncert_dif);
+  
+  cout << "LSDCosmoBasin, Line 1292, change in scaling production rate: " 
+       << this_muon_uncert_dif << " erate Schal: "
+       << erate_muon_scheme_schaller << " erate Braucher: " 
+       << erate_muon_scheme_braucher << " and erate uncert: " << Muon_uncert << endl;
+  
+  erate_uncert_vec.push_back(erate);
+  erate_uncert_vec.push_back(External_uncert);
+  erate_uncert_vec.push_back(Muon_uncert);
   
   return erate_uncert_vec;
 } 
@@ -1340,6 +1395,24 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
     LSDCRNP.set_Braucher_parameters();     
   }
 
+  // set the scaling vector
+  vector<bool> nuclide_scaling_switches(4,false);
+  if (Nuclide == "Be10")
+  {
+    nuclide_scaling_switches[0] = true;
+  }
+  else if (Nuclide == "Al26")
+  {
+    nuclide_scaling_switches[1] = true;
+  }
+  else
+  {
+    cout << "LSDBasin line 1583, You didn't choos a valid nuclide. Defaulting"
+         << " to 10Be." << endl;
+    Nuclide = "Be10";
+    nuclide_scaling_switches[0] = true; 
+  }
+
   // now get the guess from the particle
   // the initial guess just takes scaling from the outlet, and then 
   // uses that for the entire basin. This guess will probably be quite
@@ -1359,10 +1432,10 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
                         
   //cout << "LSDBasin line 1128 Prod scaling is: " << production_scaling[0] << endl;
                         
-  cout << "LSDBasin line 1129; total scaling is: " << total_shielding << endl;
+  //cout << "LSDBasin line 1129; total scaling is: " << total_shielding << endl;
                       
   // now recalculate F values to match the total shielding
-  LSDCRNP.scale_F_values(total_shielding);
+  LSDCRNP.scale_F_values(total_shielding,nuclide_scaling_switches);
   LSDCRNP.set_neutron_scaling(production_scaling[0],topographic_shielding[0],
                              snow_shielding[0]);
   
@@ -1530,6 +1603,24 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double eff_erosion_rate, string Nucl
     end_node =  int(BasinNodes.size());
   }
   
+  // set the scaling vector
+  vector<bool> nuclide_scaling_switches(4,false);
+  if (Nuclide == "Be10")
+  {
+    nuclide_scaling_switches[0] = true;
+  }
+  else if (Nuclide == "Al26")
+  {
+    nuclide_scaling_switches[1] = true;
+  }
+  else
+  {
+    cout << "LSDBasin line 1583, You didn't choos a valid nuclide. Defaulting"
+         << " to 10Be." << endl;
+    Nuclide = "Be10";
+    nuclide_scaling_switches[0] = true; 
+  }
+  
   // loop through the elevation data
   for (int q = 0; q < end_node; ++q)
   {
@@ -1577,15 +1668,16 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double eff_erosion_rate, string Nucl
       cumulative_production_rate += total_shielding_no_uncert;
 
       //cout << "LSDBasin line 1407; total scaling is: " << total_shielding << endl;
-                      
+
       // now recalculate F values to match the total shielding
       //cout << "LINE 1411 WARNING, testing sheilding == 1" << endl;
       //total_shielding = 1;
-      LSDCRNP.scale_F_values(total_shielding);
+      LSDCRNP.scale_F_values(total_shielding,nuclide_scaling_switches);
       
       // get the nuclide concentration from this node
       if (Nuclide == "Be10")
       {
+
         
         eroded_particle.update_10Be_SSfull(eff_erosion_rate,LSDCRNP);
         Total_N+=eroded_particle.getConc_10Be();
@@ -1736,7 +1828,26 @@ double LSDCosmoBasin::predict_mean_CRN_conc_centroid(double eff_erosion_rate, st
          << "Defaulting to Braucher et al (2009) scaling" << endl;
     LSDCRNP.set_Braucher_parameters();     
   }
-  
+
+  // set the scaling vector
+  vector<bool> nuclide_scaling_switches(4,false);
+  if (Nuclide == "Be10")
+  {
+    nuclide_scaling_switches[0] = true;
+  }
+  else if (Nuclide == "Al26")
+  {
+    nuclide_scaling_switches[1] = true;
+  }
+  else
+  {
+    cout << "LSDBasin line 1583, You didn't choos a valid nuclide. Defaulting"
+         << " to 10Be." << endl;
+    Nuclide = "Be10";
+    nuclide_scaling_switches[0] = true; 
+  }
+
+
   // now get the shielding. This is based on the average snow sheilding, 
   // the average topo shielding, and the production scaling of the centroid
   double total_shielding_no_uncert = AverageSnow*AverageTopo*
@@ -1748,7 +1859,7 @@ double LSDCosmoBasin::predict_mean_CRN_conc_centroid(double eff_erosion_rate, st
                         
                                           
   // now recalculate F values to match the total shielding
-  LSDCRNP.scale_F_values(total_shielding);
+  LSDCRNP.scale_F_values(total_shielding,nuclide_scaling_switches);
       
   // get the nuclide concentration from this node
   if (Nuclide == "Be10")
