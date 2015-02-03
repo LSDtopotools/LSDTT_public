@@ -43,17 +43,17 @@ class LSDBasin
 
 
   /// @return Number of rows as an integer.
-  int get_NRows() const				{ return NRows; }
+  int get_NRows() const        { return NRows; }
   /// @return Number of columns as an integer.
-  int get_NCols() const				{ return NCols; }
+  int get_NCols() const        { return NCols; }
   /// @return Minimum X coordinate as an integer.
-  float get_XMinimum() const			{ return XMinimum; }
+  float get_XMinimum() const        { return XMinimum; }
   /// @return Minimum Y coordinate as an integer.
-  float get_YMinimum() const			{ return YMinimum; }
+  float get_YMinimum() const        { return YMinimum; }
   /// @return Data resolution as an integer.
-  float get_DataResolution() const	{ return DataResolution; }
+  float get_DataResolution() const        { return DataResolution; }
   /// @return No Data Value as an integer.
-  int get_NoDataValue() const			{ return NoDataValue; }
+  int get_NoDataValue() const        { return NoDataValue; }
   
   /// @return Georeferencing information
   map<string,string> get_GeoReferencingStrings() const { return GeoReferencingStrings; }
@@ -73,7 +73,7 @@ class LSDBasin
   /// @return Stream order of basin.
   int get_BasinOrder() const { return BasinOrder; }
   
-  /// @return Boolean value of whether a basin is beheaded or not.										
+  /// @return Boolean value of whether a basin is beheaded or not.
   bool get_Beheaded() const { return Beheaded; }
   
   /// @return i index of outlet pixel.
@@ -818,14 +818,19 @@ class LSDCosmoBasin: public LSDBasin
     ///  options are Schaller, Braucher and Granger
     /// @param production_uncertainty this gives the uncertainty in the production
     ///  rates based on the production_uncert_factor; it is used in gaussian
-    ///  error propigation. The parameter is replaced within the function.    
+    ///  error propigation. The parameter is replaced within the function. 
+    /// @param average_production This gives the production rate average for the
+    ///  basin. It can be used for uncertainty analyis: if the scaling is
+    ///  changed the change in this production rate can be used to construct
+    ///  the gaussian error propigation terms       
     /// @return The effective erosion rate in g/cm^-2/yr
     /// @author SMM
     /// @date 03/01/2015
     double predict_CRN_erosion(double Nuclide_conc, string Nuclide, 
                                             double prod_uncert_factor,
                                             string Muon_scaling,
-                                            double& production_uncertainty);
+                                            double& production_uncertainty,
+                                            double& average_production);
                                                
     /// @brief this predicts the mean concentration of a nuclide within 
     /// a basin
@@ -845,13 +850,18 @@ class LSDCosmoBasin: public LSDBasin
     /// @param production_uncertainty this gives the uncertainty in the production
     ///  rates based on the production_uncert_factor; it is used in gaussian
     ///  error propigation. The parameter is replaced within the function.
+    /// @param production_rate This gives the production rate average for the
+    ///  basin. It can be used for uncertainty analyis: if the scaling is
+    ///  changed the change in this production rate can be used to construct
+    ///  the gaussian error propigation terms
     /// @return the concentration of the nuclide averaged across the DEM
     /// @author SMM
     /// @date 22/12/2014
     double predict_mean_CRN_conc(double eff_erosion_rate, string Nuclide, 
                                  double prod_uncert_factor,
                                  string Muon_scaling, bool data_from_outlet_only,
-                                 double& production_uncertainty);
+                                 double& production_uncertainty,
+                                 double& production_rate);
 
     /// @brief this predicts the mean concentration of a nuclide within 
     ///  a basin, using the production scaling of the centroid
@@ -873,12 +883,17 @@ class LSDCosmoBasin: public LSDBasin
     /// @param production_uncertainty this gives the uncertainty in the production
     ///  rates based on the production_uncert_factor; it is used in gaussian
     ///  error propigation. The parameter is replaced within the function.
+    /// @param production_rate This gives the production rate average for the
+    ///  basin. It can be used for uncertainty analyis: if the scaling is
+    ///  changed the change in this production rate can be used to construct
+    ///  the gaussian error propigation terms    
     /// @return the concentration of the nuclide averaged across the DEM.
     /// @author SMM
     /// @date 28/01/2015
     double predict_mean_CRN_conc_centroid(double eff_erosion_rate, string Nuclide,
                                     double prod_uncert_factor, string Muon_scaling,
-                                    LSDFlowInfo& FlowInfo, double& production_uncertainty);
+                                    LSDFlowInfo& FlowInfo, double& production_uncertainty,
+                                    double& production_rate);
 
     /// @brief Prints a csv with information about the nodes in a basin that
     ///  relate to cosmogenic paramters

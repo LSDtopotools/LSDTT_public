@@ -245,7 +245,7 @@ class LSDCRNParameters
   ///  this is used in the gaussian error propigation
   /// @author SMM
   /// @date 03/05/2014
-  vector<double> void set_P0_CRONUS_uncertainty_plus();
+  vector<double> set_P0_CRONUS_uncertainty_minus();
 
   /// @brief This sets the internal scaling for the particle. It includes
   ///  topographic shielding, snow shielding and scaling from latitude and

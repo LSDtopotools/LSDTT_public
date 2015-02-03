@@ -1220,26 +1220,37 @@ vector<double> LSDCosmoBasin::full_CRN_erosion_analysis(double Nuclide_conc, str
   // the vector for holding the erosion rates and uncertainties
   vector<double> erate_uncert_vec;
   
-  double erate;
-  double erate_external_plus;
-  double erate_external_minus;
-  double dEdExternal;
-  double External_uncert;
-  double production_uncertainty;
+  double erate;                   // effective erosion rate g/cm^2/yr
+  double erate_external_plus;     // effective erosion rate g/cm^2/yr for AMS uncertainty +
+  double erate_external_minus;    // effective erosion rate g/cm^2/yr for AMS uncertainty -
+  double dEdExternal;             // change in erosion rate for change in AMS atoms/g
+  double External_uncert;         // uncertainty of effective erosion rate g/cm^2/yr for AMS
+  
+  
+  double production_uncertainty;  // a lumped production uncertainty value. 
+                                  // not generally used but needs to be passed
+                                  // to the erosion finding routines as a parameter
+  
+  
+  double average_production_rate; // The average production rate, used in uncertainty
+                                  // calculations
   
   // first get the prediction of the erosion rate
   erate = predict_CRN_erosion(Nuclide_conc, Nuclide, prod_uncert_factor, 
-                              Muon_scaling, production_uncertainty);
+                              Muon_scaling, production_uncertainty,
+                              average_production_rate);
   
   double no_prod_uncert = 1.0;    // set the scheme to no production uncertainty
                                   // for the external uncertainty
   // now get the external uncertainty                                        
   erate_external_plus = predict_CRN_erosion(Nuclide_conc+Nuclide_conc_err, Nuclide, 
                                              no_prod_uncert, Muon_scaling,
-                                             production_uncertainty);
+                                             production_uncertainty,
+                                             average_production_rate);
   erate_external_minus = predict_CRN_erosion(Nuclide_conc-Nuclide_conc_err, Nuclide, 
                                              no_prod_uncert, Muon_scaling,
-                                             production_uncertainty); 
+                                             production_uncertainty,
+                                             average_production_rate); 
   dEdExternal = (erate_external_plus-erate_external_minus)/(2*Nuclide_conc_err);
   External_uncert = fabs(dEdExternal*Nuclide_conc_err);
   
@@ -1264,7 +1275,8 @@ vector<double> LSDCosmoBasin::full_CRN_erosion_analysis(double Nuclide_conc, str
 double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide, 
                                           double prod_uncert_factor,
                                           string Muon_scaling,
-                                          double& production_uncertainty)
+                                          double& production_uncertainty,
+                                          double& average_production)
 {
   // effective erosion rates (in g/cm^2/yr) for running the Newton Raphson
   // iterations
@@ -1402,13 +1414,17 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
   double displace_uncertainty;        // the uncertainty from the displaced calculations
                                       // is not used so a dummy variable is used here
   
+  double this_step_average_production;// the average production rate for this step
+  double displace_average_production; // aveage production for the displace step
+  
   do
   {
     // get the new values
     //cout << "Taking a step, eff_e: " << eff_e_new << " data_outlet? " <<  data_from_outlet_only;
     N_this_step = predict_mean_CRN_conc(eff_e_new, Nuclide,prod_uncert_factor,
                                         Muon_scaling,data_from_outlet_only,
-                                        this_step_prod_uncert);
+                                        this_step_prod_uncert,
+                                        this_step_average_production);
     //cout << " Conc: " << N_this_step << endl;
     
     
@@ -1417,7 +1433,8 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
     // now get the derivative
     N_displace = predict_mean_CRN_conc(eff_e_new+eff_e_displace,Nuclide,
                                        prod_uncert_factor,Muon_scaling, 
-                                       data_from_outlet_only,displace_uncertainty);
+                                       data_from_outlet_only,displace_uncertainty,
+                                       displace_average_production);
     f_x_displace =  N_displace-Nuclide_conc;
     
     N_derivative = (f_x_displace-f_x)/eff_e_displace;
@@ -1437,8 +1454,12 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
   
   } while(fabs(eff_e_change) > tolerance);
 
-
+  // replace the production uncertainty
   production_uncertainty = this_step_prod_uncert;
+  
+  // replace the average production
+  average_production = this_step_average_production;
+  
   return eff_e_new;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1450,7 +1471,8 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
 double LSDCosmoBasin::predict_mean_CRN_conc(double eff_erosion_rate, string Nuclide,
                                             double prod_uncert_factor, string Muon_scaling,
                                             bool data_from_outlet_only, 
-                                            double& production_uncertainty)
+                                            double& production_uncertainty, 
+                                            double& average_production)
 {
   // production uncertainty factor is a multiplier that sets the production 
   // certainty. If it is 1.1, there is 10% production rate uncertainty, or
@@ -1587,8 +1609,13 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double eff_erosion_rate, string Nucl
   BasinAverage = Total_N/double(count_samples);
   average_production_rate = cumulative_production_rate/double(count_samples);
   average_production_uncertainty = average_production_rate*fabs(1-prod_uncert_factor);
+  
+  // replace the production uncertanty
   production_uncertainty = average_production_uncertainty;
   
+  // replace the average production rate
+  average_production = average_production_rate;
+      
   return BasinAverage;
 }
 
@@ -1603,7 +1630,8 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double eff_erosion_rate, string Nucl
 double LSDCosmoBasin::predict_mean_CRN_conc_centroid(double eff_erosion_rate, string Nuclide,
                                             double prod_uncert_factor, string Muon_scaling,
                                             LSDFlowInfo& FlowInfo, 
-                                            double& production_uncertainty)
+                                            double& production_uncertainty, 
+                                            double& average_production)
 {
   // production uncertainty factor is a multiplier that sets the production 
   // certainty. If it is 1.1, there is 10% production rate uncertainty, or
@@ -1745,6 +1773,10 @@ double LSDCosmoBasin::predict_mean_CRN_conc_centroid(double eff_erosion_rate, st
 
   // replace the production uncertanty number
   production_uncertainty = average_production_uncertainty;
+  
+  // replace the average production
+  average_production = total_shielding;
+  
   
   return Total_N;
 }
