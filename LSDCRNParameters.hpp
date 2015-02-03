@@ -227,6 +227,26 @@ class LSDCRNParameters
   /// @date 14/07/2014	
   void set_Neutron_only_parameters();
 
+  /// @brief This function resets the P0 using the error from the CRONUS 
+  ///  calculator. It allows one to test the uncertainty in the
+  ///  calculated erosion rates. 
+  /// @detail this version adds to the production. 
+  /// @return a vector continaing the change in the 10Be and 26Al production rates
+  ///  this is used in the gaussian error propigation
+  /// @author SMM
+  /// @date 03/05/2014
+  vector<double> set_P0_CRONUS_uncertainty_plus();
+
+  /// @brief This function resets the P0 using the error from the CRONUS 
+  ///  calculator. It allows one to test the uncertainty in the
+  ///  calculated erosion rates. 
+  /// @detail this version adds to the production
+  /// @return a vector continaing the change in the 10Be and 26Al production rates
+  ///  this is used in the gaussian error propigation
+  /// @author SMM
+  /// @date 03/05/2014
+  vector<double> void set_P0_CRONUS_uncertainty_plus();
+
   /// @brief This sets the internal scaling for the particle. It includes
   ///  topographic shielding, snow shielding and scaling from latitude and
   ///  other factors

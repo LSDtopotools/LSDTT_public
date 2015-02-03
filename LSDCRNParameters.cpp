@@ -1177,7 +1177,7 @@ void LSDCRNParameters::set_Neutron_only_parameters()
   lambda_36Cl = 230e-8;    // in yr-1
 
   // from Vermeesh 2007
-  P0_10Be = 4.31;          // in a/g/yr
+  P0_10Be = 4.30;          // in a/g/yr
   P0_26Al = 31.10;         // in a/g/yr
   P0_14C = 15.21;          // in a/g/yr
   P0_36Cl = 58.95;         // in a/g/yr
@@ -1213,6 +1213,59 @@ void LSDCRNParameters::set_Neutron_only_parameters()
   F_36Cl[1] = 0;
   F_36Cl[2] = 0;
   F_36Cl[3] = 0;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function modifies the P0 values of Al and Be so that they
+// mirror the uncertainty reported in CRONUS v2.2
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<double> LSDCRNParameters::set_P0_CRONUS_uncertainty_plus()
+{
+  // get the uncertainty percentage from the numbers in CRONUS
+  // these numbers are from the stone scaling of CRONUS routine
+  // make_al_be_consts_v22
+  double CRONUS_P10 = 4.49;       // in atoms/g/year
+  double CRONUS_delP10 = 0.39;
+  
+  double fraction_uncert = CRONUS_delP10/CRONUS_P10;
+  
+  // now update the 10Be and 26Al uncertainty values
+  P0_10Be = P0_10Be*(1+fraction_uncert);
+  P0_26Al = P0_26Al*(1+fraction_uncert);
+  
+  // get the uncertainty value. This gets passed on to gaussian error propagation
+  vector<double> uncert_change;
+  uncert_change.push_back(P0_10Be*fraction_uncert);
+  uncert_change.push_back(P0_26Al*fraction_uncert);
+  return uncert_change;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function modifies the P0 values of Al and Be so that they
+// mirror the uncertainty reported in CRONUS v2.2
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<double> LSDCRNParameters::set_P0_CRONUS_uncertainty_minus()
+{
+  // get the uncertainty percentage from the numbers in CRONUS
+  // these numbers are from the stone scaling of CRONUS routine
+  // make_al_be_consts_v22
+  double CRONUS_P10 = 4.49;       // in atoms/g/year
+  double CRONUS_delP10 = 0.39;
+  
+  double fraction_uncert = CRONUS_delP10/CRONUS_P10;
+  
+  // now update the 10Be and 26Al uncertainty values
+  P0_10Be = P0_10Be*(1-fraction_uncert);
+  P0_26Al = P0_26Al*(1-fraction_uncert);
+  
+  // get the uncertainty value. This gets passed on to gaussian error propagation
+  vector<double> uncert_change;
+  uncert_change.push_back(P0_10Be*fraction_uncert);
+  uncert_change.push_back(P0_26Al*fraction_uncert);
+  return uncert_change;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
