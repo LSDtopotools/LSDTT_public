@@ -247,6 +247,22 @@ class LSDCRNParameters
   /// @date 03/05/2014
   vector<double> set_P0_CRONUS_uncertainty_minus();
 
+  /// @breif this gets difference in the fraction of spallation for different
+  /// paris of muon production schemes
+  /// @detail key for pairs:
+  ///  0 Braucher-Schaller
+  ///  1 Braucher-Granger
+  ///  2 Braucher-Neutron Only
+  ///  3 Schaller-Granger
+  ///  4 Schaller-Neutron Only
+  ///  5 Granger-Neutron Only
+  /// @param pair key for the pair (see key above)
+  /// @return vector containing the error from the pair
+  /// @author SMM
+  /// @date 03/02/2015
+  vector<double> get_uncertainty_scaling_pair(int pair);
+
+
   /// @brief This sets the internal scaling for the particle. It includes
   ///  topographic shielding, snow shielding and scaling from latitude and
   ///  other factors
@@ -266,6 +282,9 @@ class LSDCRNParameters
   /// @author SMM
   /// @date 17/12/2014
   void set_neutron_scaling(double scaling, double topo_shield, double snow_shield);
+
+
+
 
   /// @brief This gets the Lifton Scaling
   /// Modified from Greg Balco's code:

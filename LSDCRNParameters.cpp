@@ -147,7 +147,7 @@ void LSDCRNParameters::load_parameters_for_atmospheric_scaling(string path_to_da
   // now load the mean sea level pressure
   string filename = "NCEP2.bin";
   filename = path_to_data+filename;
-  cout << "Loading mean sea level, file is: " << endl << filename << endl;
+  //cout << "Loading mean sea level, file is: " << endl << filename << endl;
 
   ifstream ifs_data(filename.c_str(), ios::in | ios::binary);
   if( ifs_data.fail() )
@@ -202,7 +202,7 @@ void LSDCRNParameters::load_parameters_for_atmospheric_scaling(string path_to_da
   // now the data with levels
   filename = "NCEP_hgt.bin";
   filename = path_to_data+filename;
-  cout << "Loading hgt, file is: " << endl << filename << endl;
+  //cout << "Loading hgt, file is: " << endl << filename << endl;
 
   ifstream ifs_data2(filename.c_str(), ios::in | ios::binary);
   if( ifs_data2.fail() )
@@ -1216,6 +1216,68 @@ void LSDCRNParameters::set_Neutron_only_parameters()
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// this gets difference in the fraction of spallation for different
+// paris of muon production schemes
+// key for pairs:
+// 0 Braucher-Schaller
+// 1 Braucher-Granger
+// 2 Braucher-Neutron Only
+// 3 Schaller-Granger
+// 4 Schaller-Neutron Only
+// 5 Granger-Neutron Only
+vector<double> LSDCRNParameters::get_uncertainty_scaling_pair(int pair)
+{
+  double Be10_difference;
+  double Al26_difference;
+  
+  vector<double> error_vec(2,0.0);
+  
+  if(pair == 0)
+  {
+    Be10_difference = 0.9887-0.9640;
+    Al26_difference = 0.9669-0.9675;
+  }
+  else if(pair == 1)
+  {
+    Be10_difference = 0.9887-0.9744;
+    Al26_difference = 0.9669-0.9625;
+  }
+  else if(pair == 2)
+  {
+    Be10_difference = 0.9887-1;
+    Al26_difference = 0.9669-1;
+  }
+  else if(pair == 3)
+  {
+    Be10_difference = 0.9640-0.9744;
+    Al26_difference = 0.9675-0.9625;
+  }
+  else if(pair == 4)
+  {
+    Be10_difference = 0.9640-1;
+    Al26_difference = 0.9675-1;
+  }  
+  else if(pair == 4)
+  {
+    Be10_difference = 0.9744-1;
+    Al26_difference = 0.9625-1;
+  }
+  else
+  {
+    cout << "LSDCRNP, line 1268, you did not supply a valud scaling pair" << endl
+         << "Defaulting to Braucher-Schaller" << endl;
+    Be10_difference = 0.9887-0.9640;
+    Al26_difference = 0.9669-0.9675;
+  }  
+  
+  error_vec[0] = Be10_difference;
+  error_vec[1] = Al26_difference;  
+  
+  return error_vec;
+}
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function modifies the P0 values of Al and Be so that they
@@ -1268,6 +1330,8 @@ vector<double> LSDCRNParameters::set_P0_CRONUS_uncertainty_minus()
   return uncert_change;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Scaling from the Stone 2000 paper
