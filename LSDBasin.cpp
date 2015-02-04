@@ -1241,11 +1241,16 @@ vector<double> LSDCosmoBasin::full_CRN_erosion_analysis(double Nuclide_conc, str
   double Muon_uncert;             // uncertainty of effective erosion rate 
                                   // in g/cm^2/yr for different muon schemes
   
-   
+  // initially we do not modify production rates
+  bool is_production_uncertainty_plus_on = false;
+  bool is_production_uncertainty_minus_on = false;
+  
   // first get the prediction of the erosion rate
   erate = predict_CRN_erosion(Nuclide_conc, Nuclide, prod_uncert_factor, 
                               Muon_scaling, production_uncertainty,
-                              average_production_rate);
+                              average_production_rate,
+                              is_production_uncertainty_plus_on,
+                              is_production_uncertainty_minus_on);
   
   double no_prod_uncert = 1.0;    // set the scheme to no production uncertainty
                                   // for the external uncertainty
@@ -1253,11 +1258,15 @@ vector<double> LSDCosmoBasin::full_CRN_erosion_analysis(double Nuclide_conc, str
   erate_external_plus = predict_CRN_erosion(Nuclide_conc+Nuclide_conc_err, Nuclide, 
                                              no_prod_uncert, Muon_scaling,
                                              production_uncertainty,
-                                             average_production_rate);
+                                             average_production_rate,
+                                             is_production_uncertainty_plus_on,
+                                             is_production_uncertainty_minus_on);
   erate_external_minus = predict_CRN_erosion(Nuclide_conc-Nuclide_conc_err, Nuclide, 
                                              no_prod_uncert, Muon_scaling,
                                              production_uncertainty,
-                                             average_production_rate); 
+                                             average_production_rate,
+                                             is_production_uncertainty_plus_on,
+                                             is_production_uncertainty_minus_on); 
   dEdExternal = (erate_external_plus-erate_external_minus)/(2*Nuclide_conc_err);
   External_uncert = fabs(dEdExternal*Nuclide_conc_err);
   
@@ -1297,11 +1306,15 @@ vector<double> LSDCosmoBasin::full_CRN_erosion_analysis(double Nuclide_conc, str
   erate_muon_scheme_schaller = predict_CRN_erosion(Nuclide_conc, Nuclide, 
                                              no_prod_uncert, schaller_string,
                                              production_uncertainty,
-                                             average_production_rate);
+                                             average_production_rate,
+                                             is_production_uncertainty_plus_on,
+                                             is_production_uncertainty_minus_on);
   erate_muon_scheme_braucher = predict_CRN_erosion(Nuclide_conc, Nuclide, 
                                              no_prod_uncert, braucher_string,
                                              production_uncertainty,
-                                             average_production_rate);
+                                             average_production_rate,
+                                             is_production_uncertainty_plus_on,
+                                             is_production_uncertainty_minus_on);
   dEdMuonScheme = (erate_muon_scheme_schaller-erate_muon_scheme_braucher)/
                   this_muon_uncert_dif;
   Muon_uncert = fabs(dEdMuonScheme*this_muon_uncert_dif);
@@ -1310,6 +1323,11 @@ vector<double> LSDCosmoBasin::full_CRN_erosion_analysis(double Nuclide_conc, str
        << this_muon_uncert_dif << " erate Schal: "
        << erate_muon_scheme_schaller << " erate Braucher: " 
        << erate_muon_scheme_braucher << " and erate uncert: " << Muon_uncert << endl;
+  
+  // now get the production uncertainty
+  
+  
+  
   
   erate_uncert_vec.push_back(erate);
   erate_uncert_vec.push_back(External_uncert);
@@ -1331,7 +1349,9 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
                                           double prod_uncert_factor,
                                           string Muon_scaling,
                                           double& production_uncertainty,
-                                          double& average_production)
+                                          double& average_production,
+                                          bool is_production_uncertainty_plus_on,
+                                          bool is_production_uncertainty_minus_on)
 {
   // effective erosion rates (in g/cm^2/yr) for running the Newton Raphson
   // iterations
@@ -1357,7 +1377,6 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
     prod_uncert_factor = 1;
   }
 
-  
   // initiate a particle. We'll just repeatedly call this particle
   // for the sample. 
   int startType = 0; 
@@ -1372,6 +1391,18 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
 
   // now create the CRN parameters object
   LSDCRNParameters LSDCRNP;
+
+  // check the production uncertainty bools
+  if(is_production_uncertainty_plus_on)
+  {
+    if(is_production_uncertainty_minus_on)
+    {
+      cout << "You can't have both plus and minus production uncertainty on" << endl;
+      cout << "Setting minus uncertainty to false" << endl;
+      is_production_uncertainty_minus_on = false;
+    }
+  }
+
   
   // now set the scaling parameters
   if (Muon_scaling == "Schaller" )
@@ -1497,7 +1528,9 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
     N_this_step = predict_mean_CRN_conc(eff_e_new, Nuclide,prod_uncert_factor,
                                         Muon_scaling,data_from_outlet_only,
                                         this_step_prod_uncert,
-                                        this_step_average_production);
+                                        this_step_average_production,
+                                        is_production_uncertainty_plus_on,
+                                        is_production_uncertainty_minus_on);
     //cout << " Conc: " << N_this_step << endl;
     
     
@@ -1507,7 +1540,9 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
     N_displace = predict_mean_CRN_conc(eff_e_new+eff_e_displace,Nuclide,
                                        prod_uncert_factor,Muon_scaling, 
                                        data_from_outlet_only,displace_uncertainty,
-                                       displace_average_production);
+                                       displace_average_production,
+                                       is_production_uncertainty_plus_on,
+                                       is_production_uncertainty_minus_on);
     f_x_displace =  N_displace-Nuclide_conc;
     
     N_derivative = (f_x_displace-f_x)/eff_e_displace;
@@ -1545,7 +1580,9 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double eff_erosion_rate, string Nucl
                                             double prod_uncert_factor, string Muon_scaling,
                                             bool data_from_outlet_only, 
                                             double& production_uncertainty, 
-                                            double& average_production)
+                                            double& average_production,
+                                            bool is_production_uncertainty_plus_on,
+                                            bool is_production_uncertainty_minus_on)
 {
   // production uncertainty factor is a multiplier that sets the production 
   // certainty. If it is 1.1, there is 10% production rate uncertainty, or
@@ -1621,6 +1658,18 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double eff_erosion_rate, string Nucl
     nuclide_scaling_switches[0] = true; 
   }
   
+  // check the production uncertainty bools
+  if(is_production_uncertainty_plus_on)
+  {
+    if(is_production_uncertainty_minus_on)
+    {
+      cout << "You can't have both plus and minus production uncertainty on" << endl;
+      cout << "Setting minus uncertainty to false" << endl;
+      is_production_uncertainty_minus_on = false;
+    }
+  }
+  
+  
   // loop through the elevation data
   for (int q = 0; q < end_node; ++q)
   {
@@ -1651,6 +1700,17 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double eff_erosion_rate, string Nucl
              << "You chose: " << Muon_scaling << endl
              << "Defaulting to Braucher et al (2009) scaling" << endl;
         LSDCRNP.set_Braucher_parameters();     
+      }
+      
+      // set the scaling to the correct production uncertainty
+      vector<double> test_uncert;
+      if(is_production_uncertainty_plus_on)
+      {
+        test_uncert = LSDCRNP.set_P0_CRONUS_uncertainty_plus();
+      }
+      else if(is_production_uncertainty_minus_on)
+      {
+        test_uncert = LSDCRNP.set_P0_CRONUS_uncertainty_minus();
       }
       
       // the elevation, snow shielding, topographic shielding
@@ -1723,7 +1783,9 @@ double LSDCosmoBasin::predict_mean_CRN_conc_centroid(double eff_erosion_rate, st
                                             double prod_uncert_factor, string Muon_scaling,
                                             LSDFlowInfo& FlowInfo, 
                                             double& production_uncertainty, 
-                                            double& average_production)
+                                            double& average_production,
+                                            bool is_production_uncertainty_plus_on,
+                                            bool is_production_uncertainty_minus_on)
 {
   // production uncertainty factor is a multiplier that sets the production 
   // certainty. If it is 1.1, there is 10% production rate uncertainty, or
@@ -1827,6 +1889,28 @@ double LSDCosmoBasin::predict_mean_CRN_conc_centroid(double eff_erosion_rate, st
          << "You chose: " << Muon_scaling << endl
          << "Defaulting to Braucher et al (2009) scaling" << endl;
     LSDCRNP.set_Braucher_parameters();     
+  }
+
+  // check the production uncertainty bools
+  if(is_production_uncertainty_plus_on)
+  {
+    if(is_production_uncertainty_minus_on)
+    {
+      cout << "You can't have both plus and minus production uncertainty on" << endl;
+      cout << "Setting minus uncertainty to false" << endl;
+      is_production_uncertainty_minus_on = false;
+    }
+  }
+
+  // set the scaling to the correct production uncertainty
+  vector<double> test_uncert;
+  if(is_production_uncertainty_plus_on)
+  {
+    test_uncert = LSDCRNP.set_P0_CRONUS_uncertainty_plus();
+  }
+  else if(is_production_uncertainty_minus_on)
+  {
+    test_uncert = LSDCRNP.set_P0_CRONUS_uncertainty_minus();
   }
 
   // set the scaling vector
