@@ -3133,32 +3133,33 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
       //This block check the various path printing options and writes the data out accordingly
 	    if (print_paths_switch == true){
         if (ht_count % thinning == 0){
-
-  		  //create stringstream object to create filename
-	      ofstream pathwriter;
-
-        //create the output filename from the user supplied path
-        stringstream ss_path;
-        ss_path << trace_path << i << "_" << j << "_trace.txt";
-
-        pathwriter.open(ss_path.str().c_str());
-
-	      if( pathwriter.fail() ){
-		      cout << "\nFATAL ERROR: unable to write to " << ss_path.str() << endl;
-		      exit(EXIT_FAILURE);
-	      }
-
-	      for (int v = 0; v < count; ++v){
-	        if (basin_filter_switch == false){
-            pathwriter << setiosflags(ios::fixed) << setprecision(7) << east_vec[v] << " " << north_vec[v] << endl;
-          }
-          else if (basin_filter_switch == true && find(Target_Basin_Vector.begin(), Target_Basin_Vector.end(), basin[a][b]) != Target_Basin_Vector.end() && find(Target_Basin_Vector.begin(), Target_Basin_Vector.end(), basin[i][j]) != Target_Basin_Vector.end()){  //is this correct? evaulating to not equal one past the end of the vector should equal that the value is found
-            pathwriter << setiosflags(ios::fixed) << setprecision(7) << east_vec[v] << " " << north_vec[v] << endl;
-          }
+          if (hilltops[i][j] != NoDataValue){ //check that the current i,j tuple corresponds to a hilltop, ie there is actually a trace to write to file.
+          
+  		      //create stringstream object to create filename
+	          ofstream pathwriter;
+          
+            //create the output filename from the user supplied path
+            stringstream ss_path;
+            ss_path << trace_path << i << "_" << j << "_trace.txt";
+          
+            pathwriter.open(ss_path.str().c_str());
+          
+	          if(pathwriter.fail() ){
+		          cout << "\nFATAL ERROR: unable to write to " << ss_path.str() << endl;
+		          exit(EXIT_FAILURE);
+	          }
+          
+	          for (int v = 0; v < count; ++v){
+	            if (basin_filter_switch == false){
+                pathwriter << setiosflags(ios::fixed) << setprecision(7) << east_vec[v] << " " << north_vec[v] << endl;
+              }
+              else if (basin_filter_switch == true && find(Target_Basin_Vector.begin(), Target_Basin_Vector.end(), basin[a][b]) != Target_Basin_Vector.end() && find(Target_Basin_Vector.begin(), Target_Basin_Vector.end(), basin[i][j]) != Target_Basin_Vector.end()){  //is this correct? evaulating to not equal one past the end of the vector should equal that the value is found
+                pathwriter << setiosflags(ios::fixed) << setprecision(7) << east_vec[v] << " " << north_vec[v] << endl;
+              }
+            }
+            pathwriter.close();
+	        }
         }
-        pathwriter.close();
-	      }
-
       }
 	    // End of path printing logic
 
