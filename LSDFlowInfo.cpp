@@ -3036,7 +3036,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 		          exit(EXIT_FAILURE);
 	          }
           
-	          for (int v = 0; v < count; ++v){
+	          for (int v = 0; v < count+1; ++v){
 	            if (basin_filter_switch == false){
                 pathwriter << setiosflags(ios::fixed) << setprecision(7) << east_vec[v] << " " << north_vec[v] << endl;
               }
