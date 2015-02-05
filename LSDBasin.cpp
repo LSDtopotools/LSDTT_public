@@ -1387,7 +1387,8 @@ vector<double> LSDCosmoBasin::full_CRN_erosion_analysis(double Nuclide_conc, str
     prod = LSDCRNP.set_P0_CRONUS_uncertainty_minus();
     prod_minus = prod[0];
   }
-  this_prod_difference = prod_plus-prod_minus;     
+  //cout << "Prod plus: " << prod_plus << " prod minus: " << prod_minus << endl;
+  this_prod_difference = prod_plus+prod_minus;     
   
   
   is_production_uncertainty_plus_on = true;
