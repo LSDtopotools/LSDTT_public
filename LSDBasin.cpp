@@ -1419,9 +1419,19 @@ vector<double> LSDCosmoBasin::full_CRN_erosion_analysis(double Nuclide_conc, str
        << erate_prod_minus << " and erate uncert: " << Prod_uncert << endl;
 
 
+
+  // now calculate the total uncertainty
+  double total_uncert = sqrt( External_uncert*External_uncert +
+                              Muon_uncert*Muon_uncert +
+                              Prod_uncert*Prod_uncert);
+
   erate_uncert_vec.push_back(erate);
   erate_uncert_vec.push_back(External_uncert);
   erate_uncert_vec.push_back(Muon_uncert);
+  erate_uncert_vec.push_back(Prod_uncert);
+  erate_uncert_vec.push_back(total_uncert);
+  
+  cout << "Total uncertainty is: " << total_uncert << endl;
   
   return erate_uncert_vec;
 } 
@@ -1806,29 +1816,34 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double eff_erosion_rate, string Nucl
       // the elevation, snow shielding, topographic shielding
       // and production scaling are all independent of the erosion rate
       // and are calculated seperately. 
-      
       if(  production_scaling.size() < 1 )
       {
         cout << "LSDCosmoBasin, trying to precalculate erosion rate." << endl
              << "Scaling vectors have not been set! You are about to get a seg fault" << endl;
       }
-      total_shielding_no_uncert = production_scaling[q]*topographic_shielding[q]*
+      
+      // now you need logic to test if you are accounting for self shielding
+      if ( self_shielding.size() < 1 )
+      {
+        total_shielding_no_uncert = production_scaling[q]*topographic_shielding[q]*
                                   snow_shielding[q];
-      total_shielding = prod_uncert_factor*total_shielding_no_uncert;
-      cumulative_production_rate += total_shielding_no_uncert;
+        total_shielding = prod_uncert_factor*total_shielding_no_uncert;
+        cumulative_production_rate += total_shielding_no_uncert;
+      }
+      else 
+      {
+        total_shielding_no_uncert = production_scaling[q]*topographic_shielding[q]*
+                                  snow_shielding[q]*self_shielding[q];
+        total_shielding = prod_uncert_factor*total_shielding_no_uncert;
+        cumulative_production_rate += total_shielding_no_uncert;
+      }
 
-      //cout << "LSDBasin line 1407; total scaling is: " << total_shielding << endl;
-
-      // now recalculate F values to match the total shielding
-      //cout << "LINE 1411 WARNING, testing sheilding == 1" << endl;
-      //total_shielding = 1;
       LSDCRNP.scale_F_values(total_shielding,nuclide_scaling_switches);
       
       // get the nuclide concentration from this node
       if (Nuclide == "Be10")
       {
 
-        
         eroded_particle.update_10Be_SSfull(eff_erosion_rate,LSDCRNP);
         Total_N+=eroded_particle.getConc_10Be();
       }
@@ -1892,6 +1907,7 @@ double LSDCosmoBasin::predict_mean_CRN_conc_centroid(double eff_erosion_rate, st
   double AverageTopo;
   double AverageSnow;
   double AverageProd;
+  double AverageSelf;
   
   // the total shielding. A product of snow, topographic and production scaling
   double total_shielding;
@@ -1921,6 +1937,7 @@ double LSDCosmoBasin::predict_mean_CRN_conc_centroid(double eff_erosion_rate, st
   double snow_shield_total = 0;
   double topo_shield_total = 0;
   double total_prod_scaling = 0;
+  double self_shield_total = 0;
   int centroid_node = 0;   // if the centroid is not in the basin, the 'centroid'
                            // node defaults to the outlet
   int row,col;      // the row and column of the current node
@@ -1949,12 +1966,27 @@ double LSDCosmoBasin::predict_mean_CRN_conc_centroid(double eff_erosion_rate, st
       snow_shield_total+= snow_shielding[q];
       topo_shield_total+= topographic_shielding[q];
       total_prod_scaling+= production_scaling[q];
+      
+      // check for self shielding
+      if (self_shielding.size() > 1)
+      {
+        self_shield_total+= self_shielding[q];
+      }
     }
   }
 
   AverageSnow = snow_shield_total/double(count_samples);
   AverageTopo = topo_shield_total/double(count_samples);
   AverageProd = total_prod_scaling/double(count_samples);
+  
+  if (self_shielding.size() > 1)
+  {
+    AverageSelf = self_shield_total/double(count_samples);
+  }
+  else
+  {
+    AverageSelf = 1.0;
+  }
   
   // at this stage we will try to replicate the basin averaging that goes on in 
   // most paper
@@ -2024,7 +2056,7 @@ double LSDCosmoBasin::predict_mean_CRN_conc_centroid(double eff_erosion_rate, st
 
   // now get the shielding. This is based on the average snow sheilding, 
   // the average topo shielding, and the production scaling of the centroid
-  double total_shielding_no_uncert = AverageSnow*AverageTopo*
+  double total_shielding_no_uncert = AverageSnow*AverageTopo*AverageSelf*
                                      production_scaling[centroid_node];
   total_shielding = prod_uncert_factor*total_shielding_no_uncert;
                     

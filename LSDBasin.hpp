@@ -964,6 +964,11 @@ class LSDCosmoBasin: public LSDBasin
     /// A vector holding the production scaling of nodes within the basin
     vector<double> production_scaling;
     
+    /// A vector containing self shielding values. This could be due to 
+    /// a finite thickness of material assumed to be eroding. It can be used
+    /// to calculate landsliding adjustment of cosmogenics. 
+    vector<double> self_shielding;
+    
     /// a vector holding the CRNparticles
     vector<LSDCRNParticle> CRN_particle_vec;
   
