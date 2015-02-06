@@ -18,7 +18,8 @@ SOURCES=Cosmo_snapping.cpp \
         ../LSDStatsTools.cpp \
         ../LSDBasin.cpp \
         ../LSDParticle.cpp \
-        ../LSDCRNParameters.cpp
+        ../LSDCRNParameters.cpp  \
+        ../LSDCosmoData.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=cosmo_snapping.exe
 

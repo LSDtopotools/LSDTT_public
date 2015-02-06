@@ -54,6 +54,7 @@
 #include "../LSDParticle.hpp"
 #include "../LSDCRNParameters.hpp"
 #include "../LSDShapeTools.hpp"
+#include "../LSDCosmoData.hpp"
 using namespace std;
 
 
@@ -325,21 +326,38 @@ int main (int nNumberofArgs,char *argv[])
     cout << endl << endl << endl;     
     
   }
+
+  // Test the LSDCosmoData object
+  string detailed_cosmo_file = "cosmo_full.txt";
+  string cosmo_file = path_name+detailed_cosmo_file;
+  
+  
+  LSDCosmoData CosmoData(cosmo_file);
+  
+  CosmoData.convert_to_UTM(filled_raster);
+
+
+
+
+
+
+
+
+
+
+
   
   // now test some functions in the particle
-  int startType = 0; 
-  int samp = 0;
-  double Xloc = double( x_vec[valid_cosmo_points[samp]] );
-  double Yloc = double( y_vec[valid_cosmo_points[samp]] );
-  double  startdLoc = 0.0;
-  double  start_effdloc = 0.0;
-  double startzLoc = 100;
+  //int startType = 0; 
+  //int samp = 0;
+  //double Xloc = double( x_vec[valid_cosmo_points[samp]] );
+  //double Yloc = double( y_vec[valid_cosmo_points[samp]] );
+  //double  startdLoc = 0.0;
+  //double  start_effdloc = 0.0;
+  //double startzLoc = 100;
   
-  LSDCRNParticle test_particle(startType, Xloc, Yloc,
-                               startdLoc, start_effdloc, startzLoc);
-
-
-  
+  //LSDCRNParticle test_particle(startType, Xloc, Yloc,
+  //                             startdLoc, start_effdloc, startzLoc);
   //LSDCRNParameters LSDCRNP;
   
   //double test_scaling;
