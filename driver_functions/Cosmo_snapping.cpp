@@ -328,11 +328,14 @@ int main (int nNumberofArgs,char *argv[])
   }
 
   // Test the LSDCosmoData object
-  string detailed_cosmo_file = "cosmo_full.txt";
+  string detailed_cosmo_file = "Test_basin_data.txt";
   string cosmo_file = path_name+detailed_cosmo_file;
+  string filetype = "txt";
   
+  cout << "File is: " << cosmo_file << endl;
   
-  LSDCosmoData CosmoData(cosmo_file);
+  LSDCosmoData CosmoData(cosmo_file,filetype);
+  CosmoData.print_data_to_screen();
   
   CosmoData.convert_to_UTM(filled_raster);
 

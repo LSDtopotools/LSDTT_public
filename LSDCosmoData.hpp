@@ -76,10 +76,19 @@ class LSDCosmoData
     ///  in the code of this function; the numbers come from Balco et al's (2009)
     ///  CRONUS calculator. 
     /// @param filename the string of the file within which the cosmo data
-    ///  is stored. 
+    ///  is stored. This INCLUDES PATH AND EXTENSION.
+    /// @param ftype the type of file, options are csv and txt. If not one of these
+    ///  options the code assumes txt
     /// @author SMM
     /// @date 06/02/2015
-    LSDCosmoData( string fname)                   { create(fname); }
+    LSDCosmoData( string fname, string ftype)  { create(fname,ftype); }
+    
+    /// @brief this function prints the data held in the the data members
+    ///  to screen. Is used for bug checking. 
+    /// @detail Note the function does not print the standardised values, only raw values.
+    /// @author SMM
+    /// @date 09/02/2015
+    void print_data_to_screen(); 
     
     /// @brief this function calculates the UTM coordinates of all the sample
     ///  points for a given UTM zone. 
@@ -147,7 +156,39 @@ class LSDCosmoData
     void create();
     
     /// @brief the create function used when calling a file
-    void create(string filename);
+    /// @param filename the name of the file WITH PATH AND EXTENSION
+    /// @param  filtype the type of the file (either csv or txt)
+    /// @author SMM
+    /// @date 02/02/2015
+    void create(string filename, string filetype);
+    
+    /// @brief This loads data from a text file
+    /// @detail The data columns are:
+    ///  column[0]: sample_name (NO SPACES OR COMMAS!!)
+    ///  column[1]: latitude (decimal degrees)
+    ///  column[2]: longitude (decimal degrees)
+    ///  column[3]: Nuclide (Be10 or Al26)
+    ///  column[4]: Nuclide concentration (atoms per gram)
+    ///  column[6]: Nuclide uncertainty (atoms per gram)
+    ///  column[7]: standardisation
+    /// @param filename the name of the file WITH PATH AND EXTENSION
+    /// @author SMM
+    /// @date 09/02/2015
+    void load_txt_cosmo_data(string filename);
+    
+    /// @brief This loads data from a csv file
+    /// @detail The data columns are:
+    ///  column[0]: sample_name (NO SPACES OR COMMAS!!)
+    ///  column[1]: latitude (decimal degrees)
+    ///  column[2]: longitude (decimal degrees)
+    ///  column[3]: Nuclide (Be10 or Al26)
+    ///  column[4]: Nuclide concentration (atoms per gram)
+    ///  column[6]: Nuclide uncertainty (atoms per gram)
+    ///  column[7]: standardisation
+    /// @param filename the name of the file WITH PATH AND EXTENSION
+    /// @author SMM
+    /// @date 09/02/2015
+    void load_csv_cosmo_data(string filename);
 };
 
 

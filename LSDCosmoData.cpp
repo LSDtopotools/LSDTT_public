@@ -48,9 +48,14 @@
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 #include <fstream>
-#include <math.h>
+#include <cmath>
 #include <iostream>
 #include <map>
+#include <string>
+#include <ctype.h>
+#include <sstream>
+#include <algorithm> 
+#include <vector>
 #include "LSDStatsTools.hpp"
 #include "LSDShapeTools.hpp"
 #include "LSDCosmoData.hpp"
@@ -70,8 +75,16 @@ void LSDCosmoData::create()
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // The create function that actually loads the file
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDCosmoData::create(string filename)
+void LSDCosmoData::create(string filename, string filetype)
 {
+  if(filetype != "csv" && filetype != "txt")
+  {
+    cout << "LSDCosmoData line 77 You have not selected a valid filetype!" << endl;
+    cout << "Options are csv and txt" << endl;
+    cout << "Defaulting to txt" << endl;
+    filetype = "txt";
+  }
+  
   // make sure the filename works
   ifstream ifs(filename.c_str());
   if( ifs.fail() )
@@ -80,7 +93,7 @@ void LSDCosmoData::create(string filename)
          << "doesn't exist" << endl;
     exit(EXIT_FAILURE);
   }
-  
+
   // now populate the standardisation maps
   standards_Be10["07KNSTD"] = 1.0;
   standards_Be10["KNSTD"] = 0.9042;
@@ -110,26 +123,13 @@ void LSDCosmoData::create(string filename)
   standards_Al26["ASTER"] = 1.021;
   standards_Al26["Z92-0222"] = 1.0;
 
-  // now load the file. 
-  double this_lat;
-  double this_long;
-  double this_conc;
-  double this_uncert;
-  
-  string this_sample_name;
-  string this_standard;
-  string this_nuclide;
-  
-  while( ifs >> this_sample_name >> this_nuclide  >> this_lat >> this_long 
-             >> this_conc >> this_uncert >> this_standard)
+  if(filetype == "csv")
   {
-    sample_name.push_back(this_sample_name);
-    latitude.push_back(this_lat);
-    longitude.push_back(this_long);
-    nuclide.push_back(this_nuclide);
-    Concentration_unstandardised.push_back(this_conc);
-    Concentration_uncertainty_unstandardised.push_back(this_uncert);
-    standardisation.push_back(this_standard);
+    load_csv_cosmo_data(filename);
+  }
+  else
+  {
+    load_txt_cosmo_data(filename);
   }
   
   // now loop through the data, getting the standardised concentrations
@@ -178,6 +178,201 @@ void LSDCosmoData::create(string filename)
     }
   }
 
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This loads a csv file of cosmogenic data
+// The first row is a header
+// the following rows contain the data. 
+// The data columns are:
+//  column[0]: sample_name (NO SPACES OR COMMAS!!)
+//  column[1]: latitude (decimal degrees)
+//  column[2]: longitude (decimal degrees)
+//  column[3]: Nuclide (Be10 or Al26)
+//  column[4]: Nuclide concentration (atoms per gram)
+//  column[6]: Nuclide uncertainty (atoms per gram)
+//  column[7]: standardisation
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::load_csv_cosmo_data(string filename)
+{
+  // make sure the filename works
+  ifstream ifs(filename.c_str());
+  if( ifs.fail() )
+  {
+    cout << "\nFATAL ERROR: The file" << filename
+         << "doesn't exist" << endl;
+    exit(EXIT_FAILURE);
+  }
+  
+  // initiate temporary vectors
+  vector<string> temp_sample_name;
+  vector<double> temp_latitude;
+  vector<double> temp_longitude;
+  vector<string> temp_nuclide;
+  vector<double> temp_Concentration_unstandardised;
+  vector<double> temp_Concentration_uncertainty_unstandardised;
+  vector<string> temp_standardisation;
+
+  // initiate the string to hold the file
+  string line_from_file;
+  vector<string> empty_string_vec;
+  vector<string> this_string_vec;
+  string temp_string;
+  
+  // discard the first line
+  getline(ifs, line_from_file);
+  
+  // now loop through the rest of the lines, getting the data. 
+  while( getline(ifs, line_from_file))
+  {
+    // reset the string vec
+    this_string_vec = empty_string_vec;
+    
+    // create a stringstream
+    stringstream ss(line_from_file);
+    
+    while( ss.good() )
+    {
+      string substr;
+      getline( ss, substr, ',' );
+      
+      // remove the spaces
+      substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
+      
+      // remove constrol characters
+      substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
+      
+      // add the string to the string vec
+      this_string_vec.push_back( substr );
+    }
+    
+    // now convert the data
+    temp_sample_name.push_back( this_string_vec[0] );
+    temp_latitude.push_back( atof( this_string_vec[1].c_str() ) );
+    temp_longitude.push_back( atof(this_string_vec[2].c_str() ) );
+    temp_nuclide.push_back( this_string_vec[3] );
+    temp_Concentration_unstandardised.push_back( atof(this_string_vec[4].c_str() ) );
+    temp_Concentration_uncertainty_unstandardised.push_back( atof(this_string_vec[5].c_str() ) );
+    temp_standardisation.push_back( this_string_vec[6] );
+  
+  }
+  
+  // now update the data members
+  sample_name = temp_sample_name;
+  latitude = temp_latitude;
+  longitude = temp_longitude;
+  nuclide = temp_nuclide;
+  Concentration_unstandardised = temp_Concentration_unstandardised;
+  Concentration_uncertainty_unstandardised = 
+                         temp_Concentration_uncertainty_unstandardised;
+  standardisation = temp_standardisation;
+  
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This loads a text file of cosmogenic data
+// The first row is a header
+// the following rows contain the data. 
+// The data columns are:
+//  column[0]: sample_name (NO SPACES OR COMMAS!!)
+//  column[1]: latitude (decimal degrees)
+//  column[2]: longitude (decimal degrees)
+//  column[3]: Nuclide (Be10 or Al26)
+//  column[4]: Nuclide concentration (atoms per gram)
+//  column[6]: Nuclide uncertainty (atoms per gram)
+//  column[7]: standardisation
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::load_txt_cosmo_data(string filename)
+{
+  cout << "Opening text file: " << filename << endl;
+  
+  // make sure the filename works
+  ifstream ifs(filename.c_str());
+  if( ifs.fail() )
+  {
+    cout << "\nFATAL ERROR: The file" << filename
+         << "doesn't exist" << endl;
+    exit(EXIT_FAILURE);
+  }
+  
+  // initiate temporary vectors
+  vector<string> temp_sample_name;
+  vector<double> temp_latitude;
+  vector<double> temp_longitude;
+  vector<string> temp_nuclide;
+  vector<double> temp_Concentration_unstandardised;
+  vector<double> temp_Concentration_uncertainty_unstandardised;
+  vector<string> temp_standardisation;
+
+  // initiate the string to hold the file
+  string line_from_file;
+
+  // now load the file. 
+  double this_lat;
+  double this_long;
+  double this_conc;
+  double this_uncert;
+  
+  string this_sample_name;
+  string this_standard;
+  string this_nuclide;
+  
+  // discard the first line
+  ifs >> this_sample_name >> this_sample_name  >> this_sample_name >> this_sample_name 
+             >> this_sample_name >> this_sample_name >> this_sample_name;
+  
+  while( ifs >> this_sample_name >> this_lat >> this_long >> this_nuclide 
+             >> this_conc >> this_uncert >> this_standard)
+  {
+    temp_sample_name.push_back(this_sample_name);
+    temp_latitude.push_back(this_lat);
+    temp_longitude.push_back(this_long);
+    temp_nuclide.push_back(this_nuclide);
+    temp_Concentration_unstandardised.push_back(this_conc);
+    temp_Concentration_uncertainty_unstandardised.push_back(this_uncert);
+    temp_standardisation.push_back(this_standard);
+  }
+
+  // now update the data members
+  sample_name = temp_sample_name;
+  latitude = temp_latitude;
+  longitude = temp_longitude;
+  nuclide = temp_nuclide;
+  Concentration_unstandardised = temp_Concentration_unstandardised;
+  Concentration_uncertainty_unstandardised = 
+                         temp_Concentration_uncertainty_unstandardised;
+  standardisation = temp_standardisation;
+  
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function prints the data to screen
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::print_data_to_screen()
+{
+  cout << endl;
+  cout << "==========================================================" << endl;
+  cout << "PRINTING COSMO DATA HELD IN LSDCOSMODATA OBJECT" << endl;
+  cout << "Sample_name\tLatitude\tLongitude\tNuclide\tConcentration\tUncertainty\tscaling\n";
+  for(int i = 0; i<N_samples; i++)
+  {
+    cout << sample_name[i] << "\t"  << latitude[i] << "\t"  << longitude[i] << "\t"
+         << nuclide[i] << "\t"  << Concentration_unstandardised[i] << "\t"
+         << Concentration_uncertainty_unstandardised[i] << "\t"
+         << standardisation[i] << "\n";
+  }
+  cout << "==========================================================" << endl;
+  cout << endl << endl;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
