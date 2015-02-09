@@ -2717,13 +2717,13 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 							if (xi == 0 && yi == 0) xi = 0.00001;
 							else if (xi== 1 && yi == 0) xi = 1 - 0.00001;
 						}           
-					}
-
+					
+          }          
 					else {
 
 						// ROUTE ALONG EDGES						
 						if (dir	== 1) {
-							if (degs_old <= 90 || degs_new >= 270) {    
+							if (degs_new <= 90 || degs_new >= 270) { //secondary compenent of flow is north                   
 								xo = 0.00001, yo = 1;
 								s_edge = abs(s_local*sin(theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
@@ -2733,7 +2733,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 								north_vec[count] = northing[a] + 0.5*DataResolution;
 								--a;
 							}
-							else if (degs_old > 90 || degs_new < 270) {
+							else if (degs_new > 90 && degs_new < 270) {  //secondary component is south							  
 								xo = 0.00001, yo = 0;
 								s_edge = abs(s_local*sin((PI/2)-theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
@@ -2742,14 +2742,14 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 								east_vec[count] = easting[b] + xo - 0.5*DataResolution;
 								north_vec[count] = northing[a] - 0.5*DataResolution;
 								++a;
-							}
+							}						 
 							else {
-								cout << "Flow unable to route N or S" << endl;
+								cout << "Flow unable to route N or S " << endl; //something has gone very wrong...
 								exit(EXIT_FAILURE);
 							}
 						}
 						else if (dir == 2) {
-							if 	(degs_old <= 180 || degs_new >= 0) {
+							if 	(degs_new >= 0 && degs_new <= 180) { //secondary component is East							  
 								xo = 1, yo = 1-0.00001;
 								s_edge = abs(s_local*sin((2/PI)-theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
@@ -2759,7 +2759,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 								north_vec[count] = northing[a] + yo - 0.5*DataResolution;
 								++b;
 							}
-							else if (degs_old > 180 || degs_new < 360) {
+							else if (degs_new > 180 && degs_new < 360) {  //secondary component is West						
 								xo = 0, yo = 1-0.00001;
 								s_edge = abs(s_local*sin(theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
@@ -2768,15 +2768,14 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 								east_vec[count] = easting[b] -0.5*DataResolution;
 								north_vec[count] = northing[a] + yo - 0.5*DataResolution;
 								--b;
-
 							}
 							else {
-								cout << "Flow unable to route E or W" << endl;
+								cout << "Flow unable to route E or W" << endl; //something has gone very wrong...
 								exit(EXIT_FAILURE);
 							}
 						}
 						else if (dir == 3) {
-							if 	(degs_old <= 270 || degs_new >= 90) {
+							if 	(degs_new >= 90 && degs_new <= 270) {  //secondary component is South
 								xo = 1-0.00001, yo = 0;
 								s_edge = abs(s_local*sin(theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
@@ -2786,7 +2785,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 								north_vec[count] = northing[a] - 0.5*DataResolution;
 								++a;
 							}
-							else if (degs_old > 270 || degs_new < 90) {
+							else if (degs_new > 270 || degs_new < 90) {   //secondary component is North
 								xo = 1-0.00001, yo = 1;
 								s_edge = abs(s_local*sin((2/PI) - theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
@@ -2797,12 +2796,12 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 								--a;
 							}
 							else {
-								cout << "Flow unable to route N or S" << endl;
+								cout << "Flow unable to route N or S" << endl;  //something has gone very wrong...
 								exit(EXIT_FAILURE);
 							}
 						}
 						else if (dir == 4) {
-							if 	(degs_old <= 360 || degs_new >= 180) {
+							if 	(degs_new >= 180 && degs_new <= 360) { //secondary component is West
 								xo = 0, yo = 0.00001;
 								s_edge = abs(s_local*sin((PI/2) - theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
@@ -2812,7 +2811,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 								north_vec[count] = northing[a] + yo - 0.5*DataResolution;
 								--b;
 							}
-							else if (degs_old > 0 || degs_new < 180) {
+							else if (degs_new > 0 && degs_new < 180) { //secondary component is East							  
 								xo = 1, yo = 0.00001;
 								s_edge = abs(s_local*sin(theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
@@ -2823,10 +2822,11 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 								++b;
 							}
 							else {
-								cout << "Flow unable to route E or W" << endl;
+								cout << "Flow unable to route E or W" << endl; //something has gone very wrong...
 								exit(EXIT_FAILURE);
 							}
 						}
+						
 					}
 
 					if (path[a][b] < 1){  // only update length on 'first slosh'
@@ -3002,7 +3002,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
             HillslopeLength_Array[i][j] = (length * DataResolution);
             Slope_Array[i][j] = mean_slope;
             Relief_Array[i][j] = relief;
-
+          
             if (relief > 0){
 					    ofs << X << "," << Y << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "," << stnet[a][b] <<"\n";
             }
@@ -3068,7 +3068,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
   cout << "Fail count: " << ns_count << endl;
   cout << "Uphill count: " << neg_count << endl;
   cout << "Edge count: " << edge_count << endl;
-
+  
   return OutputArrays;
 }
 
