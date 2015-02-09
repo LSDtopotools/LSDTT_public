@@ -281,17 +281,17 @@ int main (int nNumberofArgs,char *argv[])
     //erate = thisBasin.predict_CRN_erosion(test_N10, String_10Be,prod_uncert_factor);
     
     string Muon_scaling = "Braucher";
-    bool data_from_outlet_only = true;
+    //bool data_from_outlet_only = true;
     double rho = 2650;
-    double erosion_rate_in_cm_kyr = 10;
-    if (samp == 0)
-    {
-      erosion_rate_in_cm_kyr = 100;
-    }
-    else if (samp == 1)
-    {
-      erosion_rate_in_cm_kyr = 3;
-    }    
+    //double erosion_rate_in_cm_kyr = 10;
+    //if (samp == 0)
+    //{
+    //  erosion_rate_in_cm_kyr = 100;
+    //}
+    //else if (samp == 1)
+    //{
+    //  erosion_rate_in_cm_kyr = 3;
+    //}    
     
     // Some routines for testing the forward model
     //double erosion_rate = erosion_rate_in_cm_kyr*1.0e-5;    // in m/yr
@@ -305,8 +305,8 @@ int main (int nNumberofArgs,char *argv[])
                           
     
     // now test the Newton-Raphson routine
-    double effective_erate;
-    double production_uncertainty;
+    //double effective_erate;
+    //double production_uncertainty;
 
          
     cout << "=======================================================" << endl;
@@ -328,9 +328,9 @@ int main (int nNumberofArgs,char *argv[])
   }
 
   // Test the LSDCosmoData object
-  string detailed_cosmo_file = "Test_basin_data.txt";
+  string detailed_cosmo_file = "Test_basin_data.csv";
   string cosmo_file = path_name+detailed_cosmo_file;
-  string filetype = "txt";
+  string filetype = "csv";
   
   cout << "File is: " << cosmo_file << endl;
   
@@ -339,9 +339,13 @@ int main (int nNumberofArgs,char *argv[])
   
   CosmoData.convert_to_UTM(filled_raster);
 
+  cout << endl << endl << endl << endl << endl << "------" << endl
+       << "Now using LSDCosmoData to run analysis" << endl;
 
-
-
+  CosmoData.snap_points_to_channel_network(search_radius_nodes, 
+                            threshold_stream_order, filled_raster,
+                            T_shield,
+                            FlowInfo, JNetwork);
 
 
 

@@ -60,6 +60,9 @@
 #include "LSDShapeTools.hpp"
 #include "LSDCosmoData.hpp"
 #include "LSDRaster.hpp"
+#include "LSDFlowInfo.hpp"
+#include "LSDJunctionNetwork.hpp"
+#include "LSDBasin.hpp"
 using namespace std;
 
 #ifndef LSDCosmoData_CPP
@@ -423,5 +426,145 @@ void LSDCosmoData::convert_to_UTM(LSDRaster& Raster)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function wraps the determination of cosmogenic erosion rates
+// 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::snap_points_to_channel_network(int search_radius_nodes, 
+                            int threshold_stream_order, LSDRaster& Elevations,
+                            LSDRaster& TopoShield,
+                            LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JNetwork)
+{
+  // the atmospheric data is in the folder with the driver_functions
+  string path_to_atmospheric_data = "./";
+  
+  // first, convert the data into this UTM zone
+  convert_to_UTM(Elevations);
+  
+  // now find valid points
+  vector<int> valid_cosmo_points;         // a vector to hold the valid nodes
+  vector<int> snapped_node_indices;       // a vector to hold the valid node indices
+  vector<int> snapped_junction_indices;   // a vector to hold the valid junction indices
+  
+  // convert UTM vectors to float
+  vector<float> fUTM_easting;
+  vector<float> fUTM_northing;
+  for (int i = 0; i< int(UTM_easting.size()); i++)
+  {
+    fUTM_easting.push_back( float(UTM_easting[i]));
+    fUTM_northing.push_back( float(UTM_northing[i]));
+  }
+  
+  JNetwork.snap_point_locations_to_channels(fUTM_easting, fUTM_northing, 
+            search_radius_nodes, threshold_stream_order, FlowInfo, 
+            valid_cosmo_points, snapped_node_indices, snapped_junction_indices);
+
+  // after this operation the three int vectors valid_cosmo_points, snapped_node_indices,
+  // and snapped_junction_indices should be populated with valid points
+  // you now need to get the concentrations and uncertainties from these
+  // points
+  
+  // first, get the data elements from the object
+  vector<string> valid_nuclide_names;
+  vector<double> valid_concentrations;
+  vector<double> valid_concentration_uncertainties;
+  
+  int n_valid_points = int(valid_cosmo_points.size());
+  for (int i = 0; i< int(n_valid_points); i++)
+  {
+    valid_nuclide_names.push_back(nuclide[ valid_cosmo_points[i] ] );
+    valid_concentrations.push_back( Concentration[ valid_cosmo_points[i] ] );
+    valid_concentration_uncertainties.push_back( 
+                          Concentration_uncertainty[ valid_cosmo_points[i] ] );
+  }
+  
+  // some environment variables
+  double prod_uncert_factor = 1;          // this is a legacy parameter.
+  string Muon_scaling = "Braucher";       // defaul muon scaling
+  //bool data_from_outlet_only = true;      // this needs to be turned off later!!!
+  
+  
+  // some temporary doubles to hold the nuclide concentrations
+  double test_N10, test_dN10;   // concetration and uncertainty of 10Be in basin
+  double test_N26, test_dN26;   // concetration and uncertainty of 26Al in basin
+  double test_N, test_dN;       // concentration and uncertainty of the nuclide in basin
+  
+  // now loop through the valid points, getting the cosmo data 
+  for(int samp = 0; samp<n_valid_points; samp++)
+  {
+    if( valid_nuclide_names[samp] == "Be10")
+    {
+      test_N10 = valid_concentrations[samp];
+      test_dN10 = valid_concentration_uncertainties[samp];
+      test_N26 = 1e9;
+      test_dN26 = 0;
+      test_N = test_N10;
+      test_dN = test_dN10;
+    }
+    else if( valid_nuclide_names[samp] == "Al26")
+    {
+      test_N10 = 1e9;
+      test_dN10 = 0;
+      test_N26 = valid_concentrations[samp];
+      test_dN26 = valid_concentration_uncertainties[samp];
+      test_N = test_N26;
+      test_dN = test_dN26;
+    }
+    else
+    {
+      cout << "You did not select a valid nuclide name, options are Be10 and Al26" << endl;
+      cout << "Defaulting to Be10" << endl;
+      valid_nuclide_names[samp] = "Be10";
+      test_N10 = valid_concentrations[samp];
+      test_dN10 = valid_concentration_uncertainties[samp];
+      test_N26 = 1e9;
+      test_dN26 = 0;
+      test_N = test_N10;
+      test_dN = test_dN10;
+    }
+    
+    cout << "Valid point is: " << valid_cosmo_points[samp] << " X: " 
+         << UTM_easting[valid_cosmo_points[samp]] << " Y: "
+         << UTM_northing[valid_cosmo_points[samp]] << endl;
+    cout << "Node index is: " <<  snapped_node_indices[samp] << " and junction is: " 
+         << snapped_junction_indices[samp] << endl;
+    LSDCosmoBasin thisBasin(snapped_junction_indices[samp],FlowInfo, JNetwork,
+                            test_N10,test_dN10, test_N26,test_dN26);
+    
+    // populate the scaling vectors
+    thisBasin.populate_scaling_vectors(FlowInfo, Elevations, TopoShield,
+                                       path_to_atmospheric_data);
+    
+    // get the atmospheric pressure for bug checking. THis will print to screen
+    thisBasin.get_atmospheric_pressure(FlowInfo, Elevations, path_to_atmospheric_data);
+    
+    // now print the data to file
+    //this_samp_number = itoa(samp);
+    //string this_filename = this_csv_prefix+this_samp_number;
+    //thisBasin.print_particle_csv(path_name, this_filename, FlowInfo, filled_raster,
+    //                             T_shield, path_to_atmospheric_data);
+
+    cout << "=======================================================" << endl;
+    cout << "And now for the full analysis" << endl;
+    double rho = 2650;
+    vector<double> erate_analysis = thisBasin.full_CRN_erosion_analysis(test_N, 
+                                        valid_nuclide_names[samp], test_dN, 
+                                        prod_uncert_factor, Muon_scaling);
+    cout << "LINE 569, LSDCosmoData.cpp, the effective erate is: " 
+         <<  erate_analysis[0] << endl << "The erosion rate for rho = "<< rho << " is: " 
+         << erate_analysis[0]*10/rho << "m/yr and " 
+         << erate_analysis[0]*1e6/rho << "cm/kyr" << endl;
+    cout << "LINE 569, LSDCosmoData.cpp, the error is: " 
+         <<  erate_analysis[1] << endl << "The erosion rate error for rho = "<< rho << " is: " 
+         << erate_analysis[1]*10/rho << "m/yr and " 
+         << erate_analysis[1]*1e6/rho << "cm/kyr" << endl;
+    cout << "============================================================" << endl;
+    cout << endl << endl << endl;     
+    
+  }
+}
 
 #endif

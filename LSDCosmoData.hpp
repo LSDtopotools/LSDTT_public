@@ -52,6 +52,8 @@
 #include <iostream>
 #include <map>
 #include "LSDRaster.hpp"
+#include "LSDFlowInfo.hpp"
+#include "LSDJunctionNetwork.hpp"
 using namespace std;
 
 #ifndef LSDCosmoData_HPP
@@ -103,7 +105,27 @@ class LSDCosmoData
     /// @author SMM
     /// @date 06/02/2015
     void convert_to_UTM(LSDRaster& Raster);    
-    
+
+    /// @brief This function calculates the CRN erosion rate from the data
+    ///  stored within the data elements of the object
+    /// @param search_radius_nodes How far away from the cosmo point one searches
+    ///  for a channel
+    /// @param threshold_stream_order The minimum stream order the algorithm 
+    ///  will accept as a valid channel
+    /// @param Elevations an LSDRaster holding the elevations of the DEM
+    /// @param TopoShield an LSDRaster holding the topographic shileding
+    /// @param FlowInfo an LSDFlowInfo object, must be the same size as the raster
+    /// @param JNetwork an LSDJunctionNetwork object
+    /// @author SMM
+    /// @date 09/02/2015 
+    void snap_points_to_channel_network(int search_radius_nodes, 
+                            int threshold_stream_order, LSDRaster& Elevations,
+                            LSDRaster& TopoShield,
+                            LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JNetwork);
+
+
+
+
   protected:
     
     /// the number of samples
