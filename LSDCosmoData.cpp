@@ -138,8 +138,15 @@ void LSDCosmoData::create(string filename, string filetype)
   // now loop through the data, getting the standardised concentrations
   N_samples = int(sample_name.size());
   
+  // create the vec vec for holding sample results
+  vector<double> empty_vec;
+  vector< vector<double> > result_vecvec;
+  
   for(int i = 0; i<N_samples; i++)
   {
+    // populate the results vector
+    result_vecvec.push_back(empty_vec);
+  
     // read the nuclide
     if(nuclide[i] == "Be10")
     {
@@ -179,7 +186,9 @@ void LSDCosmoData::create(string filename, string filetype)
       Concentration.push_back(Concentration_unstandardised[i]);
       Concentration_uncertainty.push_back(Concentration_uncertainty_unstandardised[i]);
     }
+
   }
+  erosion_rate_results = result_vecvec;
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -380,6 +389,45 @@ void LSDCosmoData::print_data_to_screen()
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prints the results to screen
+// simple is for external, muon and production uncertainty only
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::print_simple_results_to_screen(double rho)
+{
+    
+    cout << "=======================================================" << endl;
+    cout << "Printing results of the analysis" << endl;
+    for (int i = 0; i<N_samples; i++)
+    {
+      
+      
+      // don't print the results unless they exist
+      if (int(erosion_rate_results[i].size()) > 0)
+      {
+        // get the results from this sample
+        vector<double> erate_analysis = erosion_rate_results[i];
+        
+        cout << "-----------------------------------------------------" << endl;
+        cout << "Sample " << sample_name[i] << " , a " << nuclide[i] << " sample" << endl;
+        cout << "latitude:\t" << latitude[i] << "\tlongitude:\t" << longitude[i] << endl;
+        cout << "Concentration: " << Concentration[i] << " +/- " 
+             << Concentration_uncertainty[i] << " atoms/g" << endl;
+        cout << "Erate is: " 
+             <<  erate_analysis[0] << " g/cm^2/yr" << endl;
+        cout << "The erosion rate for rho = "<< rho << " is: " << endl
+             << erate_analysis[0]*10/rho << " m/yr and " 
+             << erate_analysis[0]*1e6/rho << " cm/kyr" << endl;
+        cout << "Ext uncert: " << erate_analysis[1] << " muon uncert: " << erate_analysis[2]
+             << " production uncert: " <<  erate_analysis[3] << " g/cm^2/yr"  << endl;
+        cout << "Total uncertainty in g/cm^2/yr: " << erate_analysis[4] << endl;
+      }
+    }
+    cout << "=======================================================" << endl;
+
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function converts data to UTM coordinates. You have to tell it 
 // the UTM zone
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -433,7 +481,7 @@ void LSDCosmoData::convert_to_UTM(LSDRaster& Raster)
 // This function wraps the determination of cosmogenic erosion rates
 // 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDCosmoData::snap_points_to_channel_network(int search_radius_nodes, 
+void LSDCosmoData::basic_cosmogenic_analysis(int search_radius_nodes, 
                             int threshold_stream_order, LSDRaster& Elevations,
                             LSDRaster& TopoShield,
                             LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JNetwork)
@@ -541,30 +589,19 @@ void LSDCosmoData::snap_points_to_channel_network(int search_radius_nodes,
     // get the atmospheric pressure for bug checking. THis will print to screen
     thisBasin.get_atmospheric_pressure(FlowInfo, Elevations, path_to_atmospheric_data);
     
-    // now print the data to file
-    //this_samp_number = itoa(samp);
-    //string this_filename = this_csv_prefix+this_samp_number;
-    //thisBasin.print_particle_csv(path_name, this_filename, FlowInfo, filled_raster,
-    //                             T_shield, path_to_atmospheric_data);
-
-    cout << "=======================================================" << endl;
-    cout << "And now for the full analysis" << endl;
-    double rho = 2650;
+    // now do the analysis
     vector<double> erate_analysis = thisBasin.full_CRN_erosion_analysis(test_N, 
                                         valid_nuclide_names[samp], test_dN, 
                                         prod_uncert_factor, Muon_scaling);
-    cout << "LINE 569, LSDCosmoData.cpp, the effective erate is: " 
-         <<  erate_analysis[0] << endl << "The erosion rate for rho = "<< rho << " is: " 
-         << erate_analysis[0]*10/rho << "m/yr and " 
-         << erate_analysis[0]*1e6/rho << "cm/kyr" << endl;
-    cout << "LINE 569, LSDCosmoData.cpp, the error is: " 
-         <<  erate_analysis[1] << endl << "The erosion rate error for rho = "<< rho << " is: " 
-         << erate_analysis[1]*10/rho << "m/yr and " 
-         << erate_analysis[1]*1e6/rho << "cm/kyr" << endl;
-    cout << "============================================================" << endl;
-    cout << endl << endl << endl;     
     
+    erosion_rate_results[ valid_cosmo_points[samp] ] = erate_analysis;
   }
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+
+
 
 #endif

@@ -1280,8 +1280,8 @@ vector<double> LSDCosmoBasin::full_CRN_erosion_analysis(double Nuclide_conc, str
   dEdExternal = (erate_external_plus-erate_external_minus)/(2*Nuclide_conc_err);
   External_uncert = fabs(dEdExternal*Nuclide_conc_err);
   
-  cout << "LSDCosmoBasin, line 1160, erate: " << erate << " and uncertainty: " 
-       << External_uncert << endl;
+  //cout << "LSDCosmoBasin, line 1160, erate: " << erate << " and uncertainty: " 
+  //     << External_uncert << endl;
   
   erate_uncert_vec.push_back(erate);
   erate_uncert_vec.push_back(External_uncert);
@@ -1329,10 +1329,10 @@ vector<double> LSDCosmoBasin::full_CRN_erosion_analysis(double Nuclide_conc, str
                   this_muon_uncert_dif;
   Muon_uncert = fabs(dEdMuonScheme*this_muon_uncert_dif);
   
-  cout << "LSDCosmoBasin, Line 1292, change in scaling production rate: " 
-       << this_muon_uncert_dif << " erate Schal: "
-       << erate_muon_scheme_schaller << " erate Braucher: " 
-       << erate_muon_scheme_braucher << " and erate uncert: " << Muon_uncert << endl;
+  //cout << "LSDCosmoBasin, Line 1292, change in scaling production rate: " 
+  //     << this_muon_uncert_dif << " erate Schal: "
+  //     << erate_muon_scheme_schaller << " erate Braucher: " 
+  //     << erate_muon_scheme_braucher << " and erate uncert: " << Muon_uncert << endl;
   
   // now get the production uncertainty
   // first set the scaling
@@ -1413,10 +1413,10 @@ vector<double> LSDCosmoBasin::full_CRN_erosion_analysis(double Nuclide_conc, str
                    this_prod_difference;
   Prod_uncert = fabs(dEdProduction*this_prod_difference);
 
-  cout << "LSDCosmoBasin, Line 1368, change in production rate for production uncertainty: " 
-       << this_prod_difference << " erate plus: "
-       << erate_prod_plus << " erate minus: " 
-       << erate_prod_minus << " and erate uncert: " << Prod_uncert << endl;
+  //cout << "LSDCosmoBasin, Line 1368, change in production rate for production uncertainty: " 
+  //     << this_prod_difference << " erate plus: "
+  //     << erate_prod_plus << " erate minus: " 
+  //     << erate_prod_minus << " and erate uncert: " << Prod_uncert << endl;
 
 
 

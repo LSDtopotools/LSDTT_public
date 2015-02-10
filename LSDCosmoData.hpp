@@ -92,6 +92,14 @@ class LSDCosmoData
     /// @date 09/02/2015
     void print_data_to_screen(); 
     
+    /// @detail Prints the simple results to the screen
+    /// @detail The 'simple' is because it only looks at external, 
+    ///  muon, and production uncertainties. 
+    /// @param rho the rock denisty in kg/m^3
+    /// @author SMM
+    /// @date 10/02/2015
+    void print_simple_results_to_screen(double rho);
+    
     /// @brief this function calculates the UTM coordinates of all the sample
     ///  points for a given UTM zone. 
     /// @param UTM_zone the UTM zone
@@ -108,6 +116,7 @@ class LSDCosmoData
 
     /// @brief This function calculates the CRN erosion rate from the data
     ///  stored within the data elements of the object
+    /// @detail This analysis does not calculate snow shielding or landsliding
     /// @param search_radius_nodes How far away from the cosmo point one searches
     ///  for a channel
     /// @param threshold_stream_order The minimum stream order the algorithm 
@@ -118,7 +127,7 @@ class LSDCosmoData
     /// @param JNetwork an LSDJunctionNetwork object
     /// @author SMM
     /// @date 09/02/2015 
-    void snap_points_to_channel_network(int search_radius_nodes, 
+    void basic_cosmogenic_analysis(int search_radius_nodes, 
                             int threshold_stream_order, LSDRaster& Elevations,
                             LSDRaster& TopoShield,
                             LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JNetwork);
@@ -165,6 +174,9 @@ class LSDCosmoData
     /// a vector holding the AMS uncertainty of the sample, in atoms per gram
     /// this is for data before standardisation
     vector<double> Concentration_uncertainty_unstandardised; 
+    
+    /// a vector of vectors holding the results of the cosmogenic analysis
+    vector< vector<double> > erosion_rate_results;
     
     /// a standardisation map for Be10
     map<string,double> standards_Be10;

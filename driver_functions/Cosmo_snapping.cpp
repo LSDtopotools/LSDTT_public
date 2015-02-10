@@ -342,7 +342,7 @@ int main (int nNumberofArgs,char *argv[])
   cout << endl << endl << endl << endl << endl << "------" << endl
        << "Now using LSDCosmoData to run analysis" << endl;
 
-  CosmoData.snap_points_to_channel_network(search_radius_nodes, 
+  CosmoData.basic_cosmogenic_analysis(search_radius_nodes, 
                             threshold_stream_order, filled_raster,
                             T_shield,
                             FlowInfo, JNetwork);
