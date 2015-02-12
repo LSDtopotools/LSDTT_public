@@ -125,8 +125,8 @@ int main (int nNumberofArgs,char *argv[])
   string prefix = (path+filename);  //set a path to write the hillslope length data to, based on the input path and filename given by the user
   
   // these params do not need changed during normal use of the HFR algorithm
-  bool print_paths_switch = false;
-  int thinning = 1;
+  bool print_paths_switch = true;
+  int thinning = 20;
   string trace_path = "";
   bool basin_filter_switch = false;
   vector<int> Target_Basin_Vector;

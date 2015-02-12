@@ -85,6 +85,7 @@
 #include <iomanip>
 #include <vector>
 #include <string>
+#include <cstring>
 #include <algorithm>
 #include <math.h>
 #include "TNT/tnt.h"
@@ -2441,6 +2442,402 @@ void LSDFlowInfo::D8_Trace(int i, int j, LSDIndexRaster StreamNetwork, float& le
 
 }
 
+void LSDFlowInfo::HilltopFlowRoutingOriginal(LSDRaster Elevation, LSDRaster Hilltops, LSDRaster Slope, LSDRaster Aspect, LSDIndexRaster StreamNetwork)
+{                                                         
+	//Declare parameters
+	int i,j,a,b;
+	double X,Y;
+	float dem_res = DataResolution;
+	float mean_slope, relief;
+	int ndv = NoDataValue;
+	double slope_total, length, d;
+	int flag, count;
+	double PI = 3.14159265;
+	double degs, degs_old, degs_new, theta;
+	double s_local, s_edge;
+	double xo, yo, xi, yi, temp_yo1, temp_yo2, temp_xo1, temp_xo2;
+
+	// a direction flag numbered 1,2,3,4 for E,S,W,N respectively
+	int dir;
+	double xmin = XMinimum;
+	double ymin = YMinimum;
+	double ymax = ymin + NRows*dem_res;
+	double xmax = xmin + NCols*dem_res;
+
+	//Declare Arrays
+	//Get data arrays from LSDRasters
+	Array2D<float> zeta = Elevation.get_RasterData(); //elevation
+	Array2D<int> stnet = StreamNetwork.get_RasterData(); // stream network
+	Array2D<float> aspect = Aspect.get_RasterData(); //aspect
+	Array2D<float> hilltops = Hilltops.get_RasterData(); //hilltops
+	Array2D<float> slope = Slope.get_RasterData(); //hilltops
+  Array2D<float> rads(NRows,NCols);
+	Array2D<float> path(NRows, NCols);
+	Array2D<float> blank(NRows,NCols,NoDataValue);
+
+	int vec_size = 1000000;
+
+	Array1D<double> easting(NCols);
+	Array1D<double> northing(NRows);
+	Array1D<double> east_vec(vec_size);
+	Array1D<double> north_vec(vec_size);
+
+	//for creating file names for hillslope profiles
+	string file_part_1 = "prof_";
+	string file_part_2;
+	string file_part_3 = ".txt";
+	string filename;
+	char filename_c[256];
+
+	//calculate northing and easting
+	for (i=0;i<NRows;++i){
+			northing[i] = ymax - i*dem_res - 0.5;
+	}
+	for (j=0;j<NCols;++j){
+			easting[j] = xmin + j*dem_res + 0.5;
+	}
+
+	int ht_count = 0;
+
+	// cycle through study area, find hilltops and trace downstream
+	for (i=1; i<NRows-1; ++i) {
+		for (j=1; j<NCols-1; ++j) {
+			// ignore edge cells and non-hilltop cells
+			// route initial node by aspect and get outlet coordinates
+			if (hilltops[i][j] != ndv) {
+				
+				//reset slope, length, hillslope flag and pixel counter
+				slope_total = 0;
+				length = 0;
+				flag = true;
+				count = 1;
+				
+				//copt blank raster to map hillslope trace
+				path = blank.copy();
+
+				//update hilltop counter
+				++ht_count;
+				
+				//get aspect in radians
+				degs = aspect[i][j];
+				theta = (M_PI/180.)*((-1*degs)+90.);
+				
+				//setup indices
+				a = i;
+				b = j;
+				path[a][b] = 1;
+
+				//add first pixel to easting northing vectors
+				east_vec[0] = easting[b];
+				north_vec[0] = northing[a];
+
+				//get local slope
+				s_local = slope[a][b];
+				
+				//test direction, calculate outlet coordinates and update indicies
+				// easterly, dir == 1
+				if (degs >= 45 && degs < 135) {
+					//find location where trace exits the cell and distance
+					xo = 1., yo = (1.+tan(theta))/2.;
+					d = abs(1./(2.*cos(theta)));
+					//transmit to next cell over
+					xi = 0., yi = yo;
+					dir = 1;
+					//add to vector
+					east_vec[count] = easting[b] + 0.5*dem_res;
+					north_vec[count] = northing[a] + yo - 0.5*dem_res;
+					//increment indices
+					++b;
+				}
+				//southerly
+				else if (degs >= 135 && degs < 225) {
+					xo = (1-(1/tan(theta)))/2, yo = 0;
+					d = abs(1/(2*cos((PI/2)-theta)));
+					xi = xo, yi = 1;
+					dir = 2;
+					east_vec[count] = easting[b] + xo - 0.5*dem_res;
+					north_vec[count] = northing[a] - 0.5*dem_res;
+					//increment indices
+					++a;
+				}
+				// westerly
+				else if (degs >= 225 && degs < 315) {
+					xo = 0, yo = (1-tan(theta))/2;
+					d = abs(1/(2*cos(theta)));
+					xi = 1,	yi = yo;
+					dir = 3;
+					east_vec[count] = easting[b] -0.5*dem_res;
+					north_vec[count] = northing[a] + yo - 0.5*dem_res;
+					--b;
+				}
+				//northerly
+				else if (degs >= 315 || degs < 45) {
+					xo = (1+(1/tan(theta)))/2, yo = 1;
+					d = abs(1/(2*cos((PI/2) - theta)));
+					xi = xo, yi = 0;
+					dir = 4;
+					east_vec[count] = easting[b] + xo - 0.5*dem_res;
+					north_vec[count] = northing[a] + 0.5*dem_res;
+					--a;
+				}
+				else {
+					cout << "FATAL ERROR, Kinematic routing algorithm encountered null aspect value" << endl;
+					exit(EXIT_FAILURE);
+				}
+
+				//collect slopes and totals weighted by path length
+				//slope_total += s_local*d;
+				//length += d;
+
+				s_local = slope[a][b];
+
+
+				//continue trace until a stream node is encountered
+				while (flag == true) {
+
+					path[a][b] = 1;
+
+					degs_old = degs;
+					degs_new = aspect[a][b];
+					theta = (M_PI/180.)*((-1*degs_new)+90.);
+					++ count;
+
+				//Test for perimeter flow paths
+					if ((dir == 1 && degs_new > 0 && degs_new < 180)
+						||	(dir == 2 && degs_new > 90 && degs_new < 270)
+						||	(dir == 3 && degs_new > 180 && degs_new < 360)
+						||	((dir == 4 && degs_new > 270) || (dir == 4 && degs_new < 90))) {
+
+						//DO NORMAL FLOW PATH
+						//set xo, yo to 0 and 1 in turn and test for true outlet (xi || yi == 0 || 1)
+						temp_yo1 = yi + (1-xi)*tan(theta); 		// xo = 1
+						temp_xo1 = xi + (1-yi)*(1/tan(theta)); 	// yo = 1
+						temp_yo2 = yi - xi*tan(theta);			// xo = 0
+						temp_xo2 = xi - yi*(1/tan(theta));		// yo = 0
+
+						// can't outlet at same point as inlet
+						if (dir == 1) temp_yo2 = -1;
+						else if (dir == 2) temp_xo1 = -1;
+						else if (dir == 3) temp_yo1 = -1;
+						else if (dir == 4) temp_xo2 = -1;
+
+						s_local = slope[a][b];
+
+						if (temp_yo1 <= 1 && temp_yo1 > 0) {
+							xo = 1, yo = temp_yo1;
+							d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+							xi = 0, yi = yo,
+							dir = 1;
+							east_vec[count] = easting[b] + 0.5*dem_res;
+							north_vec[count] = northing[a] + yo - 0.5*dem_res;
+							++b;
+							if (xi== 0 && yi == 0) yi = 0.00001;
+							else if (xi== 0 && yi == 1) yi = 1 - 0.00001;
+						}
+						else if (temp_xo2 <= 1 && temp_xo2 > 0) {
+							xo = temp_xo2, yo = 0;
+							d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+							xi = xo, yi = 1,
+							dir = 2;
+							east_vec[count] = easting[b] + xo - 0.5*dem_res;
+							north_vec[count] = northing[a] - 0.5*dem_res;
+							++a;
+							if (xi== 0 && yi == 1) xi = 0.00001;
+							else if (xi== 1 && yi == 1) xi = 1 - 0.00001;
+						}
+						else if (temp_yo2 <= 1 && temp_yo2 > 0) {
+							xo = 0, yo = temp_yo2;
+							d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+							xi = 1, yi = yo,
+							dir = 3;
+							east_vec[count] = easting[b] -0.5*dem_res;
+							north_vec[count] = northing[a] + yo - 0.5*dem_res;
+							--b;
+							if (xi== 1 && yi == 0) yi = 0.00001;
+							else if (xi== 1 && yi == 1) yi = 1 - 0.00001;
+						}
+
+						else if (temp_xo1 <= 1 && temp_xo1 > 0) {
+							xo = temp_xo1, yo = 1;
+							d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+							xi = xo, yi = 0,
+							dir = 4;
+							east_vec[count] = easting[b] + xo - 0.5*dem_res;
+							north_vec[count] = northing[a] + 0.5*dem_res;
+							--a;
+							
+							if (xi == 0 && yi == 0) xi = 0.00001;
+							else if (xi== 1 && yi == 0) xi = 1 - 0.00001;
+						}
+						slope_total += s_local*d;
+					}
+
+					else {
+
+						// ROUTE ALONG EDGES
+						if (dir	== 1) {
+							if 	(degs_old <= 90 || degs_new >= 270) {
+								xo = 0.00001, yo = 1;
+								s_edge = abs(s_local*sin(theta));
+								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+								xi = xo, yi = 1-yo;
+								dir = 4;
+								east_vec[count] = easting[b] + xo - 0.5*dem_res;
+								north_vec[count] = northing[a] + 0.5*dem_res;
+								--a;
+							}
+							else if (degs_old > 90 && degs_new < 270) {
+								xo = 0.00001, yo = 0;
+								s_edge = abs(s_local*sin((PI/2)-theta));
+								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+								xi = xo, yi = 1-yo;
+								dir = 2;
+								east_vec[count] = easting[b] + xo - 0.5*dem_res;
+								north_vec[count] = northing[a] - 0.5*dem_res;
+								++a;
+							}
+							else {
+								cout << "Flow unable to route N or S" << endl;
+								exit(EXIT_FAILURE);
+							}
+						}
+						else if (dir == 2) {
+							if 	(degs_old <= 180 && degs_new >= 0) {
+								xo = 1, yo = 1-0.00001;
+								s_edge = abs(s_local*sin((2/PI)-theta));
+								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+								xi = 1-xo, yi = yo;
+								dir = 1;
+								east_vec[count] = easting[b] + 0.5*dem_res;
+								north_vec[count] = northing[a] + yo - 0.5*dem_res;
+								++b;
+							}
+							else if (degs_old > 180 && degs_new < 360) {
+								xo = 0, yo = 1-0.00001;
+								s_edge = abs(s_local*sin(theta));
+								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+								xi = 1-xo, yi = yo;
+								dir = 3;
+								east_vec[count] = easting[b] -0.5*dem_res;
+								north_vec[count] = northing[a] + yo - 0.5*dem_res;
+								--b;
+
+							}
+							else {
+								cout << "Flow unable to route E or W" << endl;
+								exit(EXIT_FAILURE);
+							}
+						}
+						else if (dir == 3) {
+							if 	(degs_old <= 270 && degs_new >= 90) {
+								xo = 1-0.00001, yo = 0;
+								s_edge = abs(s_local*sin(theta));
+								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+								xi = xo, yi = 1-yo;
+								dir = 2;
+								east_vec[count] = easting[b] + xo - 0.5*dem_res;
+								north_vec[count] = northing[a] - 0.5*dem_res;
+								++a;
+							}
+							else if (degs_old > 270 || degs_new < 90) {
+								xo = 1-0.00001, yo = 1;
+								s_edge = abs(s_local*sin((2/PI) - theta));
+								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+								xi = xo, yi = 1- yo;
+								dir = 4;
+								east_vec[count] = easting[b] + xo - 0.5*dem_res;
+								north_vec[count] = northing[a] + 0.5*dem_res;
+								--a;
+							}
+							else {
+								cout << "Flow unable to route N or S" << endl;
+								exit(EXIT_FAILURE);
+							}
+						}
+						else if (dir == 4) {
+							if 	(degs_old <= 360 && degs_new >= 180) {
+								xo = 0, yo = 0.00001;
+								s_edge = abs(s_local*sin((PI/2) - theta));
+								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+								xi = 1-xo, yi = yo;
+								dir = 3;
+								east_vec[count] = easting[b] -0.5*dem_res;
+								north_vec[count] = northing[a] + yo - 0.5*dem_res;
+								--b;
+							}
+							else if (degs_old > 0 && degs_new < 180) {
+								xo = 1, yo = 0.00001;
+								s_edge = abs(s_local*sin(theta));
+								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+								xi = 1-xo, yi = yo;
+								dir = 1;
+								east_vec[count] = easting[b] + 0.5*dem_res;
+								north_vec[count] = northing[a] + yo - 0.5*dem_res;
+								++b;
+							}
+							else {
+								cout << "Flow unable to route E or W" << endl;
+								exit(EXIT_FAILURE);
+							}
+						}
+						slope_total += s_edge*d;
+
+					}
+					length += d;
+					degs = degs_new;
+
+					//cout << "[a][b]: " << a << " " << b << endl;
+
+					if (a <= 0 || b <= 0 ||	a >= NRows-1 || b >= NCols-1) flag = false;
+					else if (stnet[a][b] != ndv || path[a][b] == 1) flag = false;
+				}
+
+				//if trace finished at a stream, print hillslope info.
+				if (a <= 0 || b <= 0 ||	a >= NRows-1 || b >= NCols-1) continue;
+				else
+				{
+					if (path[a][b] == 1) 
+					{
+						cout << "Didn't make it to a channel!" << endl;
+					}
+
+//					// PRINT TO FILE Cht Sbar Relief Lh
+//					X = xmin + j*dem_res;
+//					Y = ymin + (NRows-i)*dem_res;
+//					relief = zeta[i][j] - zeta[a][b];
+//					length = length*dem_res;
+//					mean_slope = slope_total/(length/dem_res);
+
+//					ofs << X << " " << Y << " " << seg[i][j] << " "
+//						<< cht[i][j] << " " << mean_slope << " "
+//						<< relief << " " << length << " " << "/n"; //area[a][b] << "\n";
+
+					//PRINT FILE OF PATH NODES FOR EACH HILLSLOPE VECTOR
+					stringstream s;
+					s << ht_count;
+					file_part_2 = s.str();
+					filename = file_part_1;
+					filename.append(file_part_2), filename.append(file_part_3);
+					strcpy(filename_c,filename.c_str());
+
+					ofstream prof_out;
+					prof_out.open(filename_c);
+					prof_out << "Easting " << "Northing" << endl;
+					prof_out.precision(10);
+
+					for (int c=0;c<count;++c) {
+						prof_out 	<< east_vec[c] << " "
+									<< north_vec[c] << endl;
+					}
+					prof_out.close();
+				}
+			}
+			//return condition for debugging purposes only
+			//if (ht_count > 50) return;
+		}
+	}
+}  
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Hilltop flow routing code built around original code from Martin Hurst. Based on
 // Lea (1992), with improvements discussed by Tarboton (1997) and a solution to the
@@ -2527,10 +2924,10 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 
 	int vec_size = 1000000;
 
-	Array1D<float> easting(NCols);
-	Array1D<float> northing(NRows);
-	Array1D<float> east_vec(vec_size);
-	Array1D<float> north_vec(vec_size);
+	Array1D<double> easting(NCols);
+	Array1D<double> northing(NRows);
+	Array1D<double> east_vec(vec_size);
+	Array1D<double> north_vec(vec_size);
 
 	ofstream ofs;
 
@@ -2662,7 +3059,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 						temp_yo1 = yi + (1-xi)*tan(theta); 		// xo = 1
 						temp_xo1 = xi + (1-yi)*(1/tan(theta)); 	// yo = 1
 						temp_yo2 = yi - xi*tan(theta);			// xo = 0
-						temp_xo2 = xi - yi*tan(theta);			// yo = 0
+						temp_xo2 = xi - yi*(1/tan(theta));		// yo = 0
 
        			// can't outlet at same point as inlet
 						if (dir == 1) temp_yo2 = -1;
@@ -2835,141 +3232,141 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 
           degs = degs_new;
 
-          if(zeta[a][b] - zeta[a_2][b_2] > 0){
-            
-            length -= d;    //remove uphill length from trace
+//          if(zeta[a][b] - zeta[a_2][b_2] > 0){
+//            
+//            length -= d;    //remove uphill length from trace
 
-            a = a_2;
-            b = b_2;
+//            a = a_2;
+//            b = b_2;
 
-            //restart trace
-            degs = aspect[a][b];
-			    	theta = rads[a][b];
-		    		path[a][b] += 1;
-		    		east_vec[0] = easting[b];
-			    	north_vec[0] = northing[a];
-		    		s_local = slope[a][b];
+//            //restart trace
+//            degs = aspect[a][b];
+//			    	theta = rads[a][b];
+//		    		path[a][b] += 1;
+//		    		east_vec[0] = easting[b];
+//			    	north_vec[0] = northing[a];
+//		    		s_local = slope[a][b];
 
-            length += sqrt((pow((xo-0.5),2) + pow((yo-0.5),2)));  //update length to cope with the 'jump' to the centre of the cell to restart the trace
+//            length += sqrt((pow((xo-0.5),2) + pow((yo-0.5),2)));  //update length to cope with the 'jump' to the centre of the cell to restart the trace
 
-			    	//test direction, calculate outlet coordinates and update indicies
-						// easterly
-						if (degs >= 45 && degs < 135) {
-							xo = 1, yo = (1+tan(theta))/2;
-							d = abs(1/(2*cos(theta)));
-							xi = 0, yi = yo;
-			    		dir = 1;
-			    		east_vec[count] = easting[b] + 0.5*DataResolution;
-			    		north_vec[count] = northing[a] + yo - 0.5*DataResolution;
-							++b;
-						}
-						//southerly
-						else if (degs >= 135 && degs < 225) {
-							xo = (1-(1/tan(theta)))/2, yo = 0;
-							d = abs(1/(2*cos((PI/2)-theta)));
-							xi = xo, yi = 1;
-							dir = 2;
-							east_vec[count] = easting[b] + xo - 0.5*DataResolution;
-							north_vec[count] = northing[a] - 0.5*DataResolution;
-							++a;
-						}
-						// westerly
-						else if (degs >= 225 && degs < 315) {
-							xo = 0, yo = (1-tan(theta))/2;
-							d = abs(1/(2*cos(theta)));
-							xi = 1,	yi = yo;
-							dir = 3;
-							east_vec[count] = easting[b] -0.5*DataResolution;
-							north_vec[count] = northing[a] + yo - 0.5*DataResolution;
-							--b;
-						}
-						//northerly
-						else if (degs >= 315 || degs < 45) {
-							xo = (1+(1/tan(theta)))/2, yo = 1;
-							d = abs(1/(2*cos((PI/2) - theta)));
-							xi = xo, yi = 0;
-							dir = 4;
-							east_vec[count] = easting[b] + xo - 0.5*DataResolution;
-							north_vec[count] = northing[a] + 0.5*DataResolution;
-							--a;
-						}
-						else {
-							cout << "FATAL ERROR, Kinematic routing algorithm enountered null aspect value" << endl;
-							exit(EXIT_FAILURE);
-						}
+//			    	//test direction, calculate outlet coordinates and update indicies
+//						// easterly
+//						if (degs >= 45 && degs < 135) {
+//							xo = 1, yo = (1+tan(theta))/2;
+//							d = abs(1/(2*cos(theta)));
+//							xi = 0, yi = yo;
+//			    		dir = 1;
+//			    		east_vec[count] = easting[b] + 0.5*DataResolution;
+//			    		north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+//							++b;
+//						}
+//						//southerly
+//						else if (degs >= 135 && degs < 225) {
+//							xo = (1-(1/tan(theta)))/2, yo = 0;
+//							d = abs(1/(2*cos((PI/2)-theta)));
+//							xi = xo, yi = 1;
+//							dir = 2;
+//							east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+//							north_vec[count] = northing[a] - 0.5*DataResolution;
+//							++a;
+//						}
+//						// westerly
+//						else if (degs >= 225 && degs < 315) {
+//							xo = 0, yo = (1-tan(theta))/2;
+//							d = abs(1/(2*cos(theta)));
+//							xi = 1,	yi = yo;
+//							dir = 3;
+//							east_vec[count] = easting[b] -0.5*DataResolution;
+//							north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+//							--b;
+//						}
+//						//northerly
+//						else if (degs >= 315 || degs < 45) {
+//							xo = (1+(1/tan(theta)))/2, yo = 1;
+//							d = abs(1/(2*cos((PI/2) - theta)));
+//							xi = xo, yi = 0;
+//							dir = 4;
+//							east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+//							north_vec[count] = northing[a] + 0.5*DataResolution;
+//							--a;
+//						}
+//						else {
+//							cout << "FATAL ERROR, Kinematic routing algorithm enountered null aspect value" << endl;
+//							exit(EXIT_FAILURE);
+//						}
 
-						//collect slopes and totals weighted by path length
+//						//collect slopes and totals weighted by path length
 
-			    	length += d;
-			    	s_local = slope[a][b];
+//			    	length += d;
+//			    	s_local = slope[a][b];
 
-          }
+//          }
 
-		    	if (path[a][b] >= 1){  //self intersect/'slosh'
-                 
-            degs = aspect[a][b];
-						theta = rads[a][b];
-						path[a][b] += 1;
-						east_vec[0] = easting[b];
-						north_vec[0] = northing[a];
-						s_local = slope[a][b];
+//		    	if (path[a][b] >= 1){  //self intersect/'slosh'
+//                 
+//            degs = aspect[a][b];
+//						theta = rads[a][b];
+//						path[a][b] += 1;
+//						east_vec[0] = easting[b];
+//						north_vec[0] = northing[a];
+//						s_local = slope[a][b];
 
-            a_2 = a;
-            b_2 = b;
+//            a_2 = a;
+//            b_2 = b;
 
-    		    length += sqrt((pow((xo-0.5),2) + pow((yo-0.5),2)));  //update length to cope with the 'jump' to the centre of the cell to restart the trace
+//    		    length += sqrt((pow((xo-0.5),2) + pow((yo-0.5),2)));  //update length to cope with the 'jump' to the centre of the cell to restart the trace
 
-						//test direction, calculate outlet coordinates and update indicies
-						// easterly
-						if (degs >= 45 && degs < 135) {
-							xo = 1, yo = (1+tan(theta))/2;
-							d = abs(1/(2*cos(theta)));
-							xi = 0, yi = yo;
-							dir = 1;
-							east_vec[count] = easting[b] + 0.5*DataResolution;
-							north_vec[count] = northing[a] + yo - 0.5*DataResolution;
-							++b;
-						}
-						//southerly
-						else if (degs >= 135 && degs < 225) {
-							xo = (1-(1/tan(theta)))/2, yo = 0;
-							d = abs(1/(2*cos((PI/2)-theta)));
-							xi = xo, yi = 1;
-							dir = 2;
-							east_vec[count] = easting[b] + xo - 0.5*DataResolution;
-							north_vec[count] = northing[a] - 0.5*DataResolution;
-							++a;
-						}
-						// westerly
-						else if (degs >= 225 && degs < 315) {
-							xo = 0, yo = (1-tan(theta))/2;
-							d = abs(1/(2*cos(theta)));
-							xi = 1,	yi = yo;
-							dir = 3;
-							east_vec[count] = easting[b] -0.5*DataResolution;
-							north_vec[count] = northing[a] + yo - 0.5*DataResolution;
-							--b;
-						}
-						//northerly
-						else if (degs >= 315 || degs < 45) {
-							xo = (1+(1/tan(theta)))/2, yo = 1;
-							d = abs(1/(2*cos((PI/2) - theta)));
-					    xi = xo, yi = 0;
-				    	dir = 4;
-				    	east_vec[count] = easting[b] + xo - 0.5*DataResolution;
-			    		north_vec[count] = northing[a] + 0.5*DataResolution;
-			    		--a;
-				}
-				else {
-					cout << "FATAL ERROR, Kinematic routing algorithm enountered null aspect value" << endl;
-					exit(EXIT_FAILURE);
-				}
+//						//test direction, calculate outlet coordinates and update indicies
+//						// easterly
+//						if (degs >= 45 && degs < 135) {
+//							xo = 1, yo = (1+tan(theta))/2;
+//							d = abs(1/(2*cos(theta)));
+//							xi = 0, yi = yo;
+//							dir = 1;
+//							east_vec[count] = easting[b] + 0.5*DataResolution;
+//							north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+//							++b;
+//						}
+//						//southerly
+//						else if (degs >= 135 && degs < 225) {
+//							xo = (1-(1/tan(theta)))/2, yo = 0;
+//							d = abs(1/(2*cos((PI/2)-theta)));
+//							xi = xo, yi = 1;
+//							dir = 2;
+//							east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+//							north_vec[count] = northing[a] - 0.5*DataResolution;
+//							++a;
+//						}
+//						// westerly
+//						else if (degs >= 225 && degs < 315) {
+//							xo = 0, yo = (1-tan(theta))/2;
+//							d = abs(1/(2*cos(theta)));
+//							xi = 1,	yi = yo;
+//							dir = 3;
+//							east_vec[count] = easting[b] -0.5*DataResolution;
+//							north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+//							--b;
+//						}
+//						//northerly
+//						else if (degs >= 315 || degs < 45) {
+//							xo = (1+(1/tan(theta)))/2, yo = 1;
+//							d = abs(1/(2*cos((PI/2) - theta)));
+//					    xi = xo, yi = 0;
+//				    	dir = 4;
+//				    	east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+//			    		north_vec[count] = northing[a] + 0.5*DataResolution;
+//			    		--a;
+//						}
+//						else {
+//							cout << "FATAL ERROR, Kinematic routing algorithm enountered null aspect value" << endl;
+//							exit(EXIT_FAILURE);
+//						}
 
-				//collect slopes and totals weighted by path length
-				length += d;
-				s_local = slope[a][b];
+//						//collect slopes and totals weighted by path length
+//						length += d;
+//						s_local = slope[a][b];
 
-        }
+//        	}
 
 				if (a == 0 || b == 0 ||	a == NRows-1 || b == NCols-1 || stnet[a][b] != NoDataValue || stnet[a-1][b-1] != NoDataValue || stnet[a][b-1] != NoDataValue || stnet[a+1][b-1] != NoDataValue || stnet[a+1][b] != NoDataValue || stnet[a+1][b+1] != NoDataValue || stnet[a][b+1] != NoDataValue || stnet[a-1][b+1] != NoDataValue || stnet[a-1][b] != NoDataValue || path[a][b] >= 3) flag = false;
 				}
@@ -2984,7 +3381,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
           ++edge_count;
 
         }
-        else{
+        else
+        {
 				  //if trace finished at a stream, print hillslope info.
 				  if (stnet[a][b] != NoDataValue || stnet[a-1][b-1] != NoDataValue || stnet[a][b-1] != NoDataValue || stnet[a+1][b-1] != NoDataValue || stnet[a+1][b] != NoDataValue || stnet[a+1][b+1] != NoDataValue || stnet[a][b+1] != NoDataValue || stnet[a-1][b+1] != NoDataValue || stnet[a-1][b] != NoDataValue)
           {
@@ -3015,7 +3413,6 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
             ++ns_count;
           }
 				}
-			}
 
       //This block checks the various path printing options and writes the data out accordingly
 	    if (print_paths_switch == true){
@@ -3049,7 +3446,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
         }
       }
 	    // End of path printing logic
-
+			}
 		}   //for loop i,j
 	}
 
@@ -3361,6 +3758,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_probability(LSDRaster E
 						}
 
             if (flag_new == 0){  //this flag is 0 if the trace has not been routed yet
+           	
            	// ROUTE ALONG EDGES
 						if (dir	== 1) {
 							if 	(degs_old <= 90 || degs_new >= 270) {

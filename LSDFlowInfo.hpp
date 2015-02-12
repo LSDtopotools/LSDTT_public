@@ -529,6 +529,8 @@ class LSDFlowInfo
   void D8_Trace(int i, int j, LSDIndexRaster StreamNetwork, float& length, 
                    int& receiver_row, int& receiver_col, Array2D<int>& Path);
 
+	void HilltopFlowRoutingOriginal(LSDRaster Elevation, LSDRaster Hilltops, LSDRaster Slope, LSDRaster Aspect, LSDIndexRaster StreamNetwork);
+	
   /// @brief Hilltop flow routing.
   ///
   /// @details Hilltop flow routing code built around original code from Martin Hurst. Based on
