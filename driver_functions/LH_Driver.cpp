@@ -126,7 +126,7 @@ int main (int nNumberofArgs,char *argv[])
   
   // these params do not need changed during normal use of the HFR algorithm
   bool print_paths_switch = true;
-  int thinning = 20;
+  int thinning = 1;
   string trace_path = "";
   bool basin_filter_switch = false;
   vector<int> Target_Basin_Vector;

@@ -2548,37 +2548,60 @@ void LSDFlowInfo::HilltopFlowRoutingOriginal(LSDRaster Elevation, LSDRaster Hill
 					north_vec[count] = northing[a] + yo - 0.5*dem_res;
 					//increment indices
 					++b;
+					//check we're not right in the corner!
+					if (yi == 0) yi = 0.00001;
+					else if (yi == 1) yi = 1 - 0.00001;
 				}
 				//southerly
 				else if (degs >= 135 && degs < 225) {
+					//find location where trace exits the cell and distance
 					xo = (1-(1/tan(theta)))/2, yo = 0;
 					d = abs(1/(2*cos((PI/2)-theta)));
+					//transmit to next cell over
 					xi = xo, yi = 1;
 					dir = 2;
+					//add to vector
 					east_vec[count] = easting[b] + xo - 0.5*dem_res;
 					north_vec[count] = northing[a] - 0.5*dem_res;
 					//increment indices
 					++a;
+					//check we're not right in the corner!
+					if (xi == 0) xi = 0.00001;
+					else if (xi == 1) xi = 1 - 0.00001;
 				}
 				// westerly
 				else if (degs >= 225 && degs < 315) {
+					//find location where trace exits the cell and distance
 					xo = 0, yo = (1-tan(theta))/2;
 					d = abs(1/(2*cos(theta)));
+					//transmit to next cell over
 					xi = 1,	yi = yo;
 					dir = 3;
+					//add to vector
 					east_vec[count] = easting[b] -0.5*dem_res;
 					north_vec[count] = northing[a] + yo - 0.5*dem_res;
+					//increment indices
 					--b;
+					//check we're not right in the corner!
+					if (yi == 0) yi = 0.00001;
+					else if (yi == 1) yi = 1 - 0.00001;
 				}
 				//northerly
 				else if (degs >= 315 || degs < 45) {
+					//find location where trace exits the cell and distance
 					xo = (1+(1/tan(theta)))/2, yo = 1;
 					d = abs(1/(2*cos((PI/2) - theta)));
+					//transmit to next cell over
 					xi = xo, yi = 0;
 					dir = 4;
+					//add to vector
 					east_vec[count] = easting[b] + xo - 0.5*dem_res;
 					north_vec[count] = northing[a] + 0.5*dem_res;
+					//increment indices
 					--a;
+					//check we're not right in the corner!
+					if (xi == 0) xi = 0.00001;
+					else if (xi == 1) xi = 1 - 0.00001;
 				}
 				else {
 					cout << "FATAL ERROR, Kinematic routing algorithm encountered null aspect value" << endl;
@@ -2995,6 +3018,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 					east_vec[count] = easting[b] + 0.5*DataResolution;
 					north_vec[count] = northing[a] + yo - 0.5*DataResolution;
 					++b;
+					if (yi == 0) yi = 0.00001;
+					else if (yi == 1) yi = 1 - 0.00001;
 				}
 				//southerly
 				else if (degs >= 135 && degs < 225) {
@@ -3006,6 +3031,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 					east_vec[count] = easting[b] + xo - 0.5*DataResolution;
 					north_vec[count] = northing[a] - 0.5*DataResolution;
 					++a;
+					if (xi == 0) xi = 0.00001;
+					else if (xi == 1) xi = 1 - 0.00001;
 				}
 				// westerly
 				else if (degs >= 225 && degs < 315) {
@@ -3016,6 +3043,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 					east_vec[count] = easting[b] -0.5*DataResolution;
 					north_vec[count] = northing[a] + yo - 0.5*DataResolution;
 					--b;
+					if (yi == 0) yi = 0.00001;
+					else if (yi == 1) yi = 1 - 0.00001;
 				}
 				//northerly
 				else if (degs >= 315 || degs < 45) {
@@ -3026,6 +3055,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 					east_vec[count] = easting[b] + xo - 0.5*DataResolution;
 					north_vec[count] = northing[a] + 0.5*DataResolution;
 					--a;
+					if (xi == 0) xi = 0.00001;
+					else if (xi == 1) xi = 1 - 0.00001;
 				}
 				else {
 					cout << "FATAL ERROR, Kinematic routing algorithm enountered null aspect value" << endl;
