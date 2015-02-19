@@ -198,8 +198,8 @@ int main (int nNumberofArgs,char *argv[])
 
   // the values of theta and phi step are based on testing by S. Grieve 
   // Note that Codilian reccomends 5,5 but 10,15 leads to minimal errors
-  int theta_step = 30;
-  int phi_step = 30;
+  int theta_step = 10;
+  int phi_step = 15;
   
   // density of rock. Most calculations do this in shielding depth but 
   // printing results to screen includes a transaformation to length per time
