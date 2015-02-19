@@ -614,6 +614,26 @@ class LSDCRNParticle: public LSDParticle
   /// @date 01/01/2010
   void update_10Be_SSfull(double erosion, LSDCRNParameters& CRNp);
 
+  /// @brief Bring the 10Be concentration to steady state based
+  ///  on a constant erosion rate using full muogenic production. This version
+  ///  is for a DEPTH INTEGRATED concentration and as such should only be used
+  ///  for basinwide calculations 
+  /// @details This function solves for the updated concentration assuming
+  /// a constant erosion rate (in g/cm^2/yr). It is an analytical
+  /// steady state solution
+  /// @param erosion the erosion rate in g/cm^2/yr   POSITIVE FOR EROSION
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// to approximate production from the different production mechanisms
+  /// @param top_eff_depth the effective depth g/cm^2 at the top of the
+  ///  section being depth-integrated
+  /// @param bottom_eff_depth the effective depth g/cm^2 at the bottom of the
+  ///  section being depth-integrated
+  /// @author SMM
+  /// @date 20/02/2015
+void update_10Be_SSfull_depth_integrated(double erosion_rate, LSDCRNParameters& CRNp,
+                                  double top_eff_depth, double bottom_eff_depth);
+
+
   /// @brief Bring the 26Al concentration to steady state based
   /// on a constant erosion rate using full muogenic production.  
   /// @details This function solves for the updated concentration assuming
@@ -625,6 +645,26 @@ class LSDCRNParticle: public LSDParticle
   /// @author SMM
   /// @date 01/01/2010
   void update_26Al_SSfull(double erosion, LSDCRNParameters& CRNp);
+
+  /// @brief Bring the 26Al concentration to steady state based
+  ///  on a constant erosion rate using full muogenic production. This version
+  ///  is for a DEPTH INTEGRATED concentration and as such should only be used
+  ///  for basinwide calculations 
+  /// @details This function solves for the updated concentration assuming
+  /// a constant erosion rate (in g/cm^2/yr). It is an analytical
+  /// steady state solution
+  /// @param erosion the erosion rate in g/cm^2/yr   POSITIVE FOR EROSION
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// to approximate production from the different production mechanisms
+  /// @param top_eff_depth the effective depth g/cm^2 at the top of the
+  ///  section being depth-integrated
+  /// @param bottom_eff_depth the effective depth g/cm^2 at the bottom of the
+  ///  section being depth-integrated
+  /// @author SMM
+  /// @date 20/02/2015
+void update_26Al_SSfull_depth_integrated(double erosion_rate, LSDCRNParameters& CRNp,
+                                  double top_eff_depth, double bottom_eff_depth);
+
 
   /// @brief Bring the 14C concentration to steady state based
   /// on a constant erosion rate using full muogenic production.  

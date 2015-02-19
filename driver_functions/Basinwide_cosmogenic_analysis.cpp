@@ -236,7 +236,7 @@ int main (int nNumberofArgs,char *argv[])
     LSDJunctionNetwork JNetwork(sources, FlowInfo);
   
     // get the topographic shielding
-    LSDRaster T_shield = filled_raster.TopoShield(theta_step, phi_step);
+    LSDRaster T_shield = filled_raster.TopographicShielding(theta_step, phi_step);
     
     // transform the cosmo data to this DEM UTM zone
     CosmoData.convert_to_UTM(filled_raster);
