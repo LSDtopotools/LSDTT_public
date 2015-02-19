@@ -877,6 +877,45 @@ class LSDCosmoBasin: public LSDBasin
                                  bool is_production_uncertainty_minus_on);
 
     /// @brief this predicts the mean concentration of a nuclide within 
+    ///  a basin. It does a full analyitical solution to account for
+    ///  snow and self sheilding
+    /// @param eff_erosion rate The erosion rate in g/cm^2/yr
+    /// @param Nuclide a string with the nuclide name. At the moment the options are:
+    ///   Be10
+    ///   Al26
+    ///  These are case sensitive
+    /// @param prod_uncert_factor production uncertainty factor is a multiplier that sets the production 
+    ///  certainty. If it is 1.1, there is 10% production rate uncertainty, or
+    ///  if it is 0.9 there is -10% unvertainty. The reason why it is implemented
+    ///  like this is that this allows gaussian error propigation.
+    /// @param Muon_scaling a string that gives the muon scaling scheme. 
+    ///  options are Schaller, Braucher and Granger
+    /// @param data_from_outlet_only boolean that is true of you want 
+    ///  concentration calculated from the outlet only.
+    /// @param production_uncertainty this gives the uncertainty in the production
+    ///  rates based on the production_uncert_factor; it is used in gaussian
+    ///  error propigation. The parameter is replaced within the function.
+    /// @param production_rate This gives the production rate average for the
+    ///  basin. It can be used for uncertainty analyis: if the scaling is
+    ///  changed the change in this production rate can be used to construct
+    ///  the gaussian error propigation terms
+    /// @param is_production_uncertainty_plus_on a boolean that is true if the 
+    ///  production rate uncertainty (+) is switched on
+    /// @param is_production_uncertainty_minus_on a boolean that is true if the 
+    ///  production rate uncertainty (-) is switched on. If the + switch is 
+    ///  true this parameter defauts to false. 
+    /// @return the concentration of the nuclide averaged across the DEM
+    /// @author SMM
+    /// @date 22/12/2014
+    double predict_mean_CRN_conc_with_snow_and_self(double eff_erosion_rate, string Nuclide, 
+                                 double prod_uncert_factor,
+                                 string Muon_scaling, bool data_from_outlet_only,
+                                 double& production_uncertainty,
+                                 double& production_rate,
+                                 bool is_production_uncertainty_plus_on,
+                                 bool is_production_uncertainty_minus_on);
+
+    /// @brief this predicts the mean concentration of a nuclide within 
     ///  a basin, using the production scaling of the centroid
     ///  It replicates the technique used by many authors. This function
     ///  is mainly here to show how far off this method is compared to 
@@ -974,7 +1013,16 @@ class LSDCosmoBasin: public LSDBasin
   
     /// a vector holding the atmospheric pressure
     vector<double> atmospheric_pressure;
-  
+    
+    /// this is a vector for holding the effective depth of slf shelding
+    /// used in the full muon based self shielding
+    /// in g/cm^2
+    vector<double> self_shield_eff_depth;
+    
+    /// This holds an effective depth of snow for a basin
+    /// in g/cm^2
+    vector<double> snow_shield_eff_depth;
+    
   private:
     void create(int JunctionNumber, LSDFlowInfo& FlowInfo, 
                            LSDJunctionNetwork& ChanNet, 

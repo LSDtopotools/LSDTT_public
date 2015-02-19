@@ -587,7 +587,7 @@ void LSDCosmoData::basic_cosmogenic_analysis(int search_radius_nodes,
                                        path_to_atmospheric_data);
     
     // get the atmospheric pressure for bug checking. THis will print to screen
-    thisBasin.get_atmospheric_pressure(FlowInfo, Elevations, path_to_atmospheric_data);
+    //thisBasin.get_atmospheric_pressure(FlowInfo, Elevations, path_to_atmospheric_data);
     
     // now do the analysis
     vector<double> erate_analysis = thisBasin.full_CRN_erosion_analysis(test_N, 
