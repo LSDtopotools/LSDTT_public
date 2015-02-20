@@ -38,23 +38,28 @@ int main (int nNumberofArgs,char *argv[])
 //	}
   
   //load input arguments
-  string filename = "or_clip";
+  string filename = "bh";
   
   //set boundary conditions
   vector<string> BoundaryConditions(4, "No Flux");
 
   //load dem
-  LSDRaster DEM((filename+"_DEM"), "flt");  
+  LSDRaster DEM((filename+"_dem"), "flt");  
 
   //run hillshade
-  float Azimuth = 315.;
-  for (int Zenith = 15; Zenith <= 75; Zenith+=10)
+  for (int Azimuth = 25.; Azimuth < 35; Azimuth += 45)
   {
-  	LSDIndexRaster Shadows = DEM.CastShadows(Azimuth,(float)Zenith);
-  	stringstream ss;
-		ss << Zenith;
-		string AzString = ss.str();
-  	//string AzString = string(Zenith);
-  	Shadows.write_raster((filename+"_Shadows"+AzString),"flt");
+    stringstream ss1;
+		ss1 << Azimuth;
+		string AzimuthString = ss1.str();
+    for (int Zenith = 35; Zenith <= 35; Zenith+=10)
+    {
+    	LSDIndexRaster Shadows = DEM.CastShadows((float)Azimuth,(float)Zenith);
+    	stringstream ss2;
+		  ss2 << Zenith;
+		  string ZenithString = ss2.str();
+    	//string AzString = string(Zenith);
+    	Shadows.write_raster((filename+"_Shadows_"+AzimuthString+"_"+ZenithString),"flt");
+    }
   }
 }
