@@ -570,6 +570,7 @@ class LSDFlowInfo
   /// @param D_inf_Flowdir LSDRaster of flow directions.
   /// @param Prefix String Prefix for output data filename.
   /// @param Basins LSDIndexRaster of basin outlines.
+  /// @param PlanCurvature LSDRaster of planform curvature.
   /// @param print_paths_switch If true paths will be printed.
   /// @param thinning Thinning factor, value used to skip hilltops being printed, use 1 to print every hilltop.
   /// @param trace_path The file path to be used to write the path files to, must end with a slash. 
@@ -579,7 +580,7 @@ class LSDFlowInfo
   /// @author SWDG 
   /// @date 12/2/14
   vector< Array2D<float> > HilltopFlowRouting(LSDRaster Elevation, LSDRaster Hilltops, LSDRaster Slope, 
-               LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir, string Prefix, LSDIndexRaster Basins,
+               LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir, string Prefix, LSDIndexRaster Basins, LSDRaster PlanCurvature,
                bool print_paths_switch, int thinning, string trace_path, bool basin_filter_switch,
                vector<int> Target_Basin_Vector);
 

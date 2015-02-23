@@ -2895,7 +2895,7 @@ void LSDFlowInfo::HilltopFlowRoutingOriginal(LSDRaster Elevation, LSDRaster Hill
 // SWDG 12/2/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LSDRaster Hilltops, LSDRaster Slope,
-                                                         LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir, string Prefix, LSDIndexRaster Basins,
+                                                         LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir, string Prefix, LSDIndexRaster Basins, LSDRaster PlanCurvature,
                                                          bool print_paths_switch, int thinning, string trace_path, bool basin_filter_switch,
                                                          vector<int> Target_Basin_Vector){
 
@@ -2908,6 +2908,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 	float length, d;
 	int flag;
 	int count = 0;
+	int DivergentCountFlag = 0; //Flag used to count the number of divergent cells encountered in a trace
 	float PI = 3.14159265;
 	float degs, degs_old, degs_new, theta;
 	float s_local, s_edge;
@@ -2964,7 +2965,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 		cout << "\nFATAL ERROR: unable to write to " << ss_filename.str() << endl;
 		exit(EXIT_FAILURE);
 	}
-	ofs << "X,Y,hilltop_id,S,R,Lh,BasinID,StreamID\n";
+	ofs << "X,Y,hilltop_id,S,R,Lh,BasinID,StreamID,HilltopSlope,DivergentCount\n";
 
 	//calculate northing and easting
 	for (i=0;i<NRows;++i){
@@ -2995,6 +2996,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 				flag = true;
 				count = 1;
 				path = blank.copy();
+        DivergentCountFlag = 0; //initialise count of divergent cells in trace
 
 				++ht_count;
 
@@ -3266,10 +3268,10 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 //          if(zeta[a][b] - zeta[a_2][b_2] > 0){
 //            
 //            length -= d;    //remove uphill length from trace
-
+  
 //            a = a_2;
 //            b = b_2;
-
+  
 //            //restart trace
 //            degs = aspect[a][b];
 //			    	theta = rads[a][b];
@@ -3277,9 +3279,9 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 //		    		east_vec[0] = easting[b];
 //			    	north_vec[0] = northing[a];
 //		    		s_local = slope[a][b];
-
+  
 //            length += sqrt((pow((xo-0.5),2) + pow((yo-0.5),2)));  //update length to cope with the 'jump' to the centre of the cell to restart the trace
-
+  
 //			    	//test direction, calculate outlet coordinates and update indicies
 //						// easterly
 //						if (degs >= 45 && degs < 135) {
@@ -3325,14 +3327,14 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 //							cout << "FATAL ERROR, Kinematic routing algorithm enountered null aspect value" << endl;
 //							exit(EXIT_FAILURE);
 //						}
-
+  
 //						//collect slopes and totals weighted by path length
-
+  
 //			    	length += d;
 //			    	s_local = slope[a][b];
-
+  
 //          }
-
+  
 //		    	if (path[a][b] >= 1){  //self intersect/'slosh'
 //                 
 //            degs = aspect[a][b];
@@ -3341,12 +3343,12 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 //						east_vec[0] = easting[b];
 //						north_vec[0] = northing[a];
 //						s_local = slope[a][b];
-
+  
 //            a_2 = a;
 //            b_2 = b;
-
+  
 //    		    length += sqrt((pow((xo-0.5),2) + pow((yo-0.5),2)));  //update length to cope with the 'jump' to the centre of the cell to restart the trace
-
+  
 //						//test direction, calculate outlet coordinates and update indicies
 //						// easterly
 //						if (degs >= 45 && degs < 135) {
@@ -3392,12 +3394,18 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 //							cout << "FATAL ERROR, Kinematic routing algorithm enountered null aspect value" << endl;
 //							exit(EXIT_FAILURE);
 //						}
-
+  
 //						//collect slopes and totals weighted by path length
 //						length += d;
 //						s_local = slope[a][b];
-
+  
 //        	}
+
+        // test for plan curvature here and set a flag if flow is divergent but continue trace regardless
+        // The larger the counter the more divergent the trace is
+        if (PlanCurvature.get_data_element(a,b) < (-0.0001) || PlanCurvature.get_data_element(a,b) > (0.0001)){
+          ++DivergentCountFlag;
+        }
 
 				if (a == 0 || b == 0 ||	a == NRows-1 || b == NCols-1 || stnet[a][b] != NoDataValue || stnet[a-1][b-1] != NoDataValue || stnet[a][b-1] != NoDataValue || stnet[a+1][b-1] != NoDataValue || stnet[a+1][b] != NoDataValue || stnet[a+1][b+1] != NoDataValue || stnet[a][b+1] != NoDataValue || stnet[a-1][b+1] != NoDataValue || stnet[a-1][b] != NoDataValue || path[a][b] >= 3) flag = false;
 				}
@@ -3433,7 +3441,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
             Relief_Array[i][j] = relief;
           
             if (relief > 0){
-					    ofs << X << "," << Y << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "," << stnet[a][b] <<"\n";
+					    ofs << X << "," << Y << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "," << stnet[a][b] << "," << slope[i][j] << "," << DivergentCountFlag << "\n";
             }
             else {
               ++neg_count;
