@@ -773,6 +773,70 @@ class LSDCosmoBasin: public LSDBasin
                                   LSDRaster& Topo_Shield, LSDRaster& Snow_shield,
                                   string path_to_atmospheric_data);
 
+    /// @brief This function sets the basin vectors for snow and shelf sheilding
+    ///  if the effective depth method is to be used
+    /// @detail This calculates snow and self shielding by integrating production
+    ///  over the effective depth interval from which sediment comes. Snow
+    ///  cover is represented by an effective depth. This method uses
+    ///  the full muon profile to predict the CRN concetration
+    /// @param FlowInfo the LSDFlowInfo object    
+    /// @param snow_eff_depth an LSDRaster holding the effective depths (g/cm^2)
+    ///  of the snow for each pixel 
+    /// @param self_eff_depth an LSDRaster holding the effective depths (g/cm^2)
+    ///  of self shielding for each pixel. This can implement landsliding, 
+    ///  since landsliding is effectively a self shielding process
+    ///  whereby sediment from depth is exhumed. 
+    /// @author SMM
+    /// @date 23/02/2015 
+    void populate_snow_and_self_eff_depth_vectors(LSDFlowInfo& FlowInfo, 
+                                              LSDRaster& snow_eff_depth, 
+                                              LSDRaster& self_eff_depth);
+
+    /// @brief This function sets the basin vectors for snow and shelf sheilding
+    ///  if the effective depth method is to be used
+    /// @detail Overloaded function where snow shielding is simply a double
+    /// @param FlowInfo the LSDFlowInfo object    
+    /// @param snow_eff_depth the shelding depth from snow (over the entire DEM)
+    ///  in g/cm^2
+    /// @param self_eff_depth an LSDRaster holding the effective depths (g/cm^2)
+    ///  of self shielding for each pixel. This can implement landsliding, 
+    ///  since landsliding is effectively a self shielding process
+    ///  whereby sediment from depth is exhumed. 
+    /// @author SMM
+    /// @date 23/02/2015 
+    void populate_snow_and_self_eff_depth_vectors(LSDFlowInfo& FlowInfo, 
+                                              double snow_eff_depth, 
+                                              LSDRaster& self_eff_depth);
+
+    /// @brief This function sets the basin vectors for snow and shelf sheilding
+    ///  if the effective depth method is to be used
+    /// @detail Overloaded function where self shielding is simply a double
+    /// @param FlowInfo the LSDFlowInfo object    
+    /// @param snow_eff_depth an LSDRaster holding the effective depths (g/cm^2)
+    ///  of the snow for each pixel 
+    /// @param self_eff_depth the self shelding depth (over the entire DEM)
+    ///  in g/cm^2
+    ///  whereby sediment from depth is exhumed. 
+    /// @author SMM
+    /// @date 23/02/2015 
+    void populate_snow_and_self_eff_depth_vectors(LSDFlowInfo& FlowInfo, 
+                                              LSDRaster& snow_eff_depth, 
+                                              double self_eff_depth);
+
+    /// @brief This function sets the basin vectors for snow and shelf sheilding
+    ///  if the effective depth method is to be used
+    /// @detail Overloaded function where both self and snow shielding 
+    ///  are simply doubles
+    /// @param snow_eff_depth the shelding depth from snow (over the entire DEM)
+    ///  in g/cm^2
+    /// @param self_eff_depth the self shelding depth (over the entire DEM)
+    ///  in g/cm^2
+    ///  whereby sediment from depth is exhumed. 
+    /// @author SMM
+    /// @date 23/02/2015 
+    void populate_snow_and_self_eff_depth_vectors(double snow_eff_depth, 
+                                                  double self_eff_depth);
+
     /// @brief This is a utility function that populates the atmospheric pressure
     ///  vector. It uses the CRONUS calculator scheme
     /// @detail The function is mainly used for bug checking

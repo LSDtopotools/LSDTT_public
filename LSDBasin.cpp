@@ -1209,6 +1209,159 @@ void LSDCosmoBasin::get_atmospheric_pressure(LSDFlowInfo& FlowInfo,
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function creates the snow and shelf sheilding vectors based on two 
+// rasters
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoBasin::populate_snow_and_self_eff_depth_vectors(LSDFlowInfo& FlowInfo, 
+                                              LSDRaster& snow_eff_depth, 
+                                              LSDRaster& self_eff_depth)
+{
+  int row,col;
+  
+  // the effective depths at individual nodes
+  double this_eff_snow_depth;
+  double this_eff_self_depth;
+
+  // temporary vectors that will be copied into the 
+  vector<double> snow_temp;
+  vector<double> self_temp;
+
+  for (int q = 0; q < int(BasinNodes.size()); ++q)
+  {
+    
+    //exclude NDV from average
+    if (snow_eff_depth.get_data_element(row,col) != NoDataValue)
+    {
+      // get the row and column of the node
+      FlowInfo.retrieve_current_row_and_col(BasinNodes[q], row, col);
+    
+      // get the snow and self shielding
+      this_eff_snow_depth = double(snow_eff_depth.get_data_element(row,col));
+      this_eff_self_depth = double(self_eff_depth.get_data_element(row,col));
+    
+      // add data to the vectors
+      snow_temp.push_back(this_eff_snow_depth);
+      self_temp.push_back(this_eff_self_depth);
+    }
+  }
+  
+  // update the vectors in the basin object
+  self_shield_eff_depth = self_temp;
+  snow_shield_eff_depth = snow_temp;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function creates the snow and shelf sheilding vectors based on a 
+// double and a float
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoBasin::populate_snow_and_self_eff_depth_vectors(LSDFlowInfo& FlowInfo, 
+                                              double snow_eff_depth, 
+                                              LSDRaster& self_eff_depth)
+{
+  int row,col;
+  
+  // the effective depths at individual nodes
+  double this_eff_self_depth;
+
+  // temporary vectors that will be copied into the 
+  vector<double> snow_temp;
+  vector<double> self_temp;
+  
+  // first put the one element in the snow temp vector
+  snow_temp.push_back(snow_eff_depth);
+
+  // now loop through the other vector adding elements
+  for (int q = 0; q < int(BasinNodes.size()); ++q)
+  {
+    
+    //exclude NDV from average
+    if (self_eff_depth.get_data_element(row,col) != NoDataValue)
+    {
+      // get the row and column of the node
+      FlowInfo.retrieve_current_row_and_col(BasinNodes[q], row, col);
+    
+      // get the snow and self shielding
+      this_eff_self_depth = double(self_eff_depth.get_data_element(row,col));
+    
+      // add data to the vectors
+      self_temp.push_back(this_eff_self_depth);
+    }
+  }
+  
+  // update the vectors in the basin object
+  self_shield_eff_depth = self_temp;
+  snow_shield_eff_depth = snow_temp;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function creates the snow and shelf sheilding vectors based on a 
+// double and a float
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoBasin::populate_snow_and_self_eff_depth_vectors(LSDFlowInfo& FlowInfo, 
+                                              LSDRaster& snow_eff_depth, 
+                                              double self_eff_depth)
+{
+  int row,col;
+  
+  // the effective depths at individual nodes
+  double this_eff_snow_depth;
+
+  // temporary vectors that will be copied into the 
+  vector<double> snow_temp;
+  vector<double> self_temp;
+  
+  // first put the one element in the self temp vector
+  self_temp.push_back(self_eff_depth);
+
+  // now loop through the other vector adding elements
+  for (int q = 0; q < int(BasinNodes.size()); ++q)
+  {
+    
+    //exclude NDV from average
+    if (snow_eff_depth.get_data_element(row,col) != NoDataValue)
+    {
+      // get the row and column of the node
+      FlowInfo.retrieve_current_row_and_col(BasinNodes[q], row, col);
+    
+      // get the snow and self shielding
+      this_eff_snow_depth = double(snow_eff_depth.get_data_element(row,col));
+    
+      // add data to the vectors
+      snow_temp.push_back(this_eff_snow_depth);
+    }
+  }
+  
+  // update the vectors in the basin object
+  self_shield_eff_depth = self_temp;
+  snow_shield_eff_depth = snow_temp;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function creates the snow and shelf sheilding vectors based on a 
+// double and a float
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoBasin::populate_snow_and_self_eff_depth_vectors(double snow_eff_depth, 
+                                                             double self_eff_depth)
+{
+  // temporary vectors that will be copied into the 
+  vector<double> snow_temp;
+  vector<double> self_temp;
+  
+  // first put the one element in the snow temp vector
+  self_temp.push_back(self_eff_depth);
+  snow_temp.push_back(self_eff_depth);
+  
+  // update the vectors in the basin object
+  self_shield_eff_depth = self_temp;
+  snow_shield_eff_depth = snow_temp;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // This function wraps the erosion rate calculations with formal error analysis
 //
@@ -1644,7 +1797,7 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
                                        is_production_uncertainty_plus_on,
                                        is_production_uncertainty_minus_on);
     }
-    else
+    else   // if self and snow sheilding are caluclated based on effective depths
     {
       cout << "LSDBasin line 1649 You are doing this wih the effective depth driven shielding" << endl;
       
@@ -2072,6 +2225,10 @@ double LSDCosmoBasin::predict_mean_CRN_conc_with_snow_and_self(double eff_erosio
       {
         this_top_eff_depth = 0;
       }
+      else if (snow_shield_eff_depth.size() == 1)
+      {
+        this_top_eff_depth = snow_shield_eff_depth[0];
+      }
       else
       {
         this_top_eff_depth = snow_shield_eff_depth[q];
@@ -2082,6 +2239,10 @@ double LSDCosmoBasin::predict_mean_CRN_conc_with_snow_and_self(double eff_erosio
       if (self_shield_eff_depth.size() < 1)
       {
         this_bottom_eff_depth = this_top_eff_depth;
+      }
+      else if (self_shield_eff_depth.size() == 1)
+      {
+        this_bottom_eff_depth = this_top_eff_depth+self_shield_eff_depth[0];
       }
       else
       {
