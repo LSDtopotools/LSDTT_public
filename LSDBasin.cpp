@@ -1360,6 +1360,22 @@ void LSDCosmoBasin::populate_snow_and_self_eff_depth_vectors(double snow_eff_dep
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This resets the snow and self shielding vectors
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoBasin::reset_snow_and_self_eff_depth_vectors()
+{
+  // temporary vectors that will be copied into the 
+  vector<double> snow_temp;
+  vector<double> self_temp;
+  
+  // update the vectors in the basin object
+  self_shield_eff_depth = self_temp;
+  snow_shield_eff_depth = snow_temp;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
@@ -2213,7 +2229,7 @@ double LSDCosmoBasin::predict_mean_CRN_conc_with_snow_and_self(double eff_erosio
       total_shielding_no_uncert = production_scaling[q]*topographic_shielding[q];
       total_shielding = prod_uncert_factor*total_shielding_no_uncert;
       cumulative_production_rate += total_shielding_no_uncert;
-
+      
       // scale the F values
       LSDCRNP.scale_F_values(total_shielding,nuclide_scaling_switches);
       

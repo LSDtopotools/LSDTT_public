@@ -231,6 +231,10 @@ int main (int nNumberofArgs,char *argv[])
   
   string this_csv_prefix = "Node_prefix_";
   string this_samp_number;
+ 
+ 
+ 
+/* 
   
   // get the topographic shielding
   // the values of theta and phi step are based on testing by S. Grieve 
@@ -327,6 +331,100 @@ int main (int nNumberofArgs,char *argv[])
     
   }
 
+*/
+
+  double snow_eff_depth = 0;
+  double self_eff_depth = 0;
+  
+  int theta_step = 30;
+  int phi_step = 30;
+  cout << "LINE 963, LSDBasin, performing shielding" << endl;
+  LSDRaster T_shield = filled_raster.TopographicShielding(theta_step, phi_step);
+
+  // test the self sheilding and snow shielding
+  for(int samp = 0; samp<n_valid_nodes; samp++)
+  //for(int samp = 0; samp<1; samp++)
+  {
+    cout << "Valid point is: " << valid_cosmo_points[samp] << " X: " 
+         << x_vec[valid_cosmo_points[samp]] << " Y: "
+         << y_vec[valid_cosmo_points[samp]] << endl;
+    cout << "Node index is: " <<  snapped_node_indices[samp] << " and junction is: " 
+         << snapped_junction_indices[samp] << endl;
+    LSDCosmoBasin thisBasin(snapped_junction_indices[samp],FlowInfo, JNetwork,
+                            test_N10,test_dN10, test_N26,test_dN26);
+    
+    // populate the scaling vectors
+    thisBasin.populate_scaling_vectors(FlowInfo, filled_raster, T_shield,
+                                       path_to_atmospheric_data);
+                                       
+    // now get the snow and self shielding
+    thisBasin.populate_snow_and_self_eff_depth_vectors(snow_eff_depth, self_eff_depth);
+    
+    // some variables
+   string String_10Be = "Be10";
+    string String_26Al = "Al26";
+
+    double prod_uncert_factor = 1;
+    //erate = thisBasin.predict_CRN_erosion(test_N10, String_10Be,prod_uncert_factor);
+    
+    double production_uncertainty; 
+    double average_production;
+    bool is_production_uncertainty_plus_on = false;
+    bool is_production_uncertainty_minus_on = false;
+    bool data_from_outlet_only = true;
+    
+    string Muon_scaling = "Braucher";
+    //bool data_from_outlet_only = true;
+    // test the shielding calculations
+    double eff_erosion_rate = 0.000001;
+    cout << "LINE 380 main Predicting concentration"  << endl;
+    thisBasin.predict_mean_CRN_conc_with_snow_and_self(eff_erosion_rate, 
+                                            String_10Be,
+                                            prod_uncert_factor, Muon_scaling,
+                                            data_from_outlet_only, production_uncertainty, 
+                                            average_production,
+                                            is_production_uncertainty_plus_on,
+                                            is_production_uncertainty_minus_on);
+    cout << "Predicted concentration"  << endl;
+
+    BasinVec.push_back(thisBasin);
+    
+    // now print the data to file
+    this_samp_number = itoa(samp);
+    string this_filename = this_csv_prefix+this_samp_number;
+    
+    //thisBasin.print_particle_csv(path_name, this_filename, FlowInfo, filled_raster,
+    //                             T_shield, path_to_atmospheric_data);
+/*    
+    // now get the cosmo erosion rate
+    cout << "Line 272, cosmo snapping; getting erate, 10Be conc: " << test_N10 << endl;
+    //double erate;
+
+
+    double rho = 2650;
+
+         
+    cout << "=======================================================" << endl;
+    cout << "And now for the full analysis" << endl;
+    vector<double> erate_analysis = thisBasin.full_CRN_erosion_analysis(test_N10, 
+                                        String_10Be, test_dN10, prod_uncert_factor,
+                                        Muon_scaling);
+    cout << "LINE 323, cosmo_snapping.cpp, the effective erate is: " 
+         <<  erate_analysis[0] << endl << "The erosion rate for rho = 2650 is: " 
+         << erate_analysis[0]*10/rho << "m/yr and " 
+         << erate_analysis[0]*1e6/rho << "cm/kyr" << endl;
+    cout << "LINE 323, cosmo_snapping.cpp, the error is: " 
+         <<  erate_analysis[1] << endl << "The erosion rate error for rho = 2650 is: " 
+         << erate_analysis[1]*10/rho << "m/yr and " 
+         << erate_analysis[1]*1e6/rho << "cm/kyr" << endl;
+    cout << "============================================================" << endl;
+    cout << endl << endl << endl;     
+*/    
+  }
+
+
+/*
+
   // Test the LSDCosmoData object
   string detailed_cosmo_file = "Test_basin_data.csv";
   string cosmo_file = path_name+detailed_cosmo_file;
@@ -346,7 +444,7 @@ int main (int nNumberofArgs,char *argv[])
                             threshold_stream_order, filled_raster,
                             T_shield,
                             FlowInfo, JNetwork);
-
+*/
 
 
 

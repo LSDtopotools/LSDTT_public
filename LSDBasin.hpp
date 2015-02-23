@@ -837,6 +837,14 @@ class LSDCosmoBasin: public LSDBasin
     void populate_snow_and_self_eff_depth_vectors(double snow_eff_depth, 
                                                   double self_eff_depth);
 
+    /// @brief this resets the snow and self shielding effective vectors
+    /// @detail resets now and self sheidling vectors to empty vectors
+    ///  this allows calucaltions to be made with no snow and self sheilding
+    ///  after a self sheilding calculation is made
+    /// @author SMM
+    /// @date 21/02/2015
+    void reset_snow_and_self_eff_depth_vectors();
+
     /// @brief This is a utility function that populates the atmospheric pressure
     ///  vector. It uses the CRONUS calculator scheme
     /// @detail The function is mainly used for bug checking

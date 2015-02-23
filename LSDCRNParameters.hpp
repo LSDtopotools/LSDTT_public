@@ -335,6 +335,28 @@ class LSDCRNParameters
   /// @date 01/02/2015
   void scale_F_values(double single_scaling, vector<bool> nuclides_for_scaling);
 
+  /// @brief Prints F calues to screen for bug checking
+  /// @param nuclides_for_scaling this is a vector of bool telling the code 
+  ///  which nuclides to calculate. The values are:
+  ///  nuclides_for_scaling[0] = true: calculate 10Be
+  ///  nuclides_for_scaling[1] = true: calculate 26Al
+  ///  nuclides_for_scaling[2] = true: calculate 36Cl
+  ///  nuclides_for_scaling[3] = true: calculate 14C
+  /// @author SMM
+  /// @date 23/02/2015
+  void print_F_values_to_screen(vector<bool> nuclides_for_scaling);
+
+  /// @brief Prints parameters to screen for bug checking
+  /// @param nuclides_for_scaling this is a vector of bool telling the code 
+  ///  which nuclides to calculate. The values are:
+  ///  nuclides_for_scaling[0] = true: calculate 10Be
+  ///  nuclides_for_scaling[1] = true: calculate 26Al
+  ///  nuclides_for_scaling[2] = true: calculate 36Cl
+  ///  nuclides_for_scaling[3] = true: calculate 14C
+  /// @author SMM
+  /// @date 23/02/2015
+  void print_parameters_to_screen(vector<bool> nuclides_for_scaling);
+
   /// @brief this changes the 10Be decay. It is here because
   /// 10Be decay rates reported in the literature have changed
   /// @author SMM

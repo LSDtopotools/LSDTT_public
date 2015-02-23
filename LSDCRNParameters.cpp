@@ -2068,6 +2068,83 @@ void LSDCRNParameters::scale_F_values(double single_scaling, vector<bool> nuclid
 
 
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function prints F values to screen for bug checking
+// The bool vector nuclides_for_scaling has four elements
+// nuclides_for_scaling[0] = true: calculate 10Be
+// nuclides_for_scaling[1] = true: calculate 26Al
+// nuclides_for_scaling[2] = true: calculate 36Cl
+// nuclides_for_scaling[3] = true: calculate 14C
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParameters::print_F_values_to_screen(vector<bool> nuclides_for_scaling)
+{
+
+  if(nuclides_for_scaling[0])
+  {
+    cout << "10Be F\t"<<F_10Be[0]<<"\t"<<F_10Be[1]<<"\t"<<F_10Be[2]<<"\t"<<F_10Be[3]<<endl;
+  }
+  if(nuclides_for_scaling[1])
+  {
+    cout << "26Al F\t"<<F_26Al[0]<<"\t"<<F_26Al[1]<<"\t"<<F_26Al[2]<<"\t"<<F_26Al[3]<<endl;
+  }
+  if(nuclides_for_scaling[2])
+  {
+    cout << "36Cl F\t"<<F_36Cl[0]<<"\t"<<F_36Cl[1]<<"\t"<<F_36Cl[2]<<"\t"<<F_36Cl[3]<<endl;
+  }
+  if(nuclides_for_scaling[3])
+  {
+    cout << "14C F\t"<<F_14C[0]<<"\t"<<F_14C[1]<<"\t"<<F_14C[2]<<"\t"<<F_14C[3]<<endl;
+  }
+
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prints the CRN parameters to screen for bug checking
+// nuclides_for_scaling[0] = true: calculate 10Be
+// nuclides_for_scaling[1] = true: calculate 26Al
+// nuclides_for_scaling[2] = true: calculate 36Cl
+// nuclides_for_scaling[3] = true: calculate 14C
+void LSDCRNParameters::print_parameters_to_screen(vector<bool> nuclides_for_scaling)
+{
+  cout << "=======================================================" << endl;
+  cout << "Cosmogenic paramters" << endl;
+  cout << "Gammas: \t" << Gamma[0] << "\t"<< Gamma[1]<< "\t"<<Gamma[2]<<"\t"<<Gamma[3]<<endl;
+  
+
+  if(nuclides_for_scaling[0])
+  {
+    cout << "+++++++++++" << endl;
+    cout << "P0 10Be: " << P0_10Be << " lambda 10Be: " << lambda_10Be << endl;
+    cout << "10Be F\t"<<F_10Be[0]<<"\t"<<F_10Be[1]<<"\t"<<F_10Be[2]<<"\t"<<F_10Be[3]<<endl;
+  }
+  if(nuclides_for_scaling[1])
+  {
+    cout << "+++++++++++" << endl;
+    cout << "P0 26Al: " << P0_26Al << " lambda 26Al: " << lambda_26Al << endl;
+    cout << "26Al F\t"<<F_26Al[0]<<"\t"<<F_26Al[1]<<"\t"<<F_26Al[2]<<"\t"<<F_26Al[3]<<endl;
+  }
+  if(nuclides_for_scaling[2])
+  {
+    cout << "+++++++++++" << endl;
+    cout << "P0 36Cl: " << P0_36Cl << " lambda 36Cl: " << lambda_36Cl << endl;
+    cout << "36Cl F\t"<<F_36Cl[0]<<"\t"<<F_36Cl[1]<<"\t"<<F_36Cl[2]<<"\t"<<F_36Cl[3]<<endl;
+  }
+  if(nuclides_for_scaling[3])
+  {
+    cout << "+++++++++++" << endl;
+    cout << "P0 14C: " << P0_14C << " lambda 14C: " << lambda_14C << endl;
+    cout << "14C F\t"<<F_14C[0]<<"\t"<<F_14C[1]<<"\t"<<F_14C[2]<<"\t"<<F_14C[3]<<endl;
+  }
+  cout << "==========================================================="  << endl;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // This function converts elevation to atmospheric pressure
