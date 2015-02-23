@@ -745,6 +745,8 @@ void LSDCRNParticle::update_10Be_SSfull_depth_integrated(double erosion_rate,
                                   double top_eff_depth, double bottom_eff_depth)
 {
 
+  //cout << "LINE 748, doing full depth integration" << endl;
+
   // first, check if the inputs are working properly
   if (top_eff_depth > bottom_eff_depth)
   {
@@ -793,16 +795,20 @@ void LSDCRNParticle::update_10Be_SSfull_depth_integrated(double erosion_rate,
     Conc_10Be = (1/(bottom_eff_depth-top_eff_depth))*CRNp.S_t*CRNp.P0_10Be*sum_term1;
     spall_tot = (1/(bottom_eff_depth-top_eff_depth))*CRNp.S_t*CRNp.P0_10Be*spall_tot;
     muon_tot =  (1/(bottom_eff_depth-top_eff_depth))*CRNp.S_t*CRNp.P0_10Be*muon_tot;
-    
-    vector<bool> cosmo_flags(4,false);
-    cosmo_flags[0] = true;
-    
-    cout << "LSDParticle line 797, getting cosmo for erosion rate: " << erosion_rate <<endl;
-    cout << "The parameter values are: " << endl;
-    CRNp.print_parameters_to_screen(cosmo_flags);
+
     
     
   }
+
+  // print some stuff to screen for bug checking  
+  vector<bool> cosmo_flags(4,false);
+  cosmo_flags[0] = true;
+
+  cout << "LSDParticle line 797, getting cosmo for erosion rate: " << erosion_rate <<endl;
+  cout << "Top depth: " << top_eff_depth << " bottom depth: " << bottom_eff_depth << endl;
+  cout << "The parameter values are: " << endl;
+  CRNp.print_parameters_to_screen(cosmo_flags);
+  cout << "Conc 10Be: " << Conc_10Be << endl;
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

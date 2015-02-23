@@ -2268,12 +2268,14 @@ double LSDCosmoBasin::predict_mean_CRN_conc_with_snow_and_self(double eff_erosio
       // get the nuclide concentration from this node
       if (Nuclide == "Be10")
       {
+        //cout << "LInE 2271, 10Be" << endl;
         eroded_particle.update_10Be_SSfull_depth_integrated(eff_erosion_rate,LSDCRNP,
                                            this_top_eff_depth, this_bottom_eff_depth);
         Total_N+=eroded_particle.getConc_10Be();
       }
       else if (Nuclide == "Al26")
       {
+        //cout << "LINE 2278, 26Al" << endl;
         eroded_particle.update_26Al_SSfull_depth_integrated(eff_erosion_rate,LSDCRNP,
                                            this_top_eff_depth, this_bottom_eff_depth);
         Total_N+=eroded_particle.getConc_26Al();
