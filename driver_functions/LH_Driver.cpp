@@ -13,15 +13,14 @@
 // path to the input files with a trailing slash
 // filename prefix without an underscore
 // window radius value in spatial units for surface fitting
-// basin order the strahler order of basins to be extracted
-// critical slope value to be used in E* R* and in the filtering of hilltops  
+// basin order the strahler order of basins to be extracted  
 // switch to write rasters 0 == do not write rasters and 1 == write rasters
 //
 // A usage example is:
-//nice ./LH_Driver.out /home/s0675405/DataStore/Final_Paper_Data/NC/ NC 7 2 1.2 1
-//nice ./LH_Driver.out /home/s0675405/DataStore/Final_Paper_Data/PA/ PA 5 2 1.2 1
-//nice ./LH_Driver.out /home/s0675405/DataStore/Final_Paper_Data/CA/ CA 12 2 1.2 1
-//nice ./LH_Driver.out /home/s0675405/DataStore/Final_Paper_Data/OR/ OR 7.5 2 1.2 1
+//nice ./LH_Driver.out /home/s0675405/DataStore/Final_Paper_Data/NC/ NC 7 2 1
+//nice ./LH_Driver.out /home/s0675405/DataStore/Final_Paper_Data/PA/ PA 5 2 1
+//nice ./LH_Driver.out /home/s0675405/DataStore/Final_Paper_Data/CA/ CA 12 2 1
+//nice ./LH_Driver.out /home/s0675405/DataStore/Final_Paper_Data/OR/ OR 7.5 2 1
 // 
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -50,7 +49,7 @@ int main (int nNumberofArgs,char *argv[])
 {
   
   //Test for correct input arguments
-	if (nNumberofArgs!=7)
+	if (nNumberofArgs!=6)
 	{
 		cout << "FATAL ERROR: wrong number inputs. The program needs the path (with trailing slash), the filename prefix, window radius, basin order, critical slope and a switch to write rasters if desired." << endl;
 		exit(EXIT_SUCCESS);
@@ -61,15 +60,14 @@ int main (int nNumberofArgs,char *argv[])
 	string filename = argv[2];
   float window_radius = atof(argv[3]); //6
   int BasinOrder = atoi(argv[4]);  //2
-  float CriticalSlope = atof(argv[5]); //1.2
-  int WriteRasters = atoi(argv[6]);  //0 (do not write rasters) or 1 (write rasters) 
+  int WriteRasters = atoi(argv[5]);  //0 (do not write rasters) or 1 (write rasters) 
   
   //set boundary conditions
   vector<string> BoundaryConditions(4, "No Flux");
 
   //load dem
   LSDRaster DEM((path+filename+"_DEM"), "flt");  
- 	
+  
   //Fill 
   float MinSlope = 0.0001;
   LSDRaster FilledDEM = DEM.fill(MinSlope);
@@ -81,15 +79,15 @@ int main (int nNumberofArgs,char *argv[])
   raster_selection.push_back(1); //slope 
   raster_selection.push_back(1); //aspect
   raster_selection.push_back(1); //curvature
-  raster_selection.push_back(0);
-  raster_selection.push_back(0);
+  raster_selection.push_back(1); //plan curvature
+  raster_selection.push_back(0); 
   raster_selection.push_back(0);
   raster_selection.push_back(0);
 
   vector<LSDRaster> Surfaces = FilledDEM.calculate_polyfit_surface_metrics(window_radius, raster_selection);
   LSDRaster slope = Surfaces[1];
-  LSDRaster aspect = Surfaces[2];
-
+  LSDRaster aspect = Surfaces[2];   
+  
   cout << "\nGetting drainage network and basins\n" << endl;
 
   // get a flow info object
@@ -106,10 +104,9 @@ int main (int nNumberofArgs,char *argv[])
   
   cout << "\nExtracting hilltops and hilltop curvature" << endl;
   
-  // extract ridges and then hilltops based on critical slope
-  LSDRaster Ridges = ChanNetwork.ExtractRidges(FlowInfo);
-  LSDRaster hilltops = ChanNetwork.ExtractHilltops(Ridges, Surfaces[1], CriticalSlope);  
-   
+  // extract hilltops - no critical slope filtering is performed here
+  LSDRaster hilltops = ChanNetwork.ExtractRidges(FlowInfo);   
+     
   //get hilltop curvature using filter to remove positive curvatures         
   LSDRaster cht_raster = FilledDEM.get_hilltop_curvature(Surfaces[3], hilltops);
   LSDRaster CHT = FilledDEM.remove_positive_hilltop_curvature(cht_raster);  
@@ -125,14 +122,14 @@ int main (int nNumberofArgs,char *argv[])
   string prefix = (path+filename);  //set a path to write the hillslope length data to, based on the input path and filename given by the user
   
   // these params do not need changed during normal use of the HFR algorithm
-  bool print_paths_switch = true;
+  bool print_paths_switch = false;
   int thinning = 1;
-  string trace_path = "";
-  bool basin_filter_switch = false;
+  string trace_path = "/home/s0675405/DataStore/Trace_Data/testing/single_traces/";
+  bool basin_filter_switch = false;                          
   vector<int> Target_Basin_Vector;
 
   //run HFR    
-  vector< Array2D<float> > HFR_Arrays = FlowInfo.HilltopFlowRouting(FilledDEM, hilltops, Surfaces[1], StreamNetwork, dinf_rast, prefix, Basin_Raster, print_paths_switch, thinning, trace_path, basin_filter_switch, Target_Basin_Vector);
+  vector< Array2D<float> > HFR_Arrays = FlowInfo.HilltopFlowRouting(FilledDEM, hilltops, Surfaces[1], StreamNetwork, aspect, prefix, Basin_Raster, Surfaces[4], print_paths_switch, thinning, trace_path, basin_filter_switch, Target_Basin_Vector);
    
   LSDRaster HFR_LH = hilltops.LSDRasterTemplate(HFR_Arrays[1]);
   LSDRaster HFR_Slope = hilltops.LSDRasterTemplate(HFR_Arrays[2]);
@@ -146,6 +143,7 @@ int main (int nNumberofArgs,char *argv[])
   float log_bin_width = 0.1;
   int SplineResolution = 10000;
   int bin_threshold = 0;
+  float CriticalSlope = 1.2; //this needs modified to generate proper E*R* data
   
   cout << "\nCreating each LSDBasin" << endl;
   
@@ -167,8 +165,8 @@ int main (int nNumberofArgs,char *argv[])
     
     Basins.push_back(Basin);
                              
-  }  
-
+  }
+ 
   //create a filestream to write the output data
   // use the input arguments to generate a path and filename for the output file
   ofstream WriteData;                 
@@ -247,6 +245,10 @@ int main (int nNumberofArgs,char *argv[])
     HFR_LH.write_raster((path+filename+"_HFR_LH"),"flt"); 
     HFR_Slope.write_raster((path+filename+"_HFR_SLP"),"flt");
     relief.write_raster((path+filename+"_Relief"),"flt");
+    
+    //perform a hillshade
+    LSDRaster Hillshade = FilledDEM.hillshade(45.0,315.0,1.0);
+    Hillshade.write_raster((path+filename+"_HS"),"flt");
   
   }
 }
