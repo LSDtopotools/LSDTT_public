@@ -46,20 +46,7 @@ int main (int nNumberofArgs,char *argv[])
   //load dem
   LSDRaster DEM((filename+"_dem"), "flt");  
 
-  //run hillshade
-  for (int Azimuth = 25.; Azimuth < 35; Azimuth += 45)
-  {
-    stringstream ss1;
-		ss1 << Azimuth;
-		string AzimuthString = ss1.str();
-    for (int Zenith = 35; Zenith <= 35; Zenith+=10)
-    {
-    	LSDIndexRaster Shadows = DEM.CastShadows((float)Azimuth,(float)Zenith);
-    	stringstream ss2;
-		  ss2 << Zenith;
-		  string ZenithString = ss2.str();
-    	//string AzString = string(Zenith);
-    	Shadows.write_raster((filename+"_Shadows_"+AzimuthString+"_"+ZenithString),"flt");
-    }
-  }
+  //launch toposhielding
+  LSDRaster TopoShielding = DEM.TopographicShielding(5,5);
+  TopoShielding.write_raster(filename+"_TopoShield","flt");
 }
