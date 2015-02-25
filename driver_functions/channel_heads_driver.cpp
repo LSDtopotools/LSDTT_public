@@ -194,10 +194,10 @@ int main (int nNumberofArgs,char *argv[])
   //write channel_heads to a csv file
   FlowInfo.print_vector_of_nodeindices_to_csv_file(ChannelHeadNodes, complete_fname);
 
-
+  string suffix = "_nodeindices_for_Arc";
 //   string prefix = "/home/smudd/LSDTopoData/LiDAR_datasets/USA/OH/indian_creek2_fill_nodeindices_for_Arc";
 
-  FlowInfo.Ingest_Channel_Heads(complete_fname,"csv");
+  FlowInfo.Ingest_Channel_Heads(complete_fname+suffix,"csv");
 
   //write channel heads to a raster
   string CH_name = "_CH";
