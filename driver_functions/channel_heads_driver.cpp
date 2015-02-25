@@ -57,13 +57,13 @@
 #include <iomanip>
 #include <math.h>
 #include <string.h>
-#include "../LSDStatsTools.hpp"
-#include "../LSDRaster.hpp"
-#include "../LSDIndexRaster.hpp"
-#include "../LSDFlowInfo.hpp"
-#include "../LSDJunctionNetwork.hpp"
-#include "../LSDIndexChannelTree.hpp"
-#include "../LSDChiNetwork.hpp"
+#include "../../LSDStatsTools.hpp"
+#include "../../LSDRaster.hpp"
+#include "../../LSDIndexRaster.hpp"
+#include "../../LSDFlowInfo.hpp"
+#include "../../LSDJunctionNetwork.hpp"
+#include "../../LSDIndexChannelTree.hpp"
+#include "../../LSDChiNetwork.hpp"
 
 int main (int nNumberofArgs,char *argv[])
 {
@@ -82,82 +82,81 @@ int main (int nNumberofArgs,char *argv[])
        << "0.45\n"
        << "10\n\n";
 
-	//Test for correct input arguments
-	if (nNumberofArgs!=3)
-	{
-		cout << "FATAL ERROR: wrong number inputs. The program needs the path name and the file name" << endl;
-		exit(EXIT_SUCCESS);
-	}
+  //Test for correct input arguments
+  if (nNumberofArgs!=3)
+  {
+    cout << "FATAL ERROR: wrong number inputs. The program needs the path name and the file name" << endl;
+    exit(EXIT_SUCCESS);
+  }
 
-	string path_name = argv[1];
-	string f_name = argv[2];
+  string path_name = argv[1];
+  string f_name = argv[2];
 
-	cout << "The path is: " << path_name << " and the filename is: " << f_name << endl;
+  cout << "The path is: " << path_name << " and the filename is: " << f_name << endl;
 
-	string full_name = path_name+f_name;
+  string full_name = path_name+f_name;
 
-	ifstream file_info_in;
-	file_info_in.open(full_name.c_str());
-	if( file_info_in.fail() )
-	{
-		cout << "\nFATAL ERROR: the header file \"" << full_name
-		     << "\" doesn't exist" << endl;
-		exit(EXIT_FAILURE);
-	}
+  ifstream file_info_in;
+  file_info_in.open(full_name.c_str());
+  if( file_info_in.fail() )
+  {
+    cout << "\nFATAL ERROR: the header file \"" << full_name
+         << "\" doesn't exist" << endl;
+    exit(EXIT_FAILURE);
+  }
 
-	string DEM_name;
-	string fill_ext = "_fill";
-	file_info_in >> DEM_name;
-	int threshold;
-	float Minimum_Slope;
-	float A_0;
-	float m_over_n;
-	int no_connecting_nodes;
+  string DEM_name;
+  string fill_ext = "_fill";
+  string sources_ext = "_CH";
+  file_info_in >> DEM_name;
+  int threshold;
+  float Minimum_Slope;
+  float A_0;
+  float m_over_n;
+  int no_connecting_nodes;
 
-	file_info_in >> Minimum_Slope >> threshold >> A_0 >> m_over_n >> no_connecting_nodes;
+  file_info_in >> Minimum_Slope >> threshold >> A_0 >> m_over_n >> no_connecting_nodes;
 
-	// get some file names
-	string DEM_f_name = path_name+DEM_name+fill_ext;
-	string DEM_flt_extension = "flt";
-	string complete_fname = DEM_f_name+".flt";
+  // get some file names
+  string DEM_f_name = DEM_name+fill_ext;
+  string DEM_flt_extension = "flt";
+  string complete_fname = DEM_name+sources_ext;//".flt";
 
-	// load the DEM
-	LSDRaster topo_test((path_name+DEM_name), DEM_flt_extension);
+  // load the DEM
+  LSDRaster topo_test(DEM_name, DEM_flt_extension);
 
-	// Set the no flux boundary conditions
+  // Set the no flux boundary conditions
   vector<string> boundary_conditions(4);
-	boundary_conditions[0] = "No";
-	boundary_conditions[1] = "no flux";
-	boundary_conditions[2] = "no flux";
-	boundary_conditions[3] = "No flux";
+  boundary_conditions[0] = "No";
+  boundary_conditions[1] = "no flux";
+  boundary_conditions[2] = "no flux";
+  boundary_conditions[3] = "No flux";
 
-		// get the filled file
-	cout << "Filling the DEM" << endl;
-	LSDRaster filled_topo_test = topo_test.fill(Minimum_Slope);
-	filled_topo_test.write_raster((DEM_f_name),DEM_flt_extension);
+  // get the filled file
+  cout << "Filling the DEM" << endl;
+  LSDRaster filled_topo_test = topo_test.fill(Minimum_Slope);
+  filled_topo_test.write_raster((DEM_f_name),DEM_flt_extension);
 
   //get a FlowInfo object
-	LSDFlowInfo FlowInfo(boundary_conditions,filled_topo_test);
-	LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
-	LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+  LSDFlowInfo FlowInfo(boundary_conditions,filled_topo_test);
+  LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
+  LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
 
 	//string NI_name = "_NI";
   //LSDIndexRaster NodeIndex = FlowInfo.write_NodeIndex_to_LSDIndexRaster();
 	//NodeIndex.write_raster((path_name+DEM_name+NI_name), DEM_flt_extension);
 
-	//get the sources: note: this is only to select basins!
-	vector<int> sources;
-	sources = FlowInfo.get_sources_index_threshold(ContributingPixels, threshold);
+  //get the sources: note: this is only to select basins!
+  vector<int> sources;
+  sources = FlowInfo.get_sources_index_threshold(ContributingPixels, threshold);
 
-	// now get the junction network
-	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
+  // now get the junction network
+  LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 
-	//string tan_curvature_name = "ind_curv";
-	//string chan_heads_name = "ind_chan_heads";
+  //string tan_curvature_name = "ind_curv";
+  //string chan_heads_name = "ind_chan_heads";
 
-	// Get the valleys using the contour curvature
-
-
+  // Get the valleys using the contour curvature
   float surface_fitting_window_radius = 6;      // the radius of the fitting window in metres
   vector<LSDRaster> surface_fitting;
   LSDRaster tan_curvature;
@@ -168,9 +167,9 @@ int main (int nNumberofArgs,char *argv[])
 
   // now print the tangential curvature raster to file.
   for(int i = 0; i<int(raster_selection.size()); ++i)
-	{
-		if(raster_selection[i]==1)
-		{
+  {
+    if(raster_selection[i]==1)
+    {
       tan_curvature = surface_fitting[i];
       tan_curvature.write_raster((path_name+DEM_name+curv_name), DEM_flt_extension);
     }
@@ -196,21 +195,21 @@ int main (int nNumberofArgs,char *argv[])
   FlowInfo.print_vector_of_nodeindices_to_csv_file(ChannelHeadNodes, complete_fname);
 
 
-  string prefix = "/home/smudd/LSDTopoData/LiDAR_datasets/USA/OH/indian_creek2_fill_nodeindices_for_Arc";
+//   string prefix = "/home/smudd/LSDTopoData/LiDAR_datasets/USA/OH/indian_creek2_fill_nodeindices_for_Arc";
 
-  FlowInfo.Ingest_Channel_Heads(prefix,"csv");
+  FlowInfo.Ingest_Channel_Heads(complete_fname,"csv");
 
-	//write channel heads to a raster
-	string CH_name = "_CH";
-	LSDIndexRaster Channel_heads_raster = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(ChannelHeadNodes);
-	Channel_heads_raster.write_raster((path_name+DEM_name+CH_name),DEM_flt_extension);
+  //write channel heads to a raster
+  string CH_name = "_CH";
+  LSDIndexRaster Channel_heads_raster = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(ChannelHeadNodes);
+  Channel_heads_raster.write_raster((DEM_name+CH_name),DEM_flt_extension);
 
-	//create a channel network based on these channel heads
-	LSDJunctionNetwork NewChanNetwork(ChannelHeadNodes, FlowInfo);
-	//int n_junctions = NewChanNetwork.get_Number_of_Junctions();
+  //create a channel network based on these channel heads
+  LSDJunctionNetwork NewChanNetwork(ChannelHeadNodes, FlowInfo);
+  //int n_junctions = NewChanNetwork.get_Number_of_Junctions();
   LSDIndexRaster SOArrayNew = NewChanNetwork.StreamOrderArray_to_LSDIndexRaster();
-	string SO_name_new = "_SO_from_CH";
+  string SO_name_new = "_SO_from_CH";
 
-	SOArrayNew.write_raster((path_name+DEM_name+SO_name_new),DEM_flt_extension);
+  SOArrayNew.write_raster((DEM_name+SO_name_new),DEM_flt_extension);
 
 }
