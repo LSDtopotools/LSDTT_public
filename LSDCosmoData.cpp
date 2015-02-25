@@ -215,8 +215,8 @@ void LSDCosmoData::load_csv_cosmo_data(string filename)
   ifstream ifs(filename.c_str());
   if( ifs.fail() )
   {
-    cout << "\nFATAL ERROR: The file" << filename
-         << "doesn't exist" << endl;
+    cout << "\nFATAL ERROR: Trying to load csv data file, but the file" << filename
+         << "doesn't exist; LINE 219 LSDCosmoData" << endl;
     exit(EXIT_FAILURE);
   }
   
@@ -285,6 +285,181 @@ void LSDCosmoData::load_csv_cosmo_data(string filename)
   
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function loads the filenames 
+// for the DEMs or single value parameters.
+// It reads the DEM, either the snow shiled raster or a single value
+// the self shield raster name or a single value, and the topo shield raster
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::load_DEM_and_shielding_filenames_csv(string filename)
+{
+  // this vecvec holds data for determining the dem, the snow shielding
+  // the self shielding and the topographic sheilding
+  vector< vector<string> > temp_DEM_names_vecvec;
+  
+  // a string for null values
+  string null_str = "NULL";
+
+  // this vecvec holds information about snow, self and toposhielding. 
+  vector< vector<double> > temp_snow_self_topo_shielding_params; 
+
+  
+  // a vector of strings for holding the DEM names.
+  // Elements without a DEM get a null value
+  vector<string> null_string_vec(4,null_str);
+  vector<string> this_snow_self_shield_names;
+  
+  // a vector for holding parameter values. 
+  vector<double> empty_snow_self(2,0);
+  vector<double> this_snow_self;
+  
+  // make sure the filename works
+  ifstream ifs(filename.c_str());
+  if( ifs.fail() )
+  {
+    cout << "\nFATAL ERROR: Trying to load csv filenames file, but the file" << filename
+         << "doesn't exist; LINE 219 LSDCosmoData" << endl;
+    exit(EXIT_FAILURE);
+  }
+  
+  // initiate the string to hold the file
+  string line_from_file;
+  vector<string> empty_string_vec;
+  vector<string> this_string_vec;
+  string temp_string;
+  
+  // now loop through the rest of the lines, getting the data. 
+  while( getline(ifs, line_from_file))
+  {
+    // reset the string vec
+    this_string_vec = empty_string_vec;
+    
+    // create a stringstream
+    stringstream ss(line_from_file);
+    
+    while( ss.good() )
+    {
+      string substr;
+      getline( ss, substr, ',' );
+      
+      // remove the spaces
+      substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
+      
+      // remove constrol characters
+      substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
+      
+      // add the string to the string vec
+      this_string_vec.push_back( substr );
+    }
+    
+    // reset the vectors for this line
+    this_snow_self_shield_names = null_string_vec;
+    this_snow_self = empty_snow_self;
+    
+    // now we need to see how many data elements we have
+    int n_strings_in_line =  int(this_string_vec.size());
+    
+    // the can hold 1, 2, 3 or 4 elements. 
+    // If it holds 1, it only has the name of the DEM
+    // If it has 2, it has name of DEM and snow shielding
+    // If it has 3, it has name of DEM and self shielding
+    // If it has 4, the last element must be the name of the toposhield raster
+    //  which has been precalculated
+    if(n_strings_in_line == 1)
+    {
+      this_snow_self_shield_names[0] = this_string_vec[0];
+    }
+    else if(n_strings_in_line == 2)
+    {
+      this_snow_self_shield_names[0] = this_string_vec[0];
+      
+      // test if the second element is a number
+      string second = this_string_vec[1];
+      if(isnum(second[0]))
+      {
+        this_snow_self[0] = atof(this_string_vec[1].c_str());
+      }
+      else
+      {
+        this_snow_self_shield_names[1] = this_string_vec[1];
+      }
+      
+    }
+    else if(n_strings_in_line == 3)
+    {
+      this_snow_self_shield_names[0] = this_string_vec[0];
+      
+      // test if the second element is a number
+      string second = this_string_vec[1];
+      if(isnum(second[0]))
+      {
+        this_snow_self[0] = atof(this_string_vec[1].c_str());
+      }
+      else
+      {
+        this_snow_self_shield_names[1] = this_string_vec[1];
+      }
+
+      // test if the third element is a number
+      string third = this_string_vec[2];
+      if(isnum(third[0]))
+      {
+        this_snow_self[1] = atof(this_string_vec[2].c_str());
+      }
+      else
+      {
+        this_snow_self_shield_names[2] = this_string_vec[2];
+      }            
+    }    
+    else if(n_strings_in_line == 4)
+    {
+      this_snow_self_shield_names[0] = this_string_vec[0];
+      
+      // test if the second element is a number
+      string second = this_string_vec[1];
+      if(isnum(second[0]))
+      {
+        this_snow_self[0] = atof(this_string_vec[1].c_str());
+      }
+      else
+      {
+        this_snow_self_shield_names[1] = this_string_vec[1];
+      }
+
+      // test if the third element is a number
+      string third = this_string_vec[2];
+      if(isnum(third[0]))
+      {
+        this_snow_self[1] = atof(this_string_vec[2].c_str());
+      }
+      else
+      {
+        this_snow_self_shield_names[2] = this_string_vec[2];
+      }                  
+      
+      this_snow_self_shield_names[3] = this_string_vec[3];
+    }
+    else 
+    {
+      cout << "LSDCosmoData line 383, your cosmo data file names has the" << endl;
+      cout << "wrong number of elements on this line. " << endl;
+      cout << "I am only going to keep the DEM name" << endl;
+      this_snow_self_shield_names[0] = this_string_vec[0];
+    } 
+
+    // push the parameters back into the vecvecs
+    temp_DEM_names_vecvec.push_back(this_snow_self_shield_names);
+    temp_snow_self_topo_shielding_params(this_snow_self);
+  } 
+  
+  DEM_names_vecvec = temp_DEM_names_vecvec;
+  snow_self_topo_shielding_params = temp_snow_self_topo_shielding_params;    
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //

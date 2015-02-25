@@ -85,6 +85,21 @@ class LSDCosmoData
     /// @date 06/02/2015
     LSDCosmoData( string fname, string ftype)  { create(fname,ftype); }
     
+    /// @brief This function load a csv file containing names of DEMs and 
+    ///  (possibly) sheilding rasters or shielding parameters
+    /// @detail The file should have one DEM name per row. Each row
+    ///  can have between 1 and 4 elements. 
+    /// The elements are:
+    ///  [0] = DEM_filename
+    ///  [1] = Snow_shield_raster_name OR const_snow_shield in g/cm^2
+    ///  [2] = Self_shield_raster_name OR const_self_shield in g/cm^2
+    ///  [3] = Toposhield_raster_name 
+    /// If elements are missing, they are considered null arguments. 
+    /// @param filename the name of the csv file
+    /// @author SMM
+    /// @date 26/02/2015
+    void load_DEM_and_shielding_filenames_csv(string filename);
+    
     /// @brief this function prints the data held in the the data members
     ///  to screen. Is used for bug checking. 
     /// @detail Note the function does not print the standardised values, only raw values.
@@ -183,7 +198,20 @@ class LSDCosmoData
     
     /// a standardisation map for Al26
     map<string,double> standards_Al26;
-  
+    
+    /// a string vecvec for holding the DEM names involved in the analysis
+    ///  elements are
+    ///  [0] = DEM name
+    ///  [1] = snow_shield raster
+    ///  [2] = self shield raster
+    ///  [3] = topo shield raster
+    ///  When there is no raster, this is "NULL"
+    vector< vector<string> > DEM_names_vecvec;
+    
+    /// A vector holding the parameters for snow and self shielding if it is
+    ///  a single value.
+    vector< vector<double> > snow_self_topo_shielding_params;
+    
   private:
   
     /// @brief the empty create function
