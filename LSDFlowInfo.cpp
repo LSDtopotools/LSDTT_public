@@ -3428,6 +3428,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_RAW(LSDRaster Elevation
 	float degs, degs_old, degs_new, theta;
 	float s_local, s_edge;
 	float xo, yo, xi, yi, temp_yo1, temp_yo2, temp_xo1, temp_xo2;
+  bool skip_trace; //flag used to skip traces where no path to a stream can be found. Will only occur on noisy, raw topography
 
   //debugging counters
   int ns_count = 0;
@@ -3512,6 +3513,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_RAW(LSDRaster Elevation
 				count = 1;
 				path = blank.copy();
         DivergentCountFlag = 0; //initialise count of divergent cells in trace
+        skip_trace = false; //initialise skip trace flag as false, will only be switched if no path to stream can be found. Very rare.
 
 				++ht_count;
 
@@ -3690,7 +3692,9 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_RAW(LSDRaster Elevation
 							}						 
 							else {
 								cout << "Flow unable to route N or S " << endl; //something has gone very wrong...
-								exit(EXIT_FAILURE);
+                cout << "Trace skipped.\n" << endl; 
+								skip_trace = true;
+                //exit(EXIT_FAILURE);
 							}
 						}
 						else if (dir == 2) {
@@ -3716,7 +3720,9 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_RAW(LSDRaster Elevation
 							}
 							else {
 								cout << "Flow unable to route E or W" << endl; //something has gone very wrong...
-								exit(EXIT_FAILURE);
+                cout << "Trace skipped.\n" << endl; //something has gone very wrong...
+								skip_trace = true;
+                //exit(EXIT_FAILURE);
 							}
 						}
 						else if (dir == 3) {
@@ -3742,7 +3748,9 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_RAW(LSDRaster Elevation
 							}
 							else {
 								cout << "Flow unable to route N or S" << endl;  //something has gone very wrong...
-								exit(EXIT_FAILURE);
+                cout << "Trace skipped.\n" << endl; //something has gone very wrong...
+								skip_trace = true;
+                //exit(EXIT_FAILURE);
 							}
 						}
 						else if (dir == 4) {
@@ -3768,7 +3776,9 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_RAW(LSDRaster Elevation
 							}
 							else {
 								cout << "Flow unable to route E or W" << endl; //something has gone very wrong...
-								exit(EXIT_FAILURE);
+                cout << "Trace skipped.\n" << endl; //something has gone very wrong...
+								skip_trace = true;
+                //exit(EXIT_FAILURE);
 							}
 						}
 						
@@ -3912,7 +3922,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_RAW(LSDRaster Elevation
 
 						//collect slopes and totals weighted by path length
 						length += d;
-						s_local = slope[a][b];
+						s_local = slope[a][b];                                                                                                                                                                                                                
 
         	}
 
@@ -3922,7 +3932,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_RAW(LSDRaster Elevation
           ++DivergentCountFlag;
         }
 
-				if (a == 0 || b == 0 ||	a == NRows-1 || b == NCols-1 || stnet[a][b] != NoDataValue || stnet[a-1][b-1] != NoDataValue || stnet[a][b-1] != NoDataValue || stnet[a+1][b-1] != NoDataValue || stnet[a+1][b] != NoDataValue || stnet[a+1][b+1] != NoDataValue || stnet[a][b+1] != NoDataValue || stnet[a-1][b+1] != NoDataValue || stnet[a-1][b] != NoDataValue || path[a][b] >= 3) flag = false;
+				if (a == 0 || b == 0 ||	a == NRows-1 || b == NCols-1 || stnet[a][b] != NoDataValue || stnet[a-1][b-1] != NoDataValue || stnet[a][b-1] != NoDataValue || stnet[a+1][b-1] != NoDataValue || stnet[a+1][b] != NoDataValue || stnet[a+1][b+1] != NoDataValue || stnet[a][b+1] != NoDataValue || stnet[a-1][b+1] != NoDataValue || stnet[a-1][b] != NoDataValue || path[a][b] >= 3 || skip_trace == true) flag = false;
 				}
 
         if (a == 0 || b == 0 ||	a == NRows-1 || b == NCols-1 ){
@@ -3963,6 +3973,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_RAW(LSDRaster Elevation
             }
 				  }
 				  else{  //unable to route using aspects
+				    //this will encompass the skipped traces
 				    ofs << "fail: " << a << " " << b << " " << i << " " << j << endl;
             ++ns_count;
           }
