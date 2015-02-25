@@ -119,8 +119,7 @@ int main (int nNumberofArgs,char *argv[])
   cout << "Starting hilltop flow routing\n" << endl;
     
   //start of Hilltop flow routing
-  string extra_name = "_RAW";
-  string prefix = (path+filename+extra_name);  //set a path to write the hillslope length data to, based on the input path and filename given by the user
+  string prefix = (path+filename);  //set a path to write the hillslope length data to, based on the input path and filename given by the user
   
   // these params do not need changed during normal use of the HFR algorithm
   bool print_paths_switch = false;
