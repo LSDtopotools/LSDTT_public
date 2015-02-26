@@ -305,7 +305,6 @@ void LSDCosmoData::load_DEM_and_shielding_filenames_csv(string filename)
   // this vecvec holds information about snow, self and toposhielding. 
   vector< vector<double> > temp_snow_self_topo_shielding_params; 
 
-  
   // a vector of strings for holding the DEM names.
   // Elements without a DEM get a null value
   vector<string> null_string_vec(4,null_str);
@@ -377,7 +376,7 @@ void LSDCosmoData::load_DEM_and_shielding_filenames_csv(string filename)
       
       // test if the second element is a number
       string second = this_string_vec[1];
-      if(isnum(second[0]))
+      if(isdigit(second[0]))
       {
         this_snow_self[0] = atof(this_string_vec[1].c_str());
       }
@@ -393,7 +392,7 @@ void LSDCosmoData::load_DEM_and_shielding_filenames_csv(string filename)
       
       // test if the second element is a number
       string second = this_string_vec[1];
-      if(isnum(second[0]))
+      if(isdigit(second[0]))
       {
         this_snow_self[0] = atof(this_string_vec[1].c_str());
       }
@@ -404,7 +403,7 @@ void LSDCosmoData::load_DEM_and_shielding_filenames_csv(string filename)
 
       // test if the third element is a number
       string third = this_string_vec[2];
-      if(isnum(third[0]))
+      if(isdigit(third[0]))
       {
         this_snow_self[1] = atof(this_string_vec[2].c_str());
       }
@@ -419,7 +418,7 @@ void LSDCosmoData::load_DEM_and_shielding_filenames_csv(string filename)
       
       // test if the second element is a number
       string second = this_string_vec[1];
-      if(isnum(second[0]))
+      if(isdigit(second[0]))
       {
         this_snow_self[0] = atof(this_string_vec[1].c_str());
       }
@@ -430,7 +429,7 @@ void LSDCosmoData::load_DEM_and_shielding_filenames_csv(string filename)
 
       // test if the third element is a number
       string third = this_string_vec[2];
-      if(isnum(third[0]))
+      if(isdigit(third[0]))
       {
         this_snow_self[1] = atof(this_string_vec[2].c_str());
       }
@@ -451,14 +450,14 @@ void LSDCosmoData::load_DEM_and_shielding_filenames_csv(string filename)
 
     // push the parameters back into the vecvecs
     temp_DEM_names_vecvec.push_back(this_snow_self_shield_names);
-    temp_snow_self_topo_shielding_params(this_snow_self);
+    temp_snow_self_topo_shielding_params.push_back(this_snow_self);
   } 
   
   DEM_names_vecvec = temp_DEM_names_vecvec;
-  snow_self_topo_shielding_params = temp_snow_self_topo_shielding_params;    
+  snow_self_topo_shielding_params = temp_snow_self_topo_shielding_params;
+
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -562,6 +561,52 @@ void LSDCosmoData::print_data_to_screen()
   cout << endl << endl;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prints the file structures to screen
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::print_file_structures_to_screen()
+{
+
+  // now print the results to screen
+  int n_files = int(DEM_names_vecvec.size());
+  
+  if(n_files != 0)
+  {
+    for(int row = 0; row<n_files; row++)
+    {
+      vector<string> temp_stringvec = DEM_names_vecvec[row];
+      vector<double> temp_params = snow_self_topo_shielding_params[row];
+
+      cout << "------------------------------" << endl << "sample" << row << endl;
+      cout << "DEM: " << temp_stringvec[0] << endl;
+      if (temp_stringvec[1] == "NULL")
+      {
+        cout << "Snow shielding constant depth (g/cm^2): " << temp_params[0] << endl;
+      }
+      else
+      {
+        cout << "Snow shield raster: " << temp_stringvec[1] << endl;
+      }
+      if (temp_stringvec[2] == "NULL")
+      {
+        cout << "Self shielding constant depth (g/cm^2): " << temp_params[1] << endl;
+      }
+      else
+      {
+        cout << "Self shield raster: " << temp_stringvec[2] << endl;
+      }      
+      cout << "Topo shield raster: " << temp_stringvec[3] << endl;
+
+    }      
+  }
+  else
+  {
+    cout << "LSDCosmoData::print_file_structures_to_screen; files have not been loaded!" << endl;
+  }
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-  
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This prints the results to screen

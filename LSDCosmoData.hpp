@@ -106,7 +106,16 @@ class LSDCosmoData
     /// @author SMM
     /// @date 09/02/2015
     void print_data_to_screen(); 
-    
+
+    /// @brief this prints the file structure data to screen
+    ///  it is a list of the DEMs, snow shielding rasters, self shelding rasters
+    ///  and topo shielding rasters used in the analysis
+    ///  the later three rasters can be NULL values, and the snow and self shielding
+    ///  rasters can be replaced by single values
+    /// @author SMM
+    /// @date 26/02/2015
+    void print_file_structures_to_screen();
+
     /// @detail Prints the simple results to the screen
     /// @detail The 'simple' is because it only looks at external, 
     ///  muon, and production uncertainties. 
