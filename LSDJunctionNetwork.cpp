@@ -2565,13 +2565,13 @@ vector<int> LSDJunctionNetwork::identify_upstream_limits(LSDFlowInfo& FlowInfo, 
 // edited by FC 18/11/13; put the user-defined parameter of the no connecting nodes into the arguments
 // so it can be specified in the parameter file.
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-Array2D<int> LSDJunctionNetwork::find_valleys(LSDFlowInfo& FlowInfo, Array2D<float>& tan_curv_array, vector<int> sources, int no_connecting_nodes)
+Array2D<int> LSDJunctionNetwork::find_valleys(LSDFlowInfo& FlowInfo, Array2D<float>& tan_curv_array, vector<int> sources, int no_connecting_nodes, float tan_curv_threshold)
 {
   Array2D<int> NodesVisitedBefore(NRows,NCols,0);
   Array2D<int> NodesVisitedBeforeTemp(NRows,NCols,0);
   Array2D<int> valley_junctions(NRows,NCols,NoDataValue);   
   vector<int> valley_nodes;
-  float tan_curv_threshold = 0.1;
+  //float tan_curv_threshold = 0.1;
     
   //Find valleys with linked pixels greater than the threshold
   int n_sources = sources.size();

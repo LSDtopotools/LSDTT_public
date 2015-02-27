@@ -614,7 +614,7 @@ class LSDJunctionNetwork
   /// @author FC
   /// @date 29/10/2013
   Array2D<int> find_valleys(LSDFlowInfo& FlowInfo, Array2D<float>& tan_curv_array, 
-                            vector<int> sources, int no_connecting_nodes);
+                            vector<int> sources, int no_connecting_nodes, float tan_curv_threshold = 0.1);
   
   /// @brief Ridge network extraction - extracts ridge network, defined as boundaries
   /// between two basins of the same stream order.
