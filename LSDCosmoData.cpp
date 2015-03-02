@@ -343,6 +343,97 @@ void LSDCosmoData::load_csv_cosmo_data(string filename)
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function loads parameters
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::load_parameters(string filename)
+{
+  ifstream infile;
+  infile.open(filename.c_str());
+  string parameter, value, lower;
+
+  // now ingest parameters
+  while (infile.good())
+  {
+    parse_line(infile, parameter, value);
+    lower = parameter;
+    if (parameter == "NULL")
+      continue;
+    for (unsigned int i=0; i<parameter.length(); ++i)
+    {
+      lower[i] = tolower(parameter[i]);
+    }
+
+    cout << "parameter is: " << lower << " and value is: " << value << endl;
+
+    // get rid of control characters
+    value = RemoveControlCharactersFromEndOfString(value);
+    
+    // now set the parameters
+    if (lower == "min_slope")
+    {
+      min_slope = atof(value.c_str());
+    }
+    else if (lower == "source_threshold")
+    {
+      source_threshold = atoi(value.c_str());
+    }
+    else if (lower == "search_radius_nodes")
+    {
+      search_radius_nodes = atoi(value.c_str());
+    }
+    else if (lower == "threshold_stream_order")
+    {
+      threshold_stream_order = atoi(value.c_str());
+    }
+    else if (lower == "theta_step")
+    {
+      theta_step = atoi(value.c_str());
+    }
+    else if (lower == "phi_step")
+    {
+      phi_step = atoi(value.c_str());
+    }
+    else if (lower == "path_to_atmospheric_data")
+    {
+      path_to_atmospheric_data = value;
+    }
+    else if (lower == "muon_scaling")
+    {
+      if(value.find("braucher") == 0 || value.find("Braucher") == 0)
+      {
+        Muon_scaling = "Braucher";
+        cout << "You have selected Braucher scaling" << endl;
+      }
+      else if(value.find("granger") == 0 || value.find("Granger") == 0)
+      {
+        Muon_scaling = "Granger";
+        cout << "You have selected Granger scaling" << endl;
+      }
+      else if(value.find("Schaller") == 0 || value.find("schaller") == 0)
+      {
+        Muon_scaling = "Schaller";
+        cout << "You have selected Schaller scaling" << endl;
+      }
+      else
+      {
+        Muon_scaling = "Braucher";
+        cout << "You have not selected a valid scaling, defaulting to Braucher" << endl;
+      }
+    }
+    else
+    {
+      cout << "Line " << __LINE__ << ": No parameter '"
+           << parameter << "' expected.\n\t> Check spelling." << endl;
+    }
+  }
+  infile.close();
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function loads the filenames 
 // for the DEMs or single value parameters.
 // It reads the DEM, either the snow shiled raster or a single value
@@ -660,7 +751,80 @@ void LSDCosmoData::print_file_structures_to_screen()
     cout << "LSDCosmoData::print_file_structures_to_screen; files have not been loaded!" << endl;
   }
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-  
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// THis function prints all the parameters, file structures and cosmo
+// data to one file that can be used for reconstructing calculations later
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::print_all_data_parameters_and_filestructures(string outfilename)
+{
+  ofstream outfile;
+  outfile.open(outfilename.c_str());
+  
+  // first the cosmo data, comma seperated:
+  for(int i = 0; i<N_samples; i++)
+  {
+    outfile << sample_name[i] << ","  << latitude[i] << ","  << longitude[i] << ","
+         << nuclide[i] << ","  << Concentration_unstandardised[i] << ","
+         << Concentration_uncertainty_unstandardised[i] << ","
+         << standardisation[i] << "\n";
+  }
+  
+  // now the parameters
+  outfile << "----------------------------------------------" << endl << endl;
+  outfile << "min_slope: " << min_slope << endl;
+  outfile << "source_threshold: " << source_threshold << endl;
+  outfile << "search_radius_nodes: " << search_radius_nodes << endl;
+  outfile << "threshold_stream_order: " << threshold_stream_order << endl;
+  outfile << "theta_step: " << theta_step << endl;
+  outfile << "phi_step: " << phi_step << endl; 
+  outfile << "prod_uncert_factor: " << prod_uncert_factor << endl;
+  outfile << "Muon_scaling: " << Muon_scaling << endl;
+  outfile << "path_to_atmospheric_data: " << path_to_atmospheric_data << endl;
+  outfile << "----------------------------------------------" << endl << endl;
+  
+  // now the file structures
+  // now print the results to screen
+  int n_files = int(DEM_names_vecvec.size());
+  
+  if(n_files != 0)
+  {
+    for(int row = 0; row<n_files; row++)
+    {
+      vector<string> temp_stringvec = DEM_names_vecvec[row];
+      vector<double> temp_params = snow_self_topo_shielding_params[row];
+
+      outfile << "------------------------------" << endl << "sample" << row << endl;
+      outfile << "DEM: " << temp_stringvec[0] << endl;
+      if (temp_stringvec[1] == "NULL")
+      {
+        outfile << "Snow shielding constant depth (g/cm^2): " << temp_params[0] << endl;
+      }
+      else
+      {
+        outfile << "Snow shield raster: " << temp_stringvec[1] << endl;
+      }
+      if (temp_stringvec[2] == "NULL")
+      {
+        outfile << "Self shielding constant depth (g/cm^2): " << temp_params[1] << endl;
+      }
+      else
+      {
+        outfile << "Self shield raster: " << temp_stringvec[2] << endl;
+      }      
+      outfile << "Topo shield raster: " << temp_stringvec[3] << endl;
+
+    }      
+  }
+  else
+  {
+    outfile << "LSDCosmoData::print_file_structures_to_screen; files have not been loaded!" << endl;
+  }
+  
+  outfile.close();
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -700,6 +864,7 @@ void LSDCosmoData::print_simple_results_to_screen(double rho)
     cout << "=======================================================" << endl;
 
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

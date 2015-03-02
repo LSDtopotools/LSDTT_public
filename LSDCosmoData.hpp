@@ -107,6 +107,15 @@ class LSDCosmoData
     /// @date 26/02/2015
     void load_DEM_and_shielding_filenames_csv(string filename);
     
+    /// @brief This loads parameters for the comsogenic calculations
+    ///  it uses the parse_files frinction in LSDStatsTools, so the format
+    ///  is the paramterer name, followed by ":", followed by a space and then
+    ///  the parameter value
+    /// @param filename a string of the full filename
+    /// @author SMM
+    /// @date 02/03/2015
+    void load_parameters(string filename);
+    
     /// @brief this function prints the data held in the the data members
     ///  to screen. Is used for bug checking. 
     /// @detail Note the function does not print the standardised values, only raw values.
@@ -122,6 +131,14 @@ class LSDCosmoData
     /// @author SMM
     /// @date 26/02/2015
     void print_file_structures_to_screen();
+
+    /// @brief this prints all the data, parameters and file structures to screen
+    ///  It is used to keep a record of CRN erosion rate computations so
+    ///  analyses can be reproduced
+    /// @param outfilename the name of the outfile including full path
+    /// @author SMM
+    /// @date 02/03/2015
+    void print_all_data_parameters_and_filestructures(string outfilename);
 
     /// @detail Prints the simple results to the screen
     /// @detail The 'simple' is because it only looks at external, 
@@ -266,22 +283,22 @@ class LSDCosmoData
     /// The azimuth step for topographic shielding calculations
     int theta_step;
   
-     /// The inclination step for topographic sheilding calculations
-     int phi_step;
+    /// The inclination step for topographic sheilding calculations
+    int phi_step;
 
-     /// an uncertainty parameter which was superceded by the new
-     /// error analyses but I have been too lazy to remove it. Does nothing 
-     double prod_uncert_factor;
-     
-     /// The muon production scaling. Options are "Braucher", "Granger" and "Schaller"
-     string Muon_scaling;       
+    /// an uncertainty parameter which was superceded by the new
+    /// error analyses but I have been too lazy to remove it. Does nothing 
+    double prod_uncert_factor;
+    
+    /// The muon production scaling. Options are "Braucher", "Granger" and "Schaller"
+    string Muon_scaling;       
 
-     /// the atmospheric data is in the folder with the driver_functions, 
-     /// but can be changed if necessary.
-     string path_to_atmospheric_data;
+    /// the atmospheric data is in the folder with the driver_functions, 
+    /// but can be changed if necessary.
+    string path_to_atmospheric_data;
   
-     /// The boundary conditions for the flow info object
-     vector<string> boundary_conditions;
+    /// The boundary conditions for the flow info object
+    vector<string> boundary_conditions;
 
     
   private:
