@@ -108,48 +108,8 @@ int main (int nNumberofArgs,char *argv[])
   string path_name = argv[1];
   string param_name_prefix = argv[2];
   
-  // remove control characters from these strings
-  path_name.erase(remove_if(path_name.begin(), path_name.end(), ::iscntrl), path_name.end());
-  param_name_prefix.erase(remove_if(param_name_prefix.begin(), param_name_prefix.end(), ::iscntrl), param_name_prefix.end());
-  
-  // load the file that contains the path to both the cosmo data and the 
-  // DEMs
-  string file_list_ext = ".CRNfiles";
-  string file_list_fname = path_name+param_name_prefix+file_list_ext;
-
-  // open the file and get both the cosmo data name and the list of DEMs
-  ifstream file_list_in;
-  file_list_in.open(file_list_fname.c_str());
- 
-  // load the name of the cosmo data
-  string cosmo_data_name;
-  file_list_in >> cosmo_data_name;
-  
-  //  eliminate control characters and find out if it is a csv file
-  cosmo_data_name.erase(remove_if(cosmo_data_name.begin(), cosmo_data_name.end(), 
-                                              ::iscntrl), cosmo_data_name.end());
-  string csv_ext = ".csv";
-  size_t found = cosmo_data_name.find(csv_ext);
-  string filetype = "txt";
-  if (found != string::npos)
-  {
-    filetype = "csv";
-  }
-
-  // now load the names of the DEMs
-  vector<string> DEM_file_list;
-  string this_file;
-  while(file_list_in >> this_file)
-  {
-    // get rid of control characters
-    this_file.erase(remove_if(this_file.begin(), this_file.end(), 
-                                            ::iscntrl), this_file.end());
-    DEM_file_list.push_back(this_file);
-  }
-  int N_DEMS = int(DEM_file_list.size());
-
   // now load the CRNCosmoData object
-  LSDCosmoData CosmoData(cosmo_data_name,filetype); 
+  LSDCosmoData CosmoData(path_name,param_name_prefix); 
 
   cout << "===========================================================" << endl;
   cout << "Welcome to the Basinwide cosmogenic analysis tool" << endl;
@@ -162,13 +122,9 @@ int main (int nNumberofArgs,char *argv[])
   cout << "Your cosmogenic data is below." << endl; 
   cout << "If this looks wrong, check your filenames." << endl;
   CosmoData.print_data_to_screen();
-  cout << "You are about to look through these DEMs for cosmo basins:" << endl;
   cout << "..........................................................." << endl;
-  for (int dem = 0; dem < N_DEMS; dem++)
-  {
-    cout << DEM_file_list[dem] << endl;
-  }
-  cout << "..........................................................." << endl;
+  cout << "Here are the rasters you are using: " << endl;
+  CosmoData.print_data_to_screen();
   cout << "++IMPORTANT++ There must be ENVI bil files with these names." << endl;
   cout << "ENVI bil files are required because, unlike asc or flt files, " << endl;
   cout << "they use georeferencing information, which is used in the analyses." << endl;
@@ -180,78 +136,6 @@ int main (int nNumberofArgs,char *argv[])
   string param_ext = ".CRNparam";
   string param_fname = path_name+param_name_prefix+param_ext;
 
-  // a boundary condition for the flow info object
-  // get the flow info 
-  vector<string> boundary_conditions(4);
-  boundary_conditions[0] = "n";
-  boundary_conditions[1] = "n";
-  boundary_conditions[2] = "n";
-  boundary_conditions[3] = "n";
- 
-  // The default slope parameter for filling. Do not change. 
-  float min_slope = 0.0001;
-  
-  // parameters for making stream networks and looking for channels
-  int source_threshold = 12;
-  int search_radius_nodes = 1;
-  int threshold_stream_order = 1;
-
-  // the values of theta and phi step are based on testing by S. Grieve 
-  // Note that Codilian reccomends 5,5 but 10,15 leads to minimal errors
-  int theta_step = 30;
-  int phi_step = 30;
-  
-  // density of rock. Most calculations do this in shielding depth but 
-  // printing results to screen includes a transaformation to length per time
-  // units
-  double rho = 2650; 
-
-  // extensions for filenames
-  string fill_ext = "_fill";
-  string DEM_bil_extension = "bil";
-  
-  // now go through the list of DEMs, extracting the data
-  // One of the main motivations for doing this in a loop is to not store the 
-  // data for each analysis
-  for (int dem = 0; dem <N_DEMS; dem++)
-  {
-
-    // load the DEM
-    LSDRaster topo_test(DEM_file_list[dem], DEM_bil_extension);
-    
-    // fill the raster
-    LSDRaster filled_raster = topo_test.fill(min_slope);
-    
-    // get the flow info
-    LSDFlowInfo FlowInfo(boundary_conditions, filled_raster);
-
-    // get contributing pixels (needed for junction network)
-    LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
-
-    // get the sources
-    vector<int> sources;
-    sources = FlowInfo.get_sources_index_threshold(ContributingPixels, source_threshold);
-
-    // now get the junction network
-    LSDJunctionNetwork JNetwork(sources, FlowInfo);
-  
-    // get the topographic shielding
-    cout << "Starting topogrpahic shielding" << endl;
-    LSDRaster T_shield = filled_raster.TopographicShielding(theta_step, phi_step);
-    
-    // transform the cosmo data to this DEM UTM zone
-    CosmoData.convert_to_UTM(filled_raster);
-    
-    // get the cosmogenic erosion rates
-    CosmoData.basic_cosmogenic_analysis(search_radius_nodes, 
-                            threshold_stream_order, filled_raster,
-                            T_shield, FlowInfo, JNetwork);
-    
-    CosmoData.print_simple_results_to_screen(rho);       
-    
-  }
-  
-  
 
   
 }

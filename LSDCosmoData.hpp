@@ -83,7 +83,14 @@ class LSDCosmoData
     ///  options the code assumes txt
     /// @author SMM
     /// @date 06/02/2015
-    LSDCosmoData( string fname, string ftype)  { create(fname,ftype); }
+    LSDCosmoData( string path, string file_prefix)  { create(path,file_prefix); }
+    
+    /// @brief  THis function loads the crn data rom either a csv or text file
+    /// @param filename the name of the file
+    /// @param filetype this is either csv or txt
+    /// @author SMM
+    /// @date 26/02/2015
+    void load_cosmogenic_data(string filename, string filetype);
     
     /// @brief This function load a csv file containing names of DEMs and 
     ///  (possibly) sheilding rasters or shielding parameters
@@ -156,8 +163,31 @@ class LSDCosmoData
                             LSDRaster& TopoShield,
                             LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JNetwork);
 
+    /// @brief This function computes erosion rates and uncertainties for 
+    ///  a given DEM. It is wrapped by a function that goes through
+    ///  the list of DEM, providing this function with the raster names
+    ///  and the parameters for the model run
+    /// @param Raster_names a vector of strings with 4 elements:
+    ///  [0] = DEM_filename
+    ///  [1] = Snow_shield_raster_name OR const_snow_shield in g/cm^2
+    ///  [2] = Self_shield_raster_name OR const_self_shield in g/cm^2
+    ///  [3] = Toposhield_raster_name 
+    ///  It there is no DEM then this is set to "NULL"
+    ///  @param CRN_params this contains the single shielding depths for snow
+    ///   and self shielding if the rasters are not supplied. 
+    /// @author SMM
+    /// @date 28/02/2015
+    void full_shielding_cosmogenic_analysis(vector<string> Raster_names,
+                            vector<double> CRN_params);
 
 
+    /// @brief This function wraps the cosmogenic rate calculators.
+    /// @detail Looks throught the vecvecs listing file locations and then
+    ///   finds valid CRN data, and runs the erosion rate routine for these
+    ///   data.
+    /// @author SMM
+    /// @date 28/02/2015
+    void calcualte_erosion_rates();
 
   protected:
     
@@ -221,17 +251,50 @@ class LSDCosmoData
     ///  a single value.
     vector< vector<double> > snow_self_topo_shielding_params;
     
+    /// The minimum slope for the fill function
+    float min_slope;
+  
+    /// The number of pixels for a channel
+    int source_threshold;
+    
+    /// The number of pixels over which to search for a channel
+    int search_radius_nodes;
+  
+    /// The minimum stream order to be considered a channel for cosmo sampling
+    int threshold_stream_order;
+
+    /// The azimuth step for topographic shielding calculations
+    int theta_step;
+  
+     /// The inclination step for topographic sheilding calculations
+     int phi_step;
+
+     /// an uncertainty parameter which was superceded by the new
+     /// error analyses but I have been too lazy to remove it. Does nothing 
+     double prod_uncert_factor;
+     
+     /// The muon production scaling. Options are "Braucher", "Granger" and "Schaller"
+     string Muon_scaling;       
+
+     /// the atmospheric data is in the folder with the driver_functions, 
+     /// but can be changed if necessary.
+     string path_to_atmospheric_data;
+  
+     /// The boundary conditions for the flow info object
+     vector<string> boundary_conditions;
+
+    
   private:
   
     /// @brief the empty create function
     void create();
     
     /// @brief the create function used when calling a file
-    /// @param filename the name of the file WITH PATH AND EXTENSION
-    /// @param  filtype the type of the file (either csv or txt)
+    /// @param the path to the file. Must have the "/" at the end
+    /// @param  file_prefice the prefix (without extension) of the parameter files
     /// @author SMM
     /// @date 02/02/2015
-    void create(string filename, string filetype);
+    void create(string path, string file_prefix);
     
     /// @brief This loads data from a text file
     /// @detail The data columns are:

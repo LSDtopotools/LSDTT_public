@@ -75,14 +75,69 @@ using namespace std;
 void LSDCosmoData::create()
 {}
 
+void LSDCosmoData::create(string path_name, string param_name_prefix)
+{
+
+  // Set the parameters
+  // The default slope parameter for filling. Do not change. 
+  min_slope = 0.0001;
+  
+  // parameters for making stream networks and looking for channels
+  source_threshold = 12;
+  search_radius_nodes = 1;
+  threshold_stream_order = 1;
+
+  // the values of theta and phi step are based on testing by S. Grieve 
+  // Note that Codilian recommends 5,5 but 10,15 leads to minimal errors
+  theta_step = 30;
+  phi_step = 30;
+
+  // some environment variables
+  prod_uncert_factor = 1;          // this is a legacy parameter.
+  Muon_scaling = "Braucher";       // default muon scaling
+
+  // the atmospheric data is in the folder with the driver_functions
+  string path_to_atmospheric_data = "./";
+  
+  // a boundary condition for the flow info object
+  vector<string> boundary_conditionst(4);
+  boundary_conditionst[0] = "n";
+  boundary_conditionst[1] = "n";
+  boundary_conditionst[2] = "n";
+  boundary_conditionst[3] = "n";
+  boundary_conditions = boundary_conditionst;
+
+  // remove control characters from these strings
+  path_name.erase(remove_if(path_name.begin(), path_name.end(), ::iscntrl), path_name.end());
+  param_name_prefix.erase(remove_if(param_name_prefix.begin(), param_name_prefix.end(), ::iscntrl), param_name_prefix.end());
+  
+  string combined_filename = path_name+param_name_prefix;
+  
+  // load the file that contains the path to both the cosmo data and the 
+  // DEMs
+  
+  // set up extensions to the files
+  string crn_ext = "_CRNData.csv";
+  string files_ext = "_CRNRasters.csv";
+  string csv_ext = "csv";
+  
+  // get the filenames to open
+  string crn_fname = path_name+param_name_prefix+crn_ext;
+  string Rasters_fname =  path_name+param_name_prefix+files_ext;
+  
+  load_cosmogenic_data(crn_fname, csv_ext);
+  load_DEM_and_shielding_filenames_csv(Rasters_fname);
+
+}
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // The create function that actually loads the file
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDCosmoData::create(string filename, string filetype)
+void LSDCosmoData::load_cosmogenic_data(string filename, string filetype)
 {
   if(filetype != "csv" && filetype != "txt")
   {
-    cout << "LSDCosmoData line 77 You have not selected a valid filetype!" << endl;
+    cout << "LSDCosmoData line 111 You have not selected a valid filetype!" << endl;
     cout << "Options are csv and txt" << endl;
     cout << "Defaulting to txt" << endl;
     filetype = "txt";
@@ -215,8 +270,8 @@ void LSDCosmoData::load_csv_cosmo_data(string filename)
   ifstream ifs(filename.c_str());
   if( ifs.fail() )
   {
-    cout << "\nFATAL ERROR: Trying to load csv data file, but the file" << filename
-         << "doesn't exist; LINE 219 LSDCosmoData" << endl;
+    cout << "\nFATAL ERROR: Trying to load csv cosmo data file, but the file" << filename
+         << "doesn't exist; LINE 245 LSDCosmoData" << endl;
     exit(EXIT_FAILURE);
   }
   
@@ -319,7 +374,7 @@ void LSDCosmoData::load_DEM_and_shielding_filenames_csv(string filename)
   if( ifs.fail() )
   {
     cout << "\nFATAL ERROR: Trying to load csv filenames file, but the file" << filename
-         << "doesn't exist; LINE 219 LSDCosmoData" << endl;
+         << "doesn't exist; LINE 348 LSDCosmoData" << endl;
     exit(EXIT_FAILURE);
   }
   
@@ -821,7 +876,267 @@ void LSDCosmoData::basic_cosmogenic_analysis(int search_radius_nodes,
 
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function wraps the determination of cosmogenic erosion rates
+// 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_names,
+                            vector<double> CRN_params)
+{
 
+  // now find valid points
+  vector<int> valid_cosmo_points;         // a vector to hold the valid nodes
+  vector<int> snapped_node_indices;       // a vector to hold the valid node indices
+  vector<int> snapped_junction_indices;   // a vector to hold the valid junction indices
+  
+  // Load the DEM
+  string DEM_bil_extension = "bil";
+  //string fill_ext = "_fill";
+  string DEM_fname = Raster_names[0];
+  LSDRaster topo_test(DEM_fname, DEM_bil_extension);
+  
+  // Fill this raster
+  LSDRaster filled_raster = topo_test.fill(min_slope);
+    
+  // get the flow info
+  LSDFlowInfo FlowInfo(boundary_conditions, filled_raster);
+
+  // get contributing pixels (needed for junction network)
+  LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+
+  // get the sources
+  vector<int> sources;
+  sources = FlowInfo.get_sources_index_threshold(ContributingPixels, source_threshold);
+
+  // now get the junction network
+  LSDJunctionNetwork JNetwork(sources, FlowInfo);
+  
+  // Now convert the data into this UTM zone
+  convert_to_UTM(filled_raster);
+
+  // convert UTM vectors to float
+  vector<float> fUTM_easting;
+  vector<float> fUTM_northing;
+  for (int i = 0; i< int(UTM_easting.size()); i++)
+  {
+    fUTM_easting.push_back( float(UTM_easting[i]));
+    fUTM_northing.push_back( float(UTM_northing[i]));
+  }
+  
+  JNetwork.snap_point_locations_to_channels(fUTM_easting, fUTM_northing, 
+            search_radius_nodes, threshold_stream_order, FlowInfo, 
+            valid_cosmo_points, snapped_node_indices, snapped_junction_indices);
+
+  // after this operation the three int vectors valid_cosmo_points, snapped_node_indices,
+  // and snapped_junction_indices should be populated with valid points
+  // you now need to get the concentrations and uncertainties from these
+  // points
+  
+  // first, get the data elements from the object
+  vector<string> valid_nuclide_names;
+  vector<double> valid_concentrations;
+  vector<double> valid_concentration_uncertainties;
+  
+  int n_valid_points = int(valid_cosmo_points.size());
+  for (int i = 0; i< int(n_valid_points); i++)
+  {
+    valid_nuclide_names.push_back(nuclide[ valid_cosmo_points[i] ] );
+    valid_concentrations.push_back( Concentration[ valid_cosmo_points[i] ] );
+    valid_concentration_uncertainties.push_back( 
+                          Concentration_uncertainty[ valid_cosmo_points[i] ] );
+  }
+  
+  // Initiate pointers to the rasters
+  LSDRaster Topographic_shielding;
+  LSDRaster Snow_shielding;
+  LSDRaster Self_shielding;
+  
+  
+  
+  // now, IF there are valid points, go on to the rest of the analysis
+  if (valid_nuclide_names.size() != 0)
+  {
+    // first check if topographic shielding raster exists
+    if( Raster_names[3] != "Null")
+    {
+      LSDRaster T_shield(Raster_names[3], DEM_bil_extension);
+      Topographic_shielding = T_shield;
+    }
+    else
+    {
+      // get the topographic shielding
+      cout << "Starting topogrpahic shielding" << endl;
+      LSDRaster T_shield = filled_raster.TopographicShielding(theta_step, phi_step);
+      Topographic_shielding = T_shield;
+    }
+    
+    // Now check if snow and self shielding rasters exist
+    bool have_snow_raster;
+    bool have_self_raster;
+    double constant_snow_depth = 0;
+    double constant_self_depth = 0;
+    if (Raster_names[1] != "NULL")
+    {
+      cout << "LSDCosmoData, line 971: Loading the snow sheidling raster, " 
+           << Raster_names[1] << ".bil" <<  endl;
+      LSDRaster Snow_shield(Raster_names[1], DEM_bil_extension);
+      Snow_shielding = Snow_shield;
+      have_snow_raster = true;
+    }
+    else
+    {
+      // snow shielding with a single parameter
+      have_snow_raster = false;
+      constant_snow_depth = CRN_params[0];
+    }
+    if (Raster_names[1] != "NULL")
+     {
+      cout << "LSDCosmoData, line 977: Loading the self sheidling raster, " 
+           << Raster_names[2] << ".bil" <<  endl;
+      LSDRaster Self_shield(Raster_names[2], DEM_bil_extension);
+      Self_shielding = Self_shield;
+      have_self_raster = true;
+    }
+    else
+    {
+      // self shielding with a single parameter
+      have_self_raster = false;
+      constant_self_depth = CRN_params[1];
+    }
+
+    // some temporary doubles to hold the nuclide concentrations
+    double test_N10, test_dN10;   // concetration and uncertainty of 10Be in basin
+    double test_N26, test_dN26;   // concetration and uncertainty of 26Al in basin
+    double test_N, test_dN;       // concentration and uncertainty of the nuclide in basin  
+
+    //========================
+    // LOOPING THROUGH BASINS
+    //========================
+    // now loop through the valid points, getting the cosmo data 
+    for(int samp = 0; samp<n_valid_points; samp++)
+    {
+      if( valid_nuclide_names[samp] == "Be10")
+      {
+        test_N10 = valid_concentrations[samp];
+        test_dN10 = valid_concentration_uncertainties[samp];
+        test_N26 = 1e9;
+        test_dN26 = 0;
+        test_N = test_N10;
+        test_dN = test_dN10;
+      }
+      else if( valid_nuclide_names[samp] == "Al26")
+      {
+        test_N10 = 1e9;
+        test_dN10 = 0;
+        test_N26 = valid_concentrations[samp];
+        test_dN26 = valid_concentration_uncertainties[samp];
+        test_N = test_N26;
+        test_dN = test_dN26;
+      }
+      else
+      {
+        cout << "You did not select a valid nuclide name, options are Be10 and Al26" << endl;
+        cout << "Defaulting to Be10" << endl;
+        valid_nuclide_names[samp] = "Be10";
+        test_N10 = valid_concentrations[samp];
+        test_dN10 = valid_concentration_uncertainties[samp];
+        test_N26 = 1e9;
+        test_dN26 = 0;
+        test_N = test_N10;
+        test_dN = test_dN10;
+      }
+      
+      cout << "Valid point is: " << valid_cosmo_points[samp] << " X: " 
+           << UTM_easting[valid_cosmo_points[samp]] << " Y: "
+           << UTM_northing[valid_cosmo_points[samp]] << endl;
+      cout << "Node index is: " <<  snapped_node_indices[samp] << " and junction is: " 
+           << snapped_junction_indices[samp] << endl;
+      LSDCosmoBasin thisBasin(snapped_junction_indices[samp],FlowInfo, JNetwork,
+                              test_N10,test_dN10, test_N26,test_dN26);
+
+      // we need to scale the sheilding parameters
+      // now do the snow and self sheilding
+      if (have_snow_raster)
+      {
+        if(have_self_raster)
+        {
+          thisBasin.populate_snow_and_self_eff_depth_vectors(FlowInfo, 
+                                Snow_shielding, Self_shielding);
+        }
+        else
+        {
+          thisBasin.populate_snow_and_self_eff_depth_vectors(FlowInfo, 
+                                Snow_shielding, constant_self_depth);        
+        }
+      }
+      else
+      {
+        if(have_self_raster)
+        {
+          thisBasin.populate_snow_and_self_eff_depth_vectors(FlowInfo, 
+                                constant_snow_depth, Self_shielding);      
+        }
+        else
+        {
+          thisBasin.populate_snow_and_self_eff_depth_vectors(constant_snow_depth, 
+                                             constant_self_depth);
+        }
+      }
+
+      // Now topographic sheidling and production scaling
+      thisBasin.populate_scaling_vectors(FlowInfo, filled_raster, 
+                                         Topographic_shielding,
+                                         path_to_atmospheric_data);
+
+      // now do the analysis
+      vector<double> erate_analysis = thisBasin.full_CRN_erosion_analysis(test_N, 
+                                          valid_nuclide_names[samp], test_dN, 
+                                          prod_uncert_factor, Muon_scaling);
+    
+      // add the erosion rate results to the holding data member
+      erosion_rate_results[ valid_cosmo_points[samp] ] = erate_analysis;
+
+    }  // finished looping thorough basins 
+  }    // finsiehd logic for a DEM with valid points
+  else
+  {
+    cout << "There are no valid CRN points in this raster" << endl;
+  }
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function loops though the file structures calculating 
+// cosmogenic-derived erosion rates and uncertainties
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::calcualte_erosion_rates()
+{
+
+  // find out how many DEMs there are:
+  int n_DEMS = int(DEM_names_vecvec.size());
+
+  // Check to see if the files exists, if not flag them and skip them in the 
+  // analysis
+  // ####THIS NEEDS TO BE IMPLEMENTED####################
+  //vector<bool> Does_DEM_exist = check_Raster_files();
+  
+  vector<string> this_Raster_names;
+  vector<double> this_Param_names;
+  
+  // now loop through the DEMs
+  for (int iDEM = 0; iDEM< n_DEMS; iDEM++)
+  {
+    this_Raster_names = DEM_names_vecvec[iDEM];
+    this_Param_names = snow_self_topo_shielding_params[iDEM];
+    
+    full_shielding_cosmogenic_analysis(this_Raster_names,this_Param_names);
+  }
+
+}
 
 
 #endif
