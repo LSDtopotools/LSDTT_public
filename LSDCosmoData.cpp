@@ -63,6 +63,7 @@
 #include "LSDFlowInfo.hpp"
 #include "LSDJunctionNetwork.hpp"
 #include "LSDBasin.hpp"
+#include "LSDRasterInfo.hpp"
 using namespace std;
 
 #ifndef LSDCosmoData_CPP
@@ -141,6 +142,9 @@ void LSDCosmoData::create(string path_name, string param_name_prefix)
   
   // check the input parameters
   check_parameter_values();
+  
+  // check the rasters
+  check_rasters();
   
   // now print all the data into a report
   string outfile_name = path_name+param_name_prefix+outfile_ext;
@@ -811,6 +815,63 @@ void LSDCosmoData::check_parameter_values()
     cout << "Theta was not a factor of 360, changing from: " << phi_step << endl;
     phi_step = temp_step;
     cout << " to: " << phi_step << endl;
+  }
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// THis checks the rasters for georeferencing and scaling
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::check_rasters()
+{
+  // loop through the lines in the files, checking to see if the 
+  // georeferencing is equivalent
+  string bil_ext = "bil";
+  string null_str = "NULL";
+  int N_DEMS = int(DEM_names_vecvec.size());
+  for(int iDEM = 0; iDEM<N_DEMS; iDEM++)
+  {
+    // get the names from this DEM
+    vector<string>  DEM_names_vec = DEM_names_vecvec[iDEM];
+    
+    // get the info from the DEM
+    LSDRasterInfo DEM_info(DEM_names_vec[0],bil_ext);
+    
+    // now compare with the other DEMs
+    // first snow shielding
+    if(DEM_names_vec[1] != null_str)
+    {
+      LSDRasterInfo SnowShield_info(DEM_names_vec[1],bil_ext);
+      if( SnowShield_info!=DEM_info)
+      {
+        cout << "Snow shielding raster not the same shape and size as the DEM!" << endl;
+        cout << "Setting snow shielding to NULL" << endl;
+        DEM_names_vec[1] = null_str;
+      }
+    }
+    // now self shielding
+    if(DEM_names_vec[2] != null_str)
+    {
+      LSDRasterInfo SelfShield_info(DEM_names_vec[2],bil_ext);
+      if( SelfShield_info!=DEM_info)
+      {
+        cout << "Self shielding raster not the same shape and size as the DEM!" << endl;
+        cout << "Setting self shielding to NULL" << endl;
+        DEM_names_vec[2] = null_str;
+      }
+    }
+    // now toposhielding
+    if(DEM_names_vec[3] != null_str)
+    {
+      LSDRasterInfo TopoShield_info(DEM_names_vec[3],bil_ext);
+      if( TopoShield_info!=DEM_info)
+      {
+        cout << "Topo shielding raster not the same shape and size as the DEM!" << endl;
+        cout << "Setting topo shielding to NULL" << endl;
+        DEM_names_vec[3] = null_str;
+      }
+    }
   }
 }
 

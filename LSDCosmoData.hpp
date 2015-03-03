@@ -122,6 +122,12 @@ class LSDCosmoData
     /// @date 03/03/2015
     void check_parameter_values();
     
+    /// @brief this function checks the existence and georeferencing of 
+    ///  the rasters outlined in the file list
+    /// @author SMM
+    /// @date 03/03/2015
+    void check_rasters();
+    
     /// @brief this function prints the data held in the the data members
     ///  to screen. Is used for bug checking. 
     /// @detail Note the function does not print the standardised values, only raw values.
