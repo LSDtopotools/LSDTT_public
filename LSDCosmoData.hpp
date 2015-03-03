@@ -116,6 +116,12 @@ class LSDCosmoData
     /// @date 02/03/2015
     void load_parameters(string filename);
     
+    /// @brief This function checks to make sure parameter values are
+    ///  valid for the cosmo data
+    /// @author SMM
+    /// @date 03/03/2015
+    void check_parameter_values();
+    
     /// @brief this function prints the data held in the the data members
     ///  to screen. Is used for bug checking. 
     /// @detail Note the function does not print the standardised values, only raw values.

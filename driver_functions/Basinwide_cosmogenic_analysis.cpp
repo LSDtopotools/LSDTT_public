@@ -83,16 +83,17 @@ int main (int nNumberofArgs,char *argv[])
     cout << "* Second the prefix of the parameter files." << endl;
     cout << "---------------------------------------------------------" << endl;
     cout << "There must be two parameter files in the named path." << endl;
-    cout << "The first MUST have the extension .CRNfiles" << endl;
+    cout << "The first MUST have the extension _CRNRasters.csv" << endl;
     cout << " This contains the filenames (including full path) of" << endl;
-    cout << " the data file containing the cosmogenic data and all of the " << endl;
-    cout << " names of the DEMs (without file extensions) to be analysed" << endl;
-    cout << "The second file contains parameters for the analyses" << endl;
-    cout << "  and MUST have the extension CRNparam" << endl;
+    cout << " names of the DEMs (without file extensions) to be analysed." << endl;
+    cout << "The second file contains the CRN data" << endl;
+    cout << "  and MUST have the extension _CRNData.csv" << endl;
+    cout << "There is also an optional field to set parameter values. " << endl;
+    cout << "This file has the extension .CRNParam" << endl;
     cout << "---------------------------------------------------------" << endl;
     cout << "For example if you parameter files are in home/fieldwork/Chile/CRN/" << endl;
     cout << " in this folder you will have two parameter files, for example" << endl;
-    cout << " My_data.CRNfiles and My_data.CRNparam" << endl;
+    cout << " My_data_CRNData.csv and My_data_CRNRasters.csv" << endl;
     cout << "Then the command line argument will be: " << endl;
     cout << "In linux:" << endl;
     cout << "./Basinwide_CRN.exe home/fieldwork/Chile/CRN/ My_data" << endl;
@@ -119,12 +120,9 @@ int main (int nNumberofArgs,char *argv[])
   cout << "This software is released under a GNU public license." << endl;
   cout << "You are using " << driver_version << endl;
   cout << "===========================================================" << endl;
-  cout << "Your cosmogenic data is below." << endl; 
-  cout << "If this looks wrong, check your filenames." << endl;
-  CosmoData.print_data_to_screen();
-  cout << "..........................................................." << endl;
-  cout << "Here are the rasters you are using: " << endl;
-  CosmoData.print_data_to_screen();
+  cout << "Your cosmogenic data, parameters and file structures are" << endl;
+  cout << "Listed in the file within path " << path_name << endl;
+  cout << "With the extension .CRNParamReport" << endl;
   cout << "++IMPORTANT++ There must be ENVI bil files with these names." << endl;
   cout << "ENVI bil files are required because, unlike asc or flt files, " << endl;
   cout << "they use georeferencing information, which is used in the analyses." << endl;
@@ -132,11 +130,5 @@ int main (int nNumberofArgs,char *argv[])
   cout << "http://www.geos.ed.ac.uk/~smudd/LSDTT_docs/html/gdal_notes.html" << endl;
   cout << "===========================================================" << endl;
 
-  // load the parameter file
-  string param_ext = ".CRNparam";
-  string param_fname = path_name+param_name_prefix+param_ext;
-
-
-  
 }
   

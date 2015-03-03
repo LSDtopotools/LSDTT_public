@@ -120,14 +120,32 @@ void LSDCosmoData::create(string path_name, string param_name_prefix)
   string crn_ext = "_CRNData.csv";
   string files_ext = "_CRNRasters.csv";
   string csv_ext = "csv";
+  string params_ext = ".CRNParam";
+  string outfile_ext = ".CRNParamReport";
   
   // get the filenames to open
   string crn_fname = path_name+param_name_prefix+crn_ext;
   string Rasters_fname =  path_name+param_name_prefix+files_ext;
-  
-  load_cosmogenic_data(crn_fname, csv_ext);
-  load_DEM_and_shielding_filenames_csv(Rasters_fname);
+  string parameters_fname = path_name+param_name_prefix+params_ext;
 
+  // load the data. 
+  
+  cout << "Loading CRN data" << endl;
+  load_cosmogenic_data(crn_fname, csv_ext);
+  
+  cout << "Loading file structures" << endl;
+  load_DEM_and_shielding_filenames_csv(Rasters_fname);
+  
+  cout << "Loading parameters" << endl;
+  load_parameters(parameters_fname);
+  
+  // check the input parameters
+  check_parameter_values();
+  
+  // now print all the data into a report
+  string outfile_name = path_name+param_name_prefix+outfile_ext;
+  print_all_data_parameters_and_filestructures(outfile_name);
+  
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -350,6 +368,12 @@ void LSDCosmoData::load_parameters(string filename)
   ifstream infile;
   infile.open(filename.c_str());
   string parameter, value, lower;
+
+  if( infile.fail() )
+  {
+    cout << "Parameter file: " << filename << " does not exist." << endl;
+    cout << "Using default parameters." << endl;
+  }
 
   // now ingest parameters
   while (infile.good())
@@ -685,6 +709,112 @@ void LSDCosmoData::load_txt_cosmo_data(string filename)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function checks the parameters of the object and sends warnings if they
+// seem incorrect
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::check_parameter_values()
+{
+  if (min_slope <=0)
+  {
+    cout << "Your minimum slope is negative! Changing to default 0.0001" << endl;
+    min_slope = 0.0001;
+  }
+  else if (min_slope > 0.05)
+  {
+    cout << "You minimum slope is a bit high at: " << min_slope << endl;
+    cout << "Are you sure about this? Check your parameter file. "<< endl; 
+  }
+
+  if (source_threshold  <= 0)
+  {
+    cout << "Your source threshold is too small! Changing to default 10" << endl;
+    source_threshold = 10;
+  }
+  
+  if (search_radius_nodes  <= 0)
+  {
+    cout << "Your earch_radius_nodes is too small! Changing to default 1" << endl;
+    search_radius_nodes= 1;
+  }
+  
+  if (threshold_stream_order  <= 0)
+  {
+    cout << "Your threshold_stream_order is too small! Changing to default 1" << endl;
+    threshold_stream_order = 1;
+  }
+  
+  if (Muon_scaling != "Braucher" && Muon_scaling != "Granger" && 
+      Muon_scaling != "Schaller")
+  {
+    cout << "You have not seleceted a valid scaling. Defaulting to Braucher" << endl;
+    Muon_scaling = "Braucher";
+  }
+  
+  if (prod_uncert_factor != 1.0)
+  {
+    cout << "Production uncertainty factor must be 1." << endl;
+    prod_uncert_factor = 1;
+  }
+  
+  // Check the atmospheric data files
+  string filename = "NCEP2.bin";
+  filename = path_to_atmospheric_data+filename;
+  //cout << "Loading mean sea level, file is: " << endl << filename << endl;
+
+  ifstream ifs_data(filename.c_str(), ios::in | ios::binary);
+  if( ifs_data.fail() )
+  {
+    cout << "\nFATAL ERROR: the data file \"" << filename
+         << "\" doesn't exist. You need to put the atmospheric data" << endl
+         << "In the correct path" << endl;
+    exit(EXIT_FAILURE);
+  }  
+  
+  // now the data with levels
+  filename = "NCEP_hgt.bin";
+  filename = path_to_atmospheric_data+filename;
+  //cout << "Loading hgt, file is: " << endl << filename << endl;
+
+  ifstream ifs_data2(filename.c_str(), ios::in | ios::binary);
+  if( ifs_data2.fail() )
+  {
+    cout << "\nFATAL ERROR: the data file \"" << filename
+         << "\" doesn't exist. You need to put the atmospheric data" << endl
+         << "In the correct path" << endl;
+    exit(EXIT_FAILURE);
+  }
+  
+  // now check the phi and theta values. These must be a factor of 360
+  int temp_step;
+  if (360%theta_step != 0)
+  {
+    temp_step = theta_step-1;
+    while(360%temp_step != 0)
+    {
+      temp_step--;
+    }
+    cout << "Theta was not a factor of 360, changing from: " << theta_step << endl;
+    theta_step = temp_step;
+    cout << " to: " << theta_step << endl;
+  }
+  if (360%phi_step != 0)
+  {
+    temp_step = phi_step-1;
+    while(360%temp_step != 0)
+    {
+      temp_step--;
+    }
+    cout << "Theta was not a factor of 360, changing from: " << phi_step << endl;
+    phi_step = temp_step;
+    cout << " to: " << phi_step << endl;
+  }
+}
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // This function prints the data to screen
@@ -779,9 +909,7 @@ void LSDCosmoData::print_all_data_parameters_and_filestructures(string outfilena
   outfile << "threshold_stream_order: " << threshold_stream_order << endl;
   outfile << "theta_step: " << theta_step << endl;
   outfile << "phi_step: " << phi_step << endl; 
-  outfile << "prod_uncert_factor: " << prod_uncert_factor << endl;
   outfile << "Muon_scaling: " << Muon_scaling << endl;
-  outfile << "path_to_atmospheric_data: " << path_to_atmospheric_data << endl;
   outfile << "----------------------------------------------" << endl << endl;
   
   // now the file structures
