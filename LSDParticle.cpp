@@ -804,11 +804,11 @@ void LSDCRNParticle::update_10Be_SSfull_depth_integrated(double erosion_rate,
   vector<bool> cosmo_flags(4,false);
   cosmo_flags[0] = true;
 
-  cout << "LSDParticle line 797, getting cosmo for erosion rate: " << erosion_rate <<endl;
-  cout << "Top depth: " << top_eff_depth << " bottom depth: " << bottom_eff_depth << endl;
-  cout << "The parameter values are: " << endl;
-  CRNp.print_parameters_to_screen(cosmo_flags);
-  cout << "Conc 10Be: " << Conc_10Be << endl;
+  //cout << "\n\n\nLSDParticle line 797, getting cosmo for erosion rate: " << erosion_rate <<endl;
+  //cout << "Top depth: " << top_eff_depth << " bottom depth: " << bottom_eff_depth << endl;
+  //cout << "The parameter values are: " << endl;
+  //CRNp.print_parameters_to_screen(cosmo_flags);
+  //cout << "Conc 10Be: " << Conc_10Be << endl << endl << endl;
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

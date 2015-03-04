@@ -133,11 +133,11 @@ int main (int nNumberofArgs,char *argv[])
   // now run the analyses
   // First test the basic cosmogenic analysis
   int method_flag = 0;    // sets method to basic analysis
-  CosmoData.calculate_erosion_rates(method_flag);
+  //CosmoData.calculate_erosion_rates(method_flag);
 
   // print the results
   double rho = 2650;
-  CosmoData.print_simple_results_to_screen(rho);
+  //CosmoData.print_simple_results_to_screen(rho);
   
   // now do it with the full method
   method_flag = 1;    // sets method to basic analysis

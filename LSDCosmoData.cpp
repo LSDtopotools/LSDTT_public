@@ -792,7 +792,7 @@ void LSDCosmoData::check_parameter_values()
     exit(EXIT_FAILURE);
   }
   
-  // now check the phi and theta values. These must be a factor of 360
+  // now check the phi and theta values. These must be a factor of 360 and 90, respectively
   int temp_step;
   if (360%theta_step != 0)
   {
@@ -805,14 +805,14 @@ void LSDCosmoData::check_parameter_values()
     theta_step = temp_step;
     cout << " to: " << theta_step << endl;
   }
-  if (360%phi_step != 0)
+  if (90%phi_step != 0)
   {
     temp_step = phi_step-1;
-    while(360%temp_step != 0)
+    while(90%temp_step != 0)
     {
       temp_step--;
     }
-    cout << "Theta was not a factor of 360, changing from: " << phi_step << endl;
+    cout << "Phi was not a factor of 90, changing from: " << phi_step << endl;
     phi_step = temp_step;
     cout << " to: " << phi_step << endl;
   }

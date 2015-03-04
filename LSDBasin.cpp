@@ -1352,7 +1352,7 @@ void LSDCosmoBasin::populate_snow_and_self_eff_depth_vectors(double snow_eff_dep
   
   // first put the one element in the snow temp vector
   self_temp.push_back(self_eff_depth);
-  snow_temp.push_back(self_eff_depth);
+  snow_temp.push_back(snow_eff_depth);
   
   // update the vectors in the basin object
   self_shield_eff_depth = self_temp;
@@ -2152,7 +2152,7 @@ double LSDCosmoBasin::predict_mean_CRN_conc_with_snow_and_self(double eff_erosio
   }
   else
   {
-    cout << "LSDBasin line 1583, You didn't choos a valid nuclide. Defaulting"
+    cout << "LSDBasin line 1583, You didn't choose a valid nuclide. Defaulting"
          << " to 10Be." << endl;
     Nuclide = "Be10";
     nuclide_scaling_switches[0] = true; 
@@ -2235,6 +2235,7 @@ double LSDCosmoBasin::predict_mean_CRN_conc_with_snow_and_self(double eff_erosio
       
       // check to see if the shielding data exist and if so get the top and bottom
       // effective depths
+
       
       // first get snow shielding (as implemented by and effective depth of snow)
       if (snow_shield_eff_depth.size() < 1)
@@ -2244,10 +2245,12 @@ double LSDCosmoBasin::predict_mean_CRN_conc_with_snow_and_self(double eff_erosio
       else if (snow_shield_eff_depth.size() == 1)
       {
         this_top_eff_depth = snow_shield_eff_depth[0];
+        //cout << "\n\nSnow shield depth: " <<   this_top_eff_depth << endl;
       }
       else
       {
         this_top_eff_depth = snow_shield_eff_depth[q];
+        //cout << "\n\nSnow shield depth: " <<   this_top_eff_depth << endl;
       }
       
       // now get the self shielding. This is the thickness of the removed
@@ -2259,10 +2262,12 @@ double LSDCosmoBasin::predict_mean_CRN_conc_with_snow_and_self(double eff_erosio
       else if (self_shield_eff_depth.size() == 1)
       {
         this_bottom_eff_depth = this_top_eff_depth+self_shield_eff_depth[0];
+        //cout << "\n\n Self shield depth: " << self_shield_eff_depth[0]  << endl;
       }
       else
       {
         this_bottom_eff_depth = this_top_eff_depth+self_shield_eff_depth[q];
+        //cout << "\n\n Self shield depth: " << self_shield_eff_depth[q]  << endl;
       }
       
       // get the nuclide concentration from this node

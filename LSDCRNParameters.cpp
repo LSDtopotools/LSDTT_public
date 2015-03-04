@@ -2110,7 +2110,7 @@ void LSDCRNParameters::print_F_values_to_screen(vector<bool> nuclides_for_scalin
 void LSDCRNParameters::print_parameters_to_screen(vector<bool> nuclides_for_scaling)
 {
   cout << "=======================================================" << endl;
-  cout << "Cosmogenic paramters" << endl;
+  cout << "Cosmogenic parameters" << endl;
   cout << "Gammas: \t" << Gamma[0] << "\t"<< Gamma[1]<< "\t"<<Gamma[2]<<"\t"<<Gamma[3]<<endl;
   
 
