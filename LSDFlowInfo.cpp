@@ -2895,7 +2895,7 @@ void LSDFlowInfo::HilltopFlowRoutingOriginal(LSDRaster Elevation, LSDRaster Hill
 // SWDG 12/2/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LSDRaster Hilltops, LSDRaster Slope,
-                                                         LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir, string Prefix, LSDIndexRaster Basins, LSDRaster PlanCurvature,
+                                                         LSDIndexRaster StreamNetwork, LSDRaster Aspect, string Prefix, LSDIndexRaster Basins, LSDRaster PlanCurvature,
                                                          bool print_paths_switch, int thinning, string trace_path, bool basin_filter_switch,
                                                          vector<int> Target_Basin_Vector){
 
@@ -2930,7 +2930,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 	//Get data arrays from LSDRasters
 	Array2D<float> zeta = Elevation.get_RasterData(); //elevation
 	Array2D<int> stnet = StreamNetwork.get_RasterData(); // stream network
-	Array2D<float> aspect = D_inf_Flowdir.get_RasterData(); //aspect
+	Array2D<float> aspect = Aspect.get_RasterData(); //aspect
 	Array2D<float> hilltops = Hilltops.get_RasterData(); //hilltops
 	Array2D<float> slope = Slope.get_RasterData(); //hilltops
   Array2D<int> basin = Basins.get_RasterData(); //basins
