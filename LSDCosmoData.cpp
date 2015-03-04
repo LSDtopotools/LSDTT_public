@@ -1110,16 +1110,33 @@ void LSDCosmoData::convert_to_UTM(LSDRaster& Raster)
 // This function wraps the determination of cosmogenic erosion rates
 // 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDCosmoData::basic_cosmogenic_analysis(int search_radius_nodes, 
-                            int threshold_stream_order, LSDRaster& Elevations,
-                            LSDRaster& TopoShield,
-                            LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JNetwork)
+void LSDCosmoData::basic_cosmogenic_analysis(string DEM_fname)
 {
-  // the atmospheric data is in the folder with the driver_functions
-  string path_to_atmospheric_data = "./";
+  // Load the DEM
+  string DEM_bil_extension = "bil";
+  LSDRaster topo_test(DEM_fname, DEM_bil_extension);
+  
+  // Fill this raster
+  LSDRaster filled_raster = topo_test.fill(min_slope);
+    
+  // get the flow info
+  LSDFlowInfo FlowInfo(boundary_conditions, filled_raster);
+
+  // get the topographic shielding
+  LSDRaster TopoShield = filled_raster.TopographicShielding(theta_step, phi_step);
+
+  // get contributing pixels (needed for junction network)
+  LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+
+  // get the sources
+  vector<int> sources;
+  sources = FlowInfo.get_sources_index_threshold(ContributingPixels, source_threshold);
+
+  // now get the junction network
+  LSDJunctionNetwork JNetwork(sources, FlowInfo);
   
   // first, convert the data into this UTM zone
-  convert_to_UTM(Elevations);
+  convert_to_UTM(filled_raster);
   
   // now find valid points
   vector<int> valid_cosmo_points;         // a vector to hold the valid nodes
@@ -1212,11 +1229,8 @@ void LSDCosmoData::basic_cosmogenic_analysis(int search_radius_nodes,
                             test_N10,test_dN10, test_N26,test_dN26);
     
     // populate the scaling vectors
-    thisBasin.populate_scaling_vectors(FlowInfo, Elevations, TopoShield,
+    thisBasin.populate_scaling_vectors(FlowInfo, filled_raster, TopoShield,
                                        path_to_atmospheric_data);
-    
-    // get the atmospheric pressure for bug checking. THis will print to screen
-    //thisBasin.get_atmospheric_pressure(FlowInfo, Elevations, path_to_atmospheric_data);
     
     // now do the analysis
     vector<double> erate_analysis = thisBasin.full_CRN_erosion_analysis(test_N, 
@@ -1239,6 +1253,9 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
                             vector<double> CRN_params)
 {
 
+  //cout << "\n\n\n====================================================\n";
+  //cout << "Performing analysis with snow and self shielding" << endl;
+
   // now find valid points
   vector<int> valid_cosmo_points;         // a vector to hold the valid nodes
   vector<int> snapped_node_indices;       // a vector to hold the valid node indices
@@ -1248,23 +1265,30 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
   string DEM_bil_extension = "bil";
   //string fill_ext = "_fill";
   string DEM_fname = Raster_names[0];
+  //cout << "Loading raster: " << DEM_fname << endl;
   LSDRaster topo_test(DEM_fname, DEM_bil_extension);
   
   // Fill this raster
   LSDRaster filled_raster = topo_test.fill(min_slope);
-    
+  //cout << "Filled raster" << endl;
+  
+  
   // get the flow info
   LSDFlowInfo FlowInfo(boundary_conditions, filled_raster);
+  //cout << "Got flow info" << endl;
 
   // get contributing pixels (needed for junction network)
   LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
-
+  //cout << "Got contributing pixels" << endl;
+  
   // get the sources
   vector<int> sources;
   sources = FlowInfo.get_sources_index_threshold(ContributingPixels, source_threshold);
+  //cout << "Got sources" << endl;
 
   // now get the junction network
   LSDJunctionNetwork JNetwork(sources, FlowInfo);
+  //cout << "Got junction network" << endl;
   
   // Now convert the data into this UTM zone
   convert_to_UTM(filled_raster);
@@ -1281,7 +1305,9 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
   JNetwork.snap_point_locations_to_channels(fUTM_easting, fUTM_northing, 
             search_radius_nodes, threshold_stream_order, FlowInfo, 
             valid_cosmo_points, snapped_node_indices, snapped_junction_indices);
-
+  //cout << "Snapped points" << endl;
+  
+  
   // after this operation the three int vectors valid_cosmo_points, snapped_node_indices,
   // and snapped_junction_indices should be populated with valid points
   // you now need to get the concentrations and uncertainties from these
@@ -1300,19 +1326,20 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
     valid_concentration_uncertainties.push_back( 
                           Concentration_uncertainty[ valid_cosmo_points[i] ] );
   }
+  //cout << "Got valid points" << endl;
+  
   
   // Initiate pointers to the rasters
   LSDRaster Topographic_shielding;
   LSDRaster Snow_shielding;
   LSDRaster Self_shielding;
   
-  
-  
   // now, IF there are valid points, go on to the rest of the analysis
   if (valid_nuclide_names.size() != 0)
   {
     // first check if topographic shielding raster exists
-    if( Raster_names[3] != "Null")
+    cout << "Looking for toposhield raster, name is: " << Raster_names[3] << endl;
+    if( Raster_names[3] != "NULL")
     {
       LSDRaster T_shield(Raster_names[3], DEM_bil_extension);
       Topographic_shielding = T_shield;
@@ -1320,7 +1347,7 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
     else
     {
       // get the topographic shielding
-      cout << "Starting topogrpahic shielding" << endl;
+      cout << "Starting topographic shielding" << endl;
       LSDRaster T_shield = filled_raster.TopographicShielding(theta_step, phi_step);
       Topographic_shielding = T_shield;
     }
@@ -1467,17 +1494,12 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
 // cosmogenic-derived erosion rates and uncertainties
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDCosmoData::calcualte_erosion_rates()
+void LSDCosmoData::calculate_erosion_rates(int method_flag)
 {
 
   // find out how many DEMs there are:
   int n_DEMS = int(DEM_names_vecvec.size());
 
-  // Check to see if the files exists, if not flag them and skip them in the 
-  // analysis
-  // ####THIS NEEDS TO BE IMPLEMENTED####################
-  //vector<bool> Does_DEM_exist = check_Raster_files();
-  
   vector<string> this_Raster_names;
   vector<double> this_Param_names;
   
@@ -1487,7 +1509,18 @@ void LSDCosmoData::calcualte_erosion_rates()
     this_Raster_names = DEM_names_vecvec[iDEM];
     this_Param_names = snow_self_topo_shielding_params[iDEM];
     
-    full_shielding_cosmogenic_analysis(this_Raster_names,this_Param_names);
+    if (method_flag == 0)
+    {
+      basic_cosmogenic_analysis(this_Raster_names[0]);
+    }
+    else if (method_flag == 1)
+    {
+      full_shielding_cosmogenic_analysis(this_Raster_names,this_Param_names);
+    }
+    else
+    {
+      full_shielding_cosmogenic_analysis(this_Raster_names,this_Param_names);
+    }
   }
 
 }

@@ -177,20 +177,11 @@ class LSDCosmoData
     /// @brief This function calculates the CRN erosion rate from the data
     ///  stored within the data elements of the object
     /// @detail This analysis does not calculate snow shielding or landsliding
-    /// @param search_radius_nodes How far away from the cosmo point one searches
-    ///  for a channel
-    /// @param threshold_stream_order The minimum stream order the algorithm 
-    ///  will accept as a valid channel
-    /// @param Elevations an LSDRaster holding the elevations of the DEM
-    /// @param TopoShield an LSDRaster holding the topographic shileding
-    /// @param FlowInfo an LSDFlowInfo object, must be the same size as the raster
-    /// @param JNetwork an LSDJunctionNetwork object
+    /// @param DEM_prefix a string holding the prefix of the DEM (without the bil)
+    ///  NOTE the DEM must be in bil format.
     /// @author SMM
     /// @date 09/02/2015 
-    void basic_cosmogenic_analysis(int search_radius_nodes, 
-                            int threshold_stream_order, LSDRaster& Elevations,
-                            LSDRaster& TopoShield,
-                            LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JNetwork);
+    void basic_cosmogenic_analysis(string DEM_prefix);
 
     /// @brief This function computes erosion rates and uncertainties for 
     ///  a given DEM. It is wrapped by a function that goes through
@@ -214,9 +205,13 @@ class LSDCosmoData
     /// @detail Looks throught the vecvecs listing file locations and then
     ///   finds valid CRN data, and runs the erosion rate routine for these
     ///   data.
+    /// @param method_flag: an int that sets the method
+    ///  default: use snow and self shielding
+    ///  method_flag == 0, basic analysis (snow and self set to 0, calculate toposhield)
+    ///  method_flag == 1, snow and self sheilding, can load toposhield if provided
     /// @author SMM
     /// @date 28/02/2015
-    void calcualte_erosion_rates();
+    void calculate_erosion_rates(int method_flag);
 
   protected:
     
