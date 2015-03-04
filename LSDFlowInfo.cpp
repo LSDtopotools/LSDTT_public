@@ -3717,7 +3717,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_RAW(LSDRaster Elevation
 								north_vec[count] = northing[a] + yo - 0.5*DataResolution;
 								++b;
 							}
-							else if (degs_new > 180 && degs_new < 360) {  //secondary component is West						
+							else if (degs_new > 180 && degs_new <= 360) {  //secondary component is West						
 								xo = 0, yo = 1-0.00001;
 								s_edge = abs(s_local*sin(theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
@@ -3773,7 +3773,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_RAW(LSDRaster Elevation
 								north_vec[count] = northing[a] + yo - 0.5*DataResolution;
 								--b;
 							}
-							else if (degs_new > 0 && degs_new < 180) { //secondary component is East							  
+							else if (degs_new >= 0 && degs_new < 180) { //secondary component is East							  
 								xo = 1, yo = 0.00001;
 								s_edge = abs(s_local*sin(theta));
 								d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
