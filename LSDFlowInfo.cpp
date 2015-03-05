@@ -2910,7 +2910,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 	int count = 0;
 	int DivergentCountFlag = 0; //Flag used to count the number of divergent cells encountered in a trace
 	float PI = 3.14159265;
-	float degs, degs_old, degs_new, theta;
+	float degs, degs_new, theta;
 	float s_local, s_edge;
 	float xo, yo, xi, yi, temp_yo1, temp_yo2, temp_xo1, temp_xo2;
 	bool skip_trace; //flag used to skip traces where no path to a stream can be found. Will only occur on noisy, raw topography
@@ -3076,7 +3076,6 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 
 					path[a][b] += 1;
 
-					degs_old = degs;
 					degs_new = aspect[a][b];
 					theta = rads[a][b];
           ++count;
