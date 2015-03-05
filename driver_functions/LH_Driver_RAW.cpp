@@ -5,22 +5,24 @@
 // Driver created to automate extraction of hillslope lengths and basin metrics from DEM 
 // files where the topography has not been smoothed.
 //
-// Driver expects an unfilled DEM in the given directory in flt format with the name format <prefix>_DEM.flt
-// and a channel heads file in the same directory with the format <prefix>_CH.flt
+// Driver expects an unfilled DEM in the given directory in flt format with the name format <prefix>_DEM.flt,
+// a channel heads file in the same directory with the format <prefix>_CH.flt and a floodplain raster
+// <prefix>_FloodPlain.flt if floodplains are to be excluded from the analysis.
 //
 // Run driver with the following arguments:
 //
 // path to the input files with a trailing slash
 // filename prefix without an underscore
 // window radius value in spatial units for surface fitting
-// basin order the strahler order of basins to be extracted  
+// basin order the strahler order of basins to be extracted 
+// switch to exclude floodplains (1) or not exclude them (0)  
 // switch to write rasters 0 == do not write rasters and 1 == write rasters
 //
 // A usage example is:
-//nice ./LH_Driver_RAW.out /home/s0675405/DataStore/Final_Paper_Data/NC/ NC 7 2 1
-//nice ./LH_Driver_RAW.out /home/s0675405/DataStore/Final_Paper_Data/PA/ PA 5 2 1
-//nice ./LH_Driver_RAW.out /home/s0675405/DataStore/Final_Paper_Data/CA/ CA 12 2 1
-//nice ./LH_Driver_RAW.out /home/s0675405/DataStore/Final_Paper_Data/OR/ OR 7.5 2 1
+//nice ./LH_Driver_RAW.out /home/s0675405/DataStore/Final_Paper_Data/NC/ NC 7 2 1 0
+//nice ./LH_Driver_RAW.out /home/s0675405/DataStore/Final_Paper_Data/PA/ PA 5 2 1 0
+//nice ./LH_Driver_RAW.out /home/s0675405/DataStore/Final_Paper_Data/CA/ CA 12 2 1 0
+//nice ./LH_Driver_RAW.out /home/s0675405/DataStore/Final_Paper_Data/OR/ OR 7.5 2 1 0
 // 
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -49,9 +51,10 @@ int main (int nNumberofArgs,char *argv[])
 {
   
   //Test for correct input arguments
-	if (nNumberofArgs!=6)
+	if (nNumberofArgs!=7)
 	{
-		cout << "FATAL ERROR: wrong number inputs. The program needs the path (with trailing slash), the filename prefix, window radius, basin order, critical slope and a switch to write rasters if desired." << endl;
+		cout << "FATAL ERROR: wrong number inputs. The program needs the path (with trailing slash), the filename prefix, window radius, "; 
+    cout << "basin order, a switch to use or exclude floodplains and a switch to write rasters if desired." << endl;
 		exit(EXIT_SUCCESS);
 	}
   
@@ -60,7 +63,8 @@ int main (int nNumberofArgs,char *argv[])
 	string filename = argv[2];
   float window_radius = atof(argv[3]); //6
   int BasinOrder = atoi(argv[4]);  //2
-  int WriteRasters = atoi(argv[5]);  //0 (do not write rasters) or 1 (write rasters) 
+  int FloodplainSwitch = atoi(argv[5]);
+  int WriteRasters = atoi(argv[6]);  //0 (do not write rasters) or 1 (write rasters)  
   
   //set boundary conditions
   vector<string> BoundaryConditions(4, "No Flux");
@@ -97,6 +101,18 @@ int main (int nNumberofArgs,char *argv[])
   vector<int> sources = FlowInfo.Ingest_Channel_Heads((path+filename+"_DEM_CH"), "flt"); //swap to csv? 
   LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
   LSDIndexRaster StreamNetwork = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
+  
+  //load floodplain and merge with the channel network if required, otherwise the 
+  //floodplain mask will only contain the channel data
+  LSDIndexRaster ChannelAndFloodplain;
+
+  if (FloodplainSwitch == 1){
+    LSDIndexRaster Floodplains((path+filename+"_FloodPlain"), "flt");
+    ChannelAndFloodplain = StreamNetwork.MergeChannelWithFloodplain(Floodplains);
+  }
+  else{
+    ChannelAndFloodplain = StreamNetwork;
+  }
                                                          
   //Extract basins based on input stream order
   vector< int > basin_junctions = ChanNetwork.ExtractBasinJunctionOrder(BasinOrder, FlowInfo);
@@ -129,7 +145,7 @@ int main (int nNumberofArgs,char *argv[])
   vector<int> Target_Basin_Vector;
 
   //run HFR    
-  vector< Array2D<float> > HFR_Arrays = FlowInfo.HilltopFlowRouting_RAW(FilledDEM, hilltops, Surfaces[1], StreamNetwork, dinf_rast, prefix, Basin_Raster, Surfaces[4], print_paths_switch, thinning, trace_path, basin_filter_switch, Target_Basin_Vector);
+  vector< Array2D<float> > HFR_Arrays = FlowInfo.HilltopFlowRouting_RAW(FilledDEM, hilltops, slope, ChannelAndFloodplain, dinf_rast, prefix, Basin_Raster, Surfaces[4], print_paths_switch, thinning, trace_path, basin_filter_switch, Target_Basin_Vector);
    
   LSDRaster HFR_LH = hilltops.LSDRasterTemplate(HFR_Arrays[1]);
   LSDRaster HFR_Slope = hilltops.LSDRasterTemplate(HFR_Arrays[2]);
