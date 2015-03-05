@@ -3873,8 +3873,6 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_RAW(LSDRaster Elevation
             degs = aspect[a][b];
 						theta = rads[a][b];
 						path[a][b] += 1;
-						east_vec[0] = easting[b];
-						north_vec[0] = northing[a];
 						s_local = slope[a][b];
 
             a_2 = a;
