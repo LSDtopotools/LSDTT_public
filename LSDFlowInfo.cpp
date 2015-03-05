@@ -3269,6 +3269,9 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 					if (path[a][b] < 1){  // only update length on 'first slosh'
 					  length += d;
           }
+          else if (path[a][b] >= 3){ //update the skip trace flag so we can categorise each trace          
+            skip_trace = true;          
+          } 
 
           degs = degs_new;
 
@@ -3328,7 +3331,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
       //This block checks the various path printing options and writes the data out accordingly
 	    if (print_paths_switch == true){
         if (ht_count % thinning == 0){
-          if (hilltops[i][j] != NoDataValue){ //check that the current i,j tuple corresponds to a hilltop, ie there is actually a trace to write to file.
+          if (hilltops[i][j] != NoDataValue && skip_trace == false){ //check that the current i,j tuple corresponds to a hilltop, ie there is actually a trace to write to file, and check that the trace was valid.
           
   		      //create stringstream object to create filename
 	          ofstream pathwriter;
