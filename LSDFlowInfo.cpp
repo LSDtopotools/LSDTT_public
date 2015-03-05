@@ -3941,6 +3941,10 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_RAW(LSDRaster Elevation
           ++DivergentCountFlag;
         }
 
+        if (path[a][b] >=3){ //update flag if a trace cannot complete, so that we can track errors.
+          skip_trace = true;
+        }
+
 				if (a == 0 || b == 0 ||	a == NRows-1 || b == NCols-1 || stnet[a][b] != NoDataValue || stnet[a-1][b-1] != NoDataValue || stnet[a][b-1] != NoDataValue || stnet[a+1][b-1] != NoDataValue || stnet[a+1][b] != NoDataValue || stnet[a+1][b+1] != NoDataValue || stnet[a][b+1] != NoDataValue || stnet[a-1][b+1] != NoDataValue || stnet[a-1][b] != NoDataValue || path[a][b] >= 3 || skip_trace == true) flag = false;
 				}
 
@@ -3991,7 +3995,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_RAW(LSDRaster Elevation
       //This block checks the various path printing options and writes the data out accordingly
 	    if (print_paths_switch == true){
         if (ht_count % thinning == 0){
-          if (hilltops[i][j] != NoDataValue){ //check that the current i,j tuple corresponds to a hilltop, ie there is actually a trace to write to file.
+          if (hilltops[i][j] != NoDataValue && skip_trace == false){ //check that the current i,j tuple corresponds to a hilltop and has a valid trace, ie there is actually a trace to write to file.
           
   		      //create stringstream object to create filename
 	          ofstream pathwriter;
