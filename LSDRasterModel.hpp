@@ -1182,6 +1182,7 @@ class LSDRasterModel: public LSDRasterSpectral
 	//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	// DAV - I am not sure whether these should be public or protected data members
 	// LSDModelDriver needs read/write access to them, so my guess would be public?
+	// DAV - Use getter/setter functions?
 
 	// RM = LSDRasterModel specific
 	// (CM = LSDCatchmentModel specific)

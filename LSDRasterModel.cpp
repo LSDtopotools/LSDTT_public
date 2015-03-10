@@ -65,13 +65,11 @@ using namespace std;
 using namespace TNT;
 using namespace JAMA;
 
-//using std::complex::imag;    // Standard library complex numbers
-
 #define PI 3.14159265358
 #ifndef LSDRasterModel_CPP
 #define LSDRasterModel_CPP
 
-
+// The assignment operator 
 LSDRasterModel& LSDRasterModel::operator=(const LSDRasterModel& rhs)
  {
 	if (&rhs != this)
@@ -462,6 +460,56 @@ void LSDRasterModel::initialize_model(string param_file)
 	current_time = 0;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//void LSDRasterModel::initialise_model()
+//{
+	//for (unsigned int i=0; i<parameter.length(); ++i)
+	
+	//timeStep = RM_int_parameters["time_step"];
+	//endTime = RM_int_parameters["end_time"];
+	//num_runs = RM_int_parameters[
+	//endTime_mode
+	//max_uplift
+	//baseline_uplift
+	//uplift_mode
+	//steady_state_tolerance
+	//steady_state_limit
+	//boundary_conditions[i]  // use a loop
+	//m = RM_float_parameters["m"];
+	//n
+	//K_fluv
+	//threshold_drainage
+	//K_soil
+	//S_c
+	//rigidity
+	//NRows
+	//NCols
+	//DataResolution
+	//print_interval
+	//K_mode
+	//D_mode
+	//periodicity
+	//periodicity_2
+	//p_weight //must be less than one
+	//period_mode
+	//switch_time
+	//K_amplitude
+	//D_amplitude
+	//noise
+	//report_delay
+	//fluvial
+	//hillslope
+	//nonlinear
+	//isostacy
+	//flexure
+	//quiet
+	//reporting
+	//print_elevation
+	//print_hillshade
+	//print_erosion
+	//print_erosion_cycle
+	//print_slope_area
+//}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this function adds a random float to each pixel in the raster
