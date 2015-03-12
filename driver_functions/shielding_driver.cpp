@@ -47,6 +47,9 @@ int main (int nNumberofArgs,char *argv[])
   LSDRaster DEM((filename+"_dem"), "flt");  
 
   //launch toposhielding
+  //LSDRaster Shadows = DEM.CastShadows(45,45);
+  //Shadows.write_raster(filename+"_Shadows","flt");
+  
   LSDRaster TopoShielding = DEM.TopographicShielding(5,5);
   TopoShielding.write_raster(filename+"_TopoShield","flt");
 }
