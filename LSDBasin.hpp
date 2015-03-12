@@ -1052,6 +1052,31 @@ class LSDCosmoBasin: public LSDBasin
                             string path_to_atmospheric_data);
 
 
+    /// @brief This function gets effective pressure for a basin by averageing
+    ///  production rates and then calculating the 'apparent' pressure that can 
+    ///  produce that production rate. It also returns a number of valriables
+    ///  that can be plugged into existing calculators to compare results
+    ///  from the LSDCosmo calulcator against other methods
+    /// @param Elevation_Data the DEM, an LSDRaster object. IMPORTANT!! This needs
+    ///  to contain georeferencing information for this to work!!!
+    /// @param FlowInfo the LSDFlowInfo object
+    /// @param path_to_atmospheric_data THis is a path to binary NCEP data. 
+    /// @return a vector of values used in open-source calculators
+    ///  vector[0] = AverageTopo;
+    ///  vector[1] = AverageProd;
+    ///  vector[2] = AverageCombined;
+    ///  vector[3] = lat_outlet;
+    ///  vector[4] = outlet_pressure;
+    ///  vector[5] = outlet_eff_pressure;
+    ///  vector[6] = lat_centroid;
+    ///  vector[7] = centroid_pressure;
+    ///  vector[8] = centroid_eff_pressure;
+    /// @author SMM
+    /// @date 11/03/2015
+    vector<double> calculate_effective_pressures_for_calculators(LSDRaster& Elevation,
+                        LSDFlowInfo& FlowInfo, string path_to_atmospheric_data);
+
+
                             
   protected:
     /// The measured 10Be concentration    

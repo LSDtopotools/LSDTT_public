@@ -1451,10 +1451,7 @@ vector<double> LSDCosmoBasin::full_CRN_erosion_analysis(double Nuclide_conc, str
   
   //cout << "LSDCosmoBasin, line 1160, erate: " << erate << " and uncertainty: " 
   //     << External_uncert << endl;
-  
-  erate_uncert_vec.push_back(erate);
-  erate_uncert_vec.push_back(External_uncert);
-  
+
   // now calculate uncertainty from different muon scaling schemes. 
   // The end members are Braucher and Schaller
   string braucher_string = "Braucher";
@@ -1599,8 +1596,6 @@ vector<double> LSDCosmoBasin::full_CRN_erosion_analysis(double Nuclide_conc, str
   erate_uncert_vec.push_back(Muon_uncert);
   erate_uncert_vec.push_back(Prod_uncert);
   erate_uncert_vec.push_back(total_uncert);
-  
-  cout << "Total uncertainty is: " << total_uncert << endl;
   
   return erate_uncert_vec;
 } 
@@ -1796,7 +1791,7 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
     //cout << "Taking a step, eff_e: " << eff_e_new << " data_outlet? " <<  data_from_outlet_only;
     if(self_shield_eff_depth.size() < 1 && snow_shield_eff_depth.size() < 1)
     {                                             
-      cout << "LSDBasin line 1630, You are doing this wihout the effective depth driven shielding" << endl;
+      //cout << "LSDBasin line 1630, You are doing this wihout the effective depth driven shielding" << endl;
       
       N_this_step = predict_mean_CRN_conc(eff_e_new, Nuclide,prod_uncert_factor,
                                         Muon_scaling,data_from_outlet_only,
@@ -1815,7 +1810,7 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
     }
     else   // if self and snow sheilding are caluclated based on effective depths
     {
-      cout << "LSDBasin line 1649 You are doing this wih the effective depth driven shielding" << endl;
+      //cout << "LSDBasin line 1649 You are doing this wih the effective depth driven shielding" << endl;
       
       N_this_step = predict_mean_CRN_conc_with_snow_and_self(eff_e_new, Nuclide,
                                         prod_uncert_factor,
@@ -2292,7 +2287,7 @@ double LSDCosmoBasin::predict_mean_CRN_conc_with_snow_and_self(double eff_erosio
         cout << "contain spaces or control characters. Defaulting to 10Be." << endl;
         eroded_particle.update_10Be_SSfull_depth_integrated(eff_erosion_rate,LSDCRNP,
                                            this_top_eff_depth, this_bottom_eff_depth);
-        Total_N+=eroded_particle.getConc_10Be();
+        Total_N+=eroded_particle.getConc_10Be();         
       }
     }                    
   }
@@ -2537,7 +2532,208 @@ double LSDCosmoBasin::predict_mean_CRN_conc_centroid(double eff_erosion_rate, st
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function gets information of effective elevations for use in
+// online calculators 
+//
+// It returns a vector of values:
+//  vector<double> parameter_returns;
+// parameter_returns.push_back(AverageTopo);
+//  parameter_returns.push_back(AverageProd);
+//  parameter_returns.push_back(AverageCombined);
+//  parameter_returns.push_back(lat_outlet);
+//  parameter_returns.push_back(outlet_pressure);
+//  parameter_returns.push_back(outlet_eff_pressure);
+//  parameter_returns.push_back(lat_centroid);
+//  parameter_returns.push_back(centroid_pressure);
+//  parameter_returns.push_back(centroid_eff_pressure);
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<double> LSDCosmoBasin::calculate_effective_pressures_for_calculators(LSDRaster& Elevation,
+                        LSDFlowInfo& FlowInfo, string path_to_atmospheric_data)
+{
 
+  // the average atoms per gram of the nuclide
+  double AverageTopo;
+  double AverageProd;
+  double AverageCombined;
+
+  // the number of basin pixels
+  int count_samples = 0;
+  
+  // initiate a particle. We'll just repeatedly call this particle
+  // for the sample. 
+  int startType = 0; 
+  double Xloc = 0;
+  double Yloc = 0;
+  double  startdLoc = 0.0;
+  double  start_effdloc = 0.0;
+  double startzLoc = 0.0;
+  
+  // create a particle at zero depth
+  LSDCRNParticle eroded_particle(startType, Xloc, Yloc,
+                               startdLoc, start_effdloc, startzLoc);
+
+  // now create the CRN parameters object
+  LSDCRNParameters LSDCRNP;
+
+  // loop through the elevation data, averaging the snow and topo shielding
+  double topo_shield_total = 0;
+  double total_prod_scaling = 0;
+  double total_combined_scaling = 0;
+  int row,col;      // the row and column of the current node
+  int end_node = int(BasinNodes.size());
+  for (int q = 0; q < end_node; ++q)
+  {
+    
+    //exclude NDV from average
+    if(topographic_shielding[q] != NoDataValue)
+    {
+      count_samples++;
+      
+      // check to see if this is the centroid
+      FlowInfo.retrieve_current_row_and_col(BasinNodes[q], row, col);
+      
+      if(  production_scaling.size() < 1 )
+      {
+        cout << "LSDCosmoBasin, trying to precalculate erosion rate." << endl
+             << "Scaling vectors have not been set! You are about to get a seg fault" << endl;
+      }
+      topo_shield_total += topographic_shielding[q];
+      total_prod_scaling += production_scaling[q];
+      total_combined_scaling += topographic_shielding[q]*production_scaling[q];
+      
+    }
+  }
+
+  AverageTopo = topo_shield_total/double(count_samples);
+  AverageProd = total_prod_scaling/double(count_samples);
+  AverageCombined = total_combined_scaling/double(count_samples);
+  
+  // now find the latitude for both the outlet and the centroid
+  // first the outlet
+  double lat,longitude;
+  double lat_centroid, long_centroid;
+  double lat_outlet, long_outlet;
+  double this_elevation;
+  double centroid_pressure, outlet_pressure;
+  double centroid_eff_pressure, outlet_eff_pressure;
+  
+  
+  // declare converter object
+  LSDCoordinateConverterLLandUTM Converter;
+
+  // get the atmospheric parameters
+  LSDCRNP.load_parameters_for_atmospheric_scaling(path_to_atmospheric_data);
+  LSDCRNP.set_CRONUS_data_maps();
+
+  Elevation.get_lat_and_long_locations(Outlet_i, Outlet_j, lat, longitude, Converter);
+  lat_outlet = lat;
+  long_outlet = longitude;
+  Elevation.get_lat_and_long_locations(Centroid_i, Centroid_j, lat, longitude, Converter);
+  lat_centroid = lat;
+  long_centroid = longitude; 
+  
+  // get outlet and centroid pressures
+  this_elevation = Elevation.get_data_element(Centroid_i, Centroid_j);
+  centroid_pressure = LSDCRNP.NCEPatm_2(double(lat_centroid), double(long_centroid), 
+                                        double(this_elevation));
+
+  this_elevation = Elevation.get_data_element(Outlet_i, Outlet_j);
+  outlet_pressure = LSDCRNP.NCEPatm_2(double(lat_outlet), double(long_outlet), 
+                                        double(this_elevation));
+
+  // now we use newton iteration to calculate the 'effective' pressure for'
+  // both the cnetroid and outlet latitutde.
+  // First some variables that are used in the newton iteration
+  double f_x,f_x_displace;
+  double S_displace, S_this_step;
+  double P_displace = 0.01;
+  double P_change;
+  double P_derivative;
+  double tolerance = 1e-6;
+  double Fsp = 0.978;
+  
+  
+  // First for the centroid
+  // initial guess is 1000hPa
+  double this_P = 1000;
+  lat = lat_centroid;
+  do
+  {
+    S_this_step = LSDCRNP.stone2000sp(lat,this_P, Fsp);
+    S_displace = LSDCRNP.stone2000sp(lat,this_P+P_displace, Fsp); 
+    
+    f_x =  S_this_step - AverageProd;
+    f_x_displace =  S_displace - AverageProd;
+    
+    P_derivative =  (f_x_displace-f_x)/P_displace;
+    
+    if(P_derivative != 0)
+    {
+      cout << "Pressure before is: " <<this_P << " lat: " << lat;
+      
+      this_P = this_P-f_x/P_derivative;
+      
+      // check to see if the difference in erosion rates meet a tolerance
+      P_change = f_x/P_derivative;
+      cout << " Change is: " << P_change << " target is: " << AverageProd << " and Shielding is: " << S_this_step << endl;
+      
+    }
+    else
+    {
+      P_change = 0;
+    }
+  } while(fabs(P_change) > tolerance);
+  centroid_eff_pressure = this_P;
+  
+  
+
+  // Do it again for the outlet
+  // initial guess is 1000hPa
+  this_P = 1000;
+  lat = lat_outlet;
+  do
+  {
+    S_this_step = LSDCRNP.stone2000sp(lat,this_P, Fsp);
+    S_displace = LSDCRNP.stone2000sp(lat,this_P+P_displace, Fsp); 
+    
+    f_x =  S_this_step - AverageProd;
+    f_x_displace =  S_displace - AverageProd;
+    
+    P_derivative =  (f_x_displace-f_x)/P_displace;
+    
+    if(P_derivative != 0)
+    {
+      this_P = this_P-f_x/P_derivative;
+      
+      // check to see if the difference in erosion rates meet a tolerance
+      P_change = f_x/P_derivative;
+      //cout << "Change is: " << eff_e_change << " and erosion rate is: " << eff_e_new << endl;
+    }
+    else
+    {
+      P_change = 0;
+    }
+  } while(fabs(P_change) > tolerance);
+  outlet_eff_pressure = this_P; 
+  
+  vector<double> parameter_returns;
+  parameter_returns.push_back(AverageTopo);
+  parameter_returns.push_back(AverageProd);
+  parameter_returns.push_back(AverageCombined);
+  parameter_returns.push_back(lat_outlet);
+  parameter_returns.push_back(outlet_pressure);
+  parameter_returns.push_back(outlet_eff_pressure);
+  parameter_returns.push_back(lat_centroid);
+  parameter_returns.push_back(centroid_pressure);
+  parameter_returns.push_back(centroid_eff_pressure);
+    
+  return parameter_returns;
+  
+
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function prints the information, node by node, in the basin.
