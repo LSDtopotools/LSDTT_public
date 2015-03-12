@@ -128,37 +128,7 @@ class LSDCosmoData
     /// @date 03/03/2015
     void check_rasters();
     
-    /// @brief this function prints the data held in the the data members
-    ///  to screen. Is used for bug checking. 
-    /// @detail Note the function does not print the standardised values, only raw values.
-    /// @author SMM
-    /// @date 09/02/2015
-    void print_data_to_screen(); 
 
-    /// @brief this prints the file structure data to screen
-    ///  it is a list of the DEMs, snow shielding rasters, self shelding rasters
-    ///  and topo shielding rasters used in the analysis
-    ///  the later three rasters can be NULL values, and the snow and self shielding
-    ///  rasters can be replaced by single values
-    /// @author SMM
-    /// @date 26/02/2015
-    void print_file_structures_to_screen();
-
-    /// @brief this prints all the data, parameters and file structures to screen
-    ///  It is used to keep a record of CRN erosion rate computations so
-    ///  analyses can be reproduced
-    /// @param outfilename the name of the outfile including full path
-    /// @author SMM
-    /// @date 02/03/2015
-    void print_all_data_parameters_and_filestructures(string outfilename);
-
-    /// @detail Prints the simple results to the screen
-    /// @detail The 'simple' is because it only looks at external, 
-    ///  muon, and production uncertainties. 
-    /// @param rho the rock denisty in kg/m^3
-    /// @author SMM
-    /// @date 10/02/2015
-    void print_simple_results_to_screen(double rho);
     
     /// @brief this function calculates the UTM coordinates of all the sample
     ///  points for a given UTM zone. 
@@ -200,7 +170,6 @@ class LSDCosmoData
     void full_shielding_cosmogenic_analysis(vector<string> Raster_names,
                             vector<double> CRN_params);
 
-
     /// @brief This function wraps the cosmogenic rate calculators.
     /// @detail Looks throught the vecvecs listing file locations and then
     ///   finds valid CRN data, and runs the erosion rate routine for these
@@ -213,10 +182,75 @@ class LSDCosmoData
     /// @date 28/02/2015
     void calculate_erosion_rates(int method_flag);
 
+    /// @brief this function prints the data held in the the data members
+    ///  to screen. Is used for bug checking. 
+    /// @detail Note the function does not print the standardised values, only raw values.
+    /// @author SMM
+    /// @date 09/02/2015
+    void print_data_to_screen(); 
+
+    /// @brief this prints the file structure data to screen
+    ///  it is a list of the DEMs, snow shielding rasters, self shelding rasters
+    ///  and topo shielding rasters used in the analysis
+    ///  the later three rasters can be NULL values, and the snow and self shielding
+    ///  rasters can be replaced by single values
+    /// @author SMM
+    /// @date 26/02/2015
+    void print_file_structures_to_screen();
+
+    /// @brief this prints all the data, parameters and file structures to screen
+    ///  It is used to keep a record of CRN erosion rate computations so
+    ///  analyses can be reproduced
+    /// @param outfilename the name of the outfile including full path
+    /// @author SMM
+    /// @date 02/03/2015
+    void print_all_data_parameters_and_filestructures(string outfilename);
+
+    /// @brief Prints the simple results to the screen
+    /// @detail The 'simple' is because it only looks at external, 
+    ///  muon, and production uncertainties. 
+    /// @param rho the rock denisty in kg/m^3
+    /// @author SMM
+    /// @date 10/02/2015
+    void print_simple_results_to_screen(double rho);
+
+    /// @brief This prints the results to a csv file
+    /// @detail The columns in the CSV file are:
+    ///  sample_name
+    ///  nuclide
+    ///  latitude
+    ///  longitude
+    ///  concentration (atms/g)
+    ///  concentration_uncert (atoms/g)
+    ///  erosion rate g_percm2_peryr
+    ///  erosion rate AMS_uncert g_percm2_peryr
+    ///  muon_uncert g_percm2_peryr
+    ///  production_uncert g_percm2_peryr
+    ///  total_uncert g_percm2_peryr
+    ///  AvgProdScaling dimensionless
+    ///  AverageTopoShielding dimensionless
+    ///  AverageCombinedScaling dimensionless (this is averaged production scaling times toposhielding)
+    ///  outlet_latitude
+    ///  OutletPressure hPa
+    ///  OutletEffPressure hPa (pressure needed to get basin averaged production scaling)
+    ///  centroid_latitude
+    ///  CentroidPressure hPa
+    ///  CentroidEffPressure (pressure needed to get basin averaged production scaling)
+    /// @author SMM
+    /// @date 12/03/2015
+    void print_results_to_csv();
+
+
   protected:
     
     /// the number of samples
     int N_samples;
+    
+    /// the path to the cosmo data. Also used to print results
+    string path;
+    
+    /// the prefix of the parameter files
+    string param_name;
     
     /// A vector of the sample names
     vector<string> sample_name;
@@ -306,6 +340,36 @@ class LSDCosmoData
   
     /// The boundary conditions for the flow info object
     vector<string> boundary_conditions;
+    
+    //-----------------Information used in cosmogenic calculators---------------
+    /// The mean_production scaling of the basin 
+    vector<double> AverageProdScaling;
+    
+    /// The mean topographic sheilding of the basin
+    vector<double> AverageTopoShielding;
+    
+    /// The weighted scaling (production*shieding for each pixel, averaged)
+    vector<double> AverageCombinedScaling;
+
+    /// The outlet latitude of the basin
+    vector<double> outlet_lat;
+    
+    /// The centroid latitude of the basin
+    vector<double> centroid_lat;
+    
+    /// The outlet pressure
+    vector<double> OutletPressure;
+    
+    /// The effective pressure at the outlet. This is the pressure that produces
+    /// the basin averaged production
+    vector<double> OutletEffectivePressure;
+    
+    /// The centroid pressure
+    vector<double> CentroidPressure;
+    
+    /// The effective pressure at the Centroid. This is the pressure that produces
+    /// the basin averaged production
+    vector<double> CentroidEffectivePressure;
 
     
   private:

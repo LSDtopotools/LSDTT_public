@@ -78,6 +78,9 @@ void LSDCosmoData::create()
 
 void LSDCosmoData::create(string path_name, string param_name_prefix)
 {
+  // set the names of the data members
+  path = path_name;
+  param_name = param_name_prefix;
 
   // Set the parameters
   // The default slope parameter for filling. Do not change. 
@@ -133,6 +136,18 @@ void LSDCosmoData::create(string path_name, string param_name_prefix)
   
   cout << "Loading CRN data" << endl;
   load_cosmogenic_data(crn_fname, csv_ext);
+  
+  // get the correct number of samples in the results vec
+  vector<double> for_calculator_empty(N_samples,-99);
+  AverageProdScaling = for_calculator_empty;
+  AverageTopoShielding = for_calculator_empty;
+  AverageCombinedScaling = for_calculator_empty;
+  outlet_lat = for_calculator_empty;
+  centroid_lat = for_calculator_empty;
+  OutletPressure = for_calculator_empty;
+  OutletEffectivePressure = for_calculator_empty;
+  CentroidPressure = for_calculator_empty;
+  CentroidEffectivePressure = for_calculator_empty;
   
   cout << "Loading file structures" << endl;
   load_DEM_and_shielding_filenames_csv(Rasters_fname);
@@ -1475,6 +1490,22 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
                                           valid_nuclide_names[samp], test_dN, 
                                           prod_uncert_factor, Muon_scaling);
     
+      // now get parameters for cosmogenic calculators
+      vector<double> param_for_calc = 
+          thisBasin.calculate_effective_pressures_for_calculators(filled_raster,
+                                            FlowInfo, path_to_atmospheric_data);
+                                            
+
+      AverageTopoShielding[ valid_cosmo_points[samp] ] = param_for_calc[1];
+      AverageProdScaling[ valid_cosmo_points[samp] ] = param_for_calc[0];
+      AverageCombinedScaling[ valid_cosmo_points[samp] ] = param_for_calc[2];
+      outlet_lat[ valid_cosmo_points[samp] ] = param_for_calc[3];
+      OutletPressure[ valid_cosmo_points[samp] ] = param_for_calc[4];
+      OutletEffectivePressure[ valid_cosmo_points[samp] ] = param_for_calc[5];
+      centroid_lat[ valid_cosmo_points[samp] ] = param_for_calc[6];
+      CentroidPressure[ valid_cosmo_points[samp] ] = param_for_calc[7];
+      CentroidEffectivePressure[ valid_cosmo_points[samp] ] = param_for_calc[8];
+    
       // add the erosion rate results to the holding data member
       erosion_rate_results[ valid_cosmo_points[samp] ] = erate_analysis;
 
@@ -1524,6 +1555,61 @@ void LSDCosmoData::calculate_erosion_rates(int method_flag)
   }
 
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prints all valid results to a csv file
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::print_results_to_csv()
+{
+  string combined_filename = path+param_name;
+
+  // set up extensions to the files
+  string results_ext = "_CRNResults.csv";
+
+  // get the filenames to open
+  string crn_results_fname = path+param_name+results_ext;
+
+  // open the file
+  ofstream results_out;
+  results_out.open(crn_results_fname.c_str());
+  
+  // first the header line
+  results_out << "All concentrations are standardised to 07KNSTD using Balco et al 2008" << endl;
+  results_out << "sample_name,nuclide,latitude,longitude,concentration,concentration_uncert,"
+       << "erate_g_percm2_peryr,AMS_uncert,muon_uncert,production_uncert,total_uncert,"
+       << "AverageTopoShielding,AvgProdScaling,AverageCombinedScaling,outlet_latitude,"
+       << "OutletPressure,OutletEffPressure,centroid_latitude,CentroidPressure,CentroidEffPressure"
+       << endl;
+  
+  // now loop through the sampes, printing the ones with data
+  for (int i = 0; i<N_samples; i++)
+  {
+    // don't print the results unless they exist
+    if (int(erosion_rate_results[i].size()) > 0)
+    {
+      // get the results from this sample
+      vector<double> erate_analysis = erosion_rate_results[i];
+
+      results_out << sample_name[i] << "," << nuclide[i] << "," << latitude[i] 
+                  << "," << longitude[i] << "," << Concentration[i] 
+                  <<  "," << Concentration_uncertainty[i] << "," 
+                  << erate_analysis[0] << "," << erate_analysis[1] << "," 
+                  << erate_analysis[2] << "," << erate_analysis[3] << "," 
+                  << erate_analysis[4] << "," <<  AverageTopoShielding[i]  << "," 
+                  << AverageProdScaling[i] << "," << AverageCombinedScaling[i] << ","
+                  << outlet_lat[i] << "," << OutletPressure[i] << "," 
+                  << OutletEffectivePressure[i] << ","  << centroid_lat[i] << "," 
+                  << CentroidPressure[i] << "," << CentroidEffectivePressure[i] 
+                  << endl;  
+    }
+  }
+  results_out.close();
+}
+
 
 
 #endif
