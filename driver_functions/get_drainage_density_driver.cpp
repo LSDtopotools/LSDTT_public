@@ -66,6 +66,7 @@
 #include "../LSDIndexChannelTree.hpp"
 #include "../LSDChiNetwork.hpp"
 #include "../LSDBasin.hpp"
+#include "../LSDCRNParameters.hpp"
 
 int main (int nNumberofArgs,char *argv[])
 {
@@ -181,7 +182,7 @@ int main (int nNumberofArgs,char *argv[])
   
   Slope.write_raster((path_name+DEM_name+slope_name), DEM_flt_extension);
   Curvature.write_raster((path_name+DEM_name+curv_name), DEM_flt_extension);
-     
+      
   // Create the text files for writing info to
             
   int no_junctions = basin_junctions.size();  
@@ -209,9 +210,13 @@ int main (int nNumberofArgs,char *argv[])
   vector<float> Slopes;
   vector<float> CHTs;
   
-  for (int i = 0; i < no_junctions; i++)
+  vector<LSDBasin> AllBasins;  
+  vector<LSDRaster> CHT_basins;
+  vector<LSDRaster> DrainageDensity_basins;
+  
+  for (int i = 0; i < basin_junctions.size(); i++)
 	{
-    cout << flush << "Junction = " << i+1 << " of " << no_junctions << "\r";
+    cout << flush << "Junction = " << i+1 << " of " << basin_junctions.size() << "\r";
     int junction_number = basin_junctions[i];
     int StreamOrder = ChanNetwork.get_StreamOrder_of_Junction(FlowInfo, junction_number);
     
@@ -220,34 +225,23 @@ int main (int nNumberofArgs,char *argv[])
     int MaxOrder = StreamOrder-1;
     LSDRaster Hilltops = ChanNetwork.ExtractRidges(FlowInfo, MinOrder, MaxOrder);
     LSDRaster CHT_temp = filled_topo_test.get_hilltop_curvature(Curvature, Hilltops);
-  
-    // Remove hilltop pixels with positive curvature (noise)
-  
-    Array2D<float> CHT_array = CHT_temp.get_RasterData();
-    Array2D<float> CHT_array_final(NRows, NCols, NoDataValue);
-    for (int row = 0; row < NRows; row++)
-    {
-      for (int col = 0; col < NCols; col++)
-      {
-        if (CHT_array[row][col] < 0)
-        {
-          CHT_array_final[row][col] = CHT_array[row][col];
-        }
-      }
-    }
-    LSDRaster CHT(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,CHT_array_final);
-
+    LSDRaster CHT = filled_topo_test.remove_positive_hilltop_curvature(CHT_temp);
+    
     // set basin parameters
     LSDBasin Basin(junction_number, FlowInfo, ChanNetwork);
     Basin.set_FlowLength(SOArray, FlowInfo);
     Basin.set_DrainageDensity();
     Basin.set_SlopeMean(FlowInfo, Slope);
     Basin.set_CHTMean(FlowInfo, CHT);
+    LSDRaster CHT_basin = Basin.write_raster_data_to_LSDRaster(CHT, FlowInfo);
+    CHT_basins.push_back(CHT_basin);
     //Basin.Plot_Boomerang(Slope, DinfArea, FlowInfo, log_bin_width, SplineResolution, bin_threshold, path_name);
     
     // return basin parameters
     float drainage_density = Basin.get_DrainageDensity();
     cout << "Drainage density: " << drainage_density << endl;
+    LSDRaster DD = Basin.write_DrainageDensity(FlowInfo);
+    DrainageDensity_basins.push_back(DD);
     float basin_slope = Basin.get_SlopeMean();
     float basin_CHT = Basin.get_CHTMean();
     float basin_area = Basin.get_Area();
@@ -257,11 +251,21 @@ int main (int nNumberofArgs,char *argv[])
       CHTs.push_back(abs(basin_CHT));
       DrainageDensities.push_back(drainage_density);
     }
+    else
+    {
+      i++;
+    }
 
     if (drainage_density != NoDataValue || isnan(basin_CHT) == false)
     {
       DD_cloud << drainage_density << " " << basin_CHT << " " << basin_slope << " " << basin_area << endl;
     } 
+    else
+    {
+      i++;
+    }
+    
+    AllBasins.push_back(Basin);
   }   
   
   float bin_width = 0.01;
@@ -304,4 +308,12 @@ int main (int nNumberofArgs,char *argv[])
     DD_StDev_Y_output[i] << " " << DD_StandardErrorY_output[i] << " " << SlopeY_output[i] << " " << Slope_StDev_Y_output[i] << " " <<
     Slope_StandardErrorY_output[i] << endl;
   }
+  
+  LSDRaster CHT_merged = AllBasins[0].Merge_Basins(CHT_basins);
+  string CHT_all_name = "_CHT_all_basins";
+  CHT_merged.write_raster((path_name+DEM_name+CHT_all_name), DEM_flt_extension);
+  
+  LSDRaster DrainageDensity_merged = AllBasins[0].Merge_Basins(DrainageDensity_basins);
+  string DD_all_name = "_DD_all_basins" ;
+  DrainageDensity_merged.write_raster((path_name+DEM_name+DD_all_name), DEM_flt_extension);
 }
