@@ -662,7 +662,7 @@ void update_10Be_SSfull_depth_integrated(double erosion_rate, LSDCRNParameters& 
   ///  section being depth-integrated
   /// @author SMM
   /// @date 20/02/2015
-void update_26Al_SSfull_depth_integrated(double erosion_rate, LSDCRNParameters& CRNp,
+  void update_26Al_SSfull_depth_integrated(double erosion_rate, LSDCRNParameters& CRNp,
                                   double top_eff_depth, double bottom_eff_depth);
 
 
@@ -742,6 +742,24 @@ void update_26Al_SSfull_depth_integrated(double erosion_rate, LSDCRNParameters& 
   void update_all_CRN_SSfull(double erosion_rate, LSDCRNParameters& CRNp);
 
   /// @brief This returns the 'apparent' erosion rate that one would calcualte
+  /// based on an assumed density above the sampling depth and for full muon 
+  /// production based on COSMOCALC scaling
+  /// @param rho the density in kg/m^3 above the 'sampling' point
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// @param muon_string a string containting the muon scaling
+  ///  can be Schaller, Granger or Braucher. Default is Braucher
+  /// @param top_eff_depth the effective depth g/cm^2 at the top of the
+  ///  section being depth-integrated
+  /// @param bottom_eff_depth the effective depth g/cm^2 at the bottom of the
+  ///  section being depth-integrated
+  /// @return the apparent erosion rate in g/cm^2/yr and m/yr
+  /// @author SMM
+  /// @date 13/03/2015 
+  vector<double> apparent_erosion_10Be_COSMOCALC(double rho, LSDCRNParameters& CRNp,
+                                    double scaling_factor, string Muon_scaling,
+                                    double top_eff_depth, double bottom_eff_depth);
+
+  /// @brief This returns the 'apparent' erosion rate that one would calcualte
   /// based on an assumed density above the sampling depth and if the
   /// production was assumed to be from neutrons only for 10Be
   /// @param rho the density in kg/m^3 above the 'sampling' point
@@ -750,6 +768,25 @@ void update_26Al_SSfull_depth_integrated(double erosion_rate, LSDCRNParameters& 
   /// @author SMM
   /// @date 01/01/2010 
   double apparent_erosion_10Be_neutron_only(double rho, LSDCRNParameters& CRNp);
+
+  /// @brief This returns the 'apparent' erosion rate that one would calcualte
+  /// based on an assumed density above the sampling depth and for full muon 
+  /// production based on COSMOCALC scaling
+  /// @param rho the density in kg/m^3 above the 'sampling' point
+  /// @param CRNp a CRN parameters object that stores the coefficients
+  /// @param muon_string a string containting the muon scaling
+  ///  can be Schaller, Granger or Braucher. Default is Braucher
+  /// @param top_eff_depth the effective depth g/cm^2 at the top of the
+  ///  section being depth-integrated
+  /// @param bottom_eff_depth the effective depth g/cm^2 at the bottom of the
+  ///  section being depth-integrated
+  /// @return the apparent erosion rate in g/cm^2/yr and m/yr
+  /// @author SMM
+  /// @date 13/03/2015 
+  vector<double> apparent_erosion_26Al_COSMOCALC(double rho, LSDCRNParameters& CRNp,
+                                    double scaling_factor, string Muon_scaling,
+                                    double top_eff_depth, double bottom_eff_depth);
+
 
   /// @brief This returns the 'apparent' erosion rate that one would calcualte
   /// based on an assumed density above the sampling depth and if the
