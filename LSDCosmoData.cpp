@@ -142,6 +142,8 @@ void LSDCosmoData::create(string path_name, string param_name_prefix)
   AverageProdScaling = for_calculator_empty;
   AverageTopoShielding = for_calculator_empty;
   AverageCombinedScaling = for_calculator_empty;
+  AverageSelfShielding = for_calculator_empty;
+  AverageSnowShielding = for_calculator_empty;
   outlet_lat = for_calculator_empty;
   centroid_lat = for_calculator_empty;
   OutletPressure = for_calculator_empty;
@@ -1490,24 +1492,38 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
                                           valid_nuclide_names[samp], test_dN, 
                                           prod_uncert_factor, Muon_scaling);
     
+      //cout << "Line 1493, doing analysis" << endl;
+    
+    
       // now get parameters for cosmogenic calculators
       vector<double> param_for_calc = 
           thisBasin.calculate_effective_pressures_for_calculators(filled_raster,
                                             FlowInfo, path_to_atmospheric_data);
-                                            
+        
+      //cout << "Paramforcalc size: " << param_for_calc.size() << endl;              
+      //cout << "Getting pressures" << endl;
 
-      AverageTopoShielding[ valid_cosmo_points[samp] ] = param_for_calc[1];
       AverageProdScaling[ valid_cosmo_points[samp] ] = param_for_calc[0];
-      AverageCombinedScaling[ valid_cosmo_points[samp] ] = param_for_calc[2];
-      outlet_lat[ valid_cosmo_points[samp] ] = param_for_calc[3];
-      OutletPressure[ valid_cosmo_points[samp] ] = param_for_calc[4];
-      OutletEffectivePressure[ valid_cosmo_points[samp] ] = param_for_calc[5];
-      centroid_lat[ valid_cosmo_points[samp] ] = param_for_calc[6];
-      CentroidPressure[ valid_cosmo_points[samp] ] = param_for_calc[7];
-      CentroidEffectivePressure[ valid_cosmo_points[samp] ] = param_for_calc[8];
+      AverageTopoShielding[ valid_cosmo_points[samp] ] = param_for_calc[1];
+      AverageSelfShielding[ valid_cosmo_points[samp] ] = param_for_calc[2];
+      AverageSnowShielding[ valid_cosmo_points[samp] ] = param_for_calc[3];
+      AverageCombinedScaling[ valid_cosmo_points[samp] ] = param_for_calc[4];
+      outlet_lat[ valid_cosmo_points[samp] ] = param_for_calc[5];
+      OutletPressure[ valid_cosmo_points[samp] ] = param_for_calc[6];
+      OutletEffectivePressure[ valid_cosmo_points[samp] ] = param_for_calc[7];
+      centroid_lat[ valid_cosmo_points[samp] ] = param_for_calc[8];
+      CentroidPressure[ valid_cosmo_points[samp] ] = param_for_calc[9];
+      CentroidEffectivePressure[ valid_cosmo_points[samp] ] = param_for_calc[10];
+    
+      //for(int i = 0; i<param_for_calc.size(); i++)
+      //{
+      //  cout << param_for_calc[i] << endl;
+      //}
     
       // add the erosion rate results to the holding data member
       erosion_rate_results[ valid_cosmo_points[samp] ] = erate_analysis;
+
+      //cout << "finished adding data" << endl;
 
     }  // finished looping thorough basins 
   }    // finsiehd logic for a DEM with valid points
@@ -1537,6 +1553,8 @@ void LSDCosmoData::calculate_erosion_rates(int method_flag)
   // now loop through the DEMs
   for (int iDEM = 0; iDEM< n_DEMS; iDEM++)
   {
+    //cout << "Doing DEM " << iDEM << " of " <<  n_DEMS << endl;
+    
     this_Raster_names = DEM_names_vecvec[iDEM];
     this_Param_names = snow_self_topo_shielding_params[iDEM];
     
@@ -1552,6 +1570,7 @@ void LSDCosmoData::calculate_erosion_rates(int method_flag)
     {
       full_shielding_cosmogenic_analysis(this_Raster_names,this_Param_names);
     }
+    
   }
 
 }
@@ -1563,27 +1582,52 @@ void LSDCosmoData::calculate_erosion_rates(int method_flag)
 // This prints all valid results to a csv file
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDCosmoData::print_results_to_csv()
+void LSDCosmoData::print_results()
 {
   string combined_filename = path+param_name;
 
   // set up extensions to the files
   string results_ext = "_CRNResults.csv";
+  string CRONUS_ext = "_CRONUSInput.txt";
 
   // get the filenames to open
   string crn_results_fname = path+param_name+results_ext;
+  string CRONUS_results_fname = path+param_name+CRONUS_ext;
 
   // open the file
   ofstream results_out;
   results_out.open(crn_results_fname.c_str());
   
+  ofstream CRONUS_out;
+  CRONUS_out.open(CRONUS_results_fname.c_str());
+  
+  // a message for cronus file
+  CRONUS_out << "->IMPORTANT nuclide concentrations are not original!" << endl
+             << "  They are scaled to the 07KNSTD!!" << endl;
+  CRONUS_out << "->Scaling is averaged over the basin for snow, self and topographic shielding." << endl;
+  CRONUS_out << "->Snow and self shielding are considered by neutron spallation only." << endl;
+  CRONUS_out << "->Pressure is an effective pressure that reproduces Stone scaled production" << endl
+             << "  that is calculated on a pixel by pixel basis." << endl;
+  CRONUS_out << "->Self shielding is embedded in the shielding calculation and so" << endl
+             << "  sample thickness is set to 0." << endl;
+  CRONUS_out << "->These results generated by the LSDCosmoBasin program," << endl
+             << " written by Simon M. Mudd, Martin D. Hurst and Stuart W.D. Grieve" << endl;
+  CRONUS_out << "=========================================================" << endl;           
+    
   // first the header line
   results_out << "All concentrations are standardised to 07KNSTD using Balco et al 2008" << endl;
+  results_out << "Results generated by the LSDCosmoBasin program," << endl
+              << "written by Simon M. Mudd, Martin D. Hurst and Stuart W.D. Grieve" << endl;
   results_out << "sample_name,nuclide,latitude,longitude,concentration,concentration_uncert,"
        << "erate_g_percm2_peryr,AMS_uncert,muon_uncert,production_uncert,total_uncert,"
-       << "AverageTopoShielding,AvgProdScaling,AverageCombinedScaling,outlet_latitude,"
-       << "OutletPressure,OutletEffPressure,centroid_latitude,CentroidPressure,CentroidEffPressure"
+       << "AvgProdScaling,AverageTopoShielding,AverageSelfShielding,"
+       << "AverageSnowShielding,AverageCombinedScaling,outlet_latitude,"
+       << "OutletPressure,OutletEffPressure,centroid_latitude,CentroidPressure,"
+       << "CentroidEffPressure,erate_cmperkyr_rho2650,eff_erate_COSMOCALC,"
+       << "erate_COSMOCALC_cmperkyr_rho2650"
        << endl;
+  
+  double rho = 2650;
   
   // now loop through the sampes, printing the ones with data
   for (int i = 0; i<N_samples; i++)
@@ -1594,20 +1638,78 @@ void LSDCosmoData::print_results_to_csv()
       // get the results from this sample
       vector<double> erate_analysis = erosion_rate_results[i];
 
+      // now get apparent erosion rates that cosmocalc would have produced
+      int startType = 0; 
+      double Xloc = 0;
+      double Yloc = 0;
+      double  startdLoc = 0.0;
+      double  start_effdloc = 0.0;
+      double startzLoc = 100;
+      
+      LSDCRNParticle test_particle(startType, Xloc, Yloc,
+                              startdLoc, start_effdloc, startzLoc);
+      LSDCRNParameters LSDCRNP;
+      string muon_string = "Braucher";
+      double top_eff_depth = 0;     // even if there is shielding these
+      double bottom_eff_depth = 0;  // get subsumed into the combined scaling 
+      
+      vector<double> erate_info;
+      
+      if (nuclide[i] == "Be10")
+      {
+        test_particle.setConc_10Be(Concentration[i]);
+        erate_info=test_particle.apparent_erosion_10Be_COSMOCALC(rho, LSDCRNP, 
+                                 AverageCombinedScaling[i], 
+                                 muon_string, top_eff_depth, bottom_eff_depth);
+      }
+      else if(nuclide[i] == "Al26")    
+      {
+        test_particle.setConc_10Be(Concentration[i]);
+        erate_info=test_particle.apparent_erosion_26Al_COSMOCALC(rho, LSDCRNP, 
+                                 AverageCombinedScaling[i], 
+                                 muon_string, top_eff_depth, bottom_eff_depth);
+      } 
+
+      // print to the results file
       results_out << sample_name[i] << "," << nuclide[i] << "," << latitude[i] 
                   << "," << longitude[i] << "," << Concentration[i] 
-                  <<  "," << Concentration_uncertainty[i] << "," 
+                  << "," << Concentration_uncertainty[i] << "," 
                   << erate_analysis[0] << "," << erate_analysis[1] << "," 
                   << erate_analysis[2] << "," << erate_analysis[3] << "," 
-                  << erate_analysis[4] << "," <<  AverageTopoShielding[i]  << "," 
-                  << AverageProdScaling[i] << "," << AverageCombinedScaling[i] << ","
+                  << erate_analysis[4] << "," << AverageProdScaling[i] << ","
+                  << AverageTopoShielding[i] << "," << AverageSelfShielding[i] 
+                  << "," << AverageSnowShielding[i] << "," 
+                  << AverageCombinedScaling[i] << ","
                   << outlet_lat[i] << "," << OutletPressure[i] << "," 
                   << OutletEffectivePressure[i] << ","  << centroid_lat[i] << "," 
-                  << CentroidPressure[i] << "," << CentroidEffectivePressure[i] 
-                  << endl;  
+                  << CentroidPressure[i] << "," << CentroidEffectivePressure[i] << ","
+                  << erate_analysis[0]*1e6/rho <<"," 
+                  << erate_info[0] << "," << erate_info[0]*1e6/rho << endl;
+      
+      // now print to the CRONUS file
+      // Note this subsumes self shielding into the shielding factor so 
+      // the self shielding thickness is set to 0!
+      double avg_shield_no_prod = AverageTopoShielding[i]*AverageSelfShielding[i]
+                                   *AverageSnowShielding[i];
+      
+      CRONUS_out << sample_name[i] << " " << latitude[i] << " " << longitude[i]
+                 << " " << CentroidEffectivePressure[i] << " pre 0 2.65 "
+                 << avg_shield_no_prod << " ";
+      if(nuclide[i] == "Be10")
+      {
+        CRONUS_out << Concentration[i] << " " << Concentration_uncertainty[i] 
+                   << " 07KNSTD 0 0 KNSTD" << endl;
+      }
+      else if(nuclide[i] == "Al26")
+      {
+        CRONUS_out << "0 0 07KNSTD " << Concentration[i] << " " 
+                   << Concentration_uncertainty[i] << " KNSTD" << endl;      
+      }           
+        
     }
   }
   results_out.close();
+  CRONUS_out.close();
 }
 
 

@@ -1735,8 +1735,8 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
                              snow_shielding[0]);
   
   // at the moment do only the outlet
-  bool data_from_outlet_only = true;
-  cout << "LSDBasin line 1226 WARNING YOU ARE ONLY CALCULATING THE OUTLET " << endl;
+  bool data_from_outlet_only = false;
+  //cout << "LSDBasin line 1739 WARNING YOU ARE ONLY CALCULATING THE OUTLET " << endl;
   
   // get the nuclide concentration from this node
   if (Nuclide == "Be10")
@@ -2048,6 +2048,11 @@ double LSDCosmoBasin::predict_mean_CRN_conc(double eff_erosion_rate, string Nucl
         eroded_particle.update_10Be_SSfull(eff_erosion_rate,LSDCRNP);
         Total_N+=eroded_particle.getConc_10Be();
       }
+      
+      //cout << endl << endl << "LINE 2052, total shield: " << total_shielding 
+      //     << " erosion: " << eff_erosion_rate << " erosion in cm/kyr with rho = 2650: "
+      //     << eff_erosion_rate*1e6/2650.0 << " and N: " << eroded_particle.getConc_10Be() << endl;
+      
     }                    
   }
 
@@ -2289,6 +2294,11 @@ double LSDCosmoBasin::predict_mean_CRN_conc_with_snow_and_self(double eff_erosio
                                            this_top_eff_depth, this_bottom_eff_depth);
         Total_N+=eroded_particle.getConc_10Be();         
       }
+      
+      //cout << endl << endl << "LINE 2052, total shield: " << total_shielding 
+      //     << " erosion: " << eff_erosion_rate << " erosion in cm/kyr with rho = 2650: "
+      //     << eff_erosion_rate*1e6/2650.0 << " and N: " << eroded_particle.getConc_10Be() << endl;      
+      
     }                    
   }
 
@@ -2539,8 +2549,10 @@ double LSDCosmoBasin::predict_mean_CRN_conc_centroid(double eff_erosion_rate, st
 //
 // It returns a vector of values:
 //  vector<double> parameter_returns;
-// parameter_returns.push_back(AverageTopo);
 //  parameter_returns.push_back(AverageProd);
+//  parameter_returns.push_back(AverageTopo);
+//  parameter_returns.push_back(AverageSelf);
+//  parameter_returns.push_back(AverageSnow);
 //  parameter_returns.push_back(AverageCombined);
 //  parameter_returns.push_back(lat_outlet);
 //  parameter_returns.push_back(outlet_pressure);
@@ -2558,6 +2570,8 @@ vector<double> LSDCosmoBasin::calculate_effective_pressures_for_calculators(LSDR
   double AverageTopo;
   double AverageProd;
   double AverageCombined;
+  double AverageSnow;
+  double AverageSelf;
 
   // the number of basin pixels
   int count_samples = 0;
@@ -2577,11 +2591,15 @@ vector<double> LSDCosmoBasin::calculate_effective_pressures_for_calculators(LSDR
 
   // now create the CRN parameters object
   LSDCRNParameters LSDCRNP;
+  double gamma_spallation = 160;      // in g/cm^2: spallation attentuation depth
 
   // loop through the elevation data, averaging the snow and topo shielding
   double topo_shield_total = 0;
   double total_prod_scaling = 0;
+  double self_shield_total = 0;
+  double snow_shield_total = 0;
   double total_combined_scaling = 0;
+  double this_snow_shield, this_self_shield;
   int row,col;      // the row and column of the current node
   int end_node = int(BasinNodes.size());
   for (int q = 0; q < end_node; ++q)
@@ -2600,15 +2618,80 @@ vector<double> LSDCosmoBasin::calculate_effective_pressures_for_calculators(LSDR
         cout << "LSDCosmoBasin, trying to precalculate erosion rate." << endl
              << "Scaling vectors have not been set! You are about to get a seg fault" << endl;
       }
+
+      // now get the snow shelding information
+      if (snow_shield_eff_depth.size() < 1)
+      {
+        this_snow_shield = 1;
+      }
+      else if (snow_shield_eff_depth.size() == 1)
+      {
+        if (self_shield_eff_depth[0] != 0)
+        {
+          this_snow_shield = exp(-snow_shield_eff_depth[0]/gamma_spallation);
+        }
+        else
+        {
+          this_snow_shield=1;
+        }
+      }
+      else
+      {
+        if (self_shield_eff_depth[q] != 0)
+        {
+          this_snow_shield = exp(-snow_shield_eff_depth[q]/gamma_spallation);
+        }
+        else
+        {
+          this_snow_shield=1;
+        }
+      }
+      
+      // now get the self shelding information
+      if (self_shield_eff_depth.size() < 1)
+      {
+        this_self_shield = 1;
+      }
+      else if (self_shield_eff_depth.size() == 1)
+      {
+        if (self_shield_eff_depth[0] != 0)
+        {
+          this_self_shield = gamma_spallation/self_shield_eff_depth[0]*
+                             (1-exp(-self_shield_eff_depth[0]/gamma_spallation));
+        }
+        else
+        {
+          this_self_shield = 1;
+        }
+      }
+      else
+      {
+        if (self_shield_eff_depth[q] != 0)
+        {
+          this_self_shield = gamma_spallation/self_shield_eff_depth[q]*
+                             (1-exp(-self_shield_eff_depth[q]/gamma_spallation));
+        }
+        else
+        {
+          this_self_shield=1;
+        }
+      }
+      
+      snow_shield_total += this_snow_shield;
+      self_shield_total += this_self_shield;
       topo_shield_total += topographic_shielding[q];
       total_prod_scaling += production_scaling[q];
-      total_combined_scaling += topographic_shielding[q]*production_scaling[q];
+      total_combined_scaling += topographic_shielding[q]*production_scaling[q]*
+                                this_snow_shield*this_self_shield;
+      
       
     }
   }
 
   AverageTopo = topo_shield_total/double(count_samples);
   AverageProd = total_prod_scaling/double(count_samples);
+  AverageSelf = self_shield_total/double(count_samples);
+  AverageSnow = snow_shield_total/double(count_samples);
   AverageCombined = total_combined_scaling/double(count_samples);
   
   // now find the latitude for both the outlet and the centroid
@@ -2655,7 +2738,6 @@ vector<double> LSDCosmoBasin::calculate_effective_pressures_for_calculators(LSDR
   double tolerance = 1e-6;
   double Fsp = 0.978;
   
-  
   // First for the centroid
   // initial guess is 1000hPa
   double this_P = 1000;
@@ -2672,13 +2754,13 @@ vector<double> LSDCosmoBasin::calculate_effective_pressures_for_calculators(LSDR
     
     if(P_derivative != 0)
     {
-      cout << "Pressure before is: " <<this_P << " lat: " << lat;
+      //cout << "Pressure before is: " <<this_P << " lat: " << lat;
       
       this_P = this_P-f_x/P_derivative;
       
       // check to see if the difference in erosion rates meet a tolerance
       P_change = f_x/P_derivative;
-      cout << " Change is: " << P_change << " target is: " << AverageProd << " and Shielding is: " << S_this_step << endl;
+      //cout << " Change is: " << P_change << " target is: " << AverageProd << " and Shielding is: " << S_this_step << endl;
       
     }
     else
@@ -2688,8 +2770,6 @@ vector<double> LSDCosmoBasin::calculate_effective_pressures_for_calculators(LSDR
   } while(fabs(P_change) > tolerance);
   centroid_eff_pressure = this_P;
   
-  
-
   // Do it again for the outlet
   // initial guess is 1000hPa
   this_P = 1000;
@@ -2720,8 +2800,10 @@ vector<double> LSDCosmoBasin::calculate_effective_pressures_for_calculators(LSDR
   outlet_eff_pressure = this_P; 
   
   vector<double> parameter_returns;
-  parameter_returns.push_back(AverageTopo);
   parameter_returns.push_back(AverageProd);
+  parameter_returns.push_back(AverageTopo);
+  parameter_returns.push_back(AverageSelf);
+  parameter_returns.push_back(AverageSnow);
   parameter_returns.push_back(AverageCombined);
   parameter_returns.push_back(lat_outlet);
   parameter_returns.push_back(outlet_pressure);

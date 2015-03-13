@@ -829,8 +829,8 @@ vector<double> LSDCRNParticle::apparent_erosion_10Be_COSMOCALC(double rho, LSDCR
   double erate_guess = apparent_erosion_10Be_neutron_only(rho, CRNp);
   double eff_erate_guess = convert_m_to_gpercm2(erate_guess,rho);
   
-  cout << "Concentration: " << Conc_10Be << " rho: " << rho << " neutron erate " 
-       << erate_guess << "m/yr, effective: " << eff_erate_guess << " g/cm^2/yr" << endl;
+  //cout << "Concentration: " << Conc_10Be << " rho: " << rho << " neutron erate " 
+  //     << erate_guess << "m/yr, effective: " << eff_erate_guess << " g/cm^2/yr" << endl;
 
   // set the scaling
   // reset scaling parameters. This is necessary since the F values are
@@ -891,8 +891,8 @@ vector<double> LSDCRNParticle::apparent_erosion_10Be_COSMOCALC(double rho, LSDCR
     
     
     // print to screen:
-    cout << "eff_e_new = " << eff_e_new << " in cm/kyr: " << eff_e_new*1e6/rho 
-         << " 10Be: " << N_this_step << " atoms/yr" << endl;
+    //cout << "eff_e_new = " << eff_e_new << " in cm/kyr: " << eff_e_new*1e6/rho 
+    //     << " 10Be: " << N_this_step << " atoms/yr" << endl;
     
     f_x =  N_this_step-Target_conc;
     f_x_displace =  N_displace-Target_conc;
@@ -1018,8 +1018,8 @@ vector<double> LSDCRNParticle::apparent_erosion_26Al_COSMOCALC(double rho, LSDCR
   double erate_guess = apparent_erosion_26Al_neutron_only(rho, CRNp);
   double eff_erate_guess = convert_m_to_gpercm2(erate_guess,rho);
   
-  cout << "Concentration: " << Conc_26Al << " rho: " << rho << " neutron erate " 
-       << erate_guess << "m/yr, effective: " << eff_erate_guess << " g/cm^2/yr" << endl;
+  //cout << "Concentration: " << Conc_26Al << " rho: " << rho << " neutron erate " 
+  //     << erate_guess << "m/yr, effective: " << eff_erate_guess << " g/cm^2/yr" << endl;
 
   // set the scaling
   // reset scaling parameters. This is necessary since the F values are
@@ -1080,8 +1080,8 @@ vector<double> LSDCRNParticle::apparent_erosion_26Al_COSMOCALC(double rho, LSDCR
     
     
     // print to screen:
-    cout << "eff_e_new = " << eff_e_new << " in cm/kyr: " << eff_e_new*1e6/rho 
-         << " 26Al: " << N_this_step << " atoms/yr" << endl;
+    //cout << "eff_e_new = " << eff_e_new << " in cm/kyr: " << eff_e_new*1e6/rho 
+    //     << " 26Al: " << N_this_step << " atoms/yr" << endl;
     
     f_x =  N_this_step-Target_conc;
     f_x_displace =  N_displace-Target_conc;

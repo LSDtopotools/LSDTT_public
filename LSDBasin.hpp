@@ -1062,15 +1062,17 @@ class LSDCosmoBasin: public LSDBasin
     /// @param FlowInfo the LSDFlowInfo object
     /// @param path_to_atmospheric_data THis is a path to binary NCEP data. 
     /// @return a vector of values used in open-source calculators
-    ///  vector[0] = AverageTopo;
-    ///  vector[1] = AverageProd;
-    ///  vector[2] = AverageCombined;
-    ///  vector[3] = lat_outlet;
-    ///  vector[4] = outlet_pressure;
-    ///  vector[5] = outlet_eff_pressure;
-    ///  vector[6] = lat_centroid;
-    ///  vector[7] = centroid_pressure;
-    ///  vector[8] = centroid_eff_pressure;
+    ///  vector[0] = AverageProd;
+    ///  vector[1] = AverageTopo;
+    ///  vector[2] = AverageSelf;
+    ///  vector[3] = AverageSnow;
+    ///  vector[4] = AverageCombined;
+    ///  vector[5] = lat_outlet;
+    ///  vector[6] = outlet_pressure;
+    ///  vector[7] = outlet_eff_pressure;
+    ///  vector[8] = lat_centroid;
+    ///  vector[9] = centroid_pressure;
+    ///  vector[10] = centroid_eff_pressure;
     /// @author SMM
     /// @date 11/03/2015
     vector<double> calculate_effective_pressures_for_calculators(LSDRaster& Elevation,

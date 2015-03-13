@@ -1,4 +1,4 @@
-# make with make -f cosmo_snapping.make
+# make with make -f cosmo_testing.make
 
 CC=g++
 CFLAGS=-c -Wall -O3

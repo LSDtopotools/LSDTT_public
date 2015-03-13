@@ -137,10 +137,13 @@ int main (int nNumberofArgs,char *argv[])
 
   // now do it with the full method
   method_flag = 1;    // sets method to basic analysis
+  
+  //cout << "Getting data" << endl;
   CosmoData.calculate_erosion_rates(method_flag);
   
+  cout << "Printing results " << endl;
   // now print the data to a csv file
-  CosmoData.print_results_to_csv();
+  CosmoData.print_results();
   
 }
   

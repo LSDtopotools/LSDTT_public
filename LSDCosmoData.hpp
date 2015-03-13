@@ -214,7 +214,8 @@ class LSDCosmoData
     /// @date 10/02/2015
     void print_simple_results_to_screen(double rho);
 
-    /// @brief This prints the results to a csv file
+    /// @brief This prints the results to a csv file and to a file for
+    ///  passing to CRONUS
     /// @detail The columns in the CSV file are:
     ///  sample_name
     ///  nuclide
@@ -229,6 +230,8 @@ class LSDCosmoData
     ///  total_uncert g_percm2_peryr
     ///  AvgProdScaling dimensionless
     ///  AverageTopoShielding dimensionless
+    ///  AverageSelfShielding dimensionless
+    ///  AverageSnowShielding dimensionless
     ///  AverageCombinedScaling dimensionless (this is averaged production scaling times toposhielding)
     ///  outlet_latitude
     ///  OutletPressure hPa
@@ -236,9 +239,16 @@ class LSDCosmoData
     ///  centroid_latitude
     ///  CentroidPressure hPa
     ///  CentroidEffPressure (pressure needed to get basin averaged production scaling)
+    ///  ErosionRate_in_cmperkyr (to check against cosmocalc, assumes 2650 kg/m^2)
+    ///  ErosionRate_COSMOCALC_in_g_percm2_peryr (assumes 2650 kg/m^2): The erosion
+    ///   rate you would get if you took production weighted scaling and used
+    ///   cosmocalc. 
+    ///  ErosionRate_COSMOCALC_cmperkyr (assumes 2650 kg/m^2): The erosion
+    ///   rate you would get if you took production weighted scaling and used
+    ///   cosmocalc. 
     /// @author SMM
     /// @date 12/03/2015
-    void print_results_to_csv();
+    void print_results();
 
 
   protected:
@@ -347,6 +357,12 @@ class LSDCosmoData
     
     /// The mean topographic sheilding of the basin
     vector<double> AverageTopoShielding;
+
+    /// The mean snow sheilding of the basin
+    vector<double> AverageSnowShielding;
+ 
+    /// The mean self sheilding of the basin
+    vector<double> AverageSelfShielding;
     
     /// The weighted scaling (production*shieding for each pixel, averaged)
     vector<double> AverageCombinedScaling;
