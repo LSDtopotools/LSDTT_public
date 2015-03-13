@@ -78,6 +78,9 @@ void LSDCosmoData::create()
 
 void LSDCosmoData::create(string path_name, string param_name_prefix)
 {
+  // flags for writing files
+  write_TopoShield_raster = true;
+  
   // set the names of the data members
   path = path_name;
   param_name = param_name_prefix;
@@ -136,6 +139,8 @@ void LSDCosmoData::create(string path_name, string param_name_prefix)
   
   cout << "Loading CRN data" << endl;
   load_cosmogenic_data(crn_fname, csv_ext);
+  
+  cout << "Number of samples: " << N_samples << endl;
   
   // get the correct number of samples in the results vec
   vector<double> for_calculator_empty(N_samples,-99);
@@ -367,6 +372,19 @@ void LSDCosmoData::load_csv_cosmo_data(string filename)
   
   }
   
+  //for(int i = 0; i<temp_sample_name.size(); i++)
+  //{
+  //  cout << endl << endl << "==============Sample "<< i << "=======" << endl;
+  //  cout << temp_sample_name[i] << endl;
+  //  cout << temp_latitude[i] << endl;
+  //  cout << temp_longitude[i] << endl;
+  //  cout << temp_nuclide[i] << endl;  
+  //  cout << temp_Concentration_unstandardised[i] << endl;
+  //  cout << temp_Concentration_uncertainty_unstandardised[i] << endl;
+  //  cout << temp_standardisation[i] << endl;
+  //}
+  
+  
   // now update the data members
   sample_name = temp_sample_name;
   latitude = temp_latitude;
@@ -376,6 +394,8 @@ void LSDCosmoData::load_csv_cosmo_data(string filename)
   Concentration_uncertainty_unstandardised = 
                          temp_Concentration_uncertainty_unstandardised;
   standardisation = temp_standardisation;
+  
+  //cout << "Done!" << endl;
   
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -465,6 +485,22 @@ void LSDCosmoData::load_parameters(string filename)
         cout << "You have not selected a valid scaling, defaulting to Braucher" << endl;
       }
     }
+    else if (lower == "write_toposhield_raster")
+    {
+      if(value.find("true") == 0 || value.find("True") == 0)
+      {
+        write_TopoShield_raster = true;
+      }
+      else if (value.find("false") == 0 || value.find("False") == 0)
+      {
+        write_TopoShield_raster = false;
+      }
+      else
+      {
+        write_TopoShield_raster = true;
+        cout << "You have not selected a valid toposhield write. Defaulting to true." << endl;
+      }
+    }
     else
     {
       cout << "Line " << __LINE__ << ": No parameter '"
@@ -486,6 +522,8 @@ void LSDCosmoData::load_parameters(string filename)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCosmoData::load_DEM_and_shielding_filenames_csv(string filename)
 {
+  //cout << "Getting filenames" << endl;
+  
   // this vecvec holds data for determining the dem, the snow shielding
   // the self shielding and the topographic sheilding
   vector< vector<string> > temp_DEM_names_vecvec;
@@ -649,7 +687,6 @@ void LSDCosmoData::load_DEM_and_shielding_filenames_csv(string filename)
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
@@ -1367,6 +1404,13 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
       cout << "Starting topographic shielding" << endl;
       LSDRaster T_shield = filled_raster.TopographicShielding(theta_step, phi_step);
       Topographic_shielding = T_shield;
+      
+      if(write_TopoShield_raster)
+      {
+        string TShield_name = Raster_names[0]+"_TopoShield";
+        T_shield.write_raster(TShield_name,DEM_bil_extension);
+      }
+      
     }
     
     // Now check if snow and self shielding rasters exist
@@ -1575,8 +1619,6 @@ void LSDCosmoData::calculate_erosion_rates(int method_flag)
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This prints all valid results to a csv file

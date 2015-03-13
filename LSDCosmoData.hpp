@@ -351,6 +351,11 @@ class LSDCosmoData
     /// The boundary conditions for the flow info object
     vector<string> boundary_conditions;
     
+    //---------------Flags for writing files---------------------
+    /// Write toposheild rasters if they don't exist
+    bool write_TopoShield_raster;
+    
+    
     //-----------------Information used in cosmogenic calculators---------------
     /// The mean_production scaling of the basin 
     vector<double> AverageProdScaling;
