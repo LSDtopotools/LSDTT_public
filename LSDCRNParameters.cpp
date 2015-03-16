@@ -581,6 +581,8 @@ void LSDCRNParameters::P_mu_total(double z,double h)
   // find the vertical flux at SLHL
   double a = 258.5*(pow(100,2.66));
   double b = 75*(pow(100,1.66));
+  
+  // this is equation (1) From Heisinger 2002a and (3) from Heisinger 2002b
   double phi_vert_slhl = (a/((z+21000.0)*((pow((z+1000),1.66)) + b)))
                             *exp(-5.5e-6* z);
 
