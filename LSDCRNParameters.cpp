@@ -73,6 +73,8 @@ using namespace TNT;
 // function to set CRN parameters
 void LSDCRNParameters::create()
 {
+  version = "1.0";
+  
   S_t = 1;
   neutron_S_t = 1;
 
@@ -2588,5 +2590,63 @@ vector<double> LSDCRNParameters::CRONUS_get_uncert_production_ratios(string scal
   return rel_delP;
 }
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prints parameters to allow both checking and tracking of the
+// parameters used in calculations
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParameters::print_parameters_to_file(string fname, string muon_scaling)
+{
+  ofstream CRNparams_out;
+  CRNparams_out.open(fname.c_str());
+  
+  CRNparams_out << "CRNParameters version: " << version << endl;
+  
+  
+  if(muon_scaling == "Braucher")
+  {
+    set_Braucher_parameters();
+    
+  }
+  else if (muon_scaling == "Schaller")
+  {
+    set_Schaller_parameters();
+  }
+  else if (muon_scaling == "Granger")
+  {
+    set_Granger_parameters();
+  }
+  else
+  {
+    muon_scaling = "Braucher_as_default";
+    set_Braucher_parameters();
+  }
+  CRNparams_out << "Muon scaling: " << muon_scaling;
+  
+  CRNparams_out << "lambda_10Be: " << lambda_10Be << " yr^-1" << endl;
+  CRNparams_out << "lambda_26Al: " << lambda_26Al << " yr^-1" << endl;
+  CRNparams_out << "lambda_14C: " << lambda_14C << " yr^-1" << endl;
+  CRNparams_out << "lambda_36Cl: " << lambda_36Cl << " yr^-1" << endl;
+  set_CRONUS_data_maps();
+
+  CRNparams_out << "P0_10Be: " << P0_10Be << " a/g/yr, delP0_10Be: " << CRONUS_data_map["delP10_ref_St"] << endl;
+  CRNparams_out << "P0_26Al: " << P0_26Al << " a/g/yr, delP0_26Al: " << CRONUS_data_map["del26Al_ref_St"] << endl;
+  CRNparams_out << "P0_14C: " << P0_14C << " a/g/yr, delP0_14C: " << CRONUS_data_map["del14C_ref_St"] << endl;
+  CRNparams_out << "P0_36Cl: " << P0_36Cl << " a/g/yr, delP0_36Cl: " << CRONUS_data_map["del36Cl_ref_St"] << endl;
+  CRNparams_out << "P0_21Ne: " << P0_21Ne << " a/g/yr, delP0_21Ne: " << CRONUS_data_map["del21Ne_ref_St"] << endl;
+  CRNparams_out << "P0_3He: " << P0_3He << " a/g/yr, delP0_3He: " << CRONUS_data_map["del3He_ref_St"] << endl;
+  
+  CRNparams_out << "Gamma[0]: " << Gamma[0] << " g/cm^2" << endl;
+  CRNparams_out << "Gamma[1]: " << Gamma[1] << " g/cm^2" << endl;
+  CRNparams_out << "Gamma[2]: " << Gamma[2] << " g/cm^2" << endl;
+  CRNparams_out << "Gamma[3]: " << Gamma[3] << " g/cm^2" << endl;
+
+  CRNparams_out << "10Be F\t"<<F_10Be[0]<<"\t"<<F_10Be[1]<<"\t"<<F_10Be[2]<<"\t"<<F_10Be[3]<<endl;
+  CRNparams_out << "26Al F\t"<<F_26Al[0]<<"\t"<<F_26Al[1]<<"\t"<<F_26Al[2]<<"\t"<<F_26Al[3]<<endl;
+  CRNparams_out << "36Cl F\t"<<F_36Cl[0]<<"\t"<<F_36Cl[1]<<"\t"<<F_36Cl[2]<<"\t"<<F_36Cl[3]<<endl;
+  CRNparams_out << "14C F\t"<<F_14C[0]<<"\t"<<F_14C[1]<<"\t"<<F_14C[2]<<"\t"<<F_14C[3]<<endl;
+  
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 #endif

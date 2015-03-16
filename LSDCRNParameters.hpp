@@ -491,11 +491,24 @@ class LSDCRNParameters
   /// @author SMM
   /// @date 18/12/2014
   vector<double> CRONUS_get_uncert_production_ratios(string scaling_name);
-  
+
+  /// @brief this Prints the parameters to a file that is used for 
+  ///  testing and reconstruction of results
+  /// @param fname the filename with full file path
+  /// @param muon_scaling the scaling scheme, either Granger, Schaller or Braucher
+  ///  the default is Braucher
+  /// @author SMM
+  /// @date 15/03/2015
+  void print_parameters_to_file(string fname, string muon_scaling);
+
+
   private:
   /// @brief This is called by the default constructor. 
   /// It is the only possible constructor
   void create();
+  
+  /// the version number of this CRNParameters object
+  string version;
 
   /// The attenudation lengths in g/cm^2. Each element in the array
   /// refers to a different production mechanism
