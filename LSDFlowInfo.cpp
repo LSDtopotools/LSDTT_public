@@ -3275,9 +3275,9 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 
           degs = degs_new;
 
-        // test for plan curvature here and set a flag if flow is divergent but continue trace regardless
-        // The larger the counter the more divergent the trace is
-        if (PlanCurvature.get_data_element(a,b) > (0.01)){
+        // test for plan curvature here and set a flag if flow is divergent or convergent but continue trace regardless
+        // The larger the counter the more convergent or divergent the trace is
+        if (abs(PlanCurvature.get_data_element(a,b)) > (0.001)){
           ++DivergentCountFlag;
         }
 
@@ -3935,9 +3935,9 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_RAW(LSDRaster Elevation
 
         	}
 
-        // test for plan curvature here and set a flag if flow is divergent but continue trace regardless
-        // The larger the counter the more divergent the trace is
-        if (PlanCurvature.get_data_element(a,b) < (-0.0001) || PlanCurvature.get_data_element(a,b) > (0.0001)){
+        // test for plan curvature here and set a flag if flow is divergent or convergent but continue trace regardless
+        // The larger the counter the more convergent or divergent the trace is
+        if (abs(PlanCurvature.get_data_element(a,b)) > (0.001)){
           ++DivergentCountFlag;
         }
 
