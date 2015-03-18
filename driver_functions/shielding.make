@@ -1,6 +1,6 @@
 CC=g++
-CFLAGS=-c -Wall -pg -g -fopenmp
-OFLAGS = -Wall -pg -g -fopenmp
+CFLAGS=-c -Wall -O3
+OFLAGS = -Wall -O3
 
 SOURCES= shielding_driver.cpp \
         ../LSDMostLikelyPartitionsFinder.cpp \

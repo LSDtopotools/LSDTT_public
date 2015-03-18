@@ -433,6 +433,22 @@ class LSDBasin
   /// @author SWDG
   /// @date 12/12/13 
   LSDIndexRaster write_integer_data_to_LSDIndexRaster(int Param, LSDFlowInfo FlowInfo);
+
+
+  /// @brief This function creates a padded, georeferenced raster from a raw
+  ///  raster file that is trimmed to the dimension of a basin
+  /// @detail Includes a padding function so that one can pad either
+  ///  to catch streams for CRN analysis or for wider padding to catch
+  ///  peaks for topographic shielding (also for CRN analysis)
+  /// @param padding_pixels the number of pixels with which to pad the raster
+  /// @param FlowInfo an LSDFlowInfo object
+  /// @param Raster_Data the raster that gets trimmed. Its georeferencing needs
+  ///  to be the same as the basin obect georeferencing. 
+  /// @author SMM
+  /// @date 18/03/2015
+LSDRaster TrimPaddedRasterToBasin(int padding_pixels, LSDFlowInfo& FlowInfo,
+                                            LSDRaster& Raster_Data);
+
   
   /// @brief Write Junction values into the shape of the basin.
   /// @param FlowInfo Flowinfo object.

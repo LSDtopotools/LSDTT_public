@@ -751,7 +751,8 @@ LSDIndexRaster LSDBasin::write_integer_data_to_LSDIndexRaster(int Param, LSDFlow
 // Write real basin parameters into the shape of the basin.
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-LSDRaster LSDBasin::write_real_data_to_LSDRaster(float Param, LSDFlowInfo FlowInfo){
+LSDRaster LSDBasin::write_real_data_to_LSDRaster(float Param, LSDFlowInfo FlowInfo)
+{
   
   int i;
   int j; 
@@ -773,13 +774,15 @@ LSDRaster LSDBasin::write_real_data_to_LSDRaster(float Param, LSDFlowInfo FlowIn
 // Cookie cut data from an LSDRaster into the shape of the basin.
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-LSDRaster LSDBasin::write_raster_data_to_LSDRaster(LSDRaster Data, LSDFlowInfo FlowInfo){
+LSDRaster LSDBasin::write_raster_data_to_LSDRaster(LSDRaster Data, LSDFlowInfo FlowInfo)
+{
   
   int i;
   int j; 
   Array2D<float> Output(NRows, NCols, NoDataValue);
   
-  for (int q = 0; q < int(BasinNodes.size()); ++q){
+  for (int q = 0; q < int(BasinNodes.size()); ++q)
+  {
     FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
     Output[i][j] = Data.get_data_element(i,j);
   }
@@ -828,6 +831,106 @@ int LSDBasin::is_node_in_basin(int test_node)
     }
   }  
   return node_checker;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function trims a padded raster to the basin
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LSDRaster LSDBasin::TrimPaddedRasterToBasin(int padding_pixels, LSDFlowInfo& FlowInfo,
+                                            LSDRaster& Raster_Data)
+{
+  int max_row = -1;
+  int max_col = -1;
+  int min_row = 1e10;
+  int min_col = 1e10;
+  
+  int row,col;
+  
+  for (int q = 0; q < int(BasinNodes.size()); ++q)
+  {
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], row, col);
+    
+    // get the maximum and minimum columns. 
+    if(row > max_row)
+    {
+      max_row = row;
+    }
+    if(col > max_col)
+    {
+      max_col = col; 
+    }
+    if(row < min_row)
+    {
+      min_row = row;
+    }
+    if(col < min_col)
+    {
+      min_col = col;
+    }
+  }
+  
+  // pad the rows and columms
+  min_row = min_row-padding_pixels;
+  min_col = min_col-padding_pixels;
+  max_row = max_row+padding_pixels;
+  max_col = max_col+padding_pixels;  
+  
+  // restrict the rows and columns to the size of the DEM
+  if (min_row < 0)
+  {
+    min_row = 0;
+  }
+  if (min_col < 0)
+  {
+    min_col = 0;
+  }
+  if (max_row > NRows-1)
+  {
+    max_row = NRows-1;
+  }
+  if (max_col > NCols -1)
+  {
+    max_col = NCols-1;
+  }
+  
+  // now generate the new DEM
+  // create new row and col sizes taking account of zero indexing
+  int new_row_dimension = (max_row-min_row) + 1;
+  int new_col_dimension = (max_col-min_col) + 1;
+
+  Array2D<float>TrimmedData(new_row_dimension, new_col_dimension, NoDataValue);
+
+  //loop over min bounding rectangle and store it in new array of shape new_row_dimension x new_col_dimension
+  int TrimmedRow;
+  int TrimmedCol;
+  
+  for (int row = min_row; row < max_row+1; ++row)
+  {
+    for(int col = min_col; col < max_col+1; ++col)
+    {
+      TrimmedRow = row-min_row;
+      TrimmedCol = col-min_col;
+      
+      TrimmedData[TrimmedRow][TrimmedCol] = Raster_Data.get_data_element(row,col);
+    }
+  }
+
+  //calculate lower left corner coordinates of new array
+  float new_XLL = ((min_col - 1) * DataResolution) + XMinimum;
+  float new_YLL = YMinimum + ((NRows - (max_row + 0)) * DataResolution);
+  float YMax = new_YLL + (new_row_dimension* DataResolution);
+
+    
+  LSDRaster TrimmedRaster(new_row_dimension, new_col_dimension, new_XLL,
+                          new_YLL, DataResolution, NoDataValue, TrimmedData,
+                          GeoReferencingStrings);
+                          
+  // update the georeferencing
+  TrimmedRaster.Update_GeoReferencingStrings(new_XLL,YMax);                        
+
+  return TrimmedRaster;  
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

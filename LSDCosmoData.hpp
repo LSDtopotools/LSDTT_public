@@ -128,7 +128,16 @@ class LSDCosmoData
     /// @date 03/03/2015
     void check_rasters();
     
-
+    /// @detail This function takes a DEM and then spawns dems that are clipped
+    ///  to the basin boundaries, with padding to incorporate surrounding high
+    ///  topography and CRN samples that might lie outside the basin due to 
+    ///  GPS errors
+    /// @param DEM_fname the name of the DEM with FULL PATH but excluding extension
+    /// @param basin_padding_px the number of pixels that should be padded from
+    ///  the basin
+    /// @author SMM
+    /// @date 18/03/2015
+    vector<string> spawn_clipped_basins(string DEM_fname, int basin_padding_px);
     
     /// @brief this function calculates the UTM coordinates of all the sample
     ///  points for a given UTM zone. 

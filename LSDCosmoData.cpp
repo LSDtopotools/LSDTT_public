@@ -874,6 +874,9 @@ void LSDCosmoData::check_parameter_values()
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // THis checks the rasters for georeferencing and scaling
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -927,6 +930,95 @@ void LSDCosmoData::check_rasters()
       }
     }
   }
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Spawn clipped basins
+// This function attempts to speed up sheilding calculations by
+// finding basins and then clipping each basin to a DEM. It sucks up a whole bunch
+// of disk space but is faster than doing entire DEMs
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<string> LSDCosmoData::spawn_clipped_basins(string DEM_fname, int padding_pixels)
+{
+
+  vector<string> new_dem_names;
+  
+  cout << "\n\n\n====================================================\n";
+  cout << "Spawning basins" << endl;
+
+  // now find valid points
+  vector<int> valid_cosmo_points;         // a vector to hold the valid nodes
+  vector<int> snapped_node_indices;       // a vector to hold the valid node indices
+  vector<int> snapped_junction_indices;   // a vector to hold the valid junction indices
+  
+  // Load the DEM
+  string DEM_bil_extension = "bil";
+  LSDRaster topo_test(DEM_fname, DEM_bil_extension);
+  
+  // Fill this raster
+  LSDRaster filled_raster = topo_test.fill(min_slope);
+  //cout << "Filled raster" << endl;
+  
+  
+  // get the flow info
+  LSDFlowInfo FlowInfo(boundary_conditions, filled_raster);
+  //cout << "Got flow info" << endl;
+
+  // get contributing pixels (needed for junction network)
+  LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+  //cout << "Got contributing pixels" << endl;
+  
+  // get the sources
+  vector<int> sources;
+  sources = FlowInfo.get_sources_index_threshold(ContributingPixels, source_threshold);
+  //cout << "Got sources" << endl;
+
+  // now get the junction network
+  LSDJunctionNetwork JNetwork(sources, FlowInfo);
+  //cout << "Got junction network" << endl;
+  
+  // Now convert the data into this UTM zone
+  convert_to_UTM(filled_raster);
+
+  // convert UTM vectors to float
+  vector<float> fUTM_easting;
+  vector<float> fUTM_northing;
+  for (int i = 0; i< int(UTM_easting.size()); i++)
+  {
+    fUTM_easting.push_back( float(UTM_easting[i]));
+    fUTM_northing.push_back( float(UTM_northing[i]));
+  }
+  
+  JNetwork.snap_point_locations_to_channels(fUTM_easting, fUTM_northing, 
+            search_radius_nodes, threshold_stream_order, FlowInfo, 
+            valid_cosmo_points, snapped_node_indices, snapped_junction_indices);
+
+  int n_valid_points = int(valid_cosmo_points.size());
+
+  //========================
+  // LOOPING THROUGH BASINS
+  //========================
+  // now loop through the valid points, getting the cosmo data 
+  for(int samp = 0; samp<n_valid_points; samp++)
+  {
+     
+    cout << "Valid point is: " << valid_cosmo_points[samp] << " X: " 
+         << UTM_easting[valid_cosmo_points[samp]] << " Y: "
+         << UTM_northing[valid_cosmo_points[samp]] << endl;
+    cout << "Node index is: " <<  snapped_node_indices[samp] << " and junction is: " 
+         << snapped_junction_indices[samp] << endl;
+    LSDBasin thisBasin(snapped_junction_indices[samp],FlowInfo, JNetwork);
+      
+    LSDRaster BasinRaster = thisBasin.TrimPaddedRasterToBasin(padding_pixels, 
+                                         FlowInfo,filled_raster);
+      
+    string DEMnewname = DEM_fname+ "_"+itoa(valid_cosmo_points[samp]);
+    BasinRaster.write_raster(DEMnewname,"bil");
+    new_dem_names.push_back(DEMnewname);
+  }
+  return new_dem_names;
 }
 
 
