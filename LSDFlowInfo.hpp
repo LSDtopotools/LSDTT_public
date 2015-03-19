@@ -653,6 +653,12 @@ class LSDFlowInfo
   /// @date 31/10/14
   LSDIndexRaster find_cells_influenced_by_nodata(LSDIndexRaster& Bordered_mask,
                                  LSDRaster& Topography);
+  
+  /// @brief This function returns all the values from a raster for a corresponding
+  /// input vector of node indices.
+  /// @param An LSDRaster - must have same dimensions as the LSDFlowInfo object
+  /// @param vector<float> - the node indices for which you want the values
+  vector<float> get_raster_values_for_nodes(LSDRaster& Raster, vector<int>& node_indices);
 
 	
   protected:
