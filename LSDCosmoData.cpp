@@ -501,6 +501,22 @@ void LSDCosmoData::load_parameters(string filename)
         cout << "You have not selected a valid toposhield write. Defaulting to true." << endl;
       }
     }
+    else if (lower == "write_basin_index_raster")
+    {
+      if(value.find("true") == 0 || value.find("True") == 0)
+      {
+        write_basin_index_raster = true;
+      }
+      else if (value.find("false") == 0 || value.find("False") == 0)
+      {
+        write_basin_index_raster = false;
+      }
+      else
+      {
+        write_basin_index_raster = true;
+        cout << "You have not selected a valid toposhield write. Defaulting to true." << endl;
+      }
+    }
     else
     {
       cout << "Line " << __LINE__ << ": No parameter '"
@@ -1039,7 +1055,7 @@ vector<string> LSDCosmoData::spawn_clipped_basins(string DEM_fname, int padding_
   }
   return new_dem_names;
 }
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
@@ -1412,11 +1428,20 @@ void LSDCosmoData::basic_cosmogenic_analysis(string DEM_fname)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // This function wraps the determination of cosmogenic erosion rates
+// THIS IS FOR A SINGLE RASTER
 // 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_names,
                             vector<double> CRN_params)
 {
+
+  cout << endl << endl << "================================================" << endl;
+  cout << "Looking for basins in raster: " << Raster_names[0] << endl << endl;
+
+  // some parameters for printing the basins, if that is called for
+  int basin_number;
+  int basin_pixel_area;
+  map<int,int> basin_area_map;
 
   //cout << "\n\n\n====================================================\n";
   //cout << "Performing analysis with snow and self shielding" << endl;
@@ -1436,7 +1461,6 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
   // Fill this raster
   LSDRaster filled_raster = topo_test.fill(min_slope);
   //cout << "Filled raster" << endl;
-  
   
   // get the flow info
   LSDFlowInfo FlowInfo(boundary_conditions, filled_raster);
@@ -1499,9 +1523,17 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
   LSDRaster Snow_shielding;
   LSDRaster Self_shielding;
   
+  
+  // a flag for writing the initial basin index
+  bool written_inital_basin_index = false;
+  
   // now, IF there are valid points, go on to the rest of the analysis
   if (valid_nuclide_names.size() != 0)
   {
+    // if you need to write the inital raster, do so 
+    LSDIndexRaster BasinIndex;   // initiate and empty raster
+
+    
     // first check if topographic shielding raster exists
     cout << "Looking for toposhield raster, name is: " << Raster_names[3] << endl;
     if( Raster_names[3] != "NULL")
@@ -1567,6 +1599,8 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
     // LOOPING THROUGH BASINS
     //========================
     // now loop through the valid points, getting the cosmo data 
+    cout << "-----------------------------------------------------------" << endl;
+    cout << "I found " << n_valid_points << " valid CRN basins in this raster! " << endl;
     for(int samp = 0; samp<n_valid_points; samp++)
     {
       if( valid_nuclide_names[samp] == "Be10")
@@ -1600,13 +1634,38 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
         test_dN = test_dN10;
       }
       
-      cout << "Valid point is: " << valid_cosmo_points[samp] << " X: " 
-           << UTM_easting[valid_cosmo_points[samp]] << " Y: "
+
+      cout << endl << "Valid point is: " << valid_cosmo_points[samp]
+           << " Sample name: " << sample_name[ valid_cosmo_points[samp] ] << " Easting: " 
+           << UTM_easting[valid_cosmo_points[samp]] << " Northing: "
            << UTM_northing[valid_cosmo_points[samp]] << endl;
       cout << "Node index is: " <<  snapped_node_indices[samp] << " and junction is: " 
            << snapped_junction_indices[samp] << endl;
+      cout << "-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -" << endl;
       LSDCosmoBasin thisBasin(snapped_junction_indices[samp],FlowInfo, JNetwork,
                               test_N10,test_dN10, test_N26,test_dN26);
+
+      // write the index basin if flag is set to true
+      if(write_basin_index_raster)
+      {
+        if (not written_inital_basin_index)
+        {
+        
+          basin_number = valid_cosmo_points[samp];
+          basin_pixel_area = thisBasin.get_NumberOfCells();
+          basin_area_map[basin_number] = basin_pixel_area;
+          LSDIndexRaster NewBasinIndex = 
+             thisBasin.write_integer_data_to_LSDIndexRaster(basin_number, FlowInfo);
+          BasinIndex = NewBasinIndex;
+          written_inital_basin_index = true;
+        }
+        else
+        {
+          basin_number = valid_cosmo_points[samp];
+          thisBasin.add_basin_to_LSDIndexRaster(BasinIndex, FlowInfo,
+                                                basin_area_map,basin_number);
+        }
+      }
 
       // we need to scale the sheilding parameters
       // now do the snow and self sheilding
@@ -1680,12 +1739,22 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
 
       //cout << "finished adding data" << endl;
 
-    }  // finished looping thorough basins 
+    }  // finished looping thorough basins
+    
+    // now print the basin LSDIndexRaster
+    if(write_basin_index_raster)
+    {
+      string basin_ext = "_BASINS";
+      string basin_fname =  DEM_fname+basin_ext;
+      BasinIndex.write_raster(basin_fname, DEM_bil_extension);
+    }
+     
   }    // finsiehd logic for a DEM with valid points
   else
   {
     cout << "There are no valid CRN points in this raster" << endl;
   }
+  cout << "==========================================" << endl << endl;
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

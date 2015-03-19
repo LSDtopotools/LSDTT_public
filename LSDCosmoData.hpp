@@ -372,6 +372,8 @@ class LSDCosmoData
     /// Write toposheild rasters if they don't exist
     bool write_TopoShield_raster;
     
+    /// Write a LSDIndexRaster with the basins
+    bool write_basin_index_raster;
     
     //-----------------Information used in cosmogenic calculators---------------
     /// The mean_production scaling of the basin 
