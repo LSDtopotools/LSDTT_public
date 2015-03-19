@@ -769,6 +769,25 @@ void LSDCosmoData::load_txt_cosmo_data(string filename)
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This gets the DEM names
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<string> LSDCosmoData::get_DEM_fnames()
+{
+  int N_DEMS = int(DEM_names_vecvec.size());
+  vector<string> DEM_fnames;
+
+  // loop through the filename vecvec, extracting the DEM names
+  for (int i = 0; i<N_DEMS; i++)
+  {
+    vector<string> vnames = DEM_names_vecvec[i];
+    DEM_fnames.push_back(vnames[0]);
+  }
+  return DEM_fnames;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // This function checks the parameters of the object and sends warnings if they
 // seem incorrect

@@ -843,8 +843,8 @@ LSDRaster LSDBasin::TrimPaddedRasterToBasin(int padding_pixels, LSDFlowInfo& Flo
 {
   int max_row = -1;
   int max_col = -1;
-  int min_row = 1e10;
-  int min_col = 1e10;
+  int min_row = 1e8;
+  int min_col = 1e8;
   
   int row,col;
   
@@ -928,11 +928,75 @@ LSDRaster LSDBasin::TrimPaddedRasterToBasin(int padding_pixels, LSDFlowInfo& Flo
                           GeoReferencingStrings);
                           
   // update the georeferencing
-  TrimmedRaster.Update_GeoReferencingStrings(new_XLL,YMax);                        
+  TrimmedRaster.Update_GeoReferencingStrings(new_XLL,YMax);      
 
   return TrimmedRaster;  
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This adds basins to an LSDIndexRaster
+// Smaller basins overwrite larger basins
+// 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDBasin::add_basin_to_LSDIndexRaster(LSDIndexRaster& basin_raster, 
+                                           LSDFlowInfo& FlowInfo,
+                                           map<int,int>& drainage_of_other_basins, 
+                                           int this_basin_index)
+{
+  int row, col;
+  int existing_basin_index;
+  int this_basin_pixel_area = int(BasinNodes.size());
+
+  // add the drainage area of the basin
+  drainage_of_other_basins[this_basin_index] = this_basin_pixel_area;
+  
+  // make sure that the index raster is the same size as the basin
+  // check_georeferencing
+  int RNR = basin_raster.get_NRows();
+  int RNC = basin_raster.get_NCols();
+  int NDV = basin_raster.get_NoDataValue();
+  if (RNR != NRows || RNC != NCols)
+  {
+    cout << "LSDBasin::Add_basin_to_LSDIndexRaster, failed to add basins" << endl
+         << "since LSDIndexRaster does not have same georeferncing as basin." << endl;
+  }
+  else
+  {
+    for (int q = 0; q < int(BasinNodes.size()); ++q)
+    {
+      FlowInfo.retrieve_current_row_and_col(BasinNodes[q], row, col);
+      
+      // check to see if there is already data there
+      if( basin_raster.get_data_element(row,col) == NDV)
+      {
+        basin_raster.set_data_element(row,col,this_basin_index);
+      }
+      else
+      {
+        // if there is already data there, the smaller basin overrwites the larger
+        // basin. You will be able to see the larger basins since the smaller
+        // basins are nested within the larger basins
+        existing_basin_index = basin_raster.get_data_element(row,col);
+        
+        if(drainage_of_other_basins.find(existing_basin_index) == drainage_of_other_basins.end())
+        {
+          cout << "LSDBasin::Add_basin_to_LSDIndexRaster, Something has gone wrong." << endl
+               << "The existing basin is not in the basin map. " << endl
+               << "Overwriting data." << endl;
+          basin_raster.set_data_element(row,col,this_basin_index);     
+        }
+        else if (this_basin_pixel_area < drainage_of_other_basins[existing_basin_index])
+        {
+          basin_raster.set_data_element(row,col,this_basin_index);
+        }
+      }
+    }
+  }
+
+}    
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

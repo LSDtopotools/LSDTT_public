@@ -434,6 +434,26 @@ class LSDBasin
   /// @date 12/12/13 
   LSDIndexRaster write_integer_data_to_LSDIndexRaster(int Param, LSDFlowInfo FlowInfo);
 
+  
+  /// @brief This function is used to create a single LSDIndexRaster that
+  ///  contains all the basins in a DEM. It is done by adding each basin in
+  ///  turn (but this only adds a single basin). 
+  /// @param basin_raster LSDIndexRaster containing the basin codes. It should
+  ///  be initialsed using write_integer_data_to_LSDIndexRaster
+  /// @param FlowInfo the flowinfo data member
+  /// @drainage_of_other_basins This is a map where the key is an int, which 
+  ///  has the basin number, and the value is an int, the number of pixels in
+  ///  the basin. It is somewhat dangerous because it does not make sure that
+  ///  the user is inputting unique basin numbers so some basin numbers could be
+  ///  overwritten
+  /// @param this_basin_index the index of the basin being added to the raster
+  /// @author SMM
+  /// @date 18/03/2015
+  void add_basin_to_LSDIndexRaster(LSDIndexRaster& basin_raster, 
+                                           LSDFlowInfo& FlowInfo,
+                                           map<int,int>& drainage_of_other_basins, 
+                                           int this_basin_index);
+
 
   /// @brief This function creates a padded, georeferenced raster from a raw
   ///  raster file that is trimmed to the dimension of a basin

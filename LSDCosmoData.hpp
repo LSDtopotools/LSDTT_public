@@ -116,6 +116,14 @@ class LSDCosmoData
     /// @date 02/03/2015
     void load_parameters(string filename);
     
+    /// @brief this gets the names of the DEMs to be used in the analysis
+    /// @detail only returns the DEM, not snow shielding, topo shielding, etc
+    ///  rasters
+    /// @return DEM_fnames a vector of fname strings
+    /// @author SMM 
+    /// @date 19/03/2015
+    vector<string> get_DEM_fnames();
+    
     /// @brief This function checks to make sure parameter values are
     ///  valid for the cosmo data
     /// @author SMM
