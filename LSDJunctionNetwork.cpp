@@ -4310,6 +4310,14 @@ void LSDJunctionNetwork::snap_point_locations_to_channels(vector<float> x_locs,
       snapped_junction_indices.push_back(this_junc);
       valid_cosmo_points.push_back(samp);
       
+      if(this_chan_node == NoDataValue)
+      {
+        cout << endl << "+++" << endl;
+        cout << "WARNING LSDJunctionNetwork::snap_point_locations_to_channels." << endl;
+        cout << "This node is in the DEM but I have not found a nearby channel." << endl;
+        cout << "+++" << endl << endl;
+      }
+      
       //cout << "channel node index is: " << this_chan_node << " and receiver_junc is: " 
       //     << this_junc << endl;
     }
