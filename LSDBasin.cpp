@@ -919,8 +919,8 @@ LSDRaster LSDBasin::TrimPaddedRasterToBasin(int padding_pixels, LSDFlowInfo& Flo
   }
 
   //calculate lower left corner coordinates of new array
-  float new_XLL = ((min_col - 1) * DataResolution) + XMinimum;
-  float new_YLL = YMinimum + ((NRows - (max_row + 0)) * DataResolution);
+  float new_XLL = (min_col * DataResolution) + XMinimum;
+  float new_YLL = YMinimum + ((NRows - max_row - 1) * DataResolution);
   float YMax = new_YLL + (new_row_dimension* DataResolution);
 
     
