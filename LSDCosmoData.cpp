@@ -156,6 +156,13 @@ void LSDCosmoData::create(string path_name, string param_name_prefix)
   OutletEffectivePressure = for_calculator_empty;
   CentroidPressure = for_calculator_empty;
   CentroidEffectivePressure = for_calculator_empty;
+  BasinRelief  = for_calculator_empty;
+  
+  
+  //cout << "basin_metrics_empty size22: " << AverageProdScaling.size() << endl;
+  //cout << "basin_metrics_empty size22: " << BasinRelief.size() << endl;
+  //cout << "basin_metrics_empty size23: " << MBS.size() << endl;
+  //cout << "basin_metrics_empty size24: " << BasinRelief.size() << endl;
   
   cout << "Loading file structures" << endl;
   load_DEM_and_shielding_filenames_csv(Rasters_fname);
@@ -1718,6 +1725,13 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
       //cout << "Paramforcalc size: " << param_for_calc.size() << endl;              
       //cout << "Getting pressures" << endl;
 
+
+      // get the relief of the basin
+      float R = thisBasin.CalculateBasinRange(FlowInfo, filled_raster);
+      double relief = double(R);
+      //cout << "Basin releif is: " << relief << endl;
+
+      BasinRelief[ valid_cosmo_points[samp] ] = relief;
       AverageProdScaling[ valid_cosmo_points[samp] ] = param_for_calc[0];
       AverageTopoShielding[ valid_cosmo_points[samp] ] = param_for_calc[1];
       AverageSelfShielding[ valid_cosmo_points[samp] ] = param_for_calc[2];
@@ -1847,7 +1861,7 @@ void LSDCosmoData::print_results()
        << "AverageSnowShielding,AverageCombinedScaling,outlet_latitude,"
        << "OutletPressure,OutletEffPressure,centroid_latitude,CentroidPressure,"
        << "CentroidEffPressure,eff_erate_COSMOCALC,erate_COSMOCALC_mmperkyr_rho2650,"
-       << "erate_mmperkyr_rho2650,erate_totalerror_mmperkyr_rho2650"
+       << "erate_mmperkyr_rho2650,erate_totalerror_mmperkyr_rho2650,basin_relief"
        << endl;
   
   double rho = 2650;
@@ -1907,7 +1921,8 @@ void LSDCosmoData::print_results()
                   << OutletEffectivePressure[i] << ","  << centroid_lat[i] << "," 
                   << CentroidPressure[i] << "," << CentroidEffectivePressure[i] << ","
                   << erate_info[0] << "," << erate_info[0]*1e7/rho << ","
-                  << erate_analysis[0]*1e7/rho <<","<< erate_analysis[4]*1e7/rho  << endl;
+                  << erate_analysis[0]*1e7/rho <<","<< erate_analysis[4]*1e7/rho 
+                  << "," << BasinRelief[i] << endl;
       
       // now print to the CRONUS file
       // Note this subsumes self shielding into the shielding factor so 

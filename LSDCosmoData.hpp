@@ -411,7 +411,13 @@ class LSDCosmoData
     /// the basin averaged production
     vector<double> CentroidEffectivePressure;
 
+    //---------------basin metrics---------------------
+    /// The Basin Relief
+    vector<double> MBS;
     
+    /// Vector holding the Basin Relief
+    vector<double> BasinRelief;
+
   private:
   
     /// @brief the empty create function
