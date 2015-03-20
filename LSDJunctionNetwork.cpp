@@ -4325,5 +4325,50 @@ void LSDJunctionNetwork::snap_point_locations_to_channels(vector<float> x_locs,
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+ 
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// THESE FUNCTIONS ARE WRITTEN TO COUPLE EACH HILLSLOPE PIXEL TO THE CHANNEL NODE THAT
+// SETS THEIR LOWER BOUNDARY CONDITION.
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// couple_hillslope_nodes_to_channel_nodes  => Should be in LSDFlowInfo
+//----------------------------------------------------------------------------------------
+// This function couples all hillslope pixels within a given basin to the channel node 
+// that sets the baselevel for that hillslope pixel.  The node on the channel network for
+// which this occurs is determined using Stuart's rather wonderful hillslope flow routing
+// method (REFERENCE TO GO HERE), which exploits the D-Infinity flow routing algorithm.
+// void LSDJunctionNetwork::couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, int OutletJunction, vector<int>& basin_nodes, vector<int>& baselevel_channel_nodes)
+// {
+// 
+// }
+// ----------------------------------------------------------------------------------------
+// get_raster_values_for_nodes => should be in LSDFlowInfo
+// ---------------------------------------------------------------------------------------- 
+// This function gets the values from a raster corresponding to the given nodes.
+// vector<float> LSDJunctionNetwork::get_raster_values_for_nodes(LSDRaster& Raster, vector<int>& node_indices)
+// {
+// 
+// }
+
+//----------------------------------------------------------------------------------------
+// get_channel_characteristics_for_nodes => should be in LSDChiNetwork or LSDChannel
+//---------------------------------------------------------------------------------------- 
+// This function gets the values from a given channel characteristic corresponding to the
+// base level channel node for given hillslope nodes.  For example channel longitudinal
+// coordinate, chi coordinate or channel number.
+// vector<float> LSDRaster::get_channel_characteristics_for_nodes(LSDFlowInfo& FlowInfo, vector<float> channel_characteristics, vector<int>& node_indices)
+// {
+// 
+// }
+// vector<int> LSDRaster::get_channel_characteristics_for_nodes(LSDFlowInfo& FlowInfo, vector<int> channel_characteristics, vector<int>& node_indices)
+// {
+// 
+// }
+
+
+
 
 #endif
