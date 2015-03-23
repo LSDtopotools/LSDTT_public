@@ -418,6 +418,14 @@ class LSDBasin
   /// @date 21/02/14
   int is_node_in_basin(int test_node);
   
+  /// @brief remove hilltop curvature values that are at the edge of the basin
+  /// @param hilltop_curvature raster of CHT
+  /// @param FlowInfo Flowinfo object
+  /// @return LSDRaster of internal hilltop curvature values
+  /// @author FJC
+  /// @date 19/03/15
+  LSDRaster keep_only_internal_hilltop_curvature(LSDRaster hilltop_curvature, LSDFlowInfo FlowInfo);
+  
   /// @brief Write a real value to an LSDRaster in the shape of the basin.
   /// @param Param real value to be written
   /// @param FlowInfo Flowinfo object.

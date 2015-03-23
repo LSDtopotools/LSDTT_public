@@ -641,8 +641,8 @@ void LSDBasin::set_Perimeter(LSDFlowInfo& FlowInfo){
         if (BasinData[i][j+1] == NoDataValue){ ++NDVCount; }
         if (BasinData[i+1][j+1] == NoDataValue){ ++NDVCount; }
         
-        if (NDVCount >= 4 && NDVCount < 8){  //increase the first value to get a simpler polygon
-          //edge pixel
+        if (NDVCount >= 1 && NDVCount < 8){  //increase the first value to get a simpler polygon  (changed to 1 by FJC 23/03/15 to get only internal hilltops.
+          //edge pixel                       // Otherwise not all external ridges were being excluded from the analysis).
           I.push_back(i);
           J.push_back(j);
         }
@@ -834,6 +834,56 @@ int LSDBasin::is_node_in_basin(int test_node)
   return node_checker;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Function to remove any hilltop curvature values that are not internal to the 
+// basin
+// FJC 19/03/15
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LSDRaster LSDBasin::keep_only_internal_hilltop_curvature(LSDRaster hilltop_curvature, LSDFlowInfo FlowInfo)
+{
+  Array2D<float> CHT_array(NRows, NCols, NoDataValue);
+  Array2D<int> perimeter(NRows, NCols, 0);
+  Array2D<int> ridge_pixels(NRows, NCols,0);
+  cout << "Number of perimeter pixels: " << Perimeter_i.size() << endl;
+  for (int q =0; q < Perimeter_i.size(); q++)
+  {
+      int row_perim = Perimeter_i[q];
+      int col_perim = Perimeter_j[q];
+      if (row_perim != NoDataValue && col_perim != NoDataValue)
+      {
+        perimeter[row_perim][col_perim] = 1;
+      }
+  }
+  
+  for (int row = 0; row < NRows; row++)
+  {
+    for (int col = 0; col < NCols; col++)
+    {
+      float curvature = hilltop_curvature.get_data_element(row, col);
+      if (curvature != NoDataValue)
+      {
+        ridge_pixels[row][col] = 1;  
+      }
+    }
+  }
+  
+
+  for (int row = 0; row < NRows; row++)
+  {
+    for (int col = 0; col < NCols; col++)
+    {
+      if (perimeter[row][col] == 0 || ridge_pixels[row][col] == 0)
+      {
+        float curvature = hilltop_curvature.get_data_element(row, col);
+        CHT_array[row][col] = curvature; 
+      }
+    }
+  }
+  LSDRaster CHT(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, CHT_array,GeoReferencingStrings);
+   
+   return CHT;  
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function trims a padded raster to the basin
