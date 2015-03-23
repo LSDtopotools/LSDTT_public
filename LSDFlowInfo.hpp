@@ -660,6 +660,12 @@ class LSDFlowInfo
   /// @param vector<float> - the node indices for which you want the values
   vector<float> get_raster_values_for_nodes(LSDRaster& Raster, vector<int>& node_indices);
 
+  void D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_node, LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir,
+                                                          LSDRaster PlanCurvature, LSDRaster Slope,
+                                                          vector< vector<float> >& output_trace_coordinates, vector<float>& output_trace_metrics,
+                                                          int& output_channel_node, bool& skip_trace);
+
+
 	
   protected:
 

@@ -4152,5 +4152,626 @@ vector<float> LSDFlowInfo::get_raster_values_for_nodes(LSDRaster& Raster, vector
 }
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Hilltop flow routing code built around original code from Martin Hurst. Based on
+// Lea (1992), with improvements discussed by Tarboton (1997) and a solution to the
+// problem of looping flow paths implemented.
+//
+// This version performs a single trace from a specified node, and routes down until it
+// reaches a channel pixel
+//
+// THIS VERSION OF THE CODE RETAINS THE FLOODING METHOD TO ALLOW TRACES TO BE USED
+// ON RAW TOPOGRPAHY TO GET EVENT SCALE HILLSLOPE LENGTHS WITH NO SMOOTHING. IN 
+// MOST CASES USE THE MAIN METHOD, TO ANALYSE SEDIMENT TRANSPORT OVER GEOMORPHIC TIME.
+//
+// This code is SLOW but robust, a refactored version may appear, but there may not be
+// enough whisky in Scotland to support that endeavour.
+//
+// The algorithm now checks for local uphill flows and in the case of identifying one,
+// D8 flow path is used to push the flow into the centre of the steepest downslope
+// cell, at which point the trace is restarted. The same technique is used to cope
+// with self intersections of the flow path. These problems are not solved in the
+// original paper and I think they are caused at least in part by the high resolution
+// topogrpahy we are using.
+//
+// The code is also now built to take a d infinity flow direction raster instead of an
+// aspect raster. See Tarboton (1997) for discussions on why this is the best solution.
+//
+// There are 4 outputs:
+// output_trace_coordinates - the output coordinates tracing the flow path
+// output_trace_metrics - the metrics derived from the flow routing
+//                        (i) X
+//                        (i) Y
+//                        (i) mean slope
+//                        (i) hillslope relief
+//                        (i) hillslope length
+//                        (i) channel ID @ lower boundary
+//                        (i) DivergentCountFlag
+// output_channel_node -the nodeindex at the bounding channel
+// skip_trace - a bool object that specifies whether this trace has routed
+// successfully to the channel.
+//
+// SWDG (adapted by DTM) 23/3/15
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_node, LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir,
+                                                          LSDRaster PlanCurvature, LSDRaster Slope,
+                                                          vector< vector<float> >& output_trace_coordinates, vector<float>& output_trace_metrics,
+                                                          int& output_channel_node, bool& skip_trace)
+{
+
+  //Declare parameters
+  int i,j;
+  int a = 0;
+  int b = 0;
+  float X,Y;
+  float mean_slope, relief;
+  float length, d;
+  int flag;
+  int count = 0;
+  int DivergentCountFlag = 0; //Flag used to count the number of divergent cells encountered in a trace
+  float PI = 3.14159265;
+  float degs, degs_old, degs_new, theta;
+  float s_local, s_edge;
+  float xo, yo, xi, yi, temp_yo1, temp_yo2, temp_xo1, temp_xo2;
+//   bool skip_trace; //flag used to skip traces where no path to a stream can be found. Will only occur on noisy, raw topography
+
+  //debugging counters
+  int ns_count = 0;
+  int s_count = 0;
+  int neg_count = 0;
+  int edge_count = 0;
+  int ht_count = 0;
+
+  // a direction flag numbered 1,2,3,4 for E,S,W,N respectively
+  int dir;
+
+  float ymax = YMinimum + NRows*DataResolution;
+
+  //Get data arrays from LSDRasters
+  Array2D<float> zeta = Elevation.get_RasterData(); //elevation
+  Array2D<int> stnet = StreamNetwork.get_RasterData(); // stream network
+  Array2D<float> aspect = D_inf_Flowdir.get_RasterData(); //aspect
+  Array2D<float> slope = Slope.get_RasterData(); //slope
+  
+  Array2D<float> rads(NRows,NCols);
+  Array2D<float> path(NRows, NCols);
+  Array2D<float> blank(NRows,NCols,NoDataValue);
+  
+  int channel_node = int(NoDataValue);
+  vector<float> trace_metrics;
+  vector< vector<float> > trace_coordinates;
+  vector<float> empty;
+  trace_coordinates.push_back(empty);
+  trace_coordinates.push_back(empty);
+
+  int vec_size = 1000000;
+
+  Array1D<double> easting(NCols);
+  Array1D<double> northing(NRows);
+  Array1D<double> east_vec(vec_size);
+  Array1D<double> north_vec(vec_size);
+
+  //calculate northing and easting
+  for (i=0;i<NRows;++i)
+  {
+    northing[i] = ymax - i*DataResolution - 0.5;
+  }
+  for (j=0;j<NCols;++j)
+  {
+    easting[j] = XMinimum + j*DataResolution + 0.5;
+  }
+  // find node and trace downstream
+      
+  // ignore edge cells and non-hilltop cells
+  // route initial node by aspect and get outlet coordinates
+  int start_row, start_col;
+  retrieve_current_row_and_col(start_node,start_row,start_col);
+  if (zeta[start_row][start_col] != NoDataValue)
+  {
+    length = 0;
+    flag = true;
+    count = 1;
+    path = blank.copy();
+    DivergentCountFlag = 0; //initialise count of divergent cells in trace
+    skip_trace = false; //initialise skip trace flag as false, will only be switched if no path to stream can be found. Very rare.
+
+    ++ht_count;
+
+    degs = aspect[start_row][start_col];
+    theta = BearingToRad(aspect[start_row][start_col]);
+    a = start_row;
+    b = start_col;
+    path[a][b] += 1;
+    east_vec[0] = easting[b];
+    north_vec[0] = northing[a];
+    s_local = slope[a][b];
+
+    //test direction, calculate outlet coordinates and update indicies
+    // easterly
+    if (degs >= 45 && degs < 135)
+    {
+      //cout << "\neasterly" << endl;
+      xo = 1, yo = (1+tan(theta))/2;
+      d = abs(1/(2*cos(theta)));
+      xi = 0, yi = yo;
+      dir = 1;
+      east_vec[count] = easting[b] + 0.5*DataResolution;
+      north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+      ++b;
+      if (yi == 0) yi = 0.00001;
+      else if (yi == 1) yi = 1 - 0.00001;
+    }
+    //southerly
+    else if (degs >= 135 && degs < 225)
+    {
+      //cout << "\nsoutherly" << endl;
+      xo = (1-(1/tan(theta)))/2, yo = 0;
+      d = abs(1/(2*cos((PI/2)-theta)));
+      xi = xo, yi = 1;
+      dir = 2;
+      east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+      north_vec[count] = northing[a] - 0.5*DataResolution;
+      ++a;
+      if (xi == 0) xi = 0.00001;
+      else if (xi == 1) xi = 1 - 0.00001;
+    }
+    // westerly
+    else if (degs >= 225 && degs < 315)
+    {
+      xo = 0, yo = (1-tan(theta))/2;
+      d = abs(1/(2*cos(theta)));
+      xi = 1,	yi = yo;
+      dir = 3;
+      east_vec[count] = easting[b] -0.5*DataResolution;
+      north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+      --b;
+      if (yi == 0) yi = 0.00001;
+      else if (yi == 1) yi = 1 - 0.00001;
+    }
+    //northerly
+    else if (degs >= 315 || degs < 45)
+    {
+      xo = (1+(1/tan(theta)))/2, yo = 1;
+      d = abs(1/(2*cos((PI/2) - theta)));
+      xi = xo, yi = 0;
+      dir = 4;
+      east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+      north_vec[count] = northing[a] + 0.5*DataResolution;
+      --a;
+      if (xi == 0) xi = 0.00001;
+      else if (xi == 1) xi = 1 - 0.00001;
+    }
+    else
+    {
+      cout << "FATAL ERROR, Kinematic routing algorithm enountered null aspect value" << endl;
+      exit(EXIT_FAILURE);
+    }
+
+    //collect slopes and totals weighted by path length
+    length += d;
+    s_local = slope[a][b];
+    // place coordinates into output vector
+    trace_coordinates[0].push_back(east_vec[count]);
+    trace_coordinates[1].push_back(north_vec[count]);
+
+    //continue trace until a stream node is encountered
+    while (flag == true && a > 0 && a < NRows-1 && b > 0 && b < NCols-1)   //added boudary checking to catch cells which flow off the edge of the DEM tile.
+    {
+      int a_2 = a;
+      int b_2 = b;
+
+      path[a][b] += 1;
+
+      degs_old = degs;
+      degs_new = aspect[a][b];
+      theta = BearingToRad(aspect[a][b]);
+      ++count;
+
+      //Test for perimeter flow paths
+      if ((dir == 1 && degs_new > 0 && degs_new < 180)
+        || (dir == 2 && degs_new > 90 && degs_new < 270)
+        || (dir == 3 && degs_new > 180 && degs_new < 360)
+        || ((dir == 4 && degs_new > 270) || (dir == 4 && degs_new < 90)))
+      {
+        //DO NORMAL FLOW PATH
+        //set xo, yo to 0 and 1 in turn and test for true outlet (xi || yi == 0 || 1)
+        temp_yo1 = yi + (1-xi)*tan(theta);      // xo = 1
+        temp_xo1 = xi + (1-yi)*(1/tan(theta));  // yo = 1
+        temp_yo2 = yi - xi*tan(theta);          // xo = 0
+        temp_xo2 = xi - yi*(1/tan(theta));      // yo = 0
+
+        // can't outlet at same point as inlet
+        if (dir == 1) temp_yo2 = -1;
+        else if (dir == 2) temp_xo1 = -1;
+        else if (dir == 3) temp_yo1 = -1;
+        else if (dir == 4) temp_xo2 = -1;
+
+        s_local = slope[a][b];
+
+        if (temp_yo1 <= 1 && temp_yo1 > 0)
+        {              
+          xo = 1, yo = temp_yo1;
+          d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+          xi = 0, yi = yo,
+          dir = 1;
+          east_vec[count] = easting[b] + 0.5*DataResolution;
+          north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+          ++b;
+          if (xi== 0 && yi == 0) yi = 0.00001;
+          else if (xi== 0 && yi == 1) yi = 1 - 0.00001;
+        }
+        else if (temp_xo2 <= 1 && temp_xo2 > 0)
+        {
+          xo = temp_xo2, yo = 0;
+          d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+          xi = xo, yi = 1,
+          dir = 2;
+          east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+          north_vec[count] = northing[a] - 0.5*DataResolution;
+          ++a;
+          if (xi== 0 && yi == 1) xi = 0.00001;
+          else if (xi== 1 && yi == 1) xi = 1 - 0.00001;
+        }
+        else if (temp_yo2 <= 1 && temp_yo2 > 0)
+        {
+          xo = 0, yo = temp_yo2;
+          d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+          xi = 1, yi = yo,
+          dir = 3;
+          east_vec[count] = easting[b] -0.5*DataResolution;
+          north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+          --b;
+          if (xi== 1 && yi == 0) yi = 0.00001;
+          else if (xi== 1 && yi == 1) yi = 1 - 0.00001;
+        }
+        else if (temp_xo1 <= 1 && temp_xo1 > 0)
+        {
+          xo = temp_xo1, yo = 1;
+          d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+          xi = xo, yi = 0,
+          dir = 4;
+          east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+          north_vec[count] = northing[a] + 0.5*DataResolution;
+          --a;
+          if (xi == 0 && yi == 0) xi = 0.00001;
+          else if (xi== 1 && yi == 0) xi = 1 - 0.00001;
+        }
+      }
+      else
+      {
+        // ROUTE ALONG EDGES
+        if (dir	== 1)
+        {
+          if (degs_new <= 90 || degs_new >= 270) //secondary compenent of flow is north                   
+          {
+            xo = 0.00001, yo = 1;
+            s_edge = abs(s_local*sin(theta));
+            d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+            xi = xo, yi = 1-yo;
+            dir = 4;
+            east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+            north_vec[count] = northing[a] + 0.5*DataResolution;
+            --a;
+          }
+          else if (degs_new > 90 && degs_new < 270)  //secondary component is south
+          {
+            xo = 0.00001, yo = 0;
+            s_edge = abs(s_local*sin((PI/2)-theta));
+            d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+            xi = xo, yi = 1-yo;
+            dir = 2;
+            east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+            north_vec[count] = northing[a] - 0.5*DataResolution;
+            ++a;
+          } 
+          else
+          {
+            cout << "Flow unable to route N or S " << endl; //something has gone very wrong...
+            cout << "Trace skipped.\n" << endl; 
+            skip_trace = true;
+            //exit(EXIT_FAILURE);
+          }
+        }
+        else if (dir == 2)
+        {
+          if (degs_new >= 0 && degs_new <= 180) //secondary component is East
+          {
+            xo = 1, yo = 1-0.00001;
+            s_edge = abs(s_local*sin((2/PI)-theta));
+            d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+            xi = 1-xo, yi = yo;
+            dir = 1;
+            east_vec[count] = easting[b] + 0.5*DataResolution;
+            north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+            ++b;
+          }
+          else if (degs_new > 180 && degs_new <= 360)  //secondary component is West
+          {
+            xo = 0, yo = 1-0.00001;
+            s_edge = abs(s_local*sin(theta));
+            d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+            xi = 1-xo, yi = yo;
+            dir = 3;
+            east_vec[count] = easting[b] -0.5*DataResolution;
+            north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+            --b;
+          }
+          else
+          {
+            cout << "Flow unable to route E or W" << endl; //something has gone very wrong...
+            cout << "Trace skipped.\n" << endl; //something has gone very wrong...
+            skip_trace = true;
+            //exit(EXIT_FAILURE);
+          }
+        }
+        else if (dir == 3)
+        {
+          if(degs_new >= 90 && degs_new <= 270)   //secondary component is South
+          {
+            xo = 1-0.00001, yo = 0;
+            s_edge = abs(s_local*sin(theta));
+            d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+            xi = xo, yi = 1-yo;
+            dir = 2;
+            east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+            north_vec[count] = northing[a] - 0.5*DataResolution;
+            ++a;
+          }
+          else if (degs_new > 270 || degs_new < 90)   //secondary component is North
+          {
+            xo = 1-0.00001, yo = 1;
+            s_edge = abs(s_local*sin((2/PI) - theta));
+            d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+            xi = xo, yi = 1- yo;
+            dir = 4;
+            east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+            north_vec[count] = northing[a] + 0.5*DataResolution;
+            --a;
+          }
+          else
+          {
+            cout << "Flow unable to route N or S" << endl;  //something has gone very wrong...
+            cout << "Trace skipped.\n" << endl; //something has gone very wrong...
+            skip_trace = true;
+            //exit(EXIT_FAILURE);
+          }
+        }
+        else if (dir == 4)
+        {
+          if(degs_new >= 180 && degs_new <= 360) //secondary component is West
+          {
+            xo = 0, yo = 0.00001;
+            s_edge = abs(s_local*sin((PI/2) - theta));
+            d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+            xi = 1-xo, yi = yo;
+            dir = 3;
+            east_vec[count] = easting[b] -0.5*DataResolution;
+            north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+            --b;
+          }
+          else if (degs_new >= 0 && degs_new < 180) //secondary component is East
+          { 
+            xo = 1, yo = 0.00001;
+            s_edge = abs(s_local*sin(theta));
+            d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+            xi = 1-xo, yi = yo;
+            dir = 1;
+            east_vec[count] = easting[b] + 0.5*DataResolution;
+            north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+            ++b;
+          }
+          else
+          {
+            cout << "Flow unable to route E or W" << endl; //something has gone very wrong...
+            cout << "Trace skipped.\n" << endl; //something has gone very wrong...
+            skip_trace = true;
+            //exit(EXIT_FAILURE);
+          }
+        }
+      }
+      
+      if (path[a][b] < 1) length += d; // only update length on 'first slosh'
+
+      degs = degs_new;
+
+      if(zeta[a][b] - zeta[a_2][b_2] > 0)
+      {
+        length -= d;    //remove uphill length from trace
+
+        a = a_2;
+        b = b_2;
+
+        //restart trace
+        degs = aspect[a][b];
+        theta = BearingToRad(aspect[a][b]);
+        path[a][b] += 1;
+//         east_vec[0] = easting[b];
+//         north_vec[0] = northing[a];
+        s_local = slope[a][b];
+        length += sqrt((pow((xo-0.5),2) + pow((yo-0.5),2)));  //update length to cope with the 'jump' to the centre of the cell to restart the trace
+
+        //test direction, calculate outlet coordinates and update indices easterly
+        if (degs >= 45 && degs < 135)
+        {
+          xo = 1, yo = (1+tan(theta))/2;
+          d = abs(1/(2*cos(theta)));
+          xi = 0, yi = yo;
+          dir = 1;
+          east_vec[count] = easting[b] + 0.5*DataResolution;
+          north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+          ++b;
+        }
+        //southerly
+        else if (degs >= 135 && degs < 225) 
+        {
+          xo = (1-(1/tan(theta)))/2, yo = 0;
+          d = abs(1/(2*cos((PI/2)-theta)));
+          xi = xo, yi = 1;
+          dir = 2;
+          east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+          north_vec[count] = northing[a] - 0.5*DataResolution;
+          ++a;
+        }
+        // westerly
+        else if (degs >= 225 && degs < 315)
+        {
+          xo = 0, yo = (1-tan(theta))/2;
+          d = abs(1/(2*cos(theta)));
+          xi = 1,	yi = yo;
+          dir = 3;
+          east_vec[count] = easting[b] -0.5*DataResolution;
+          north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+          --b;
+        }
+        //northerly
+        else if (degs >= 315 || degs < 45)
+        {
+          xo = (1+(1/tan(theta)))/2, yo = 1;
+          d = abs(1/(2*cos((PI/2) - theta)));
+          xi = xo, yi = 0;
+          dir = 4;
+          east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+          north_vec[count] = northing[a] + 0.5*DataResolution;
+          --a;
+        }
+        else
+        {
+          cout << "FATAL ERROR, Kinematic routing algorithm enountered null aspect value" << endl;
+          exit(EXIT_FAILURE);
+        }
+        //collect slopes and totals weighted by path length
+        length += d;
+        s_local = slope[a][b];
+      }
+
+      if (path[a][b] >= 1)  //self intersect/'slosh'
+      {
+        degs = aspect[a][b];
+        theta = rads[a][b];
+        path[a][b] += 1;
+        s_local = slope[a][b];
+
+        a_2 = a;
+        b_2 = b;
+        
+        length += sqrt((pow((xo-0.5),2) + pow((yo-0.5),2)));  //update length to cope with the 'jump' to the centre of the cell to restart the trace
+        
+        //test direction, calculate outlet coordinates and update indices
+        // easterly
+        if (degs >= 45 && degs < 135)
+        {
+          xo = 1, yo = (1+tan(theta))/2;
+          d = abs(1/(2*cos(theta)));
+          xi = 0, yi = yo;
+          dir = 1;
+          east_vec[count] = easting[b] + 0.5*DataResolution;
+          north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+          ++b;
+        }
+        //southerly
+        else if (degs >= 135 && degs < 225)
+        {
+          xo = (1-(1/tan(theta)))/2, yo = 0;
+          d = abs(1/(2*cos((PI/2)-theta)));
+          xi = xo, yi = 1;
+          dir = 2;
+          east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+          north_vec[count] = northing[a] - 0.5*DataResolution;
+          ++a;
+        }
+        // westerly
+        else if (degs >= 225 && degs < 315)
+        {
+          xo = 0, yo = (1-tan(theta))/2;
+          d = abs(1/(2*cos(theta)));
+          xi = 1,	yi = yo;
+          dir = 3;
+          east_vec[count] = easting[b] -0.5*DataResolution;
+          north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+          --b;
+        }
+        //northerly
+        else if (degs >= 315 || degs < 45)
+        {
+          xo = (1+(1/tan(theta)))/2, yo = 1;
+          d = abs(1/(2*cos((PI/2) - theta)));
+          xi = xo, yi = 0;
+          dir = 4;
+          east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+          north_vec[count] = northing[a] + 0.5*DataResolution;
+          --a;
+        }
+        else
+        {
+          cout << "FATAL ERROR, Kinematic routing algorithm enountered null aspect value" << endl;
+          exit(EXIT_FAILURE);
+        }
+        //collect slopes and totals weighted by path length
+        length += d;
+        s_local = slope[a][b];                                                                                                                                                                                                                
+      }
+
+      // test for plan curvature here and set a flag if flow is divergent or convergent but continue trace regardless
+      // The larger the counter the more convergent or divergent the trace is
+      if (abs(PlanCurvature.get_data_element(a,b)) > (0.001)) ++DivergentCountFlag;
+      if (path[a][b] >=3) skip_trace = true;//update flag if a trace cannot complete, so that we can track errors.
+      if (a == 0 || b == 0 ||	a == NRows-1 || b == NCols-1 || stnet[a][b] != NoDataValue || stnet[a-1][b-1] != NoDataValue || stnet[a][b-1] != NoDataValue || stnet[a+1][b-1] != NoDataValue || stnet[a+1][b] != NoDataValue || stnet[a+1][b+1] != NoDataValue || stnet[a][b+1] != NoDataValue || stnet[a-1][b+1] != NoDataValue || stnet[a-1][b] != NoDataValue || path[a][b] >= 3 || skip_trace == true) flag = false;
+      
+      // save trace coordinates for this iteration.
+      trace_coordinates[0].push_back(east_vec[count]);
+      trace_coordinates[1].push_back(north_vec[count]);
+    }
+  
+    if (a == 0 || b == 0 ||	a == NRows-1 || b == NCols-1 )
+    {
+      // avoid going out of bounds.
+      // this is caused by having a hilltop on the first row or col away from the border
+      // eg i or j == 1 or nrows/ncols - 2 and flowing towards the edge.
+      // can fix with a test here for if streamnet[a][b] != NDV otherwise trace will fail *correctly*
+      ++edge_count;
+    }
+    else
+    {
+      //if trace finished at a stream, print hillslope info.
+      if (stnet[a][b] != NoDataValue || stnet[a-1][b-1] != NoDataValue || stnet[a][b-1] != NoDataValue || stnet[a+1][b-1] != NoDataValue || stnet[a+1][b] != NoDataValue || stnet[a+1][b+1] != NoDataValue || stnet[a][b+1] != NoDataValue || stnet[a-1][b+1] != NoDataValue || stnet[a-1][b] != NoDataValue)
+      {
+        path[a][b] = 1;
+        ++s_count;
+
+        X = XMinimum + j*DataResolution;
+        Y = YMinimum - (NRows-i)*DataResolution;
+        relief = zeta[i][j] - zeta[a][b];
+        mean_slope = relief/(length * DataResolution);
+
+        trace_metrics.push_back(X);
+        trace_metrics.push_back(Y);
+        trace_metrics.push_back(float(start_node));
+        trace_metrics.push_back(mean_slope);
+        trace_metrics.push_back(relief);
+        trace_metrics.push_back(length*DataResolution);
+        trace_metrics.push_back(float(stnet[a][b]));
+        trace_metrics.push_back(float(DivergentCountFlag));
+      
+        channel_node = stnet[a][b]; 
+//         if (relief > 0) ofs << X << "," << Y << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "," << stnet[a][b] << "," << slope[i][j] << "," << DivergentCountFlag << "\n";
+//         else ++neg_count;
+        if (relief <= 0) ++neg_count;
+      }
+      else
+      { //unable to route using aspects
+        //this will encompass the skipped traces
+//         ofs << "fail: " << a << " " << b << " " << i << " " << j << endl;
+        ++ns_count;
+      }
+    }
+  }
+  output_trace_coordinates = trace_coordinates;
+  output_trace_metrics = trace_metrics;
+  output_channel_node = channel_node;
+}
+
+
+
+
 
 #endif
