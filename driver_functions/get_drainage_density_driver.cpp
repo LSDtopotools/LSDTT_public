@@ -146,7 +146,7 @@ int main (int nNumberofArgs,char *argv[])
 	LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
 	
 	// get all the basins greater than 100,000 m^2
-	float AreaThreshold = 100000;
+	float AreaThreshold = 500000;
 	vector<int> basin_nodes = ChanNetwork.extract_basin_nodes_by_drainage_area(AreaThreshold, FlowInfo);
 	vector<int> basin_junctions = ChanNetwork.extract_basin_junctions_from_nodes(basin_nodes, FlowInfo);
 	  
@@ -218,51 +218,52 @@ int main (int nNumberofArgs,char *argv[])
 	{
     cout << flush << "Junction = " << i+1 << " of " << basin_junctions.size() << "\r";
     int junction_number = basin_junctions[i];
-    int StreamOrder = ChanNetwork.get_StreamOrder_of_Junction(FlowInfo, junction_number);
-    
+    //int StreamOrder = ChanNetwork.get_StreamOrder_of_Junction(FlowInfo, junction_number);
     // Get the hilltop curvature
-    int MinOrder = 1;
-    int MaxOrder = StreamOrder-1;
-    LSDRaster Hilltops = ChanNetwork.ExtractRidges(FlowInfo, MinOrder, MaxOrder);
+    LSDRaster Hilltops = ChanNetwork.ExtractRidges(FlowInfo);
     LSDRaster CHT_temp = filled_topo_test.get_hilltop_curvature(Curvature, Hilltops);
     LSDRaster CHT = filled_topo_test.remove_positive_hilltop_curvature(CHT_temp);
-    
+
     // set basin parameters
     LSDBasin Basin(junction_number, FlowInfo, ChanNetwork);
     Basin.set_FlowLength(SOArray, FlowInfo);
     Basin.set_DrainageDensity();
     Basin.set_SlopeMean(FlowInfo, Slope);
-    Basin.set_CHTMean(FlowInfo, CHT);
+    Basin.set_Perimeter(FlowInfo);
     LSDRaster CHT_basin = Basin.write_raster_data_to_LSDRaster(CHT, FlowInfo);
-    CHT_basins.push_back(CHT_basin);
+    LSDRaster CHT_internal = Basin.keep_only_internal_hilltop_curvature(CHT_basin, FlowInfo);
+    Basin.set_CHTMean(FlowInfo, CHT_internal);
+
+    
     //Basin.Plot_Boomerang(Slope, DinfArea, FlowInfo, log_bin_width, SplineResolution, bin_threshold, path_name);
     
     // return basin parameters
     float drainage_density = Basin.get_DrainageDensity();
     cout << "Drainage density: " << drainage_density << endl;
-    LSDRaster DD = Basin.write_DrainageDensity(FlowInfo);
-    DrainageDensity_basins.push_back(DD);
     float basin_slope = Basin.get_SlopeMean();
     float basin_CHT = Basin.get_CHTMean();
+    cout << "Basin CHT: " << basin_CHT << endl;
     float basin_area = Basin.get_Area();
-    if (isnan(basin_CHT) == false)
+    if (drainage_density != NoDataValue || isnan(basin_CHT) == false)
     {
       Slopes.push_back(basin_slope);
       CHTs.push_back(abs(basin_CHT));
       DrainageDensities.push_back(drainage_density);
+      CHT_basins.push_back(CHT_internal);
+      LSDRaster DD = Basin.write_real_data_to_LSDRaster(drainage_density, FlowInfo);
+      DrainageDensity_basins.push_back(DD);
     }
     else
     {
-      i++;
+      ++i;
     }
-
     if (drainage_density != NoDataValue || isnan(basin_CHT) == false)
     {
       DD_cloud << drainage_density << " " << basin_CHT << " " << basin_slope << " " << basin_area << endl;
     } 
     else
     {
-      i++;
+      ++i;
     }
     
     AllBasins.push_back(Basin);
