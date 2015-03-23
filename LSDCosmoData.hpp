@@ -376,47 +376,13 @@ class LSDCosmoData
     bool write_basin_index_raster;
     
     //-----------------Information used in cosmogenic calculators---------------
-    /// The mean_production scaling of the basin 
-    vector<double> AverageProdScaling;
-    
-    /// The mean topographic sheilding of the basin
-    vector<double> AverageTopoShielding;
-
-    /// The mean snow sheilding of the basin
-    vector<double> AverageSnowShielding;
- 
-    /// The mean self sheilding of the basin
-    vector<double> AverageSelfShielding;
-    
-    /// The weighted scaling (production*shieding for each pixel, averaged)
-    vector<double> AverageCombinedScaling;
-
-    /// The outlet latitude of the basin
-    vector<double> outlet_lat;
-    
-    /// The centroid latitude of the basin
-    vector<double> centroid_lat;
-    
-    /// The outlet pressure
-    vector<double> OutletPressure;
-    
-    /// The effective pressure at the outlet. This is the pressure that produces
-    /// the basin averaged production
-    vector<double> OutletEffectivePressure;
-    
-    /// The centroid pressure
-    vector<double> CentroidPressure;
-    
-    /// The effective pressure at the Centroid. This is the pressure that produces
-    /// the basin averaged production
-    vector<double> CentroidEffectivePressure;
+    /// This contains data with all sorts of scaling parameters
+    /// for calculation of erosion rates using other calculators
+    map<string, map<int,double> > MapOfProdAndScaling;
 
     //---------------basin metrics---------------------
     /// The Basin Relief
     vector<double> MBS;
-    
-    /// Vector holding the Basin Relief
-    vector<double> BasinRelief;
 
   private:
   

@@ -2788,6 +2788,7 @@ vector<double> LSDCosmoBasin::calculate_effective_pressures_for_calculators(LSDR
   double AverageTopo;
   double AverageProd;
   double AverageCombined;
+  double AverageCombinedShielding;
   double AverageSnow;
   double AverageSelf;
 
@@ -2817,6 +2818,7 @@ vector<double> LSDCosmoBasin::calculate_effective_pressures_for_calculators(LSDR
   double self_shield_total = 0;
   double snow_shield_total = 0;
   double total_combined_scaling = 0;
+  double total_combined_shielding = 0;
   double this_snow_shield, this_self_shield;
   int row,col;      // the row and column of the current node
   int end_node = int(BasinNodes.size());
@@ -2901,6 +2903,8 @@ vector<double> LSDCosmoBasin::calculate_effective_pressures_for_calculators(LSDR
       total_prod_scaling += production_scaling[q];
       total_combined_scaling += topographic_shielding[q]*production_scaling[q]*
                                 this_snow_shield*this_self_shield;
+      total_combined_shielding += topographic_shielding[q]*
+                                this_snow_shield*this_self_shield;
       
       
     }
@@ -2911,6 +2915,7 @@ vector<double> LSDCosmoBasin::calculate_effective_pressures_for_calculators(LSDR
   AverageSelf = self_shield_total/double(count_samples);
   AverageSnow = snow_shield_total/double(count_samples);
   AverageCombined = total_combined_scaling/double(count_samples);
+  AverageCombinedShielding = total_combined_shielding/double(count_samples);
   
   // now find the latitude for both the outlet and the centroid
   // first the outlet
@@ -3029,6 +3034,8 @@ vector<double> LSDCosmoBasin::calculate_effective_pressures_for_calculators(LSDR
   parameter_returns.push_back(lat_centroid);
   parameter_returns.push_back(centroid_pressure);
   parameter_returns.push_back(centroid_eff_pressure);
+  parameter_returns.push_back(AverageCombinedShielding);
+  
     
   return parameter_returns;
   

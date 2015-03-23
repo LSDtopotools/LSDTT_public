@@ -144,25 +144,12 @@ void LSDCosmoData::create(string path_name, string param_name_prefix)
   cout << "Number of samples: " << N_samples << endl;
   
   // get the correct number of samples in the results vec
-  vector<double> for_calculator_empty(N_samples,-99);
-  AverageProdScaling = for_calculator_empty;
-  AverageTopoShielding = for_calculator_empty;
-  AverageCombinedScaling = for_calculator_empty;
-  AverageSelfShielding = for_calculator_empty;
-  AverageSnowShielding = for_calculator_empty;
-  outlet_lat = for_calculator_empty;
-  centroid_lat = for_calculator_empty;
-  OutletPressure = for_calculator_empty;
-  OutletEffectivePressure = for_calculator_empty;
-  CentroidPressure = for_calculator_empty;
-  CentroidEffectivePressure = for_calculator_empty;
-  BasinRelief  = for_calculator_empty;
+  vector<double> for_calculator_empty(N_samples);
   
-  
-  //cout << "basin_metrics_empty size22: " << AverageProdScaling.size() << endl;
-  //cout << "basin_metrics_empty size22: " << BasinRelief.size() << endl;
-  //cout << "basin_metrics_empty size23: " << MBS.size() << endl;
-  //cout << "basin_metrics_empty size24: " << BasinRelief.size() << endl;
+  // set the map of scaling parameters with an empty map
+  map< string, map<int,double> > empty_map;
+  MapOfProdAndScaling = empty_map;
+
   
   cout << "Loading file structures" << endl;
   load_DEM_and_shielding_filenames_csv(Rasters_fname);
@@ -1729,25 +1716,20 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
       // get the relief of the basin
       float R = thisBasin.CalculateBasinRange(FlowInfo, filled_raster);
       double relief = double(R);
-      //cout << "Basin releif is: " << relief << endl;
 
-      BasinRelief[ valid_cosmo_points[samp] ] = relief;
-      AverageProdScaling[ valid_cosmo_points[samp] ] = param_for_calc[0];
-      AverageTopoShielding[ valid_cosmo_points[samp] ] = param_for_calc[1];
-      AverageSelfShielding[ valid_cosmo_points[samp] ] = param_for_calc[2];
-      AverageSnowShielding[ valid_cosmo_points[samp] ] = param_for_calc[3];
-      AverageCombinedScaling[ valid_cosmo_points[samp] ] = param_for_calc[4];
-      outlet_lat[ valid_cosmo_points[samp] ] = param_for_calc[5];
-      OutletPressure[ valid_cosmo_points[samp] ] = param_for_calc[6];
-      OutletEffectivePressure[ valid_cosmo_points[samp] ] = param_for_calc[7];
-      centroid_lat[ valid_cosmo_points[samp] ] = param_for_calc[8];
-      CentroidPressure[ valid_cosmo_points[samp] ] = param_for_calc[9];
-      CentroidEffectivePressure[ valid_cosmo_points[samp] ] = param_for_calc[10];
-    
-      //for(int i = 0; i<param_for_calc.size(); i++)
-      //{
-      //  cout << param_for_calc[i] << endl;
-      //}
+      MapOfProdAndScaling["BasinRelief"][ valid_cosmo_points[samp] ] = relief;
+      MapOfProdAndScaling["AverageProdScaling"][ valid_cosmo_points[samp] ] = param_for_calc[0];
+      MapOfProdAndScaling["AverageTopoShielding"][ valid_cosmo_points[samp] ] = param_for_calc[1];
+      MapOfProdAndScaling["AverageSelfShielding"][ valid_cosmo_points[samp] ] = param_for_calc[2];
+      MapOfProdAndScaling["AverageSnowShielding"][ valid_cosmo_points[samp] ] = param_for_calc[3];
+      MapOfProdAndScaling["AverageShielding"][ valid_cosmo_points[samp] ] =  param_for_calc[11];
+      MapOfProdAndScaling["AverageCombinedScaling"][ valid_cosmo_points[samp] ] = param_for_calc[4];
+      MapOfProdAndScaling["outlet_lat"][ valid_cosmo_points[samp] ] = param_for_calc[5];
+      MapOfProdAndScaling["OutletPressure"][ valid_cosmo_points[samp] ] = param_for_calc[6];
+      MapOfProdAndScaling["OutletEffectivePressure"][ valid_cosmo_points[samp] ] = param_for_calc[7];
+      MapOfProdAndScaling["centroid_lat"][ valid_cosmo_points[samp] ] = param_for_calc[8];
+      MapOfProdAndScaling["CentroidPressure"][ valid_cosmo_points[samp] ] = param_for_calc[9];
+      MapOfProdAndScaling["CentroidEffectivePressure"][ valid_cosmo_points[samp] ] = param_for_calc[10];
     
       // add the erosion rate results to the holding data member
       erosion_rate_results[ valid_cosmo_points[samp] ] = erate_analysis;
@@ -1858,9 +1840,10 @@ void LSDCosmoData::print_results()
   results_out << "basin_ID,sample_name,nuclide,latitude,longitude,concentration,concentration_uncert,"
        << "erate_g_percm2_peryr,AMS_uncert,muon_uncert,production_uncert,total_uncert,"
        << "AvgProdScaling,AverageTopoShielding,AverageSelfShielding,"
-       << "AverageSnowShielding,AverageCombinedScaling,outlet_latitude,"
+       << "AverageSnowShielding,AverageShielding,AvgShield_times_AvgProd,AverageCombinedScaling,outlet_latitude,"
        << "OutletPressure,OutletEffPressure,centroid_latitude,CentroidPressure,"
        << "CentroidEffPressure,eff_erate_COSMOCALC,erate_COSMOCALC_mmperkyr_rho2650,"
+       << "eff_erate_COSMOCALC_emulating_CRONUS,erate_COSMOCALC_emulating_CRONUS_mmperkyr_rho2650,"
        << "erate_mmperkyr_rho2650,erate_totalerror_mmperkyr_rho2650,basin_relief"
        << endl;
   
@@ -1891,21 +1874,41 @@ void LSDCosmoData::print_results()
       double bottom_eff_depth = 0;  // get subsumed into the combined scaling 
       
       vector<double> erate_info;
+      vector<double> erate_info_CCCR;   // this gets a cosmocalc erosion rate but
+                                        // using a CRONUS-like scaling
       
       if (nuclide[i] == "Be10")
       {
         test_particle.setConc_10Be(Concentration[i]);
         erate_info=test_particle.apparent_erosion_10Be_COSMOCALC(rho, LSDCRNP, 
-                                 AverageCombinedScaling[i], 
+                                 MapOfProdAndScaling["AverageCombinedScaling"][i],
                                  muon_string, top_eff_depth, bottom_eff_depth);
       }
       else if(nuclide[i] == "Al26")    
       {
         test_particle.setConc_10Be(Concentration[i]);
         erate_info=test_particle.apparent_erosion_26Al_COSMOCALC(rho, LSDCRNP, 
-                                 AverageCombinedScaling[i], 
+                                 MapOfProdAndScaling["AverageCombinedScaling"][i],
                                  muon_string, top_eff_depth, bottom_eff_depth);
-      } 
+      }
+      
+      // do a second calculation based on the CRONUS equivalent erosion
+      if (nuclide[i] == "Be10")
+      {
+        test_particle.setConc_10Be(Concentration[i]);
+        erate_info_CCCR=test_particle.apparent_erosion_10Be_COSMOCALC(rho, LSDCRNP, 
+                                 MapOfProdAndScaling["AverageShielding"][i]*
+                                 MapOfProdAndScaling["AverageProdScaling"][i],  
+                                 muon_string, top_eff_depth, bottom_eff_depth);
+      }
+      else if(nuclide[i] == "Al26")    
+      {
+        test_particle.setConc_10Be(Concentration[i]);
+        erate_info_CCCR=test_particle.apparent_erosion_26Al_COSMOCALC(rho, LSDCRNP, 
+                                 MapOfProdAndScaling["AverageShielding"][i]*
+                                 MapOfProdAndScaling["AverageProdScaling"][i],
+                                 muon_string, top_eff_depth, bottom_eff_depth);
+      }
 
       // print to the results file
       results_out << i << "," << sample_name[i] << "," << nuclide[i] << "," << latitude[i] 
@@ -1913,26 +1916,34 @@ void LSDCosmoData::print_results()
                   << "," << Concentration_uncertainty[i] << "," 
                   << erate_analysis[0] << "," << erate_analysis[1] << "," 
                   << erate_analysis[2] << "," << erate_analysis[3] << "," 
-                  << erate_analysis[4] << "," << AverageProdScaling[i] << ","
-                  << AverageTopoShielding[i] << "," << AverageSelfShielding[i] 
-                  << "," << AverageSnowShielding[i] << "," 
-                  << AverageCombinedScaling[i] << ","
-                  << outlet_lat[i] << "," << OutletPressure[i] << "," 
-                  << OutletEffectivePressure[i] << ","  << centroid_lat[i] << "," 
-                  << CentroidPressure[i] << "," << CentroidEffectivePressure[i] << ","
+                  << erate_analysis[4] << "," 
+                  << MapOfProdAndScaling["AverageProdScaling"][i] << ","
+                  << MapOfProdAndScaling["AverageTopoShielding"][i] << "," 
+                  << MapOfProdAndScaling["AverageSelfShielding"][i] << "," 
+                  << MapOfProdAndScaling["AverageSnowShielding"][i] << "," 
+                  << MapOfProdAndScaling["AverageShielding"][i] << ","
+                  << MapOfProdAndScaling["AverageShielding"][i]*
+                     MapOfProdAndScaling["AverageProdScaling"][i] << "," 
+                  << MapOfProdAndScaling["AverageCombinedScaling"][i] << ","
+                  << MapOfProdAndScaling["outlet_lat"][i] << "," 
+                  << MapOfProdAndScaling["OutletPressure"][i] << "," 
+                  << MapOfProdAndScaling["OutletEffectivePressure"][i] << ","  
+                  << MapOfProdAndScaling["centroid_lat"][i] << "," 
+                  << MapOfProdAndScaling["CentroidPressure"][i] << "," 
+                  << MapOfProdAndScaling["CentroidEffectivePressure"][i] << ","
                   << erate_info[0] << "," << erate_info[0]*1e7/rho << ","
+                  << erate_info_CCCR[0] << "," << erate_info_CCCR[0]*1e7/rho << ","
                   << erate_analysis[0]*1e7/rho <<","<< erate_analysis[4]*1e7/rho 
-                  << "," << BasinRelief[i] << endl;
+                  << "," << MapOfProdAndScaling["BasinRelief"][i] << endl;
+
+
       
       // now print to the CRONUS file
       // Note this subsumes self shielding into the shielding factor so 
       // the self shielding thickness is set to 0!
-      double avg_shield_no_prod = AverageTopoShielding[i]*AverageSelfShielding[i]
-                                   *AverageSnowShielding[i];
-      
       CRONUS_out << sample_name[i] << " " << latitude[i] << " " << longitude[i]
-                 << " " << CentroidEffectivePressure[i] << " pre 0 2.65 "
-                 << avg_shield_no_prod << " ";
+                 << " " << MapOfProdAndScaling["CentroidEffectivePressure"][i] 
+                 << " pre 0 2.65 " << MapOfProdAndScaling["AverageShielding"][i] << " ";
       if(nuclide[i] == "Be10")
       {
         CRONUS_out << Concentration[i] << " " << Concentration_uncertainty[i] 
