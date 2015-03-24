@@ -823,6 +823,20 @@ class LSDChiNetwork
 		/// @date 04/08/14
 		vector< vector<float> > get_m_means();
 
+    /// @brief This gets the node_indices for the channel network
+    /// @return vector of vectors with m means
+    /// @ author DTM
+    /// @date 24/03/15
+    vector< vector<float> > get_node_indices()
+      { return node_indices; }
+    /// @brief This gets the chi coordinates for the channel network
+    /// @return vector of vectors with m means
+    /// @ author DTM
+    /// @date 24/03/15
+    vector< vector<float> > get_chis()
+      { return chis; }
+
+
 	protected:
 
 	///Number of rows.

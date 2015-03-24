@@ -4362,7 +4362,7 @@ void LSDJunctionNetwork::couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elev
   matlab_float_sort_descending(ElevationValues,ElevationValues,index_map);
   matlab_int_reorder(BasinNodes,index_map,BasinNodes);
   // Step 3: For each node, route flow to channel
-  bool skip_trace = false;
+  bool skip_trace;
   vector< vector<float> > vv_temp;
   vector<float> v_temp;
   int output_channel_node;

@@ -4702,7 +4702,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
         }
         //collect slopes and totals weighted by path length
         length += d;
-//         s_local = slope[a][b];                                                                                                                                                                                                                
+//         s_local = slope[a][b];
       }
 
       // test for plan curvature here and set a flag if flow is divergent or convergent but continue trace regardless
@@ -4716,7 +4716,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
       trace_coordinates[1].push_back(north_vec[count]);
     }
   
-    if (a == 0 || b == 0 ||	a == NRows-1 || b == NCols-1 )
+    if (a == 0 || b == 0 || a == NRows-1 || b == NCols-1 )
     {
       // avoid going out of bounds.
       // this is caused by having a hilltop on the first row or col away from the border
@@ -4743,9 +4743,82 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
         trace_metrics.push_back(mean_slope);
         trace_metrics.push_back(relief);
         trace_metrics.push_back(length*DataResolution);
-        trace_metrics.push_back(float(stnet[a][b]));
-      
-        channel_node = stnet[a][b]; 
+        
+        if (stnet[a][b] != NoDataValue)
+        {
+          channel_node = retrieve_node_from_row_and_column(a,b);
+          trace_metrics.push_back(channel_node);
+        }
+        // find nearest channel pixel within 1m buffer - if more than one, choose furthest downstream
+        else
+        {
+          float min_elev=NoDataValue;
+          if (stnet[a-1][b-1] != NoDataValue)
+          {
+            if (min_elev == NoDataValue || zeta[a-1][b-1] < min_elev)
+            {
+              min_elev = zeta[a-1][b-1]; 
+              channel_node = retrieve_node_from_row_and_column(a-1,b-1);
+            }
+          }
+          else if (stnet[a-1][b] != NoDataValue)
+          {
+            if (min_elev == NoDataValue || zeta[a-1][b] < min_elev)
+            {
+              min_elev = zeta[a-1][b]; 
+              channel_node = retrieve_node_from_row_and_column(a-1,b);
+            }
+          }
+          else if (stnet[a-1][b+1] != NoDataValue)
+          {
+            if (min_elev == NoDataValue || zeta[a-1][b+1] < min_elev)
+            {
+              min_elev = zeta[a-1][b+1]; 
+              channel_node = retrieve_node_from_row_and_column(a-1,b+1);
+            }
+          }
+          else if (stnet[a][b-1] != NoDataValue)
+          {
+            if (min_elev == NoDataValue || zeta[a][b-1] < min_elev)
+            {
+              min_elev = zeta[a][b-1]; 
+              channel_node = retrieve_node_from_row_and_column(a,b-1);
+            }
+          }
+          else if (stnet[a][b+1] != NoDataValue)
+          {
+            if (min_elev == NoDataValue || zeta[a][b+1] < min_elev)
+            {
+              min_elev = zeta[a][b+1]; 
+              channel_node = retrieve_node_from_row_and_column(a,b+1);
+            }
+          }
+          else if (stnet[a+1][b-1] != NoDataValue)
+          {
+            if (min_elev == NoDataValue || zeta[a+1][b-1] < min_elev)
+            {
+              min_elev = zeta[a+1][b-1]; 
+              channel_node = retrieve_node_from_row_and_column(a+1,b-1);
+            }
+          }
+          else if (stnet[a+1][b] != NoDataValue)
+          {
+            if (min_elev == NoDataValue || zeta[a+1][b] < min_elev)
+            {
+              min_elev = zeta[a+1][b]; 
+              channel_node = retrieve_node_from_row_and_column(a+1,b);
+            }
+          }
+          else if (stnet[a+1][b+1] != NoDataValue)
+          {
+            if (min_elev == NoDataValue || zeta[a+1][b+1] < min_elev)
+            {
+              min_elev = zeta[a+1][b+1]; 
+              channel_node = retrieve_node_from_row_and_column(a+1,b+1);
+            }
+          }
+          trace_metrics.push_back(channel_node);
+        }
 //         if (relief > 0) ofs << X << "," << Y << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "," << stnet[a][b] << "," << slope[i][j] << "," << DivergentCountFlag << "\n";
 //         else ++neg_count;
         if (relief <= 0) ++neg_count;
@@ -4762,9 +4835,5 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
   output_trace_metrics = trace_metrics;
   output_channel_node = channel_node;
 }
-
-
-
-
-
+//----------------------------------------------------------------------------------------------------------------------
 #endif
