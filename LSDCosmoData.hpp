@@ -199,6 +199,18 @@ class LSDCosmoData
     /// @date 28/02/2015
     void calculate_erosion_rates(int method_flag);
 
+    /// @brief This function prints sevear rasters to file:
+    ///  1) Pixel-by-pixel production scaling
+    ///  2) Pixel-by-pixel combined scaling (production plus combined shielding)
+    ///  3) Pixel-by-pixel combined shielding
+    ///  4) The cosmo concetration coming from each pixel at the proscribed erosion rate
+    /// @param Raster_names a vector containing the names of DEM, snow, self and toposhield rasters
+    /// @param CRN_params a vector of parameter values
+    /// @author SMM
+    /// @date 23/03/2015
+    void full_shielding_raster_printer(vector<string> Raster_names,
+                                        vector<double> CRN_params);
+
     /// @brief this function prints the data held in the the data members
     ///  to screen. Is used for bug checking. 
     /// @detail Note the function does not print the standardised values, only raw values.
@@ -267,7 +279,15 @@ class LSDCosmoData
     /// @date 12/03/2015
     void print_results();
 
-
+    /// @brief This function prints several rasters to file:
+    ///  1) Pixel-by-pixel production scaling
+    ///  2) Pixel-by-pixel combined scaling (production plus combined shielding)
+    ///  3) Pixel-by-pixel combined shielding
+    ///  4) The cosmo concetration coming from each pixel at the proscribed erosion rate
+    /// @author SMM
+    /// @date 23/03/2015
+    void print_rasters();
+    
   protected:
     
     /// the number of samples
@@ -374,6 +394,9 @@ class LSDCosmoData
     
     /// Write a LSDIndexRaster with the basins
     bool write_basin_index_raster;
+    
+    /// Write the shielding and scaling rasters
+    bool write_full_scaling_rasters;
     
     //-----------------Information used in cosmogenic calculators---------------
     /// This contains data with all sorts of scaling parameters

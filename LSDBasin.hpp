@@ -1123,6 +1123,29 @@ class LSDCosmoBasin: public LSDBasin
                         LSDFlowInfo& FlowInfo, string path_to_atmospheric_data);
 
 
+    /// @brief This function prints the production scaling as well as the 
+    ///  combined scaling and combined shielding on a pixel by pixel basis to 
+    ///  rasters
+    /// @param filename the name of the file: this is generally the DEM file with
+    ///  an extension for the basin name
+    /// @param FlowInfo The LSDFlowInfo object
+    /// @author SMM
+    /// @date 24/03/2015
+    void print_scaling_and_shielding_rasters(string filename,LSDFlowInfo& FlowInfo);
+
+    /// @brief This function is run after the CRN erosion rate have been found
+    ///  it prints a raster contiannig the spatially distributed concentration
+    ///  of the nuclide predicted for the estimated erosion rate
+    /// @param filename the name of the file: this is generally the DEM file with
+    ///  an extension for the basin name
+    /// @param eff_erosion_rate: the erosion rate calculated for the basin
+    /// @param Nuclide a string containing either Al26 or Be10
+    /// @param Muon_scaling a string with either Braucher, Schaller or Granger
+    /// @param FlowInfo The LSDFlowInfo object
+    /// @author SMM
+    /// @date 24/03/2015
+    void print_CRN_conc_raster(string filename, double eff_erosion_rate, string Nuclide,
+                               string Muon_scaling, LSDFlowInfo& FlowInfo);
                             
   protected:
     /// The measured 10Be concentration    
