@@ -630,7 +630,9 @@ void LSDBasin::set_Perimeter(LSDFlowInfo& FlowInfo){
     FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
     
       NDVCount = 0;
-     
+      
+      if (i != 0 && j != 0)
+      {     
         //count border cells that are NDV
         if (BasinData[i-1][j-1] == NoDataValue){ ++NDVCount; }
         if (BasinData[i][j-1] == NoDataValue){ ++NDVCount; }
@@ -646,6 +648,11 @@ void LSDBasin::set_Perimeter(LSDFlowInfo& FlowInfo){
           I.push_back(i);
           J.push_back(j);
         }
+      }
+      else
+      {
+        ++i;
+      }
     
   }
 
