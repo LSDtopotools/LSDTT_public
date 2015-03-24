@@ -3812,8 +3812,6 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_RAW(LSDRaster Elevation
             degs = aspect[a][b];
 			    	theta = rads[a][b];
 		    		path[a][b] += 1;
-		    		east_vec[0] = easting[b];
-			    	north_vec[0] = northing[a];
 		    		s_local = slope[a][b];
 
             length += sqrt((pow((xo-0.5),2) + pow((yo-0.5),2)));  //update length to cope with the 'jump' to the centre of the cell to restart the trace
@@ -4186,7 +4184,6 @@ vector<float> LSDFlowInfo::get_raster_values_for_nodes(LSDRaster& Raster, vector
 //                        (i) hillslope relief
 //                        (i) hillslope length
 //                        (i) channel ID @ lower boundary
-//                        (i) DivergentCountFlag
 // output_channel_node -the nodeindex at the bounding channel
 // skip_trace - a bool object that specifies whether this trace has routed
 // successfully to the channel.
@@ -4194,7 +4191,6 @@ vector<float> LSDFlowInfo::get_raster_values_for_nodes(LSDRaster& Raster, vector
 // SWDG (adapted by DTM) 23/3/15
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_node, LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir,
-                                                          LSDRaster PlanCurvature, LSDRaster Slope,
                                                           vector< vector<float> >& output_trace_coordinates, vector<float>& output_trace_metrics,
                                                           int& output_channel_node, bool& skip_trace)
 {
@@ -4208,10 +4204,10 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
   float length, d;
   int flag;
   int count = 0;
-  int DivergentCountFlag = 0; //Flag used to count the number of divergent cells encountered in a trace
+//   int DivergentCountFlag = 0; //Flag used to count the number of divergent cells encountered in a trace
   float PI = 3.14159265;
   float degs, degs_old, degs_new, theta;
-  float s_local, s_edge;
+//   float s_local, s_edge;
   float xo, yo, xi, yi, temp_yo1, temp_yo2, temp_xo1, temp_xo2;
 //   bool skip_trace; //flag used to skip traces where no path to a stream can be found. Will only occur on noisy, raw topography
 
@@ -4231,7 +4227,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
   Array2D<float> zeta = Elevation.get_RasterData(); //elevation
   Array2D<int> stnet = StreamNetwork.get_RasterData(); // stream network
   Array2D<float> aspect = D_inf_Flowdir.get_RasterData(); //aspect
-  Array2D<float> slope = Slope.get_RasterData(); //slope
+//   Array2D<float> slope = Slope.get_RasterData(); //slope
   
   Array2D<float> rads(NRows,NCols);
   Array2D<float> path(NRows, NCols);
@@ -4272,7 +4268,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
     flag = true;
     count = 1;
     path = blank.copy();
-    DivergentCountFlag = 0; //initialise count of divergent cells in trace
+//     DivergentCountFlag = 0; //initialise count of divergent cells in trace
     skip_trace = false; //initialise skip trace flag as false, will only be switched if no path to stream can be found. Very rare.
 
     ++ht_count;
@@ -4284,7 +4280,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
     path[a][b] += 1;
     east_vec[0] = easting[b];
     north_vec[0] = northing[a];
-    s_local = slope[a][b];
+//     s_local = slope[a][b];
 
     //test direction, calculate outlet coordinates and update indicies
     // easterly
@@ -4349,7 +4345,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
 
     //collect slopes and totals weighted by path length
     length += d;
-    s_local = slope[a][b];
+//     s_local = slope[a][b];
     // place coordinates into output vector
     trace_coordinates[0].push_back(east_vec[count]);
     trace_coordinates[1].push_back(north_vec[count]);
@@ -4386,7 +4382,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
         else if (dir == 3) temp_yo1 = -1;
         else if (dir == 4) temp_xo2 = -1;
 
-        s_local = slope[a][b];
+//         s_local = slope[a][b];
 
         if (temp_yo1 <= 1 && temp_yo1 > 0)
         {              
@@ -4445,7 +4441,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
           if (degs_new <= 90 || degs_new >= 270) //secondary compenent of flow is north                   
           {
             xo = 0.00001, yo = 1;
-            s_edge = abs(s_local*sin(theta));
+//             s_edge = abs(s_local*sin(theta));
             d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
             xi = xo, yi = 1-yo;
             dir = 4;
@@ -4456,7 +4452,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
           else if (degs_new > 90 && degs_new < 270)  //secondary component is south
           {
             xo = 0.00001, yo = 0;
-            s_edge = abs(s_local*sin((PI/2)-theta));
+//             s_edge = abs(s_local*sin((PI/2)-theta));
             d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
             xi = xo, yi = 1-yo;
             dir = 2;
@@ -4477,7 +4473,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
           if (degs_new >= 0 && degs_new <= 180) //secondary component is East
           {
             xo = 1, yo = 1-0.00001;
-            s_edge = abs(s_local*sin((2/PI)-theta));
+//             s_edge = abs(s_local*sin((2/PI)-theta));
             d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
             xi = 1-xo, yi = yo;
             dir = 1;
@@ -4488,7 +4484,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
           else if (degs_new > 180 && degs_new <= 360)  //secondary component is West
           {
             xo = 0, yo = 1-0.00001;
-            s_edge = abs(s_local*sin(theta));
+//             s_edge = abs(s_local*sin(theta));
             d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
             xi = 1-xo, yi = yo;
             dir = 3;
@@ -4509,7 +4505,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
           if(degs_new >= 90 && degs_new <= 270)   //secondary component is South
           {
             xo = 1-0.00001, yo = 0;
-            s_edge = abs(s_local*sin(theta));
+//             s_edge = abs(s_local*sin(theta));
             d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
             xi = xo, yi = 1-yo;
             dir = 2;
@@ -4520,7 +4516,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
           else if (degs_new > 270 || degs_new < 90)   //secondary component is North
           {
             xo = 1-0.00001, yo = 1;
-            s_edge = abs(s_local*sin((2/PI) - theta));
+//             s_edge = abs(s_local*sin((2/PI) - theta));
             d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
             xi = xo, yi = 1- yo;
             dir = 4;
@@ -4541,7 +4537,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
           if(degs_new >= 180 && degs_new <= 360) //secondary component is West
           {
             xo = 0, yo = 0.00001;
-            s_edge = abs(s_local*sin((PI/2) - theta));
+//             s_edge = abs(s_local*sin((PI/2) - theta));
             d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
             xi = 1-xo, yi = yo;
             dir = 3;
@@ -4552,7 +4548,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
           else if (degs_new >= 0 && degs_new < 180) //secondary component is East
           { 
             xo = 1, yo = 0.00001;
-            s_edge = abs(s_local*sin(theta));
+//             s_edge = abs(s_local*sin(theta));
             d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
             xi = 1-xo, yi = yo;
             dir = 1;
@@ -4585,9 +4581,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
         degs = aspect[a][b];
         theta = BearingToRad(aspect[a][b]);
         path[a][b] += 1;
-//         east_vec[0] = easting[b];
-//         north_vec[0] = northing[a];
-        s_local = slope[a][b];
+//         s_local = slope[a][b];
         length += sqrt((pow((xo-0.5),2) + pow((yo-0.5),2)));  //update length to cope with the 'jump' to the centre of the cell to restart the trace
 
         //test direction, calculate outlet coordinates and update indices easterly
@@ -4641,7 +4635,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
         }
         //collect slopes and totals weighted by path length
         length += d;
-        s_local = slope[a][b];
+//         s_local = slope[a][b];
       }
 
       if (path[a][b] >= 1)  //self intersect/'slosh'
@@ -4649,7 +4643,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
         degs = aspect[a][b];
         theta = rads[a][b];
         path[a][b] += 1;
-        s_local = slope[a][b];
+//         s_local = slope[a][b];
 
         a_2 = a;
         b_2 = b;
@@ -4708,14 +4702,14 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
         }
         //collect slopes and totals weighted by path length
         length += d;
-        s_local = slope[a][b];                                                                                                                                                                                                                
+//         s_local = slope[a][b];                                                                                                                                                                                                                
       }
 
       // test for plan curvature here and set a flag if flow is divergent or convergent but continue trace regardless
       // The larger the counter the more convergent or divergent the trace is
-      if (abs(PlanCurvature.get_data_element(a,b)) > (0.001)) ++DivergentCountFlag;
+//       if (abs(PlanCurvature.get_data_element(a,b)) > (0.001)) ++DivergentCountFlag;
       if (path[a][b] >=3) skip_trace = true;//update flag if a trace cannot complete, so that we can track errors.
-      if (a == 0 || b == 0 ||	a == NRows-1 || b == NCols-1 || stnet[a][b] != NoDataValue || stnet[a-1][b-1] != NoDataValue || stnet[a][b-1] != NoDataValue || stnet[a+1][b-1] != NoDataValue || stnet[a+1][b] != NoDataValue || stnet[a+1][b+1] != NoDataValue || stnet[a][b+1] != NoDataValue || stnet[a-1][b+1] != NoDataValue || stnet[a-1][b] != NoDataValue || path[a][b] >= 3 || skip_trace == true) flag = false;
+      if (a == 0 || b == 0 || a == NRows-1 || b == NCols-1 || stnet[a][b] != NoDataValue || stnet[a-1][b-1] != NoDataValue || stnet[a][b-1] != NoDataValue || stnet[a+1][b-1] != NoDataValue || stnet[a+1][b] != NoDataValue || stnet[a+1][b+1] != NoDataValue || stnet[a][b+1] != NoDataValue || stnet[a-1][b+1] != NoDataValue || stnet[a-1][b] != NoDataValue || path[a][b] >= 3 || skip_trace == true) flag = false;
       
       // save trace coordinates for this iteration.
       trace_coordinates[0].push_back(east_vec[count]);
@@ -4750,7 +4744,6 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
         trace_metrics.push_back(relief);
         trace_metrics.push_back(length*DataResolution);
         trace_metrics.push_back(float(stnet[a][b]));
-        trace_metrics.push_back(float(DivergentCountFlag));
       
         channel_node = stnet[a][b]; 
 //         if (relief > 0) ofs << X << "," << Y << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "," << stnet[a][b] << "," << slope[i][j] << "," << DivergentCountFlag << "\n";

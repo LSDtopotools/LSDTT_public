@@ -3461,38 +3461,35 @@ LSDIndexRaster LSDJunctionNetwork::SplitHillslopes(LSDFlowInfo& FlowInfo, LSDInd
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexRaster LSDJunctionNetwork::extract_basin_from_junction(int basin_junction, int basin_reference_number, LSDFlowInfo& FlowInfo)
 {
+  if (basin_junction >= int(JunctionVector.size()))
+  {
+    cout << "LSDJunctionNetwork::extract_basin_from_junction junction not in list" << endl;
+    exit(EXIT_FAILURE);
+  }
 
+  int receiver_junc, n_nodes_in_channel,basin_outlet;
+  Array2D<int> Basin(NRows,NCols,NoDataValue);
+  // get the reciever junction
+  receiver_junc = ReceiverVector[basin_junction];
 
-	if (basin_junction >= int(JunctionVector.size()))
-	{
-		cout << "LSDJunctionNetwork::extract_basin_from_junction junction not in list" << endl;
-		exit(EXIT_FAILURE);
-	}
-
-  	int receiver_junc, n_nodes_in_channel,basin_outlet;
-	Array2D<int> Basin(NRows,NCols,NoDataValue);
-	// get the reciever junction
-  	receiver_junc = ReceiverVector[basin_junction];
-
-  	LSDIndexChannel StreamLinkVector = LSDIndexChannel(basin_junction, JunctionVector[basin_junction],
+  LSDIndexChannel StreamLinkVector = LSDIndexChannel(basin_junction, JunctionVector[basin_junction],
                                                            receiver_junc, JunctionVector[receiver_junc], FlowInfo);
+                                                           
+  // Find final nth order channel pixel, which is the penultimate pixel in channel.
+  n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
+  int node,row,col;
 
-    // Find final nth order channel pixel, which is the penultimate pixel
-    // in channel.
-     n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
-     int node,row,col;
-
-    basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
-    vector<int> BasinNodeVector = FlowInfo.get_upslope_nodes(basin_outlet);
-    // Loop through basin to label basin pixels with basin ID
-    for (int BasinIndex = 0; BasinIndex < int(BasinNodeVector.size()); ++BasinIndex)
-    {
-		node = BasinNodeVector[BasinIndex];
-        FlowInfo.retrieve_current_row_and_col(node,row,col);
-        Basin[row][col] = basin_reference_number;
-    }
-	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Basin,GeoReferencingStrings);
-	return IR;
+  basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
+  vector<int> BasinNodeVector = FlowInfo.get_upslope_nodes(basin_outlet);
+  // Loop through basin to label basin pixels with basin ID
+  for (int BasinIndex = 0; BasinIndex < int(BasinNodeVector.size()); ++BasinIndex)
+  {
+    node = BasinNodeVector[BasinIndex];
+    FlowInfo.retrieve_current_row_and_col(node,row,col);
+    Basin[row][col] = basin_reference_number;
+  }
+  LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Basin,GeoReferencingStrings);
+  return IR;
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
@@ -4340,18 +4337,47 @@ void LSDJunctionNetwork::snap_point_locations_to_channels(vector<float> x_locs,
 // that sets the baselevel for that hillslope pixel.  The node on the channel network for
 // which this occurs is determined using Stuart's rather wonderful hillslope flow routing
 // method (REFERENCE TO GO HERE), which exploits the D-Infinity flow routing algorithm.
-// void LSDJunctionNetwork::couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, int OutletJunction, vector<int>& basin_nodes, vector<int>& baselevel_channel_nodes)
-// {
-// 
-// }
-// ----------------------------------------------------------------------------------------
-// get_raster_values_for_nodes => should be in LSDFlowInfo
-// ---------------------------------------------------------------------------------------- 
-// This function gets the values from a raster corresponding to the given nodes.
-// vector<float> LSDJunctionNetwork::get_raster_values_for_nodes(LSDRaster& Raster, vector<int>& node_indices)
-// {
-// 
-// }
+void LSDJunctionNetwork::couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& D_inf_Flowdir, LSDIndexRaster& ChannelNodeNetwork, 
+                                                                 int OutletJunction, vector<int>& basin_nodes, vector<int>& baselevel_channel_nodes)
+{
+  LSDIndexChannel StreamLinkVector = LSDIndexChannel(OutletJunction, JunctionVector[OutletJunction],ReceiverVector[OutletJunction],
+                                                     JunctionVector[ReceiverVector[OutletJunction]], FlowInfo);
+  // Step 1: get basin
+  int n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
+  int basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
+  vector<int> BasinNodes = FlowInfo.get_upslope_nodes(basin_outlet);
+  int N_BasinNodes = BasinNodes.size();
+  //-----------------------------------------//
+  // option to clip all rasters to basin here//
+  //-----------------------------------------//
+  // Step 2: sort basin nodes by elevation
+  vector<float> ElevationValues;
+  vector<size_t> index_map;
+  for(int i = 0; i<N_BasinNodes; ++i)
+  {
+    int row,col;
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[i],row,col);
+    ElevationValues.push_back(Elevation.get_data_element(row,col));
+  }
+  matlab_float_sort_descending(ElevationValues,ElevationValues,index_map);
+  matlab_int_reorder(BasinNodes,index_map,BasinNodes);
+  // Step 3: For each node, route flow to channel
+  bool skip_trace = false;
+  vector< vector<float> > vv_temp;
+  vector<float> v_temp;
+  int output_channel_node;
+  vector<int> ChannelNodes;
+  for(int i = 0; i<N_BasinNodes; ++i)
+  {
+    FlowInfo.D_Inf_single_trace_to_channel(Elevation, BasinNodes[i], ChannelNodeNetwork, D_inf_Flowdir, vv_temp, v_temp, output_channel_node, skip_trace);
+    if(skip_trace == false) ChannelNodes.push_back(output_channel_node);
+    else cout << "\t trace failed - skipping!" << endl;
+  }
+  
+  // return output vectors
+  baselevel_channel_nodes = ChannelNodes;
+  basin_nodes = BasinNodes;
+}
 
 //----------------------------------------------------------------------------------------
 // get_channel_characteristics_for_nodes => should be in LSDChiNetwork or LSDChannel
