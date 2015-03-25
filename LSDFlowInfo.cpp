@@ -1238,14 +1238,17 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension,
     else if(input_switch == 2)
     {
       vector<int> Sources_temp;
-      for(int i = 0; i < int(x_coord.size()); ++i)
+      int N_coords = x_coord.size();
+      int N_sources_1 = 0;
+      for(int i = 0; i < N_coords; ++i)
       {
         node = get_node_index_of_coordinate_point(x_coord[i], y_coord[i]);
         if (node != NoDataValue) 
         {
           // Test 1 - Check for channel heads that fall in same pixel
           int test1 = 0;
-          for(int i_test=0; i_test<int(Sources_temp.size());++i_test)
+          N_sources_1 = Sources_temp.size();
+          for(int i_test=0; i_test<N_sources_1;++i_test)
           {
             if(node==Sources_temp[i_test]) test1 = 1;
           }
@@ -1254,7 +1257,8 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension,
         }
       }
       // Test 2 - Need to do some extra checks to load sources correctly. 
-      for(int i = 0; i<int(Sources_temp.size()); ++i)
+      int N_sources_2 = Sources_temp.size();
+      for(int i = 0; i<N_sources_2; ++i)
       {
         int test2 = 0;
         for(int i_test = 0; i_test<int(Sources_temp.size()); ++i_test)
