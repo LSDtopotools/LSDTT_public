@@ -2215,8 +2215,9 @@ int LSDFlowInfo::get_node_index_of_coordinate_point(float X_coordinate, float Y_
   int row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/DataResolution));
 
   // Get node of point
-  int CurrentNode = retrieve_node_from_row_and_column(row_point, col_point);
-
+  int CurrentNode;
+  if(col_point>=0 && col_point<NCols && row_point>=0 && row_point<NRows) CurrentNode = retrieve_node_from_row_and_column(row_point, col_point);
+  else CurrentNode = int(NoDataValue);
   return CurrentNode;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
