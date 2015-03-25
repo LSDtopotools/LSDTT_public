@@ -4359,6 +4359,7 @@ void LSDJunctionNetwork::couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elev
     FlowInfo.retrieve_current_row_and_col(BasinNodes[i],row,col);
     ElevationValues.push_back(Elevation.get_data_element(row,col));
   }
+  cout << "\t\t sorting values" << endl;
   matlab_float_sort_descending(ElevationValues,ElevationValues,index_map);
   matlab_int_reorder(BasinNodes,index_map,BasinNodes);
   // Step 3: For each node, route flow to channel
@@ -4366,14 +4367,16 @@ void LSDJunctionNetwork::couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elev
   vector< vector<float> > vv_temp;
   vector<float> v_temp;
   int output_channel_node;
-  vector<int> ChannelNodes;
+  vector<int> ChannelNodes; 
+  cout << "\t\t routing flow from each pixel" << endl;
   for(int i = 0; i<N_BasinNodes; ++i)
   {
+    cout << flush << i+1 << "/" << N_BasinNodes;
     FlowInfo.D_Inf_single_trace_to_channel(Elevation, BasinNodes[i], ChannelNodeNetwork, D_inf_Flowdir, vv_temp, v_temp, output_channel_node, skip_trace);
     if(skip_trace == false) ChannelNodes.push_back(output_channel_node);
-    else cout << "\t trace failed - skipping!" << endl;
+    else cout << "\n\t trace failed - skipping!" << endl;
   }
-  
+  cout << "\t\t hillslope flow routing complete; moving on..." << endl;
   // return output vectors
   baselevel_channel_nodes = ChannelNodes;
   basin_nodes = BasinNodes;

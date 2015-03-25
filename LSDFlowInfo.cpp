@@ -4221,7 +4221,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
   int s_count = 0;
   int neg_count = 0;
   int edge_count = 0;
-  int ht_count = 0;
+//   int ht_count = 0;
 
   // a direction flag numbered 1,2,3,4 for E,S,W,N respectively
   int dir;
@@ -4253,6 +4253,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
   Array1D<double> north_vec(vec_size);
 
   //calculate northing and easting
+  cout << "\t\t\t calculating northing and easting..." << endl;
   for (i=0;i<NRows;++i)
   {
     northing[i] = ymax - i*DataResolution - 0.5;
@@ -4267,6 +4268,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
   // route initial node by aspect and get outlet coordinates
   int start_row, start_col;
   retrieve_current_row_and_col(start_node,start_row,start_col);
+  cout << "\t\t\t commence tracing..." << endl;
   if (zeta[start_row][start_col] != NoDataValue)
   {
     length = 0;
@@ -4276,7 +4278,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
 //     DivergentCountFlag = 0; //initialise count of divergent cells in trace
     skip_trace = false; //initialise skip trace flag as false, will only be switched if no path to stream can be found. Very rare.
 
-    ++ht_count;
+//     ++ht_count;
 
     degs = aspect[start_row][start_col];
     theta = BearingToRad(aspect[start_row][start_col]);
@@ -4355,7 +4357,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
     trace_coordinates[0].push_back(east_vec[count]);
     trace_coordinates[1].push_back(north_vec[count]);
 
-    //continue trace until a stream node is encountered
+    //continue trace until a stream node is encountered 
     while (flag == true && a > 0 && a < NRows-1 && b > 0 && b < NCols-1)   //added boudary checking to catch cells which flow off the edge of the DEM tile.
     {
       int a_2 = a;
@@ -4388,7 +4390,6 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
         else if (dir == 4) temp_xo2 = -1;
 
 //         s_local = slope[a][b];
-
         if (temp_yo1 <= 1 && temp_yo1 > 0)
         {              
           xo = 1, yo = temp_yo1;
@@ -4642,7 +4643,6 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
         length += d;
 //         s_local = slope[a][b];
       }
-
       if (path[a][b] >= 1)  //self intersect/'slosh'
       {
         degs = aspect[a][b];
@@ -4736,10 +4736,9 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
       {
         path[a][b] = 1;
         ++s_count;
-
         X = XMinimum + j*DataResolution;
         Y = YMinimum - (NRows-i)*DataResolution;
-        relief = zeta[i][j] - zeta[a][b];
+        relief = zeta[start_row][start_col] - zeta[a][b];
         mean_slope = relief/(length * DataResolution);
 
         trace_metrics.push_back(X);
@@ -4752,7 +4751,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
         if (stnet[a][b] != NoDataValue)
         {
           channel_node = retrieve_node_from_row_and_column(a,b);
-          trace_metrics.push_back(channel_node);
+          trace_metrics.push_back(float(channel_node));
         }
         // find nearest channel pixel within 1m buffer - if more than one, choose furthest downstream
         else
@@ -4822,7 +4821,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
               channel_node = retrieve_node_from_row_and_column(a+1,b+1);
             }
           }
-          trace_metrics.push_back(channel_node);
+          trace_metrics.push_back(float(channel_node));
         }
 //         if (relief > 0) ofs << X << "," << Y << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "," << stnet[a][b] << "," << slope[i][j] << "," << DivergentCountFlag << "\n";
 //         else ++neg_count;
