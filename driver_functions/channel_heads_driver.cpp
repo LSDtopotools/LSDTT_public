@@ -177,7 +177,8 @@ int main (int nNumberofArgs,char *argv[])
   // Find the valley junctions
   Array2D<float> tan_curv_array = tan_curvature.get_RasterData();
   cout << "got tan curvature array" << endl;
-	Array2D<int> valley_junctions = ChanNetwork.find_valleys(FlowInfo, tan_curv_array, sources, no_connecting_nodes);
+  float tan_curv_threshold = 0.1;
+	Array2D<int> valley_junctions = ChanNetwork.find_valleys(FlowInfo, tan_curv_array, sources, no_connecting_nodes, tan_curv_threshold);
 
 	// Write the valley junctions to an LSDIndexRaster
   //string VJ_name = "_VJ";
