@@ -55,29 +55,6 @@ class LSDSwath
   ///@date 11/04/2014
   ///
   LSDSwath(PointData& ProfilePoints, LSDRaster& RasterTemplate, float HalfWidth) { create(ProfilePoints, RasterTemplate, HalfWidth); }
-
-  ///@brief Create an LSDSwath object using a raster as a template, but uses a 
-  /// LSDIndexChannel object to create the points from a mainstem channel.
-  ///@details This overloaded create function takes an IndexChannel object as its
-  /// first argument, avoiding the need to invoke the PCL stuff. The aim of this 
-  /// approach is to create a longitudinal swath profile along a channel, by using
-  /// the data members from an IndexChannel object that correspond to the 'points'
-  /// of the channel, namely IndexChannel.[Row|Col]Sequence. (Look at the data members 
-  /// in LSDIndexChannel for more details.)
-  ///@param LSDIndexChannel ProfilePoints -> coordinates of points forming the
-  /// baseline of the profile.
-  ///@param LSDRaster RasterTemplate -> a raster dataset that is used as a
-  /// template for the swath profile i.e. any rasters that you wish to generate
-  /// the profile for should have the same characteristics/spatial extent as the
-  /// original template.
-  ///@param float ProfileHalfWidth
-  ///@author DAV
-  ///@date 25/03/2015
-  ///
-  LSDSwath(LSDIndexChannel& ProfilePoints, LSDRaster& RasterTemplate, float HalfWidth) 
-  { 
-    create(ProfilePoints, RasterTemplate, HalfWidth); 
-  }
 	
   void get_transverse_swath_profile(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth,
        vector<float>& mid_points, vector<float>& mean_profile, vector<float>& sd_profile, vector< vector<float> >& output_percentile_profiles,
@@ -122,8 +99,8 @@ class LSDSwath
 	private:
   void create();
   void create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float ProfileHalfWidth);
-  // Overloaded create function for the IndexChannel ingestion version - DAV
-  void create(LSDIndexChannel& ProfilePoints, LSDRaster& RasterTemplate, float HalfWidth);
+
+
             
 };
 

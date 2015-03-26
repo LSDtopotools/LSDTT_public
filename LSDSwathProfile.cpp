@@ -138,6 +138,7 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
     // Retrieve baseline value at each point - sample closest pixel in template raster
     X_coordinate_shifted_origin = ProfilePoints.X[i] - RasterTemplate.get_XMinimum();
     Y_coordinate_shifted_origin = ProfilePoints.Y[i] - RasterTemplate.get_YMinimum();
+    
     // Get row and column of point
     col_point = int(round(X_coordinate_shifted_origin/Resolution));
     row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/Resolution));
@@ -147,9 +148,11 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
   
   DistanceAlongBaseline = DistanceAlongBaseline_temp;
   BaselineValue = BaselineValue_temp;
+  
   // Read profile data into a LSDCloud object for querying
   vector<float> zeros(NPtsInProfile,0.0);
   LSDCloud ProfileCloud(ProfilePoints, RasterTemplate);
+  
   // For each point in array, find nearest point along the profile and calculate
   // signed distance to profile.  The convention here is that points lying on
   // left hand side of profile as you traverse from start to finish are 
