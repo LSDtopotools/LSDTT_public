@@ -4802,17 +4802,19 @@ LSDIndexRaster LSDFlowInfo::find_cells_influenced_by_nodata(LSDIndexRaster& Bord
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //----------------------------------------------------------------------------------------
-// get_raster_values_for_nodes => should be in LSDFlowInfo
+// get_raster_values_for_nodes
 //---------------------------------------------------------------------------------------- 
 // This function gets the values from a raster corresponding to the given nodes.
 vector<float> LSDFlowInfo::get_raster_values_for_nodes(LSDRaster& Raster, vector<int>& node_indices)
 {
   int N_nodes = node_indices.size();
+   cout << "N nodes " << node_indices.size() << endl;
   vector<float> return_values;
   int row, col;
   for(int i = 0; i < N_nodes; ++i)
   {
     retrieve_current_row_and_col(node_indices[i],row,col);
+    cout << "node " << node_indices[i] << " row " << row << " col " << col << endl;
     return_values.push_back(Raster.get_data_element(row,col));
   }
   return return_values;
@@ -5527,7 +5529,7 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
   }
   output_trace_coordinates = trace_coordinates;
   output_trace_metrics = trace_metrics;
-  output_channel_node = channel_node;
+  output_channel_node = channel_node;  
 }
 //----------------------------------------------------------------------------------------------------------------------
 #endif

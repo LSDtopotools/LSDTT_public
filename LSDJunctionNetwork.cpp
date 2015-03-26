@@ -4337,8 +4337,7 @@ void LSDJunctionNetwork::snap_point_locations_to_channels(vector<float> x_locs,
 // that sets the baselevel for that hillslope pixel.  The node on the channel network for
 // which this occurs is determined using Stuart's rather wonderful hillslope flow routing
 // method (REFERENCE TO GO HERE), which exploits the D-Infinity flow routing algorithm.
-void LSDJunctionNetwork::couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& D_inf_Flowdir, LSDIndexRaster& ChannelNodeNetwork, 
-                                                                 int OutletJunction, vector<int>& basin_nodes, vector<int>& baselevel_channel_nodes)
+void LSDJunctionNetwork::couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& D_inf_Flowdir, LSDIndexRaster& ChannelNodeNetwork, int OutletJunction, vector<int>& basin_nodes, vector<int>& baselevel_channel_nodes)
 {
   LSDIndexChannel StreamLinkVector = LSDIndexChannel(OutletJunction, JunctionVector[OutletJunction],ReceiverVector[OutletJunction],
                                                      JunctionVector[ReceiverVector[OutletJunction]], FlowInfo);
