@@ -4917,7 +4917,6 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
   Array1D<double> north_vec(vec_size);
 
   //calculate northing and easting
-  cout << "\t\t\t calculating northing and easting..." << endl;
   for (i=0;i<NRows;++i)
   {
     northing[i] = ymax - i*DataResolution - 0.5;
@@ -4932,7 +4931,6 @@ void LSDFlowInfo::D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_n
   // route initial node by aspect and get outlet coordinates
   int start_row, start_col;
   retrieve_current_row_and_col(start_node,start_row,start_col);
-  cout << "\t\t\t commence tracing..." << endl;
   if (zeta[start_row][start_col] != NoDataValue)
   {
     length = 0;

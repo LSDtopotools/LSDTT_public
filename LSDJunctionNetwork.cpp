@@ -4371,7 +4371,7 @@ void LSDJunctionNetwork::couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elev
   cout << "\t\t routing flow from each pixel" << endl;
   for(int i = 0; i<N_BasinNodes; ++i)
   {
-    cout << flush << i+1 << "/" << N_BasinNodes;
+    cout << flush << i+1 << "/" << N_BasinNodes << "\r";
     FlowInfo.D_Inf_single_trace_to_channel(Elevation, BasinNodes[i], ChannelNodeNetwork, D_inf_Flowdir, vv_temp, v_temp, output_channel_node, skip_trace);
     if(skip_trace == false) ChannelNodes.push_back(output_channel_node);
     else cout << "\n\t trace failed - skipping!" << endl;
