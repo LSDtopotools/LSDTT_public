@@ -82,6 +82,9 @@ int main (int nNumberofArgs,char *argv[])
 	string sources_ext = "_CH";    // for the dreich channel heads
 	
 	file_info_in >> DEM_name >> EROSIONDEM_name >> raster_extension;
+  
+  int JunctionIndex;
+  file_info_in >> JunctionIndex;
 	
 	float MinSlope; 
 	file_info_in >> MinSlope;
@@ -147,31 +150,46 @@ swath profile of the erosion in the mainstem channel from the erosion raster \n 
 	cout << "\nInitializing Channel network..." << endl;
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 	cout << "got channel_network." << endl;
+  
+  //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+  // This block is for when you don't know the Junction Number that the basin starts from.
+	// get the stream orders and the junctions
+	LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
+	LSDIndexRaster JIArray = ChanNetwork.JunctionIndexArray_to_LSDIndexRaster();
+  //
+  //
+	string SO_name = "_SO";
+	string JI_name = "_JI";
+  //
+	SOArray.write_raster((path_name+DEM_name+SO_name),raster_extension);
+	JIArray.write_raster((path_name+DEM_name+JI_name),raster_extension);
+  //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 	
   // Now get a junction and look for the longest channel upstream (the mainstem)
   // DAV - I test it here with a hard coded junction number since the raster is already per
   // 		clipped to a basin, so the first junction should be the outlet more or less (???)
-  int junction_number = 0;
+  //int junction_number = 0;  // This value is now specified in the parameter file and no longer hard coded.
   cout << "\nCreating main stem channel..." << endl;
-  LSDIndexChannel main_stem = ChanNetwork.generate_longest_index_channel_in_basin(junction_number, FlowInfo, DistanceFromOutlet);
-  cout << "got main stem channel, with n_nodes " << main_stem.get_n_nodes_in_channel() <<  endl;	
+  LSDIndexChannel main_stem = ChanNetwork.generate_longest_index_channel_in_basin(JunctionIndex, FlowInfo, DistanceFromOutlet);
+  cout << "got main stem channel, with n_nodes " << main_stem.get_n_nodes_in_channel() <<  "starting at junction no.: " << JunctionIndex << endl;	
 
 	// Now create the Channel Tree, this contains basic channel profile data and will be converted in PointData later
 	cout << "\nCreating IndexChannelTree..." << endl;
 	int organization_switch = 1;
 	int pruning_switch = 1;
-	LSDIndexChannelTree ChannelTree(FlowInfo, ChanNetwork, junction_number, organization_switch,
+	LSDIndexChannelTree ChannelTree(FlowInfo, ChanNetwork, JunctionIndex, organization_switch,
                                         DistanceFromOutlet, pruning_switch, SourceThreshold);   // pruning_threshold = SourceThreshold (is good yes?)
-  cout << "\ngot index channel tree." << endl;
+  cout << "got index channel tree." << endl;
     
   // Interim step of writing the channel tree to a file for the next part
+  cout << "\nWriting Channel Tree to File..." << endl;
 	string Chan_fname = "_ChanNet";
 	string Chan_ext = ".chan";
 	string Chan_for_swath_ingestion_fname = path_name + DEM_name + Chan_fname + Chan_ext;
 	ChannelTree.print_LSDChannels_for_chi_network_ingestion(FlowInfo,
                              filled_topo_test, DistanceFromOutlet, Chan_for_swath_ingestion_fname);
     
-  cout << "\nWrote index channel tree to file: " << Chan_for_swath_ingestion_fname << endl;   
+  cout << "wrote index channel tree to file: " << Chan_for_swath_ingestion_fname << endl;   
      
   // Now we are going to use a nifty tool from LSDShapeTools to write the index channel tree to a PointData object
   cout << "\nCreating PointData object from the tree file just written..." << endl;
@@ -182,17 +200,17 @@ swath profile of the erosion in the mainstem channel from the erosion raster \n 
 	//-=-=-=-=-=-=-=-=-=-=-=-=//
 	
 	// Load the raster template
-  string RasterTemplate_file = DEM_name;
+  string RasterTemplate_file = EROSIONDEM_name;
   string Long_Swath_ext = "_swath_long";
   string BV_ext = "_baseline_values";
-  cout << "STARTING SWATHING... here we go!" << endl;
+  cout << "\nSTARTING SWATHING... here we go!" << endl;
 	//RasterTemplate_file = RasterTemplate_file;   // Huh?
 	
-  cout << "\t Loading template raster..." << endl;
+  cout << "Loading template raster..." << endl;
   LSDRaster RasterTemplate(RasterTemplate_file.c_str(),raster_extension);
-  cout << "\nRaster template loaded using: " << RasterTemplate_file << endl;
+  cout << "raster template loaded using: " << RasterTemplate_file << endl;
 
-	// Load the baseline point data (created above)
+	// Load the baseline point data (no need - created above)
 	
 	// Create Swath Template
   cout << "\nCreating swath template..." << endl;
@@ -206,24 +224,17 @@ swath profile of the erosion in the mainstem channel from the erosion raster \n 
   int NormaliseTransProfile = 1;
   int NormaliseLongProfile = 0;
   
-  //cout << "\n\t writing output \n\t\t - transverse profile" << endl;
-  //TestSwath.write_transverse_profile_to_file(RasterTemplate, percentiles, BinWidth, RasterTemplate_file.c_str(),NormaliseTransProfile);
-  
-  cout << "\n Writing longitudinal profile..." << endl;
+  cout << "\nWriting longitudinal profile..." << endl;
   TestSwath.write_longitudinal_profile_to_file(RasterTemplate, percentiles, SwathBinWidth, RasterTemplate_file.c_str(),NormaliseLongProfile);
-  cout << "long profile swath written to file." << endl;
+  cout << "long profile swath written to text file." << endl;
   
-  //LSDRaster Swath(RasterTemplate.get_NRows(), RasterTemplate.get_NCols(), RasterTemplate.get_XMinimum(), RasterTemplate.get_YMinimum(),
-  //                RasterTemplate.get_DataResolution(), RasterTemplate.get_NoDataValue(), TestSwath.get_DistanceToBaselineArray()); 
-                   
+  // Last bit creates and writes swath templates to raster so you can inspect them and check they sampled the data extent that you expected.
+  // This is useful when you aren't sure how wide to set the half width or the channel threshold values for truncating the mainstem.                 
   LSDRaster Long_Swath(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_XMinimum(),RasterTemplate.get_YMinimum(),
                   RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_DistanceAlongBaselineArray());
                   
   LSDRaster BaselineValues(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_XMinimum(),RasterTemplate.get_YMinimum(),
                   RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_BaselineValueArray());
-                  
-  //string output_file = RasterTemplate_file + Swath_ext;
-  //Swath.write_raster(output_file.c_str(),flt_ext);
   
   string output_file2 = RasterTemplate_file + Long_Swath_ext;
   Long_Swath.write_raster(output_file2.c_str(),raster_extension);
