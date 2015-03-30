@@ -4337,7 +4337,7 @@ void LSDJunctionNetwork::snap_point_locations_to_channels(vector<float> x_locs,
 // that sets the baselevel for that hillslope pixel.  The node on the channel network for
 // which this occurs is determined using Stuart's rather wonderful hillslope flow routing
 // method (REFERENCE TO GO HERE), which exploits the D-Infinity flow routing algorithm.
-void LSDJunctionNetwork::couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& D_inf_Flowdir, LSDIndexRaster& ChannelNodeNetwork, int OutletJunction, vector<int>& basin_nodes, vector<int>& baselevel_channel_nodes)
+void LSDJunctionNetwork::couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& D_inf_Flowdir, LSDIndexRaster& ChannelNodeNetwork, int OutletJunction, vector<int>& hillslope_nodes, vector<int>& baselevel_channel_nodes)
 {
   LSDIndexChannel StreamLinkVector = LSDIndexChannel(OutletJunction, JunctionVector[OutletJunction],ReceiverVector[OutletJunction],
                                                      JunctionVector[ReceiverVector[OutletJunction]], FlowInfo);
@@ -4350,35 +4350,51 @@ void LSDJunctionNetwork::couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elev
   // option to clip all rasters to basin here//
   //-----------------------------------------//
   // Step 2: sort basin nodes by elevation
-  vector<float> ElevationValues;
+  vector<float> ElevationValues(N_BasinNodes,float(NoDataValue));
   vector<size_t> index_map;
   for(int i = 0; i<N_BasinNodes; ++i)
   {
     int row,col;
     FlowInfo.retrieve_current_row_and_col(BasinNodes[i],row,col);
-    ElevationValues.push_back(Elevation.get_data_element(row,col));
+    ElevationValues[i]=Elevation.get_data_element(row,col);
   }
   cout << "\t\t sorting values" << endl;
   matlab_float_sort_descending(ElevationValues,ElevationValues,index_map);
   matlab_int_reorder(BasinNodes,index_map,BasinNodes);
   // Step 3: For each node, route flow to channel
-  bool skip_trace;
+  bool skip_trace,hillslope_node_test;
   vector< vector<float> > vv_temp;
   vector<float> v_temp;
   int output_channel_node;
-  vector<int> ChannelNodes; 
+  vector<int> ChannelNodes,HillslopeNodes; 
+  int target_row,target_col;
+  int channel_node_count = 0;
   cout << "\t\t routing flow from each pixel" << endl;
   for(int i = 0; i<N_BasinNodes; ++i)
   {
     cout << flush << i+1 << "/" << N_BasinNodes << "\r";
-    FlowInfo.D_Inf_single_trace_to_channel(Elevation, BasinNodes[i], ChannelNodeNetwork, D_inf_Flowdir, vv_temp, v_temp, output_channel_node, skip_trace);
-    if(skip_trace == false) ChannelNodes.push_back(output_channel_node);
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[i],target_row,target_col);
+    if(ChannelNodeNetwork.get_data_element(target_row,target_col) == NoDataValue)
+    {
+      hillslope_node_test = true;
+      FlowInfo.D_Inf_single_trace_to_channel(Elevation, BasinNodes[i], ChannelNodeNetwork, D_inf_Flowdir, vv_temp, v_temp, output_channel_node, skip_trace);
+    }
+    else hillslope_node_test = false;
+    if(skip_trace == false)
+    {
+      if(hillslope_node_test == true)
+      {
+        ChannelNodes.push_back(output_channel_node);
+        HillslopeNodes.push_back(BasinNodes[i]);
+      }
+      else ++channel_node_count;
+    }
     else cout << "\n\t trace failed - skipping!" << endl;
   }
-  cout << "\t\t hillslope flow routing complete; moving on..." << endl;
+  cout << "\t\t hillslope flow routing complete - note within basin there were " << channel_node_count << " channel pixels from " << N_BasinNodes << "; moving on..." << endl;
   // return output vectors
   baselevel_channel_nodes = ChannelNodes;
-  basin_nodes = BasinNodes;
+  hillslope_nodes = HillslopeNodes;
 }
 
 //----------------------------------------------------------------------------------------

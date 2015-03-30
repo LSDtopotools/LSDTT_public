@@ -4808,14 +4808,20 @@ LSDIndexRaster LSDFlowInfo::find_cells_influenced_by_nodata(LSDIndexRaster& Bord
 vector<float> LSDFlowInfo::get_raster_values_for_nodes(LSDRaster& Raster, vector<int>& node_indices)
 {
   int N_nodes = node_indices.size();
-   cout << "N nodes " << node_indices.size() << endl;
-  vector<float> return_values;
-  int row, col;
+  vector<float> return_values(N_nodes,float(NoDataValue));
+  int row=0;
+  int col=0;
   for(int i = 0; i < N_nodes; ++i)
   {
-    retrieve_current_row_and_col(node_indices[i],row,col);
-    cout << "node " << node_indices[i] << " row " << row << " col " << col << endl;
-    return_values.push_back(Raster.get_data_element(row,col));
+    if(node_indices[i] == NoDataValue)
+    {
+      return_values[i] = NoDataValue;
+    }
+    else
+    {
+      retrieve_current_row_and_col(node_indices[i],row,col);
+      return_values[i] = Raster.get_data_element(row,col);
+    }
   }
   return return_values;
 }

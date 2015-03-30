@@ -914,8 +914,7 @@ class LSDJunctionNetwork
 	/// @return The vector of sources. The vector is composed of node indices
 	vector<int> get_SourcesVector() const { return SourcesVector; }
   
-  void couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& D_inf_Flowdir, LSDIndexRaster& ChannelNodeNetwork, 
-                                                                 int OutletJunction, vector<int>& basin_nodes, vector<int>& baselevel_channel_nodes);
+  void couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& D_inf_Flowdir, LSDIndexRaster& ChannelNodeNetwork, int OutletJunction, vector<int>& hillslope_nodes, vector<int>& baselevel_channel_nodes);
   
   
   protected:
