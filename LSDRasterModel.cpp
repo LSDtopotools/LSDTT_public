@@ -994,7 +994,7 @@ void LSDRasterModel::check_steady_state( void )
   steady_state = true;
 
   //cout << "Line 591, checking steady state, at this point ISS is" << initial_steady_state << endl;
-	
+  
   //  SMM: this check if steady state has been arrived across a cycle. 
   // It check a data member erosion_cycle_record, which is calculated elsewhere
   if (cycle_steady_check)
@@ -1035,13 +1035,15 @@ void LSDRasterModel::check_steady_state( void )
   {
     initial_steady_state = true;
     time_delay = current_time;
-		
+
     // This is a mode of end times. 0 == default, run until the endTime
     // 1 == run until a specified time after steady state
     // 2 == run a number of cycles
     // 3 == run to steady state, then run some cycles. 
     if (endTime_mode == 1 || endTime_mode == 3)
-			endTime += time_delay;
+    {
+      endTime += time_delay;
+    }
     if (not quiet)
     {
       cout << "\t\t\t> Initial steady state reached at " << current_time;
@@ -1062,32 +1064,32 @@ void LSDRasterModel::check_steady_state( void )
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::check_recording( void )
 {
-	int num_cycles = (current_time - time_delay) / periodicity;
-	if (recording)
-	{
-		return;
-	}
-	else if (not initial_steady_state)
-	{
-		// If we haven't reached steady state yet, don't record any data
-		recording = false;
-	}
-	else if (K_mode == 0 && D_mode == 0)
-	{
-		// If we aren't changing any of the forcing parameters, we can record
-		// as soon as we hit steady state
-		recording = true;
-	}
-	else if (num_cycles >= 1)
-	{
-		// If we are changing forcing parameters, we need to wait until one cycle has
-		// passed, as there is a small adjustment period associated with the first cycle
-		recording = true;
-	}
-	else
-	{
-		recording = false;
-	}
+  int num_cycles = (current_time - time_delay) / periodicity;
+  if (recording)
+  {
+    return;
+  }
+  else if (not initial_steady_state)
+  {
+    // If we haven't reached steady state yet, don't record any data
+    recording = false;
+  }
+  else if (K_mode == 0 && D_mode == 0)
+  {
+    // If we aren't changing any of the forcing parameters, we can record
+    // as soon as we hit steady state
+    recording = true;
+  }
+  else if (num_cycles >= 1)
+  {
+    // If we are changing forcing parameters, we need to wait until one cycle has
+    // passed, as there is a small adjustment period associated with the first cycle
+    recording = true;
+  }
+  else
+  {
+    recording = false;
+  }
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -1113,56 +1115,73 @@ bool LSDRasterModel::check_end_condition( void )
   //  cout << "LINE 888 End time mode is: " << endTime_mode 
   //      << " and current time is: " << current_time << endl;
   //}
-	int num_cycles;
-	
-	// if this is not cyclic, first just get a placeholder for the number of cycles
-	if (K_mode != 0 || D_mode != 0)
-		num_cycles = cycle_number-1;
-	else     // if not calculate time based on current time
-		num_cycles = (current_time - time_delay) / periodicity;
-	float endTime_adjusted;
-	
-	// now check to see if end time is reached in a number of conditions
-	switch (endTime_mode){
-		case 1:		// time specified is after reaching steady state
-		{
-		  // end is only true if the time exceeds or is equal to the end time
-			if (not initial_steady_state || current_time <= endTime+timeStep)
-				return false;
-			else
-				return true;
-			break;
-		}
-		case 2:		// Number specified is a number of cycles of periodicity
-		{
-			if (not initial_steady_state || num_cycles <= endTime)
-				return false;
-			else
-				return true;
-			break;	
-		}
-		case 3:		// Time specified is after reaching steady state, but waits till a roughly exact number of cycles of periodicty have passed
-		{
-			if (ceil((endTime-time_delay)/periodicity) == 1)
-		endTime_adjusted = (1+ceil((endTime-time_delay) / periodicity)) * periodicity + time_delay;
-			else
-		endTime_adjusted = (ceil((endTime-time_delay) / periodicity)) * periodicity + time_delay;
-		//	if (not quiet)
-		//		cout << "\n" << endTime << " " << time_delay << " " << periodicity << " " <<endTime_adjusted << " hi " << endl;
-			endTime = endTime_adjusted;
-			if (not initial_steady_state || current_time < endTime_adjusted+timeStep)
-				return false;
-			else
-				return true;
-			break;
-		}
-		default:
-			if (current_time >= endTime)
-				return true;
-			else
-				return false;
-			break;
-	};
+  int num_cycles;
+  
+  // if this is not cyclic, first just get a placeholder for the number of cycles
+  if (K_mode != 0 || D_mode != 0)
+  {
+    num_cycles = cycle_number-1;
+  }
+  else     // if not calculate time based on current time
+  {
+    num_cycles = (current_time - time_delay) / periodicity;
+  }
+  float endTime_adjusted;
+  
+  // now check to see if end time is reached in a number of conditions
+  switch (endTime_mode)
+  {
+    case 1:		// time specified is after reaching steady state
+    {
+      // end is only true if the time exceeds or is equal to the end time
+      if (not initial_steady_state || current_time <= endTime+timeStep)
+      	return false;
+      else
+      	return true;
+      break;
+    }
+    case 2:		// Number specified is a number of cycles of periodicity
+    {
+      if (not initial_steady_state || num_cycles <= endTime)
+      	return false;
+      else
+      	return true;
+      break;	
+    }
+    case 3:		// Time specified is after reaching steady state, but waits till a roughly exact number of cycles of periodicty have passed
+    {
+      if (ceil((endTime-time_delay)/periodicity) == 1)
+      {
+        endTime_adjusted = (1+ceil((endTime-time_delay) / periodicity)) * periodicity + time_delay;
+      }
+      else
+      {
+        endTime_adjusted = (ceil((endTime-time_delay) / periodicity)) * periodicity + time_delay;
+      }
+      //	if (not quiet)
+      //		cout << "\n" << endTime << " " << time_delay << " " << periodicity << " " <<endTime_adjusted << " hi " << endl;
+      endTime = endTime_adjusted;
+      if (not initial_steady_state || current_time < endTime_adjusted+timeStep)
+      {
+        return false;
+      }
+      else
+      {
+        return true;
+      }
+      break;
+    }
+    default:
+      if (current_time >= endTime)
+      {
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+      break;
+  };
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -2825,17 +2844,15 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
 
 
   //cout << "\n\nLine 2604, data[10][10]: " << RasterData[10][10] << endl;
-	
-  // set the fram to the current frame
+
+  // set the frame to the current frame
   int frame = current_frame;
   int print = 1;
   do 
-  {		
+  {
     // Record current topography
     zeta_old = RasterData.copy();
-		
-		//cout << "/n/nLine 2583, data[10][10]: " << RasterData[10][10] << endl;
-		
+
     // run active model components    
     // first diffuse the hillslopes. Currently two options. Perhaps a flag could be
     // added so that we don't have to keep adding if statements as more
@@ -2843,13 +2860,13 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
     if (hillslope)
     {
       //cout << "Time: " << current_time << " nonlinear: " << nonlinear << endl;
-	    if (nonlinear)
-	    {
-	      //soil_diffusion_fv_nonlinear();
-	      MuddPILE_nl_soil_diffusion_nouplift();
-	    }
-	    else
-	      soil_diffusion_fd_linear();
+      if (nonlinear)
+      {
+        //soil_diffusion_fv_nonlinear();
+        MuddPILE_nl_soil_diffusion_nouplift();
+      }
+      else
+        soil_diffusion_fd_linear();
     }
 
     //cout << "Line 2600, data[10][10]: " << RasterData[10][10] << endl;
@@ -2858,11 +2875,11 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
     // be immediately removed by fluvial processes, so we use the
     // 'wash out' member function
     wash_out();
-		
+
     // now for fluvial erosion
     if (fluvial)
     {
-      // currently the opnly option is stream power using the FASTSCAPE 
+      // currently the only option is stream power using the FASTSCAPE 
       // algorithm so there are no choices here
       fluvial_incision_with_uplift();
     }  
@@ -2895,9 +2912,9 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
       
       double this_uplift_rate = get_uplift_rate_at_cell(row,col);
 
-      //cout << "\n\n\nCRN at [" << row << "]["<<col<<"], znew: " << this_zeta_new 
-      //     << " zold: " << this_zeta_old << " uplift rate: " << this_uplift_rate << endl;  
-      //CRNColumns[i].print_particle_properties_to_screen(CRNParams);
+      cout << "\n\n\nCRN at [" << row << "]["<<col<<"], znew: " << this_zeta_new 
+           << " zold: " << this_zeta_old << " uplift rate: " << this_uplift_rate << endl;  
+      CRNColumns[i].print_particle_properties_to_screen(CRNParams);
 
 
       LSDParticleColumn this_eroded_column = 
@@ -2909,14 +2926,14 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
                        particle_spacing, CRNParams);
       e_cells[i] = this_eroded_column;        
 
-      //cout << "\n\n\nAFTER CHANGE!!! CRN at [" << row << "]["<<col<<"], znew: " << this_zeta_new 
-      //     << " zold: " << this_zeta_old << " uplift rate: " << this_uplift_rate << endl;  
-      //CRNColumns[i].print_particle_properties_to_screen(CRNParams);
+      cout << "\n\n\nAFTER CHANGE!!! CRN at [" << row << "]["<<col<<"], znew: " << this_zeta_new 
+           << " zold: " << this_zeta_old << " uplift rate: " << this_uplift_rate << endl;  
+      CRNColumns[i].print_particle_properties_to_screen(CRNParams);
 
          
     }    
 
-    //CRNColumns[1].print_particle_properties_to_screen(CRNParams);
+    CRNColumns[1].print_particle_properties_to_screen(CRNParams);
 
     //cout << "Line 2643, data[10][10]: " << RasterData[10][10] << endl;
 
@@ -3013,7 +3030,7 @@ vector<LSDParticleColumn> LSDRasterModel::initiate_steady_CRN_columns(int column
            
       // make a steady state column
       temp_col.initiate_SS_cosmo_column_3CRN(startType, this_x, this_y, startDepth, particle_spacing, 
-		            zeta_at_cell, eff_U, CRNParam); 
+                                             zeta_at_cell, eff_U, CRNParam); 
       
       // make sure this is a rock only simulation          
       double ST = 0;          
@@ -4881,21 +4898,21 @@ void LSDRasterModel::cycle_report( float elev, float relief0, float relief10)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::final_report( void )
 {
-	ofstream final_report;
-	final_report.open((report_name + "_final").c_str());
-	final_report << name << endl;
+  ofstream final_report;
+  final_report.open((report_name + "_final").c_str());
+  final_report << name << endl;
 
-	float run_time;
-	run_time = (K_mode != 0 || D_mode != 0) ? current_time - time_delay - periodicity : current_time - time_delay;
-	//cout << "Run time: " << run_time << endl;
+  float run_time;
+  run_time = (K_mode != 0 || D_mode != 0) ? current_time - time_delay - periodicity : current_time - time_delay;
+  //cout << "Run time: " << run_time << endl;
 
 
-	final_report << "Erosion\tAveraged\tResponse\tK amp\tD amp\tPeriodicity\tOvershoot" << endl;
-	final_report << total_erosion << "\t" << (total_erosion / ( run_time * num_runs)) << "\t" 
-		<< ((initial_steady_state) ? response/num_runs : -99) << "\t" << K_amplitude << "\t" 
-		<< D_amplitude << "\t" << periodicity << "\t" << current_time - endTime << endl;
-	//final_report << "Erosion\tResponse\tK amp\tD amp\tPeriodicity" << endl;
-	//final_report << total_erosion << "\t" << ((initial_steady_state) ? max_erosion - min_erosion : -99) << "\t" << K_amplitude << "\t" 
+  final_report << "Erosion\tAveraged\tResponse\tK amp\tD amp\tPeriodicity\tOvershoot" << endl;
+  final_report << total_erosion << "\t" << (total_erosion / ( run_time * num_runs)) << "\t" 
+    << ((initial_steady_state) ? response/num_runs : -99) << "\t" << K_amplitude << "\t" 
+    << D_amplitude << "\t" << periodicity << "\t" << current_time - endTime << endl;
+  //final_report << "Erosion\tResponse\tK amp\tD amp\tPeriodicity" << endl;
+  //final_report << total_erosion << "\t" << ((initial_steady_state) ? max_erosion - min_erosion : -99) << "\t" << K_amplitude << "\t" 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -5542,33 +5559,35 @@ float LSDRasterModel::get_D( void )
   //cout << "LINE 454 Getting D, D mode is: " << D_mode << " and D amp is: " << D_amplitude << endl;
   float thisD;
   //cout << "initial steady state: " << initial_steady_state << endl;
-	static bool copied = false;
+  static bool copied = false;
 
- 	if (D_mode == 3 && not copied)
-	{
-		stringstream ss;
-		ss << ".D_file_" << name << ".aux";
-		ifstream infile("D_file", ios::binary);
-		ofstream outfile(ss.str().c_str(), ios::binary);
+  if (D_mode == 3 && not copied)
+  {
+    stringstream ss;
+    ss << ".D_file_" << name << ".aux";
+    ifstream infile("D_file", ios::binary);
+    ofstream outfile(ss.str().c_str(), ios::binary);
 
-		outfile << infile.rdbuf();
+    outfile << infile.rdbuf();
 
-		// This inhibits portablity
-		ss.str("");
-		ss << "chmod -w .D_file_" << name << ".aux";
-		system(ss.str().c_str());
+    // This inhibits portablity
+    ss.str("");
+    ss << "chmod -w .D_file_" << name << ".aux";
+    system(ss.str().c_str());
 
-		copied = true;
-	}
-		
+    copied = true;
+  }
+
   switch( D_mode )
   {
     case 1:
-    {			// sin wave
+    {
+      // sin wave
       thisD =  ((initial_steady_state) ? periodic_parameter( K_soil, D_amplitude ) : K_soil);
+      //cout << "LINE 5568 Sine wave: D is: " << thisD << " K_soil is: " << K_soil << endl;
       break;
     }
-    case 2:			// square wave
+    case 2:   // square wave
     {
       thisD =  ((initial_steady_state) ? square_wave_parameter( K_soil, D_amplitude ) : K_soil);
       break;
@@ -5578,7 +5597,7 @@ float LSDRasterModel::get_D( void )
       thisD = ((initial_steady_state) ? stream_K_soil() : K_soil);
       break;
     }
-    default:		// constant
+    default:    // constant
     {
       thisD =  K_soil;
       break;
@@ -5600,14 +5619,16 @@ float LSDRasterModel::get_D( void )
 float LSDRasterModel::periodic_parameter( float base_param, float amplitude )
 {
   float result;
-	
+
   if (period_mode == 3 || period_mode == 4)
   {
     result = p_weight * sin( (current_time-time_delay-switch_delay)*2*PI/periodicity )*amplitude + 
-			 (1-p_weight) * sin( (current_time-time_delay-switch_delay)*2*PI/periodicity_2)*amplitude + base_param;
+        (1-p_weight) * sin( (current_time-time_delay-switch_delay)*2*PI/periodicity_2)*amplitude + base_param;
   }
   else
   {
+    //cout << "LINE 5611: ctime: " << current_time << " td: " << time_delay << " switch_delay: " << switch_delay << endl;
+    //cout << "amplitude: " << amplitude << " base_param: " << base_param << " periodicity: " << periodicity << endl;
     result = sin( (current_time - time_delay - switch_delay) * 2 * PI / periodicity )* amplitude + base_param;
   }
 
@@ -5733,7 +5754,7 @@ float LSDRasterModel::stream_K_soil( void )
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::snap_periodicity( void )
 {
-	periodicity = ceil(periodicity/timeStep) * timeStep;
+  periodicity = ceil(periodicity/timeStep) * timeStep;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -5819,19 +5840,19 @@ void LSDRasterModel::MuddPILE_calculate_k_values_for_assembly_matrix()
       if(col == 0)
       {
         vec_k_value_i_jp1[counter] = NCols*(row)+col+1;
-	vec_k_value_i_jm1[counter] = NCols*(row)+NCols-1;
+        vec_k_value_i_jm1[counter] = NCols*(row)+NCols-1;
       }
       // logic for east periodic boundary
       else if(col == NCols-1)
       {
-	vec_k_value_i_jp1[counter] = NCols*(row);
-	vec_k_value_i_jm1[counter] = NCols*(row)+col-1;
+        vec_k_value_i_jp1[counter] = NCols*(row);
+        vec_k_value_i_jm1[counter] = NCols*(row)+col-1;
       }
       // logic for rest of matrix
       else
       {
-	vec_k_value_i_jp1[counter] = NCols*(row)+col+1;
-	vec_k_value_i_jm1[counter] = NCols*(row)+col-1;
+        vec_k_value_i_jp1[counter] = NCols*(row)+col+1;
+        vec_k_value_i_jm1[counter] = NCols*(row)+col-1;
       }
 
       // increment counter
@@ -5847,9 +5868,9 @@ void LSDRasterModel::MuddPILE_calculate_k_values_for_assembly_matrix()
 // in the zeta value within the domain of the DataArray
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::MuddPILE_assemble_matrix(Array2D<float>& uplift_rate,
-						 Array2D<float>& fluvial_erosion_rate,
-						 mtl::compressed2D<float>& mtl_Assembly_matrix,
-						 mtl::dense_vector<float>& mtl_b_vector)
+             Array2D<float>& fluvial_erosion_rate,
+             mtl::compressed2D<float>& mtl_Assembly_matrix,
+             mtl::dense_vector<float>& mtl_b_vector)
 {
 
   // get the soil diffusivity of the current step
@@ -6054,28 +6075,28 @@ void LSDRasterModel::MuddPILE_assemble_matrix(Array2D<float>& uplift_rate,
 // It used the mtl library for sparse matrices
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::MuddPILE_solve_assembler_matrix(Array2D<float>& uplift_rate,
-						 Array2D<float>& fluvial_erosion_rate)
+                        Array2D<float>& fluvial_erosion_rate)
 {
 
-	// reset the zeta array for this iteration
-	Array2D<float> empty_zeta(NRows,NCols,0.0);
-	zeta_this_iter = empty_zeta.copy();
+  // reset the zeta array for this iteration
+  Array2D<float> empty_zeta(NRows,NCols,0.0);
+  zeta_this_iter = empty_zeta.copy();
 
-	// create a mtl matrix
-	// NOTE: you could probably save time by creating the mtl matrix and vector
-	// in main()
-	mtl::compressed2D<float> mtl_Assembly_matrix(problem_dimension, problem_dimension);
-	mtl::dense_vector<float> mtl_b_vector(problem_dimension,0.0);
-	
-	//cout << "dense vector is: " << mtl_b_vector << endl;
+  // create a mtl matrix
+  // NOTE: you could probably save time by creating the mtl matrix and vector
+  // in main()
+  mtl::compressed2D<float> mtl_Assembly_matrix(problem_dimension, problem_dimension);
+  mtl::dense_vector<float> mtl_b_vector(problem_dimension,0.0);
+  
+  //cout << "dense vector is: " << mtl_b_vector << endl;
 
   //cout<< "LINE 5701 zti: " << zeta_this_iter[10][10]
   //    << " zeta_lts: " << zeta_last_timestep[10][10] << " rd: " << RasterData[10][10] << endl;
 
   /*
   if(current_time >= 11000)
-		{
-		  cout <<"YO 5806\n";
+  {
+     cout <<"YO 5806\n";
       string asc_name = "asc";
       string this_time = itoa(int(current_time));
       string RDfname = "RDassem_t"+this_time;
@@ -6095,10 +6116,10 @@ void LSDRasterModel::MuddPILE_solve_assembler_matrix(Array2D<float>& uplift_rate
     }
   */
 
-	// assemble the matrix
-	//cout << "LINE 5289 assembling matrix 1st time" << endl;
-	//cout << "Line 5309, problem dimension: " << problem_dimension << endl;
-	MuddPILE_assemble_matrix(uplift_rate, fluvial_erosion_rate,mtl_Assembly_matrix, 
+  // assemble the matrix
+  //cout << "LINE 5289 assembling matrix 1st time" << endl;
+  //cout << "Line 5309, problem dimension: " << problem_dimension << endl;
+  MuddPILE_assemble_matrix(uplift_rate, fluvial_erosion_rate,mtl_Assembly_matrix, 
                            mtl_b_vector);
   //cout << "LINE 5292 assembled!" << endl;
 
@@ -6109,45 +6130,45 @@ void LSDRasterModel::MuddPILE_solve_assembler_matrix(Array2D<float>& uplift_rate
   //    << " zeta_lts: "<< zeta_last_timestep[0][10] << " rd: " << RasterData[0][10] << endl;	  
             
   // some couts for bug checking
-	//cout << "matrix assembled!" << endl;
-	//ofstream assembly_out;
-	//assembly_out.open("assembly.data");
-	//assembly_out << mtl_Assembly_matrix << endl;
-	//assembly_out.close();
+  //cout << "matrix assembled!" << endl;
+  //ofstream assembly_out;
+  //assembly_out.open("assembly.data");
+  //assembly_out << mtl_Assembly_matrix << endl;
+  //assembly_out.close();
 
-	// now solve the mtl system
-	// Create an ILU(0) preconditioner
-	long time_start, time_end, time_diff;
-	time_start = time(NULL);
-	//cout << "LINE 5404 making P " << endl;
-	itl::pc::ilu_0< mtl::compressed2D<float> > P(mtl_Assembly_matrix);
-	//cout << "LINE 5405 made P " << endl;
-	mtl::dense_vector<float> mtl_zeta_solved_vector(problem_dimension);
-	//cout << "LINE 5406 made mtl_zeta_solved_vector" << endl;
-	itl::basic_iteration<float> iter(mtl_b_vector, 500, 1.e-8);
-	//cout << "LINE 5408 made iter" << endl;
-	bicgstab(mtl_Assembly_matrix, mtl_zeta_solved_vector, mtl_b_vector, P, iter);
-	time_end = time(NULL);
-	time_diff = time_end-time_start;
-	//cout << "iter MTL bicg took: " << time_diff << endl;
+  // now solve the mtl system
+  // Create an ILU(0) preconditioner
+  long time_start, time_end, time_diff;
+  time_start = time(NULL);
+  //cout << "LINE 5404 making P " << endl;
+  itl::pc::ilu_0< mtl::compressed2D<float> > P(mtl_Assembly_matrix);
+  //cout << "LINE 5405 made P " << endl;
+  mtl::dense_vector<float> mtl_zeta_solved_vector(problem_dimension);
+  //cout << "LINE 5406 made mtl_zeta_solved_vector" << endl;
+  itl::basic_iteration<float> iter(mtl_b_vector, 500, 1.e-8);
+  //cout << "LINE 5408 made iter" << endl;
+  bicgstab(mtl_Assembly_matrix, mtl_zeta_solved_vector, mtl_b_vector, P, iter);
+  time_end = time(NULL);
+  time_diff = time_end-time_start;
+  //cout << "iter MTL bicg took: " << time_diff << endl;
 
-	// now reconstitute zeta
-	int counter = 0;
-	//cout << "LINE 5413 reconstituting data!" << endl;
-	for (int row = 0; row<NRows; row++)
-	{
-		for (int col = 0; col < NCols; col++)
-		{
-		  //cout << "counter is: " << counter << endl;
-			zeta_this_iter[row][col] = mtl_zeta_solved_vector[counter];
-			counter++;
-		}
-	}
-	
-	/*
+  // now reconstitute zeta
+  int counter = 0;
+  //cout << "LINE 5413 reconstituting data!" << endl;
+  for (int row = 0; row<NRows; row++)
+  {
+    for (int col = 0; col < NCols; col++)
+    {
+      //cout << "counter is: " << counter << endl;
+      zeta_this_iter[row][col] = mtl_zeta_solved_vector[counter];
+      counter++;
+    }
+  }
+  
+  /*
   if(current_time >= 11000)
-		{
-		  cout <<"YO 5806\n";
+    {
+      cout <<"YO 5806\n";
       string asc_name = "asc";
       string this_time = itoa(int(current_time));
       string RDfname = "RDinterm_t"+this_time;
@@ -6165,7 +6186,7 @@ void LSDRasterModel::MuddPILE_solve_assembler_matrix(Array2D<float>& uplift_rate
             DataResolution, NoDataValue, RasterData.copy());
       LTS.write_raster(LTSfname,asc_name);                       
     }
-	 */
+   */
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -6176,8 +6197,8 @@ void LSDRasterModel::MuddPILE_solve_assembler_matrix(Array2D<float>& uplift_rate
 // At the end of this iteration RasterData will have the new surface elevations
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::MuddPILE_nonlinear_creep_timestep(Array2D<float>& uplift_rate,
-						Array2D<float>& fluvial_erosion_rate,
-						float iteration_tolerance)
+            Array2D<float>& fluvial_erosion_rate,
+            float iteration_tolerance)
 {
   
   // check to see if the model has been initiated
@@ -6198,59 +6219,59 @@ void LSDRasterModel::MuddPILE_nonlinear_creep_timestep(Array2D<float>& uplift_ra
     
   }
 
-	// reset old zeta
-	zeta_last_timestep = RasterData.copy();
+  // reset old zeta
+  zeta_last_timestep = RasterData.copy();
 
   // reset the zeta_this_iter
-	zeta_this_iter = RasterData.copy();
+  zeta_this_iter = RasterData.copy();
 
-	// set up residual
-	float residual;
-	float N_nodes = float(NRows*NCols);
-	int iteration = 0;
-	int Max_iter = 100;
-	do
-	{
-		residual = 0.0;
+  // set up residual
+  float residual;
+  float N_nodes = float(NRows*NCols);
+  int iteration = 0;
+  int Max_iter = 100;
+  do
+  {
+    residual = 0.0;
 
     //cout << "Time is: " << current_time << endl;
     //cout << "LINE 5775 zti[10][10]: " << zeta_this_iter[10][10] << " and uplift: " 
     //     << uplift_rate[10][10] << " and fluv: " << fluvial_erosion_rate[10][10] << endl;
-		
-		// this solves for zeta_this_iter
-		MuddPILE_solve_assembler_matrix(uplift_rate, fluvial_erosion_rate);
+
+    // this solves for zeta_this_iter
+    MuddPILE_solve_assembler_matrix(uplift_rate, fluvial_erosion_rate);
 
     //cout << "LINE 5784 zti[10][10]: " << zeta_this_iter[10][10] << endl;
 
-		// check the residuals (basically this is the aveage elevation change between intermediate
-		// zeta values
-		for (int row = 0; row<NRows; row++)
-		{
-			for (int col = 0; col<NCols; col++)
-			{
-			  // in the first iteration, RasterData contains the elevations from the
-			  // previous timestep. In subsequent iterations it contains the last iteration
-				residual+= sqrt( (zeta_this_iter[row][col]-RasterData[row][col])*
-								 (zeta_this_iter[row][col]-RasterData[row][col]) );
-			}
-		}
-		residual = residual/N_nodes;
+    // check the residuals (basically this is the aveage elevation change between intermediate
+    // zeta values
+    for (int row = 0; row<NRows; row++)
+    {
+      for (int col = 0; col<NCols; col++)
+      {
+        // in the first iteration, RasterData contains the elevations from the
+        // previous timestep. In subsequent iterations it contains the last iteration
+        residual+= sqrt( (zeta_this_iter[row][col]-RasterData[row][col])*
+                 (zeta_this_iter[row][col]-RasterData[row][col]) );
+      }
+    }
+    residual = residual/N_nodes;
 
-		// reset the last iteration of surface elevations zeta
-		RasterData = zeta_this_iter.copy();
-		iteration++;
+    // reset the last iteration of surface elevations zeta
+    RasterData = zeta_this_iter.copy();
+    iteration++;
 
-		if (iteration%5 == 0)
-		{
-			std::cout << "iteration is: " << iteration << " and residual RMSE is: " << residual << endl;
-		}
-		if (iteration > Max_iter)
-		{
-			iteration_tolerance = iteration_tolerance*10;
-			iteration = 0;
-		}
+    if (iteration%5 == 0)
+    {
+      std::cout << "iteration is: " << iteration << " and residual RMSE is: " << residual << endl;
+    }
+    if (iteration > Max_iter)
+    {
+      iteration_tolerance = iteration_tolerance*10;
+      iteration = 0;
+    }
 
-	} while (residual > iteration_tolerance);
+  } while (residual > iteration_tolerance);
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -6267,7 +6288,7 @@ void LSDRasterModel::MuddPILE_nl_soil_diffusion_nouplift()
 {
   
   // set the fluvial and uplift rasters to zero
-  // I don't use the same raster for both since I'm a bir worried about
+  // I don't use the same raster for both since I'm a bit worried about
   // passing the same reference to a data oject for two different computations
   // in the nonlinear_creep_timestep module
   Array2D<float> zero_uplift(NRows,NCols,0.0);

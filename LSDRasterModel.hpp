@@ -916,7 +916,11 @@ class LSDRasterModel: public LSDRasterSpectral
 
   /// @brief this just sets the initial steady state to true so that 
   /// the periodic functions can be run from a starting DEM
-  void force_initial_steady_state()   { initial_steady_state = true; }
+  /// It also forces the time delay ans switch delay so periodic functions start straight away
+  void force_initial_steady_state()   { initial_steady_state = true;
+                                        time_delay = 0;
+                                        switch_delay = 0;
+                                      }
 
  	// -------------------------------------------------------------------
 	//@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@
