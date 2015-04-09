@@ -877,25 +877,25 @@ void LSDRasterModel::initialise_nonlinear_SS(float U)
   vector<float> elevs;
   for (int row = 0; row<NRows; row++)
   {
-		// get the position along the slope
-		loc_y = DataResolution*float(row);
-		inside_sqrt = K_soil*K_soil+ (4*(loc_y-divide_loc)*(loc_y-divide_loc)*beta*beta/(S_c*S_c)); 
-		sqrt_term = sqrt(inside_sqrt);
-		log_term = log(((sqrt_term+K_soil)*S_c)/(2*beta) ); 
+    // get the position along the slope
+    loc_y = DataResolution*float(row);
+    inside_sqrt = K_soil*K_soil+ (4*(loc_y-divide_loc)*(loc_y-divide_loc)*beta*beta/(S_c*S_c)); 
+    sqrt_term = sqrt(inside_sqrt);
+    log_term = log(((sqrt_term+K_soil)*S_c)/(2*beta) ); 
     elevs.push_back(leading_term*(sqrt_term-K_soil*log_term));  
   
     cout << "Location is " << loc_y << " and elevation is " << elevs[row]-elevs[0] << endl;
   }
 
 
-	for (int row = 0; row<NRows; row++)
-	{
-		for (int col = 0; col<NCols; col++)
-		{
+  for (int row = 0; row<NRows; row++)
+  {
+    for (int col = 0; col<NCols; col++)
+    {
 
-			RasterData[row][col] = elevs[row]-elevs[0];
-		}
-	}
+      RasterData[row][col] = elevs[row]-elevs[0];
+    }
+  }
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -912,9 +912,9 @@ void LSDRasterModel::resize_and_reset( int new_rows, int new_cols )
   // set most of the arrays as data members to empty arrays  
   uplift_field = empty_array.copy();
   root_depth =  empty_array.copy();  
-	zeta_old = empty_array.copy();
-	steady_state_data = empty_array.copy();
-	erosion_cycle_field = empty_array.copy(); 
+  zeta_old = empty_array.copy();
+  steady_state_data = empty_array.copy();
+  erosion_cycle_field = empty_array.copy(); 
   zeta_last_iter = empty_array.copy(); 
   zeta_last_timestep = empty_array.copy(); 
   zeta_this_iter = empty_array.copy(); 
@@ -930,8 +930,8 @@ void LSDRasterModel::resize_and_reset( int new_rows, int new_cols )
   random_surface_noise();
   
   // reset flags and total erosion rates
-	total_erosion = 0;
-	total_response = 0;
+  total_erosion = 0;
+  total_response = 0;
   steady_state = false;
   initial_steady_state = false;  
 }
@@ -951,9 +951,9 @@ void LSDRasterModel::resize_and_reset( int new_rows, int new_cols, float new_res
   // set most of the arrays as data members to empty arrays  
   uplift_field = empty_array.copy();
   root_depth =  empty_array.copy();  
-	zeta_old = empty_array.copy();
-	steady_state_data = empty_array.copy();
-	erosion_cycle_field = empty_array.copy(); 
+  zeta_old = empty_array.copy();
+  steady_state_data = empty_array.copy();
+  erosion_cycle_field = empty_array.copy(); 
   zeta_last_iter = empty_array.copy(); 
   zeta_last_timestep = empty_array.copy(); 
   zeta_this_iter = empty_array.copy(); 
@@ -971,8 +971,8 @@ void LSDRasterModel::resize_and_reset( int new_rows, int new_cols, float new_res
   random_surface_noise();
   
   // reset flags and total erosion rates
-	total_erosion = 0;
-	total_response = 0;
+  total_erosion = 0;
+  total_response = 0;
   steady_state = false;
   initial_steady_state = false;  
 }
@@ -1004,8 +1004,8 @@ void LSDRasterModel::check_steady_state( void )
       if (erosion_cycle_record[i] == -99 || abs(erosion_cycle_record[i] 
              - erosion_cycle_record[i+1]) > steady_state_tolerance)
       {
-	steady_state = false;
-	return;
+  steady_state = false;
+  return;
       }
     }
   }
@@ -1017,10 +1017,10 @@ void LSDRasterModel::check_steady_state( void )
       for (int j=0; j<NCols; ++j)
       {
         if (abs(RasterData[i][j] - zeta_old[i][j]) > steady_state_tolerance)
-	{
-	    steady_state = false;
-	    return;
-	}
+  {
+      steady_state = false;
+      return;
+  }
       }
     }
   }
@@ -1200,38 +1200,38 @@ bool LSDRasterModel::check_end_condition( void )
 void LSDRasterModel::check_periodicity_switch( void )
 {
   // don't do anything if not periodic
-	if ((K_mode == 0 && D_mode == 0) || (not initial_steady_state && not cycle_steady_check))
-		return;	
-	else if (period_mode == 2 || period_mode == 4)
-	{
-	  // this syncs the periods if there are multiple periodicities
-	  //if (not quiet)
-	  //{
+  if ((K_mode == 0 && D_mode == 0) || (not initial_steady_state && not cycle_steady_check))
+    return;	
+  else if (period_mode == 2 || period_mode == 4)
+  {
+    // this syncs the periods if there are multiple periodicities
+   //if (not quiet)
+    //{
     //  cout << "Periodic run. ::check_periodicity_switch. Adjusting times" << endl;
     //}
-		float p = periodicity;
+    float p = periodicity;
 
-		float swap;
-		float t;
-		if (endTime_mode == 2)
-			t = switch_time * p;
-		else if (endTime_mode == 3)
-			t = ceil((switch_time)/p) * p;
-		else
-			t = switch_time;
+    float swap;
+    float t;
+    if (endTime_mode == 2)
+      t = switch_time * p;
+    else if (endTime_mode == 3)
+      t = ceil((switch_time)/p) * p;
+    else
+      t = switch_time;
 
-		if (current_time-time_delay > t + switch_delay)
-		{
-			// Time to switch periodicities yo
-			/// Possible problem here, if running sequential models 
-			/// we can't remeber which periodicity was the original one
-			swap = periodicity;
-			periodicity = periodicity_2;
-			periodicity_2 = swap;
-			// Bump up the time til the next switch
-			switch_delay = current_time - time_delay - timeStep;
-		}
-	}
+    if (current_time-time_delay > t + switch_delay)
+    {
+      // Time to switch periodicities yo
+      /// Possible problem here, if running sequential models 
+      /// we can't remeber which periodicity was the original one
+      swap = periodicity;
+      periodicity = periodicity_2;
+      periodicity_2 = swap;
+      // Bump up the time til the next switch
+      switch_delay = current_time - time_delay - timeStep;
+    }
+  }
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -2912,9 +2912,9 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
       
       double this_uplift_rate = get_uplift_rate_at_cell(row,col);
 
-      cout << "\n\n\nCRN at [" << row << "]["<<col<<"], znew: " << this_zeta_new 
-           << " zold: " << this_zeta_old << " uplift rate: " << this_uplift_rate << endl;  
-      CRNColumns[i].print_particle_properties_to_screen(CRNParams);
+      //cout << "\n\n\nCRN at [" << row << "]["<<col<<"], znew: " << this_zeta_new 
+      //     << " zold: " << this_zeta_old << " uplift rate: " << this_uplift_rate << endl;  
+      //CRNColumns[i].print_particle_properties_to_screen(CRNParams);
 
 
       LSDParticleColumn this_eroded_column = 
@@ -2926,14 +2926,13 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
                        particle_spacing, CRNParams);
       e_cells[i] = this_eroded_column;        
 
-      cout << "\n\n\nAFTER CHANGE!!! CRN at [" << row << "]["<<col<<"], znew: " << this_zeta_new 
-           << " zold: " << this_zeta_old << " uplift rate: " << this_uplift_rate << endl;  
-      CRNColumns[i].print_particle_properties_to_screen(CRNParams);
+      //cout << "\n\n\nAFTER CHANGE!!! CRN at [" << row << "]["<<col<<"], znew: " << this_zeta_new 
+      //     << " zold: " << this_zeta_old << " uplift rate: " << this_uplift_rate << endl;  
+      //CRNColumns[i].print_particle_properties_to_screen(CRNParams);
 
-         
     }    
 
-    CRNColumns[1].print_particle_properties_to_screen(CRNParams);
+    //CRNColumns[1].print_particle_properties_to_screen(CRNParams);
 
     //cout << "Line 2643, data[10][10]: " << RasterData[10][10] << endl;
 
@@ -2953,12 +2952,12 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
     ++print;
     
     //cout << "Line 2693, data[10][10]: " << RasterData[10][10] << endl;
-		
+
     // check to see if steady state has been achieved
     //check_steady_state();
-		
+
   }  while (not check_end_condition());
-	
+
   eroded_cells = e_cells;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -3029,8 +3028,10 @@ vector<LSDParticleColumn> LSDRasterModel::initiate_steady_CRN_columns(int column
       zeta_at_cell = float(RasterData[this_row][this_col]);
            
       // make a steady state column
+      //cout << "LINE 3032, initiating SS column" << endl;
       temp_col.initiate_SS_cosmo_column_3CRN(startType, this_x, this_y, startDepth, particle_spacing, 
                                              zeta_at_cell, eff_U, CRNParam); 
+      //cout << "LINE 3035, Initiated column" << endl;
       
       // make sure this is a rock only simulation          
       double ST = 0;          
@@ -4928,26 +4929,26 @@ void LSDRasterModel::print_average_erosion_and_apparaent_erosion( int frame,
   float avg_uplift = get_average_upflit_rate_last_timestep();
   float avg_erosion = get_total_erosion_rate_over_timestep();
 
-	static ofstream er_outfile;
-	// Print the cosmo metadata
-	if (not er_outfile.is_open())
-	{
-	  string metadata_fname =  name+".er_frame_metadata";
-	  cout << "Name of raster metadata file is: " <<  metadata_fname << endl;
+  static ofstream er_outfile;
+  // Print the cosmo metadata
+  if (not er_outfile.is_open())
+  {
+    string metadata_fname =  name+".er_frame_metadata";
+    cout << "Name of raster metadata file is: " <<  metadata_fname << endl;
           er_outfile.open(metadata_fname.c_str());
-       	  er_outfile << name << endl;
+           er_outfile << name << endl;
           er_outfile << "Frame_num\t";
-		er_outfile << "Time\t";
-		er_outfile << "K\t";
-		er_outfile << "D\t";
-		er_outfile << "Erosion\t";
-		er_outfile << "Avg_uplift\t";
-		er_outfile << "10Be_apparent_erosion\t";
-		er_outfile << "14C_apparent_erosion\t";
-		er_outfile << "21Ne_apparent_erosion\t";
-		er_outfile << endl;
-	}
-		
+    er_outfile << "Time\t";
+    er_outfile << "K\t";
+    er_outfile << "D\t";
+    er_outfile << "Erosion\t";
+    er_outfile << "Avg_uplift\t";
+    er_outfile << "10Be_apparent_erosion\t";
+    er_outfile << "14C_apparent_erosion\t";
+    er_outfile << "21Ne_apparent_erosion\t";
+    er_outfile << endl;
+  }
+    
   // also print the cosmo properties
   string frame_name = itoa(frame);
   string uscore = "_";
@@ -4974,7 +4975,10 @@ void LSDRasterModel::print_average_erosion_and_apparaent_erosion( int frame,
                                               CRNColumns[cc].getCol());     
 
     // get the diffusivity
-    double this_D = get_D();
+    double this_D = get_D(); 
+    
+    // get the K value
+    double this_K = get_K();
 
     // get the apparent erosion at the cell
     vector<double> this_app_erosion = 
@@ -4990,7 +4994,7 @@ void LSDRasterModel::print_average_erosion_and_apparaent_erosion( int frame,
     // print these things   
     cosmo_out << current_time << " "<< CRNColumns[cc].getRow() 
               << " " << CRNColumns[cc].getCol() 
-              << " " << this_D << " " << this_U
+              << " " << this_D << " " << this_K << " " << this_U
               << " " << this_erosion << " " << this_app_erosion[0] << " "
               << " " << this_app_erosion[1] << " " << this_app_erosion[2]
               << endl; 
@@ -4999,24 +5003,22 @@ void LSDRasterModel::print_average_erosion_and_apparaent_erosion( int frame,
               
   }
   cosmo_out.close();		
-	
-	
-	float weight_10Be =  tot_weighted_erate_10Be/tot_erate;
-	float weight_14C =  tot_weighted_erate_14C/tot_erate;
-	float weight_21Ne =  tot_weighted_erate_21Ne/tot_erate;
-	
-		
-	er_outfile << frame << "\t";
-	er_outfile << current_time << "\t";
-	er_outfile << get_K() << "\t";
-	er_outfile << get_D() << "\t";
-	er_outfile << avg_erosion << "\t";
-	er_outfile << avg_uplift << "\t";
-	er_outfile << weight_10Be << "\t";
-	er_outfile << weight_14C << "\t";
- 	er_outfile << weight_21Ne << "\t";	
-	er_outfile <<  endl;
-	
+
+  float weight_10Be =  tot_weighted_erate_10Be/tot_erate;
+  float weight_14C =  tot_weighted_erate_14C/tot_erate;
+  float weight_21Ne =  tot_weighted_erate_21Ne/tot_erate;
+
+  er_outfile << frame << "\t";
+  er_outfile << current_time << "\t";
+  er_outfile << get_K() << "\t";
+  er_outfile << get_D() << "\t";
+  er_outfile << avg_erosion << "\t";
+  er_outfile << avg_uplift << "\t";
+  er_outfile << weight_10Be << "\t";
+  er_outfile << weight_14C << "\t";
+  er_outfile << weight_21Ne << "\t";	
+  er_outfile <<  endl;
+
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

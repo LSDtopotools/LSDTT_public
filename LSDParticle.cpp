@@ -719,6 +719,10 @@ void LSDCRNParticle::update_10Be_SSfull(double erosion_rate, LSDCRNParameters& C
     }
   }
 
+  //cout << "effective_dLoc: " << effective_dLoc  << endl;
+  //cout << "erosion rate: " << erosion_rate << endl;
+  
+
   //cout << "and sum term is: " << sum_term1 << " " << sum_term2 << endl;
   //double Pref =  CRNp.S_t*CRNp.P0_10Be;
   //cout << "Pref is: " << Pref << endl;
@@ -946,6 +950,7 @@ double LSDCRNParticle::apparent_erosion_10Be_neutron_only(double rho, LSDCRNPara
                                 /Conc_10Be-CRNp.lambda_10Be);
   app_eros = app_eff_eros*10/rho;                              
   return app_eros;
+  
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
