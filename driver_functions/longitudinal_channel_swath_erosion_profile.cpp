@@ -97,6 +97,12 @@ int main (int nNumberofArgs,char *argv[])
 	
 	float SwathBinWidth;
 	file_info_in >> SwathBinWidth;
+  
+  int multistem_option;  // 0 for mainstem, 1 for ALL TRIBS  // Later addition could be to isolate specific channels
+  file_info_in >> multistem_option;
+  
+  int trib_number;  // for option 2 above, specify the channel number to extract
+  file_info_in >> trib_number;
 	
 	file_info_in.close();
 	
@@ -126,6 +132,12 @@ swath profile of the erosion in the mainstem channel from the erosion raster \n 
 	boundary_conditions[1] = "no flux";
 	boundary_conditions[2] = "no flux";
 	boundary_conditions[3] = "No flux";
+  
+	// make the hillshade (this is faster than doing it in arc) - w
+  // we can use it later on to plot maps of channels overlayed with the swatch profiles
+	string HS_name = "_HS";
+	LSDRaster HS = filled_topo_test.hillshade(45, 315, 1);
+	HS.write_raster((path_name+DEM_name+HS_name),raster_extension);
 	
 	// Get a flow info object for computing the channel network later on
 	cout << "\nGetting FlowInfo object... " << endl;
@@ -168,15 +180,17 @@ swath profile of the erosion in the mainstem channel from the erosion raster \n 
   // Now get a junction and look for the longest channel upstream (the mainstem)
   // DAV - I test it here with a hard coded junction number since the raster is already per
   // 		clipped to a basin, so the first junction should be the outlet more or less (???)
-  //int junction_number = 0;  // This value is now specified in the parameter file and no longer hard coded.
+  //int junction_number = 0;  
+  // This value is now specified in the parameter file and no longer hard coded.
   cout << "\nCreating main stem channel..." << endl;
   LSDIndexChannel main_stem = ChanNetwork.generate_longest_index_channel_in_basin(JunctionIndex, FlowInfo, DistanceFromOutlet);
   cout << "got main stem channel, with n_nodes " << main_stem.get_n_nodes_in_channel() <<  "starting at junction no.: " << JunctionIndex << endl;	
+  // Hang on, what is main_stem actually used for??? DAV
 
 	// Now create the Channel Tree, this contains basic channel profile data and will be converted in PointData later
 	cout << "\nCreating IndexChannelTree..." << endl;
 	int organization_switch = 1;
-	int pruning_switch = 1;
+	int pruning_switch = 0;
 	LSDIndexChannelTree ChannelTree(FlowInfo, ChanNetwork, JunctionIndex, organization_switch,
                                         DistanceFromOutlet, pruning_switch, SourceThreshold);   // pruning_threshold = SourceThreshold (is good yes?)
   cout << "got index channel tree." << endl;
@@ -193,7 +207,7 @@ swath profile of the erosion in the mainstem channel from the erosion raster \n 
      
   // Now we are going to use a nifty tool from LSDShapeTools to write the index channel tree to a PointData object
   cout << "\nCreating PointData object from the tree file just written..." << endl;
-  PointData BaselinePoints = LoadChannelTree(Chan_for_swath_ingestion_fname, 0);   // Zero argument tells it to just pick out the mainstem
+  PointData BaselinePoints = LoadChannelTree(Chan_for_swath_ingestion_fname, multistem_option, trib_number);   // Zero argument tells it to just pick out the mainstem // 1 means all tribs
     
 	//-=-=-=-=-=-=-=-=-=-=-=-=//
 	// NOW FOR THE COOL STUFF //
