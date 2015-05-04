@@ -157,6 +157,12 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @date 2015-01-17
   void initialise_model();
 
+  /// @brief this appends a string to the run name
+  /// @detail can be used to append parameters to run names
+  /// @author SMM
+  /// @date 09/04/2015
+  void append_run_name(string append_name);
+
   /// @brief Adds random noise to each pixel in range [min, max]
   /// @param minium random addition
   /// @param maximum random addition
@@ -1049,7 +1055,7 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @CRNColumns the columns of cosmogenic particles
 	/// @author SMM
 	/// @date 01/08/2014  
-	void print_average_erosion_and_apparaent_erosion( int frame, 
+	void print_average_erosion_and_apparent_erosion( int frame, 
                                  vector<LSDParticleColumn>& CRNColumns, 
                                  LSDCRNParameters& CRNParams);
                                  

@@ -103,15 +103,15 @@ LSDRasterModel::~LSDRasterModel( void )
 // This sets up a model domain with a default size and model parameters
 void LSDRasterModel::create()
 {
-	NRows = 100;
-	NCols = 100;
-	DataResolution = 10;
-	NoDataValue = -99;
-	XMinimum = 0;
-	YMinimum = 0;
-	RasterData = Array2D <float> (NRows, NCols, 0.0);
+  NRows = 100;
+  NCols = 100;
+  DataResolution = 10;
+  NoDataValue = -99;
+  XMinimum = 0;
+  YMinimum = 0;
+  RasterData = Array2D <float> (NRows, NCols, 0.0);
 
-	default_parameters();
+  default_parameters();
 }
 
 // this creates a raster using an infile
@@ -461,55 +461,15 @@ void LSDRasterModel::initialize_model(string param_file)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-//void LSDRasterModel::initialise_model()
-//{
-	//for (unsigned int i=0; i<parameter.length(); ++i)
-	
-	//timeStep = RM_int_parameters["time_step"];
-	//endTime = RM_int_parameters["end_time"];
-	//num_runs = RM_int_parameters[
-	//endTime_mode
-	//max_uplift
-	//baseline_uplift
-	//uplift_mode
-	//steady_state_tolerance
-	//steady_state_limit
-	//boundary_conditions[i]  // use a loop
-	//m = RM_float_parameters["m"];
-	//n
-	//K_fluv
-	//threshold_drainage
-	//K_soil
-	//S_c
-	//rigidity
-	//NRows
-	//NCols
-	//DataResolution
-	//print_interval
-	//K_mode
-	//D_mode
-	//periodicity
-	//periodicity_2
-	//p_weight //must be less than one
-	//period_mode
-	//switch_time
-	//K_amplitude
-	//D_amplitude
-	//noise
-	//report_delay
-	//fluvial
-	//hillslope
-	//nonlinear
-	//isostacy
-	//flexure
-	//quiet
-	//reporting
-	//print_elevation
-	//print_hillshade
-	//print_erosion
-	//print_erosion_cycle
-	//print_slope_area
-//}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function appends the run name, so that if you want you can add some
+// details to the filename
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDRasterModel::append_run_name(string append_name)
+{
+  name = name+append_name;
+  cout << "The model run name is: " << name << endl;
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this function adds a random float to each pixel in the raster
@@ -1496,7 +1456,7 @@ float LSDRasterModel::find_max_boundary(int boundary_number)
 Array2D<float> LSDRasterModel::calculate_erosion_rates( void )
 {
   // create the erosion array
-	Array2D<float> ErosionRateArray(NRows,NCols,NoDataValue);
+  Array2D<float> ErosionRateArray(NRows,NCols,NoDataValue);
   
   // first check to see if zeta_old exists
   if (zeta_old.dim1() != NRows || zeta_old.dim2() != NCols)
@@ -1507,18 +1467,18 @@ Array2D<float> LSDRasterModel::calculate_erosion_rates( void )
   {
     // loop through all the raster data getting erosion rate using the
     // get_erosion_at_cell data member
-	  for(int row=0; row<NRows; ++row)
-	  {
-	    for(int col=0; col<NCols; ++col)
-	    {
-	      if(RasterData[row][col]!=NoDataValue)
-  	    {
-	  	    ErosionRateArray[row][col] = get_erosion_at_cell(row, col);
-  	    }
-  	  }
-  	}
+    for(int row=0; row<NRows; ++row)
+    {
+      for(int col=0; col<NCols; ++col)
+      {
+        if(RasterData[row][col]!=NoDataValue)
+        {
+          ErosionRateArray[row][col] = get_erosion_at_cell(row, col);
+        }
+      }
+    }
   }
-	return ErosionRateArray;
+  return ErosionRateArray;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -1800,59 +1760,59 @@ float LSDRasterModel::get_uplift_at_cell(int i, int j)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float LSDRasterModel::get_uplift_rate_at_cell(int i, int j)
 {
-	float result;
+  float result;
 
   // don't do anything if this is a base level node
-	if (is_base_level(i,j))
-		return 0;		
-	else
-		switch (uplift_mode)
-		{
-			case 1:		// Tilt block (SMM: seems to only tilt in one direction)
-			{
-			  if (baseline_uplift > 0 && baseline_uplift < max_uplift)
-			  {
-			    // this tilt block is maximum in row 1 and at the baseline_uplift 
-			    // in row NRows-2
-			    float m = (baseline_uplift-get_max_uplift())/(NRows-3);
-			    result = float(i)*m+get_max_uplift()-m;
+  if (is_base_level(i,j))
+    return 0;
+  else
+    switch (uplift_mode)
+    {
+      case 1:  // Tilt block (SMM: seems to only tilt in one direction)
+      {
+        if (baseline_uplift > 0 && baseline_uplift < max_uplift)
+        {
+          // this tilt block is maximum in row 1 and at the baseline_uplift 
+          // in row NRows-2
+          float m = (baseline_uplift-get_max_uplift())/(NRows-3);
+          result = float(i)*m+get_max_uplift()-m;
         }
-				else
-				{
+        else
+        {
           result = (NRows - i - 1) * get_max_uplift() / ((float) NRows - 1);
         }
         break;
-			}
-			case 2:		// Gausian
-	    {  
+      }
+      case 2:    // Gausian
+      {  
         // Gaussian parameters
-	      int mu_i = NRows/2;
-	      int mu_j = NCols/2;
-	      float sigma_i = NRows/10;
-	      float sigma_j = NCols/10;	
-        			
-				result = get_max_uplift()*pow(1.1, -((i-mu_i)*(i-mu_i)/(2*sigma_i*sigma_i) + (j-mu_j)*(j-mu_j)/(2*sigma_j*sigma_j) ));
-				break;
-			}
-			case 3:    // polynomial
-			{
-				result = get_max_uplift() * ( -pow((2.0*i/(NRows-1) - 1),2) - pow((2.0*j/(NCols-1) - 1), 2) + 1);
-				if (result < 0)
-					result = 0;
-				break;
-			}	
-			case 4:
-			{
+        int mu_i = NRows/2;
+        int mu_j = NCols/2;
+        float sigma_i = NRows/10;
+        float sigma_j = NCols/10;	
+        
+        result = get_max_uplift()*pow(1.1, -((i-mu_i)*(i-mu_i)/(2*sigma_i*sigma_i) + (j-mu_j)*(j-mu_j)/(2*sigma_j*sigma_j) ));
+        break;
+      }
+      case 3:    // polynomial
+      {
+        result = get_max_uplift() * ( -pow((2.0*i/(NRows-1) - 1),2) - pow((2.0*j/(NCols-1) - 1), 2) + 1);
+        if (result < 0)
+        	result = 0;
+        break;
+      }	
+      case 4:
+      {
         result = periodic_parameter( get_max_uplift(), uplift_amplitude );        
         break;      
       }
-			default:
-				result = get_max_uplift();
-				break;
-		}
-	// the uplift is multiplied by the timestep so uplift is passed as a distance
-	// and not a rate. 
-	return result;
+      default:
+        result = get_max_uplift();
+        break;
+    }
+  // the uplift is multiplied by the timestep so uplift is passed as a distance
+  // and not a rate. 
+  return result;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -2953,7 +2913,7 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
       erosion = get_total_erosion_rate_over_timestep();
       print_rasters( frame );
       
-      print_average_erosion_and_apparaent_erosion( frame, CRNColumns, CRNParams);
+      print_average_erosion_and_apparent_erosion( frame, CRNColumns, CRNParams);
             
       ++frame;
     }
@@ -4930,7 +4890,7 @@ void LSDRasterModel::final_report( void )
 // This function writes some averaged information about the erosion and
 // apparent erosion rates
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDRasterModel::print_average_erosion_and_apparaent_erosion( int frame, 
+void LSDRasterModel::print_average_erosion_and_apparent_erosion( int frame, 
                                  vector<LSDParticleColumn>& CRNColumns, 
                                  LSDCRNParameters& CRNParams)
 {
