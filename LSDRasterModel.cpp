@@ -1516,7 +1516,7 @@ float LSDRasterModel::get_total_erosion_rate_over_timestep()
         if(RasterData[row][col]!=NoDataValue)
         {
           // make sure this is not a base level node
-          if(not is_base_level)
+          if(not is_base_level(row,col))
           {
             erate_total+= get_erosion_at_cell(row, col);
             N_erate++;
@@ -1827,7 +1827,6 @@ float LSDRasterModel::get_average_upflit_rate_last_timestep()
   float avg_uplift_rate;
   float tot_urate = 0;
   int N_U = 0;
-  float this_URate
   
   for (int row = 0; row<NRows-1; row++)
   {
@@ -1836,7 +1835,7 @@ float LSDRasterModel::get_average_upflit_rate_last_timestep()
       if(RasterData[row][col] != NoDataValue)
       {
         // check to see if it is a base level cell
-        if(not is_base_level)
+        if(not is_base_level(row,col))
         {
           tot_urate += get_uplift_rate_at_cell(row, col);
           N_U++;
