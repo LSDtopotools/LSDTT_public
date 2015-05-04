@@ -1555,8 +1555,12 @@ float LSDRasterModel::get_total_erosion_rate_over_timestep()
       {
         if(RasterData[row][col]!=NoDataValue)
         {
-          erate_total+= get_erosion_at_cell(row, col);
-          N_erate++;
+          // make sure this is not a base level node
+          if(not is_base_level)
+          {
+            erate_total+= get_erosion_at_cell(row, col);
+            N_erate++;
+          }
         }
       }
     }
