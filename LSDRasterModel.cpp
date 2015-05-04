@@ -1863,6 +1863,7 @@ float LSDRasterModel::get_average_upflit_rate_last_timestep()
   float avg_uplift_rate;
   float tot_urate = 0;
   int N_U = 0;
+  float this_URate
   
   for (int row = 0; row<NRows-1; row++)
   {
@@ -1870,8 +1871,12 @@ float LSDRasterModel::get_average_upflit_rate_last_timestep()
     {
       if(RasterData[row][col] != NoDataValue)
       {
-        tot_urate += get_uplift_rate_at_cell(row, col);
-        N_U++;
+        // check to see if it is a base level cell
+        if(not is_base_level)
+        {
+          tot_urate += get_uplift_rate_at_cell(row, col);
+          N_U++;
+        }
       }
     }
   } 
@@ -3026,7 +3031,7 @@ vector<LSDParticleColumn> LSDRasterModel::initiate_steady_CRN_columns(int column
       
       // get the elevation of the surface    
       zeta_at_cell = float(RasterData[this_row][this_col]);
-           
+      
       // make a steady state column
       //cout << "LINE 3032, initiating SS column" << endl;
       temp_col.initiate_SS_cosmo_column_3CRN(startType, this_x, this_y, startDepth, particle_spacing, 
