@@ -143,6 +143,14 @@ class LSDIndexChannel
 	/// @return This tells how many nodes are in the channel.
 	int get_n_nodes_in_channel() const		{return int(NodeSequence.size()); }
 
+  /// @brief gets the row and column of the end node
+  /// @param FlowInfo the LSDFlowInfo object
+  /// @param row, the row that will be replaced 
+  /// @param col the col that will be replaced with the correct value
+  /// @author SMM
+  /// @date 06/05/2015
+  void get_row_column_of_end_node(LSDFlowInfo& FlowInfo, int& row, int& col);
+
   /// @brief This gets the node index at a given node in the index channel.
   /// @param n_node index of target node.
 	/// @return Node index.
@@ -180,7 +188,7 @@ class LSDIndexChannel
 	/// @author SMM
   /// @date 01/01/12
 	int get_contributing_pixels_at_outlet(LSDFlowInfo& FlowInfo)
-								{ return FlowInfo.retrieve_contributing_pixels_of_node(EndNode); }
+          { return FlowInfo.retrieve_contributing_pixels_of_node(EndNode); }
 	/// @brief Gets the pixels at the penultimate node.
 	///
   /// @details Useful when calculating area of basins where the tributary junction is at the EndNode.

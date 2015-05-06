@@ -243,6 +243,15 @@ void LSDIndexChannel::create(int SJ, int SJN, int EJ, int EJN, LSDFlowInfo& Flow
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This gets the row and column of the end node
+// row and col are replaced
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDIndexChannel::get_row_column_of_end_node(LSDFlowInfo& FlowInfo, int& row, int& col)
+{
+  FlowInfo.retrieve_current_row_and_col(EndNode,row, col);
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // gets the n contributing pixels at one before the final pixel.
 // useful for when you want to get the basin area just above the tributary
 // junction, which is usually at EndNode
@@ -292,18 +301,18 @@ void LSDIndexChannel::truncate_final_node()
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 int LSDIndexChannel::get_contributing_pixels_at_node(int n_node, LSDFlowInfo& FlowInfo)
 {
-	int n_nodes_in_channel = int(NodeSequence.size());
-	if (n_node < 0)
-	{
-		cout << "LINE 138 LSDIndexChannel Not in channel!" << endl;
-		exit(EXIT_FAILURE);
-	}
-	if (n_node >= n_nodes_in_channel)
-	{
-		cout << "LINE 138 LSDIndexChannel Not in channel!" << endl;
-		exit(EXIT_FAILURE);
-	}
-	return FlowInfo.retrieve_contributing_pixels_of_node( NodeSequence[n_node] );
+  int n_nodes_in_channel = int(NodeSequence.size());
+  if (n_node < 0)
+  {
+    cout << "LINE 138 LSDIndexChannel Not in channel!" << endl;
+    exit(EXIT_FAILURE);
+  }
+  if (n_node >= n_nodes_in_channel)
+  {
+    cout << "LINE 138 LSDIndexChannel Not in channel!" << endl;
+    exit(EXIT_FAILURE);
+  }
+  return FlowInfo.retrieve_contributing_pixels_of_node( NodeSequence[n_node] );
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

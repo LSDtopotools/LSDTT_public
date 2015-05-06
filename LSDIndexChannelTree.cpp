@@ -222,132 +222,133 @@ void LSDIndexChannelTree::create(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& Chan
 // some of the subbasins based on various criteria set by an integer called pruning switch
 // pruning_switch == 0  channels are only added if they exceed a threshold drainage area
 // pruning_switch == 1  channels are only added if the ratio between them and the mainstem
-//						exceeds a certain value (pruning_threshold)
-// pruning_switch == 2	channels are only added if the ratio between them and the area of the
-//						mainstem _at the junction_ exceeds a certain value
+//                      exceeds a certain value (pruning_threshold)
+// pruning_switch == 2  channels are only added if the ratio between them and the area of the
+//                      mainstem _at the junction_ exceeds a certain value
 //
 // SMM 01/09/2012
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDIndexChannelTree::create(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChannelNetwork,
-							  	int starting_junction, int org_switch, LSDRaster& DistanceFromOutlet,
-									int pruning_switch, float pruning_threshold)
+              int starting_junction, int org_switch, LSDRaster& DistanceFromOutlet,
+              int pruning_switch, float pruning_threshold)
 {
-	NRows = FlowInfo.get_NRows();
-	NCols = FlowInfo.get_NCols();
-	DataResolution = FlowInfo.get_DataResolution();
-	XMinimum = FlowInfo.get_XMinimum();
-	YMinimum = FlowInfo.get_YMinimum();
-	NoDataValue = ChannelNetwork.get_NoDataValue();
-	float pixel_area = DataResolution*DataResolution;
+  NRows = FlowInfo.get_NRows();
+  NCols = FlowInfo.get_NCols();
+  DataResolution = FlowInfo.get_DataResolution();
+  XMinimum = FlowInfo.get_XMinimum();
+  YMinimum = FlowInfo.get_YMinimum();
+  NoDataValue = ChannelNetwork.get_NoDataValue();
+  float pixel_area = DataResolution*DataResolution;
 
-  	organization_switch = org_switch;
+  organization_switch = org_switch;
 
-	if (organization_switch == 0)
-	{
-		// get the upstream junctions
-		upstream_junction_list = ChannelNetwork.get_upslope_junctions(starting_junction);
+  if (organization_switch == 0)
+  {
+    // get the upstream junctions
+    upstream_junction_list = ChannelNetwork.get_upslope_junctions(starting_junction);
 
-		// get the number of upstream junctions
-		int n_us_junctions = upstream_junction_list.size();
+    // get the number of upstream junctions
+    int n_us_junctions = upstream_junction_list.size();
 
-		int this_junction;
-		outlet_junction = starting_junction;
-		outlet_node = ChannelNetwork.get_Node_of_Junction(starting_junction);
+    int this_junction;
+    outlet_junction = starting_junction;
+    outlet_node = ChannelNetwork.get_Node_of_Junction(starting_junction);
 
-		for(int i = 0; i< n_us_junctions; i++)
-		{
-			this_junction = upstream_junction_list[i];
-			IndexChannelVector.push_back( ChannelNetwork.generate_link_index_channel_from_junction(this_junction,FlowInfo) );
-		}
-	}
-	else if (organization_switch == 1)
-	{
-		int nodes_in_channel;
+    for(int i = 0; i< n_us_junctions; i++)
+    {
+      this_junction = upstream_junction_list[i];
+      IndexChannelVector.push_back( ChannelNetwork.generate_link_index_channel_from_junction(this_junction,FlowInfo) );
+    }
+  }
+  else if (organization_switch == 1)
+  {
+    int nodes_in_channel;
 
-		// initiate the main stem
-		LSDIndexChannel main_stem = ChannelNetwork.generate_longest_index_channel_in_basin(starting_junction,
-																							FlowInfo, DistanceFromOutlet);
+    // initiate the main stem
+    LSDIndexChannel main_stem = ChannelNetwork.generate_longest_index_channel_in_basin(starting_junction,
+                                               FlowInfo, DistanceFromOutlet);
 
-		// truncate the final node so the tributary algorithm does not pick up a bigger channel as a 'tributary'
-		main_stem.truncate_final_node();
+    // truncate the final node so the tributary algorithm does not pick up a bigger channel as a 'tributary'
+    main_stem.truncate_final_node();
 
-		nodes_in_channel = main_stem.get_n_nodes_in_channel();
-		IndexChannelVector.push_back(main_stem);
-		receiver_channel.push_back(0);
-		node_on_receiver_channel.push_back(nodes_in_channel-1);
-		float main_stem_drainage_area = float(main_stem.get_contributing_pixels_at_outlet(FlowInfo))*pixel_area;
-		float contributing_pixel_area;
+    nodes_in_channel = main_stem.get_n_nodes_in_channel();
+    IndexChannelVector.push_back(main_stem);
+    receiver_channel.push_back(0);
+    node_on_receiver_channel.push_back(nodes_in_channel-1);
+    float main_stem_drainage_area = float(main_stem.get_contributing_pixels_at_outlet(FlowInfo))*pixel_area;
+    float contributing_pixel_area;
 
-		// now get the tributaries for the main stem
-		vector<int> tributary_junctions;
-		vector<int> node_of_tributaries;
-		ChannelNetwork.extract_tributary_junctions_to_main_stem(main_stem, FlowInfo, tributary_junctions, node_of_tributaries);
+    // now get the tributaries for the main stem
+    vector<int> tributary_junctions;
+    vector<int> node_of_tributaries;
+    ChannelNetwork.extract_tributary_junctions_to_main_stem(main_stem, FlowInfo, tributary_junctions, node_of_tributaries);
 
-		// get the number of main stem tributaries
-		int n_main_stem_tributaries = tributary_junctions.size();
-		//cout << "number main_stem trib: " << n_main_stem_tributaries << endl;
-		// now loop through the tributaries, getting the longest channel for each, and linking them to the main stem
-		for (int trib = 0; trib<n_main_stem_tributaries; trib++)
-		{
-			LSDIndexChannel main_stem_tributary= ChannelNetwork.generate_longest_index_channel_in_basin(tributary_junctions[trib],
-																								FlowInfo, DistanceFromOutlet);
-			contributing_pixel_area = pixel_area*float(main_stem_tributary.get_contributing_pixels_at_penultimate_node(FlowInfo));
-			// enter pruning logic
-			if (pruning_switch == 0)
-			{
-				if (contributing_pixel_area >pruning_threshold)
-				{
-					IndexChannelVector.push_back(main_stem_tributary);
-					// in this case the receiver is the main stem (index 0) so push back zero
-					receiver_channel.push_back(0);
-					node_on_receiver_channel.push_back(node_of_tributaries[trib]);
-				}
-			}
-			else if (pruning_switch == 1)
-			{
-				//cout << "tributary number: " << trib << " ratio: " << contributing_pixel_area/main_stem_drainage_area << endl;
+    // get the number of main stem tributaries
+    int n_main_stem_tributaries = tributary_junctions.size();
+    //cout << "number main_stem trib: " << n_main_stem_tributaries << endl;
+    // now loop through the tributaries, getting the longest channel for each, and linking them to the main stem
+    for (int trib = 0; trib<n_main_stem_tributaries; trib++)
+    {
+      LSDIndexChannel main_stem_tributary= ChannelNetwork.generate_longest_index_channel_in_basin(tributary_junctions[trib],
+                                            FlowInfo, DistanceFromOutlet);
+      contributing_pixel_area = pixel_area*float(main_stem_tributary.get_contributing_pixels_at_penultimate_node(FlowInfo));
+      // enter pruning logic
+      if (pruning_switch == 0)
+      {
+        if (contributing_pixel_area >pruning_threshold)
+        {
+          IndexChannelVector.push_back(main_stem_tributary);
+          // in this case the receiver is the main stem (index 0) so push back zero
+          receiver_channel.push_back(0);
+          node_on_receiver_channel.push_back(node_of_tributaries[trib]);
+        }
+      }
+      else if (pruning_switch == 1)
+      {
+        //cout << "tributary number: " << trib << " ratio: " << contributing_pixel_area/main_stem_drainage_area << endl;
 
-				if (contributing_pixel_area/main_stem_drainage_area >pruning_threshold)
-				{
-					IndexChannelVector.push_back(main_stem_tributary);
-					// in this case the receiver is the main stem (index 0) so push back zero
-					receiver_channel.push_back(0);
-					node_on_receiver_channel.push_back(node_of_tributaries[trib]);
-				}
-			}
-			else if (pruning_switch == 2)
-			{
-				float main_stem_junc_area = float(main_stem.get_contributing_pixels_at_node(node_of_tributaries[trib], FlowInfo))*
-										pixel_area;
-				if ( contributing_pixel_area/main_stem_junc_area > pruning_threshold)
-				{
-					IndexChannelVector.push_back(main_stem_tributary);
-					// in this case the receiver is the main stem (index 0) so push back zero
-					receiver_channel.push_back(0);
-					node_on_receiver_channel.push_back(node_of_tributaries[trib]);
-				}
-			}
-			else
-			{
-				IndexChannelVector.push_back(main_stem_tributary);
-				// in this case the receiver is the main stem (index 0) so push back zero
-				receiver_channel.push_back(0);
-				node_on_receiver_channel.push_back(node_of_tributaries[trib]);
-			}
+        if (contributing_pixel_area/main_stem_drainage_area >pruning_threshold)
+        {
+          IndexChannelVector.push_back(main_stem_tributary);
+          // in this case the receiver is the main stem (index 0) so push back zero
+          receiver_channel.push_back(0);
+          node_on_receiver_channel.push_back(node_of_tributaries[trib]);
+        }
+      }
+      else if (pruning_switch == 2)
+      {
+        float main_stem_junc_area = float(main_stem.get_contributing_pixels_at_node(node_of_tributaries[trib], FlowInfo))*
+                                          pixel_area;
+        if ( contributing_pixel_area/main_stem_junc_area > pruning_threshold)
+        {
+          IndexChannelVector.push_back(main_stem_tributary);
+          // in this case the receiver is the main stem (index 0) so push back zero
+          receiver_channel.push_back(0);
+          node_on_receiver_channel.push_back(node_of_tributaries[trib]);
+        }
+      }
+      else
+      {
+        IndexChannelVector.push_back(main_stem_tributary);
+        // in this case the receiver is the main stem (index 0) so push back zero
+        receiver_channel.push_back(0);
+        node_on_receiver_channel.push_back(node_of_tributaries[trib]);
+      }
 
-		}
-	}
-	else
-	{
-		cout << "LINE 1xx LSDIndexChannelTree Invalid ortganization switch!" << endl;
-		exit(EXIT_FAILURE);
-	}
-
+    }
+  }
+  else
+  {
+    cout << "LINE 1xx LSDIndexChannelTree Invalid ortganization switch!" << endl;
+    exit(EXIT_FAILURE);
+  }
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function calculates the chi value starting from the bottom node of the channel tree and working its way up
 // note that junctions are the top of the channel
 //
