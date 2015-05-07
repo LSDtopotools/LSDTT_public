@@ -267,50 +267,58 @@ class LSDIndexChannelTree
   void print_LSDChannels_for_chi_network_ingestion(LSDFlowInfo& FlowInfo,
                              LSDRaster& Elevation_Raster, LSDRaster& FlowDistance, string fname,
                              LSDRaster& Discharge);
-                      
 
-	/// @brief This takes a .chan file and converts it into a comma seperated file with
-	/// headers that can be read into ArcMap easily
-	/// @param fname the filename of the channel file. The function spits out a similarly named outfile
-	/// @author SMM
-	/// @date 22/11/2013
-	void convert_chan_file_for_ArcMap_ingestion(string fname);
+  /// @brief This takes a .chan file and converts it into a comma seperated file with
+  /// headers that can be read into ArcMap easily
+  /// @detail Includes the discharge
+  /// @param fname the filename of the channel file. The function spits out a similarly named outfile
+  /// @param Discharge a raster of the discharge, assumed to be in m^3/yr
+  /// @author SMM
+  /// @date 07/05/2015                   
+  void convert_chan_file_for_ArcMap_ingestion(string fname, LSDRaster& Discharge);
 
-	// get functions
+  /// @brief This takes a .chan file and converts it into a comma seperated file with
+  /// headers that can be read into ArcMap easily
+  /// @param fname the filename of the channel file. The function spits out a similarly named outfile
+  /// @author SMM
+  /// @date 22/11/2013
+  void convert_chan_file_for_ArcMap_ingestion(string fname);
 
-	/// @return Number of rows as an integer.
-	int get_NRows() const				{ return NRows; }
-	/// @return Number of columns as an integer.
+  // get functions
+
+  /// @return Number of rows as an integer.
+  int get_NRows() const				{ return NRows; }
+  /// @return Number of columns as an integer.
   int get_NCols() const				{ return NCols; }
   /// @return Minimum X coordinate as an integer.
-	float get_XMinimum() const			{ return XMinimum; }
-	/// @return Minimum Y coordinate as an integer.
-	float get_YMinimum() const			{ return YMinimum; }
-	/// @return Data resolution as an integer.
-	float get_DataResolution() const	{ return DataResolution; }
-	/// @return No Data Value as an integer.
-	int get_NoDataValue() const			{ return NoDataValue; }
-	/// @return Raster values as a 2D Array.
+  float get_XMinimum() const			{ return XMinimum; }
+  /// @return Minimum Y coordinate as an integer.
+  float get_YMinimum() const			{ return YMinimum; }
+  /// @return Data resolution as an integer.
+  float get_DataResolution() const	{ return DataResolution; }
+  /// @return No Data Value as an integer.
+  int get_NoDataValue() const			{ return NoDataValue; }
+  /// @return Raster values as a 2D Array.
 
-	protected:
+  protected:
 
   /// @brief Number of rows.
   int NRows;
   ///Number of columns.
-	int NCols;
-	///Minimum X coordinate.
+  int NCols;
+  ///Minimum X coordinate.
   float XMinimum;
-	///Minimum Y coordinate.
-	float YMinimum;
+  ///Minimum Y coordinate.
+  float YMinimum;
 
-	///Data resolution.
-	float DataResolution;
-	///No data value.
-	int NoDataValue;
+  ///Data resolution.
+  float DataResolution;
+  ///No data value.
+  int NoDataValue;
 
   ///Outlet Junction.
-	int outlet_junction;
-	///Outlet node.
+  int outlet_junction;
+  ///Outlet node.
   int outlet_node;
 
   /// @brief There are a number of ways to organize this data and this switch tells the object how its data are organized.
@@ -319,23 +327,23 @@ class LSDIndexChannelTree
 	int organization_switch;
 
   ///Vector of upstream junctions.
-	vector<int> upstream_junction_list;
+  vector<int> upstream_junction_list;
 
-	/// A vector containing all the index channel nodes.
-	vector< LSDIndexChannel > IndexChannelVector;
+  /// A vector containing all the index channel nodes.
+  vector< LSDIndexChannel > IndexChannelVector;
 
   /// Vector of reciever channels.
-	vector<int> receiver_channel;
-	/// Vector of nodes along reciever channel.
-	vector<int> node_on_receiver_channel;
+  vector<int> receiver_channel;
+  /// Vector of nodes along reciever channel.
+  vector<int> node_on_receiver_channel;
 
-	private:
-	void create(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChannelNetwork, int starting_junction);
-	void create(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChannelNetwork,
-									int starting_junction, int org_switch, LSDRaster& DistanceFromOutlet);
-	void create(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChannelNetwork,
-									int starting_junction, int org_switch, LSDRaster& DistanceFromOutlet,
-									int pruning_switch, float pruning_threshold);
+  private:
+  void create(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChannelNetwork, int starting_junction);
+  void create(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChannelNetwork,
+                 int starting_junction, int org_switch, LSDRaster& DistanceFromOutlet);
+  void create(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChannelNetwork,
+                  int starting_junction, int org_switch, LSDRaster& DistanceFromOutlet,
+                  int pruning_switch, float pruning_threshold);
 };
 
 #endif

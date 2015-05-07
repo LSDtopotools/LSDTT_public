@@ -1187,51 +1187,116 @@ void LSDIndexChannelTree::convert_chan_file_for_ArcMap_ingestion(string fname)
 
   channelfile_in.close();
   ArcChan_out.close();
-
 }
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=---=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=---=-=-=-=-=-=-=-=-=-=-=-=-
+// Same as above but also reports the discharge
+//
+// SMM 06/05/2015
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDIndexChannelTree::convert_chan_file_for_ArcMap_ingestion(string fname, LSDRaster& Discharge)
+{
+
+  // open the outfile
+  ifstream channelfile_in;
+  channelfile_in.open(fname.c_str());
+
+  unsigned dot = fname.find_last_of(".");
+
+  string prefix = fname.substr(0,dot);
+  //string suffix = str.substr(dot);
+    string insert = "_for_Arc.csv";
+    string outfname = prefix+insert;
+
+    cout << "the Arc channel filename is: " << outfname << endl;
+
+    ofstream ArcChan_out;
+    ArcChan_out.open(outfname.c_str());
+    ArcChan_out.precision(10);
+
+  // print the first line of the arcchan. This is going to be comma seperated!
+  ArcChan_out << "id,x,y,channel,reciever_channel,node_on_reciever_channel,node,row,col,flow_distance_m,elevation_m,drainage_area_m2,discharge_m3_yr" << endl;
+
+  // now go throught the file, collecting the data
+  int id,ch,rc,norc,n,r,c;
+  float fd,elev,da;
+  float x,y;
+
+  float xll;
+  float yll;
+  float datares;
+  float ndv;
+  int nrows;
+  int ncols;
+  float this_discahrge;
+
+  // read in the first lines with DEM information
+  channelfile_in >> nrows >> ncols >> xll >> yll >> datares >> ndv;
+  id = 0;
+
+  // now loop through the file, calculating x and y locations as you go
+  while(channelfile_in >> ch >> rc >> norc >> n >> r >> c >> fd >> elev >> da)
+  {
+    id++;
+    x = xll + float(c)*datares + 0.5*datares;
+    y = yll + float(nrows-r)*datares - 0.5*datares;		// this is because the DEM starts from the top corner
+
+    this_discharge = Discharge.get_data_element(r,c);
+
+    ArcChan_out << id << "," << x << "," << y << "," << ch << "," << rc 
+                << "," << norc << "," << n << "," << r << "," << c << ","
+                << fd << "," << elev << "," << da << "," << this_discharge << endl;
+  }
+
+  channelfile_in.close();
+  ArcChan_out.close();
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=---=-=-=-=-=-=-=-=-=-=-=-=-
 // this function takes the channel tree and prints it to an LSDIndexRaster
 //
 // SMM 01/09/2012
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 LSDIndexRaster LSDIndexChannelTree::TributaryArray_to_LSDIndexRaster()
 {
-	if(organization_switch != 1)
-	{
-		cout << "LSDIndexChannelTree you can't run LSDIndexChannelTree::create_tributary_array with this channel organization" << endl;
-		cout << "organization_switch: " << organization_switch << endl;
-		exit(EXIT_FAILURE);
-	}
+  if(organization_switch != 1)
+  {
+    cout << "LSDIndexChannelTree you can't run LSDIndexChannelTree::create_tributary_array with this channel organization" << endl;
+    cout << "organization_switch: " << organization_switch << endl;
+    exit(EXIT_FAILURE);
+  }
 
-	Array2D<int> Channel_array(NRows,NCols,NoDataValue);
-	int n_channels = IndexChannelVector.size();
-	int node,row,col;
+  Array2D<int> Channel_array(NRows,NCols,NoDataValue);
+  int n_channels = IndexChannelVector.size();
+  int node,row,col;
 
-	cout << "n channels: " << n_channels  << endl;
+  cout << "n channels: " << n_channels  << endl;
 
-	for(int chan = 0; chan<n_channels; chan++)
-	{
-		cout << "channel number: " << chan << endl;
-		int n_nodes_in_channel = IndexChannelVector[chan].get_n_nodes_in_channel();
+  for(int chan = 0; chan<n_channels; chan++)
+  {
+    cout << "channel number: " << chan << endl;
+    int n_nodes_in_channel = IndexChannelVector[chan].get_n_nodes_in_channel();
 
 
-		for(int i = 0; i<n_nodes_in_channel-1; i++)
-		{
-			IndexChannelVector[chan].get_node_row_col_in_channel(i, node, row, col);
-			//cout << "row: " << RowSequence[i] << " col: " << ColSequence[i] << endl;
-			Channel_array[row][col]= chan;
-		}
+    for(int i = 0; i<n_nodes_in_channel-1; i++)
+    {
+      IndexChannelVector[chan].get_node_row_col_in_channel(i, node, row, col);
+      //cout << "row: " << RowSequence[i] << " col: " << ColSequence[i] << endl;
+      Channel_array[row][col]= chan;
+    }
 
-		// the last node, which is the downstream junction, will default to the
-		// receiver channel
-		IndexChannelVector[chan].get_node_row_col_in_channel(n_nodes_in_channel-1, node, row, col);
-		Channel_array[row][col]=receiver_channel[chan];
-	}
+    // the last node, which is the downstream junction, will default to the
+    // receiver channel
+    IndexChannelVector[chan].get_node_row_col_in_channel(n_nodes_in_channel-1, node, row, col);
+    Channel_array[row][col]=receiver_channel[chan];
+  }
 
-	LSDIndexRaster Channel_loc(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Channel_array);
-	return Channel_loc;
+  LSDIndexRaster Channel_loc(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Channel_array);
+  return Channel_loc;
 }
 
 #endif
