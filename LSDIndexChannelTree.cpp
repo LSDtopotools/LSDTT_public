@@ -927,130 +927,205 @@ float LSDIndexChannelTree::search_for_best_fit_m_over_n(float A_0, int n_movern,
 
 
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=---=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// this function prints chi and elevation, along with flow distance and the number of the tributary
-// it all goes to one file
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=---=-=-=-=-=-=-=-=-=-=-=-=-
+// this function prints chi and elevation, along with flow distance and the 
+// number of the tributary it all goes to one file
 //
 // the file format is
 // channel_number node_index row column flow_dist chi elevation drainage_area
 //
 // SMM 01/09/2012
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDIndexChannelTree::print_LSDChannels_from_tree(float m_over_n, float A_0, LSDFlowInfo& FlowInfo,
                              LSDRaster& Elevation_Raster, LSDRaster& FlowDistance, string fname)
 {
-	if (organization_switch != 1)
-	{
-		cout << "LSDIndexChannelTree you can't run LSDIndexChannelTree::retrieve_LSDChannels_from_tree" << endl;
-		cout << "with this channel organization, organization switch: " << organization_switch << endl;
-		exit(EXIT_FAILURE);
-	}
+  if (organization_switch != 1)
+  {
+    cout << "LSDIndexChannelTree you can't run LSDIndexChannelTree::retrieve_LSDChannels_from_tree" << endl;
+    cout << "with this channel organization, organization switch: " << organization_switch << endl;
+    exit(EXIT_FAILURE);
+  }
 
-	// open the outfile
-	ofstream channelfile_out;
-	channelfile_out.open(fname.c_str());
+  // open the outfile
+  ofstream channelfile_out;
+  channelfile_out.open(fname.c_str());
 
-	// get the vector of channels
-	vector<LSDChannel> vector_of_channels = retrieve_LSDChannels_from_tree(m_over_n, A_0, FlowInfo,Elevation_Raster);
+  // get the vector of channels
+  vector<LSDChannel> vector_of_channels = retrieve_LSDChannels_from_tree(m_over_n, A_0, FlowInfo,Elevation_Raster);
 
-	int n_channels = vector_of_channels.size();
-	int n_nodes_in_channel;
-	int node,row,col;
-	float elev,chi,drain_area,flow_dist;
-	//loop through the channels
-	for (int i = 0; i< n_channels; i++)
-	{
-		// get the number of nodes in the channel
-		n_nodes_in_channel =IndexChannelVector[i].get_n_nodes_in_channel();
+  int n_channels = vector_of_channels.size();
+  int n_nodes_in_channel;
+  int node,row,col;
+  float elev,chi,drain_area,flow_dist;
+  //loop through the channels
+  for (int i = 0; i< n_channels; i++)
+  {
+    // get the number of nodes in the channel
+    n_nodes_in_channel =IndexChannelVector[i].get_n_nodes_in_channel();
 
-		// now loop through the channel, printing out the data.
-		for(int ch_node= 0; ch_node<n_nodes_in_channel; ch_node++)
-		{
-			IndexChannelVector[i].get_node_row_col_in_channel(ch_node, node, row, col);
-			vector_of_channels[i].retrieve_node_information(ch_node, elev, chi, drain_area);
-			flow_dist = FlowDistance.get_data_element(row,col);
+    // now loop through the channel, printing out the data.
+    for(int ch_node= 0; ch_node<n_nodes_in_channel; ch_node++)
+    {
+      IndexChannelVector[i].get_node_row_col_in_channel(ch_node, node, row, col);
+      vector_of_channels[i].retrieve_node_information(ch_node, elev, chi, drain_area);
+      flow_dist = FlowDistance.get_data_element(row,col);
 
-			// print data to file
-			channelfile_out << i << " " << node << " " << row << " " << col << " " << flow_dist << " "
-			                << chi << " " << elev << " " << drain_area << endl;
-		}
-	}
+      // print data to file
+      channelfile_out << i << " " << node << " " << row << " " << col << " " << flow_dist << " "
+                      << chi << " " << elev << " " << drain_area << endl;
+    }
+  }
 
-	channelfile_out.close();
+  channelfile_out.close();
 
 }
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=---=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// this function prints chi and elevation, along with flow distance and the number of the tributary
-// it all goes to one file
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=---=-=-=-=-=-=-=-=-=-=-=-=-
+// this function prints chi and elevation, along with flow distance and the 
+// number of the tributary, it all goes to one file
 //
 // the file format is
-// channel_number node_index row column flow_dist chi elevation drainage_area
+// channel_number node_index node_on_reciever row column flow_dist elevation drainage_area
 //
 // SMM 01/02/2013
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDIndexChannelTree::print_LSDChannels_for_chi_network_ingestion(LSDFlowInfo& FlowInfo,
                              LSDRaster& Elevation_Raster, LSDRaster& FlowDistance, string fname)
 {
-	if (organization_switch != 1)
-	{
-		cout << "LSDIndexChannelTree you can't run LSDIndexChannelTree::retrieve_LSDChannels_from_tree" << endl;
-		cout << "with this channel organization, organization switch: " << organization_switch << endl;
-		exit(EXIT_FAILURE);
-	}
+  if (organization_switch != 1)
+  {
+    cout << "LSDIndexChannelTree you can't run LSDIndexChannelTree::retrieve_LSDChannels_from_tree" << endl;
+    cout << "with this channel organization, organization switch: " << organization_switch << endl;
+    exit(EXIT_FAILURE);
+  }
 
-	// open the outfile
-	ofstream channelfile_out;
-	channelfile_out.open(fname.c_str());
+  // open the outfile
+  ofstream channelfile_out;
+  channelfile_out.open(fname.c_str());
 
-	channelfile_out.precision(10);
+  channelfile_out.precision(10);
 
-	float m_over_n = 0.5;
-	float A_0 = 1;
+  float m_over_n = 0.5;
+  float A_0 = 1;
 
-	// get the vector of channels
-	vector<LSDChannel> vector_of_channels = retrieve_LSDChannels_from_tree(m_over_n, A_0, FlowInfo,Elevation_Raster);
+  // get the vector of channels
+  vector<LSDChannel> vector_of_channels = retrieve_LSDChannels_from_tree(m_over_n, A_0, FlowInfo,Elevation_Raster);
 
-	int n_channels = vector_of_channels.size();
-	int n_nodes_in_channel;
-	int node,row,col;
-	float elev,chi,drain_area,flow_dist;
+  int n_channels = vector_of_channels.size();
+  int n_nodes_in_channel;
+  int node,row,col;
+  float elev,chi,drain_area,flow_dist;
 
-	// first print out some data about the dem
-	channelfile_out << get_NRows() << endl;
-	channelfile_out << get_NCols() << endl;
-	channelfile_out << get_XMinimum() << endl;
-	channelfile_out << get_YMinimum() << endl;
-	channelfile_out << get_DataResolution() << endl;
-	channelfile_out << get_NoDataValue() << endl;
+  // first print out some data about the dem
+  channelfile_out << get_NRows() << endl;
+  channelfile_out << get_NCols() << endl;
+  channelfile_out << get_XMinimum() << endl;
+  channelfile_out << get_YMinimum() << endl;
+  channelfile_out << get_DataResolution() << endl;
+  channelfile_out << get_NoDataValue() << endl;
 
-	//loop through the channels
-	for (int i = 0; i< n_channels; i++)
-	{
-		// get the number of nodes in the channel
-		n_nodes_in_channel =IndexChannelVector[i].get_n_nodes_in_channel();
+  //loop through the channels
+  for (int i = 0; i< n_channels; i++)
+  {
+    // get the number of nodes in the channel
+    n_nodes_in_channel =IndexChannelVector[i].get_n_nodes_in_channel();
 
-		// now loop through the channel, printing out the data.
-		for(int ch_node= 0; ch_node<n_nodes_in_channel; ch_node++)
-		{
-			IndexChannelVector[i].get_node_row_col_in_channel(ch_node, node, row, col);
-			vector_of_channels[i].retrieve_node_information(ch_node, elev, chi, drain_area);
-			flow_dist = FlowDistance.get_data_element(row,col);
+    // now loop through the channel, printing out the data.
+    for(int ch_node= 0; ch_node<n_nodes_in_channel; ch_node++)
+    {
+      IndexChannelVector[i].get_node_row_col_in_channel(ch_node, node, row, col);
+      vector_of_channels[i].retrieve_node_information(ch_node, elev, chi, drain_area);
+      flow_dist = FlowDistance.get_data_element(row,col);
 
-			// print data to file
-			channelfile_out << i << " " << receiver_channel[i] << " " << node_on_receiver_channel[i] << " "
-			                << node << " " << row << " " << col << " " << flow_dist << " "
-			                << " " << elev << " " << drain_area << endl;
-		}
-	}
+      // print data to file
+      channelfile_out << i << " " << receiver_channel[i] << " " << node_on_receiver_channel[i] << " "
+                      << node << " " << row << " " << col << " " << flow_dist << " "
+                      << " " << elev << " " << drain_area << endl;
+    }
+  }
 
-	channelfile_out.close();
+  channelfile_out.close();
 
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=---=-=-=-=-=-=-=-=-=-=-=-=-
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=---=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=---=-=-=-=-=-=-=-=-=-=-=-=-
+// This function prints a chan file for assimilation into the chi analysis, 
+// but in this cases uses a discharge rather than a drainage area
+//
+// the file format is
+// channel_number node_index node_on_reciever row column flow_dist elevation drainage_area
+//
+// SMM 07/05/2015
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDIndexChannelTree::print_LSDChannels_for_chi_network_ingestion(LSDFlowInfo& FlowInfo,
+                             LSDRaster& Elevation_Raster, LSDRaster& FlowDistance, string fname,
+                             LSDRaster& Discharge)
+{
+  if (organization_switch != 1)
+  {
+    cout << "LSDIndexChannelTree you can't run LSDIndexChannelTree::retrieve_LSDChannels_from_tree" << endl;
+    cout << "with this channel organization, organization switch: " << organization_switch << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  // open the outfile
+  ofstream channelfile_out;
+  channelfile_out.open(fname.c_str());
+
+  channelfile_out.precision(10);
+
+  float m_over_n = 0.5;
+  float A_0 = 1;
+
+  // get the vector of channels
+  vector<LSDChannel> vector_of_channels = retrieve_LSDChannels_from_tree(m_over_n, A_0, FlowInfo,Elevation_Raster);
+
+  int n_channels = vector_of_channels.size();
+  int n_nodes_in_channel;
+  int node,row,col;
+  float elev,chi,drain_area,flow_dist,this_discharge;
+
+  // first print out some data about the dem
+  channelfile_out << get_NRows() << endl;
+  channelfile_out << get_NCols() << endl;
+  channelfile_out << get_XMinimum() << endl;
+  channelfile_out << get_YMinimum() << endl;
+  channelfile_out << get_DataResolution() << endl;
+  channelfile_out << get_NoDataValue() << endl;
+
+  //loop through the channels
+  for (int i = 0; i< n_channels; i++)
+  {
+    // get the number of nodes in the channel
+    n_nodes_in_channel =IndexChannelVector[i].get_n_nodes_in_channel();
+
+    // now loop through the channel, printing out the data.
+    for(int ch_node= 0; ch_node<n_nodes_in_channel; ch_node++)
+    {
+      IndexChannelVector[i].get_node_row_col_in_channel(ch_node, node, row, col);
+      vector_of_channels[i].retrieve_node_information(ch_node, elev, chi, drain_area);
+      flow_dist = FlowDistance.get_data_element(row,col);
+      this_discharge = Discharge.get_data_element(row,col);
+
+      // print data to file
+      channelfile_out << i << " " << receiver_channel[i] << " " << node_on_receiver_channel[i] << " "
+                      << node << " " << row << " " << col << " " << flow_dist << " "
+                      << " " << elev << " " << this_discharge << endl;
+    }
+  }
+
+  channelfile_out.close();
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=---=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=---=-=-=-=-=-=-=-=-=-=-=-=-
 // this function takes the chan file and converts it to a file that can be ingested easily
 // by arcmap
 // the file format is
@@ -1058,19 +1133,19 @@ void LSDIndexChannelTree::print_LSDChannels_for_chi_network_ingestion(LSDFlowInf
 //
 // SMM 22/11/2013
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDIndexChannelTree::convert_chan_file_for_ArcMap_ingestion(string fname)
 {
 
 
-	// open the outfile
-	ifstream channelfile_in;
-	channelfile_in.open(fname.c_str());
+  // open the outfile
+  ifstream channelfile_in;
+  channelfile_in.open(fname.c_str());
 
-	unsigned dot = fname.find_last_of(".");
+  unsigned dot = fname.find_last_of(".");
 
-	string prefix = fname.substr(0,dot);
-	//string suffix = str.substr(dot);
+  string prefix = fname.substr(0,dot);
+  //string suffix = str.substr(dot);
     string insert = "_for_Arc.csv";
     string outfname = prefix+insert;
 
@@ -1080,40 +1155,38 @@ void LSDIndexChannelTree::convert_chan_file_for_ArcMap_ingestion(string fname)
     ArcChan_out.open(outfname.c_str());
     ArcChan_out.precision(10);
 
-	// print the first line of the arcchan. This is going to be comma seperated!
-	ArcChan_out << "id,x,y,channel,reciever_channel,node_on_reciever_channel,node,row,col,flow_distance,elevation,drainage_area" << endl;
+  // print the first line of the arcchan. This is going to be comma seperated!
+  ArcChan_out << "id,x,y,channel,reciever_channel,node_on_reciever_channel,node,row,col,flow_distance,elevation,drainage_area" << endl;
 
-	// now go throught the file, collecting the data
-	int id,ch,rc,norc,n,r,c;
-	float fd,elev,da;
-	float x,y;
+  // now go throught the file, collecting the data
+  int id,ch,rc,norc,n,r,c;
+  float fd,elev,da;
+  float x,y;
 
-	float xll;
-	float yll;
- 	float datares;
- 	float ndv;
- 	int nrows;
- 	int ncols;
+  float xll;
+  float yll;
+  float datares;
+  float ndv;
+  int nrows;
+  int ncols;
 
-	// read in the first lines with DEM information
-	channelfile_in >> nrows >> ncols >> xll >> yll >> datares >> ndv;
-	id = 0;
+  // read in the first lines with DEM information
+  channelfile_in >> nrows >> ncols >> xll >> yll >> datares >> ndv;
+  id = 0;
 
-	// now loop through the file, calculating x and y locations as you go
-	while(channelfile_in >> ch >> rc >> norc >> n >> r >> c >> fd >> elev >> da)
-	{
-		id++;
-		x = xll + float(c)*datares + 0.5*datares;
-		y = yll + float(nrows-r)*datares - 0.5*datares;		// this is because the DEM starts from the top corner
+  // now loop through the file, calculating x and y locations as you go
+  while(channelfile_in >> ch >> rc >> norc >> n >> r >> c >> fd >> elev >> da)
+  {
+    id++;
+    x = xll + float(c)*datares + 0.5*datares;
+    y = yll + float(nrows-r)*datares - 0.5*datares;		// this is because the DEM starts from the top corner
 
-		ArcChan_out << id << "," << x << "," << y << "," << ch << "," << rc << "," << norc
-		            << "," << n << "," << r << "," << c << "," << fd << "," << elev << "," << da << endl;
-	}
+    ArcChan_out << id << "," << x << "," << y << "," << ch << "," << rc << "," << norc
+                << "," << n << "," << r << "," << c << "," << fd << "," << elev << "," << da << endl;
+  }
 
-
-
-	channelfile_in.close();
-	ArcChan_out.close();
+  channelfile_in.close();
+  ArcChan_out.close();
 
 }
 

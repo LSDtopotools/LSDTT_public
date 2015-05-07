@@ -88,15 +88,15 @@ using namespace TNT;
 /// @brief This object spawns vectors of LSDIndexChannels.
 class LSDIndexChannelTree
 {
-	public:
+  public:
   /// @brief Create an LSDIndexChannelTree object from a starting junction.
   /// @param FlowInfo LSDFlowInfo object.
   /// @param ChannelNetwork LSDJunctionNetwork object.
   /// @param starting_junction Starting junction.
   /// @author SMM
   /// @date 01/09/12
-	LSDIndexChannelTree(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChannelNetwork, int starting_junction)
-							{ create(FlowInfo, ChannelNetwork, starting_junction); }
+  LSDIndexChannelTree(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChannelNetwork, int starting_junction)
+                   { create(FlowInfo, ChannelNetwork, starting_junction); }
 
   /// @brief Create an LSDIndexChannelTree object from a starting junction and orginisation switch.
   ///
@@ -112,8 +112,8 @@ class LSDIndexChannelTree
   /// @author SMM
   /// @date 01/09/12
   LSDIndexChannelTree(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChannelNetwork,
-	                    int starting_junction, int org_switch, LSDRaster& DistanceFromOutlet)
-					       	{ create(FlowInfo, ChannelNetwork, starting_junction, org_switch, DistanceFromOutlet); }
+                      int starting_junction, int org_switch, LSDRaster& DistanceFromOutlet)
+                  { create(FlowInfo, ChannelNetwork, starting_junction, org_switch, DistanceFromOutlet); }
 
   /// @brief Create an LSDIndexChannelTree object from a starting junction, orginisation switch and pruning parameters.
   ///
@@ -137,16 +137,16 @@ class LSDIndexChannelTree
   /// @author SMM
   /// @date 01/09/12
   LSDIndexChannelTree(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChannelNetwork,
-	                    int starting_junction, int org_switch, LSDRaster& DistanceFromOutlet,
-	                    int pruning_switch, float pruning_threshold)
-					       	{ create(FlowInfo, ChannelNetwork, starting_junction, org_switch, DistanceFromOutlet,
-							         pruning_switch, pruning_threshold); }
+                      int starting_junction, int org_switch, LSDRaster& DistanceFromOutlet,
+                      int pruning_switch, float pruning_threshold)
+                      { create(FlowInfo, ChannelNetwork, starting_junction, org_switch, DistanceFromOutlet,
+                        pruning_switch, pruning_threshold); }
 
-	// access function
-	/// @return Vector of index channels.
+  // access function
+  /// @return Vector of index channels.
   /// @author SMM
   /// @date 01/09/12
-	vector< LSDIndexChannel > get_LSDIndexChannelVector()	{ return IndexChannelVector; }
+  vector< LSDIndexChannel > get_LSDIndexChannelVector()	{ return IndexChannelVector; }
 
 
   /// @brief This function calcualtes the chi value starting from the bottom node of the channel tree and working its way up.
@@ -158,8 +158,8 @@ class LSDIndexChannelTree
   /// @return Vector of chi values.
   /// @author SMM
   /// @date 01/09/12
-	vector< vector<float> > calculate_chi_from_channel_tree(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChannelNetwork,
-											float m_over_n, float A_0);
+  vector< vector<float> > calculate_chi_from_channel_tree(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChannelNetwork,
+                           float m_over_n, float A_0);
 
   /// @brief This function prints chi values.
   /// @details It is used on the channel tree when channels are organized by links.
@@ -171,11 +171,11 @@ class LSDIndexChannelTree
   /// @param chi_vs_elev_fname Output filename.
   /// @author SMM
   /// @date 01/09/12
-	void print_chi_vs_elevation_from_channel_tree(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChannelNetwork,
+  void print_chi_vs_elevation_from_channel_tree(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChannelNetwork,
                                                      float m_over_n, float A_0, string chi_vs_elev_fname);
 
-	/// @brief This calculates the best fit m over n on the main stem channel.
-	/// @details Minimizes the R^2 of the main stem channel assuming it is in steady state that is assuming the entire main stem is undergoing the same uplift.
+  /// @brief This calculates the best fit m over n on the main stem channel.
+  /// @details Minimizes the R^2 of the main stem channel assuming it is in steady state that is assuming the entire main stem is undergoing the same uplift.
   /// @param m_over_n_values Vector of m over n values.
   /// @param R_squared Vector of R-Squared values.
   /// @param A_0 A_0 value.
@@ -188,18 +188,18 @@ class LSDIndexChannelTree
   /// @author SMM
   /// @date 01/09/12
   float fit_m_over_n_mainstem(vector<float>& m_over_n_values, vector<float>& R_squared,
-				    	float A_0, LSDFlowInfo& FlowInfo, LSDRaster& Elevation_Raster,
-				      	float start_movn, float increment_movn, int n_movn);
+                float A_0, LSDFlowInfo& FlowInfo, LSDRaster& Elevation_Raster,
+                float start_movn, float increment_movn, int n_movn);
 
-	/// @brief This function takes the channel tree and prints it to an LSDIndexRaster.
-	/// @return LSDIndexRaster of the channel tree.
+  /// @brief This function takes the channel tree and prints it to an LSDIndexRaster.
+  /// @return LSDIndexRaster of the channel tree.
   /// @author SMM
   /// @date 01/09/12
-	LSDIndexRaster TributaryArray_to_LSDIndexRaster();
+  LSDIndexRaster TributaryArray_to_LSDIndexRaster();
 
-	/// @brief This creates a vector of LSDChannels, they contain area and chi information.
+  /// @brief This creates a vector of LSDChannels, they contain area and chi information.
   /// @param m_over_n m over n ratio.
-	/// @param A_0 A_0 value.
+  /// @param A_0 A_0 value.
   /// @param FlowInfo LSDFlowInfo object.
   /// @param Elevation_Raster LSDRaster of elevation.
   /// @return Vector of LSDChannels.
@@ -209,7 +209,7 @@ class LSDIndexChannelTree
                              LSDRaster& Elevation_Raster);
 
   /// @brief This function uses the segment fitting tool to look for the best fit values of m over n.
-	/// @param A_0 A_0 value.
+  /// @param A_0 A_0 value.
   /// @param n_movern
   /// @param d_movern
   /// @param start_movern
@@ -224,33 +224,50 @@ class LSDIndexChannelTree
   /// @date 01/05/13
   float search_for_best_fit_m_over_n(float A_0, int n_movern, float d_movern,float start_movern,
                                           int minimum_segment_length, float sigma, int target_nodes,
-					                      LSDFlowInfo& FlowInfo,  LSDRaster& Elevation_Raster,  string fname);
+                            LSDFlowInfo& FlowInfo,  LSDRaster& Elevation_Raster,  string fname);
 
-	/// @brief This prints a file that contiains all the channel information. It can be used to plot and analyze the channel profiles.
-	/// @details The file format is: channel_number node_index row column flow_dist chi elevation drainage_area.
-	/// @param m_over_n m over n ratio.
-	/// @param A_0 A_0 value.
+  /// @brief This prints a file that contiains all the channel information. It can be used to plot and analyze the channel profiles.
+  /// @details The file format is: channel_number node_index row column flow_dist chi elevation drainage_area.
+  /// @param m_over_n m over n ratio.
+  /// @param A_0 A_0 value.
   /// @param FlowInfo LSDFlowInfo object.
   /// @param Elevation_Raster LSDRaster of elevation.
   /// @param FlowDistance LSDRaster of flow length.
   /// @param fname Output filename.
   /// @author SMM
   /// @date 01/09/12
-	void print_LSDChannels_from_tree(float m_over_n, float A_0, LSDFlowInfo& FlowInfo,
+  void print_LSDChannels_from_tree(float m_over_n, float A_0, LSDFlowInfo& FlowInfo,
                              LSDRaster& Elevation_Raster, LSDRaster& FlowDistance, string fname);
 
-	/// @brief This prints all the channels for ingestion into the chi analysis object.
-	/// @details Data extracted form this file can be used in a standalone chi analysis function.
-	/// The file format is: channel_number node_index row column flow_dist chi elevation drainage_area.
+  /// @brief This prints all the channels for ingestion into the chi analysis object.
+  /// @details Data extracted form this file can be used in a standalone chi analysis function.
+  /// The file format is: channel_number node_index row column flow_dist chi elevation drainage_area.
   /// @param FlowInfo LSDFlowInfo object.
   /// @param Elevation_Raster LSDRaster of elevation.
   /// @param FlowDistance LSDRaster of flow length.
   /// @param fname Output filename.
   /// @author SMM
   /// @date 01/05/13
-	void print_LSDChannels_for_chi_network_ingestion(LSDFlowInfo& FlowInfo,
+  void print_LSDChannels_for_chi_network_ingestion(LSDFlowInfo& FlowInfo,
                              LSDRaster& Elevation_Raster, LSDRaster& FlowDistance, string fname);
 
+  /// @brief This prints all the channels for ingestion into the chi analysis object.
+  ///   THIS VERSION USES DISCHARGE INSTEAD OF DRAINAGE AREA (that is, you can put in
+  ///   a nonuniforms precipitaiton field).
+  /// @details Data extracted form this file can be used in a standalone chi analysis function.
+  /// The file format is: channel_number node_index row column flow_dist chi elevation discharge.
+  /// @param FlowInfo LSDFlowInfo object.
+  /// @param Elevation_Raster LSDRaster of elevation.
+  /// @param FlowDistance LSDRaster of flow length.
+  /// @param fname Output filename.
+  /// @param Discharge The discharge raster. Can be calculated using the 
+  ///  LSDFlowInfo upslope_variable_accumulator function
+  /// @author SMM
+  /// @date 07/05/15
+  void print_LSDChannels_for_chi_network_ingestion(LSDFlowInfo& FlowInfo,
+                             LSDRaster& Elevation_Raster, LSDRaster& FlowDistance, string fname,
+                             LSDRaster& Discharge);
+                      
 
 	/// @brief This takes a .chan file and converts it into a comma seperated file with
 	/// headers that can be read into ArcMap easily
