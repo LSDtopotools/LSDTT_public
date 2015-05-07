@@ -147,7 +147,7 @@ int main (int nNumberofArgs,char *argv[])
 
   // calculate the discharge
   // note: not discharge yet, need to multiply by cell area
-  LSDRaster VolumePrecipitation((Precip_f_name, DEM_bil_extension);
+  LSDRaster VolumePrecipitation(Precip_f_name, DEM_bil_extension);
   float dx = VolumePrecipitation.get_DataResolution();
   
   // volume precipitation per time precipitation times the cell areas

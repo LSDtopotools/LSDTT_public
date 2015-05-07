@@ -1230,7 +1230,7 @@ void LSDIndexChannelTree::convert_chan_file_for_ArcMap_ingestion(string fname, L
   float ndv;
   int nrows;
   int ncols;
-  float this_discahrge;
+  float this_discharge;
 
   // read in the first lines with DEM information
   channelfile_in >> nrows >> ncols >> xll >> yll >> datares >> ndv;
