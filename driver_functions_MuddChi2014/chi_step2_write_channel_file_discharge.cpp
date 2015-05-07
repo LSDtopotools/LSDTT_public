@@ -156,6 +156,10 @@ int main (int nNumberofArgs,char *argv[])
   // discharge accumulates this precipitation
   LSDRaster Discharge = FlowInfo.upslope_variable_accumulator(VolumePrecipitation);
 
+  string Q_ext = "_Q";
+  string Q_f_name = path_name+DEM_name+Q_ext;
+  Discharge.write_raster(Q_f_name,DEM_bil_extension);
+
   // get the sources
   vector<int> sources;
   sources = FlowInfo.get_sources_index_threshold(ContributingPixels, threshold);
