@@ -53,7 +53,7 @@ int main (int nNumberofArgs,char *argv[])
     cout << "* Sixth, the order of the basins to be extracted." << endl;
     cout << "=========================================================" << endl;
     cout << "An example call is: " << endl;
-    cout << "basin_grabber c:\basins\Chile\ Chile_test 0 10 60 2" << endl;
+    cout << "basin_grabber ~home/basins/Chile/ Chile_test 0 10 60 2" << endl;
     exit(EXIT_SUCCESS);
   }
   
@@ -131,10 +131,21 @@ int main (int nNumberofArgs,char *argv[])
   
   LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
   LSDIndexRaster StreamNetwork = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
-                                                         
+  
+  LSDIndexRaster Basin_Raster;     
+  
   //Extract basins based on input stream order
-  vector< int > basin_junctions = ChanNetwork.ExtractBasinJunctionOrder(BasinOrder, FlowInfo);
-  LSDIndexRaster Basin_Raster = ChanNetwork.extract_basins_from_junction_vector(basin_junctions, FlowInfo);
+  cout << "\nGetting basins\n";
+  if (BasinOrder == 0)
+  {
+    vector< int > basin_junctions = ChanNetwork.get_Junctions_of_Sources(FlowInfo);
+    Basin_Raster = ChanNetwork.extract_basins_from_junctions_rudimentary(basin_junctions, FlowInfo); 
+  }
+  else
+  {
+    vector< int > basin_junctions = ChanNetwork.ExtractBasinJunctionOrder(BasinOrder, FlowInfo);
+    Basin_Raster = ChanNetwork.extract_basins_from_junction_vector(basin_junctions, FlowInfo);
+  }
   
   cout << "\nExtracting hilltops and hilltop curvature" << endl;
 

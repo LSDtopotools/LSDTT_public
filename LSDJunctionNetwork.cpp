@@ -852,7 +852,7 @@ vector<int> LSDJunctionNetwork::get_Junctions_of_Sources(LSDFlowInfo& FlowInfo)
   int n_sources = SourcesVector.size();
   for(int i = 0; i< n_sources; i++)
   {
-    this_junc = get_Junction_of_Node(int Node, LSDFlowInfo& FlowInfo);
+    this_junc = get_Junction_of_Node(SourcesVector[i], FlowInfo);
     Sources_junctions.push_back(this_junc);
   }
   return Sources_junctions;
@@ -1277,8 +1277,10 @@ vector<int> LSDJunctionNetwork::extract_basin_junctions_from_nodes(vector<int> b
   
   return basin_junctions;
 }
-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 // This function extracts the base level junction to which a starting junction 
@@ -3649,60 +3651,86 @@ LSDIndexRaster LSDJunctionNetwork::extract_hollow(vector<int> CH_junctions, LSDF
 //
 // SMM 01/09/2012
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 LSDIndexRaster LSDJunctionNetwork::extract_basins_from_junction_vector(vector<int> basin_junctions, LSDFlowInfo& FlowInfo)
 {
 
   Array2D<int> Basin(NRows,NCols,NoDataValue);
 
-  for (vector<int>::iterator it = basin_junctions.begin(); it !=  basin_junctions.end(); ++it){
+  for (vector<int>::iterator it = basin_junctions.begin(); it !=  basin_junctions.end(); ++it)
+  {
 
     int basin_junction = *it;
 
-		if (basin_junction >= int(JunctionVector.size()))
-		{
-			cout << "LSDJunctionNetwork::extract_basin_from_junction junction not in list" << endl;
-			exit(EXIT_FAILURE);
-		}
+    if (basin_junction >= int(JunctionVector.size()))
+    {
+      cout << "LSDJunctionNetwork::extract_basin_from_junction junction not in list" << endl;
+      exit(EXIT_FAILURE);
+    }
 
     int receiver_junc, n_nodes_in_channel, basin_outlet;
 
-		// get the reciever junction
-    	receiver_junc = ReceiverVector[basin_junction];
+    // get the reciever junction
+    receiver_junc = ReceiverVector[basin_junction];
 
-    	LSDIndexChannel StreamLinkVector = LSDIndexChannel(basin_junction, JunctionVector[basin_junction],
+    LSDIndexChannel StreamLinkVector = LSDIndexChannel(basin_junction, JunctionVector[basin_junction],
                                                              receiver_junc, JunctionVector[receiver_junc], FlowInfo);
 
-      // Find final nth order channel pixel, which is the penultimate pixel
-      // in channel.
-      n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
-      int node,row,col;
+    // Find final nth order channel pixel, which is the penultimate pixel
+    // in channel.
+    n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
+    int node,row,col;
 
-      basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
-      vector<int> BasinNodeVector = FlowInfo.get_upslope_nodes(basin_outlet);
-      // Loop through basin to label basin pixels with basin ID
-      for (int BasinIndex = 0; BasinIndex < int(BasinNodeVector.size()); ++BasinIndex)
-      {
-			node = BasinNodeVector[BasinIndex];
-          FlowInfo.retrieve_current_row_and_col(node,row,col);
-          Basin[row][col] = basin_junction;
-      }
+    basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
+    vector<int> BasinNodeVector = FlowInfo.get_upslope_nodes(basin_outlet);
+    // Loop through basin to label basin pixels with basin ID
+    for (int BasinIndex = 0; BasinIndex < int(BasinNodeVector.size()); ++BasinIndex)
+    {
+      node = BasinNodeVector[BasinIndex];
+      FlowInfo.retrieve_current_row_and_col(node,row,col);
+      Basin[row][col] = basin_junction;
+    }
 
   }
 
-	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Basin,GeoReferencingStrings);
-	return IR;
+  LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Basin,GeoReferencingStrings);
+  return IR;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+//This function gets basins in a rudimentary way: it just takes a list of nodes 
+// numbers the basins. 
+// Basins later in the list overwrite basins earlier in the list
+//
+// SMM 07/05/2015
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LSDIndexRaster LSDJunctionNetwork::extract_basins_from_junctions_rudimentary(vector<int> junctions, LSDFlowInfo& FlowInfo)
+{
 
+  Array2D<int> Basin(NRows,NCols,NoDataValue);
+  int node,row,col;
+  int n_juncs = junctions.size();
+  for (int i = 0; i<n_juncs; i++)
+  {
+    int basin_outlet = get_Node_of_Junction(junctions[i]);
+    vector<int> BasinNodeVector = FlowInfo.get_upslope_nodes(basin_outlet);
+    for (int BasinIndex = 0; BasinIndex < int(BasinNodeVector.size()); ++BasinIndex)
+    {
+      node = BasinNodeVector[BasinIndex];
+      FlowInfo.retrieve_current_row_and_col(node,row,col);
+      Basin[row][col] = junctions[i];
+    }
+  }
 
+  LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Basin,GeoReferencingStrings);
+  return IR;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this sends the StreamOrderArray to a LSDIndexRaster
 //
 // SMM 01/09/2012
@@ -3710,8 +3738,8 @@ LSDIndexRaster LSDJunctionNetwork::extract_basins_from_junction_vector(vector<in
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexRaster LSDJunctionNetwork::StreamOrderArray_to_LSDIndexRaster()
 {
-	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, StreamOrderArray,GeoReferencingStrings);
-	return IR;
+  LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, StreamOrderArray,GeoReferencingStrings);
+  return IR;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -3726,8 +3754,8 @@ LSDIndexRaster LSDJunctionNetwork::StreamOrderArray_to_LSDIndexRaster()
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexRaster LSDJunctionNetwork::JunctionArray_to_LSDIndexRaster()
 {
-	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, JunctionArray,GeoReferencingStrings);
-	return IR;
+  LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, JunctionArray,GeoReferencingStrings);
+  return IR;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 

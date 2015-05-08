@@ -430,6 +430,16 @@ class LSDJunctionNetwork
   /// @date 01/09/12
   LSDIndexRaster extract_basins_from_junction_vector(vector<int> basin_junctions, LSDFlowInfo& FlowInfo);
 
+  /// @brief This function gets the an LSDIndexRaster of basins draining from a vector of junctions.
+  /// @details IThis is a highly rudimentary version, which just collects
+  ///  all the upslope nodes. 
+  /// @param basin_junctions Vector of junction numbers of basins to be extracted.
+  /// @param FlowInfo LSDFlowInfo object.
+  /// @return LSDIndexRaster of extracted basin.
+  /// @author SMM
+  /// @date 08/05/15
+  LSDIndexRaster extract_basins_from_junctions_rudimentary(vector<int> junctions, LSDFlowInfo& FlowInfo);
+
   /// @brief Basin extraction - extracts all drainage basins of specified stream order.
   /// @param BasinOrder Integer basin order to extract.
   /// @param FlowInfo LSDFlowInfo object.
