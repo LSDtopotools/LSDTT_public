@@ -90,24 +90,24 @@ using namespace TNT;
 ///@brief Object to create a channel network from an LSDFlowInfo object.
 class LSDJunctionNetwork
 {
-	public:
+  public:
   /// @brief This defines a channel network, is empty
   /// @author SMM
   /// @date 30/07/14
-	LSDJunctionNetwork()   { create(); }
+  LSDJunctionNetwork()   { create(); }
    
   /// @brief This defines a channel network based on a FlowInfo object and a list of source nodes.
   /// @param FlowInfo LSDFlowInfo object.
   /// @param Sources vector of source nodes.
   /// @author SMM
   /// @date 01/09/12
-	LSDJunctionNetwork(vector<int> Sources, LSDFlowInfo& FlowInfo)
-											{ create(Sources, FlowInfo); }
+  LSDJunctionNetwork(vector<int> Sources, LSDFlowInfo& FlowInfo)
+                  { create(Sources, FlowInfo); }
 
 
   /// @brief Assignment operator.
   LSDJunctionNetwork& operator=(const LSDJunctionNetwork& LSDR);
-											
+
   ///@brief Recursive add_to_stack routine to build the junction tree, from Braun and Willett (2012)
   ///equations 12 and 13.
   ///@param lm_index Integer
@@ -117,15 +117,16 @@ class LSDJunctionNetwork
   /// @date 01/09/12
   void add_to_stack(int lm_index, int& j_index, int bl_node);
 
-	// this returns all the upstream junction of a junction_number_outlet
-	/// @brief This returns all the upstream junction of a junction_number_outlet.
+  // this returns all the upstream junction of a junction_number_outlet
+  /// @brief This returns all the upstream junction of a junction_number_outlet.
   /// @param junction_number_outlet Integer of junction of interest.
   /// @return integer vector containing all the junction numbers upslope
   /// of the chosen junction.
   /// @author SMM
   /// @date 01/09/12
-	vector<int> get_upslope_junctions(int junction_number_outlet);
-	/// @brief This function maps a junction onto the indexing of the upslope junction list.
+  vector<int> get_upslope_junctions(int junction_number_outlet);
+
+  /// @brief This function maps a junction onto the indexing of the upslope junction list.
   ///
   /// @details If you get an upslope junction list the indexing starts at the furthest downslope
   /// junction. All of the junction pointing refers to the master junction list however.
@@ -134,10 +135,10 @@ class LSDJunctionNetwork
   /// @return Vector of mapped junctions.
   /// @author SMM
   /// @date 01/09/12
-	int map_junction_to_upslope_junction_list(vector<int> upslope_junctions, int junction);
+  int map_junction_to_upslope_junction_list(vector<int> upslope_junctions, int junction);
 
-	// functions for finding specific basins
-	/// @brief This function returns the maximum stream order in the DEM.
+  // functions for finding specific basins
+  /// @brief This function returns the maximum stream order in the DEM.
   /// @return Maximum stream order as an integer.
   /// @author SMM
   /// @date 01/09/12
@@ -150,6 +151,13 @@ class LSDJunctionNetwork
   /// @author FC
   /// @date 31/10/13
   int get_Junction_of_Node(int Node, LSDFlowInfo& FlowInfo);
+
+  /// @brief This gets the junction number all the sources
+  /// @param FlowInfo Flow Info object  
+  /// @return A vector of junctions from all the sources
+  /// @author SMM
+  /// @date 08/05/15  
+  vector<int> get_Junctions_of_Sources(LSDFlowInfo& FlowInfo);
   
   /// @brief returns the penultimate node of the stream link below given junction
   /// @param upstream junction of desired stream link
@@ -158,9 +166,9 @@ class LSDJunctionNetwork
   /// @author DTM
   /// @date 04/06/14
   int get_penultimate_node_from_stream_link(int upstream_junction, LSDFlowInfo& FlowInfo);
-	
-	// this prints the link array to raster
-	/// @brief This sends the StreamOrderArray to a LSDIndexRaster.
+
+  // this prints the link array to raster
+  /// @brief This sends the StreamOrderArray to a LSDIndexRaster.
   /// @return LSDIndexRaster of StreamOrderArray.
   /// @author SMM
   /// @date 01/09/12
