@@ -1,0 +1,55 @@
+# Template for parameter file
+
+Run Name:		TestRun
+
+# INTIAL AND BOUNDARY CONDITIONS
+NRows:			150
+NCols:			300
+Resolution:		10
+
+init_parabolic_surface: true
+init_random_fractal_surface: false
+fractal_dimension: 2.1
+parabola_max_elev: 1000
+surface_noise_value: 50
+boundary code:		bpbp	#North, east, south, west
+# b = base level, p = periodic, n = no flow (default)
+
+# NUMERICAL OPTIONS
+Time step:		200
+End time:		100000
+End time mode:		0	#(if 1, wait for steady state to set the time to count down)
+
+# UPLIFT
+Uplift mode:		0	Block uplift
+Max uplift:		0.0002
+Tolerance:		0.00002
+Print interval:		50
+Periodicity:		10000
+
+# FLUVIAL
+Fluvial:	on
+K:			0.0001
+m:			0.5
+n:			1
+K mode:		0	#constant
+#K amplitude:	0.005
+
+# HILLSLOPE
+Hillslope:		on
+Non-linear:		on
+Threshold drainage:	-1	(if negative, ignored)
+D:			0.002
+S_c:			1
+D mode:			0	Constant
+#D amplitude:	0.005
+
+# TECTONICS
+Isostasy:		off
+Flexure:		off
+Rigidity:		1000000
+
+
+
+
+
