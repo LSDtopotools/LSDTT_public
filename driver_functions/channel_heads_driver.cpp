@@ -95,12 +95,13 @@ int main (int nNumberofArgs,char *argv[])
   cout << "The path is: " << path_name << " and the filename is: " << f_name << endl;
 
   string full_name = path_name+f_name;
+  cout << "The full path is: " << full_name << endl;
 
   ifstream file_info_in;
   file_info_in.open(full_name.c_str());
   if( file_info_in.fail() )
   {
-    cout << "\nFATAL ERROR: the header file \"" << full_name
+    cout << "\nFATAL ERROR: the driver file \"" << full_name
          << "\" doesn't exist" << endl;
     exit(EXIT_FAILURE);
   }
@@ -119,11 +120,19 @@ int main (int nNumberofArgs,char *argv[])
 
   // get some file names
   string DEM_f_name = DEM_name+fill_ext;
-  string DEM_flt_extension = "flt";
-  string complete_fname = DEM_name+sources_ext;//".flt";
+  string DEM_flt_extension = "bil";
+  string complete_fname = path_name+DEM_name+sources_ext;		//".bil";
+  string DEM_with_path = path_name+DEM_name;
+
+  cout << "I am running the channel finding algorithm with the following parameters: " << endl;
+  cout << "Minimum slope: " << Minimum_Slope << " threshold: " << threshold << endl
+       << "A_0: " << A_0 << " m_over_n: " << m_over_n << " n connecting nodes: " << no_connecting_nodes << endl
+       << "And the name of the DEM is: " <<   DEM_with_path << endl;
+
+
 
   // load the DEM
-  LSDRaster topo_test(DEM_name, DEM_flt_extension);
+  LSDRaster topo_test(DEM_with_path, DEM_flt_extension);
 
   // Set the no flux boundary conditions
   vector<string> boundary_conditions(4);
@@ -135,7 +144,7 @@ int main (int nNumberofArgs,char *argv[])
   // get the filled file
   cout << "Filling the DEM" << endl;
   LSDRaster filled_topo_test = topo_test.fill(Minimum_Slope);
-  filled_topo_test.write_raster((DEM_f_name),DEM_flt_extension);
+  filled_topo_test.write_raster((path_name+DEM_f_name),DEM_flt_extension);
 
   //get a FlowInfo object
   LSDFlowInfo FlowInfo(boundary_conditions,filled_topo_test);
@@ -203,7 +212,7 @@ int main (int nNumberofArgs,char *argv[])
   //write channel heads to a raster
   string CH_name = "_CH";
   LSDIndexRaster Channel_heads_raster = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(ChannelHeadNodes);
-  Channel_heads_raster.write_raster((DEM_name+CH_name),DEM_flt_extension);
+  Channel_heads_raster.write_raster((path_name+DEM_name+CH_name),DEM_flt_extension);
 
   //create a channel network based on these channel heads
   LSDJunctionNetwork NewChanNetwork(ChannelHeadNodes, FlowInfo);
@@ -211,6 +220,6 @@ int main (int nNumberofArgs,char *argv[])
   LSDIndexRaster SOArrayNew = NewChanNetwork.StreamOrderArray_to_LSDIndexRaster();
   string SO_name_new = "_SO_from_CH";
 
-  SOArrayNew.write_raster((DEM_name+SO_name_new),DEM_flt_extension);
+  SOArrayNew.write_raster((path_name+DEM_name+SO_name_new),DEM_flt_extension);
 
 }
