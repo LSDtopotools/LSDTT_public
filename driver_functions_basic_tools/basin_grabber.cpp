@@ -66,15 +66,22 @@ int main (int nNumberofArgs,char *argv[])
   string sources_filename;
   bool channel_network_from_file = false;
   
+  cout << endl <<"===============================" << endl;
+  cout << "Are you reading the sources from file?" << endl;
+
+  
   if (SourceReadFlag == 0)
   {
+    cout << "No, I am using a threshold" << endl;
     threshold_pixels = atoi(argv[4]);
   }
   else
   {
     sources_filename = argv[4];
+    cout << "Yes, I am using this csv file: " << sources_filename << endl;
+    channel_network_from_file = true;
   }
-  
+  cout <<"===============================" << endl;
   float window_radius = atof(argv[5]);
   int BasinOrder = atoi(argv[6]);  
   
@@ -118,7 +125,8 @@ int main (int nNumberofArgs,char *argv[])
   if(channel_network_from_file)
   {
     //get stream net from channel heads
-    sources = FlowInfo.Ingest_Channel_Heads((path+sources_filename), "bil"); //swap to csv? 
+    cout << "IMPORTANT: your sources file should be a csv!!" << endl;
+    sources = FlowInfo.Ingest_Channel_Heads((path+sources_filename), "csv"); //swap to csv? 
   }
   else
   {
