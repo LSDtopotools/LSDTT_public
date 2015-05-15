@@ -2914,11 +2914,15 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 	int flag;
 	int count = 0;
 	int DivergentCountFlag = 0; //Flag used to count the number of divergent cells encountered in a trace
+	int PlanarCountFlag;
 	float PI = 3.14159265;
 	float degs, degs_new, theta;
 	float s_local, s_edge;
 	float xo, yo, xi, yi, temp_yo1, temp_yo2, temp_xo1, temp_xo2;
 	bool skip_trace; //flag used to skip traces where no path to a stream can be found. Will only occur on noisy, raw topography
+  float E_Star = 0;
+  float R_Star = 0;
+  float EucDist = 0;
 
   //debugging counters
   int ns_count = 0;
@@ -3003,7 +3007,11 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 				count = 1;
 				path = blank.copy();
         DivergentCountFlag = 0; //initialise count of divergent cells in trace
+        PlanarCountFlag = 0;
         skip_trace = false; //initialise skip trace flag as false, will only be switched if no path to stream can be found. Very rare.
+        
+        E_Star = 0;
+        R_Star = 0;
         
 				++ht_count;
 
@@ -3285,7 +3293,10 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
         if (abs(PlanCurvature.get_data_element(a,b)) > (0.001)){
           ++DivergentCountFlag;
         }
-
+        else {
+          ++PlanarCountFlag;
+        }
+        
 				if (a == 0 || b == 0 ||	a == NRows-1 || b == NCols-1 || stnet[a][b] != NoDataValue || stnet[a-1][b-1] != NoDataValue || stnet[a][b-1] != NoDataValue || stnet[a+1][b-1] != NoDataValue || stnet[a+1][b] != NoDataValue || stnet[a+1][b+1] != NoDataValue || stnet[a][b+1] != NoDataValue || stnet[a-1][b+1] != NoDataValue || stnet[a-1][b] != NoDataValue || path[a][b] >= 3 || skip_trace == true) flag = false;
 				}
 
@@ -3319,8 +3330,16 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
             Slope_Array[i][j] = mean_slope;
             Relief_Array[i][j] = relief;
           
+            //calculate an E* and R* Value assuming S_c of 0.8
+            E_Star = (2.0 * abs(hilltops[i][j])*(length*DataResolution))/0.8;
+            R_Star = relief/((length*DataResolution)*0.8);
+            
+            //calulate the Euclidean distance between the start and end points of the trace
+            EucDist = sqrt((pow(((i+0.5)-(a+yo)),2) + pow(((j+0.5)-(b+xo)),2))) * DataResolution;
+
+          
             if (relief > 0){
-					    ofs << X << "," << Y << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "," << stnet[a][b] << "," << slope[i][j] << "," << DivergentCountFlag << "\n";
+					    ofs << X << "," << Y << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "," << stnet[a][b] << "," << slope[i][j] << "," << DivergentCountFlag << "," << PlanarCountFlag << "," << E_Star << "," << R_Star << "," << EucDist << "\n";
             }
             else {
               ++neg_count;
@@ -3354,10 +3373,10 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
           
 	          for (int v = 0; v < count+1; ++v){
 	            if (basin_filter_switch == false){
-                pathwriter << setiosflags(ios::fixed) << setprecision(7) << east_vec[v] << " " << north_vec[v] << endl;
+                pathwriter << setiosflags(ios::fixed) << setprecision(7) << east_vec[v] << " " << north_vec[v] << " " << DivergentCountFlag << " " << length << " " << PlanarCountFlag << " " << E_Star << " " << R_Star << " " << EucDist << endl;
               }
               else if (basin_filter_switch == true && find(Target_Basin_Vector.begin(), Target_Basin_Vector.end(), basin[a][b]) != Target_Basin_Vector.end() && find(Target_Basin_Vector.begin(), Target_Basin_Vector.end(), basin[i][j]) != Target_Basin_Vector.end()){  //is this correct? evaulating to not equal one past the end of the vector should equal that the value is found
-                pathwriter << setiosflags(ios::fixed) << setprecision(7) << east_vec[v] << " " << north_vec[v] << endl;
+                pathwriter << setiosflags(ios::fixed) << setprecision(7) << east_vec[v] << " " << north_vec[v] << " " << DivergentCountFlag << " " << length << " " << PlanarCountFlag << " " << E_Star << " " << R_Star << " " << EucDist << endl;
               }
             }
             pathwriter.close();
