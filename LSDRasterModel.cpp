@@ -4992,6 +4992,85 @@ void LSDRasterModel::print_average_erosion_and_apparent_erosion( int frame,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function writes all of the erosion data from individual columns
+// Warning: Writes very big files!!
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::print_column_erosion_and_apparent_erosion( int frame, 
+                                 vector<LSDParticleColumn>& CRNColumns, 
+                                 LSDCRNParameters& CRNParams)
+{
+
+  float avg_uplift = get_average_upflit_rate_last_timestep();
+  float avg_erosion = get_total_erosion_rate_over_timestep();
+
+  // get the number of columns
+  int N_CRNcols = int(CRNColumns.size());
+
+  // This if statement opens the file if it doesn't exist
+  static ofstream er_outfile;
+  // Print the cosmo metadata
+  if (not er_outfile.is_open())
+  {
+    string CRNdata_fname =  name+".CRN_frame_metadata";
+    cout << "Name of CRN file is: " <<  CRNdata_fname << endl;
+          er_outfile.open(CRNdata_fname.c_str());
+           er_outfile << name << endl;
+          er_outfile << "Frame_num\t";
+    er_outfile << "Time\t";
+    er_outfile << "K\t";
+    er_outfile << "D\t";
+    er_outfile << "Avg_uplift\t";
+    er_outfile << "Avg_erosion\t";
+    
+    // Now you need to loop through every column collecting data
+    for (int cc = 0; cc<N_CRNcols; cc++)
+    {
+      er_outfile << "Row\tCol\t\Erosion\t10BeErosion";
+    }
+
+    er_outfile << endl;
+  }
+
+  
+  // if the file is aloready open, print the data to file
+  er_outfile << frame << "\t";
+  er_outfile << current_time << "\t";
+  er_outfile << get_K() << "\t";
+  er_outfile << get_D() << "\t";
+  er_outfile << avg_uplift << "\t";
+  er_outfile << avg_erosion << "\t";
+  
+  // loop through the columns, printing the local data
+  for (int cc = 0; cc<N_CRNcols; cc++)
+  {
+    er_outfile << CRNColumns[cc].getRow() << "\t";
+    er_outfile << CRNColumns[cc].getCol() << "\t";
+
+
+    // get the actual erosion at the cell
+    double this_erosion = get_erosion_at_cell(CRNColumns[cc].getRow(),
+                                              CRNColumns[cc].getCol());
+    
+    // get the uplift rate
+    double this_U = get_uplift_rate_at_cell(  CRNColumns[cc].getRow(),
+                                              CRNColumns[cc].getCol());     
+
+    // get the apparent erosion at the cell
+    vector<double> this_app_erosion = 
+       CRNColumns[cc].calculate_app_erosion_3CRN_neutron_rock_only(CRNParams);
+    
+    er_outfile << this_erosion << "\t";
+    er_outfile << this_app_erosion[0] << "\t";
+    
+  }
+  er_outfile <<  endl;
+
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This routine prints rasters according to some internal model switched
 // Used by JAJ's code so DO NOT MODIFY
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

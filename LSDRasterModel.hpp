@@ -1028,34 +1028,47 @@ class LSDRasterModel: public LSDRasterSpectral
 	/// @date 01/01/2014
 	void print_parameters( void );
   
-	/// @brief this prints a file about what has happened over a cycle
-	/// @author JAJ
-	/// @date 01/01/2014  	
-	void cycle_report( float, float, float);
+  /// @brief this prints a file about what has happened over a cycle
+  /// @author JAJ
+  /// @date 01/01/2014  	
+  void cycle_report( float, float, float);
 
   /// @brief this prints a final report (SMML not sure what is in the final report)
-	/// @author JAJ
-	/// @date 01/01/2014  
-	void final_report( void );
+  /// @author JAJ
+  /// @date 01/01/2014  
+  void final_report( void );
 
   /// @brief This function prints a series of rasters. 
   /// The rasters printed depend on the switches
   /// print_elevation,	print_erosion, print_erosion_cycle, print_hillshade;		
-	/// and print_slope_area
+  /// and print_slope_area
   /// The filename inculdes the frame_num	
   /// @param the frame of the rasters to be printed	
-	/// @author JAJ
-	/// @date 01/01/2014  
-	void print_rasters( int frame_num );
+  /// @author JAJ
+  /// @date 01/01/2014  
+  void print_rasters( int frame_num );
 
   /// @brief This function prints the apparent cosmogenic rates from a collection
   /// of LSDParticle Columns
-  /// The filename inculdes the frame_num		
+  /// @detail This function opens a file if none exists
   /// @param frame the frame to be printed
-  /// @CRNColumns the columns of cosmogenic particles
-	/// @author SMM
-	/// @date 01/08/2014  
-	void print_average_erosion_and_apparent_erosion( int frame, 
+  /// @param CRNColumns the columns of cosmogenic particles
+  /// @param  CRNParams and LSDCRNParamters object
+  /// @author SMM
+  /// @date 01/08/2014  
+  void print_average_erosion_and_apparent_erosion( int frame, 
+                                 vector<LSDParticleColumn>& CRNColumns, 
+                                 LSDCRNParameters& CRNParams);
+
+  /// @brief This function prints the apparent cosmogenic rates from individual
+  /// LSDParticle Columns
+  /// @detail This function opens a file if none exists
+  /// @param frame the frame to be printed
+  /// @param CRNColumns the columns of cosmogenic particles
+  /// @param  CRNParams and LSDCRNParamters object
+  /// @author SMM
+  /// @date 24/05/2015  
+  void print_column_erosion_and_apparent_erosion( int frame, 
                                  vector<LSDParticleColumn>& CRNColumns, 
                                  LSDCRNParameters& CRNParams);
                                  
@@ -1065,33 +1078,33 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @date 01/08/2014
   void close_static_outfiles();                            
 
-	/// @brief Print slope area data
-	/// Probably fits better into LSDRaster, but requires LSDFlowInfo
-	/// @param requires a filename 
-	/// @author JAJ
-	/// @date 01/01/2014
-	void slope_area_data( string name );
+  /// @brief Print slope area data
+  /// Probably fits better into LSDRaster, but requires LSDFlowInfo
+  /// @param requires a filename 
+  /// @author JAJ
+  /// @date 01/01/2014
+  void slope_area_data( string name );
 
   /// @brief Print slope area data
-	/// This is an overloaded function that calcualtes slope area
-	/// data based on flags. There are two flag, one for the slope
-	/// calculation and one for the area calculation
-	/// @details The output is a file with four columns
-	/// Elevation  slope area  predicted_slope
-	/// The predicted slope is that based on the SS solution of stream power
-	/// at the current uplift rate and the current K
-	/// @param requires a filename
-	/// @param a flag for calculation of the topographic slope
-	/// 0 == polyfit using the data resolution as the smoothing diameter
-	/// 1 == slope calculated with the D8 slopes, with dx = data resolution
+  /// This is an overloaded function that calcualtes slope area
+  /// data based on flags. There are two flag, one for the slope
+  /// calculation and one for the area calculation
+  /// @details The output is a file with four columns
+  /// Elevation  slope area  predicted_slope
+  /// The predicted slope is that based on the SS solution of stream power
+  /// at the current uplift rate and the current K
+  /// @param requires a filename
+  /// @param a flag for calculation of the topographic slope
+  /// 0 == polyfit using the data resolution as the smoothing diameter
+  /// 1 == slope calculated with the D8 slopes, with dx = data resolution
   /// or DataResolution*sqrt(2) depending on flow direction. 
-	/// @param a flag for calculation of the area
-	/// 0 == area using contributing pixels but smoothed to data resolution with polyfit
-	/// 1 == area using contributing pixels only
-	/// 2 == 
-	/// @author SMM
-	/// @date 18/06/2014
-	void slope_area_data( string name, int slope_flag, int area_flag  );
+  /// @param a flag for calculation of the area
+  /// 0 == area using contributing pixels but smoothed to data resolution with polyfit
+  /// 1 == area using contributing pixels only
+  /// 2 == 
+  /// @author SMM
+  /// @date 18/06/2014
+  void slope_area_data( string name, int slope_flag, int area_flag  );
 
 	/// @brief Produce a template of a parameter file to be supplied to the model
 	/// @param the name of the parameter file to be printed
