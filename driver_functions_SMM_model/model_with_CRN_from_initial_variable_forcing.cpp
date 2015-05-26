@@ -245,8 +245,8 @@ int main(int argc, char *argv[])
   
   int startType = 0;
   int startDepth = 5;
-  double particle_spacing = 0.2;
-  int column_spacing = 3;
+  double particle_spacing = 0.1;
+  int column_spacing = 2;
   LSDCRNParameters CRNParam;
   CRNParam.set_Neutron_only_parameters();     // set to neutron only production
   double rho_r = 2000;
