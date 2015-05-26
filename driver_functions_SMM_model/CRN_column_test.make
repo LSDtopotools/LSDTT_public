@@ -15,7 +15,7 @@ SOURCES = CRN_column_test.cpp \
 		../LSDParticleColumn.cpp \
 		../LSDCRNParameters.cpp
 OBJ = $(SOURCES:.cpp=.o)
-EXEC = CRN_column_test.out
+EXEC = CRN_column_test.exe
 
 all: $(SOURCES) $(EXEC)
 
