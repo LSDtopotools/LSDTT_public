@@ -2913,7 +2913,8 @@ void LSDRasterModel::run_components_combined_cell_tracker( vector<LSDParticleCol
       print_rasters( frame );
       
       print_average_erosion_and_apparent_erosion( frame, CRNColumns, CRNParams);
-            
+      //print_column_erosion_and_apparent_erosion( frame, CRNColumns, CRNParams);
+           
       ++frame;
     }
     if (not quiet) cout << "\rTime: " << current_time << " years" << flush;
