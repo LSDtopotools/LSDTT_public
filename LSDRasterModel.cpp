@@ -5152,16 +5152,16 @@ void LSDRasterModel::print_rasters( int frame )
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::close_static_outfiles()
 {
-	static ofstream er_outfile;
-	static ofstream outfile;
+  static ofstream er_outfile;
+  static ofstream outfile;
   if (er_outfile.is_open())
-	{
-	  er_outfile.close();
-	}
-	if (outfile.is_open())
-	{
-	  outfile.close();
-	}	
+  {
+    er_outfile.close();
+  }
+  if (outfile.is_open())
+  {
+    outfile.close();
+  }
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -5172,56 +5172,56 @@ void LSDRasterModel::close_static_outfiles()
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::slope_area_data( string name )
 {
-	ofstream outfile;
-	outfile.open((name).c_str());
+  ofstream outfile;
+  outfile.open((name).c_str());
 
-	LSDRaster slope;                  
-	Array2D<float> a, b, c, d, e, f;
-	Array2D<float> drainage_array(NRows, NCols, 0.0);    
-	LSDFlowInfo flowData(boundary_conditions, *this);
-	int node;
-	float DR2 = DataResolution*DataResolution;
+  LSDRaster slope;                  
+  Array2D<float> a, b, c, d, e, f;
+  Array2D<float> drainage_array(NRows, NCols, 0.0);    
+  LSDFlowInfo flowData(boundary_conditions, *this);
+  int node;
+  float DR2 = DataResolution*DataResolution;
 
-	calculate_polyfit_coefficient_matrices(DataResolution, a, b, c, d, e, f);
-	slope = calculate_polyfit_slope(d, e);
+  calculate_polyfit_coefficient_matrices(DataResolution, a, b, c, d, e, f);
+  slope = calculate_polyfit_slope(d, e);
 
-	for (int i=0; i<NRows; ++i)
-	{
-		for (int j=0; j<NCols; ++j)
-		{
-			node = flowData.retrieve_node_from_row_and_column(i, j);
-			drainage_array[i][j] = flowData.retrieve_contributing_pixels_of_node(node) * DR2;
-		}
-	}
-	LSDRaster drainage(NRows, NCols, XMinimum, YMinimum, DataResolution,
-		NoDataValue, drainage_array); 
+  for (int i=0; i<NRows; ++i)
+  {
+    for (int j=0; j<NCols; ++j)
+    {
+      node = flowData.retrieve_node_from_row_and_column(i, j);
+      drainage_array[i][j] = flowData.retrieve_contributing_pixels_of_node(node) * DR2;
+    }
+  }
+  LSDRaster drainage(NRows, NCols, XMinimum, YMinimum, DataResolution,
+                     NoDataValue, drainage_array); 
 
-	drainage.calculate_polyfit_coefficient_matrices(DataResolution, a, b, c, d, e, f);
-	drainage = drainage.calculate_polyfit_elevation(f);
+  drainage.calculate_polyfit_coefficient_matrices(DataResolution, a, b, c, d, e, f);
+  drainage = drainage.calculate_polyfit_elevation(f);
 
-	// Write data
-	outfile << name << endl;
-	outfile << "Elevation\tSlope\tArea" << endl;
+  // Write data
+  outfile << name << endl;
+  outfile << "Elevation\tSlope\tArea" << endl;
 
-	for (int i=0; i<NRows; ++i)
-	{
-		for (int j=0; j<NCols; ++j)
-		{
-			if (slope.get_data_element(i,j) == NoDataValue || RasterData[i][j] == NoDataValue)
-			{
-				continue;
-			}
-			else
-			{
-				outfile << RasterData[i][j];
-				outfile << "\t" << slope.get_data_element(i, j);
-				outfile << "\t" << drainage.get_data_element(i, j); 
-				outfile << endl;
-			}
-		}
-	}
+  for (int i=0; i<NRows; ++i)
+  {
+    for (int j=0; j<NCols; ++j)
+    {
+      if (slope.get_data_element(i,j) == NoDataValue || RasterData[i][j] == NoDataValue)
+      {
+        continue;
+      }
+      else
+      {
+        outfile << RasterData[i][j];
+        outfile << "\t" << slope.get_data_element(i, j);
+        outfile << "\t" << drainage.get_data_element(i, j); 
+        outfile << endl;
+      }
+        }
+  }
 
-	outfile.close();
+  outfile.close();
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -5245,17 +5245,17 @@ void LSDRasterModel::slope_area_data( string name )
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::slope_area_data( string fname, int slope_flag, int area_flag  )
 {
-	if (not quiet)
-	{
+  if (not quiet)
+  {
     cout << "Printing slope-area data, filename is " << fname << endl;
   }
   
   // open the file for printing
   ofstream outfile;
-	outfile.open((fname).c_str());
-	
-	// get the flow info
-	LSDFlowInfo flowData(boundary_conditions, *this);
+  outfile.open((fname).c_str());
+  
+  // get the flow info
+  LSDFlowInfo flowData(boundary_conditions, *this);
 
   // first calculate the slope
   // slope_flag is a flag for calculation of the topographic slope
@@ -5274,9 +5274,9 @@ void LSDRasterModel::slope_area_data( string fname, int slope_flag, int area_fla
   switch (slope_flag)
   {
     case 0:
-    {	
+    {
       vector<LSDRaster> surface_fitting;      
-	    vector<int> raster_selection(8, 0);
+      vector<int> raster_selection(8, 0);
       raster_selection[1] = 1;            // this indicates you only want the slope
       surface_fitting = calculate_polyfit_surface_metrics(DataResolution+0.001, raster_selection);
       slope = surface_fitting[1];
@@ -5316,10 +5316,10 @@ void LSDRasterModel::slope_area_data( string fname, int slope_flag, int area_fla
          }
       }       // end loop through nodes
       LSDRaster slope2(NRows, NCols, XMinimum, YMinimum, DataResolution,
-		                     NoDataValue, slope_array);
-		  slope = slope2;       // a bit of a stupid way to do this but don't want 
-		                        // local slope raster  
-		}
+                         NoDataValue, slope_array);
+      slope = slope2;       // a bit of a stupid way to do this but don't want 
+                            // local slope raster  
+    }
     break;
     default:
       cout << "Slope_area function, you have chose an incorrect slope flag" << endl;
@@ -5343,19 +5343,19 @@ void LSDRasterModel::slope_area_data( string fname, int slope_flag, int area_fla
       int node;
       
       // loop through the nodes collecting drainage area
-	    for (int i=0; i<NRows; ++i)
-	    {
-		    for (int j=0; j<NCols; ++j)
-		    {
-			    node = flowData.retrieve_node_from_row_and_column(i, j);
-			    drainage_array[i][j] = flowData.retrieve_contributing_pixels_of_node(node) * DR2;
-		    }
-	    }
-	    LSDRaster drainage(NRows, NCols, XMinimum, YMinimum, DataResolution,
-		                     NoDataValue, drainage_array); 
-		                     
-		  // fit the surface
-	    surface_fitting_area = drainage.calculate_polyfit_surface_metrics(DataResolution+0.5*DataResolution, raster_selection);
+      for (int i=0; i<NRows; ++i)
+      {
+        for (int j=0; j<NCols; ++j)
+        {
+    	    node = flowData.retrieve_node_from_row_and_column(i, j);
+    	    drainage_array[i][j] = flowData.retrieve_contributing_pixels_of_node(node) * DR2;
+        }
+      }
+      LSDRaster drainage(NRows, NCols, XMinimum, YMinimum, DataResolution,
+                         NoDataValue, drainage_array); 
+                         
+      // fit the surface
+      surface_fitting_area = drainage.calculate_polyfit_surface_metrics(DataResolution+0.5*DataResolution, raster_selection);
       drainage_area = surface_fitting_area[0];
     }
     break;
@@ -5363,8 +5363,8 @@ void LSDRasterModel::slope_area_data( string fname, int slope_flag, int area_fla
     {
       int node;
       // loop through the nodes getting drainage area. 
-	    for (int i=0; i<NRows; ++i)
-	    {
+      for (int i=0; i<NRows; ++i)
+      {
 		    for (int j=0; j<NCols; ++j)
 		    {
 			    node = flowData.retrieve_node_from_row_and_column(i, j);
@@ -5378,20 +5378,20 @@ void LSDRasterModel::slope_area_data( string fname, int slope_flag, int area_fla
 		break;
 		default:
       cout << "Slope_area function, you have chose an incorrect area flag" << endl;
-      exit(EXIT_FAILURE);
-	}       // end area flag switch logic
-	
-	// Write data
-	outfile << name << endl;
-	outfile << "row\tcol\tElevation\tSlope\tArea\tPredicted_slope" << endl;
-	
-	float predicted_slope, A_pow, U_over_KApowm;
-	int n_sa_nodes = 0;
-	float err;
-	float err_tot = 0;
+       exit(EXIT_FAILURE);
+  }       // end area flag switch logic
+  
+  // Write data
+  outfile << name << endl;
+  outfile << "row\tcol\tElevation\tSlope\tArea\tPredicted_slope" << endl;
+  
+  float predicted_slope, A_pow, U_over_KApowm;
+  int n_sa_nodes = 0;
+  float err;
+  float err_tot = 0;
 
-	for (int i=0; i<NRows; ++i)
-	{
+  for (int i=0; i<NRows; ++i)
+  {
 		for (int j=0; j<NCols; ++j)
 		{
 			if (slope.get_data_element(i,j) == NoDataValue 
