@@ -53,7 +53,7 @@ int main (int nNumberofArgs,char *argv[])
   //Test for correct input arguments
 	if (nNumberofArgs!=7)
 	{
-		cout << "FATAL ERROR: wrong number inputs. The program needs the path (with trailing slash), the filename prefix, window radius, "; 
+		cout << "FATAL ERROR: wrong number of inputs. The program needs the path (with trailing slash), the filename prefix, window radius, "; 
     cout << "basin order, a switch to use or exclude floodplains and a switch to write rasters if desired." << endl;
 		exit(EXIT_SUCCESS);
 	}
@@ -98,7 +98,7 @@ int main (int nNumberofArgs,char *argv[])
 	LSDFlowInfo FlowInfo(BoundaryConditions,FilledDEM);
   
   //get stream net from channel heads
-  vector<int> sources = FlowInfo.Ingest_Channel_Heads((path+filename+"_DEM_CH"), "flt"); //swap to csv? 
+  vector<int> sources = FlowInfo.Ingest_Channel_Heads((path+filename+"_dem_CH"), "flt"); //swap to csv? 
   LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
   LSDIndexRaster StreamNetwork = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
 
@@ -140,7 +140,7 @@ int main (int nNumberofArgs,char *argv[])
   // these params do not need changed during normal use of the HFR algorithm
   bool print_paths_switch = false;
   int thinning = 1;
-  string trace_path = "/home/s0675405/DataStore/Trace_Data/testing/single_traces/";
+  string trace_path = "";
   bool basin_filter_switch = false;                          
   vector<int> Target_Basin_Vector;
 
