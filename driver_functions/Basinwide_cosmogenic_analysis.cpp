@@ -52,6 +52,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <cstdlib>
 #include "../LSDRaster.hpp"
 #include "../LSDStatsTools.hpp"
 #include "../LSDFlowInfo.hpp"
