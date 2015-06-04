@@ -17,7 +17,7 @@
 // nice ./PolyFitWindowSize.out /home/s0675405/DataStore/Final_Paper_Data/NC/ NC_DEM flt
 //
 // Output data is stored in the input directory in a file called <DEM_Name>_Window_Size_Data.txt
-// and can be plotted using WindowSize.py
+// and can be plotted using WindowSize.py  found at https://github.com/sgrieve/GeneralAnalysis/
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Stuart W.D. Grieve
