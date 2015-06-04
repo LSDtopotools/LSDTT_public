@@ -4,14 +4,12 @@ OFLAGS = -Wall -O3 -pg -g
 LDFLAGS= -Wall
 SOURCES= LH_Driver_RAW.cpp \
         ../LSDMostLikelyPartitionsFinder.cpp \
-        ../LSDChiNetwork.cpp \
         ../LSDIndexRaster.cpp \
         ../LSDRaster.cpp \
         ../LSDFlowInfo.cpp \
         ../LSDJunctionNetwork.cpp \
         ../LSDIndexChannel.cpp \
         ../LSDChannel.cpp \
-        ../LSDIndexChannelTree.cpp \
         ../LSDStatsTools.cpp \
         ../LSDBasin.cpp \
         ../LSDShapeTools.cpp \
