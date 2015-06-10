@@ -20,10 +20,10 @@
 // An example of running this driver would be:
 //
 // ./E_Star_R_Star.out /homes/s0675405/Data/ OR 20
-//  
 //
-// Outputs 2 csv files into the user supplied path containing the data averaged over hilltop 
-// patches and containng the raw data. Information of the format of these output files can be found at
+// Outputs 2 csv files and a raster of hilltop patches, <prefix>_Patches.flt,
+// into the user supplied path. The csv files contain the data averaged over hilltop 
+// patches and raw data. Information of the format of these output files can be found at
 // [URL].
 //
 // These data files can be processed using the python scripts located at [URL]
@@ -276,5 +276,8 @@ int main (int nNumberofArgs,char *argv[])
   	}
     
   WritePatchData.close();
+  
+  //write the Patch raster data
+  HilltopPatches.write_raster((path+prefix+"_Patches"),"flt");
   
 }
