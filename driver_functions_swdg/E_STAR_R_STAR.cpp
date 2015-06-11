@@ -87,7 +87,7 @@ int main (int nNumberofArgs,char *argv[])
   LSDRaster Slope((path+prefix+"_Slope"), "flt");
   
   cout << "Generating contiguous hilltop patches" << endl;
-  
+   
   //Run the hilltop patch algorithm
   LSDIndexRaster HilltopPatches = CHT.CreateHilltopPatches(MinimumPatchArea);
     
@@ -124,7 +124,7 @@ int main (int nNumberofArgs,char *argv[])
   vector<float> s_medians;
   vector<float> s_std_devs;
   vector<float> s_std_errs;
-
+   
   //Get vector of unique segment indexes
   vector<int> PatchIndex = Unique(HilltopPatches.get_RasterData(), ndv);
 
@@ -245,6 +245,9 @@ int main (int nNumberofArgs,char *argv[])
   stringstream ss;
   ss << path << prefix << "_E_R_Star_Patch_Data.csv";                
   WritePatchData.open(ss.str().c_str());
+
+  //write the header file
+  WritePatchData << "Final_ID,lh_means,lh_medians,lh_std_devs,lh_std_errs,cht_means,cht_medians,cht_std_devs,cht_std_errs,r_means,r_medians,r_std_devs,r_std_errs,s_means,s_medians,s_std_devs,s_std_errs" << endl;
   
   for (int w = 0; w < int(Final_ID.size());++w){
     //break this over a few lines for clarity
@@ -252,7 +255,7 @@ int main (int nNumberofArgs,char *argv[])
    
   }
   
-  WritePatchData.close();
+  WritePatchData.close();     
 
   //Now generate a raw data file so that the raw data can be plotted along with the segments
   
@@ -262,20 +265,23 @@ int main (int nNumberofArgs,char *argv[])
   ofstream WriteRawData;                 
   stringstream ss2;
   ss2 << path << prefix << "_E_R_Star_Raw_Data.csv";                
-  WritePatchData.open(ss2.str().c_str());
+  WriteRawData.open(ss2.str().c_str());
+    
+  //write the header
+  WriteRawData << "i,j,LH,CHT,Relief,Slope" << endl;  
     
    for (int i=0; i<nrows; ++i){
   	  for (int j=0; j<ncols; ++j){
   	  
   	    if (CHT.get_data_element(i,j) != ndv && LH.get_data_element(i,j) != ndv && Relief.get_data_element(i,j) != ndv && Slope.get_data_element(i,j) != ndv){
-  	    
+  	      	    
   	      WriteRawData << i << "," << j << "," << LH.get_data_element(i,j) << "," << CHT.get_data_element(i,j) << "," << Relief.get_data_element(i,j) << "," << Slope.get_data_element(i,j) << endl;
   	    
   	    }
   	  }  	  
   	}
     
-  WritePatchData.close();
+  WriteRawData.close();
   
   //write the Patch raster data
   HilltopPatches.write_raster((path+prefix+"_Patches"),"flt");
