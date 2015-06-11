@@ -59,7 +59,7 @@ int main (int nNumberofArgs,char *argv[])
 {
   
   //Test for correct input arguments
-	if (nNumberofArgs!=7)
+	if (nNumberofArgs!=4)
 	{
 		cout << "FATAL ERROR: wrong number of inputs. The program needs the path (with trailing slash), the filename prefix, and the minimum patch area in pixels." << endl; 
 		exit(EXIT_FAILURE);
