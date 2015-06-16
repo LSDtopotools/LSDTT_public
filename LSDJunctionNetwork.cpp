@@ -746,25 +746,51 @@ vector<int> LSDJunctionNetwork::get_upslope_junctions(int junction_number_outlet
 {
 	vector<int> us_junctions;
 
-	if(junction_number_outlet < 0 || junction_number_outlet > NJunctions-1)
-	{
-		cout << "Tried LSDJunctionNetwork::get_upslope_junctions but the"
-		     << "  junction number does not exist" << endl;
-		exit(0);
-	}
+  if(junction_number_outlet < 0 || junction_number_outlet > NJunctions-1)
+  {
+    cout << "Tried LSDJunctionNetwork::get_upslope_junctions but the"
+         << "  junction number does not exist" << endl;
+    exit(0);
+  }
 
-	int start_SVector_junction = SVectorIndex[junction_number_outlet];
-	int end_SVector_junction = start_SVector_junction+NContributingJunctions[junction_number_outlet];
+  int start_SVector_junction = SVectorIndex[junction_number_outlet];
+  int end_SVector_junction = start_SVector_junction+NContributingJunctions[junction_number_outlet];
 
-	for(int junction = start_SVector_junction; junction < end_SVector_junction; junction++)
-	{
-		us_junctions.push_back(SVector[junction]);
-	}
+  for(int junction = start_SVector_junction; junction < end_SVector_junction; junction++)
+  {
+    us_junctions.push_back(SVector[junction]);
+  }
 
-	return us_junctions;
+  return us_junctions;
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function redurns a vector of node indices to all the donor
+// nodes of a particular node
+//
+// SMM 16/6/2015
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDJunctionNetwork::get_donor_nodes(int current_node)
+{
+  int start_D = DeltaVector[current_node];
+  int end_D = DeltaVector[current_node+1];
+
+  vector<int> donor_nodes;
+  for(int this_node = start_D; this_node<end_D; this_node++)
+  {
+    //cout << "node " << current_node << " and donor: " << DonorStackVector[ this_node ] << endl;
+    donor_nodes.push_back( DonorStackVector[ this_node ] );
+  }
+
+  return donor_nodes;
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

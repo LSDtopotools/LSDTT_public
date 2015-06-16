@@ -126,6 +126,13 @@ class LSDJunctionNetwork
   /// @date 01/09/12
   vector<int> get_upslope_junctions(int junction_number_outlet);
 
+  /// @brief this function gets a list of the node indices of the donors to a particular node
+  /// @param node this is the nodeindex of the node for which you want to find the donors
+  /// @return a vector of the donor nodes
+  /// @author SMM
+  /// @date 15/06/2015
+  vector<int> get_donor_nodes(int node);
+
   /// @brief This function maps a junction onto the indexing of the upslope junction list.
   ///
   /// @details If you get an upslope junction list the indexing starts at the furthest downslope
@@ -928,9 +935,9 @@ class LSDJunctionNetwork
   
   /// @return The Vector of stream orders.
   vector<int> get_StreamOrderVector() const { return StreamOrderVector; }  
-	
-	/// @return The vector of sources. The vector is composed of node indices
-	vector<int> get_SourcesVector() const { return SourcesVector; }
+  
+  /// @return The vector of sources. The vector is composed of node indices
+  vector<int> get_SourcesVector() const { return SourcesVector; }
   
   void couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& D_inf_Flowdir, LSDIndexRaster& ChannelNodeNetwork, int OutletJunction, vector<int>& hillslope_nodes, vector<int>& baselevel_channel_nodes);
   

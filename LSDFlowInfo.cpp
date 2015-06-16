@@ -1819,7 +1819,7 @@ int LSDFlowInfo::is_node_upstream(int current_node, int test_node)
 		{
       i = 1;
     }
-	}
+  }
 
   return i;
 }
@@ -1835,17 +1835,17 @@ int LSDFlowInfo::is_node_upstream(int current_node, int test_node)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 vector<int> LSDFlowInfo::get_donor_nodes(int current_node)
 {
-	int start_D = DeltaVector[current_node];
-	int end_D = DeltaVector[current_node+1];
+  int start_D = DeltaVector[current_node];
+  int end_D = DeltaVector[current_node+1];
 
-	vector<int> donor_nodes;
-	for(int this_node = start_D; this_node<end_D; this_node++)
-	{
-		//cout << "node " << current_node << " and donor: " << DonorStackVector[ this_node ] << endl;
-		donor_nodes.push_back( DonorStackVector[ this_node ] );
-	}
+  vector<int> donor_nodes;
+  for(int this_node = start_D; this_node<end_D; this_node++)
+  {
+    //cout << "node " << current_node << " and donor: " << DonorStackVector[ this_node ] << endl;
+    donor_nodes.push_back( DonorStackVector[ this_node ] );
+  }
 
-	return donor_nodes;
+  return donor_nodes;
 }
 
 
