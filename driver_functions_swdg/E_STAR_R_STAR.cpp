@@ -339,11 +339,11 @@ int main (int nNumberofArgs,char *argv[])
   //write the basin data  
   ofstream WriteBasinData;                 
   stringstream ss3;
-  ss3 << path << prefix << "_E_R_Star_Basin_Data.csv";                
-  WriteRawData.open(ss3.str().c_str());
+  ss3 << path << prefix << "_E_R_Star_Basin_" << BasinOrder << "_Data.csv";                
+  WriteBasinData.open(ss3.str().c_str());
     
   //write the header
-  WriteBasinData << "ID,LH,CHT,Relief,Slope,Area,Count" << endl;
+  WriteBasinData << "Basin_ID,LH,CHT,Relief,Slope,Area,Count" << endl;
   
   
   //write all data to the opened file, ensuring that there are data points to be written in each basin                                         
