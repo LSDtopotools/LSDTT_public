@@ -59,7 +59,7 @@ int main (int nNumberofArgs,char *argv[])
 {
   
   //Test for correct input arguments
-	if (nNumberofArgs!=4)
+	if (nNumberofArgs!=5)
 	{
 		cout << "FATAL ERROR: wrong number of inputs. The program needs the path (with trailing slash), the filename prefix, and the minimum patch area in pixels." << endl; 
 		exit(EXIT_FAILURE);
@@ -69,6 +69,29 @@ int main (int nNumberofArgs,char *argv[])
   string path = argv[1];
 	string prefix = argv[2];
   int MinimumPatchArea  = atoi(argv[3]);  //Minium area of a hilltop patch. In pixels.
+  int BasinOrder = atoi(argv[4]);
+    
+  cout << "Filling DEM and generating the junction network." << endl;
+  
+  //set boundary conditions
+  vector<string> BoundaryConditions(4, "No Flux");
+  
+  //load dem
+  LSDRaster DEM((path+prefix+"_DEM"), "flt");  
+  
+  //Fill 
+  float MinSlope = 0.0001;
+  LSDRaster FilledDEM = DEM.fill(MinSlope);
+  
+  // get a flow info object
+	LSDFlowInfo FlowInfo(BoundaryConditions,FilledDEM);
+  
+  //get junction network from channel heads
+  vector<int> sources = FlowInfo.Ingest_Channel_Heads((path+prefix+"_DEM_CH"), "flt"); 
+  LSDJunctionNetwork JunctionNetwork(sources, FlowInfo);    
+
+  //Extract basins based on input stream order
+  vector< int > basin_junctions = JunctionNetwork.ExtractBasinJunctionOrder(BasinOrder, FlowInfo);
     
   cout << "Loading raster datasets" << endl;
 
@@ -79,13 +102,16 @@ int main (int nNumberofArgs,char *argv[])
   
   //load Relief
   LSDRaster Relief((path+prefix+"_Relief"), "flt");
-  
+   
   //load hilltop curvature
   LSDRaster CHT((path+prefix+"_CHT"), "flt");
   
   //load slope
   LSDRaster Slope((path+prefix+"_Slope"), "flt");
   
+  //create hilltop slope raster - uses hilltop curvature sampling routine, but samples slope along the hilltop instead.
+  LSDRaster HilltopSlope = FilledDEM.get_hilltop_curvature(Slope, CHT);
+    
   cout << "Generating contiguous hilltop patches" << endl;
    
   //Run the hilltop patch algorithm
@@ -282,6 +308,55 @@ int main (int nNumberofArgs,char *argv[])
   	}
     
   WriteRawData.close();
+  
+  
+  //Now generate basin average data for the basins of the user supplied order
+  
+  cout << "Generating basin average data using LSDBasin" << endl;
+  
+  //create lsdbasin objects in a loop over each junction number
+  vector< LSDBasin > Basins;
+  
+   //loop over each basin, generating an LSDBasin object which contains that basin's measurements
+  for (int w = 0; w < int(basin_junctions.size()); ++w){
+                                    
+    LSDBasin Basin(basin_junctions[w], FlowInfo, JunctionNetwork);
+    Basin.set_HillslopeLength_HFR(FlowInfo, LH);
+    Basin.set_SlopeMean(FlowInfo, HilltopSlope);   
+    Basin.set_ReliefMean(FlowInfo, Relief);
+    Basin.set_CHTMean(FlowInfo, CHT);
+    Basin.set_HilltopPx(FlowInfo,CHT);
+  
+    Basins.push_back(Basin);
+                             
+  }
+  
+  cout << "Writing basin average data to file" << endl;
+  
+  //write the basin data  
+  ofstream WriteBasinData;                 
+  stringstream ss3;
+  ss3 << path << prefix << "_E_R_Star_Basin_Data.csv";                
+  WriteRawData.open(ss3.str().c_str());
+    
+  //write the header
+  WriteBasinData << "ID,LH,CHT,Relief,Slope,Area,Count" << endl;
+  
+  
+  //write all data to the opened file, ensuring that there are data points to be written in each basin                                         
+  for (int q = 0; q < int(Basins.size()); ++q){
+    // only work where we have data points  - all data is templated from LH or CHT, so if these have data, all rasters have data
+    if (Basins[q].CalculateNumDataPoints(FlowInfo, LH) != 0 && Basins[q].CalculateNumDataPoints(FlowInfo, CHT) != 0 ){
+      
+      WriteBasinData << Basins[q].get_Junction() << "," << Basins[q].get_HillslopeLength_HFR() << ",";
+      WriteBasinData << Basins[q].get_CHTMean() << "," << Basins[q].get_ReliefMean() << ",";
+      WriteBasinData << Basins[q].get_SlopeMean() << "," << Basins[q].get_Area() << ",";
+      WriteBasinData << Basins[q].get_HilltopPx() << endl;
+   
+    }
+  }
+  
+  WriteBasinData.close();
   
   //write the Patch raster data
   HilltopPatches.write_raster((path+prefix+"_Patches"),"flt");
