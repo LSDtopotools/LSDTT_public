@@ -696,21 +696,26 @@ void LSDBasin::set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, L
                                   int SplineResolution, float bin_threshold, float CriticalSlope, float CosmoErosionRate, 
                                   float OtherErosionRate){
 
-  // coefficent matrices for polyfit routine
-  Array2D<float> a;
-  Array2D<float> b;
-  Array2D<float> c;
-  Array2D<float> d;
-  Array2D<float> e;
-  Array2D<float> f;
+  
+  //surface fitting
+  vector<int> raster_selection;
+  
+  raster_selection.push_back(0);
+  raster_selection.push_back(1); //slope 
+  raster_selection.push_back(1); //aspect
+  raster_selection.push_back(1); //curvature
+  raster_selection.push_back(1); //plan curvature
+  raster_selection.push_back(1); //profile curvature
+  raster_selection.push_back(0);
+  raster_selection.push_back(0);
 
-  Elevation.calculate_polyfit_coefficient_matrices(window_radius, a, b, c, d, e, f);
-  LSDRaster TotalCurv = Elevation.calculate_polyfit_curvature (a,b);
-  LSDRaster ProfileCurv = Elevation.calculate_polyfit_profile_curvature (a,b,c,d,e);
-  LSDRaster PlanCurv = Elevation.calculate_polyfit_planform_curvature (a,b,c,d,e);
-  LSDRaster Aspect = Elevation.calculate_polyfit_aspect(d,e);  
-  LSDRaster Slope = Elevation.calculate_polyfit_slope(d,e);
-  LSDRaster DinfArea = Elevation.D_inf_units(); 
+  vector<LSDRaster> Surfaces = Elevation.calculate_polyfit_surface_metrics(window_radius, raster_selection); 
+  LSDRaster TotalCurv = Surfaces[3];
+  LSDRaster ProfileCurv = Surfaces[5];
+  LSDRaster PlanCurv = Surfaces[4];
+  LSDRaster Aspect = Surfaces[2];  
+  LSDRaster Slope = Surfaces[1];
+  LSDRaster DinfArea = Elevation.D_inf_units();
   
   set_SlopeMean(FlowInfo, Slope);
   set_ElevationMean(FlowInfo, Elevation);
@@ -728,6 +733,7 @@ void LSDBasin::set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, L
   set_all_HillslopeLengths(FlowInfo, HillslopeLengths, Slope, DinfArea, log_bin_width, SplineResolution, bin_threshold);
   set_Perimeter(FlowInfo);
   set_EStar_RStar(CriticalSlope);
+  set_HilltopPx(FlowInfo, CHT);
   set_CosmoErosionRate(CosmoErosionRate);
   set_OtherErosionRate(OtherErosionRate);
 
