@@ -136,6 +136,8 @@ class LSDBasin
   float get_EStar() const { return EStar; }
   /// @return R* value.
   float get_RStar() const { return RStar; }  
+  /// @return Number of hilltop pixels in the basin.
+  int get_HilltopPx() const { return HilltopPx; }
   
   /// @brief Calculate the mean value of an LSDRaster which falls inside a basin.
   /// @param FlowInfo Flowinfo object.
@@ -394,6 +396,13 @@ class LSDBasin
                           LSDRaster& HillslopeLengths, LSDRaster& Relief, float window_radius, float log_bin_width, 
                           int SplineResolution, float bin_threshold, float CriticalSlope, 
                           float CosmoErosionRate = -9999, float OtherErosionRate = -9999);
+
+  /// @brief Set the count of the number of hilltop pixels in a basin.
+  /// @param FlowInfo Flowinfo object.
+  /// @param Hilltops a raster of hilltop data.
+  /// @author SWDG
+  /// @date 18/6/15
+  void set_HilltopPx(LSDFlowInfo& FlowInfo, LSDRaster Hilltops);
 
   /// @brief Cookie cut data from an LSDIndexRaster into the shape of the basin.
   /// @param Data LSDIndexRaster data to be written.
@@ -755,6 +764,8 @@ LSDRaster TrimPaddedRasterToBasin(int padding_pixels, LSDFlowInfo& FlowInfo,
   float EStar;
   /// Basin R* value.
   float RStar;
+  /// Number of hilltop pixels in a basin.
+  float HilltopPx;
 
   private:
   void create();

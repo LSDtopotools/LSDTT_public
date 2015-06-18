@@ -52,6 +52,7 @@ void LSDBasin::create()
   CHTMean = NoDataValue;
   EStar = NoDataValue;
   RStar = NoDataValue;
+  HilltopPx = NoDataValue;
    
   //finished creating empty variables 
 
@@ -729,6 +730,30 @@ void LSDBasin::set_All_Parameters(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, L
   set_EStar_RStar(CriticalSlope);
   set_CosmoErosionRate(CosmoErosionRate);
   set_OtherErosionRate(OtherErosionRate);
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Write integer basin parameters into the shape of the basin.
+// SWDG 12/12/13
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDBasin::set_HilltopPx(LSDFlowInfo& FlowInfo, LSDRaster Hilltops){
+
+  int i;
+  int j;
+  int HilltopCount = 0;
+  
+  for (int q = 0; q < int(BasinNodes.size()); ++q){    
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    
+    //only count hilltop pixels
+    if (Hilltops.get_data_element(i,j) != NoDataValue){
+      ++HilltopCount;
+    }
+  
+  }
+
+  HilltopPx = HilltopCount;
 
 }
 
