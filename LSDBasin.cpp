@@ -878,7 +878,7 @@ LSDRaster LSDBasin::keep_only_internal_hilltop_curvature(LSDRaster hilltop_curva
   Array2D<int> perimeter(NRows, NCols, 0);
   Array2D<int> ridge_pixels(NRows, NCols,0);
   cout << "Number of perimeter pixels: " << Perimeter_i.size() << endl;
-  for (int q =0; q < Perimeter_i.size(); q++)
+  for (int q =0; q < int(Perimeter_i.size()); q++)
   {
       int row_perim = Perimeter_i[q];
       int col_perim = Perimeter_j[q];
