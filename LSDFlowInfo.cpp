@@ -2216,7 +2216,7 @@ int LSDFlowInfo::get_node_index_of_coordinate_point(float X_coordinate, float Y_
 
   // Get row and column of point
   int col_point = int(X_coordinate_shifted_origin/DataResolution);
-  int row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/DataResolution));
+  int row_point = (NRows) - int(round(Y_coordinate_shifted_origin/DataResolution));
 
   // Get node of point
   int CurrentNode;
