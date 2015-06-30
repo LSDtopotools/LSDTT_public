@@ -1,3 +1,46 @@
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// chi_map.cpp
+// This function calcualtes chi across a landscape. Run without
+// arguments for instructions
+//
+// Developed by:
+//  Simon M. Mudd
+//
+// Copyright (C) 2013 Simon M. Mudd 2013
+//
+// Developer can be contacted by simon.m.mudd _at_ ed.ac.uk
+//
+//    Simon Mudd
+//    University of Edinburgh
+//    School of GeoSciences
+//    Drummond Street
+//    Edinburgh, EH8 9XP
+//    Scotland
+//    United Kingdom
+//
+// This program is free software;
+// you can redistribute it and/or modify it under the terms of the
+// GNU General Public License as published by the Free Software Foundation;
+// either version 2 of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY;
+// without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the GNU General Public License for more details.
+//
+// You should have received a copy of the
+// GNU General Public License along with this program;
+// if not, write to:
+// Free Software Foundation, Inc.,
+// 51 Franklin Street, Fifth Floor,
+// Boston, MA 02110-1301
+// USA
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
@@ -10,11 +53,28 @@ using namespace std;
 int main(int argc, char *argv[])
 {
 
-  if (argc != 4)
+  if (argc!=6)
   {
-    cout << "ERROR: you need to enter a data folder, \n" 
-         << "a DEM name (without extension) and the extension name" << endl;
-    exit(0);
+    cout << "===========================================================" << endl;
+    cout << "|| Welcome to the chi_map tool!                          ||" << endl;
+    cout << "|| I am used to calculate the chi coordinate from a DEM. ||" << endl;
+    cout << "===========================================================" << endl;
+    cout << "This program requires six inputs: " << endl << endl;
+    cout << "* First the path to the DEM." << endl;
+    cout << "   The path must have a slash at the end." << endl;
+    cout << "   (Either \\ or / depending on your operating system.)" << endl << endl;
+    cout << "* Second the prefix of the DEM. " << endl;
+    cout << "   For example, if the DEM is called Spain.bil the filename is Spain." << endl << endl;
+    cout << "* Third, the DEM format. Must be either bil, flt or asc. " << endl;
+    cout << "   If you write something the computer doesn't understand it will default to bil" << endl << endl;
+    cout << "* Fourth, a threshold area for a channel (in m^2). " << endl << endl;
+    cout << "* Fifth, a flag to tell the code to print out the data as a csv (1 for true)." << endl;
+    cout << "   WARNING you should only do this if you have a small DEM or " << endl
+         << "   set a reasonably large drainage area threshold or you'll get a huge file" << endl;
+    cout << "============================================================" << endl;
+    cout << "An example call is: " << endl;
+    cout << "./chi_map.exe ~home/basins/Chile/ Chile_test bil 50 1" << endl;
+    exit(EXIT_SUCCESS);
   }
 
   string pathname = argv[1];
@@ -39,6 +99,15 @@ int main(int argc, char *argv[])
 
   LSDRaster new_raster(full_DEM_name,DEM_ext);
   
+  float threshold_area = atof(argv[4]);
+  
+  int temp_csv_flag = atoi(argv[4]);
+  bool write_csv = false;
+  if(temp_csv_flag == 1)
+  {
+    write_csv = true;
+  }
+  
   float min_slope = 0.0001;
   LSDRaster filled_raster = new_raster.fill(min_slope);
   
@@ -55,7 +124,6 @@ int main(int argc, char *argv[])
 	
   float m_over_n = 0.5;
   float A_0 = 1000;
-  float threshold_area = 200;
 	
   //vector<int> bl_nodes(2);
   //bl_nodes[0] = 156860657;
@@ -89,6 +157,12 @@ int main(int argc, char *argv[])
   TAstr = "_TA"+TAstr;
 
   string chistr = "_chi"+m_nstr+A0str+TAstr;
+  
+  if(write_csv)
+  {
+    string pointsname = full_DEM_name+chistr+"_points";
+    chi_map.FlattenToCSV(pointsname);
+  }
   
                      
   string cm_fname = full_DEM_name+chistr;                                             
