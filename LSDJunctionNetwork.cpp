@@ -1476,9 +1476,13 @@ vector<int> LSDJunctionNetwork::extract_basins_order_outlet_junctions(int BasinO
       // receiver junction should be of higher order.
       if (receiver_junc_SO > BasinOrder)
       {
-		outlet_junctions_of_basins_of_order_x.push_back(current_junc);
-        // Increment BasinID to ensure that each basin is distinct.
-        ++BasinID;
+        bool IsTruncated = node_tester(FlowInfo,current_junc);
+        if(IsTruncated == false)
+        {
+          outlet_junctions_of_basins_of_order_x.push_back(current_junc);
+          // Increment BasinID to ensure that each basin is distinct.
+          ++BasinID;
+        }
       } // end of while logic - have searched through junction catchment
     }
   }
