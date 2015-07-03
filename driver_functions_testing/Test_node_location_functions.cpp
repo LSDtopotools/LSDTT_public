@@ -69,6 +69,10 @@ int main (int nNumberofArgs,char *argv[])
   // get the min and max x and y locations
   vector<float> XYMinMax = DEM.get_XY_MinMax();
   cout << "Got the Min and Max values" << endl;
+  cout << "Xmin: " << XYMinMax[0] << endl;
+  cout << "YMin: " << XYMinMax[1] << endl;
+  cout << "Xmax: " << XYMinMax[2] << endl;
+  cout << "YMax: " << XYMinMax[3] << endl;
   
   // these get the ranges of X and Y for random location generation
   float XRange = XYMinMax[2]-XYMinMax[0];
@@ -162,6 +166,10 @@ int main (int nNumberofArgs,char *argv[])
   cout << "Getting basin raster" << endl;
   LSDIndexRaster Basin_Raster = NewChanNetwork.extract_basins_from_junctions_rudimentary(basin_junctions, FlowInfo);
   cout << "Got basin raster" << endl;
+  
+  // Now print the SO as csv
+  string SO_prefix =path+"Stream_order_flattened";
+  SO.FlattenToCSV(SO_prefix);
   
   // now write the DEMS
   string bil_ext = "bil";
