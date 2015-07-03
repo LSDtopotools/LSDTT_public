@@ -174,71 +174,71 @@ void LSDJunctionNetwork::create( void )
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDJunctionNetwork::create(vector<int> Sources, LSDFlowInfo& FlowInfo)
 {
-	NRows = FlowInfo.NRows;
-	NCols = FlowInfo.NCols;
-	XMinimum = FlowInfo.XMinimum;
-	YMinimum = FlowInfo.YMinimum;
-	DataResolution = FlowInfo.DataResolution;
-	NoDataValue = FlowInfo.NoDataValue;
+  NRows = FlowInfo.NRows;
+  NCols = FlowInfo.NCols;
+  XMinimum = FlowInfo.XMinimum;
+  YMinimum = FlowInfo.YMinimum;
+  DataResolution = FlowInfo.DataResolution;
+  NoDataValue = FlowInfo.NoDataValue;
   GeoReferencingStrings =  FlowInfo.GeoReferencingStrings;
 
-	SourcesVector = Sources;
+  SourcesVector = Sources;
 
-	// start arrays where the data all begins as nodata
-	Array2D<int> TempLinkArray(NRows,NCols,NoDataValue);
+  // start arrays where the data all begins as nodata
+  Array2D<int> TempLinkArray(NRows,NCols,NoDataValue);
 
-	JunctionArray = TempLinkArray.copy();
-	StreamOrderArray = TempLinkArray.copy();
-	JunctionIndexArray = TempLinkArray.copy();
+  JunctionArray = TempLinkArray.copy();
+  StreamOrderArray = TempLinkArray.copy();
+  JunctionIndexArray = TempLinkArray.copy();
 
-	vector<int> TempVector;
-	JunctionVector = TempVector;
-	BaseLevelJunctions = TempVector;
+  vector<int> TempVector;
+  JunctionVector = TempVector;
+  BaseLevelJunctions = TempVector;
 
-	// we loop through the sources file
-	// for each source we burn down to either base level
-	// or the next channel
-	//
-	// with link numbers by adding integers
-	//
-	int n_sources = SourcesVector.size();
-	int current_node;
-	int current_row,current_col;
-	int receiver_node;
-	int baselevel_switch;		// 0 if not a base level node, 1 if so
-	int current_stream_order;
-	int junction_switch;
-	int donor_node, donor_row,donor_col;
-	int n_current_stream_order_donors;
+  // we loop through the sources file
+  // for each source we burn down to either base level
+  // or the next channel
+  //
+  // with link numbers by adding integers
+  //
+  int n_sources = SourcesVector.size();
+  int current_node;
+  int current_row,current_col;
+  int receiver_node;
+  int baselevel_switch;		// 0 if not a base level node, 1 if so
+  int current_stream_order;
+  int junction_switch;
+  int donor_node, donor_row,donor_col;
+  int n_current_stream_order_donors;
 
-	// loop through sources.
-	// this loop sets the stream orders and identifies the
-	// junctions
-	// it is the first of two loops through the stream network
-	// the second will generate the stream link information
-	for(int src = 0; src<n_sources; src++)
-	{
-		baselevel_switch =0;			// 0 == not base level
-		junction_switch = 0;			// 0 == no junction so far
-		current_node = SourcesVector[src];
-		current_row = FlowInfo.RowIndex[current_node];
-		current_col = FlowInfo.ColIndex[current_node];
-		receiver_node = FlowInfo.ReceiverVector[current_node];
+  // loop through sources.
+  // this loop sets the stream orders and identifies the
+  // junctions
+  // it is the first of two loops through the stream network
+  // the second will generate the stream link information
+  for(int src = 0; src<n_sources; src++)
+  {
+    baselevel_switch =0;			// 0 == not base level
+    junction_switch = 0;			// 0 == no junction so far
+    current_node = SourcesVector[src];
+    current_row = FlowInfo.RowIndex[current_node];
+    current_col = FlowInfo.ColIndex[current_node];
+    receiver_node = FlowInfo.ReceiverVector[current_node];
 
-		current_stream_order = 1;
+    current_stream_order = 1;
 
-		if (current_node == receiver_node)
-		{
-			baselevel_switch = 1;
-		}
+    if (current_node == receiver_node)
+    {
+    	baselevel_switch = 1;
+    }
 
 
-		// follow node down through receivers until it hits a base level node
-		// the switch is set to 2 because if there is a baselevel node
-		// the algorithm has to go through the loop once to register the
-		// 'downslope node' as the baselevel
-		while ( baselevel_switch <2 )
-		{
+    // follow node down through receivers until it hits a base level node
+    // the switch is set to 2 because if there is a baselevel node
+    // the algorithm has to go through the loop once to register the
+    // 'downslope node' as the baselevel
+    while ( baselevel_switch <2 )
+    {
 
 			// check if this node has already been added to the channel network
 			// if it hasn't, then this becomes a channel of order of the current order
@@ -383,19 +383,19 @@ void LSDJunctionNetwork::create(vector<int> Sources, LSDFlowInfo& FlowInfo)
 			}			// end logic for if this is not a NoData node
 
 
-			// get the next current node, which is this nodes receiver
-			current_node = FlowInfo.ReceiverVector[current_node];
+      // get the next current node, which is this nodes receiver
+      current_node = FlowInfo.ReceiverVector[current_node];
 
-			// get the next receiver node, which is the next node
-			receiver_node = FlowInfo.ReceiverVector[current_node];
-			current_row = FlowInfo.RowIndex[current_node];
-			current_col = FlowInfo.ColIndex[current_node];
+      // get the next receiver node, which is the next node
+      receiver_node = FlowInfo.ReceiverVector[current_node];
+      current_row = FlowInfo.RowIndex[current_node];
+      current_col = FlowInfo.ColIndex[current_node];
 
-			// if this is a baselevel node
-			if (current_node == receiver_node)
-			{
+      // if this is a baselevel node
+      if (current_node == receiver_node)
+      {
 				baselevel_switch ++;
-			}
+      }
 
 
 		}						// end flow to baselevel loop
@@ -413,59 +413,59 @@ void LSDJunctionNetwork::create(vector<int> Sources, LSDFlowInfo& FlowInfo)
 	int this_junction = -1;
 	for(int src = 0; src<n_sources; src++)
 	{
-		this_junction++;				// increment the last junction
-		baselevel_switch =0;			// 0 == not base level
-		junction_switch = 0;			// 0 == no junction so far
-		current_node = SourcesVector[src];
-		current_row = FlowInfo.RowIndex[current_node];
-		current_col = FlowInfo.ColIndex[current_node];
-		receiver_node = FlowInfo.ReceiverVector[current_node];
+    this_junction++;				// increment the last junction
+    baselevel_switch =0;			// 0 == not base level
+    junction_switch = 0;			// 0 == no junction so far
+    current_node = SourcesVector[src];
+    current_row = FlowInfo.RowIndex[current_node];
+    current_col = FlowInfo.ColIndex[current_node];
+    receiver_node = FlowInfo.ReceiverVector[current_node];
 
-		//cout << "LINE 257 ChNet, SOURCE: " << src <<  " n_src: " << n_sources << " current_node: " << current_node
-		//     << " and rnode: " << receiver_node << endl;
+    //cout << "LINE 257 ChNet, SOURCE: " << src <<  " n_src: " << n_sources << " current_node: " << current_node
+    //     << " and rnode: " << receiver_node << endl;
 
-		//each source is a junction node. Push back the junction vector
-		JunctionVector.push_back(current_node);
+    //each source is a junction node. Push back the junction vector
+    JunctionVector.push_back(current_node);
 
-		// set the junction Index Array
-		JunctionIndexArray[current_row][current_col] = this_junction;
+    // set the junction Index Array
+    JunctionIndexArray[current_row][current_col] = this_junction;
 
-		// stream order only increases at junctions. So the junction node has a stream
-		// order that remains the same until it gets to the next junction, where it possibly
-		// could change
-		StreamOrderVector.push_back( StreamOrderArray[current_row][current_col] );
+    // stream order only increases at junctions. So the junction node has a stream
+    // order that remains the same until it gets to the next junction, where it possibly
+    // could change
+    StreamOrderVector.push_back( StreamOrderArray[current_row][current_col] );
 
-		// check if this is a baselevel node
-		if(receiver_node == current_node)
-		{
-			baselevel_switch = 1;			// turn the baselevel switch on
-			ReceiverVector.push_back(this_junction);		// the Receiver node is iteself
+    // check if this is a baselevel node
+    if(receiver_node == current_node)
+    {
+      baselevel_switch = 1;			// turn the baselevel switch on
+      ReceiverVector.push_back(this_junction);		// the Receiver node is iteself
 
-			// this logic only applies to sources, which cannot lie downstream of another source
-			// ***THIS MUST BE ENFORCED BY THE GET_SOURCES ALGORITHM***
-			// this means that if a source is also a baselevel, then this is the one and only time
-			// this baselevel junction is added, so add it to the baselevel vector
-			BaseLevelJunctions.push_back(this_junction);
-		}
+      // this logic only applies to sources, which cannot lie downstream of another source
+      // ***THIS MUST BE ENFORCED BY THE GET_SOURCES ALGORITHM***
+      // this means that if a source is also a baselevel, then this is the one and only time
+      // this baselevel junction is added, so add it to the baselevel vector
+      BaseLevelJunctions.push_back(this_junction);
+    }
 
-		// the next element is the receiver junction, we need to follow the path to this receiver
-		// the routine continues until the junction has been visited or until it hits
-		// a baselevel node
-		//cout << "LINE 280" << endl;
-		while (baselevel_switch == 0 && junction_switch <2)
-		{
-			//cout << "Line 283" << endl;
+    // the next element is the receiver junction, we need to follow the path to this receiver
+    // the routine continues until the junction has been visited or until it hits
+    // a baselevel node
+    //cout << "LINE 280" << endl;
+    while (baselevel_switch == 0 && junction_switch <2)
+    {
+      //cout << "Line 283" << endl;
 
-			//cout << "Line 286, current node = " << current_node << " and rode: " << receiver_node << endl;
-			current_node = receiver_node;
-			//cout << "Line 288, current node = " << current_node << " and rode: " << receiver_node << endl;
-			current_row = FlowInfo.RowIndex[current_node];
-			current_col = FlowInfo.ColIndex[current_node];
-			receiver_node = FlowInfo.ReceiverVector[current_node];
+      //cout << "Line 286, current node = " << current_node << " and rode: " << receiver_node << endl;
+      current_node = receiver_node;
+      //cout << "Line 288, current node = " << current_node << " and rode: " << receiver_node << endl;
+      current_row = FlowInfo.RowIndex[current_node];
+      current_col = FlowInfo.ColIndex[current_node];
+      receiver_node = FlowInfo.ReceiverVector[current_node];
 
-			// first we need logic for if this is a baselevel node
-			if (current_node == receiver_node)
-			{
+      // first we need logic for if this is a baselevel node
+      if (current_node == receiver_node)
+      {
 				//cout << "source: " << src << " and BASELEVEL, node: " << current_node << " rnode: " << receiver_node << endl;
 				// check to see if it has a junction index number.
 				if(JunctionIndexArray[current_row][current_col] == NoDataValue)
@@ -483,215 +483,215 @@ void LSDJunctionNetwork::create(vector<int> Sources, LSDFlowInfo& FlowInfo)
 					//push back the junction vector
 					JunctionVector.push_back(current_node);
 
-					// because this is a baselevel node, the Receiver of this junction
-					// is iteself
-					ReceiverVector.push_back( JunctionIndexArray[current_row][current_col] );
+      		// because this is a baselevel node, the Receiver of this junction
+      		// is iteself
+      		ReceiverVector.push_back( JunctionIndexArray[current_row][current_col] );
 
-					// the stream order of this node is also determined by the node
-					StreamOrderVector.push_back( StreamOrderArray[current_row][current_col] );
+      		// the stream order of this node is also determined by the node
+      		StreamOrderVector.push_back( StreamOrderArray[current_row][current_col] );
 
-					// finally, this is the first time we have visted this baselevel node.
-					// So it gets added to the baselevel vector
-					BaseLevelJunctions.push_back(this_junction);
+      		// finally, this is the first time we have visted this baselevel node.
+      		// So it gets added to the baselevel vector
+      		BaseLevelJunctions.push_back(this_junction);
 
-				}
-				else				// this junction does have an index number, no new junction is created
-				{
-					// the receiver node of the previous junction is the new junction
-					ReceiverVector.push_back( JunctionIndexArray[current_row][current_col] );
-				}
-				junction_switch = 2;
-				baselevel_switch = 1;			// this is a baselevel. It will exit the
-												// loop and move to the next source
-			}
-			else						// this is not a baselevel node
-			{
-				//cout << "LINE 330, not baselevel; src: " << src << " and node: " << current_node << " rnde: " << receiver_node << endl;
-				// the node in the junction array is zero if it is not a
-				// junction, 1 if it is an unvisited junction, and 2 or more if it
-				// is a visited junction
-				if(JunctionArray[current_row][current_col] != NoDataValue)
-				{
-					//cout << "LINE 338, found a junction at node: " << current_node
-					//	 << " JArray: " << JunctionArray[current_row][current_col]  << endl;
-					junction_switch = JunctionArray[current_row][current_col];
-					JunctionArray[current_row][current_col] ++;		// increment the junction array
-																	// it will be greater than 1 if
-																	// the junction has been visited
+      	}
+      	else				// this junction does have an index number, no new junction is created
+      	{
+      		// the receiver node of the previous junction is the new junction
+      		ReceiverVector.push_back( JunctionIndexArray[current_row][current_col] );
+      	}
+      	junction_switch = 2;
+      	baselevel_switch = 1;      // this is a baselevel. It will exit the
+                                    // loop and move to the next source
+      }
+      else                  // this is not a baselevel node
+      {
+      	//cout << "LINE 330, not baselevel; src: " << src << " and node: " << current_node << " rnde: " << receiver_node << endl;
+      	// the node in the junction array is zero if it is not a
+      	// junction, 1 if it is an unvisited junction, and 2 or more if it
+      	// is a visited junction
+      	if(JunctionArray[current_row][current_col] != NoDataValue)
+      	{
+      		//cout << "LINE 338, found a junction at node: " << current_node
+      		//	 << " JArray: " << JunctionArray[current_row][current_col]  << endl;
+      		junction_switch = JunctionArray[current_row][current_col];
+      		JunctionArray[current_row][current_col] ++;		// increment the junction array
+                        // it will be greater than 1 if
+                        // the junction has been visited
 
-					// if this junction has been visited, it will have a junction number
-					// include the receiver vector
-					if (JunctionIndexArray[current_row][current_col] != NoDataValue )
-					{
-						ReceiverVector.push_back( JunctionIndexArray[current_row][current_col] );
+      		// if this junction has been visited, it will have a junction number
+      		// include the receiver vector
+      		if (JunctionIndexArray[current_row][current_col] != NoDataValue )
+      		{
+            ReceiverVector.push_back( JunctionIndexArray[current_row][current_col] );
 
-						// the loop will not continue; it will move onto the next
-						// source since it has visited an already visited junction
-					}
-					else			// the junction has not been visited
-					{
-						// this is a new junction. Increment the 'last junction' int
-						this_junction++;
+            // the loop will not continue; it will move onto the next
+            // source since it has visited an already visited junction
+      		}
+      		else			// the junction has not been visited
+      		{
+            // this is a new junction. Increment the 'last junction' int
+            this_junction++;
 
-						// this junction has the this_junction index. Set the JunctionIndexArray
-						JunctionIndexArray[current_row][current_col] = this_junction;
+            // this junction has the this_junction index. Set the JunctionIndexArray
+            JunctionIndexArray[current_row][current_col] = this_junction;
 
-						// the receiver node of the previous junction is the new junction
-						ReceiverVector.push_back( JunctionIndexArray[current_row][current_col] );
+            // the receiver node of the previous junction is the new junction
+            ReceiverVector.push_back( JunctionIndexArray[current_row][current_col] );
 
-						//push back the junction vector; this is a new junction
-						JunctionVector.push_back(current_node);
+            //push back the junction vector; this is a new junction
+            JunctionVector.push_back(current_node);
 
-						// get the stream order of this new junction
-						StreamOrderVector.push_back( StreamOrderArray[current_row][current_col] );
-					}
-				}	// end logic for is this a junction
-			}		// end logic for not a baselevel node
+            // get the stream order of this new junction
+            StreamOrderVector.push_back( StreamOrderArray[current_row][current_col] );
+      		}
+      	}	// end logic for is this a junction
+      }		// end logic for not a baselevel node
 		}				// end baselevel logic
 	}					// end sources loop
 
-	//cout << "ChanNet; LINE 368; sz ReceiverVec: " << ReceiverVector.size() << " sz JuncVec: " << JunctionVector.size()
-	//   << " sz SOVec: " << StreamOrderVector.size() << endl;
+  //cout << "ChanNet; LINE 368; sz ReceiverVec: " << ReceiverVector.size() << " sz JuncVec: " << JunctionVector.size()
+  //   << " sz SOVec: " << StreamOrderVector.size() << endl;
 
-	//for(int i = 0; i< int(BaseLevelJunctions.size()); i++)
-	//{
-	//	cout << "LINE 382 bl node["<<i<<"]: " << BaseLevelJunctions[i] << endl;
-	//}
+  //for(int i = 0; i< int(BaseLevelJunctions.size()); i++)
+  //{
+  //	cout << "LINE 382 bl node["<<i<<"]: " << BaseLevelJunctions[i] << endl;
+  //}
 
-	//cout << "LINE 385: links data " << endl;
-	//for (int i = 0; i< int(StreamOrderVector.size()); i++)
-	//{
-	//	cout << "Junc: " << i << " node: " << JunctionVector[i]
-	//	     << " receiv: " << ReceiverVector[i] << " Order: " << StreamOrderVector[i] << endl;
-	//}
-
-
-	// get the number of junctions
-	NJunctions = int(JunctionVector.size());
-
-	// now we implement the fastscape algorithm
+  //cout << "LINE 385: links data " << endl;
+  //for (int i = 0; i< int(StreamOrderVector.size()); i++)
+  //{
+  //	cout << "Junc: " << i << " node: " << JunctionVector[i]
+  //	     << " receiv: " << ReceiverVector[i] << " Order: " << StreamOrderVector[i] << endl;
+  //}
 
 
-	// set the sizes of the member vectors
-	vector<int> ndn_vec(NJunctions,0);
-	vector<int> ndn_nodata_vec(NJunctions,NoDataValue);
-	vector<int> ndn_plusone_vec(NJunctions+1,0);
-	vector<int> w_vector(NJunctions,0);
+  // get the number of junctions
+  NJunctions = int(JunctionVector.size());
 
-	NDonorsVector = ndn_vec;
-	DonorStackVector = ndn_vec;
-	DeltaVector = ndn_plusone_vec;
+  // now we implement the fastscape algorithm
 
-	SVector = ndn_nodata_vec;
-	BLBasinVector = ndn_nodata_vec;
 
-	// first create the number of donors vector
-	// from braun and willett eq. 5
-	for(int i = 0; i<NJunctions; i++)
-	{
-		NDonorsVector[ ReceiverVector[i] ]++;
-	}
+  // set the sizes of the member vectors
+  vector<int> ndn_vec(NJunctions,0);
+  vector<int> ndn_nodata_vec(NJunctions,NoDataValue);
+  vector<int> ndn_plusone_vec(NJunctions+1,0);
+  vector<int> w_vector(NJunctions,0);
 
-	// now create the delta vector
-	// this starts on the last element and works its way backwards
-	// from Braun and Willett eq 7 and 8
-	DeltaVector[NJunctions] = NJunctions;
-	for(int i = NJunctions; i>0; i--)
-	{
-		DeltaVector[i-1] = DeltaVector[i] -  NDonorsVector[i-1];
-	}
+  NDonorsVector = ndn_vec;
+  DonorStackVector = ndn_vec;
+  DeltaVector = ndn_plusone_vec;
 
-	// now the DonorStack and the r vectors. These come from Braun and Willett
-	// equation 9.
-	// Note that in the manscript I have there is a typo in eqaution 9
-	// (Jean Braun's code is correct)
-	// it should be w_{r_i} = w_{r_i}+1
-	int r_index;
-	int w_index;
-	int delta_index;
-	for (int i = 0; i<NJunctions; i++)
-	{
-		r_index = ReceiverVector[i];
-		delta_index = DeltaVector[ r_index ];
-		w_index = w_vector[ r_index ];
-		DonorStackVector[  delta_index+w_index ] = i;
-		w_vector[r_index] += 1;
-	}
+  SVector = ndn_nodata_vec;
+  BLBasinVector = ndn_nodata_vec;
 
-	// now go through the base level node list, building the drainage tree for each of these nodes as one goes along
-	int n_base_level_nodes;
-	n_base_level_nodes = BaseLevelJunctions.size();
+  // first create the number of donors vector
+  // from braun and willett eq. 5
+  for(int i = 0; i<NJunctions; i++)
+  {
+    NDonorsVector[ ReceiverVector[i] ]++;
+  }
 
-	int k;
-	int j_index;
-	int begin_delta_index, end_delta_index;
-	int l_index;
+  // now create the delta vector
+  // this starts on the last element and works its way backwards
+  // from Braun and Willett eq 7 and 8
+  DeltaVector[NJunctions] = NJunctions;
+  for(int i = NJunctions; i>0; i--)
+  {
+    DeltaVector[i-1] = DeltaVector[i] -  NDonorsVector[i-1];
+  }
 
-	j_index = 0;
-	for (int i = 0; i<n_base_level_nodes; i++)
-	{
+  // now the DonorStack and the r vectors. These come from Braun and Willett
+  // equation 9.
+  // Note that in the manscript I have there is a typo in eqaution 9
+  // (Jean Braun's code is correct)
+  // it should be w_{r_i} = w_{r_i}+1
+  int r_index;
+  int w_index;
+  int delta_index;
+  for (int i = 0; i<NJunctions; i++)
+  {
+    r_index = ReceiverVector[i];
+    delta_index = DeltaVector[ r_index ];
+    w_index = w_vector[ r_index ];
+    DonorStackVector[  delta_index+w_index ] = i;
+    w_vector[r_index] += 1;
+  }
+
+  // now go through the base level node list, building the drainage tree for each of these nodes as one goes along
+  int n_base_level_nodes;
+  n_base_level_nodes = BaseLevelJunctions.size();
+
+  int k;
+  int j_index;
+  int begin_delta_index, end_delta_index;
+  int l_index;
+
+  j_index = 0;
+  for (int i = 0; i<n_base_level_nodes; i++)
+  {
 		k = BaseLevelJunctions[i];			// set k to the base level node
 
-		// This doesn't seem to be in Braun and Willet but to get the ordering correct you
-		// need to make sure that the base level node appears first in the donorstack
-		// of nodes contributing to the baselevel node.
-		// For example, if base level node is 4, with 4 donors
-		// and the donor stack has 3 4 8 9
-		// the code has to put the 4 first.
-		if (DonorStackVector[ DeltaVector[k] ] != k)
-		{
-			int this_index = DonorStackVector[ DeltaVector[k] ];
-			int bs_node = k;
+    // This doesn't seem to be in Braun and Willet but to get the ordering correct you
+    // need to make sure that the base level node appears first in the donorstack
+    // of nodes contributing to the baselevel node.
+    // For example, if base level node is 4, with 4 donors
+    // and the donor stack has 3 4 8 9
+    // the code has to put the 4 first.
+    if (DonorStackVector[ DeltaVector[k] ] != k)
+    {
+      int this_index = DonorStackVector[ DeltaVector[k] ];
+      int bs_node = k;
 
-			for(int ds_node = 1; ds_node < NDonorsVector[k]; ds_node++)
-			{
-				if( DonorStackVector[ DeltaVector[k] + ds_node ] == bs_node )
-				{
-					DonorStackVector[ DeltaVector[k] ] = k;
-					DonorStackVector[ DeltaVector[k] + ds_node ] = this_index;
-				}
-			}
-		}
+      for(int ds_node = 1; ds_node < NDonorsVector[k]; ds_node++)
+      {
+      	if( DonorStackVector[ DeltaVector[k] + ds_node ] == bs_node )
+      	{
+      		DonorStackVector[ DeltaVector[k] ] = k;
+      		DonorStackVector[ DeltaVector[k] + ds_node ] = this_index;
+      	}
+      }
+    }
 
-		// now run recursive algorithm
-		begin_delta_index = DeltaVector[k];
-		end_delta_index = DeltaVector[k+1];
+    // now run recursive algorithm
+    begin_delta_index = DeltaVector[k];
+    end_delta_index = DeltaVector[k+1];
 
-		for (int delta_index = begin_delta_index; delta_index<end_delta_index; delta_index++)
-		{
-			l_index = DonorStackVector[delta_index];
-			add_to_stack(l_index, j_index, k);
-		}
+    for (int delta_index = begin_delta_index; delta_index<end_delta_index; delta_index++)
+    {
+      l_index = DonorStackVector[delta_index];
+      add_to_stack(l_index, j_index, k);
+    }
 	}
 
-	// now run the indexing and accumulation routine
-	vector<int> vectorized_contributing_pixels(NJunctions,1);
-	SVectorIndex = vectorized_contributing_pixels;
+  // now run the indexing and accumulation routine
+  vector<int> vectorized_contributing_pixels(NJunctions,1);
+  SVectorIndex = vectorized_contributing_pixels;
 
-	int receiver_junction;
-	int donor_junction;
+  int receiver_junction;
+  int donor_junction;
 
-	// loop through the s vector, adding pixels to receiver nodes
-	for(int junc = NJunctions-1; junc>=0; junc--)
-	{
-		donor_junction = SVector[junc];
-		receiver_junction = ReceiverVector[ donor_junction ];
+  // loop through the s vector, adding pixels to receiver nodes
+  for(int junc = NJunctions-1; junc>=0; junc--)
+  {
+    donor_junction = SVector[junc];
+    receiver_junction = ReceiverVector[ donor_junction ];
 
-		// every node is visited once and only once so we can map the
-		// unique positions of the nodes to the SVector
-		SVectorIndex[donor_junction] = junc;
+    // every node is visited once and only once so we can map the
+    // unique positions of the nodes to the SVector
+    SVectorIndex[donor_junction] = junc;
 
-		// add the upslope area (note no action is taken
-		// for base level nodes since they donate to themselves and
-		// we must avoid float counting
-		if (donor_junction != receiver_junction)
-		{
-			vectorized_contributing_pixels[ receiver_junction ] +=  vectorized_contributing_pixels[ donor_junction ];
-		}
-	}
-	//cout << "LINE 525 did area calcs " << endl;
+    // add the upslope area (note no action is taken
+    // for base level nodes since they donate to themselves and
+    // we must avoid float counting
+    if (donor_junction != receiver_junction)
+    {
+      vectorized_contributing_pixels[ receiver_junction ] +=  vectorized_contributing_pixels[ donor_junction ];
+    }
+  }
+  //cout << "LINE 525 did area calcs " << endl;
 
-	NContributingJunctions = vectorized_contributing_pixels;
+  NContributingJunctions = vectorized_contributing_pixels;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -703,33 +703,33 @@ void LSDJunctionNetwork::create(vector<int> Sources, LSDFlowInfo& FlowInfo)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDJunctionNetwork::add_to_stack(int lm_index, int& j_index, int bl_node)
 {
-	//cout << "j_index: " << j_index << " and s_vec: " << lm_index << endl;
+  //cout << "j_index: " << j_index << " and s_vec: " << lm_index << endl;
 
-	SVector[j_index] = lm_index;
-	BLBasinVector[j_index] = bl_node;
-	j_index++;
+  SVector[j_index] = lm_index;
+  BLBasinVector[j_index] = bl_node;
+  j_index++;
 
 
-	int begin_m,end_m;
-	int l_index;
-	// if donating to itself, need escape hatch
-	if ( lm_index == bl_node)
-	{
-		begin_m = 0;
-		end_m = 0;
-	}
-	else
-	{
-		begin_m = DeltaVector[lm_index];
-		end_m =  DeltaVector[ lm_index+1];
-	}
-	//cout << "lm_index: " << lm_index << " begin_m: " << begin_m << " end m: " << end_m << endl;
-	for( int m_index = begin_m; m_index<end_m; m_index++)
-	{
-		//cout << "recursion, begin_m: " << begin_m << " and end_m: " << end_m << endl;
-		l_index = DonorStackVector[m_index];
-		add_to_stack(l_index, j_index, bl_node);
-	}
+  int begin_m,end_m;
+  int l_index;
+  // if donating to itself, need escape hatch
+  if ( lm_index == bl_node)
+  {
+    begin_m = 0;
+    end_m = 0;
+  }
+  else
+  {
+    begin_m = DeltaVector[lm_index];
+    end_m =  DeltaVector[ lm_index+1];
+  }
+  //cout << "lm_index: " << lm_index << " begin_m: " << begin_m << " end m: " << end_m << endl;
+  for( int m_index = begin_m; m_index<end_m; m_index++)
+  {
+    //cout << "recursion, begin_m: " << begin_m << " and end_m: " << end_m << endl;
+    l_index = DonorStackVector[m_index];
+    add_to_stack(l_index, j_index, bl_node);
+  }
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 

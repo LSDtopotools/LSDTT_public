@@ -35,7 +35,7 @@ int main (int nNumberofArgs,char *argv[])
     cout << "* First the path to the parameter files." << endl;
     cout << "   The path must have a slash at the end." << endl;
     cout << "   (Either \\ or / depending on your operating system.)" << endl << endl;
-    cout << "* Second the prefix of the DEM. The DEM must be a .bil file" << endl;
+    cout << "* Second the prefix of the DEM." << endl;
     cout << "   For example, if the DEM is called Spain.bil the filename is Spain." << endl << endl;
     cout << "* Third, the extension of the DEM. " << endl;
     cout << "  Options are: bil, flt and asc." << endl << endl;

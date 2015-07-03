@@ -106,27 +106,39 @@ using namespace TNT;
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::create()
 {
-	cout << "I am an empty flow info object. " << endl;
-	//exit(EXIT_FAILURE);
+  cout << endl << "-------------------------------" << endl;
+  cout << "I am an empty flow info object. " << endl;
+  cout << "Did you forget to give me a DEM?" << endl;
+  cout << endl << "-------------------------------" << endl;
+  //exit(EXIT_FAILURE);
 }
 
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Create function, this creates from a pickled file
 // fname is the name of the pickled flow info file
 //
 // SMM 01/06/2012
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDFlowInfo::create(string fname)
 {
-	unpickle(fname);
+  unpickle(fname);
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This defaults to no flux boundary conditions
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDFlowInfo::create(LSDRaster& TopoRaster)
+{
+  vector<string> BoundaryConditions(4, "No Flux");
+  create(BoundaryConditions, TopoRaster);
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function calcualtes the receiver nodes
 // it returns the receiver vector r_i
 // it also returns a flow direction array in this ordering:
@@ -145,167 +157,167 @@ void LSDFlowInfo::create(string fname)
 //
 // SMM 01/06/2012
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDFlowInfo::create(vector<string>& temp_BoundaryConditions,
-										  LSDRaster& TopoRaster)
+                         LSDRaster& TopoRaster)
 {
 
-	// initialize several data members
-	BoundaryConditions = temp_BoundaryConditions;
+  // initialize several data members
+  BoundaryConditions = temp_BoundaryConditions;
   //cout << "TBC" << endl;
-	NRows = TopoRaster.get_NRows();
-	//cout << "Rows: " << NRows << endl;
-	NCols = TopoRaster.get_NCols();
-	//cout << "Cols: " << NCols << endl;
-	XMinimum = TopoRaster.get_XMinimum();
-	//cout << "Xmin: " << XMinimum << endl;
-	YMinimum = TopoRaster.get_YMinimum();
-	//cout << "Ymin: " << YMinimum << endl;
-	NoDataValue = int(TopoRaster.get_NoDataValue());
-	//cout << "NDV: " << NoDataValue << endl;
-	DataResolution = TopoRaster.get_DataResolution();
-	//cout << "Data resolution: " <<DataResolution << endl; 	
-	
+  NRows = TopoRaster.get_NRows();
+  //cout << "Rows: " << NRows << endl;
+  NCols = TopoRaster.get_NCols();
+  //cout << "Cols: " << NCols << endl;
+  XMinimum = TopoRaster.get_XMinimum();
+  //cout << "Xmin: " << XMinimum << endl;
+  YMinimum = TopoRaster.get_YMinimum();
+  //cout << "Ymin: " << YMinimum << endl;
+  NoDataValue = int(TopoRaster.get_NoDataValue());
+  //cout << "NDV: " << NoDataValue << endl;
+  DataResolution = TopoRaster.get_DataResolution();
+  //cout << "Data resolution: " <<DataResolution << endl; 	
+  
   GeoReferencingStrings = TopoRaster.get_GeoReferencingStrings();
   //cout << "GRS" << endl;
 
   //cout << "1" << endl;
 
-	// Declare matrices for calculating flow routing
-	float one_ov_root2 = 0.707106781;
-	float target_elev;				// a placeholder for the elevation of the potential receiver
-	float slope;
-	float max_slope;				// the maximum slope away from a node
-	int max_slope_index;			// index into the maximum slope
+  // Declare matrices for calculating flow routing
+  float one_ov_root2 = 0.707106781;
+  float target_elev;				// a placeholder for the elevation of the potential receiver
+  float slope;
+  float max_slope;				// the maximum slope away from a node
+  int max_slope_index;			// index into the maximum slope
 
-	int row, col;						// index for the rows and column
-	int receive_row,receive_col;
-	string::iterator string_iterator;	// used to get characters from string
+  int row, col;						// index for the rows and column
+  int receive_row,receive_col;
+  string::iterator string_iterator;	// used to get characters from string
 
-	// we need logic for all of the boundaries.
-	// there are 3 kinds of edge boundaries:
-	// no flux
-	// base level
-	// periodic
-	// These are denoted in a vector of strings.
-	// the vector has four elements
-	// North boundary, East boundary, South bondary and West boundary
-	// the strings can be any length, as long as the first letter corresponds to the
-	// first letter of the boundary condition. It is not case sensitive.
+  // we need logic for all of the boundaries.
+  // there are 3 kinds of edge boundaries:
+  // no flux
+  // base level
+  // periodic
+  // These are denoted in a vector of strings.
+  // the vector has four elements
+  // North boundary, East boundary, South bondary and West boundary
+  // the strings can be any length, as long as the first letter corresponds to the
+  // first letter of the boundary condition. It is not case sensitive.
 
-	// go through the boundaries
-	// A NOTE ON CARDINAL DIRECTIONS
-	// If one looks at the raster data, the top row in the data corresponds to the NORTH boundary
-	// This is the row that is first read into the code
-	// so row 0 is the NORTH boundary
-	// row NRows-1 is the SOUTH boundary
-	// column 0 is the WEST boundary
-	// column NCols-1 is the EAST boundary
-	vector<float> slopes(8,NoDataValue);
-	vector<int> row_kernal(8);
-	vector<int> col_kernal(8);
-	int ndv = NoDataValue;
-	NDataNodes = 0; 			// the number of nodes in the raster that have data
-	int one_if_a_baselevel_node;	// this is a switch used to tag baseleve nodes
+  // go through the boundaries
+  // A NOTE ON CARDINAL DIRECTIONS
+  // If one looks at the raster data, the top row in the data corresponds to the NORTH boundary
+  // This is the row that is first read into the code
+  // so row 0 is the NORTH boundary
+  // row NRows-1 is the SOUTH boundary
+  // column 0 is the WEST boundary
+  // column NCols-1 is the EAST boundary
+  vector<float> slopes(8,NoDataValue);
+  vector<int> row_kernal(8);
+  vector<int> col_kernal(8);
+  int ndv = NoDataValue;
+  NDataNodes = 0; 			// the number of nodes in the raster that have data
+  int one_if_a_baselevel_node;	// this is a switch used to tag baseleve nodes
 
-	// the first thing you need to do is construct a topoglogy matrix
-	// the donor, receiver, etc lists are as long as the number of nodes.
-	// these are made of vectors that are exactly dimension n, which is the number of nodes with
-	// data. Each of these nodes has several index vectors, that point the program to where the node is
-	// we construct these index vectors first
-	// we need to loop through all the data before we calcualte slopes because the
-	// receiver node indices must be known before the slope calculations are run
-	vector<int> empty_vec;
-	RowIndex = empty_vec;
-	ColIndex = empty_vec;
-	BaseLevelNodeList = empty_vec;
-	ReceiverVector = empty_vec;
-	Array2D<int> ndv_raster(NRows,NCols,ndv);
+  // the first thing you need to do is construct a topoglogy matrix
+  // the donor, receiver, etc lists are as long as the number of nodes.
+  // these are made of vectors that are exactly dimension n, which is the number of nodes with
+  // data. Each of these nodes has several index vectors, that point the program to where the node is
+  // we construct these index vectors first
+  // we need to loop through all the data before we calcualte slopes because the
+  // receiver node indices must be known before the slope calculations are run
+  vector<int> empty_vec;
+  RowIndex = empty_vec;
+  ColIndex = empty_vec;
+  BaseLevelNodeList = empty_vec;
+  ReceiverVector = empty_vec;
+  Array2D<int> ndv_raster(NRows,NCols,ndv);
 
-	NodeIndex = ndv_raster.copy();
-	FlowDirection = ndv_raster.copy();
-	FlowLengthCode = ndv_raster.copy();
+  NodeIndex = ndv_raster.copy();
+  FlowDirection = ndv_raster.copy();
+  FlowLengthCode = ndv_raster.copy();
 
 
   //cout << "2" << endl;
 
-	// loop through the topo data finding places where there is actually data
-	for (row = 0; row<NRows; row++)
-	{
-		for (col = 0; col<NCols; col++)
+  // loop through the topo data finding places where there is actually data
+  for (row = 0; row<NRows; row++)
+  {
+    for (col = 0; col<NCols; col++)
+    {
+      // only do calcualtions if there is data
+      if(TopoRaster.RasterData[row][col] != NoDataValue)
+      {
+        RowIndex.push_back(row);
+        ColIndex.push_back(col);
+        NodeIndex[row][col] = NDataNodes;
+        NDataNodes++;
+      }
+    }
+  }
+
+  //cout << "3" << endl;
+  
+  // now the row and col index are populated by the row and col of the node in row i
+  // and the node index has the indeces into the row and col vectors
+  // next up, make d, delta, and D vectors
+  vector<int> ndn_vec(NDataNodes,0);
+  vector<int> ndn_nodata_vec(NDataNodes,ndv);
+  vector<int> ndn_plusone_vec(NDataNodes+1,0);
+  vector<int> w_vector(NDataNodes,0);
+
+  NDonorsVector = ndn_vec;
+  DonorStackVector = ndn_vec;
+  DeltaVector = ndn_plusone_vec;
+
+  SVector = ndn_nodata_vec;
+  BLBasinVector = ndn_nodata_vec;
+
+  // this vector starts out empty and then base level nodes are added to it
+  for (row = 0; row<NRows; row++)
+  {
+    for (col = 0; col<NCols; col++)
 		{
-			// only do calcualtions if there is data
-			if(TopoRaster.RasterData[row][col] != NoDataValue)
-			{
-				RowIndex.push_back(row);
-				ColIndex.push_back(col);
-				NodeIndex[row][col] = NDataNodes;
-				NDataNodes++;
-			}
-		}
-	}
-	
-	//cout << "3" << endl;
-	
-	// now the row and col index are populated by the row and col of the node in row i
-	// and the node index has the indeces into the row and col vectors
-	// next up, make d, delta, and D vectors
-	vector<int> ndn_vec(NDataNodes,0);
-	vector<int> ndn_nodata_vec(NDataNodes,ndv);
-	vector<int> ndn_plusone_vec(NDataNodes+1,0);
-	vector<int> w_vector(NDataNodes,0);
+      // only do calcualtions if there is data
+      if(TopoRaster.RasterData[row][col] != NoDataValue)
+      {
+        // calcualte 8 slopes
+        // no slopes mean get NoDataValue entries
+        // the algorithm loops through the neighbors to the cells, collecting
+        // receiver indices. The order is
+        // 7 0 1
+        // 6 - 2
+        // 5 4 3
+        // where the above directions are cardinal directions
+        // do slope 0
+        row_kernal[0] = row-1;
+        row_kernal[1] = row-1;
+        row_kernal[2] = row;
+        row_kernal[3] = row+1;
+        row_kernal[4] = row+1;
+        row_kernal[5] = row+1;
+        row_kernal[6] = row;
+        row_kernal[7] = row-1;
 
-	NDonorsVector = ndn_vec;
-	DonorStackVector = ndn_vec;
-	DeltaVector = ndn_plusone_vec;
+        col_kernal[0] = col;
+        col_kernal[1] = col+1;
+        col_kernal[2] = col+1;
+        col_kernal[3] = col+1;
+        col_kernal[4] = col;
+        col_kernal[5] = col-1;
+        col_kernal[6] = col-1;
+        col_kernal[7] = col-1;
 
-	SVector = ndn_nodata_vec;
-	BLBasinVector = ndn_nodata_vec;
-
-	// this vector starts out empty and then base level nodes are added to it
-	for (row = 0; row<NRows; row++)
-	{
-		for (col = 0; col<NCols; col++)
-		{
-			// only do calcualtions if there is data
-			if(TopoRaster.RasterData[row][col] != NoDataValue)
-			{
-				// calcualte 8 slopes
-				// no slopes mean get NoDataValue entries
-				// the algorithm loops through the neighbors to the cells, collecting
-				// receiver indices. The order is
-				// 7 0 1
-				// 6 - 2
-				// 5 4 3
-				// where the above directions are cardinal directions
-				// do slope 0
-				row_kernal[0] = row-1;
-				row_kernal[1] = row-1;
-				row_kernal[2] = row;
-				row_kernal[3] = row+1;
-				row_kernal[4] = row+1;
-				row_kernal[5] = row+1;
-				row_kernal[6] = row;
-				row_kernal[7] = row-1;
-
-				col_kernal[0] = col;
-				col_kernal[1] = col+1;
-				col_kernal[2] = col+1;
-				col_kernal[3] = col+1;
-				col_kernal[4] = col;
-				col_kernal[5] = col-1;
-				col_kernal[6] = col-1;
-				col_kernal[7] = col-1;
-
-				// check for periodic boundary conditions
-				if( BoundaryConditions[0].find("P") == 0 || BoundaryConditions[0].find("p") == 0 )
-				{
+        // check for periodic boundary conditions
+        if( BoundaryConditions[0].find("P") == 0 || BoundaryConditions[0].find("p") == 0 )
+        {
 					if( BoundaryConditions[2].find("P") != 0 && BoundaryConditions[2].find("p") != 0 )
 					{
-						cout << "WARNING!!! North boundary is periodic! Changing South boundary to periodic" << endl;
-						BoundaryConditions[2] = "P";
+            cout << "WARNING!!! North boundary is periodic! Changing South boundary to periodic" << endl;
+            BoundaryConditions[2] = "P";
 					}
-				}
+        }
 				if( BoundaryConditions[1].find("P") == 0 || BoundaryConditions[1].find("p") == 0 )
 				{
 					if( BoundaryConditions[3].find("P") != 0 && BoundaryConditions[3].find("p") != 0 )
@@ -343,19 +355,19 @@ void LSDFlowInfo::create(vector<string>& temp_BoundaryConditions,
 					}
 					else
 					{
-						// if periodic, reflect across to south boundary
-						if( BoundaryConditions[0].find("P") == 0 || BoundaryConditions[0].find("p") == 0 )
-						{
-							row_kernal[0] = NRows-1;
+            // if periodic, reflect across to south boundary
+            if( BoundaryConditions[0].find("P") == 0 || BoundaryConditions[0].find("p") == 0 )
+            {
+              row_kernal[0] = NRows-1;
 							row_kernal[1] = NRows-1;
 							row_kernal[7] = NRows-1;
-						}
-						else
-						{
-							row_kernal[0] = ndv;
-							row_kernal[1] = ndv;
-							row_kernal[7] = ndv;
-						}
+            }
+            else
+            {
+            	row_kernal[0] = ndv;
+            	row_kernal[1] = ndv;
+            	row_kernal[7] = ndv;
+            }
 					}
 				}
 				// EAST BOUNDAY
@@ -367,18 +379,18 @@ void LSDFlowInfo::create(vector<string>& temp_BoundaryConditions,
 					}
 					else
 					{
-						if( BoundaryConditions[1].find("P") == 0 || BoundaryConditions[1].find("p") == 0)
-						{
-							col_kernal[1] = 0;
-							col_kernal[2] = 0;
-							col_kernal[3] = 0;
-						}
-						else
-						{
-							col_kernal[1] = ndv;
-							col_kernal[2] = ndv;
-							col_kernal[3] = ndv;
-						}
+            if( BoundaryConditions[1].find("P") == 0 || BoundaryConditions[1].find("p") == 0)
+            {
+            	col_kernal[1] = 0;
+            	col_kernal[2] = 0;
+            	col_kernal[3] = 0;
+            }
+            else
+            {
+            	col_kernal[1] = ndv;
+            	col_kernal[2] = ndv;
+            	col_kernal[3] = ndv;
+            }
 					}
 				}
 				// SOUTH BOUNDARY
@@ -390,18 +402,18 @@ void LSDFlowInfo::create(vector<string>& temp_BoundaryConditions,
 					}
 					else
 					{
-						if( BoundaryConditions[2].find("P") == 0 || BoundaryConditions[2].find("p") == 0)
-						{
+            if( BoundaryConditions[2].find("P") == 0 || BoundaryConditions[2].find("p") == 0)
+            {
 							row_kernal[3] = 0;
 							row_kernal[4] = 0;
 							row_kernal[5] = 0;
-						}
-						else
-						{
-							row_kernal[3] = ndv;
-							row_kernal[4] = ndv;
-							row_kernal[5] = ndv;
-						}
+            }
+            else
+            {
+            	row_kernal[3] = ndv;
+            	row_kernal[4] = ndv;
+            	row_kernal[5] = ndv;
+            }
 					}
 				}
 				// WEST BOUNDARY
@@ -409,22 +421,22 @@ void LSDFlowInfo::create(vector<string>& temp_BoundaryConditions,
 				{
 					if( BoundaryConditions[3].find("B") == 0 || BoundaryConditions[3].find("b") == 0 )
 					{
-						one_if_a_baselevel_node = 1;
+            one_if_a_baselevel_node = 1;
 					}
 					else
 					{
-						if( BoundaryConditions[3].find("P") == 0 || BoundaryConditions[3].find("p") == 0)
-						{
-							col_kernal[5] = NCols-1;
-							col_kernal[6] = NCols-1;
-							col_kernal[7] = NCols-1;
-						}
-						else
-						{
-							col_kernal[5] = ndv;
-							col_kernal[6] = ndv;
-							col_kernal[7] = ndv;
-						}
+            if( BoundaryConditions[3].find("P") == 0 || BoundaryConditions[3].find("p") == 0)
+            {
+            	col_kernal[5] = NCols-1;
+            	col_kernal[6] = NCols-1;
+            	col_kernal[7] = NCols-1;
+            }
+            else
+            {
+            	col_kernal[5] = ndv;
+            	col_kernal[6] = ndv;
+            	col_kernal[7] = ndv;
+            }
 					}
 				}
 
@@ -453,46 +465,46 @@ void LSDFlowInfo::create(vector<string>& temp_BoundaryConditions,
 					receive_col = col;
 					for (int slope_iter = 0; slope_iter<8; slope_iter++)
 					{
-						if (row_kernal[slope_iter] == ndv || col_kernal[slope_iter] == ndv)
-						{
-							slopes[slope_iter] = NoDataValue;
-						}
-						else
-						{
-							target_elev = TopoRaster.RasterData[ row_kernal[slope_iter] ][ col_kernal[slope_iter] ];
-							if(target_elev == NoDataValue)
-							{
-								slopes[slope_iter] = NoDataValue;
-							}
-							else
-							{
-								if(slope_iter%2 == 0)
-								{
-									//cout << "LINE 988, cardinal direction, slope iter = " << slope_iter << endl;
-									slope = TopoRaster.RasterData[row][col]-target_elev;
-								}
-								else
-								{
-									slope = one_ov_root2*(TopoRaster.RasterData[row][col]-target_elev);
-								}
+            if (row_kernal[slope_iter] == ndv || col_kernal[slope_iter] == ndv)
+            {
+              slopes[slope_iter] = NoDataValue;
+            }
+            else
+            {
+            	target_elev = TopoRaster.RasterData[ row_kernal[slope_iter] ][ col_kernal[slope_iter] ];
+            	if(target_elev == NoDataValue)
+            	{
+            		slopes[slope_iter] = NoDataValue;
+            	}
+            	else
+            	{
+            		if(slope_iter%2 == 0)
+            		{
+            			//cout << "LINE 988, cardinal direction, slope iter = " << slope_iter << endl;
+            			slope = TopoRaster.RasterData[row][col]-target_elev;
+            		}
+            		else
+            		{
+            			slope = one_ov_root2*(TopoRaster.RasterData[row][col]-target_elev);
+            		}
 
-								if (slope > max_slope)
-								{
-									max_slope_index = slope_iter;
-									receive_row = row_kernal[slope_iter];
-									receive_col = col_kernal[slope_iter];
-									max_slope = slope;
-									if(slope_iter%2 == 0)
-									{
-										FlowLengthCode[row][col] = 1;
-									}
-									else
-									{
-										FlowLengthCode[row][col] = 2;
-									}
-								}
-							}
-						}
+            		if (slope > max_slope)
+            		{
+            			max_slope_index = slope_iter;
+            			receive_row = row_kernal[slope_iter];
+            			receive_col = col_kernal[slope_iter];
+            			max_slope = slope;
+            			if(slope_iter%2 == 0)
+            			{
+            				FlowLengthCode[row][col] = 1;
+            			}
+            			else
+            			{
+            				FlowLengthCode[row][col] = 2;
+            			}
+            		}
+            	}
+            }
 					}
 					// get reciever index
 					FlowDirection[row][col] = max_slope_index;
@@ -510,55 +522,55 @@ void LSDFlowInfo::create(vector<string>& temp_BoundaryConditions,
 
 
 
-	// first create the number of donors vector
-	// from braun and willett eq. 5
-	for(int i = 0; i<NDataNodes; i++)
-	{
+  // first create the number of donors vector
+  // from braun and willett eq. 5
+  for(int i = 0; i<NDataNodes; i++)
+  {
 		NDonorsVector[ ReceiverVector[i] ]++;
-	}
+  }
 
 
-	// now create the delta vector
-	// this starts on the last element and works its way backwards
-	// from Braun and Willett eq 7 and 8
-	DeltaVector[NDataNodes] = NDataNodes;
-	for(int i = NDataNodes; i>0; i--)
-	{
+  // now create the delta vector
+  // this starts on the last element and works its way backwards
+  // from Braun and Willett eq 7 and 8
+  DeltaVector[NDataNodes] = NDataNodes;
+  for(int i = NDataNodes; i>0; i--)
+  {
 		DeltaVector[i-1] = DeltaVector[i] -  NDonorsVector[i-1];
-	}
+  }
 
 
-	// now the DonorStack and the r vectors. These come from Braun and Willett
-	// equation 9.
-	// Note that in the manscript I have there is a typo in eqaution 9
-	// (Jean Braun's code is correct)
-	// it should be w_{r_i} = w_{r_i}+1
-	int r_index;
-	int w_index;
-	int delta_index;
-	for (int i = 0; i<NDataNodes; i++)
-	{
+  // now the DonorStack and the r vectors. These come from Braun and Willett
+  // equation 9.
+  // Note that in the manscript I have there is a typo in eqaution 9
+  // (Jean Braun's code is correct)
+  // it should be w_{r_i} = w_{r_i}+1
+  int r_index;
+  int w_index;
+  int delta_index;
+  for (int i = 0; i<NDataNodes; i++)
+  {
 		r_index = ReceiverVector[i];
 		delta_index = DeltaVector[ r_index ];
 		w_index = w_vector[ r_index ];
 		DonorStackVector[  delta_index+w_index ] = i;
 		w_vector[r_index] += 1;
 		//cout << "i: " << i << " r_i: " << r_index << " delta_i: " << delta_index << " w_index: " << w_index << endl;
-	}
+  }
 
 
-	// now go through the base level node list, building the drainage tree for each of these nodes as one goes along
-	int n_base_level_nodes;
-	n_base_level_nodes = BaseLevelNodeList.size();
+  // now go through the base level node list, building the drainage tree for each of these nodes as one goes along
+  int n_base_level_nodes;
+  n_base_level_nodes = BaseLevelNodeList.size();
 
-	int k;
-	int j_index;
-	int begin_delta_index, end_delta_index;
-	int l_index;
+  int k;
+  int j_index;
+  int begin_delta_index, end_delta_index;
+  int l_index;
 
-	j_index = 0;
-	for (int i = 0; i<n_base_level_nodes; i++)
-	{
+  j_index = 0;
+  for (int i = 0; i<n_base_level_nodes; i++)
+  {
 		k = BaseLevelNodeList[i];			// set k to the base level node
 
 		// This doesn't seem to be in Braun and Willet but to get the ordering correct you
@@ -680,10 +692,10 @@ void LSDFlowInfo::print_vector_of_nodeindices_to_csv_file(vector<int>& nodeindex
 {
 
   // fid the last '.' in the filename to use in the scv filename
-	unsigned dot = outfilename.find_last_of(".");
+  unsigned dot = outfilename.find_last_of(".");
 
-	string prefix = outfilename.substr(0,dot);
-	//string suffix = str.substr(dot);
+  string prefix = outfilename.substr(0,dot);
+  //string suffix = str.substr(dot);
   string insert = "_nodeindices_for_Arc.csv";
   string outfname = prefix+insert;
 
@@ -695,6 +707,7 @@ void LSDFlowInfo::print_vector_of_nodeindices_to_csv_file(vector<int>& nodeindex
   // open the outfile
   ofstream csv_out;
   csv_out.open(outfname.c_str());
+  csv_out.precision(8);
 
   csv_out << "x,y,node,row,col" << endl;
 
@@ -709,18 +722,18 @@ void LSDFlowInfo::print_vector_of_nodeindices_to_csv_file(vector<int>& nodeindex
      // make sure the nodeindex isn't out of bounds
      if (current_node < n_nodeindeces)
      {
-        // get the row and column
-        retrieve_current_row_and_col(current_node,current_row,
+       // get the row and column
+       retrieve_current_row_and_col(current_node,current_row,
                                              current_col);
 
-        // get the x and y location of the node
-        // the last 0.0001*DataResolution is to make sure there are no integer data points
-		    x = XMinimum + float(current_col)*DataResolution + 0.5*DataResolution + 0.0001*DataResolution;
+       // get the x and y location of the node
+       // the last 0.0001*DataResolution is to make sure there are no integer data points
+       x = XMinimum + float(current_col)*DataResolution + 0.5*DataResolution + 0.0001*DataResolution;
 
-		    // the last 0.0001*DataResolution is to make sure there are no integer data points
-		    // y coord a bit different since the DEM starts from the top corner
-		    y = YMinimum + float(NRows-current_row)*DataResolution - 0.5*DataResolution + 0.0001*DataResolution;;
-        csv_out << x << "," << y << "," << current_node << "," << current_row << "," << current_col << endl;
+       // the last 0.0001*DataResolution is to make sure there are no integer data points
+       // y coord a bit different since the DEM starts from the top corner
+       y = YMinimum + float(NRows-current_row)*DataResolution - 0.5*DataResolution + 0.0001*DataResolution;;
+       csv_out << x << "," << y << "," << current_node << "," << current_row << "," << current_col << endl;
      }
   }
 
@@ -1175,6 +1188,13 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension,
     string fname = filename +"."+extension;
     ch_csv_in.open(fname.c_str());
     
+    if(not ch_csv_in.good())
+    {
+      cout << "Hey DUDE, you are trying to ingest a sources file that doesn't exist!!" << endl;
+      cout << "Check your filename" << endl;
+      exit(EXIT_FAILURE);
+    }
+    
     cout << "fname is: " << fname << endl;
     
     string sline = "";
@@ -1377,6 +1397,7 @@ void LSDFlowInfo::print_flow_info_vectors(string filename)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexRaster LSDFlowInfo::write_NodeIndex_to_LSDIndexRaster()
 {
+  cout << "NRows: " << NRows << " and NCols: " << NCols << endl; 
   LSDIndexRaster temp_nodeindex(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,NodeIndex,GeoReferencingStrings);
   return temp_nodeindex;
 }
@@ -1394,9 +1415,6 @@ LSDIndexRaster LSDFlowInfo::write_FlowLengthCode_to_LSDIndexRaster()
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-
-
-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
@@ -1408,47 +1426,49 @@ LSDIndexRaster LSDFlowInfo::write_FlowLengthCode_to_LSDIndexRaster()
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexRaster LSDFlowInfo::write_NodeIndexVector_to_LSDIndexRaster(vector<int>& nodeindexvec)
 {
-	int n_node_indices = nodeindexvec.size();
-	Array2D<int> chan(NRows,NCols,NoDataValue);
+  int n_node_indices = nodeindexvec.size();
+  //cout << "The number of nodeindices is: " << n_node_indices << endl;
+  Array2D<int> chan(NRows,NCols,NoDataValue);
+  
+  //cout << "Raster nr: " << chan.dim1() << " nc: " << chan.dim2() << endl;
 
-	int curr_row, curr_col;
+  int curr_row, curr_col;
 
-	for(int i = 0; i<n_node_indices; i++)
-	{
-		// make sure there is no segmantation fault for bad data
-		// Note: bad data is ignored
-		if(nodeindexvec[i] <= NDataNodes)
-		{
-			retrieve_current_row_and_col(nodeindexvec[i],curr_row,
+  for(int i = 0; i<n_node_indices; i++)
+  {
+    // make sure there is no segmentation fault for bad data
+    // Note: bad data is ignored
+    if(nodeindexvec[i] <= NDataNodes)
+    {
+      retrieve_current_row_and_col(nodeindexvec[i],curr_row,
                                              curr_col);
 
-            if(chan[curr_row][curr_col] == NoDataValue)
-            {
-            	chan[curr_row][curr_col] = 1;
-			}
-			else
-			{
-				chan[curr_row][curr_col]++;
-			}
-		}
-		else
-		{
-			cout << "WARNING: LSDFlowInfo::write_NodeIndexVector_to_LSDIndexRaster"
-			     << " node index does not exist!"<< endl;
-		}
-	}
+      if(chan[curr_row][curr_col] == NoDataValue)
+      {
+        chan[curr_row][curr_col] = 1;
+      }
+      else
+      {
+        chan[curr_row][curr_col]++;
+      }
+    }
+    else
+    {
+      cout << "WARNING: LSDFlowInfo::write_NodeIndexVector_to_LSDIndexRaster"
+           << " node index does not exist!"<< endl;
+    }
+  }
 
-	LSDIndexRaster temp_chan(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,chan,GeoReferencingStrings);
-	return temp_chan;
+
+  LSDIndexRaster temp_chan(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,chan,GeoReferencingStrings);
+  return temp_chan;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 
-
-
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // This function calcualtes the contributing pixels
 // it can be converted to contributing area by multiplying by the
@@ -1463,17 +1483,17 @@ LSDIndexRaster LSDFlowInfo::write_NodeIndexVector_to_LSDIndexRaster(vector<int>&
 LSDIndexRaster LSDFlowInfo::write_NContributingNodes_to_LSDIndexRaster()
 {
   Array2D<int> contributing_pixels(NRows,NCols,NoDataValue);
-	int row,col;
+  int row,col;
 
-	// loop through the node vector, adding pixels to receiver nodes
-	for(int node = 0; node<NDataNodes; node++)
-	{
-		row = RowIndex[node];
-		col = ColIndex[node];
-		contributing_pixels[row][col] = NContributingNodes[node];
-	}
+  // loop through the node vector, adding pixels to receiver nodes
+  for(int node = 0; node<NDataNodes; node++)
+  {
+    row = RowIndex[node];
+    col = ColIndex[node];
+    contributing_pixels[row][col] = NContributingNodes[node];
+  }
 
-	LSDIndexRaster temp_cp(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,contributing_pixels,GeoReferencingStrings);
+  LSDIndexRaster temp_cp(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,contributing_pixels,GeoReferencingStrings);
   return temp_cp;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -1498,59 +1518,55 @@ LSDIndexRaster LSDFlowInfo::write_NContributingNodes_to_LSDIndexRaster()
 LSDIndexRaster LSDFlowInfo::write_FlowDirection_to_LSDIndexRaster_Arcformat()
 {
 
-	Array2D<int> FlowDirectionArc(NRows,NCols,NoDataValue);
-	for(int row = 0; row<NRows; row++)
-	{
-		for (int col = 0; col<NCols; col++)
-		{
-			if ( FlowDirection[row][col] == -1)
-			{
-				FlowDirectionArc[row][col] = 0;
-			}
-			else if ( FlowDirection[row][col] == 0)
-			{
-				FlowDirectionArc[row][col] = 64;
-			}
-			else if ( FlowDirection[row][col] == 1)
-			{
-				FlowDirectionArc[row][col] = 128;
-			}
-			else if ( FlowDirection[row][col] == 2)
-			{
-				FlowDirectionArc[row][col] = 1;
-			}
-			else if ( FlowDirection[row][col] == 3)
-			{
-				FlowDirectionArc[row][col] = 2;
-			}
-			else if ( FlowDirection[row][col] == 4)
-			{
-				FlowDirectionArc[row][col] = 4;
-			}
-			else if ( FlowDirection[row][col] == 5)
-			{
-				FlowDirectionArc[row][col] = 8;
-			}
-			else if ( FlowDirection[row][col] == 6)
-			{
-				FlowDirectionArc[row][col] = 16;
-			}
-			else if ( FlowDirection[row][col] == 7)
-			{
-				FlowDirectionArc[row][col] = 32;
-			}
-		}
-	}
+  Array2D<int> FlowDirectionArc(NRows,NCols,NoDataValue);
+  for(int row = 0; row<NRows; row++)
+  {
+    for (int col = 0; col<NCols; col++)
+    {
+      if ( FlowDirection[row][col] == -1)
+      {
+        FlowDirectionArc[row][col] = 0;
+      }
+      else if ( FlowDirection[row][col] == 0)
+      {
+        FlowDirectionArc[row][col] = 64;
+      }
+      else if ( FlowDirection[row][col] == 1)
+      {
+        FlowDirectionArc[row][col] = 128;
+      }
+      else if ( FlowDirection[row][col] == 2)
+      {
+        FlowDirectionArc[row][col] = 1;
+      }
+      else if ( FlowDirection[row][col] == 3)
+      {
+        FlowDirectionArc[row][col] = 2;
+      }
+      else if ( FlowDirection[row][col] == 4)
+      {
+        FlowDirectionArc[row][col] = 4;
+      }
+      else if ( FlowDirection[row][col] == 5)
+      {
+        FlowDirectionArc[row][col] = 8;
+      }
+      else if ( FlowDirection[row][col] == 6)
+      {
+        FlowDirectionArc[row][col] = 16;
+      }
+      else if ( FlowDirection[row][col] == 7)
+      {
+        FlowDirectionArc[row][col] = 32;
+      }
+    }
+  }
 
-	LSDIndexRaster temp_fd(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,FlowDirectionArc,GeoReferencingStrings);
-	return temp_fd;
+  LSDIndexRaster temp_fd(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,FlowDirectionArc,GeoReferencingStrings);
+  return temp_fd;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
-
-
-
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

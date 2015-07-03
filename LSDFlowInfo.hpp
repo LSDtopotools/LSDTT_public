@@ -93,14 +93,22 @@ class LSDFlowInfo
   /// @brief The create function. This is default and throws an error.
   /// @author SMM
   /// @date 01/016/12
-  LSDFlowInfo()				{ create(); }
-	
+  LSDFlowInfo()        { create(); }
+
   /// @brief Creates a FlowInfo object from a binary flowinfo data.
   /// @param fname String of the binary flowinfo data file to be read.
   /// @author SMM
   /// @date 01/016/12
-  LSDFlowInfo(string fname)		{ create(fname); }
-	
+  LSDFlowInfo(string fname)    { create(fname); }
+
+  /// @brief Creates a FlowInfo object from a binary flowinfo data.
+  /// @detail This assumes no flux boundaries
+  /// @param TopoRaster LSDRaster object containing the topographic data.
+  /// @author SMM
+  /// @date 3/07/2015
+  LSDFlowInfo(LSDRaster& TopoRaster)
+                   { create(TopoRaster); }
+
   /// @brief Creates a FlowInfo object from topography.
   /// @param BoundaryConditions Vector<string> of the boundary conditions at each edge of the
   /// DEM file. Boundary conditions can start with 'P' or 'p' for periodic,
@@ -110,7 +118,7 @@ class LSDFlowInfo
   /// @author SMM
   /// @date 01/016/12
   LSDFlowInfo(vector<string>& BoundaryConditions, LSDRaster& TopoRaster)
-				{ create(BoundaryConditions, TopoRaster); }
+                   { create(BoundaryConditions, TopoRaster); }
 
   /// @brief Copy of the LSDJunctionNetwork description here when written.
   friend class LSDJunctionNetwork;
@@ -165,7 +173,7 @@ class LSDFlowInfo
   /// @author SMM
   /// @date 01/016/12
   int retrieve_contributing_pixels_of_node(int node)
-				{ return NContributingNodes[node]; }
+                  { return NContributingNodes[node]; }
 
   ///@brief Get the FlowLengthCode of a given node.
   ///@param node Integer of node index value.
@@ -173,7 +181,7 @@ class LSDFlowInfo
   /// @author SMM
   /// @date 01/016/12
   int retrieve_flow_length_code_of_node(int node)
-		{ return FlowLengthCode[ RowIndex[node] ][ ColIndex[node] ]; }
+               { return FlowLengthCode[ RowIndex[node] ][ ColIndex[node] ]; }
 
   ///@brief Get the FlowDirection of a row and column pair.
   ///@param row Integer of row index.
@@ -182,7 +190,7 @@ class LSDFlowInfo
   ///@author SWDG
   ///@date 04/02/14
   int get_LocalFlowDirection(int row, int col)
-				{ return FlowDirection[row][col]; }
+               { return FlowDirection[row][col]; }
 
   /// @brief get the number of donors to a given node
   /// @param current_node the node index from which to get n donors
@@ -211,22 +219,22 @@ class LSDFlowInfo
   // get functions
 
   /// @return Number of rows as an integer.
-  int get_NRows() const				{ return NRows; }
+  int get_NRows() const                   { return NRows; }
   /// @return Number of columns as an integer.
-  int get_NCols() const				{ return NCols; }
+  int get_NCols() const                   { return NCols; }
   /// @return Minimum X coordinate as an integer.
-  float get_XMinimum() const			{ return XMinimum; }
+  float get_XMinimum() const              { return XMinimum; }
   /// @return Minimum Y coordinate as an integer.
-  float get_YMinimum() const			{ return YMinimum; }
+  float get_YMinimum() const              { return YMinimum; }
   /// @return Data resolution as an integer.
-  float get_DataResolution() const	{ return DataResolution; }
+  float get_DataResolution() const        { return DataResolution; }
   /// @return No Data Value as an integer.
-  int get_NoDataValue() const			{ return NoDataValue; }
+  int get_NoDataValue() const             { return NoDataValue; }
   /// @return Georeferencing information
   map<string,string> get_GeoReferencingStrings() const { return GeoReferencingStrings; }
   
   /// @return Number of nodes with data as an integer.   
-  int get_NDataNodes () const			{ return NDataNodes; }
+  int get_NDataNodes () const          { return NDataNodes; }
   /// @return Vector of all base level nodes.
   vector<int> get_BaseLevelNodeList () { return BaseLevelNodeList; }
 
@@ -313,7 +321,7 @@ class LSDFlowInfo
   /// original file). Testing indicates reading this file takes
   /// almost as long as recalculating the flowinfo object so
   /// is probably not worth doing
-	///@param filename String of the binary file to be written.
+  ///@param filename String of the binary file to be written.
   /// @author SMM
   /// @date 01/016/12
   void pickle(string filename);
@@ -477,7 +485,7 @@ class LSDFlowInfo
   /// @author SMM
   /// @date 25/19/13
   int find_farthest_upslope_node(int node, LSDRaster& DistFromOutlet);
-	
+
   /// @brief Function to get the node index for a point using its X and Y coordinates
   /// @param X_coordinate X_coord of point
   /// @param Y_coordinate Y_coord of point
@@ -493,7 +501,7 @@ class LSDFlowInfo
   /// @author SMM
   /// @date 01/016/12
   vector<int> get_sources_index_threshold(LSDIndexRaster& FlowPixels, int threshold);
-	
+
   /// @brief A get sources version that uses AS^2 (area and slope).
   /// @param FlowPixels LSDIndexRaster of flow accumulation in pixels.
   /// @param Slope LSDRaster of slope values
@@ -529,8 +537,8 @@ class LSDFlowInfo
   void D8_Trace(int i, int j, LSDIndexRaster StreamNetwork, float& length, 
                    int& receiver_row, int& receiver_col, Array2D<int>& Path);
 
-	void HilltopFlowRoutingOriginal(LSDRaster Elevation, LSDRaster Hilltops, LSDRaster Slope, LSDRaster Aspect, LSDIndexRaster StreamNetwork);
-	
+  void HilltopFlowRoutingOriginal(LSDRaster Elevation, LSDRaster Hilltops, LSDRaster Slope, LSDRaster Aspect, LSDIndexRaster StreamNetwork);
+  
   /// @brief Hilltop flow routing.
   ///
   /// @details Hilltop flow routing code built around original code from Martin Hurst. Based on
@@ -721,69 +729,69 @@ class LSDFlowInfo
                                                           int& output_channel_node, bool& skip_trace);
 
 
-	
+
   protected:
 
-	///Number of rows.
+  ///Number of rows.
   int NRows;
   ///Number of columns.
-	int NCols;
-	///Minimum X coordinate.
+  int NCols;
+  ///Minimum X coordinate.
   float XMinimum;
-	///Minimum Y coordinate.
-	float YMinimum;
+  ///Minimum Y coordinate.
+  float YMinimum;
 
-	///Data resolution.
-	float DataResolution;
-	///No data value.
-	int NoDataValue;
-	
-	///A map of strings for holding georeferencing information
+  ///Data resolution.
+  float DataResolution;
+  ///No data value.
+  int NoDataValue;
+  
+  ///A map of strings for holding georeferencing information
   map<string,string> GeoReferencingStrings;
 
-	/// The number of nodes in the raster that have data.
-	int NDataNodes;
+  /// The number of nodes in the raster that have data.
+  int NDataNodes;
 
-	/// An array that says what node number is at a given row and column.
-	Array2D<int> NodeIndex;
+  /// An array that says what node number is at a given row and column.
+  Array2D<int> NodeIndex;
 
   /// @brief A raster of flow direction information.
   ///
-	/// In the format:
-	///
-	/// 7  0 1 \n
-	/// 6 -1 2 \n
-	/// 5  4 3 \n
-	///
-	/// Nodes with flow direction of -1 drain to themselvs and are base level/sink nodes.
+  /// In the format:
+  ///
+  /// 7  0 1 \n
+  /// 6 -1 2 \n
+  /// 5  4 3 \n
+  ///
+  /// Nodes with flow direction of -1 drain to themselvs and are base level/sink nodes.
   Array2D<int> FlowDirection;
 
   /// @brief A code to denote the flow length from the node to its reciever node.
   /// <b>Each node has one and only one receiver.</b>
   /// \n\n
-	/// 0 == no receiver/self receiver (base level) \n
-	/// 1 == cardinal direction, flow length = DataResolution \n
-	/// 2 == diagonal, flow length = DataResolution*(1/sqrt(2)) \n
-	Array2D<int> FlowLengthCode;
+  /// 0 == no receiver/self receiver (base level) \n
+  /// 1 == cardinal direction, flow length = DataResolution \n
+  /// 2 == diagonal, flow length = DataResolution*(1/sqrt(2)) \n
+  Array2D<int> FlowLengthCode;
 
-	/// @brief This stores the row of a node in the vectorized
-	/// node index. It, combined with ColIndex, is the
-	/// inverse of NodeIndex.
-	vector<int> RowIndex;
+  /// @brief This stores the row of a node in the vectorized
+  /// node index. It, combined with ColIndex, is the
+  /// inverse of NodeIndex.
+  vector<int> RowIndex;
 
   /// @brief This stores the column of a node in the vectorized
   /// node index. It, combined with RowIndex, is the
   /// inverse of NodeIndex.
-	vector<int> ColIndex;
+  vector<int> ColIndex;
 
   /// A list of base level nodes.
-	vector<int> BaseLevelNodeList;
+  vector<int> BaseLevelNodeList;
 
   /// Stores the number of donors to each node.
-	vector<int> NDonorsVector;
+  vector<int> NDonorsVector;
 
   /// Stores the node index of the receiving node.
-	vector<int> ReceiverVector;
+  vector<int> ReceiverVector;
 
   /// @brief Stores the delta vector which is used to index into the donor stack
   /// and order contributing nodes. See Braun and Willett (2012).
@@ -798,32 +806,33 @@ class LSDFlowInfo
   /// the next hilltop so that by cascading down through the node indices in
   /// this list one can quickly calculate drainage area, discharge, sediment
   /// flux, etc.
-	vector<int> SVector;
+  vector<int> SVector;
 
   /// This stores the base level node for all of the nodes in the DEM.
-	vector<int> BLBasinVector;
+  vector<int> BLBasinVector;
 
   /// This points to the starting point in the S vector of each node.
-	vector<int> SVectorIndex;
+  vector<int> SVectorIndex;
 
   /// @brief The number of contributing nodes <b>INCULDING SELF</b> to a current
-	/// pixel. It is used in conjunction with the SVectorIndex to build
-	/// basins upslope of any and all nodes in the node list.
-	vector<int> NContributingNodes;
+  /// pixel. It is used in conjunction with the SVectorIndex to build
+  /// basins upslope of any and all nodes in the node list.
+  vector<int> NContributingNodes;
 
   /// @brief Boundary conditions stored in a vector of four strings.
-	/// The conditions are North[0] East[1] South[2] West[3].
-	///
-	/// There are 3 kinds of edge boundaries: no flux, base level and periodic.
-	///
-	/// The strings can be any length, as long as the first letter corresponds to the
-	/// first letter of the boundary condition. It is not case sensitive.
+  /// The conditions are North[0] East[1] South[2] West[3].
+  ///
+  /// There are 3 kinds of edge boundaries: no flux, base level and periodic.
+  ///
+  /// The strings can be any length, as long as the first letter corresponds to the
+  /// first letter of the boundary condition. It is not case sensitive.
   vector<string> BoundaryConditions;
 
-	private:
-	void create();
-	void create(string fname);
-	void create(vector<string>& temp_BoundaryConditions, LSDRaster& TopoRaster);
+  private:
+  void create();
+  void create(string fname);
+  void create(LSDRaster& TopoRaster);
+  void create(vector<string>& temp_BoundaryConditions, LSDRaster& TopoRaster);
 };
 
 #endif
