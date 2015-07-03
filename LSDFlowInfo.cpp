@@ -835,17 +835,17 @@ void LSDFlowInfo::add_to_stack(int lm_index, int& j_index, int bl_node)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::pickle(string filename)
 {
-	string ext = ".FIpickle";
-	string hdr_ext = ".FIpickle.hdr";
+  string ext = ".FIpickle";
+  string hdr_ext = ".FIpickle.hdr";
 
-	string hdr_fname = filename+hdr_ext;
-	string data_fname = filename+ext;
+  string hdr_fname = filename+hdr_ext;
+  string data_fname = filename+ext;
 
-	ofstream header_out;
-	header_out.open(hdr_fname.c_str());
+  ofstream header_out;
+  header_out.open(hdr_fname.c_str());
 
-	int contributing_nodes = int(NContributingNodes.size());
-	int BLNodes = int(BaseLevelNodeList.size());
+  int contributing_nodes = int(NContributingNodes.size());
+  int BLNodes = int(BaseLevelNodeList.size());
 
 	// print the header file
 	header_out <<  "ncols         		" << NCols
@@ -1307,61 +1307,61 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::print_flow_info_vectors(string filename)
 {
-	string string_filename;
-	string dot = ".";
-	string extension = "txt";
-	string_filename = filename+dot+extension;
-	cout << "The filename is " << string_filename << endl;
+  string string_filename;
+  string dot = ".";
+  string extension = "txt";
+  string_filename = filename+dot+extension;
+  cout << "The filename is " << string_filename << endl;
 
-	// print out all the donor, reciever and stack info
-	ofstream donor_info_out;
-	donor_info_out.open(string_filename.c_str());
-	for(int i = 0; i<NDataNodes; i++)
-	{
-		donor_info_out << i << " ";
-	}
-	donor_info_out << endl;
-	for(int i = 0; i<NDataNodes; i++)
-	{
-		donor_info_out << ReceiverVector[i] << " ";
-	}
-	donor_info_out << endl;
-	for(int i = 0; i<NDataNodes; i++)
-	{
-		donor_info_out << NDonorsVector[i] << " ";
-	}
-	donor_info_out << endl;
-	for(int i = 0; i<NDataNodes+1; i++)
-	{
-		donor_info_out << DeltaVector[i] << " ";
-	}
-	donor_info_out << endl;
-	for(int i = 0; i<NDataNodes; i++)
-	{
-		donor_info_out << DonorStackVector[i] << " ";
-	}
-	donor_info_out << endl;
-	for(int i = 0; i<NDataNodes; i++)
-	{
-		donor_info_out << SVector[i] << " ";
-	}
-	donor_info_out << endl;
+  // print out all the donor, reciever and stack info
+  ofstream donor_info_out;
+  donor_info_out.open(string_filename.c_str());
+  for(int i = 0; i<NDataNodes; i++)
+  {
+    donor_info_out << i << " ";
+  }
+  donor_info_out << endl;
+  for(int i = 0; i<NDataNodes; i++)
+  {
+    donor_info_out << ReceiverVector[i] << " ";
+  }
+  donor_info_out << endl;
+  for(int i = 0; i<NDataNodes; i++)
+  {
+    donor_info_out << NDonorsVector[i] << " ";
+  }
+  donor_info_out << endl;
+  for(int i = 0; i<NDataNodes+1; i++)
+  {
+    donor_info_out << DeltaVector[i] << " ";
+  }
+  donor_info_out << endl;
+  for(int i = 0; i<NDataNodes; i++)
+  {
+    donor_info_out << DonorStackVector[i] << " ";
+  }
+  donor_info_out << endl;
+  for(int i = 0; i<NDataNodes; i++)
+  {
+    donor_info_out << SVector[i] << " ";
+  }
+  donor_info_out << endl;
 
-	if( int(SVectorIndex.size()) == NDataNodes)
-	{
-		for(int i = 0; i<NDataNodes; i++)
-		{
-			donor_info_out << SVectorIndex[i] << " ";
-		}
-		donor_info_out << endl;
-		for(int i = 0; i<NDataNodes; i++)
-		{
-			donor_info_out << NContributingNodes[i] << " ";
-		}
-		donor_info_out << endl;
-	}
+  if( int(SVectorIndex.size()) == NDataNodes)
+  {
+    for(int i = 0; i<NDataNodes; i++)
+    {
+      donor_info_out << SVectorIndex[i] << " ";
+    }
+    donor_info_out << endl;
+    for(int i = 0; i<NDataNodes; i++)
+    {
+      donor_info_out << NContributingNodes[i] << " ";
+    }
+    donor_info_out << endl;
+  }
 
-	donor_info_out.close();
+  donor_info_out.close();
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -1377,20 +1377,20 @@ void LSDFlowInfo::print_flow_info_vectors(string filename)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexRaster LSDFlowInfo::write_NodeIndex_to_LSDIndexRaster()
 {
-	LSDIndexRaster temp_nodeindex(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,NodeIndex,GeoReferencingStrings);
-	return temp_nodeindex;
+  LSDIndexRaster temp_nodeindex(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,NodeIndex,GeoReferencingStrings);
+  return temp_nodeindex;
 }
 
 LSDIndexRaster LSDFlowInfo::write_FlowDirection_to_LSDIndexRaster()
 {
-	LSDIndexRaster temp_flowdir(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,FlowDirection,GeoReferencingStrings);
-	return temp_flowdir;
+  LSDIndexRaster temp_flowdir(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,FlowDirection,GeoReferencingStrings);
+  return temp_flowdir;
 }
 
 LSDIndexRaster LSDFlowInfo::write_FlowLengthCode_to_LSDIndexRaster()
 {
-	LSDIndexRaster temp_flc(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,FlowLengthCode,GeoReferencingStrings);
-	return temp_flc;
+  LSDIndexRaster temp_flc(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,FlowLengthCode,GeoReferencingStrings);
+  return temp_flc;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
