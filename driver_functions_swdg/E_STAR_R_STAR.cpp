@@ -61,7 +61,7 @@ int main (int nNumberofArgs,char *argv[])
   //Test for correct input arguments
 	if (nNumberofArgs!=5)
 	{
-		cout << "FATAL ERROR: wrong number of inputs. The program needs the path (with trailing slash), the filename prefix, and the minimum patch area in pixels." << endl; 
+		cout << "FATAL ERROR: wrong number of inputs. The program needs the path (with trailing slash), the filename prefix, the minimum patch area in pixels and the basin order." << endl; 
 		exit(EXIT_FAILURE);
 	}
   

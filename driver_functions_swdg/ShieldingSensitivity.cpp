@@ -12,7 +12,7 @@
 // path to the DEM file with a trailing slash
 // DEM filename without the file extension or dot
 // file extension without the dot
-
+//
 // A usage example is:
 // nice ./ShieldingSensitivity.out /home/s0675405/DataStore/Final_Paper_Data/NC/ NC_DEM flt
 //
@@ -51,24 +51,27 @@ int main(int nNumberofArgs, char *argv[])
   //load the DEM and fill it
   LSDRaster DEM((path+DEM_Name), DEM_Format);
 
+
+  LSDRaster Trimmed = DEM.RasterTrimmer();
+  
   //set up a writer to write the output data
   ofstream WriteData;
  
   //arraya of theta and phi steps to test 
-  int ThetaSteps[] = {1, 2, 3, 5, 8, 10, 15, 20, 30, 45, 60, 90};
-  int PhiSteps[] = {1, 2, 3, 5, 8, 10, 15, 20, 30, 45, 60, 90, 180, 360};
+  int PhiSteps[] = {1, 2, 3, 5, 8, 10, 15, 20, 30, 45, 60, 90};
+  int ThetaSteps[] = {1, 2, 3, 5, 8, 10, 15, 20, 30, 45, 60, 90, 180, 360};
    
-  for (int w = 0; w < 12; ++w){
-    for (int q = 0; q < 14; ++w){
+  for (int q = 11; q >= 0; --q){
+    for (int w = 13; w >= 0; --w){
     
-      cout << "Processing theta, phi pair of " << ThetaSteps[q] << " " << PhiSteps[w] << endl;
+      cout << "Processing theta, phi pair of " << ThetaSteps[w] << " " << PhiSteps[q] << endl;
       cout << "Currently processing Theta " << (q+1) << " of " << "14 & Phi " << (w+1) << " of " << "12" << endl; 
      
       //create an output filename based on the dem name
       stringstream ss;
-      ss << path << DEM_Name<< "_" << ThetaSteps[q] << "_" << PhiSteps[w] << "_shield.txt"; 
+      ss << path << DEM_Name<< "_" << ThetaSteps[w] << "_" << PhiSteps[q] << "_shield.txt"; 
                                             
-      LSDRaster Shielded = DEM.TopographicShielding(ThetaSteps[q], PhiSteps[w]);
+      LSDRaster Shielded = Trimmed.TopographicShielding(ThetaSteps[w], PhiSteps[q]);
       Shielded.FlattenToFile(ss.str().c_str());
    
     }
