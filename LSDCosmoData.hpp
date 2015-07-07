@@ -124,6 +124,15 @@ class LSDCosmoData
     /// @date 19/03/2015
     vector<string> get_DEM_fnames();
     
+    /// @brief this gets the names of the snow/self shielding rasters
+    //  to be used in the analysis
+    /// @detail returns only snow shielding names. If name does not exist,  
+    ///  returns NULL.
+    /// @return SnowSelf_fnames a vector of fname strings
+    /// @author SMM 
+    /// @date 07/07/2015
+    vector<string> get_SnowSelf_fnames();
+    
     /// @brief This function checks to make sure parameter values are
     ///  valid for the cosmo data
     /// @author SMM

@@ -813,6 +813,35 @@ vector<string> LSDCosmoData::get_DEM_fnames()
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This gets the names of the snow and self shielding rasters
+// If none exists, the name is NULL
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<string> LSDCosmoData::get_SnowSelf_fnames()
+{
+
+  vector<string> Snowself_fnames;
+
+  // now print the results to screen
+  int n_files = int(DEM_names_vecvec.size());
+  
+  if(n_files != 0)
+  {
+    for(int row = 0; row<n_files; row++)
+    {
+      vector<string> temp_stringvec = DEM_names_vecvec[row];
+      Snowself_fnames.push_back(temp_stringvec[1]);
+    }      
+  }
+  else
+  {
+    cout << "LSDCosmoData::print_file_structures_to_screen; files have not been loaded!" << endl;
+  }
+  return Snowself_fnames;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
