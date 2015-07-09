@@ -56,7 +56,7 @@ int main(int nNumberofArgs, char *argv[])
     
   //load the DEM
   LSDRaster DEM((path+DEM_Name), DEM_Format);
-
+    
   ifstream infile;  
                      
   stringstream ss;
@@ -74,7 +74,7 @@ int main(int nNumberofArgs, char *argv[])
   
   for (int q = 0; q < int(BasinList.size()); ++q){
     
-    cout << "Processing " << q+1 << " of " << BasinList.size() << endl; 
+    cout << "Processing " << q+1 << " of " << BasinList.size() << endl;
     
     //load basin raster
     LSDRaster Basin((path+BasinList[q]), DEM_Format);
@@ -82,11 +82,11 @@ int main(int nNumberofArgs, char *argv[])
     //process basin into a dem for shielding
     LSDRaster CutDEM = DEM.CookieCutRaster(Basin);
     LSDRaster Trimmed = CutDEM.RasterTrimmer();
-    LSDRaster Shielded = Trimmed.TopographicShielding(theta_step, phi_step);  
-    
+    LSDRaster Shielded = Trimmed.TopographicShielding(theta_step, phi_step);
+        
     //write the shielding raster to the working directory
-    Shielded.write_raster((path+BasinList[q]+"SH"),DEM_Format);
+    Shielded.write_raster((path+BasinList[q]+"_SH2"),DEM_Format);
   
   }
-  
+        
 }
