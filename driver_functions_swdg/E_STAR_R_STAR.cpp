@@ -59,15 +59,15 @@ int main (int nNumberofArgs,char *argv[])
 {
   
   //Test for correct input arguments
-	if (nNumberofArgs!=5)
-	{
-		cout << "FATAL ERROR: wrong number of inputs. The program needs the path (with trailing slash), the filename prefix, the minimum patch area in pixels and the basin order." << endl; 
-		exit(EXIT_FAILURE);
-	}
+  if (nNumberofArgs!=5)
+  {
+    cout << "FATAL ERROR: wrong number of inputs. The program needs the path (with trailing slash), the filename prefix, the minimum patch area in pixels and the basin order." << endl; 
+    exit(EXIT_FAILURE);
+  }
   
   //load input arguments
   string path = argv[1];
-	string prefix = argv[2];
+  string prefix = argv[2];
   int MinimumPatchArea  = atoi(argv[3]);  //Minium area of a hilltop patch. In pixels.
   int BasinOrder = atoi(argv[4]);
     
@@ -77,18 +77,18 @@ int main (int nNumberofArgs,char *argv[])
   vector<string> BoundaryConditions(4, "No Flux");
   
   //load dem
-  LSDRaster DEM((path+prefix+"_DEM"), "flt");  
+  LSDRaster DEM((path+prefix+"_DEM"), "flt");
   
   //Fill 
   float MinSlope = 0.0001;
   LSDRaster FilledDEM = DEM.fill(MinSlope);
   
   // get a flow info object
-	LSDFlowInfo FlowInfo(BoundaryConditions,FilledDEM);
+  LSDFlowInfo FlowInfo(BoundaryConditions,FilledDEM);
   
   //get junction network from channel heads
   vector<int> sources = FlowInfo.Ingest_Channel_Heads((path+prefix+"_DEM_CH"), "flt"); 
-  LSDJunctionNetwork JunctionNetwork(sources, FlowInfo);    
+  LSDJunctionNetwork JunctionNetwork(sources, FlowInfo);
 
   //Extract basins based on input stream order
   vector< int > basin_junctions = JunctionNetwork.ExtractBasinJunctionOrder(BasinOrder, FlowInfo);
@@ -138,17 +138,17 @@ int main (int nNumberofArgs,char *argv[])
   vector<float> lh_means;
   vector<float> lh_medians;
   vector<float> lh_std_devs;
-  vector<float> lh_std_errs;    
+  vector<float> lh_std_errs;
   
   vector<float> cht_means;
   vector<float> cht_medians;
   vector<float> cht_std_devs;
-  vector<float> cht_std_errs;    
+  vector<float> cht_std_errs;
   
   vector<float> r_means;
   vector<float> r_medians;
   vector<float> r_std_devs;
-  vector<float> r_std_errs;    
+  vector<float> r_std_errs;
   
   vector<float> s_means;
   vector<float> s_medians;
@@ -172,23 +172,23 @@ int main (int nNumberofArgs,char *argv[])
     s_data.clear();
     
     for (int i=0; i<nrows; ++i){
-  	  for (int j=0; j<ncols; ++j){
-  	  
+      for (int j=0; j<ncols; ++j){
+      
         if (HilltopPatches.get_data_element(i,j) == PatchID){
            
           //make sure we have valid data for each of our arrays
-        	if (CHT.get_data_element(i,j) != ndv && LH.get_data_element(i,j) != ndv && Relief.get_data_element(i,j) != ndv && Slope.get_data_element(i,j) != ndv){
-        	            	           	
+          if (CHT.get_data_element(i,j) != ndv && LH.get_data_element(i,j) != ndv && Relief.get_data_element(i,j) != ndv && Slope.get_data_element(i,j) != ndv){
+              
               lh_data.push_back(LH.get_data_element(i,j));
               r_data.push_back(Relief.get_data_element(i,j));
               cht_data.push_back(CHT.get_data_element(i,j));
-              s_data.push_back(Slope.get_data_element(i,j));              
+              s_data.push_back(Slope.get_data_element(i,j));
               
             }
           }
         }
       }
-  	
+    
     //calculate the mean, median, stddev and std err values for each value in the current segment
   
     //avoid calculations on empty vectors
@@ -244,7 +244,7 @@ int main (int nNumberofArgs,char *argv[])
       
       get_distribution_stats(s_data, s_mean, s_median, s_upper, s_lower, s_max);
       s_std_dev = get_standard_deviation(s_data, s_mean);
-      s_std_err = get_standard_error(s_data, s_std_dev);    
+      s_std_err = get_standard_error(s_data, s_std_dev);
              
       //put patch stats into series of vectors ready to be written to file
       Final_ID.push_back(PatchID);
@@ -257,12 +257,12 @@ int main (int nNumberofArgs,char *argv[])
       cht_means.push_back(cht_mean);
       cht_medians.push_back(cht_median);
       cht_std_devs.push_back(cht_std_dev);
-      cht_std_errs.push_back(cht_std_err);    
+      cht_std_errs.push_back(cht_std_err);
       
       r_means.push_back(r_mean);
       r_medians.push_back(r_median);
       r_std_devs.push_back(r_std_dev);
-      r_std_errs.push_back(r_std_err);    
+      r_std_errs.push_back(r_std_err);
       
       s_means.push_back(s_mean);
       s_medians.push_back(s_median);
@@ -275,9 +275,9 @@ int main (int nNumberofArgs,char *argv[])
   cout << "Writing patch data to file" << endl;
     
   //write the patch data  
-  ofstream WritePatchData;                 
+  ofstream WritePatchData;
   stringstream ss;
-  ss << path << prefix << "_E_R_Star_Patch_Data.csv";                
+  ss << path << prefix << "_E_R_Star_Patch_Data.csv";
   WritePatchData.open(ss.str().c_str());
 
   //write the header file
@@ -289,31 +289,31 @@ int main (int nNumberofArgs,char *argv[])
    
   }
   
-  WritePatchData.close();     
+  WritePatchData.close();
 
   //Now generate a raw data file so that the raw data can be plotted along with the segments
   
   cout << "Writing raw data to file" << endl;
   
   //write the raw data  
-  ofstream WriteRawData;                 
+  ofstream WriteRawData;
   stringstream ss2;
-  ss2 << path << prefix << "_E_R_Star_Raw_Data.csv";                
+  ss2 << path << prefix << "_E_R_Star_Raw_Data.csv";
   WriteRawData.open(ss2.str().c_str());
     
   //write the header
   WriteRawData << "i,j,LH,CHT,Relief,Slope" << endl;  
     
    for (int i=0; i<nrows; ++i){
-  	  for (int j=0; j<ncols; ++j){
-  	  
-  	    if (CHT.get_data_element(i,j) != ndv && LH.get_data_element(i,j) != ndv && Relief.get_data_element(i,j) != ndv && Slope.get_data_element(i,j) != ndv){
-  	      	    
-  	      WriteRawData << i << "," << j << "," << LH.get_data_element(i,j) << "," << CHT.get_data_element(i,j) << "," << Relief.get_data_element(i,j) << "," << Slope.get_data_element(i,j) << endl;
-  	    
-  	    }
-  	  }  	  
-  	}
+      for (int j=0; j<ncols; ++j){
+      
+        if (CHT.get_data_element(i,j) != ndv && LH.get_data_element(i,j) != ndv && Relief.get_data_element(i,j) != ndv && Slope.get_data_element(i,j) != ndv){
+        
+          WriteRawData << i << "," << j << "," << LH.get_data_element(i,j) << "," << CHT.get_data_element(i,j) << "," << Relief.get_data_element(i,j) << "," << Slope.get_data_element(i,j) << endl;
+        
+        }
+      }
+    }
     
   WriteRawData.close();
   
@@ -335,7 +335,7 @@ int main (int nNumberofArgs,char *argv[])
     Basin.set_HilltopPx(FlowInfo,CHT);
   
     Basins.push_back(Basin);
-                             
+    
   }
   
   cout << "Writing basin average data to file" << endl;
@@ -343,14 +343,14 @@ int main (int nNumberofArgs,char *argv[])
   //write the basin data  
   ofstream WriteBasinData;                 
   stringstream ss3;
-  ss3 << path << prefix << "_E_R_Star_Basin_" << BasinOrder << "_Data.csv";                
+  ss3 << path << prefix << "_E_R_Star_Basin_" << BasinOrder << "_Data.csv";
   WriteBasinData.open(ss3.str().c_str());
     
   //write the header
   WriteBasinData << "Basin_ID,LH,CHT,Relief,Slope,Area,Count" << endl;
   
   
-  //write all data to the opened file, ensuring that there are data points to be written in each basin                                         
+  //write all data to the opened file, ensuring that there are data points to be written in each basin
   for (int q = 0; q < int(Basins.size()); ++q){
     // only work where we have data points  - all data is templated from LH or CHT, so if these have data, all rasters have data
     if (Basins[q].CalculateNumDataPoints(FlowInfo, LH) != 0 && Basins[q].CalculateNumDataPoints(FlowInfo, CHT) != 0 ){

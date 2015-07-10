@@ -547,6 +547,23 @@ class LSDRasterSpectral: public LSDRaster
     void print_radial_spectrum(string file_id);
     void print_binned_spectrum(string output_id, float log_bin_width);
 
+    /// @brief method to locate channel pixels adapted from Pelletier (2013).
+    /// 
+    /// @detail Isolate channelised portions of the landscape using an adapted method to that proposed
+    /// by Pelletier, J. D. (2013), A robust, two-parameter method for the extraction of
+    /// drainage networks from high-resolution digital elevation models (DEMs): Evaluation
+    /// using synthetic and real-world DEMs, Water Resour. Res., 49, doi:10.1029/2012WR012452.
+    ///
+    /// This function (i) filters the DEM using a Wiener filter; (ii) calculates the
+    /// curvature; (iii) uses quantile quantile analysis to define a curvature threshold
+    /// for channel initiation.
+    ///
+    /// @param a catchment area threshold for pruning
+    /// @param a window radius for surface fitting from which curvature calculation is performed
+    /// @return LSDIndexRaster A binary raster where the pixel value is 1 where the input raster exceeded the defined threshold 
+    /// @author DTM
+    /// @date 10/07/2015
+    LSDIndexRaster IsolateChannelsWienerQQ(float area_threshold, float window_radius, string q_q_filename);
 
   protected:
     int Lx;

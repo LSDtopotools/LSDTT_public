@@ -96,7 +96,7 @@
 #include "LSDRasterSpectral.hpp"
 #include "LSDStatsTools.hpp"
 #include "LSDIndexRaster.hpp"
-#include "fftw-3.3.1/api/fftw3.h"
+#include "fftw-3.3.4/api/fftw3.h"
 using namespace std;
 using namespace TNT;
 using namespace JAMA;
@@ -163,6 +163,12 @@ void LSDRasterSpectral::create(int raster_order, float cellsize, float ndv)
 void LSDRasterSpectral::create(string filename, string extension)
 {
   read_raster(filename,extension);
+  Ly = int(pow(2,ceil(log(NRows)/log(2))));
+  Lx = int(pow(2,ceil(log(NCols)/log(2)))); 
+  dfx = 1/(DataResolution*float(Lx));
+  dfy = 1/(DataResolution*float(Ly));      
+  NyquistFreq = 1/(2*DataResolution);
+  WSS=float(NRows*NCols);
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -1035,10 +1041,11 @@ void LSDRasterSpectral::calculate_radial_PSD()
   {
     for (int j=0; j < (Lx/2+1); ++j)
     {
-
-      float x = j;
-      float y = i;
-      RadialFreq = sqrt((y - (Ly/2))*(y - (Ly/2))*dfy*dfy + (x - (Lx/2))*(x - (Lx/2))*dfx*dfx); // distance from centre to this point. Converting position in frequency into an absolute frequency
+      float x = float(j);
+      float y = float(i);
+      float fLy = float(Ly);
+      float fLx = float(Lx);
+      RadialFreq = sqrt((y - (fLy/2))*(y - (fLy/2))*dfy*dfy + (x - (fLx/2))*(x - (fLx/2))*dfx*dfx); // distance from centre to this point. Converting position in frequency into an absolute frequency
       if (RadialFreq <= NyquistFreq)  // Ignore radial frequencies greater than the Nyquist frequency as these are aliased
         {
           RadialFrequencyRaw[count] = RadialFreq;
@@ -1525,6 +1532,7 @@ void LSDRasterSpectral::wiener_filter(Array2D<float>& RawSpectrumReal, Array2D<f
   float m_model,logc_model,c_model;      // Coefficients of power law fit => logPSD = logc + m*log(freq) => PSD = c*freq^m
   for (int i = 0; i < n_freqs; ++i)
   {
+    //cout << RadialFrequency[i] << endl;
     if(RadialFrequency[i] <= f_high && RadialFrequency[i] >= f_low)
     {
       LogRadialFrequency.push_back(log10(RadialFrequency[i]));
@@ -1534,7 +1542,9 @@ void LSDRasterSpectral::wiener_filter(Array2D<float>& RawSpectrumReal, Array2D<f
   }
   // Least squares regression
   vector<float> residuals;
+  cout << LogRadialFrequency.size() << " " << LogRadialPSD.size() << " " <<  endl;
   vector<float> regression_results = simple_linear_regression(LogRadialFrequency, LogRadialPSD, residuals);
+  cout << "done" << endl;
   m_model = regression_results[0];
   logc_model = regression_results[1];
 
@@ -2361,5 +2371,57 @@ void LSDRasterSpectral::print_binned_spectrum(string output_id, float log_bin_wi
   }
   ofs.close();
 }  
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Isolate channelised portions of the landscape using an adapted method to that proposed
+// by Pelletier, J. D. (2013), A robust, two-parameter method for the extraction of
+// drainage networks from high-resolution digital elevation models (DEMs): Evaluation
+// using synthetic and real-world DEMs, Water Resour. Res., 49, doi:10.1029/2012WR012452.
+//
+// This function (i) filters the DEM using a Wiener filter; (ii) calculates the
+// curvature; (iii) uses quantile quantile analysis to define a curvature threshold
+// for channel initiation.
+//
+// DTM 21/04/2015
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- =-=-=-=-=
+LSDIndexRaster LSDRasterSpectral::IsolateChannelsWienerQQ(float area_threshold, float window_radius, string q_q_filename)
+{
+  cout << "\t Isolation of channelised pixels using curvature" << endl;   
+  // filter
+  cout << "\t\t Wiener filter" << endl;
+  float slope_percentile = 90;
+  float dt = 0.1;
+  LSDRaster FilteredTopo = fftw2D_wiener();
+  // calculate curvature
+  vector<LSDRaster> output_rasters;
+//  float window_radius = 1;
+  vector<int> raster_selection(8,0.0);
+  raster_selection[6]=1;
+  cout << "\t\t Calculate tangential curvature" << endl;
+  output_rasters = FilteredTopo.calculate_polyfit_surface_metrics(window_radius, raster_selection);
+  LSDRaster curvature = output_rasters[6];
+  // use q-q plot to isolate the channels
+  cout << "\t\t Finding threshold using q-q plot" << endl;
+  LSDIndexRaster channels_init = curvature.IsolateChannelsQuantileQuantile(q_q_filename);
+  // Calculate D_inf
+  cout << "\t\t D_inf flow routing" << endl;
+  LSDRaster Area = FilteredTopo.D_inf();
+  // Reclassification of channel mask based on imposed threshold
+  Array2D<int> binary_array = channels_init.get_RasterData();
+  for(int i = 0; i<NRows; ++i)
+  {
+    for(int j = 0; j < NCols; ++j)
+    {
+      if(channels_init.get_data_element(i,j)!=channels_init.get_NoDataValue())
+      {
+        if(Area.get_data_element(i,j)<=area_threshold) binary_array[i][j] = 0;
+      }
+    }
+  }
+  
+  LSDIndexRaster channels(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,binary_array);
+  return channels;
+}
+
 
 #endif
