@@ -82,10 +82,11 @@ int main(int nNumberofArgs, char *argv[])
     //process basin into a dem for shielding
     LSDRaster CutDEM = DEM.CookieCutRaster(Basin);
     LSDRaster Trimmed = CutDEM.RasterTrimmer();
+    
     LSDRaster Shielded = Trimmed.TopographicShielding(theta_step, phi_step);
         
     //write the shielding raster to the working directory
-    Shielded.write_raster((path+BasinList[q]+"_SH2"),DEM_Format);
+    Shielded.write_raster((path+BasinList[q]+"_SH"),DEM_Format);
   
   }
         
