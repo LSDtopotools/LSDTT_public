@@ -124,15 +124,24 @@ class LSDCosmoData
     /// @date 19/03/2015
     vector<string> get_DEM_fnames();
     
-    /// @brief this gets the names of the snow/self shielding rasters
+    /// @brief this gets the names of the snow shielding rasters
     //  to be used in the analysis
     /// @detail returns only snow shielding names. If name does not exist,  
     ///  returns NULL.
-    /// @return SnowSelf_fnames a vector of fname strings
+    /// @return Snow_fnames a vector of fname strings
     /// @author SMM 
     /// @date 07/07/2015
-    vector<string> get_SnowSelf_fnames();
-    
+    vector<string> get_Snow_fnames();
+
+    /// @brief this gets the names of the self shielding rasters
+    //  to be used in the analysis
+    /// @detail returns only snow shielding names. If name does not exist,  
+    ///  returns NULL.
+    /// @return Self_fnames a vector of fname strings
+    /// @author SMM 
+    /// @date 07/07/2015
+    vector<string> get_Self_fnames();
+
     /// @brief This function checks to make sure parameter values are
     ///  valid for the cosmo data
     /// @author SMM
@@ -155,7 +164,13 @@ class LSDCosmoData
     /// @author SMM
     /// @date 18/03/2015
     vector<string> spawn_clipped_basins(string DEM_fname, int basin_padding_px);
-    
+
+    /// @brief This dirves the spawning of basins
+    /// @param padding_pixels the number of pixels with which to pad the basins
+    /// @author SMM
+    /// @date 10/07/2015
+    void BasinSpawnerMaster(int padding_pixels);
+
     /// @brief this function calculates the UTM coordinates of all the sample
     ///  points for a given UTM zone. 
     /// @param UTM_zone the UTM zone

@@ -544,7 +544,7 @@ void LSDCosmoData::load_parameters(string filename)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function loads the filenames 
 // for the DEMs or single value parameters.
-// It reads the DEM, either the snow shiled raster or a single value
+// It reads the DEM, either the snow shield raster or a single value
 // the self shield raster name or a single value, and the topo shield raster
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCosmoData::load_DEM_and_shielding_filenames_csv(string filename)
@@ -602,7 +602,7 @@ void LSDCosmoData::load_DEM_and_shielding_filenames_csv(string filename)
       // remove the spaces
       substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
       
-      // remove constrol characters
+      // remove control characters
       substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
       
       // add the string to the string vec
@@ -817,10 +817,10 @@ vector<string> LSDCosmoData::get_DEM_fnames()
 // This gets the names of the snow and self shielding rasters
 // If none exists, the name is NULL
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-vector<string> LSDCosmoData::get_SnowSelf_fnames()
+vector<string> LSDCosmoData::get_Snow_fnames()
 {
 
-  vector<string> Snowself_fnames;
+  vector<string> Snow_fnames;
 
   // now print the results to screen
   int n_files = int(DEM_names_vecvec.size());
@@ -830,14 +830,42 @@ vector<string> LSDCosmoData::get_SnowSelf_fnames()
     for(int row = 0; row<n_files; row++)
     {
       vector<string> temp_stringvec = DEM_names_vecvec[row];
-      Snowself_fnames.push_back(temp_stringvec[1]);
+      Snow_fnames.push_back(temp_stringvec[1]);
     }      
   }
   else
   {
     cout << "LSDCosmoData::print_file_structures_to_screen; files have not been loaded!" << endl;
   }
-  return Snowself_fnames;
+  return Snow_fnames;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This gets the names of the snow and self shielding rasters
+// If none exists, the name is NULL
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<string> LSDCosmoData::get_Self_fnames()
+{
+
+  vector<string> Self_fnames;
+
+  // now print the results to screen
+  int n_files = int(DEM_names_vecvec.size());
+  
+  if(n_files != 0)
+  {
+    for(int row = 0; row<n_files; row++)
+    {
+      vector<string> temp_stringvec = DEM_names_vecvec[row];
+      Self_fnames.push_back(temp_stringvec[2]);
+    }      
+  }
+  else
+  {
+    cout << "LSDCosmoData::print_file_structures_to_screen; files have not been loaded!" << endl;
+  }
+  return Self_fnames;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -1011,7 +1039,7 @@ void LSDCosmoData::check_rasters()
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Spawn clipped basins
-// This function attempts to speed up sheilding calculations by
+// This function attempts to speed up shielding calculations by
 // finding basins and then clipping each basin to a DEM. It sucks up a whole bunch
 // of disk space but is faster than doing entire DEMs
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1088,14 +1116,122 @@ vector<string> LSDCosmoData::spawn_clipped_basins(string DEM_fname, int padding_
       
     LSDRaster BasinRaster = thisBasin.TrimPaddedRasterToBasin(padding_pixels, 
                                          FlowInfo,filled_raster);
-      
-    string DEMnewname = DEM_fname+ "_"+itoa(valid_cosmo_points[samp]);
+    
+    string DEMpath = DEM_fname+ "/";
+    string DEM_newpath = ReformatPath(DEMpath);
+    string DEMnewname = DEM_newpath+ "SpawnedBasin_"+itoa(valid_cosmo_points[samp]);
     BasinRaster.write_raster(DEMnewname,"bil");
     new_dem_names.push_back(DEMnewname);
   }
   return new_dem_names;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::BasinSpawnerMaster(int padding_pixels)
+{
+  // first get the names of the DEMs:
+  vector<string> dfnames = get_DEM_fnames();
+  vector<string> snow_fnames = get_Snow_fnames();
+  vector<string> self_fnames = get_Self_fnames();
+  string DEM_bil_extension = "bil";
+  
+  // holds shielding parameters
+  vector<double> this_ss_shielding;
+  
+  int n_DEMs = dfnames.size();
+  for(int i = 0; i<n_DEMs; i++)
+  {
+    vector<string> new_dem_names = spawn_clipped_basins(dfnames[i], padding_pixels);
+    string this_dem_path = dfnames[i]+"/";
+    
+    if (new_dem_names.size() != 0)
+    {
+      // open the file for this dem
+      ofstream new_CRNRasters_csv;
+      string new_csv_name =  dfnames[i]+"_CRNRasters.csv";
+      new_CRNRasters_csv.open(new_csv_name.c_str());
+
+
+      // start buidling the string that will go into the new file
+      vector<string> new_DEMs_vec;
+      vector<string> new_snow_vec;
+      vector<string> new_self_vec;
+      
+      // get the snow_self_shielding_params
+      this_ss_shielding = snow_self_topo_shielding_params[i];
+
+      // loop though the new rasters
+      int NSpawn = new_dem_names.size();
+      for(int ns = 0; ns<NSpawn; ns++)
+      {
+        new_DEMs_vec.push_back(new_dem_names[ns]);
+
+        // now check to see if there is a shielding raster
+        if(snow_fnames[ns] == "NULL" && self_fnames[ns] == "NULL")
+        {
+          new_snow_vec.push_back(dtoa(this_ss_shielding[0]));
+          new_self_vec.push_back(dtoa(this_ss_shielding[1]));
+        }
+        else
+        {
+          // at least one of these rasters must be clipped. So load the basin
+          LSDRaster clipped_raster(new_dem_names[ns],DEM_bil_extension);
+        
+          if(snow_fnames[ns] == "NULL")
+          {
+            new_snow_vec.push_back(dtoa(this_ss_shielding[0]));
+          }
+          else
+          {
+            // load the shielding dem
+            LSDRaster Snow_Raster(snow_fnames[ns],DEM_bil_extension);
+            
+            // clip this raster
+            LSDRaster Snow_clip = Snow_Raster.clip_to_smaller_raster(clipped_raster);
+            
+            // save this raster
+            Snow_clip.write_raster(new_dem_names[ns]+"_snowclip",DEM_bil_extension);
+            
+            // add the name to the list
+            new_snow_vec.push_back(new_dem_names[ns]+"_snowclip");
+            
+          }
+          if(self_fnames[ns] == "NULL")
+          {
+            new_self_vec.push_back(dtoa(this_ss_shielding[1]));
+          }
+          else
+          {
+            // load the shielding dem
+            LSDRaster Self_Raster(self_fnames[ns],DEM_bil_extension);
+            
+            // clip this raster
+            LSDRaster Self_clip = Self_Raster.clip_to_smaller_raster(clipped_raster);
+            
+            // save this raster
+            Self_clip.write_raster(new_dem_names[ns]+"_selfclip",DEM_bil_extension);
+            
+            // add the name to the list
+            new_self_vec.push_back(new_dem_names[ns]+"_selfclip");
+          }
+        }
+      }      // end if statement to see if there are shielding rasters
+    
+      int n_new_dems = new_DEMs_vec.size();
+      for(int ndm = 0; ndm < n_new_dems; ndm++)
+      {
+        new_CRNRasters_csv << new_dem_names[ndm] + "," + new_snow_vec[ndm] + "," +
+                              new_self_vec[ndm];
+      }
+      new_CRNRasters_csv.close();
+    }
+  }
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
