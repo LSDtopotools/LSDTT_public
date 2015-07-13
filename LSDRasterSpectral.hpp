@@ -564,6 +564,7 @@ class LSDRasterSpectral: public LSDRaster
     /// @author DTM
     /// @date 10/07/2015
     LSDIndexRaster IsolateChannelsWienerQQ(float area_threshold, float window_radius, string q_q_filename);
+  LSDIndexRaster IsolateChannelsWienerQQAdaptive(float area_threshold, float window_radius, string q_q_filename);
 
   protected:
     int Lx;

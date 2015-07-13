@@ -2403,6 +2403,45 @@ LSDIndexRaster LSDRasterSpectral::IsolateChannelsWienerQQ(float area_threshold, 
   // use q-q plot to isolate the channels
   cout << "\t\t Finding threshold using q-q plot" << endl;
   int half_width = 100;
+  LSDIndexRaster channels_init = curvature.IsolateChannelsQuantileQuantile(q_q_filename);
+  // Calculate D_inf
+  cout << "\t\t D_inf flow routing" << endl;
+  LSDRaster Area = FilteredTopo.D_inf();
+  // Reclassification of channel mask based on imposed threshold
+  Array2D<int> binary_array = channels_init.get_RasterData();
+  for(int i = 0; i<NRows; ++i)
+  {
+    for(int j = 0; j < NCols; ++j)
+    {
+      if(channels_init.get_data_element(i,j)!=channels_init.get_NoDataValue())
+      {
+        if(Area.get_data_element(i,j)<=area_threshold) binary_array[i][j] = 0;
+      }
+    }
+  }
+  
+  LSDIndexRaster channels(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,binary_array);
+  return channels;
+}
+LSDIndexRaster LSDRasterSpectral::IsolateChannelsWienerQQAdaptive(float area_threshold, float window_radius, string q_q_filename)
+{
+  cout << "\t Isolation of channelised pixels using curvature" << endl;   
+  // filter
+  cout << "\t\t Wiener filter" << endl;
+  float slope_percentile = 90;
+  float dt = 0.1;
+  LSDRaster FilteredTopo = fftw2D_wiener();
+  // calculate curvature
+  vector<LSDRaster> output_rasters;
+//  float window_radius = 1;
+  vector<int> raster_selection(8,0.0);
+  raster_selection[6]=1;
+  cout << "\t\t Calculate tangential curvature" << endl;
+  output_rasters = FilteredTopo.calculate_polyfit_surface_metrics(window_radius, raster_selection);
+  LSDRaster curvature = output_rasters[6];
+  // use q-q plot to isolate the channels
+  cout << "\t\t Finding threshold using q-q plot" << endl;
+  int half_width = 100;
   LSDIndexRaster channels_init = curvature.IsolateChannelsQuantileQuantileAdaptive(half_width);
   // Calculate D_inf
   cout << "\t\t D_inf flow routing" << endl;
