@@ -2402,7 +2402,8 @@ LSDIndexRaster LSDRasterSpectral::IsolateChannelsWienerQQ(float area_threshold, 
   LSDRaster curvature = output_rasters[6];
   // use q-q plot to isolate the channels
   cout << "\t\t Finding threshold using q-q plot" << endl;
-  LSDIndexRaster channels_init = curvature.IsolateChannelsQuantileQuantile(q_q_filename);
+  int half_width = 100;
+  LSDIndexRaster channels_init = curvature.IsolateChannelsQuantileQuantileAdaptive(half_width);
   // Calculate D_inf
   cout << "\t\t D_inf flow routing" << endl;
   LSDRaster Area = FilteredTopo.D_inf();
