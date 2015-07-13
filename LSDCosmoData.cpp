@@ -1064,6 +1064,13 @@ vector<string> LSDCosmoData::spawn_clipped_basins(string DEM_fname, int padding_
   LSDRaster filled_raster = topo_test.fill(min_slope);
   //cout << "Filled raster" << endl;
   
+  // remove the seas
+  cout << endl << endl << endl << "--------------------" << endl;
+  cout << "Removing seas" << endl;
+  filled_raster.remove_seas();
+  string JB = DEM_fname+ "_Updated";
+  filled_raster.write_raster(JB,"bil");
+  
   
   // get the flow info
   LSDFlowInfo FlowInfo(boundary_conditions, filled_raster);
@@ -1112,18 +1119,35 @@ vector<string> LSDCosmoData::spawn_clipped_basins(string DEM_fname, int padding_
          << UTM_easting[valid_cosmo_points[samp]] << " Y: "
          << UTM_northing[valid_cosmo_points[samp]] << endl;
     cout << "Node index is: " <<  snapped_node_indices[samp] << " and junction is: " 
-         << snapped_junction_indices[samp] << endl;
+         << snapped_junction_indices[samp] << " and sample name is: " << sample_name[valid_cosmo_points[samp]] << endl;
+         
+    cout << "Getting basin" << endl;
     LSDBasin thisBasin(snapped_junction_indices[samp],FlowInfo, JNetwork);
-      
+    
+    cout << "Now getting the basin raster" << endl;  
     LSDRaster BasinRaster = thisBasin.TrimPaddedRasterToBasin(padding_pixels, 
                                          FlowInfo,filled_raster);
+    cout << "Formatting the path" << endl;
     
-    string DEMpath = DEM_fname+ "/";
-    string DEM_newpath = ReformatPath(DEMpath);
-    string DEMnewname = DEM_newpath+ "SpawnedBasin_"+itoa(valid_cosmo_points[samp]);
+    
+    string DEM_path = DEM_fname+ "/";
+    
+    //string DEM_newpath = ReformatPath(DEMpath);
+    string DEMnewname = DEM_path+ "SpawnedBasin_"+itoa(valid_cosmo_points[samp]);
+    
+    cout << "Writing a new basin to: " << DEMnewname << endl;
+        
     BasinRaster.write_raster(DEMnewname,"bil");
     new_dem_names.push_back(DEMnewname);
+    
+    
+    //string JB = DEM_path+ "JustBasin_"+itoa(valid_cosmo_points[samp]);
+    //LSDRaster JustBasinRaster = thisBasin.write_raster_data_to_LSDRaster(filled_raster, FlowInfo);
+    //JustBasinRaster.write_raster(JB,"bil");
+    
   }
+  cout << "Finished with this DEM!" << endl 
+       << "I found " << new_dem_names.size() << " new  basins!" << endl << "----------------" << endl; 
   return new_dem_names;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1151,11 +1175,13 @@ void LSDCosmoData::BasinSpawnerMaster(int padding_pixels)
     vector<string> new_dem_names = spawn_clipped_basins(dfnames[i], padding_pixels);
     string this_dem_path = dfnames[i]+"/";
     
+    
     if (new_dem_names.size() != 0)
     {
       // open the file for this dem
       ofstream new_CRNRasters_csv;
       string new_csv_name =  dfnames[i]+"_CRNRasters.csv";
+      cout << "New csv name is: " << new_csv_name << endl;
       new_CRNRasters_csv.open(new_csv_name.c_str());
 
 
@@ -1169,19 +1195,22 @@ void LSDCosmoData::BasinSpawnerMaster(int padding_pixels)
 
       // loop though the new rasters
       int NSpawn = new_dem_names.size();
+      cout << "Number of new DEMs is: " <<  NSpawn << endl;
       for(int ns = 0; ns<NSpawn; ns++)
       {
         new_DEMs_vec.push_back(new_dem_names[ns]);
 
         // now check to see if there is a shielding raster
-        if(snow_fnames[ns] == "NULL" && self_fnames[ns] == "NULL")
+        if(snow_fnames[i] == "NULL" && self_fnames[i] == "NULL")
         {
+          cout << "No snow or self shielding rasters, adding constant values" << endl;
           new_snow_vec.push_back(dtoa(this_ss_shielding[0]));
           new_self_vec.push_back(dtoa(this_ss_shielding[1]));
         }
         else
         {
           // at least one of these rasters must be clipped. So load the basin
+          cout << "I need to clip a snow or shielding raster!" << endl;
           LSDRaster clipped_raster(new_dem_names[ns],DEM_bil_extension);
         
           if(snow_fnames[ns] == "NULL")
@@ -1191,7 +1220,7 @@ void LSDCosmoData::BasinSpawnerMaster(int padding_pixels)
           else
           {
             // load the shielding dem
-            LSDRaster Snow_Raster(snow_fnames[ns],DEM_bil_extension);
+            LSDRaster Snow_Raster(snow_fnames[i],DEM_bil_extension);
             
             // clip this raster
             LSDRaster Snow_clip = Snow_Raster.clip_to_smaller_raster(clipped_raster);
@@ -1210,7 +1239,7 @@ void LSDCosmoData::BasinSpawnerMaster(int padding_pixels)
           else
           {
             // load the shielding dem
-            LSDRaster Self_Raster(self_fnames[ns],DEM_bil_extension);
+            LSDRaster Self_Raster(self_fnames[i],DEM_bil_extension);
             
             // clip this raster
             LSDRaster Self_clip = Self_Raster.clip_to_smaller_raster(clipped_raster);
@@ -1225,6 +1254,11 @@ void LSDCosmoData::BasinSpawnerMaster(int padding_pixels)
       }      // end if statement to see if there are shielding rasters
     
       int n_new_dems = new_DEMs_vec.size();
+      cout << "The number of names is: " << n_new_dems << endl;
+      cout << "New snow vecs: " << new_snow_vec.size() << endl;
+      cout << "New self vecs: " << new_self_vec.size() << endl;
+      
+      
       for(int ndm = 0; ndm < n_new_dems; ndm++)
       {
         new_CRNRasters_csv << new_dem_names[ndm] + "," + new_snow_vec[ndm] + "," +
