@@ -61,6 +61,7 @@ int main (int nNumberofArgs,char *argv[])
   // Elevation
   LSDRasterSpectral raster(Raster_name, DEM_extension);
   LSDIndexRaster output_raster = raster.IsolateChannelsWienerQQ(area_threshold, window_radius, q_q_filename_prefix+".txt");
-  output_raster.write_raster(Output_name,DEM_extension);
+  output_raster = output_raster.ConnectedComponents();
+  output_raster.write_raster(Output_name+"_cc",DEM_extension);
   cout << "DONE" << endl;
 }
