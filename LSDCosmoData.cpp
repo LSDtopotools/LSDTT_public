@@ -1104,6 +1104,7 @@ vector<string> LSDCosmoData::spawn_clipped_basins(string DEM_fname, int padding_
   // LOOPING THROUGH BASINS
   //========================
   // now loop through the valid points, getting the cosmo data 
+  cout << "I am trying to spawn basins, found " << n_valid_points << " valid points." << endl;
   for(int samp = 0; samp<n_valid_points; samp++)
   {
      
@@ -1145,6 +1146,8 @@ void LSDCosmoData::BasinSpawnerMaster(int padding_pixels)
   int n_DEMs = dfnames.size();
   for(int i = 0; i<n_DEMs; i++)
   {
+    
+    cout << "Looking at DEM: " <<  dfnames[i] << endl;
     vector<string> new_dem_names = spawn_clipped_basins(dfnames[i], padding_pixels);
     string this_dem_path = dfnames[i]+"/";
     
