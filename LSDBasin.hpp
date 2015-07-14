@@ -138,6 +138,8 @@ class LSDBasin
   float get_RStar() const { return RStar; }  
   /// @return Number of hilltop pixels in the basin.
   int get_HilltopPx() const { return HilltopPx; }
+  /// @return fraction basin that is rock rather than soil mantled
+  float get_BedrockFraction() const { return BedrockFraction; };
   
   /// @brief Calculate the mean value of an LSDRaster which falls inside a basin.
   /// @param FlowInfo Flowinfo object.
@@ -327,6 +329,11 @@ class LSDBasin
   /// @author SWDG
   /// @date 12/12/13
   void set_HillslopeLength_Density() { HillslopeLength_Density = (1 / (2 * DrainageDensity)); }
+  
+  /// @brief Set the Rock Exposure fraction of the basin 
+  /// @author DTM
+  /// @date 14/07/15
+  void set_BedrockFraction(LSDFlowInfo& FlowInfo, LSDRaster RockExposure) { BedrockFraction = CalculateBasinMean(FlowInfo, RockExposure); }
   
   /// @brief Generate text files containing data to plot boomerangs.
   ///
@@ -766,6 +773,8 @@ LSDRaster TrimPaddedRasterToBasin(int padding_pixels, LSDFlowInfo& FlowInfo,
   float RStar;
   /// Number of hilltop pixels in a basin.
   float HilltopPx;
+  /// Fraction of basin mapped bedrock
+  float BedrockFraction;
 
   private:
   void create();

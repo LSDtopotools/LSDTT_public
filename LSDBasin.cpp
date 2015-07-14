@@ -53,6 +53,7 @@ void LSDBasin::create()
   EStar = NoDataValue;
   RStar = NoDataValue;
   HilltopPx = NoDataValue;
+  BedrockFraction = NoDataValue;
    
   //finished creating empty variables 
 
@@ -149,7 +150,7 @@ void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNetw
   CHTMean = NoDataValue;
   EStar = NoDataValue;
   RStar = NoDataValue;
-   
+  BedrockFraction = NoDataValue;
   //finished creating empty variables 
 
 }
