@@ -1065,11 +1065,11 @@ vector<string> LSDCosmoData::spawn_clipped_basins(string DEM_fname, int padding_
   //cout << "Filled raster" << endl;
   
   // remove the seas
-  cout << endl << endl << endl << "--------------------" << endl;
-  cout << "Removing seas" << endl;
-  filled_raster.remove_seas();
-  string JB = DEM_fname+ "_Updated";
-  filled_raster.write_raster(JB,"bil");
+  //cout << endl << endl << endl << "--------------------" << endl;
+  //cout << "Removing seas" << endl;
+  //filled_raster.remove_seas();
+  //string JB = DEM_fname+ "_Updated";
+  //filled_raster.write_raster(JB,"bil");
   
   
   // get the flow info
@@ -1156,7 +1156,7 @@ vector<string> LSDCosmoData::spawn_clipped_basins(string DEM_fname, int padding_
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDCosmoData::BasinSpawnerMaster(int padding_pixels)
+void LSDCosmoData::BasinSpawnerMaster(string path, string prefix, int padding_pixels)
 {
   // first get the names of the DEMs:
   vector<string> dfnames = get_DEM_fnames();
@@ -1167,24 +1167,22 @@ void LSDCosmoData::BasinSpawnerMaster(int padding_pixels)
   // holds shielding parameters
   vector<double> this_ss_shielding;
   
+  // this holds the information from the spawned basins
+  // open the file for this dem
+  ofstream new_CRNRasters_csv;
+  string new_csv_name =  path+prefix+"_Spawned_CRNRasters.csv";
+  cout << "New csv name is: " << new_csv_name << endl;
+  new_CRNRasters_csv.open(new_csv_name.c_str());
+  
   int n_DEMs = dfnames.size();
   for(int i = 0; i<n_DEMs; i++)
   {
     
     cout << "Looking at DEM: " <<  dfnames[i] << endl;
     vector<string> new_dem_names = spawn_clipped_basins(dfnames[i], padding_pixels);
-    string this_dem_path = dfnames[i]+"/";
-    
     
     if (new_dem_names.size() != 0)
     {
-      // open the file for this dem
-      ofstream new_CRNRasters_csv;
-      string new_csv_name =  dfnames[i]+"_CRNRasters.csv";
-      cout << "New csv name is: " << new_csv_name << endl;
-      new_CRNRasters_csv.open(new_csv_name.c_str());
-
-
       // start buidling the string that will go into the new file
       vector<string> new_DEMs_vec;
       vector<string> new_snow_vec;
@@ -1262,12 +1260,47 @@ void LSDCosmoData::BasinSpawnerMaster(int padding_pixels)
       for(int ndm = 0; ndm < n_new_dems; ndm++)
       {
         new_CRNRasters_csv << new_dem_names[ndm] + "," + new_snow_vec[ndm] + "," +
-                              new_self_vec[ndm];
+                              new_self_vec[ndm] << endl;
       }
-      new_CRNRasters_csv.close();
+      
     }
   }
+  new_CRNRasters_csv.close();
+  
+  // now spawn a new cosmodata file with the correct prefix
+  string new_prefix = prefix+"_Spawned";
+  print_renamed_cosmo_data(path, new_prefix);
+  print_renamed_parameter_data(path, new_prefix);
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Shielding calculations
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::RunShielding()
+{
+  vector<string> dfnames = get_DEM_fnames();
+  string DEM_Format = "bil";
+
+  //loop over each DEM and generate the shielding raster.
+  int n_DEMs = dfnames.size();
+  for(int i = 0; i<n_DEMs; i++)
+  {
+    
+    cout << "Processing " << i+1 << " of " << n_DEMs << endl;
+    
+    //load the raster
+    LSDRaster ForShield(dfnames[i], DEM_Format);
+
+    // run shielding
+    LSDRaster Shielded = ForShield.TopographicShielding(theta_step, phi_step);
+    
+    //write the shielding raster to the working directory
+    Shielded.write_raster((dfnames[i]+"_SH"),DEM_Format);
+  }
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1292,6 +1325,71 @@ void LSDCosmoData::print_data_to_screen()
   cout << endl << endl;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function prints the data to screen
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::print_renamed_cosmo_data(string path, string prefix)
+{
+  ofstream new_CRN_data;
+  string new_CRN_data_name = path+prefix+"_CRNData.csv";
+  new_CRN_data.open(new_CRN_data_name.c_str());
+  new_CRN_data << "Sample_name,Latitude,Longitude,Nuclide,Concentration,Uncertainty,Standardisation" << endl;
+  
+  for (int i= 0; i<N_samples; i++)
+  {
+    new_CRN_data << sample_name[i] << "," << latitude[i] << "," << longitude[i] << ","
+                 << nuclide[i] << "," << Concentration_unstandardised[i] 
+                 << "," << Concentration_uncertainty_unstandardised[i] << ","
+                 << standardisation[i] << endl;
+  }
+  new_CRN_data.close();
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::print_renamed_parameter_data(string path, string prefix)
+{
+  ofstream new_param_data;
+  string new_param_data_name = path+prefix+".CRNParam";
+  new_param_data.open(new_param_data_name.c_str());
+  new_param_data << "min_slope: " << min_slope << endl;
+  new_param_data << "source_threshold: " << source_threshold << endl;
+  new_param_data << "search_radius_nodes: " << search_radius_nodes << endl;
+  new_param_data << "threshold_stream_order: " << threshold_stream_order << endl;
+  new_param_data << "theta_step: " << theta_step << endl;
+  new_param_data << "phi_step: " << phi_step << endl; 
+  new_param_data << "Muon_scaling: " << Muon_scaling << endl;
+  if (write_basin_index_raster)
+  {
+    new_param_data << "write_basin_index_raster: True" << endl;
+  }
+  else
+  {
+    new_param_data << "write_basin_index_raster: False" << endl;
+  }
+  if (write_TopoShield_raster)
+  {
+    new_param_data << "write_toposhield_raster: True" << endl;
+  }
+  else
+  {
+    new_param_data << "write_toposhield_raster: False" << endl;
+  }    
+  if (write_full_scaling_rasters)
+  {
+    new_param_data << "write_full_scaling_rasters: True" << endl;
+  }
+  else
+  {
+    new_param_data << "write_full_scaling_rasters: False" << endl;
+  }  
+  new_param_data.close();
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This prints the file structures to screen

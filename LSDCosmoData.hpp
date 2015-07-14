@@ -166,10 +166,19 @@ class LSDCosmoData
     vector<string> spawn_clipped_basins(string DEM_fname, int basin_padding_px);
 
     /// @brief This dirves the spawning of basins
+    /// @param path This is a string containing the path to the data files (needs / at the end)
+    /// @param prefix the prefix of the data files
     /// @param padding_pixels the number of pixels with which to pad the basins
     /// @author SMM
     /// @date 10/07/2015
-    void BasinSpawnerMaster(int padding_pixels);
+    void BasinSpawnerMaster(string path, string prefix, int padding_pixels);
+
+    /// @brief This calculates topographic shielding for basins listed in the 
+    ///   _CRNRasters.csv file
+    /// @detail Shielding rasters are printed to the same folder as the DEM
+    /// @author SMM
+    /// @date 15/07/2015
+    void RunShielding();
 
     /// @brief this function calculates the UTM coordinates of all the sample
     ///  points for a given UTM zone. 
@@ -241,6 +250,20 @@ class LSDCosmoData
     /// @author SMM
     /// @date 09/02/2015
     void print_data_to_screen(); 
+
+    /// @brief This prints the cosmo data to a new file 
+    /// @param path is the pathname. Needs a "/"  at the end
+    /// @param prefix: the name of the file before _CRNData.csv
+    /// @author SMM
+    /// @date 14/07/2015
+    void print_renamed_cosmo_data(string path, string prefix);
+
+    /// @brief This prints the parameter data to a new file 
+    /// @param path is the pathname. Needs a "/"  at the end
+    /// @param prefix: the name of the file before _CRNData.csv
+    /// @author SMM
+    /// @date 14/07/2015
+    void print_renamed_parameter_data(string path, string prefix);
 
     /// @brief this prints the file structure data to screen
     ///  it is a list of the DEMs, snow shielding rasters, self shelding rasters
