@@ -730,6 +730,12 @@ class LSDFlowInfo
 
 
 
+    vector< Array2D<float> > HilltopFlowRoutingBedrock(LSDRaster Elevation, LSDRaster Hilltops, LSDRaster Slope, 
+               LSDIndexRaster StreamNetwork, LSDRaster Aspect, string Prefix, LSDIndexRaster Basins, LSDRaster PlanCurvature,
+               bool print_paths_switch, int thinning, string trace_path, bool basin_filter_switch,
+               vector<int> Target_Basin_Vector, LSDRaster RockExposure);
+
+
   protected:
 
   ///Number of rows.
