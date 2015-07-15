@@ -176,9 +176,11 @@ class LSDCosmoData
     /// @brief This calculates topographic shielding for basins listed in the 
     ///   _CRNRasters.csv file
     /// @detail Shielding rasters are printed to the same folder as the DEM
+    /// @param path This is a string containing the path to the data files (needs / at the end)
+    /// @param prefix the prefix of the data files
     /// @author SMM
     /// @date 15/07/2015
-    void RunShielding();
+    void RunShielding(string path, string prefix);
 
     /// @brief this function calculates the UTM coordinates of all the sample
     ///  points for a given UTM zone. 

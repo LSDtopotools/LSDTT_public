@@ -1278,9 +1278,10 @@ void LSDCosmoData::BasinSpawnerMaster(string path, string prefix, int padding_pi
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Shielding calculations
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDCosmoData::RunShielding()
+void LSDCosmoData::RunShielding(string path, string prefix)
 {
   vector<string> dfnames = get_DEM_fnames();
+  vector<string> shield_names;
   string DEM_Format = "bil";
 
   //loop over each DEM and generate the shielding raster.
@@ -1298,7 +1299,54 @@ void LSDCosmoData::RunShielding()
     
     //write the shielding raster to the working directory
     Shielded.write_raster((dfnames[i]+"_SH"),DEM_Format);
+    shield_names.push_back(dfnames[i]+"_SH");
   }
+  
+  // now rewrite the parameter file
+  string rasters_name = path+prefix+"_CRNRasters.csv";
+  cout << endl << endl << endl << "---------------------------------" << endl;
+  cout << "Rasters name is: " << rasters_name << endl;
+  
+  
+  // make sure the filename works
+  ifstream ifs(rasters_name.c_str());
+  if( ifs.fail() )
+  {
+    cout << "\nFATAL ERROR: Trying to load csv filenames file, but the file" << rasters_name
+         << "doesn't exist; LINE 348 LSDCosmoData" << endl;
+    exit(EXIT_FAILURE);
+  }
+  
+  string line_from_file;
+  vector<string> lines;
+  string temp_string;
+  
+  // now loop through the rest of the lines, getting the data. 
+  int i = 0;
+  while( getline(ifs, line_from_file))
+  {
+    // get rid of control characters. Stupid windows
+    string newline = RemoveControlCharacters(line_from_file);
+    cout << "line is: " << newline << " and shield name is: " << shield_names[i] << endl;
+    temp_string = newline+","+shield_names[i];
+    lines.push_back(temp_string);
+    i++;
+  }
+  ifs.close();
+  
+  
+  
+  // now write the data
+  ofstream rasters_out;
+  rasters_out.open(rasters_name.c_str());
+  
+  int n_files = int(lines.size());
+  cout << "N_files is: " << n_files << endl;
+  for(int i = 0; i<n_files; i++)
+  {
+    rasters_out << lines[i] << endl;
+  }
+  rasters_out.close();
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
