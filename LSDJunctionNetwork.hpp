@@ -248,8 +248,7 @@ class LSDJunctionNetwork
   /// @return The channel for the given junction.
   /// @author SMM
   /// @date 01/09/12
-	LSDIndexChannel generate_link_index_channel_from_junction(int start_junction,
-													LSDFlowInfo& FlowInfo);
+	LSDIndexChannel generate_link_index_channel_from_junction(int start_junction,LSDFlowInfo& FlowInfo);
 
 	/// @brief This function extracts the longest channel originating from a junction number
   /// outlet_junction.
@@ -259,9 +258,7 @@ class LSDJunctionNetwork
   /// @return LSDIndexRaster of the longest channel.
   /// @author SMM
   /// @date 01/09/12
-	LSDIndexChannel generate_longest_index_channel_from_junction(int outlet_junction,
-																LSDFlowInfo& FInfo,
-																LSDRaster& dist_from_outlet);
+	LSDIndexChannel generate_longest_index_channel_from_junction(int outlet_junction,LSDFlowInfo& FInfo,LSDRaster& dist_from_outlet);
 
   // this generates the longest channel in a basin. The basin starts where a channel of
   // some order intersects with a channel of higher order. So the bain includes the
@@ -640,6 +637,19 @@ class LSDJunctionNetwork
   /// @date 29/10/2013
   Array2D<int> find_valleys(LSDFlowInfo& FlowInfo, Array2D<float>& tan_curv_array, 
                             vector<int> sources, int no_connecting_nodes, float tan_curv_threshold = 0.1);
+  
+  /// @brief This function uses a predefined channel mask to locate valley junctions
+  ///
+  /// @details This uses the same approach as the find_valleys function, but allows
+  /// greater flexibility in how the valley network is defined
+  ///
+  /// @param FlowInfo LSDFlowInfo object
+  /// @param channel_mask 2D binary array with multi-pixel channel network marked by 1s
+  /// @param sources vector with sources of channel network
+  /// @param no_connecting_nodes number of nodes that need to be above the threshold before the valley is identified
+  /// @return Array2D<int> with nodes at the base of each of the valleys
+  Array2D<int> find_valleys_using_channel_mask(LSDFlowInfo& FlowInfo, Array2D<int>& channel_mask, vector<int> sources, int no_connecting_nodes);
+  
   
   /// @brief Ridge network extraction - extracts ridge network, defined as boundaries
   /// between two basins of the same stream order.

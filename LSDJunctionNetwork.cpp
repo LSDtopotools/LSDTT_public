@@ -2719,6 +2719,94 @@ Array2D<int> LSDJunctionNetwork::find_valleys(LSDFlowInfo& FlowInfo, Array2D<flo
   return valley_junctions;  
 }  
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// DTM 16/07/2015
+Array2D<int> LSDJunctionNetwork::find_valleys_using_channel_mask(LSDFlowInfo& FlowInfo, Array2D<int>& channel_mask, vector<int> sources, int no_connecting_nodes)
+{
+  Array2D<int> NodesVisitedBefore(NRows,NCols,0);
+  Array2D<int> NodesVisitedBeforeTemp(NRows,NCols,0);
+  Array2D<int> valley_junctions(NRows,NCols,NoDataValue);   
+  vector<int> valley_nodes;
+    
+  //Find valleys with linked pixels greater than the threshold
+  int n_sources = sources.size();
+  cout << "No of sources: " << n_sources << endl;
+  
+  // Loop through all the sources, moving downstream - keep a count of the number of connected
+  // nodes that are above the threshold curvature.  If there are more than 10 nodes that are 
+  // connected then it is a valley - get the outlet junction of the valley and store in a vector
+  
+  for (int source = 0; source < n_sources; source++)
+  {
+    bool EndofReach = false;
+    int max_no_connected_nodes =0;
+    int CurrentNode = sources[source];
+    int CurrentRow,CurrentCol,ReceiverNode,ReceiverRow,ReceiverCol; 
+    
+    while (EndofReach == false)
+    {
+      FlowInfo.retrieve_current_row_and_col(CurrentNode,CurrentRow,CurrentCol);
+      FlowInfo.retrieve_receiver_information(CurrentNode, ReceiverNode, ReceiverRow, ReceiverCol);
+      if (channel_mask[CurrentRow][CurrentCol] != int(NoDataValue))
+      {
+        NodesVisitedBefore[CurrentRow][CurrentCol] = 1;
+    
+        if (channel_mask[CurrentRow][CurrentCol] == 1) ++max_no_connected_nodes;
+        else max_no_connected_nodes = 0;
+        
+        //check whether the no of connected nodes has been reached; if it has then identify the 
+        // outlet junction of the valley
+        if (max_no_connected_nodes > no_connecting_nodes)
+        {
+          EndofReach = true;
+          int this_node = CurrentNode;
+          int current_row,current_col,downslope_node,downslope_row,downslope_col,current_SO,downslope_SO;
+          bool reached_outlet = false;
+          while (reached_outlet == false)
+          {
+            FlowInfo.retrieve_current_row_and_col(this_node, current_row, current_col);
+            FlowInfo.retrieve_receiver_information(this_node, downslope_node, downslope_row, downslope_col);
+            current_SO = StreamOrderArray[current_row][current_col];
+            downslope_SO = StreamOrderArray[downslope_row][downslope_col];
+            NodesVisitedBeforeTemp[current_row][current_col] = 1;
+            bool BeentoReceiver = false;
+            if (downslope_SO > current_SO)
+            {
+              valley_nodes.push_back(this_node);
+              int valley_junction = find_upstream_junction_from_channel_nodeindex(this_node, FlowInfo);
+              valley_junctions[current_row][current_col] = valley_junction;
+              reached_outlet = true;
+             // cout << "valley junction: " << valley_junction << endl;
+            }
+            if (NodesVisitedBeforeTemp[downslope_row][downslope_col] ==1) BeentoReceiver = true;
+            if(BeentoReceiver == false) this_node = downslope_node; //Move downstream
+            else  reached_outlet = true; //Push back the valley node
+          }
+        }  
+        
+        bool ReceiverVisitedBefore = false;
+        // test to see whether we have visited this node before
+        if(NodesVisitedBefore[ReceiverRow][ReceiverCol]==1) ReceiverVisitedBefore = true;
+        if(ReceiverVisitedBefore == false) 
+        {
+          //Move downstream
+          CurrentNode = ReceiverNode;        
+        }
+        else
+        {
+          //Move to next source
+          EndofReach = true;
+        }
+      }
+      else
+      {
+        EndofReach = true;
+      }
+    }      
+  }
+
+  return valley_junctions;  
+}  
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function extracts the ridge network by defining it as the co-boundaries

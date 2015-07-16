@@ -99,7 +99,8 @@ int main (int nNumberofArgs,char *argv[])
   LSDFlowInfo FlowInfo(BoundaryConditions,FilledDEM);
   
   //get stream net from channel heads
-  vector<int> sources = FlowInfo.Ingest_Channel_Heads((path+filename+"_dem_CH"), "flt"); //swap to csv? 
+//   vector<int> sources = FlowInfo.Ingest_Channel_Heads((path+filename+"_dem_CH"), "flt"); //swap to csv?   
+  vector<int> sources = FlowInfo.Ingest_Channel_Heads((path+ChannelHeads_name), "csv",2);
   LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
   LSDIndexRaster StreamNetwork = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
 
