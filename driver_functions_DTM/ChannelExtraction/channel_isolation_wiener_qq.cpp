@@ -66,5 +66,7 @@ int main (int nNumberofArgs,char *argv[])
   LSDIndexRaster skeleton_raster = output_raster.thin_to_skeleton();
   //  output_raster = output_raster.ConnectedComponents();
   skeleton_raster.write_raster(Output_name+"_skeleton",DEM_extension);
+  LSDIndexRaster Ends = skeleton_raster.find_end_points();
+  Ends.write_raster(Output_name+"_end_points",DEM_extension);
   cout << "DONE" << endl;
 }
