@@ -637,6 +637,25 @@ class LSDJunctionNetwork
   /// @date 29/10/2013
   Array2D<int> find_valleys(LSDFlowInfo& FlowInfo, Array2D<float>& tan_curv_array, 
                             vector<int> sources, int no_connecting_nodes, float tan_curv_threshold = 0.1);
+                            
+  /// @brief This function is used to identify concave portions of the landscape using a tangential curvature threshold 
+  /// which is adaptive for each portion of the landscape
+  ///
+  /// @details It defines the threshold based on the standard deviation
+  /// of the curvature.  It then identifies valleys in which there are a linked series of pixels
+  /// which have a curvature value greater than the threshold, and finds the outlet junction number
+  /// of this valley.  This can be passed to the channel head prediction algorithm using the chi
+  /// method.
+  ///
+  /// @param FlowInfo LSDFlowInfo object
+  /// @param tan_curv_array 2D array with curvature
+  /// @param sources vector with sources of channel network
+  /// @param no_connecting_nodes number of nodes that need to be above the threshold before the valley is identified
+  /// @param tan_curv_threshold array with the curvature thresholds for each row and col
+  /// @return Array2D<int> with nodes at the base of each of the valleys
+  /// @author FC
+  /// @date 29/10/2013                          
+  Array2D<int> find_valleys_adaptive_threshold(LSDFlowInfo& FlowInfo, Array2D<float>& tan_curv_array, vector<int> sources, int no_connecting_nodes, Array2D<float>& tan_curv_threshold);
   
   /// @brief This function uses a predefined channel mask to locate valley junctions
   ///
