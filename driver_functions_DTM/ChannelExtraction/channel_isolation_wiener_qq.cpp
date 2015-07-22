@@ -61,17 +61,19 @@ int main (int nNumberofArgs,char *argv[])
   file_info_in.close();
   // Now create the raster selection vector based on user's selection
   // Elevation
-  //LSDRasterSpectral raster(Raster_name, DEM_extension);
-  //LSDIndexRaster output_raster = raster.IsolateChannelsWienerQQ(area_threshold, window_radius, q_q_filename_prefix+".txt");
-  LSDIndexRaster output_raster(Output_name,DEM_extension);
+  LSDRasterSpectral raster(Raster_name, DEM_extension);
+  LSDIndexRaster output_raster = raster.IsolateChannelsWienerQQ(area_threshold, window_radius, q_q_filename_prefix+".txt");
+  cout << "filter by connected components" << endl;
+  output_raster.filter_by_connected_components(connected_components_threshold);
+  //LSDIndexRaster output_raster(Output_name,DEM_extension);
   cout << "thin network to skeleton" << endl;
-  //LSDIndexRaster skeleton_raster = output_raster.thin_to_skeleton();
+  LSDIndexRaster skeleton_raster = output_raster.thin_to_skeleton();
   cout << "finding end points" << endl;
-  //LSDIndexRaster Ends = skeleton_raster.find_end_points();
+  LSDIndexRaster Ends = skeleton_raster.find_end_points();
   //output_raster = output_raster.ConnectedComponents();
   output_raster.filter_by_connected_components(connected_components_threshold);
   output_raster.write_raster(Output_name+"_cc", DEM_extension);
-  //skeleton_raster.write_raster(Output_name+"_skeleton",DEM_extension);
-  //Ends.write_raster(Output_name+"_end_points",DEM_extension);
+  skeleton_raster.write_raster(Output_name+"_skeleton",DEM_extension);
+  Ends.write_raster(Output_name+"_end_points",DEM_extension);
   cout << "DONE" << endl;
 }
