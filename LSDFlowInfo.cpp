@@ -6143,5 +6143,98 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRoutingBedrock(LSDRaster Elevat
 }
 
 
+vector<int> LSDFlowInfo::ProcessEndPointsToChannelHeads(LSDIndexRaster Ends){
+
+  Array2D<int> EndArray = Ends.get_RasterData();
+  vector<int> Sources;
+  
+  //make a map containing each nodeindex where true means it is a valid channel head, eg the top of the network
+  map<int,bool> EndStatus;
+  vector<int> EndNodes;
+  
+  for(int i=1; i<NRows-1; ++i){
+    for(int j=1; j<NCols-1; ++j){
+      if (EndArray[i][j] != NoDataValue){
+        int nodeindex = retrieve_node_from_row_and_column (i,j);
+        EndStatus[nodeindex] = true;
+        EndNodes.push_back(nodeindex);
+      }
+    }
+  }
+      
+  for (int q = 0; q < int(EndNodes.size());++q){
+    cout << q << " of " << EndNodes.size() << endl; 
+    int CurrentNode = EndNodes[q];
+    if (EndStatus[CurrentNode] == true){
+    
+      bool stop = false;
+      
+      while (stop == false){
+        int DownslopeNode;
+        int Downslopei;
+        int Downslopej;	 
+              
+        //get steepest descent neighbour
+        retrieve_receiver_information(CurrentNode,DownslopeNode,Downslopei,Downslopej);
+      
+        if (find(EndNodes.begin(), EndNodes.end(), DownslopeNode) != EndNodes.end()){
+          EndStatus[DownslopeNode] = false;
+          stop = true;          
+        }		      
+        
+        //check for out of bounds
+        if (Downslopei == 0 || Downslopei == NRows - 1 || Downslopej == 0 || Downslopej == NCols - 1){
+          stop = true;
+        }
+        
+        //check for a node with no downslope neughbours
+        if (CurrentNode == DownslopeNode){
+          stop = true;
+        }
+               
+        CurrentNode = DownslopeNode; 
+        
+      }
+    
+    }
+  } 
+
+  for (int q = 0; q < int(EndNodes.size());++q){
+    if (EndStatus[EndNodes[q]] == true){  
+      Sources.push_back(EndNodes[q]);
+    }
+  }
+
+   return Sources;
+}
+
+
+vector<int> LSDFlowInfo::RemoveSinglePxChannels(LSDIndexRaster StreamNetwork, vector<int> Sources){
+
+  for (int q = 0; q < int(Sources.size());++q){
+    
+    int CurrentNode = Sources[q];
+    int Currenti;
+    int Currentj;
+    retrieve_current_row_and_col(CurrentNode,Currenti,Currentj);
+    int CurrentOrder = StreamNetwork.get_data_element(Currenti,Currentj);
+    
+    //get steepest descent neighbour
+    int DownslopeNode;
+    int Downslopei;
+    int Downslopej;
+    retrieve_receiver_information(CurrentNode,DownslopeNode,Downslopei,Downslopej);
+    int DownslopeOrder = StreamNetwork.get_data_element(Downslopei,Downslopej);
+    
+    if (CurrentOrder != DownslopeOrder){
+      //remove the value from the list of nodes -> Sources is passed by val, so this will not change values in sources outide this method
+      Sources.erase(remove(Sources.begin(), Sources.end(), Sources[q]), Sources.end());
+    }
+  
+  }
+
+  return Sources;
+}
+
 
 #endif
