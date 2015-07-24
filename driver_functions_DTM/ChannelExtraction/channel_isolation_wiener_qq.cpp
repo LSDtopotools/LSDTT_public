@@ -1,10 +1,12 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// threshold_quartile_quantile.cpp
+// channel_isolation_wiener_qq.cpp
+// make with channel_isolation_wiener_qq.make
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // David T Milodowski
+// Stuart W.D Grieve
 // University of Edinburgh
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -20,6 +22,8 @@
 #include "../../LSDRasterSpectral.hpp"
 #include "../../LSDIndexRaster.hpp"
 #include "../../TNT/tnt.h"
+#include "../../LSDFlowInfo.hpp"
+#include "../../LSDJunctionNetwork.hpp"
 int main (int nNumberofArgs,char *argv[])
 {
   //Test for correct input arguments
@@ -75,5 +79,38 @@ int main (int nNumberofArgs,char *argv[])
   output_raster.write_raster(Output_name+"_cc", DEM_extension);
   skeleton_raster.write_raster(Output_name+"_skeleton",DEM_extension);
   Ends.write_raster(Output_name+"_end_points",DEM_extension);
+  
+  
+  //Now we can process the end points to get only the channel heads - SWDG
+  
+  cout << "Starting channel head processing" << endl;
+  
+  //First we need to load the elevation data, fill it and generate a FlowInfo object
+  LSDRaster DEM(Raster_name, DEM_extension);
+  float MinSlope = 0.0001;
+  LSDRaster FilledDEM = DEM.fill(MinSlope);
+  vector<string> BoundaryConditions(4, "No Flux");
+  LSDFlowInfo FlowInfo(BoundaryConditions,FilledDEM);
+  
+  //this processes the end points to only keep the upper extent of the channel network
+  cout << "getting channel heads" << endl;
+  vector<int> tmpsources = FlowInfo.ProcessEndPointsToChannelHeads(Ends);
+      
+  // we need a temp junction network to search for single pixel channels
+  LSDJunctionNetwork tmpJunctionNetwork(tmpsources, FlowInfo);
+  LSDIndexRaster tmpStreamNetwork = tmpJunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
+  
+  cout << "removing single px channels" << endl;
+  vector<int> FinalSources = FlowInfo.RemoveSinglePxChannels(tmpStreamNetwork, tmpsources);
+  
+  //Now we have the final channel heads, so we can generate a channel network from them
+  LSDJunctionNetwork JunctionNetwork(FinalSources, FlowInfo);
+  LSDIndexRaster StreamNetwork = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
+  
+  //Finally we write the channel network and channel heads to files so they can be used in other drivers. 
+  LSDIndexRaster Heads = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(FinalSources);
+  Heads.write_raster((Output_name+"_CH"),DEM_extension);
+  StreamNetwork.write_raster((Output_name+"_st_final"),DEM_extension);
+  
   cout << "DONE" << endl;
 }
