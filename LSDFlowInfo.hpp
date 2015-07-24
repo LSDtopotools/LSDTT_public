@@ -721,7 +721,7 @@ class LSDFlowInfo
   /// @brief This function returns all the values from a raster for a corresponding
   /// input vector of node indices.
   /// @param An LSDRaster - must have same dimensions as the LSDFlowInfo object
-  /// @param vector<float> - the node indices for which you want the values
+  /// @param vector<float> - the node indices for which you want the values   
   vector<float> get_raster_values_for_nodes(LSDRaster& Raster, vector<int>& node_indices);
 
   void D_Inf_single_trace_to_channel(LSDRaster Elevation, int start_node, LSDIndexRaster StreamNetwork, LSDRaster D_inf_Flowdir,
@@ -735,10 +735,19 @@ class LSDFlowInfo
                bool print_paths_switch, int thinning, string trace_path, bool basin_filter_switch,
                vector<int> Target_Basin_Vector, LSDRaster RockExposure);
 
-
-
+  /// @brief This method removes end nodes which are not the uppermost extent of the channel network.
+  /// @param Ends an LSDIndexRaster of the end points to be processed.
+  /// @return A vector of source nodes
+  /// @author SWDG
+  /// @date 23/7/15
   vector<int> ProcessEndPointsToChannelHeads(LSDIndexRaster Ends);
 
+  /// @brief This method removes single pixel channels from a channel network.
+  /// @param StreamNetwork an LSDIndexRaster of the channel network generated from Sources.
+  /// @param Sources a vetcor of integer node indices which need cleaned
+  /// @return A vector of source nodes
+  /// @author SWDG
+  /// @date 23/7/15
   vector<int> RemoveSinglePxChannels(LSDIndexRaster StreamNetwork, vector<int> Sources);
   
   protected:
