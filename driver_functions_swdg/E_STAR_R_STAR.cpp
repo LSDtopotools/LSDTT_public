@@ -11,30 +11,24 @@
 // <prefix>_Slope.flt
 // <prefix>_CHT.flt - Hilltop curvature
 //
-// And 3 input arguments:
+// And 5 input arguments:
 //
 // path - the path to the data files and where the outputs will be stored, must include trailing slash
 // prefix - the filename prefix of the input raster files, without the underscore
 // Minimum patch area - The minimum area in pixels of a patch that will be considered valid
+// Minimum number of basin points - The minimum number of data points needed for a basin average value
+// Basin Order - The stream order of basins to be averaged over
 //
 // An example of running this driver would be:
 //
-// ./E_Star_R_Star.out /homes/s0675405/Data/ OR 20
+// ./E_Star_R_Star.out /homes/s0675405/Data/ OR 100 100 2
 //
 // Outputs 2 csv files and a raster of hilltop patches, <prefix>_Patches.flt,
 // into the user supplied path. The csv files contain the data averaged over hilltop 
 // patches and raw data. Information of the format of these output files can be found at
 // [URL].
 //
-// These data files can be processed using the python scripts located at [URL]
-//
-// ONE THING TO CONSIDER IS WHETHER A PIXEL WITH A SLOPE > 0.4 SHOULD BE INCLUDED IN THE AVERAGES
-// FOR A PATCH. CURRENTLY WE GET THE MEAN PATCH GRADIENT AND WOULD FILTER BASED ON THAT BUT IT MIGHT 
-// BE WORTH EXPLORING THE DIFFERENCES IN RESULTS THAT EXCLUDING ALL PX WITH A SLOPE ABOVE THE THRESHOLD 
-// FROM THE AVERAGING WILL HAVE ON THE RESULTS.
-//
-// ALSO SHOULD LOOK INTO AN OPTIONAL EXTRA PARAM TO ALLOW HURST ET AL 2013 DBPR FILTERING TO BE PERFORMED.
-// NEED TO THINK ABOUT HOW TO DO THIS IN A USER FRIENDLY WAY THOUGH.   
+// These data files can be processed using the python scripts located at https://github.com/sgrieve/GeneralAnalysis
 //
 // Stuart W.D. Grieve, 10/6/15
 // University of Edinburgh
@@ -57,9 +51,9 @@
 
 int main (int nNumberofArgs,char *argv[])
 {
-  
+ 
   //Test for correct input arguments
-  if (nNumberofArgs!=5)
+  if (nNumberofArgs!=6)
   {
     cout << "FATAL ERROR: wrong number of inputs. The program needs the path (with trailing slash), the filename prefix, the minimum patch area in pixels and the basin order." << endl; 
     exit(EXIT_FAILURE);
@@ -68,8 +62,9 @@ int main (int nNumberofArgs,char *argv[])
   //load input arguments
   string path = argv[1];
   string prefix = argv[2];
-  int MinimumPatchArea  = atoi(argv[3]);  //Minium area of a hilltop patch. In pixels.
-  int BasinOrder = atoi(argv[4]);
+  int MinimumPatchArea = atoi(argv[3]);  //Minium area of a hilltop patch. In pixels.
+  int MinBasinSize = atoi(argv[4]); //Minium number of data points in a basin.
+  int BasinOrder = atoi(argv[5]);
     
   cout << "Filling DEM and generating the junction network." << endl;
   
@@ -87,9 +82,10 @@ int main (int nNumberofArgs,char *argv[])
   LSDFlowInfo FlowInfo(BoundaryConditions,FilledDEM);
   
   //get junction network from channel heads
-  vector<int> sources = FlowInfo.Ingest_Channel_Heads((path+prefix+"_DEM_CH"), "flt"); 
+  vector<int> sources = FlowInfo.Ingest_Channel_Heads((path+prefix+"_DEM_CH"), "flt");
+  cout << "ingested" << endl; 
   LSDJunctionNetwork JunctionNetwork(sources, FlowInfo);
-
+  cout << "junctions" << endl;
   //Extract basins based on input stream order
   vector< int > basin_junctions = JunctionNetwork.ExtractBasinJunctionOrder(BasinOrder, FlowInfo);
   
@@ -118,8 +114,9 @@ int main (int nNumberofArgs,char *argv[])
     
   cout << "Generating contiguous hilltop patches" << endl;
    
-  //Run the hilltop patch algorithm
+  //Run the hilltop patch algorithm   
   LSDIndexRaster HilltopPatches = CHT.CreateHilltopPatches(MinimumPatchArea);
+  //LSDIndexRaster HilltopPatches((path+prefix+"_Patches"), "flt");
         
   float ndv = LH.get_NoDataValue();
   int nrows = LH.get_NRows();
@@ -154,6 +151,8 @@ int main (int nNumberofArgs,char *argv[])
   vector<float> s_medians;
   vector<float> s_std_devs;
   vector<float> s_std_errs;
+  
+  vector<int> Sizes;
    
   //Get vector of unique segment indexes
   vector<int> PatchIndex = Unique(HilltopPatches.get_RasterData(), ndv);
@@ -171,6 +170,8 @@ int main (int nNumberofArgs,char *argv[])
     r_data.clear();
     s_data.clear();
     
+    int patchsize = 0;
+    
     for (int i=0; i<nrows; ++i){
       for (int j=0; j<ncols; ++j){
       
@@ -178,12 +179,13 @@ int main (int nNumberofArgs,char *argv[])
            
           //make sure we have valid data for each of our arrays
           if (CHT.get_data_element(i,j) != ndv && LH.get_data_element(i,j) != ndv && Relief.get_data_element(i,j) != ndv && Slope.get_data_element(i,j) != ndv){
-              
-              lh_data.push_back(LH.get_data_element(i,j));
-              r_data.push_back(Relief.get_data_element(i,j));
-              cht_data.push_back(CHT.get_data_element(i,j));
-              s_data.push_back(Slope.get_data_element(i,j));
-              
+              if (Slope.get_data_element(i,j) <= 0.4 ){
+                lh_data.push_back(LH.get_data_element(i,j));
+                r_data.push_back(Relief.get_data_element(i,j));
+                cht_data.push_back(CHT.get_data_element(i,j));
+                s_data.push_back(Slope.get_data_element(i,j));
+                ++patchsize;
+              }
             }
           }
         }
@@ -269,6 +271,8 @@ int main (int nNumberofArgs,char *argv[])
       s_std_devs.push_back(s_std_dev);
       s_std_errs.push_back(s_std_err);
       
+      Sizes.push_back(patchsize);
+      
     }
   }
   
@@ -281,11 +285,11 @@ int main (int nNumberofArgs,char *argv[])
   WritePatchData.open(ss.str().c_str());
 
   //write the header file
-  WritePatchData << "Final_ID,lh_means,lh_medians,lh_std_devs,lh_std_errs,cht_means,cht_medians,cht_std_devs,cht_std_errs,r_means,r_medians,r_std_devs,r_std_errs,s_means,s_medians,s_std_devs,s_std_errs" << endl;
+  WritePatchData << "Final_ID,lh_means,lh_medians,lh_std_devs,lh_std_errs,cht_means,cht_medians,cht_std_devs,cht_std_errs,r_means,r_medians,r_std_devs,r_std_errs,s_means,s_medians,s_std_devs,s_std_errs,size" << endl;
   
   for (int w = 0; w < int(Final_ID.size());++w){
     //break this over a few lines for clarity
-    WritePatchData << Final_ID[w] << "," << lh_means[w] << "," << lh_medians[w] << "," << lh_std_devs[w] << "," << lh_std_errs[w] << "," << cht_means[w] << "," << cht_medians[w] << "," << cht_std_devs[w] << "," << cht_std_errs[w] << "," << r_means[w] << "," << r_medians[w] << "," << r_std_devs[w] << "," << r_std_errs[w] << "," << s_means[w] << "," << s_medians[w] << "," << s_std_devs[w] << "," << s_std_errs[w] << endl;
+    WritePatchData << Final_ID[w] << "," << lh_means[w] << "," << lh_medians[w] << "," << lh_std_devs[w] << "," << lh_std_errs[w] << "," << cht_means[w] << "," << cht_medians[w] << "," << cht_std_devs[w] << "," << cht_std_errs[w] << "," << r_means[w] << "," << r_medians[w] << "," << r_std_devs[w] << "," << r_std_errs[w] << "," << s_means[w] << "," << s_medians[w] << "," << s_std_devs[w] << "," << s_std_errs[w] << "," << Sizes[w] << endl;
    
   }
   
@@ -307,7 +311,7 @@ int main (int nNumberofArgs,char *argv[])
    for (int i=0; i<nrows; ++i){
       for (int j=0; j<ncols; ++j){
       
-        if (CHT.get_data_element(i,j) != ndv && LH.get_data_element(i,j) != ndv && Relief.get_data_element(i,j) != ndv && Slope.get_data_element(i,j) != ndv){
+        if (CHT.get_data_element(i,j) != ndv && LH.get_data_element(i,j) != ndv && Relief.get_data_element(i,j) != ndv && Slope.get_data_element(i,j) != ndv && Slope.get_data_element(i,j) <= 0.4){
         
           WriteRawData << i << "," << j << "," << LH.get_data_element(i,j) << "," << CHT.get_data_element(i,j) << "," << Relief.get_data_element(i,j) << "," << Slope.get_data_element(i,j) << endl;
         
@@ -316,6 +320,32 @@ int main (int nNumberofArgs,char *argv[])
     }
     
   WriteRawData.close();
+  
+  //Now we want to remove all datapoints which have a hilltop slope greater than 0.4
+  //prior to creating the basin objects
+  
+  Array2D<float> newLH = LH.get_RasterData();
+  Array2D<float> newR = Relief.get_RasterData();
+  Array2D<float> newS = HilltopSlope.get_RasterData();
+  Array2D<float> newCHT = CHT.get_RasterData();
+  
+  
+  for (int i=0; i<nrows; ++i){
+    for (int j=0; j<ncols; ++j){
+      if (Slope.get_data_element(i,j) > 0.4 ){
+        newLH[i][j] = ndv; 
+        newR[i][j] = ndv; 
+        newS[i][j] = ndv; 
+        newCHT[i][j] = ndv;  
+      } 
+    }   
+  }
+  
+  //generate LSDRasters from our cleaned arrays
+  LSDRaster NewLH = LH.LSDRasterTemplate(newLH);
+  LSDRaster NewR = Relief.LSDRasterTemplate(newR);
+  LSDRaster NewHilltopSlope = HilltopSlope.LSDRasterTemplate(newS);
+  LSDRaster NewCHT = CHT.LSDRasterTemplate(newCHT);    
   
   //Now generate basin average data for the basins of the user supplied order
   
@@ -328,11 +358,11 @@ int main (int nNumberofArgs,char *argv[])
   for (int w = 0; w < int(basin_junctions.size()); ++w){
                                     
     LSDBasin Basin(basin_junctions[w], FlowInfo, JunctionNetwork);
-    Basin.set_HillslopeLength_HFR(FlowInfo, LH);
-    Basin.set_SlopeMean(FlowInfo, HilltopSlope);   
-    Basin.set_ReliefMean(FlowInfo, Relief);
-    Basin.set_CHTMean(FlowInfo, CHT);
-    Basin.set_HilltopPx(FlowInfo,CHT);
+    Basin.set_HillslopeLength_HFR(FlowInfo, NewLH);
+    Basin.set_SlopeMean(FlowInfo, NewHilltopSlope);   
+    Basin.set_ReliefMean(FlowInfo, NewR);
+    Basin.set_CHTMean(FlowInfo, NewCHT);
+    Basin.set_HilltopPx(FlowInfo,NewCHT);
   
     Basins.push_back(Basin);
     
@@ -347,18 +377,23 @@ int main (int nNumberofArgs,char *argv[])
   WriteBasinData.open(ss3.str().c_str());
     
   //write the header
-  WriteBasinData << "Basin_ID,LH,CHT,Relief,Slope,Area,Count" << endl;
-  
+  WriteBasinData << "Basin_ID,LH_mean,CHT_mean,Relief_mean,Slope_mean,LH_median,CHT_median,Relief_median,Slope_median,LH_StdDev,CHT_StdDev,Relief_StdDev,Slope_StdDev,LH_StdErr,CHT_StdErr,Relief_StdErr,Slope_StdErr,Area,Count" << endl;
   
   //write all data to the opened file, ensuring that there are data points to be written in each basin
   for (int q = 0; q < int(Basins.size()); ++q){
-    // only work where we have data points  - all data is templated from LH or CHT, so if these have data, all rasters have data
-    if (Basins[q].CalculateNumDataPoints(FlowInfo, LH) != 0 && Basins[q].CalculateNumDataPoints(FlowInfo, CHT) != 0 ){
+    // only work where we have data points
+    if (Basins[q].CalculateNumDataPoints(FlowInfo, NewLH) >= MinBasinSize && Basins[q].CalculateNumDataPoints(FlowInfo, NewCHT) >= MinBasinSize && Basins[q].CalculateNumDataPoints(FlowInfo, NewR) >= MinBasinSize && Basins[q].CalculateNumDataPoints(FlowInfo, NewHilltopSlope) >= MinBasinSize){
       
       WriteBasinData << Basins[q].get_Junction() << "," << Basins[q].get_HillslopeLength_HFR() << ",";
       WriteBasinData << Basins[q].get_CHTMean() << "," << Basins[q].get_ReliefMean() << ",";
-      WriteBasinData << Basins[q].get_SlopeMean() << "," << Basins[q].get_Area() << ",";
-      WriteBasinData << Basins[q].get_HilltopPx() << endl;
+      WriteBasinData << Basins[q].get_SlopeMean() << "," << Basins[q].CalculateBasinMedian(FlowInfo,NewLH) << ",";
+      WriteBasinData << Basins[q].CalculateBasinMedian(FlowInfo,NewCHT) << ",";
+      WriteBasinData << Basins[q].CalculateBasinMedian(FlowInfo,NewR) << "," << Basins[q].CalculateBasinMedian(FlowInfo,NewHilltopSlope) << ",";
+      WriteBasinData << Basins[q].CalculateBasinStdDev(FlowInfo, NewLH) << "," << Basins[q].CalculateBasinStdDev(FlowInfo, NewCHT) << ",";
+      WriteBasinData << Basins[q].CalculateBasinStdDev(FlowInfo, NewR) << "," << Basins[q].CalculateBasinStdDev(FlowInfo, NewHilltopSlope) << ","; 
+      WriteBasinData << Basins[q].CalculateBasinStdError(FlowInfo, NewLH) << "," << Basins[q].CalculateBasinStdError(FlowInfo, NewCHT) << ",";
+      WriteBasinData << Basins[q].CalculateBasinStdError(FlowInfo, NewR) << "," << Basins[q].CalculateBasinStdError(FlowInfo, NewHilltopSlope) << ",";
+      WriteBasinData << Basins[q].get_Area() << "," << Basins[q].get_HilltopPx() << endl;
    
     }
   }
