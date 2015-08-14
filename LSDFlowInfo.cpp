@@ -6166,7 +6166,7 @@ vector<int> LSDFlowInfo::ProcessEndPointsToChannelHeads(LSDIndexRaster Ends){
   }
       
   for (int q = 0; q < int(EndNodes.size());++q){
-    cout << q << " of " << EndNodes.size() << endl; 
+    cout << flush << q << " of " << EndNodes.size() << "\r"; 
     int CurrentNode = EndNodes[q];
     if (EndStatus[CurrentNode] == true){
     
@@ -6200,7 +6200,8 @@ vector<int> LSDFlowInfo::ProcessEndPointsToChannelHeads(LSDIndexRaster Ends){
       }
     
     }
-  } 
+  }
+  cout << endl; 
 
   for (int q = 0; q < int(EndNodes.size());++q){
     if (EndStatus[EndNodes[q]] == true){  

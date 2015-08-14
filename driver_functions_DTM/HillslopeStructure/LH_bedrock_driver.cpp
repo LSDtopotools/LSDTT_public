@@ -71,7 +71,7 @@ int main (int nNumberofArgs,char *argv[])
   vector<string> BoundaryConditions(4, "No Flux");
 
   //load dem
-  LSDRaster DEM((path+filename+"_DEM"), "flt");  
+  LSDRaster DEM((path+filename+"_dem"), "flt");  
   
   //Fill 
   float MinSlope = 0.0001;
@@ -99,10 +99,13 @@ int main (int nNumberofArgs,char *argv[])
   LSDFlowInfo FlowInfo(BoundaryConditions,FilledDEM);
   
   //get stream net from channel heads
-//   vector<int> sources = FlowInfo.Ingest_Channel_Heads((path+filename+"_dem_CH"), "flt"); //swap to csv?   
-  vector<int> sources = FlowInfo.Ingest_Channel_Heads((path+ChannelHeads_name), "csv",2);
+  cout << "\tLoading sources" << endl;
+  vector<int> sources = FlowInfo.Ingest_Channel_Heads((path+filename+"_channel_mask_CH"), "flt");  
+  //  vector<int> sources = FlowInfo.Ingest_Channel_Heads((path+ChannelHeads_name), "csv",2);
+  cout << "\tCreating JunctionNetwork object" << endl;
   LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
   LSDIndexRaster StreamNetwork = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
+  StreamNetwork.write_raster(path+filename+"_SO","flt");
 
   //load floodplain and merge with the channel network if required, otherwise the 
   //floodplain mask will only contain the channel data
@@ -118,7 +121,7 @@ int main (int nNumberofArgs,char *argv[])
 //   
   LSDIndexRaster MultipixelNetwork;
   if (MultipixelSwitch == 1){
-    LSDIndexRaster MultipixelChannels((path+filename+"_channel_mask"), "flt");
+    LSDIndexRaster MultipixelChannels((path+filename+"_channel_mask_cc"), "flt");
     MultipixelNetwork = StreamNetwork.MergeChannelWithFloodplain(MultipixelChannels);
   }
   else{
@@ -126,7 +129,7 @@ int main (int nNumberofArgs,char *argv[])
   }
 
   // load rock exposure raster
-  LSDRaster RockExposure((path+filename+"_rock_exposure"), "flt");
+  LSDRaster RockExposure((path+filename+"_rock_exposure_max"), "flt");
   
   //Extract basins based on input stream order
   vector< int > basin_junctions = ChanNetwork.ExtractBasinJunctionOrder(BasinOrder, FlowInfo);
