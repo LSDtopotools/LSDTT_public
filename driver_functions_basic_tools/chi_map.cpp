@@ -97,17 +97,24 @@ int main(int argc, char *argv[])
     
   string DEM_ext = argv[3];
 
-  LSDRaster new_raster(full_DEM_name,DEM_ext);
-  
   float threshold_area = atof(argv[4]);
+  cout << "The threshold area is: " << threshold_area << endl;
   
-  int temp_csv_flag = atoi(argv[4]);
+  int temp_csv_flag = atoi(argv[5]);
   bool write_csv = false;
   if(temp_csv_flag == 1)
   {
+    cout << endl << endl << endl << "---------" << endl << "I'll print a csv" << endl;
     write_csv = true;
   }
+
+  // load the raster
+  LSDRaster new_raster(full_DEM_name,DEM_ext);
   
+  // remove the sea (seems to be required if gdal is used in places with nodata)
+  new_raster.remove_seas();
+  
+  // get the filled raster
   float min_slope = 0.0001;
   LSDRaster filled_raster = new_raster.fill(min_slope);
   
@@ -161,6 +168,7 @@ int main(int argc, char *argv[])
   if(write_csv)
   {
     string pointsname = full_DEM_name+chistr+"_points";
+    cout << "Writing csv, the prefix is: " << pointsname << endl;
     chi_map.FlattenToCSV(pointsname);
   }
   

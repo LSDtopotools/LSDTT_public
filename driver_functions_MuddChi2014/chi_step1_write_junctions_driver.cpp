@@ -76,8 +76,11 @@ int main (int nNumberofArgs,char *argv[])
 	string DEM_f_name = path_name+DEM_name+fill_ext;
 	string DEM_bil_extension = "bil";
 
-	// load the DEM
-	LSDRaster topo_test((path_name+DEM_name), DEM_bil_extension);
+  // load the DEM
+  LSDRaster topo_test((path_name+DEM_name), DEM_bil_extension);
+  
+  // remove the sea (seems to be required if gdal is used in places with nodata)
+  topo_test.remove_seas();
 
 	// get the filled file
 	cout << "Filling the DEM" << endl;
