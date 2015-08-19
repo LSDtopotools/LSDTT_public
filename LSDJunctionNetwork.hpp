@@ -638,6 +638,19 @@ class LSDJunctionNetwork
   Array2D<int> find_valleys(LSDFlowInfo& FlowInfo, Array2D<float>& tan_curv_array, 
                             vector<int> sources, int no_connecting_nodes, float tan_curv_threshold = 0.1);
                             
+  /// @brief This function is used to get the outlet junctions from a vector of input source nodes
+  ///
+  /// @details It is used to get a list of valley junctions that can be used in the DrEICH algorithm.  
+  /// The function goes downstream from each source node until the stream order of the downstream node is greater than
+  /// that of the current node, then identifies the junction of the outlet valley node.
+  ///
+  /// @param FlowInfo LSDFlowInfo object
+  /// @param sources vector with sources of channel network
+  /// @return Array2D<int> with junctions at the base of each of the valleys
+  /// @author FJC
+  /// @date 19/08/2015
+  Array2D<int> get_outlet_junctions_from_sources(LSDFlowInfo& FlowInfo, vector<int> sources);
+                            
   /// @brief This function is used to identify concave portions of the landscape using a tangential curvature threshold 
   /// which is adaptive for each portion of the landscape
   ///

@@ -2720,6 +2720,59 @@ Array2D<int> LSDJunctionNetwork::find_valleys(LSDFlowInfo& FlowInfo, Array2D<flo
 }  
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// GETTING OUTLET JUNCTION FROM SOURCES
+//
+// This function is used to get the outlet junction downstream of a series of source nodes
+// It is used for identifying valleys to run the DrEICH algorithm on
+//
+// FJC 19/08/15
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+Array2D<int> LSDJunctionNetwork::get_outlet_junctions_from_sources(LSDFlowInfo& FlowInfo, vector<int> sources)
+{
+  Array2D<int> NodesVisitedBefore(NRows,NCols,0);
+  Array2D<int> NodesVisitedBeforeTemp(NRows,NCols,0);
+  Array2D<int> valley_junctions(NRows,NCols,NoDataValue);   
+  vector<int> valley_nodes;
+  
+  for (int i = 0; i < sources.size(); i++)
+  {
+    int this_node = sources[i];
+    int current_row,current_col,downslope_node,downslope_row,downslope_col,current_SO,downslope_SO;
+    bool reached_outlet = false;
+    while (reached_outlet == false)
+    {
+      FlowInfo.retrieve_current_row_and_col(this_node, current_row, current_col);
+      FlowInfo.retrieve_receiver_information(this_node, downslope_node, downslope_row, downslope_col);
+      current_SO = StreamOrderArray[current_row][current_col];
+      downslope_SO = StreamOrderArray[downslope_row][downslope_col];
+      NodesVisitedBeforeTemp[current_row][current_col] = 1;
+      bool BeentoReceiver = false;
+      if (downslope_SO > current_SO)
+      {
+        valley_nodes.push_back(this_node);
+        int valley_junction = find_upstream_junction_from_channel_nodeindex(this_node, FlowInfo);
+        valley_junctions[current_row][current_col] = valley_junction;
+        reached_outlet = true;
+        // cout << "valley junction: " << valley_junction << endl;
+      }
+      if (NodesVisitedBeforeTemp[downslope_row][downslope_col] ==1) BeentoReceiver = true;
+      if(BeentoReceiver == false) 
+      {
+        //Move downstream
+        this_node = downslope_node;        
+      }
+      else
+      {
+        //Push back the valley node
+        reached_outlet = true;
+      }         
+    }
+  }
+  return valley_junctions;  
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // This function is used to identify concave portions of the landscape using a tangential
 // curvature threshold. It defines the threshold based on the standard deviation
