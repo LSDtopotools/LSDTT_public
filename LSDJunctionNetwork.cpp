@@ -1826,6 +1826,7 @@ vector<int> LSDJunctionNetwork::GetChannelHeadsChiMethodFromValleys(vector<int> 
 									                    LSDRaster& ElevationRaster)
 {
 	vector<int> ChannelHeadNodes;
+	vector<int> ChannelHeadNodes_temp;
   
   int max_nodes = ValleyNodes.size();
   int node_number = 0;
@@ -1844,14 +1845,38 @@ vector<int> LSDJunctionNetwork::GetChannelHeadsChiMethodFromValleys(vector<int> 
                                        			FlowDistance, ElevationRaster);
 
      // now append these channel heads to the master list
-	  ChannelHeadNodes.push_back(channel_head_node);
+	  ChannelHeadNodes_temp.push_back(channel_head_node);
 	}
-	  
-  
+	
+	//removing any nodes that are not the furthest upstream
+	int upstream_test = 0;
+	vector<int>::iterator find_it;
+	
+	for (int node = 0; node < ChannelHeadNodes_temp.size(); node++)
+	{
+    vector<int> tests;
+    int current_node = ChannelHeadNodes_temp[node];
+    for (int i = 0; i < ChannelHeadNodes_temp.size(); i++)
+    {
+      if (ChannelHeadNodes_temp[i] != current_node)
+      {
+        int test_node = ChannelHeadNodes_temp[i];
+        upstream_test = FlowInfo.is_node_upstream(current_node, test_node); 
+        tests.push_back(upstream_test);  
+      }  
+    }
+    find_it = find(tests.begin(), tests.end(), 1); 
+    if (find_it == tests.end())
+    {
+      ChannelHeadNodes.push_back(current_node); 
+    }
+    
+  }
+	    
   cout << "No of source nodes: " << ChannelHeadNodes.size() << endl;   
 
   return ChannelHeadNodes;
-}                              
+}                             
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-
