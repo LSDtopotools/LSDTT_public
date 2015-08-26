@@ -907,7 +907,7 @@ void LSDBasin::set_AlternativeIndex(LSDFlowInfo& FlowInfo, LSDIndexRaster& AltIn
     indices.push_back(index);
     counts.push_back(0); 
   }
-  cout << max << " " << indices.back() << endl;
+  //cout << max << " " << indices.back() << endl;
   for (int q = 0; q < int(BasinNodes.size()); ++q){
     FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
     ++counts[AltIndex.get_data_element(i,j)];
@@ -916,7 +916,7 @@ void LSDBasin::set_AlternativeIndex(LSDFlowInfo& FlowInfo, LSDIndexRaster& AltIn
   matlab_int_sort(counts, counts, index_map);
   matlab_int_reorder(indices,index_map,indices);
   AlternativeIndex = indices.back();
-  cout << "yoo hoo " << AlternativeIndex << endl;
+  //cout << "yoo hoo " << AlternativeIndex << endl;
 }
 
 
@@ -931,7 +931,7 @@ LSDRaster LSDBasin::keep_only_internal_hilltop_curvature(LSDRaster hilltop_curva
   //Array2D<int> perimeter(NRows, NCols, 0);
   //Array2D<int> ridge_pixels(NRows, NCols,0);
   Array2D<float> CHT_array = hilltop_curvature.get_RasterData();
-  cout << "Number of perimeter pixels: " << Perimeter_i.size() << endl;
+  //cout << "Number of perimeter pixels: " << Perimeter_i.size() << endl;
   for (int q =0; q < int(Perimeter_i.size()); q++){
     int row_perim = Perimeter_i[q];
     int col_perim = Perimeter_j[q];
