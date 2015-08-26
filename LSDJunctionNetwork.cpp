@@ -2736,6 +2736,11 @@ vector<int> LSDJunctionNetwork::get_outlet_nodes_from_sources(LSDFlowInfo& FlowI
       downslope_SO = StreamOrderArray[downslope_row][downslope_col];
       NodesVisitedBeforeTemp[current_row][current_col] = 1;
       bool BeentoReceiver = false;
+      int base_level = FlowInfo.is_node_base_level(downslope_node);
+      if (base_level == 1)
+      {
+        valley_nodes.push_back(this_node);
+      }
       if (downslope_SO > current_SO)
       {
         valley_nodes.push_back(this_node);
@@ -2759,7 +2764,6 @@ vector<int> LSDJunctionNetwork::get_outlet_nodes_from_sources(LSDFlowInfo& FlowI
   }
   return valley_nodes;  
 } 
-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // This function is used to identify concave portions of the landscape using a tangential
