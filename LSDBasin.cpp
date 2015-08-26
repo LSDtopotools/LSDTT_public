@@ -907,15 +907,16 @@ void LSDBasin::set_AlternativeIndex(LSDFlowInfo& FlowInfo, LSDIndexRaster& AltIn
     indices.push_back(index);
     counts.push_back(0); 
   }
-
-for (int q = 0; q < int(BasinNodes.size()); ++q){
+  cout << max << " " << indices.back() << endl;
+  for (int q = 0; q < int(BasinNodes.size()); ++q){
     FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
     ++counts[AltIndex.get_data_element(i,j)];
   }
   vector<size_t> index_map;
   matlab_int_sort(counts, counts, index_map);
   matlab_int_reorder(indices,index_map,indices);
-  AlternativeIndex = counts.back();
+  AlternativeIndex = indices.back();
+  cout << "yoo hoo " << AlternativeIndex << endl;
 }
 
 
