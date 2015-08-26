@@ -126,6 +126,8 @@ class LSDBasin
   vector<int> get_Perimeter_i() const { return Perimeter_i; }
   /// @return Basin Perimeter's j index.
   vector<int> get_Perimeter_j() const { return Perimeter_j; }
+  /// @return Basin Perimiter's node indices
+  vector<int> get_Perimeter_nodes() const { return Perimeter_nodes; };
   /// @return Cosmo erosion rate.
   float get_CosmoErosionRate() const { return CosmoErosionRate; }
   /// @return Other eroision rate.
@@ -140,7 +142,8 @@ class LSDBasin
   int get_HilltopPx() const { return HilltopPx; }
   /// @return fraction basin that is rock rather than soil mantled
   float get_BedrockFraction() const { return BedrockFraction; };
-  
+  float get_Biomass() const { return Biomass; };
+  int get_AlternativeIndex() const { return AlternativeIndex; };
   /// @brief Calculate the mean value of an LSDRaster which falls inside a basin.
   /// @param FlowInfo Flowinfo object.
   /// @param Data Values to find the mean of.
@@ -334,7 +337,12 @@ class LSDBasin
   /// @author DTM
   /// @date 14/07/15
   void set_BedrockFraction(LSDFlowInfo& FlowInfo, LSDRaster RockExposure) { BedrockFraction = CalculateBasinMean(FlowInfo, RockExposure); }
-  
+
+  void set_Biomass(LSDFlowInfo& FlowInfo, LSDRaster BiomassRaster) { Biomass = CalculateBasinMean(FlowInfo, BiomassRaster); }
+
+  void set_AlternativeIndex(LSDFlowInfo& FlowInfo, LSDIndexRaster& AltIndex);  
+
+
   /// @brief Generate text files containing data to plot boomerangs.
   ///
   /// @details Writes 3 files to the output path, coded with the basin's unique
@@ -761,6 +769,8 @@ LSDRaster TrimPaddedRasterToBasin(int padding_pixels, LSDFlowInfo& FlowInfo,
   vector<int> Perimeter_i;
   /// Basin Perimeter's j index.
   vector<int> Perimeter_j;
+  /// Basin Perimeter's node index
+  vector<int> Perimeter_nodes;
   /// Cosmo erosion rate.
   float CosmoErosionRate;
   /// Other erosion rate.
@@ -775,6 +785,10 @@ LSDRaster TrimPaddedRasterToBasin(int padding_pixels, LSDFlowInfo& FlowInfo,
   float HilltopPx;
   /// Fraction of basin mapped bedrock
   float BedrockFraction;
+  /// AGB density
+  float Biomass;
+  // Alternative index (e.g. lithology)
+  int AlternativeIndex;
 
   private:
   void create();

@@ -47,6 +47,7 @@ void LSDBasin::create()
   DrainageDensity = NoDataValue;  
   Perimeter_i = vector<int>(1,NoDataValue);
   Perimeter_j =  vector<int>(1,NoDataValue);
+  Perimeter_nodes =  vector<int>(1,NoDataValue);
   CosmoErosionRate = NoDataValue;
   OtherErosionRate = NoDataValue;
   CHTMean = NoDataValue;
@@ -54,6 +55,8 @@ void LSDBasin::create()
   RStar = NoDataValue;
   HilltopPx = NoDataValue;
   BedrockFraction = NoDataValue;
+  Biomass = NoDataValue;
+  AlternativeIndex=int(NoDataValue);
    
   //finished creating empty variables 
 
@@ -145,12 +148,15 @@ void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNetw
   DrainageDensity = NoDataValue;  
   Perimeter_i = vector<int>(1,NoDataValue);
   Perimeter_j =  vector<int>(1,NoDataValue);
+  Perimeter_nodes =  vector<int>(1,NoDataValue);
   CosmoErosionRate = NoDataValue;
   OtherErosionRate = NoDataValue;
   CHTMean = NoDataValue;
   EStar = NoDataValue;
   RStar = NoDataValue;
   BedrockFraction = NoDataValue;
+  Biomass = NoDataValue;
+  AlternativeIndex=int(NoDataValue);
   //finished creating empty variables 
 
 }
@@ -616,6 +622,7 @@ void LSDBasin::set_Perimeter(LSDFlowInfo& FlowInfo){
   int j;
   vector<int> I;
   vector<int> J;
+  vector<int> B;
   int NDVCount = 0;
   Array2D<float> BasinData(NRows, NCols, NoDataValue);
 
@@ -649,6 +656,7 @@ void LSDBasin::set_Perimeter(LSDFlowInfo& FlowInfo){
           //edge pixel                       // Otherwise not all external ridges were being excluded from the analysis).
           I.push_back(i);
           J.push_back(j);
+	  B.push_back(BasinNodes[q]);
         }
       }
       else
@@ -661,7 +669,7 @@ void LSDBasin::set_Perimeter(LSDFlowInfo& FlowInfo){
   //now have 2 vectors of i and j indexes of every point
   Perimeter_i = I;
   Perimeter_j = J;
-
+  Perimeter_nodes = B;
 
 }
 
@@ -875,50 +883,87 @@ int LSDBasin::is_node_in_basin(int test_node)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Function to provide an alternative (integer) index (e.g. lithology) based on
+// majority
+// DTM 26/08/2015
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDBasin::set_AlternativeIndex(LSDFlowInfo& FlowInfo, LSDIndexRaster& AltIndex)
+{
+  int max = 0;
+  int i,j;
+  for (int q = 0; q < int(BasinNodes.size()); ++q){
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    if(AltIndex.get_data_element(i,j)>max) max = AltIndex.get_data_element(i,j);
+  }
+  //  for(int i=0; i<AltIndex.get_NRows(); ++i){
+  //    for(int j=0; j<AltIndex.get_NCols(); ++j){
+  //      if(AltIndex.get_data_element(i,j)>max) max=AltIndex.get_data_element(i,j);
+  //    }
+  //  }
+  
+  vector<int> indices;
+  vector<int> counts;
+  for(int index = 0; index < max+1; ++index){
+    indices.push_back(index);
+    counts.push_back(0); 
+  }
+
+for (int q = 0; q < int(BasinNodes.size()); ++q){
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+    ++counts[AltIndex.get_data_element(i,j)];
+  }
+  vector<size_t> index_map;
+  matlab_int_sort(counts, counts, index_map);
+  matlab_int_reorder(indices,index_map,indices);
+  AlternativeIndex = counts.back();
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Function to remove any hilltop curvature values that are not internal to the 
 // basin
 // FJC 19/03/15
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 LSDRaster LSDBasin::keep_only_internal_hilltop_curvature(LSDRaster hilltop_curvature, LSDFlowInfo FlowInfo)
 {
-  Array2D<float> CHT_array(NRows, NCols, NoDataValue);
-  Array2D<int> perimeter(NRows, NCols, 0);
-  Array2D<int> ridge_pixels(NRows, NCols,0);
+  //Array2D<float> CHT_array(NRows, NCols, NoDataValue);
+  //Array2D<int> perimeter(NRows, NCols, 0);
+  //Array2D<int> ridge_pixels(NRows, NCols,0);
+  Array2D<float> CHT_array = hilltop_curvature.get_RasterData();
   cout << "Number of perimeter pixels: " << Perimeter_i.size() << endl;
-  for (int q =0; q < int(Perimeter_i.size()); q++)
-  {
-      int row_perim = Perimeter_i[q];
-      int col_perim = Perimeter_j[q];
-      if (row_perim != NoDataValue && col_perim != NoDataValue)
-      {
-        perimeter[row_perim][col_perim] = 1;
-      }
-  }
-  
-  for (int row = 0; row < NRows; row++)
-  {
-    for (int col = 0; col < NCols; col++)
-    {
-      float curvature = hilltop_curvature.get_data_element(row, col);
-      if (curvature != NoDataValue)
-      {
-        ridge_pixels[row][col] = 1;  
-      }
+  for (int q =0; q < int(Perimeter_i.size()); q++){
+    int row_perim = Perimeter_i[q];
+    int col_perim = Perimeter_j[q];
+    if (row_perim != NoDataValue && col_perim != NoDataValue){
+      //perimeter[row_perim][col_perim] = 1;
+      CHT_array[row_perim][col_perim]=NoDataValue;
     }
   }
+  
+  //  for (int row = 0; row < NRows; row++)
+  //{
+  //for (int col = 0; col < NCols; col++)
+  //{
+  //  float curvature = hilltop_curvature.get_data_element(row, col);
+  //  if (curvature != NoDataValue)
+  //  {
+  //    ridge_pixels[row][col] = 1;  
+  //  }
+  //}
+  //}
   
 
-  for (int row = 0; row < NRows; row++)
-  {
-    for (int col = 0; col < NCols; col++)
-    {
-      if (perimeter[row][col] == 0 || ridge_pixels[row][col] == 0)
-      {
-        float curvature = hilltop_curvature.get_data_element(row, col);
-        CHT_array[row][col] = curvature; 
-      }
-    }
-  }
+  //for (int row = 0; row < NRows; row++)
+  //{
+  //for (int col = 0; col < NCols; col++)
+  //{
+  //  if (perimeter[row][col] == 0 || ridge_pixels[row][col] == 0)
+  //  {
+  //    float curvature = hilltop_curvature.get_data_element(row, col);
+  //    CHT_array[row][col] = curvature; 
+  //  }
+  //}
+  //}
   LSDRaster CHT(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, CHT_array,GeoReferencingStrings);
    
    return CHT;  
