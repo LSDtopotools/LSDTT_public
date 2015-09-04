@@ -93,10 +93,17 @@ int main (int nNumberofArgs,char *argv[])
   
   //First we need to load the elevation data, fill it and generate a FlowInfo object
   LSDRaster DEM(Raster_name, DEM_extension);
-  float MinSlope = 0.0001;
+  float MinSlope = 0.0005;
   LSDRaster FilledDEM = DEM.fill(MinSlope);
+  string fill_name = "_fill";
+  FilledDEM.write_raster((Output_name+fill_name), DEM_extension);
+  
   vector<string> BoundaryConditions(4, "No Flux");
   LSDFlowInfo FlowInfo(BoundaryConditions,FilledDEM);
+  
+  string HS_name = "_HS";
+	LSDRaster HS = FilledDEM.hillshade(45, 315, 1);
+	HS.write_raster((Output_name+HS_name),DEM_extension);
   
   //this processes the end points to only keep the upper extent of the channel network
   cout << "getting channel heads" << endl;
@@ -115,8 +122,8 @@ int main (int nNumberofArgs,char *argv[])
   //Generate a channel netowrk from the sources
   LSDJunctionNetwork JunctionNetwork(FinalSources, FlowInfo);
 	LSDIndexRaster JIArray = JunctionNetwork.JunctionIndexArray_to_LSDIndexRaster();
-	string JN_name = "_JI";
-	JIArray.write_raster(Output_name+JN_name, DEM_extension);
+	//string JN_name = "_JI";
+	//JIArray.write_raster(Output_name+JN_name, DEM_extension);
   
   LSDIndexRaster StreamNetwork = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
   string SO_name = "_SO";
@@ -136,12 +143,12 @@ int main (int nNumberofArgs,char *argv[])
 //   float DataResolution = FilledDEM.get_DataResolution();
   
 	// Calculate the channel head nodes
-  int MinSegLength = 10;
-  //LSDIndexRaster ChannelsFromDreich = JunctionNetwork.GetChannelsDreich(valley_nodes, MinSegLength, A_0, m_over_n,
-	//								                    FlowInfo, DistanceFromOutlet, FilledDEM);
+  int MinSegLength = 30;
+  LSDIndexRaster ChannelsFromDreich = JunctionNetwork.GetChannelsDreich(valley_nodes, MinSegLength, A_0, m_over_n,
+									                    FlowInfo, DistanceFromOutlet, FilledDEM, path_name);
 									                    
-	//string channels_name = "_channels";
-	//ChannelsFromDreich.write_raster((Output_name+channels_name), DEM_extension);
+	string channels_name = "_channels";
+	ChannelsFromDreich.write_raster((Output_name+channels_name), DEM_extension);
   
   vector<int> ChannelHeadNodes = JunctionNetwork.GetChannelHeadsChiMethodFromValleys(valley_nodes, MinSegLength, A_0, m_over_n,
 									                    FlowInfo, DistanceFromOutlet, FilledDEM);
@@ -155,7 +162,7 @@ int main (int nNumberofArgs,char *argv[])
   LSDJunctionNetwork NewChanNetwork(ChannelHeadNodes, FlowInfo);
   //int n_junctions = NewChanNetwork.get_Number_of_Junctions();
   LSDIndexRaster SOArrayNew = NewChanNetwork.StreamOrderArray_to_LSDIndexRaster();
-  string SO_name_new = "_SO_from_CH_DrEICH";
+  string SO_name_new = "_SO_from_CH_DrEICH_test";
 
   SOArrayNew.write_raster((Output_name+SO_name_new),DEM_extension);                                               
 }
