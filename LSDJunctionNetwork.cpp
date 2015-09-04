@@ -1694,11 +1694,17 @@ int LSDJunctionNetwork::GetChannelHeadsChiMethodFromNode(int NodeNumber,
 	//vector<int> ChannelHeadNodes;
 	float downslope_chi = 0;
 	
+	// get the second order junction from this node
+	int node_at_junction = FlowInfo.ReceiverVector[NodeNumber];
+	int first_order_junction = get_Junction_of_Node (node_at_junction, FlowInfo);
+	int second_order_junction = get_Receiver_of_Junction(first_order_junction);
+	int second_order_node = get_Node_of_Junction(second_order_junction);
+	
 	// get the hilltop node from this junction
 	int hilltop_node = FlowInfo.find_farthest_upslope_node(NodeNumber, FlowDistance);
 	
 	//perform chi segment fitting
-	LSDChannel new_channel(hilltop_node, NodeNumber, downslope_chi, m_over_n, A_0, FlowInfo,  ElevationRaster);
+	LSDChannel new_channel(hilltop_node, second_order_node, downslope_chi, m_over_n, A_0, FlowInfo,  ElevationRaster);
   int channel_head_node = new_channel.calculate_channel_heads(MinSegLength, A_0, m_over_n, FlowInfo);
 
 	// get the nodes of the hilltops.
@@ -1706,7 +1712,7 @@ int LSDJunctionNetwork::GetChannelHeadsChiMethodFromNode(int NodeNumber,
   //                                        FlowInfo, FlowDistance);
 
   return channel_head_node;
-}      
+}       
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-
