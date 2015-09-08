@@ -564,7 +564,7 @@ class LSDRasterSpectral: public LSDRaster
     /// @author DTM
     /// @date 10/07/2015
     LSDIndexRaster IsolateChannelsWienerQQ(float area_threshold, float window_radius, string q_q_filename);
-  LSDIndexRaster IsolateChannelsWienerQQAdaptive(float area_threshold, float window_radius, string q_q_filename);
+    LSDIndexRaster IsolateChannelsWienerQQAdaptive(float area_threshold, float window_radius, string q_q_filename);
 
   protected:
     int Lx;
@@ -590,6 +590,9 @@ class LSDRasterSpectral: public LSDRaster
     void create(int ncols, int nrows, float xmin, float ymin,
                 float cellsize, float ndv, Array2D<float> data);
     void create(int raster_order, float cellsize, float ndv);
+    void create(int nrows, int ncols, float xmin, float ymin,
+           float cellsize, float ndv, Array2D<float> data,
+           map<string,string> temp_GRS);
     void create(LSDRaster& An_LSDRaster);
 
 };

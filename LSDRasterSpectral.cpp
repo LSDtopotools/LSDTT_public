@@ -112,7 +112,8 @@ LSDRasterSpectral& LSDRasterSpectral::operator=(const LSDRasterSpectral& rhs)
   if (&rhs != this)
   {
     create(rhs.get_NRows(),rhs.get_NCols(),rhs.get_XMinimum(),rhs.get_YMinimum(),
-           rhs.get_DataResolution(),rhs.get_NoDataValue(),rhs.get_RasterData());
+           rhs.get_DataResolution(),rhs.get_NoDataValue(),rhs.get_RasterData(),
+           rhs.get_GeoReferencingStrings());
   }
   return *this;
 }
@@ -171,9 +172,9 @@ void LSDRasterSpectral::create(string filename, string extension)
   WSS=float(NRows*NCols);
 }
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// this creates a raster filled with no data values
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// this creates a raster filled with some data values
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterSpectral::create(int nrows, int ncols, float xmin, float ymin,
             float cellsize, float ndv, Array2D<float> data)
 {
@@ -204,6 +205,45 @@ void LSDRasterSpectral::create(int nrows, int ncols, float xmin, float ymin,
 
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Like the above function, but copies the GeoReferencing
+// SMM 2015
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDRasterSpectral::create(int nrows, int ncols, float xmin, float ymin,
+           float cellsize, float ndv, Array2D<float> data, map<string,string> temp_GRS)
+{
+  NRows = nrows;
+  NCols = ncols;
+  XMinimum = xmin;
+  YMinimum = ymin;
+  DataResolution = cellsize;
+  NoDataValue = ndv;
+  GeoReferencingStrings = temp_GRS;
+  Ly = int(pow(2,ceil(log(NRows)/log(2))));
+  Lx = int(pow(2,ceil(log(NCols)/log(2)))); 
+  dfx = 1/(DataResolution*float(Lx));
+  dfy = 1/(DataResolution*float(Ly));   
+  NyquistFreq = 1/(2*DataResolution);
+  WSS=float(NRows*NCols);
+  RasterData = data.copy();
+
+  if (RasterData.dim1() != NRows)
+  {
+    cout << "LSDRaster line 89 dimension of data is not the same as stated in NRows!" << endl;
+    exit(EXIT_FAILURE);
+  }
+  if (RasterData.dim2() != NCols)
+  {
+    cout << "LSDRaster line 94 dimension of data is not the same as stated in NRows!" << endl;
+    exit(EXIT_FAILURE);
+  }
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function creates an LSDSpectralRaster from an LSDRaster
 void LSDRasterSpectral::create(LSDRaster& An_LSDRaster)
 {
@@ -213,6 +253,7 @@ void LSDRasterSpectral::create(LSDRaster& An_LSDRaster)
   YMinimum = An_LSDRaster.get_YMinimum();
   DataResolution = An_LSDRaster.get_DataResolution();
   NoDataValue = An_LSDRaster.get_NoDataValue();
+  GeoReferencingStrings = An_LSDRaster.get_GeoReferencingStrings();
   Ly = int(pow(2,ceil(log(NRows)/log(2))));
   Lx = int(pow(2,ceil(log(NCols)/log(2)))); 
   dfx = 1/(DataResolution*float(Lx));
@@ -222,6 +263,10 @@ void LSDRasterSpectral::create(LSDRaster& An_LSDRaster)
   RasterData = An_LSDRaster.get_RasterData();
 
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -413,7 +458,7 @@ void LSDRasterSpectral::dfftw2D_fwd(Array2D<float>& InputArray, Array2D<float>& 
   // -forwards, transform_direction==-1, -inverse, transform_direction==1
   if (transform_direction==-1)
   {
-//     cout << "  Running 2D discrete FORWARD fast fourier transform..." << endl;
+    //     cout << "  Running 2D discrete FORWARD fast fourier transform..." << endl;
     plan = fftw_plan_dft_2d(Ly,Lx,input,output,transform_direction,FFTW_MEASURE);
   }
   else
@@ -538,7 +583,7 @@ Array2D<float>& OutputArray, int transform_direction)
   else
   {
     cout << "\nFATAL ERROR: for the tranform direction\n\t 1 = INVERSE \n\t" << endl;
-		exit(EXIT_FAILURE);
+    exit(EXIT_FAILURE);
   }
 
   // LOAD DATA INTO COMPLEX ARRAY FOR FFT IN ROW MAJOR ORDER
@@ -546,7 +591,7 @@ Array2D<float>& OutputArray, int transform_direction)
   {
     for (int j=0;j<Lx;++j)
     {
-	  // In this version, we have passed a full complex array, so at this
+      // In this version, we have passed a full complex array, so at this
       // point we then access the real and imaginary parts, so as not to change too much code
       input[Lx*i+j][0] = InputArrayComplex[i][j].real(); 	
       input[Lx*i+j][1] = InputArrayComplex[i][j].imag();
@@ -589,9 +634,9 @@ void LSDRasterSpectral::detrend2D(Array2D<float>& zeta, Array2D<float>& zeta_det
 {
 //   cout << "  Detrending the DEM by fitting a planar surface..." << endl;
   Array2D<float> A(3,3,0.0);
-	Array1D<float> bb(3,0.0);
-	Array1D<float> coeffs(3);
-	
+  Array1D<float> bb(3,0.0);
+  Array1D<float> coeffs(3);
+  
   for (int i=0; i<NRows; ++i)
   {      
     for (int j=0; j<NCols; ++j)
@@ -599,22 +644,22 @@ void LSDRasterSpectral::detrend2D(Array2D<float>& zeta, Array2D<float>& zeta_det
       if(zeta[i][j] != NoDataValue)
       {
         float x = j;
-	float y = i;
+        float y = i;
         // Generate matrix A
-	A[0][0] += pow(x,2);
-	A[0][1] += x*y;
-	A[0][2] += x;
-	A[1][0] += y*x;
-	A[1][1] += pow(y,2);
-	A[1][2] += y;
-	A[2][0] += x;
-	A[2][1] += y;
-	A[2][2] += 1;
+        A[0][0] += pow(x,2);
+        A[0][1] += x*y;
+        A[0][2] += x;
+        A[1][0] += y*x;
+        A[1][1] += pow(y,2);
+        A[1][2] += y;
+        A[2][0] += x;
+        A[2][1] += y;
+        A[2][2] += 1;
 
         // Generate vector bb
-	bb[0] += zeta[i][j]*x;
-	bb[1] += zeta[i][j]*y;
-	bb[2] += zeta[i][j];
+        bb[0] += zeta[i][j]*x;
+        bb[1] += zeta[i][j]*y;
+        bb[2] += zeta[i][j];
       }
     }
   }
@@ -709,7 +754,9 @@ void LSDRasterSpectral::window_data(Array2D<float>& input, Array2D<float>& outpu
             theta = atan2((y - b),(x - a));
           }
           r = sqrt((y - b)*(y - b) + (x - a)*(x - a)); // distance from centre to this point
-          rprime = sqrt((a*a)*(b*b)/(b*b*(cos(theta)*cos(theta)) + a*a*(sin(theta)*sin(theta)))); // distance from centre to edge of ellipse for this particular theta
+          
+          // distance from centre to edge of ellipse for this particular theta
+          rprime = sqrt((a*a)*(b*b)/(b*b*(cos(theta)*cos(theta)) + a*a*(sin(theta)*sin(theta)))); 
           if(r < rprime)
           {
             HannCoefficient = 0.5 * (1 + cos(PI * r/rprime));
@@ -746,7 +793,9 @@ void LSDRasterSpectral::window_data(Array2D<float>& input, Array2D<float>& outpu
             theta = atan2((y - b),(x - a));
           }
           r = sqrt((y - b)*(y - b) + (x - a)*(x - a)); // distance from centre to this point
-          rprime = sqrt((a*a)*(b*b)/(b*b*(cos(theta)*cos(theta)) + a*a*(sin(theta)*sin(theta)))); // distance from centre to edge of ellipse for this particular theta
+          
+          // distance from centre to edge of ellipse for this particular theta
+          rprime = sqrt((a*a)*(b*b)/(b*b*(cos(theta)*cos(theta)) + a*a*(sin(theta)*sin(theta)))); 
           if(r < rprime)
           {
             HammingCoefficient = (alpha - beta*(PI * r/rprime));
@@ -809,7 +858,7 @@ void LSDRasterSpectral::window_data(Array2D<float>& input, Array2D<float>& outpu
 void LSDRasterSpectral::window_data_Hann2D(Array2D<float>& zeta_detrend, Array2D<float>& zeta_Hann2D, Array2D<float>& Hann2D)
 {
   float PI = 3.14159265;
-//   cout << "  Windowing DEM using an elliptical 2D Hann window..." << endl;
+  //   cout << "  Windowing DEM using an elliptical 2D Hann window..." << endl;
   float ny = NRows;
   float nx = NCols;
   // Get matrix coordinates of centroid of matrix
@@ -1113,10 +1162,10 @@ void LSDRasterSpectral::fftw2D_spectral_analysis(char* file_id, float LogBinWidt
 {
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // DETREND DATA
-	// FIT PLANE BY LEAST SQUARES REGRESSION AND USE COEFFICIENTS TO DETERMINE
-	// LOCAL SLOPE ax + by + c = z
-	Array2D<float> zeta_detrend(NRows,NCols);
-	Array2D<float> trend_plane(NRows,NCols);
+  // FIT PLANE BY LEAST SQUARES REGRESSION AND USE COEFFICIENTS TO DETERMINE
+  // LOCAL SLOPE ax + by + c = z
+  Array2D<float> zeta_detrend(NRows,NCols);
+  Array2D<float> trend_plane(NRows,NCols);
   detrend2D(RasterData, zeta_detrend, trend_plane);
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1184,9 +1233,9 @@ void LSDRasterSpectral::fftw2D_spectral_analysis(char* file_id, float LogBinWidt
   vector<float> StandardDeviationRadialPSD;
 //   // Execute log binning
 //   log_bin_data(RadialFrequency, RadiallyAveragedPSD, LogBinWidth, Bin_MeanRadialFreq, Bin_RadialPSD, BinMidpoints,
-//   								StandardDeviationRadialFreq, StandardDeviationRadialPSD, int(NoDataValue)); 
+//                  StandardDeviationRadialFreq, StandardDeviationRadialPSD, int(NoDataValue)); 
   log_bin_data(RadialFrequency, RadialPSD, LogBinWidth, Bin_MeanRadialFreq, Bin_RadialPSD, BinMidpoints,
-  								StandardDeviationRadialFreq, StandardDeviationRadialPSD, int(NoDataValue));
+               StandardDeviationRadialFreq, StandardDeviationRadialPSD, int(NoDataValue));
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // WRITE OUTPUTS TO FILE
@@ -1207,16 +1256,16 @@ void LSDRasterSpectral::fftw2D_spectral_analysis(char* file_id, float LogBinWidt
   // Radially averaged PSD
 
   char *RadialPSD_file = new char[len+14];
-	strcpy(RadialPSD_file,file_id);
+  strcpy(RadialPSD_file,file_id);
   strcat(RadialPSD_file,"_RadialPSD.txt");
 
-	ofs.open(RadialPSD_file);
-	if( ofs.fail() )
+  ofs.open(RadialPSD_file);
+  if( ofs.fail() )
   {
-		cout << "\nFATAL ERROR: unable to write to " << RadialPSD_file << endl;
-		exit(EXIT_FAILURE);
-	}
-	ofs << "Freq Wavelength PSD Model_PSD Model_noise\n";
+    cout << "\nFATAL ERROR: unable to write to " << RadialPSD_file << endl;
+    exit(EXIT_FAILURE);
+  }
+  ofs << "Freq Wavelength PSD Model_PSD Model_noise\n";
   for(int i=0; i < int(RadialFrequency.size()); ++i)
   {
 //     ofs << RadialFrequency[i] << " " << 1/RadialFrequency[i] << " " << RadiallyAveragedPSD[i] << " \n";
@@ -1226,16 +1275,16 @@ void LSDRasterSpectral::fftw2D_spectral_analysis(char* file_id, float LogBinWidt
   //----------------------------------------------------------------------------
   // Binned averaged PSD
   char *RadialPSD_binned_file = new char[len+21];
-	strcpy(RadialPSD_binned_file,file_id);
+  strcpy(RadialPSD_binned_file,file_id);
   strcat(RadialPSD_binned_file,"_RadialPSD_binned.txt");
 
-	ofs.open(RadialPSD_binned_file);
-	if( ofs.fail() )
+  ofs.open(RadialPSD_binned_file);
+  if( ofs.fail() )
   {
-		cout << "\nFATAL ERROR: unable to write to " << RadialPSD_binned_file << endl;
-		exit(EXIT_FAILURE);
-	}
-	ofs << "Freq Wavelength PSD Sigma Model Noise\n";
+    cout << "\nFATAL ERROR: unable to write to " << RadialPSD_binned_file << endl;
+    exit(EXIT_FAILURE);
+  }
+  ofs << "Freq Wavelength PSD Sigma Model Noise\n";
   for(int i=0; i < int(Bin_MeanRadialFreq.size()); ++i)
   {
     ofs << Bin_MeanRadialFreq[i] << " " << 1/Bin_MeanRadialFreq[i] << " " << Bin_RadialPSD[i] << " " << StandardDeviationRadialPSD[i] << " \n";
@@ -1327,7 +1376,7 @@ void LSDRasterSpectral::lowpass_filter(Array2D<float>& RawSpectrumReal, Array2D<
       float x = j;
       float y = i;
       f = sqrt((y - (Ly/2))*(y - (Ly/2))*dfy*dfy + (x - (Lx/2))*(x - (Lx/2))*dfx*dfx);
-      		               // distance from centre to this point. Converting position in frequency into an absolute frequency
+                     // distance from centre to this point. Converting position in frequency into an absolute frequency
       if (f < f1)
       {
         weight = 1;
@@ -1555,7 +1604,14 @@ void LSDRasterSpectral::wiener_filter(Array2D<float>& RawSpectrumReal, Array2D<f
   vector<float> RadialPSD_model(n_freqs,0.0);
   for (int i = 0; i < n_freqs; ++i)
   {
-    RadialPSD_model[i] = c_model*pow(RadialFrequency[i],m_model);
+    if(RadialFrequency[i] == 0)
+    {
+      RadialPSD_model[i] = 0;
+    }
+    else
+    {
+      RadialPSD_model[i] = c_model*pow(RadialFrequency[i],m_model);
+    }
   }
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // GET MEAN AMPLITUDE OF SPECTRUM CLOSE TO NYQUIST FREQUENCY AS ESTIMATE OF
@@ -1574,6 +1630,16 @@ void LSDRasterSpectral::wiener_filter(Array2D<float>& RawSpectrumReal, Array2D<f
   //vector<float> WhiteNoise(n_freqs,0.0);
   int n_freqs_noise = 0;
   float f_highpass = pow(10,-0.7);
+  
+  // Make sure that the highpass filter is not greater than the DEM resolution. 
+  // If it is, set the highpass filter to 3x the DEM resolution
+  float L_highpass = 1/f_highpass;
+  if(L_highpass < 2*DataResolution)
+  {
+    L_highpass = 2*DataResolution+0.00001;
+    f_highpass = 1/L_highpass;
+  }
+  
   float WhiteNoiseAmplitude = 0;
 //   for (int i = 0; i < int(RadiallyAveragedPSD.size()); ++i)
   for (int i = 0; i < int(RadialPSD.size()); ++i)
@@ -1686,10 +1752,10 @@ LSDRaster LSDRasterSpectral::fftw2D_filter(int FilterType, float FLow, float FHi
   cout << "\n***fftw_2Dfilt_v1.1: spectral filtering of array***" << endl;
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // DETREND DATA => DO NOT WINDOW!
-	// FIT PLANE BY LEAST SQUARES REGRESSION AND USE COEFFICIENTS TO DETERMINE
-	// LOCAL SLOPE ax + by + c = z
-	Array2D<float> zeta_detrend(NRows,NCols);
-	Array2D<float> trend_plane(NRows,NCols);
+  // FIT PLANE BY LEAST SQUARES REGRESSION AND USE COEFFICIENTS TO DETERMINE
+  // LOCAL SLOPE ax + by + c = z
+  Array2D<float> zeta_detrend(NRows,NCols);
+  Array2D<float> trend_plane(NRows,NCols);
   detrend2D(RasterData, zeta_detrend, trend_plane);
   //float WSS = 1; // dataset is not windowed
 
@@ -1789,7 +1855,7 @@ LSDRaster LSDRasterSpectral::fftw2D_filter(int FilterType, float FLow, float FHi
     }
   }
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-  LSDRaster FilteredTopographyRaster(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,FilteredTopography);
+  LSDRaster FilteredTopographyRaster(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,FilteredTopography,GeoReferencingStrings);
   return FilteredTopographyRaster;
 }
 
@@ -1840,10 +1906,10 @@ LSDRaster LSDRasterSpectral::fftw2D_wiener()
 {
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // DETREND DATA => DO NOT WINDOW!
-	// FIT PLANE BY LEAST SQUARES REGRESSION AND USE COEFFICIENTS TO DETERMINE
-	// LOCAL SLOPE ax + by + c = z
-	Array2D<float> zeta_detrend(NRows,NCols);
-	Array2D<float> trend_plane(NRows,NCols);
+  // FIT PLANE BY LEAST SQUARES REGRESSION AND USE COEFFICIENTS TO DETERMINE
+  // LOCAL SLOPE ax + by + c = z
+  Array2D<float> zeta_detrend(NRows,NCols);
+  Array2D<float> trend_plane(NRows,NCols);
   detrend2D(RasterData, zeta_detrend, trend_plane);
   WSS = 1; // dataset is not windowed
 
@@ -1926,7 +1992,7 @@ LSDRaster LSDRasterSpectral::fftw2D_wiener()
     }
   }
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-  LSDRaster FilteredTopographyRaster(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,FilteredTopography);
+  LSDRaster FilteredTopographyRaster(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,FilteredTopography,GeoReferencingStrings);
   return FilteredTopographyRaster;
 }
 
@@ -2200,10 +2266,10 @@ void LSDRasterSpectral::full_spectral_analysis(float log_bin_width, int N_iterat
 {
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // DETREND DATA
-	// FIT PLANE BY LEAST SQUARES REGRESSION AND USE COEFFICIENTS TO DETERMINE
-	// LOCAL SLOPE ax + by + c = z
-	Array2D<float> zeta_detrend(NRows,NCols,0.0);
-	Array2D<float> trend_plane(NRows,NCols,0.0);
+  // FIT PLANE BY LEAST SQUARES REGRESSION AND USE COEFFICIENTS TO DETERMINE
+  // LOCAL SLOPE ax + by + c = z
+  Array2D<float> zeta_detrend(NRows,NCols,0.0);
+  Array2D<float> trend_plane(NRows,NCols,0.0);
   detrend2D(RasterData, zeta_detrend, trend_plane);
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2304,13 +2370,13 @@ void LSDRasterSpectral::print_radial_spectrum(string file_id)
   string PSD_suffix = "_radialPSD";
   string output_format = ".txt";
   string RadialPSD_file = file_id + PSD_suffix + output_format;
-	ofs.open(RadialPSD_file.c_str());
-	if( ofs.fail() )
+  ofs.open(RadialPSD_file.c_str());
+  if( ofs.fail() )
   {
-		cout << "\nFATAL ERROR: unable to write to " << RadialPSD_file << endl;
-		exit(EXIT_FAILURE);
-	}
-	ofs << "Freq Wavelength PSD PSDnorm\n";
+    cout << "\nFATAL ERROR: unable to write to " << RadialPSD_file << endl;
+    exit(EXIT_FAILURE);
+  }
+  ofs << "Freq Wavelength PSD PSDnorm\n";
   int n_freqs = RadialFrequency.size();
   for(int i=0; i < n_freqs; ++i)
   {
@@ -2358,13 +2424,13 @@ void LSDRasterSpectral::print_binned_spectrum(string output_id, float log_bin_wi
   string file_id = output_id;
   string binnedRadialPSD_file = file_id + binnedPSD_suffix;
 
-	ofs.open(binnedRadialPSD_file.c_str());
-	if( ofs.fail() )
+  ofs.open(binnedRadialPSD_file.c_str());
+  if( ofs.fail() )
   {
-		cout << "\nFATAL ERROR: unable to write to " << binnedRadialPSD_file << endl;
-		exit(EXIT_FAILURE);
-	}
-	ofs << "Freq Wavelength PSD R_sq Beta BackgroundPSD CI95 CI99 \n";
+    cout << "\nFATAL ERROR: unable to write to " << binnedRadialPSD_file << endl;
+    exit(EXIT_FAILURE);
+  }
+  ofs << "Freq Wavelength PSD R_sq Beta BackgroundPSD CI95 CI99 \n";
   for(int i=0; i < bin_index.size(); ++i)
   {
     ofs << bin_mean_freq[bin_index[i]] << " " << 1/bin_mean_freq[bin_index[i]] << " " << bin_mean_PSD[bin_index[i]] << " " << R_sq[i] << " " << beta[i] << " " << bin_mean_background[bin_index[i]] << " " << bin_CI_norm[bin_index[i]] << " " << bin_CI_norm99[bin_index[i]] << " \n";
@@ -2420,7 +2486,7 @@ LSDIndexRaster LSDRasterSpectral::IsolateChannelsWienerQQ(float area_threshold, 
     }
   }
   
-  LSDIndexRaster channels(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,binary_array);
+  LSDIndexRaster channels(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,binary_array,GeoReferencingStrings);
   return channels;
 }
 LSDIndexRaster LSDRasterSpectral::IsolateChannelsWienerQQAdaptive(float area_threshold, float window_radius, string q_q_filename)
@@ -2459,7 +2525,7 @@ LSDIndexRaster LSDRasterSpectral::IsolateChannelsWienerQQAdaptive(float area_thr
     }
   }
   
-  LSDIndexRaster channels(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,binary_array);
+  LSDIndexRaster channels(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,binary_array,GeoReferencingStrings);
   return channels;
 }
 
