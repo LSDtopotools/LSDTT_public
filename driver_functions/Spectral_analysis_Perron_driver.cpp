@@ -48,8 +48,8 @@ int main (int nNumberofArgs,char *argv[])
   string raster_format;
   string raster_ext;
 
-  string temp;                
-  
+  string temp;
+
   file_info_in.open(full_name.c_str());
   if( file_info_in.fail() )
   {
@@ -57,37 +57,37 @@ int main (int nNumberofArgs,char *argv[])
          << "\" doesn't exist" << endl;
     exit(EXIT_FAILURE);
   }
-  file_info_in >> temp >> data_path;   
-  data_path = RemoveControlCharactersFromEndOfString(data_path);                                  
-  
-  file_info_in >> temp >> raster_name;  
-  raster_name = RemoveControlCharactersFromEndOfString(raster_name);                                 
-  
+  file_info_in >> temp >> data_path;
+  data_path = RemoveControlCharactersFromEndOfString(data_path);
+
+  file_info_in >> temp >> raster_name;
+  raster_name = RemoveControlCharactersFromEndOfString(raster_name);
+
   file_info_in >> temp >> output_id;
   output_id = RemoveControlCharactersFromEndOfString(output_id);
-  
+
   file_info_in >> temp >> N_iterations;
-  
+
   file_info_in >> temp >> window_option;
-  
+
   file_info_in >> temp >> log_bin_width;
-  
+
   file_info_in >> temp >> raster_format;
   raster_format = RemoveControlCharactersFromEndOfString(raster_format);
-  
+
   file_info_in.close();
-  
-  // print the spectral data to the data folder. 
+
+  // print the spectral data to the data folder.
   output_id = data_path+output_id;
-  
-  
+
+
   // now check the raster format
   string lower = raster_format;
   for (unsigned int i=0; i<raster_format.length(); ++i)
   {
     lower[i] = tolower(raster_format[i]);
   }
-  
+
   if (lower == "bil" || lower == "envi")
   {
     raster_ext = ENVI_ext;
@@ -115,12 +115,12 @@ int main (int nNumberofArgs,char *argv[])
   // Load in data
   string DEM_f_name = data_path+raster_name;
   LSDRaster raw_raster(DEM_f_name, raster_ext);
-  
+
   // convert to float by using the polyfit function
   //float window_radius = 61.0;
   //vector<int> raster_selection(8,0);
   //raster_selection[0] = 1;                    // set to return the smoothed surface
-  //vector<LSDRaster> polyfit_rasters = 
+  //vector<LSDRaster> polyfit_rasters =
   //    raw_raster.calculate_polyfit_surface_metrics(window_radius, raster_selection);
 
   // remove the seas
@@ -128,19 +128,19 @@ int main (int nNumberofArgs,char *argv[])
   raw_raster.mask_to_nodata_below_threshold(sea_threshold);
 
   // now trim the raster
-  LSDRaster trimmed = polyfit_rasters[0].RasterTrimmerSpiral();
-  
+  LSDRaster trimmed = raw_raster.RasterTrimmerSpiral();
+
   cout << "Trimmed raster, printing" << endl;
-  
+
   string Trim_name = "_TRIM";
   trimmed.write_raster((DEM_f_name+Trim_name),raster_ext);
 
   cout << "Now performing spectral analysis" << endl;
-   
-  // Perform full spectral analysis  
+
+  // Perform full spectral analysis
   LSDRasterSpectral SpectralRaster(trimmed);
   SpectralRaster.full_spectral_analysis(log_bin_width,N_iterations,window_option);
   SpectralRaster.print_radial_spectrum(output_id);
   SpectralRaster.print_binned_spectrum(output_id, log_bin_width);
 
-}                                                                                 
+}
