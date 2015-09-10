@@ -93,7 +93,7 @@ int main (int nNumberofArgs,char *argv[])
   
   //First we need to load the elevation data, fill it and generate a FlowInfo object
   LSDRaster DEM(Raster_name, DEM_extension);
-  float MinSlope = 0.0005;
+  float MinSlope = 0.0001;
   LSDRaster FilledDEM = DEM.fill(MinSlope);
   string fill_name = "_fill";
   FilledDEM.write_raster((Output_name+fill_name), DEM_extension);
@@ -135,20 +135,8 @@ int main (int nNumberofArgs,char *argv[])
   
   LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
   
-//   float NoDataValue = FilledDEM.get_NoDataValue();
-//   int NRows = FilledDEM.get_NRows();
-//   int NCols = FilledDEM.get_NCols();
-//   float XMinimum = FilledDEM.get_XMinimum();
-//   float YMinimum = FilledDEM.get_YMinimum();
-//   float DataResolution = FilledDEM.get_DataResolution();
-  
 	// Calculate the channel head nodes
   int MinSegLength = 30;
-  LSDIndexRaster ChannelsFromDreich = JunctionNetwork.GetChannelsDreich(valley_nodes, MinSegLength, A_0, m_over_n,
-									                    FlowInfo, DistanceFromOutlet, FilledDEM, path_name);
-									                    
-	string channels_name = "_channels";
-	ChannelsFromDreich.write_raster((Output_name+channels_name), DEM_extension);
   
   vector<int> ChannelHeadNodes = JunctionNetwork.GetChannelHeadsChiMethodFromValleys(valley_nodes, MinSegLength, A_0, m_over_n,
 									                    FlowInfo, DistanceFromOutlet, FilledDEM);
