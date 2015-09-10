@@ -482,6 +482,15 @@ class LSDJunctionNetwork
                               int MinSegLength, float A_0, float m_over_n,
 			      LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance, LSDRaster& ElevationRaster);
 
+	/// @brief This function generates LSDChannels that run from the hilltops above
+  /// all the sources from the valley network down to a specified number of downstream junctions below
+  /// the sources
+  /// @author FJC
+  /// @date 10/09/15 
+  int GetChannelHeadsChiMethodFromSourceNode(int NodeNumber,
+                        int MinSegLength, float A_0, float m_over_n,
+											  LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance, LSDRaster& ElevationRaster, int NJunctions);
+
   /// @brief This function generates an LSDIndexRaster of the channel that runs from
   /// the hilltop above the furthest upslope source of the junction JunctionNumber
   /// @param BasinOrder
@@ -495,7 +504,7 @@ class LSDJunctionNetwork
   /// @author FJC
   /// @date 21/08/15
   LSDIndexRaster GetChannelfromDreich(int NodeNumber, int MinSegLength, float A_0, float m_over_n,
-											                LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance, LSDRaster& ElevationRaster);
+											                LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance, LSDRaster& ElevationRaster, string path_name, int NJunctions);
 
 
 
@@ -530,6 +539,25 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
 									                    LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance,
 									                    LSDRaster& ElevationRaster);
 				      
+ 	/// @brief This function returns all potential channel heads in a DEM. It looks for
+  /// channel heads based on the valley source nodes identified as concave parts of the landscape
+  /// @param ValleyJunctions
+  /// @param MinSegLength
+  /// @param A_0
+  /// @param m_over_n
+  /// @param FlowInfo
+  /// @param FlowDistance
+  /// @param ElevationRaster
+  /// @param NJunctions number of downstream junctions to run the channel profiles from
+  /// @return vector<int> a vector of node_indices of potential channel heads
+  /// @author FC
+  /// @date 10/09/15								                    
+									                    
+  vector<int> GetChannelHeadsChiMethodFromSources(vector<int> ValleySources,
+                                      int MinSegLength, float A_0, float m_over_n,
+									                    LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance,
+									                    LSDRaster& ElevationRaster, int NJunctions);
+				      
   /// @brief This function returns all channels in the DEM that the DrEICH algorithm uses for segiment fitting.
   /// It looks for channels based on the outlet junctions of valleys.
   /// It returns a LSDIndexRaster with the channels.
@@ -543,8 +571,8 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @return LSDIndexRaster with all channels
   /// @author FJC
   /// @date 21/08/15	  
-  LSDIndexRaster GetChannelsDreich(vector<int> ValleyNodes, int MinSegLength, float A_0, float m_over_n,
-									                    LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance, LSDRaster& ElevationRaster);
+  LSDIndexRaster GetChannelsDreich(vector<int> ValleySources, int MinSegLength, float A_0, float m_over_n,
+									                    LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance, LSDRaster& ElevationRaster, string path_name, int NJunctions);
 
 
   /// @brief This function returns a 2D array containing the locations of all pixels identified
