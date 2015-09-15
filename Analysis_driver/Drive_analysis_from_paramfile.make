@@ -1,4 +1,4 @@
-# make with make -f chi_map.make
+# make with make -f Drive_analysis_from_paramfile.make
 
 CC=g++
 CFLAGS=-c -Wall -O3 -g 
@@ -15,14 +15,13 @@ SOURCES=Drive_analysis_from_paramfile.cpp \
     ../LSDMostLikelyPartitionsFinder.cpp \
     ../LSDShapeTools.cpp \
     ../LSDAnalysisDriver.cpp 
-LIBS= -lm -lstdc++ -lfftw3
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=LSDTT_analysis_from_paramfile.out
 
 all: $(SOURCES) $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) $(OFLAGS) $(OBJECTS) $(LIBS) -o $@
+	$(CC) $(OFLAGS) $(OBJECTS) -o $@
 
 .cpp.o:
 	$(CC) $(CFLAGS) $< -o $@
