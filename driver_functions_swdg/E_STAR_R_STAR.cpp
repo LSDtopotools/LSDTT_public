@@ -115,8 +115,8 @@ int main (int nNumberofArgs,char *argv[])
   cout << "Generating contiguous hilltop patches" << endl;
    
   //Run the hilltop patch algorithm   
-  LSDIndexRaster HilltopPatches = CHT.CreateHilltopPatches(MinimumPatchArea);
-  //LSDIndexRaster HilltopPatches((path+prefix+"_Patches"), "flt");
+  //LSDIndexRaster HilltopPatches = CHT.CreateHilltopPatches(MinimumPatchArea);
+  LSDIndexRaster HilltopPatches((path+prefix+"_Patches"), "flt");
         
   float ndv = LH.get_NoDataValue();
   int nrows = LH.get_NRows();
@@ -289,8 +289,9 @@ int main (int nNumberofArgs,char *argv[])
   
   for (int w = 0; w < int(Final_ID.size());++w){
     //break this over a few lines for clarity
-    WritePatchData << Final_ID[w] << "," << lh_means[w] << "," << lh_medians[w] << "," << lh_std_devs[w] << "," << lh_std_errs[w] << "," << cht_means[w] << "," << cht_medians[w] << "," << cht_std_devs[w] << "," << cht_std_errs[w] << "," << r_means[w] << "," << r_medians[w] << "," << r_std_devs[w] << "," << r_std_errs[w] << "," << s_means[w] << "," << s_medians[w] << "," << s_std_devs[w] << "," << s_std_errs[w] << "," << Sizes[w] << endl;
-   
+    if (Sizes[w] >= MinimumPatchArea){  
+      WritePatchData << Final_ID[w] << "," << lh_means[w] << "," << lh_medians[w] << "," << lh_std_devs[w] << "," << lh_std_errs[w] << "," << cht_means[w] << "," << cht_medians[w] << "," << cht_std_devs[w] << "," << cht_std_errs[w] << "," << r_means[w] << "," << r_medians[w] << "," << r_std_devs[w] << "," << r_std_errs[w] << "," << s_means[w] << "," << s_medians[w] << "," << s_std_devs[w] << "," << s_std_errs[w] << "," << Sizes[w] << endl;
+    }
   }
   
   WritePatchData.close();
