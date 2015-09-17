@@ -1911,11 +1911,11 @@ vector<int> LSDJunctionNetwork::GetChannelHeadsChiMethodFromValleys(vector<int> 
 	int upstream_test = 0;
 	vector<int>::iterator find_it;
 	
-	for (int node = 0; node < ChannelHeadNodes_temp.size(); node++)
+	for (int node = 0; node < int(ChannelHeadNodes_temp.size()); node++)
 	{
     vector<int> tests;
     int current_node = ChannelHeadNodes_temp[node];
-    for (int i = 0; i < ChannelHeadNodes_temp.size(); i++)
+    for (int i = 0; i < int(ChannelHeadNodes_temp.size()); i++)
     {
       if (ChannelHeadNodes_temp[i] != current_node)
       {
@@ -1980,11 +1980,11 @@ vector<int> LSDJunctionNetwork::GetChannelHeadsChiMethodFromSources(vector<int> 
 	int upstream_test = 0;
 	vector<int>::iterator find_it;
 	
-	for (int node = 0; node < ChannelHeadNodes_temp.size(); node++)
+	for (int node = 0; node < int(ChannelHeadNodes_temp.size()); node++)
 	{
     vector<int> tests;
     int current_node = ChannelHeadNodes_temp[node];
-    for (int i = 0; i < ChannelHeadNodes_temp.size(); i++)
+    for (int i = 0; i < int(ChannelHeadNodes_temp.size()); i++)
     {
       if (ChannelHeadNodes_temp[i] != current_node)
       {
@@ -2098,7 +2098,7 @@ Array2D<int> LSDJunctionNetwork::GetChannelHeadsChiMethodAllPixels(int JunctionN
 	chi_profile_all.open(string_filename_all.c_str());
 	//cout << "The filename is " << string_filename_all << endl;
 
-  for (unsigned int node=0; node < upslope_nodes.size(); node++)
+  for (int node=0; node < int(upslope_nodes.size()); node++)
   {
     FlowInfo.retrieve_current_row_and_col(upslope_nodes[node], row, col);
     float elev = ElevationRaster.get_data_element(row,col);
@@ -2175,7 +2175,7 @@ Array2D<int> LSDJunctionNetwork::GetChannelHeadsChiMethodAllPixels(int JunctionN
   elev_regression.resize(range_min.size());
   float regression_pointer = 0;
 
-  for (unsigned int i=0; i<range_min.size(); i++)
+  for (int i=0; i<int(range_min.size()); i++)
   {
     if (range_min[i] <= elev_limit)
     {
@@ -2223,7 +2223,7 @@ Array2D<int> LSDJunctionNetwork::GetChannelHeadsChiMethodAllPixels(int JunctionN
   vector<int> source_nodes;
   vector<int>::iterator iterator_find;
 
-  for (unsigned int i=0; i < upslope_nodes.size(); i++)
+  for (int i=0; i < int(upslope_nodes.size()); i++)
   {
     int bin_id = int((upslope_chi[i]-lower_limit)/bin_width);
     FlowInfo.retrieve_current_row_and_col(upslope_nodes[i], row, col);
@@ -2275,7 +2275,7 @@ vector<int> LSDJunctionNetwork::GetSourceNodesChiMethodAllPixels(int JunctionNum
   vector<float> elevation;
   int row,col;
 
-  for (unsigned int node=0; node < upslope_nodes.size(); node++)
+  for (int node=0; node < int(upslope_nodes.size()); node++)
   {
     FlowInfo.retrieve_current_row_and_col(upslope_nodes[node], row, col);
     float elev = ElevationRaster.get_data_element(row,col);
@@ -2343,7 +2343,7 @@ vector<int> LSDJunctionNetwork::GetSourceNodesChiMethodAllPixels(int JunctionNum
   elev_regression.resize(range_min.size());
   float regression_pointer = 0;
 
-  for (unsigned int i=0; i<range_min.size(); i++)
+  for (int i=0; i< int(range_min.size()); i++)
   {
     if (range_min[i] <= elev_limit)
     {
@@ -2875,7 +2875,7 @@ vector<int> LSDJunctionNetwork::get_outlet_nodes_from_sources(LSDFlowInfo& FlowI
   Array2D<int> NodesVisitedBeforeTemp(NRows,NCols,0);   
   vector<int> valley_nodes;  
   
-  for (int i = 0; i < sources.size(); i++)
+  for (int i = 0; i < int(sources.size()); i++)
   {
     int this_node = sources[i];
     int current_row,current_col,downslope_node,downslope_row,downslope_col,current_SO,downslope_SO;
