@@ -13,6 +13,12 @@ bool file_check(string name)
 
 int main(int argc, char *argv[])
 {
+	std::cerr << "argc = " << argc << '\n';
+    if ((argc > 0) && (argv[1] == NULL)) std::cerr << "Urk! 1\n";
+    if ((argc > 1) && (argv[2] == NULL)) std::cerr << "Urk! 2\n";
+    if ((argc > 2) && (argv[3] == NULL)) std::cerr << "Urk! 3\n";
+    std::cerr << "Past Urks\n";
+    
 	std::stringstream ss;
 	
 	if (argc < 3)
@@ -31,15 +37,17 @@ int main(int argc, char *argv[])
 	// Bingo!
 	{
 		
-		std::string pname = argv[1];
-		std::string pfname = argv[2];
+		std::string pname(argv[1]);
+		std::string pfname(argv[2]);
 		// The path name and the parameter file name, respectively.
 		// Remember: argc[0] is the program name that you just typed in to the terminal.
 		std::cout << "The pathname is: " << pname << " and the paramter file is: " << pfname << std::endl;
 		
 		LSDCatchmentModel modelrun(pname, pfname);
+		//LSDCatchmentModel modelrun;
 		std::cout << "The parameters have been successfully ingested and the model initialised" << std::endl;
-		//modelrun.run_components();
+		modelrun.load_data();
+		modelrun.run_components();
 	}
 	
 	else
