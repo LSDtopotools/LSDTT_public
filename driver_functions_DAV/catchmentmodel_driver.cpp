@@ -35,6 +35,7 @@ int main(int argc, char *argv[])
 
 	if (argc == 3)
 	// Bingo!
+	// DAV - Copied this out of "main_loop()" in origial CAESAR (after initialising 
 	{
 		
 		std::string pname(argv[1]);
@@ -46,7 +47,8 @@ int main(int argc, char *argv[])
 		LSDCatchmentModel modelrun(pname, pfname);
 		//LSDCatchmentModel modelrun;
 		std::cout << "The parameters have been successfully ingested and the model initialised" << std::endl;
-		modelrun.load_data();
+		modelrun.load_data(); // Loads data from external files (DEM, hydroindex etc.)
+		modelrun.initialise_arrays(); // could be part of create() ??
 		modelrun.run_components();
 	}
 	
