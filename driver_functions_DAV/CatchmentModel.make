@@ -1,6 +1,6 @@
 CC = g++
-CFLAGS= -c -Wall -O3 -pg -std=gnu++11
-OFLAGS = -Wall -O3 -pg -std=gnu++11
+CFLAGS= -c -Wall -Og -g -std=gnu++11
+OFLAGS = -Wall -Og -g -std=gnu++11
 LDFLAGS= -Wall
 SOURCES = catchmentmodel_driver.cpp \
 			../LSDCatchmentModel.cpp \
