@@ -3,27 +3,31 @@
 
 # File Information
 dem_name:	boscastle
-dem_extension:	.asc
+dem_read_extension:	.asc
+dem_write_extension:    .asc
 read_path:	./
 write_path:	./output
+read_fname:	boscastle5m_bedrock_fill
+write_fname:	boscastle_testout
+save_interval:  1
 
 # Supplementary Files
-hydroindex_file:	bos_rain_index.asc
-rainfall_data_file:	bos_rain_data.txt
-grain_data_file:
+hydroindex_file: bos_hydroindex.asc
+rainfall_data_file: bos_rain_data.txt
+grain_data_file: 
 bedrock_data_file:
 
 # Numerical
-no_of_iterations:
-min_time_step:
-max_time_step:
-run_time_start:
-max_run_duration:
-memory_limit:
+no_of_iterations:	
+min_time_step:        1
+max_time_step:		1000
+run_time_start:		1
+max_run_duration:	10000
+memory_limit:		2
 
 # Sediment
-transport_law:		WILCOCK  #EINSTEIN
-max_tau_velocity:	
+transport_law:		wilcock  #einstein
+max_tau_velocity:	127
 max_erode_limit:
 active_layer_thickness:
 recirculate_proportion:
@@ -36,8 +40,8 @@ max_diff_cross_chan:
 # Hydrology
 m_value:
 rain_data_time_step:
-spatial_var_rain:	yes	#no
-allow_in_out_diff	yes	#no
+spatial_var_rain:		no
+allow_in_out_diff		no
 min_Q_for_depth:	
 depth_ero_threshold:
 slope_on_edge_cell:
