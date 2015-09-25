@@ -228,12 +228,12 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
       vector<string> temp_bc(4);
       bc = lower_val;
 
-      // now loop through collecting boundary conidtions
+      // now loop through collecting boundary conditions
       for (int i = 0; i<4; i++)
       {
         string this_bc = bc.substr(i,1);
         //cout << "Component " << i << " of the bc string: " << this_bc << endl;
-        if (this_bc.find("p") != 0 && this_bc.find("p") != 0 && this_bc.find("n") != 0)
+        if (this_bc.find("p") != 0 && this_bc.find("b") != 0 && this_bc.find("n") != 0)
         {
           cout << "boundary condition not periodic, baselevel or noflux!" << endl;
           cout << "defaulting to no flux" << endl;
