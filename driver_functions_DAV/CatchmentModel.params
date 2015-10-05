@@ -12,8 +12,8 @@ write_fname:	boscastle_testout
 save_interval:  1
 
 # Supplementary Files
-hydroindex_file: bos_hydroindex.asc
-rainfall_data_file: bos_rain_data.txt
+hydroindex_file: bos5m_hydroindex.asc
+rainfall_data_file: boscastle_rain_uniform.txt
 grain_data_file: 
 bedrock_data_file:
 
