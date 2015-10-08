@@ -1438,7 +1438,34 @@ int LSDJunctionNetwork::get_Receiver_of_Junction(int junction) const
     junction = 0;
   }
   return ReceiverVector[junction];
-}	  
+}	
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+// Function to get the junction downstream of the next
+// Added by FJC 08/10/15
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=  
+int LSDJunctionNetwork::get_downstream_junction(int starting_junction, LSDFlowInfo& FlowInfo)
+{
+    int start_node = get_Node_of_Junction(starting_junction);
+    int receiver_node, receiver_row, receiver_col, receiver_junction;
+    int i = 0;
+    while (i == 0)
+    {
+      FlowInfo.retrieve_receiver_information(start_node, receiver_node, receiver_row, receiver_col);
+      receiver_junction = get_Junction_of_Node(receiver_node, FlowInfo);
+      if (receiver_junction == NoDataValue)
+      {
+        start_node = receiver_node;
+      }
+      else
+      {
+        //cout << "Reached downstream junction" << endl;
+        i=1;
+      }
+    }
+    
+    return receiver_junction;    
+}   
   
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 // This function extracts the junctions of a given basin order that are the lowermost
@@ -1730,26 +1757,41 @@ int LSDJunctionNetwork::GetChannelHeadsChiMethodFromSourceNode(int NodeNumber,
                                       int MinSegLength, float A_0, float m_over_n,
 											                LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance, LSDRaster& ElevationRaster, int NJunctions)
 {
-	//vector<int> ChannelHeadNodes;
+	int channel_head_node;
+  //vector<int> ChannelHeadNodes;
 	float downslope_chi = 0;
 	
-	//get the junction at the source node
-  int Junction = get_Junction_of_Node(NodeNumber, FlowInfo);
-		// get the hilltop node from this junction
+	// get the hilltop node from this source node
 	int hilltop_node = FlowInfo.find_farthest_upslope_node(NodeNumber, FlowDistance);
 	
-	// get the nth junction downstream
-	for (int i = 0; i < NJunctions; i++)
+	//get the junction at the source node
+	int source_junction = get_Junction_of_Node(NodeNumber, FlowInfo);
+	
+	if (NJunctions == 0)
 	{
-    int downstream_junction = get_Receiver_of_Junction(Junction);
-    Junction = downstream_junction;
+    LSDChannel new_channel(hilltop_node, NodeNumber, downslope_chi, m_over_n, A_0, FlowInfo,  ElevationRaster);
+    channel_head_node = new_channel.calculate_channel_heads(MinSegLength, A_0, m_over_n, FlowInfo);   
   }
-  int final_node = get_Node_of_Junction(Junction);
-		
-	//perform chi segment fitting
-	LSDChannel new_channel(hilltop_node, final_node, downslope_chi, m_over_n, A_0, FlowInfo,  ElevationRaster);
-  int channel_head_node = new_channel.calculate_channel_heads(MinSegLength, A_0, m_over_n, FlowInfo);
-
+  else if (NJunctions > 0)
+  {
+    int count = 0;
+	  // get the nth junction downstream
+	  for (int i = 0; i < NJunctions; i++)
+	  {
+      //cout << "Source junction: " << source_junction << endl;
+      int downstream_junction = get_downstream_junction(source_junction, FlowInfo);
+      //cout << "downstream junction: " << downstream_junction << endl;
+      source_junction = downstream_junction;
+      count++;
+      //cout << "Moved " << count << " junctions downstream from source" << endl;
+    } 
+    int final_node = get_Node_of_Junction(source_junction);
+    //cout << "Node of downstream junction: " << final_node << endl;
+    //cout << "Start node of channel: " << hilltop_node << endl;
+    //perform chi segment fitting
+	  LSDChannel new_channel(hilltop_node, final_node, downslope_chi, m_over_n, A_0, FlowInfo,  ElevationRaster);
+    channel_head_node = new_channel.calculate_channel_heads(MinSegLength, A_0, m_over_n, FlowInfo);
+  }
   return channel_head_node;
 }      
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-

@@ -996,6 +996,14 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @param junction integer reciever index.
   /// @return Integer reciever of junction.
   int get_Receiver_of_Junction(int junction) const;
+  
+  /// @details Get downstream junction
+  /// @param starting_junction starting junction
+  /// @param FlowInfo LSDFlowInfo object
+  /// @return integer with downstream junction number
+  /// @author FJC
+  /// @date 08/10/15
+  int get_downstream_junction(int starting_junction, LSDFlowInfo& FlowInfo);
 	
   /// @details Gets the stream order of a junction
   /// @param FlowInfo LSDFlowInfo object
