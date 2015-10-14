@@ -20,6 +20,7 @@ SOURCES=Spawn_DEMs_for_CRN.cpp \
         ../LSDParticle.cpp \
         ../LSDCRNParameters.cpp \
         ../LSDCosmoData.cpp \
+        ../LSDStrahlerLinks.cpp \
         ../LSDRasterInfo.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=Spawn_DEMs_for_CRN.exe

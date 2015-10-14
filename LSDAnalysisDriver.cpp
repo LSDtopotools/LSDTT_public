@@ -1322,7 +1322,7 @@ void LSDAnalysisDriver::calculate_polyfit()
       if (WR <= 2*dx)
       {
         cout << "Warning, window radius less than twice the data resolution, defaulting 2* window resolution" << endl;
-        WR = 2*dx+0.001;
+        WR = 2*sqrt(2)*dx+0.001;
       }
 
 
