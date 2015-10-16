@@ -1852,7 +1852,7 @@ int LSDFlowInfo::is_node_base_level(int node)
 {
   int i = 0;
 
-  for (int j = 0; j < BaseLevelNodeList.size(); j++)
+  for (int j = 0; j < int(BaseLevelNodeList.size()); j++)
   {
     if (node == BaseLevelNodeList[j])
     {
@@ -1907,12 +1907,32 @@ vector<float> LSDFlowInfo::get_upslope_chi(int starting_node, float m_over_n, fl
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// This function calculates the chi function for all the nodes upslope a given node
+// it takes a node list
+//
+//
+// SMM 01/06/2012
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<float> LSDFlowInfo::get_upslope_chi(int starting_node, float m_over_n, float A_0,
+                                           LSDRaster& Discharge)
+{
+  vector<int> upslope_pixel_list = get_upslope_nodes(starting_node);
+  vector<float> chi_vec = get_upslope_chi(upslope_pixel_list, m_over_n, A_0, Discharge);
+  return chi_vec;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function is called from the the get_upslope_chi that only has an integer
 // it returns the acutal chi values in a vector
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- 
 vector<float> LSDFlowInfo::get_upslope_chi(vector<int>& upslope_pixel_list, 
-					   float m_over_n, float A_0)
+                                           float m_over_n, float A_0)
 {
 
   int receiver_node;
@@ -1927,51 +1947,110 @@ vector<float> LSDFlowInfo::get_upslope_chi(vector<int>& upslope_pixel_list,
   vector<float> chi_vec(n_nodes_upslope,0.0);
 
   if(n_nodes_upslope != NContributingNodes[ upslope_pixel_list[0] ])
-    {
-      cout << "LSDFlowInfo::get_upslope_chi, the contributing pixels don't agree" << endl;
-      exit(EXIT_FAILURE);
-    }
+  {
+    cout << "LSDFlowInfo::get_upslope_chi, the contributing pixels don't agree" << endl;
+    exit(EXIT_FAILURE);
+  }
 
   int start_SVector_node = SVectorIndex[ upslope_pixel_list[0] ];
 
   for (int n_index = 1; n_index<n_nodes_upslope; n_index++)
+  {
+    node = upslope_pixel_list[n_index];
+    receiver_node = ReceiverVector[ node ];
+    IndexOfReceiverInUplsopePList = SVectorIndex[receiver_node]-start_SVector_node;
+    row = RowIndex[node];
+    col = ColIndex[node];
+
+    if (FlowLengthCode[row][col] == 2)
     {
-      node = upslope_pixel_list[n_index];
-      receiver_node = ReceiverVector[ node ];
-      IndexOfReceiverInUplsopePList = SVectorIndex[receiver_node]-start_SVector_node;
-      row = RowIndex[node];
-      col = ColIndex[node];
-
-      if (FlowLengthCode[row][col] == 2)
-	{
-	  dx = diag_length;
-	}
-      else
-	{
-	  dx = DataResolution;
-	}
-
-
-      chi_vec[n_index] = dx*(pow( (A_0/ (float(NContributingNodes[node])*pixel_area) ),m_over_n))
-	+ chi_vec[IndexOfReceiverInUplsopePList];
-
-      //	cout << "node: " << upslope_pixel_list[n_index] << " receiver: " << receiver_node
-      //	     << " SIndexReciever: " << IndexOfReceiverInUplsopePList 
-      //       << " and checked: " << upslope_pixel_list[IndexOfReceiverInUplsopePList]
-      //	     << " and chi: " << chi_vec[n_index] << endl;
-
-
+      dx = diag_length;
     }
+    else
+    {
+      dx = DataResolution;
+    }
+
+
+    chi_vec[n_index] = dx*(pow( (A_0/ (float(NContributingNodes[node])*pixel_area) ),m_over_n))
+                          + chi_vec[IndexOfReceiverInUplsopePList];
+
+    //	cout << "node: " << upslope_pixel_list[n_index] << " receiver: " << receiver_node
+    //	     << " SIndexReciever: " << IndexOfReceiverInUplsopePList 
+    //       << " and checked: " << upslope_pixel_list[IndexOfReceiverInUplsopePList]
+    //	     << " and chi: " << chi_vec[n_index] << endl;
+
+  }
   return chi_vec;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function is called from the the get_upslope_chi that only has an integer
+// it returns the acutal chi values in a vector
+// same as above but uses a discharge raster
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- 
+vector<float> LSDFlowInfo::get_upslope_chi(vector<int>& upslope_pixel_list, 
+                                           float m_over_n, float A_0,
+                                           LSDRaster& Discharge)
+{
+
+  int receiver_node;
+  int IndexOfReceiverInUplsopePList;
+  float root2 = 1.41421356;
+  float diag_length = root2*DataResolution;
+  float dx;
+  int node,row,col;
+  // get the number of nodes upslope
+  int n_nodes_upslope = upslope_pixel_list.size();
+  vector<float> chi_vec(n_nodes_upslope,0.0);
+
+  if(n_nodes_upslope != NContributingNodes[ upslope_pixel_list[0] ])
+  {
+    cout << "LSDFlowInfo::get_upslope_chi, the contributing pixels don't agree" << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  int start_SVector_node = SVectorIndex[ upslope_pixel_list[0] ];
+
+  for (int n_index = 1; n_index<n_nodes_upslope; n_index++)
+  {
+    node = upslope_pixel_list[n_index];
+    receiver_node = ReceiverVector[ node ];
+    IndexOfReceiverInUplsopePList = SVectorIndex[receiver_node]-start_SVector_node;
+    row = RowIndex[node];
+    col = ColIndex[node];
+
+    if (FlowLengthCode[row][col] == 2)
+    {
+      dx = diag_length;
+    }
+    else
+    {
+      dx = DataResolution;
+    }
+
+
+    chi_vec[n_index] = dx*(pow( (A_0/ ( Discharge.get_data_element(row, col) ) ),m_over_n))
+                          + chi_vec[IndexOfReceiverInUplsopePList];
+
+    //	cout << "node: " << upslope_pixel_list[n_index] << " receiver: " << receiver_node
+    //	     << " SIndexReciever: " << IndexOfReceiverInUplsopePList 
+    //       << " and checked: " << upslope_pixel_list[IndexOfReceiverInUplsopePList]
+    //	     << " and chi: " << chi_vec[n_index] << endl;
+
+  }
+  return chi_vec;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function takes a list of starting nodes and calucaltes chi
 // it assumes each chi value has the same base level. 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 LSDRaster LSDFlowInfo::get_upslope_chi_from_multiple_starting_nodes(vector<int>& starting_nodes, 
-								    float m_over_n, float A_0, float area_threshold)
+                              float m_over_n, float A_0, float area_threshold)
 {
   // some variables for writing to the raster
   int curr_row;
@@ -1987,39 +2066,97 @@ LSDRaster LSDFlowInfo::get_upslope_chi_from_multiple_starting_nodes(vector<int>&
   int n_starting_nodes = int(starting_nodes.size());
   
   for(int sn = 0; sn<n_starting_nodes; sn++)
+  {
+    // first check to see if this node has already been visited. If it has 
+    // all upslope nodes have also been visited so there is no point continuing 
+    // with this node 
+    retrieve_current_row_and_col(starting_nodes[sn],curr_row,curr_col);
+    if(new_chi[curr_row][curr_col] == NoDataValue)
     {
-      // first check to see if this node has already been visited. If it has 
-      // all upslope nodes have also been visited so there is no point continuing 
-      // with this node 
-      retrieve_current_row_and_col(starting_nodes[sn],curr_row,curr_col);
-      if(new_chi[curr_row][curr_col] == NoDataValue)
-	{
-	  vector<float> us_chi = get_upslope_chi(starting_nodes[sn], m_over_n, A_0);
-	  vector<int> upslope_pixel_list = get_upslope_nodes(starting_nodes[sn]);
+      vector<float> us_chi = get_upslope_chi(starting_nodes[sn], m_over_n, A_0);
+      vector<int> upslope_pixel_list = get_upslope_nodes(starting_nodes[sn]);
        
-	  int n_chi_nodes = int(us_chi.size());
-	  for (int cn = 0; cn<n_chi_nodes; cn++)
-	    {
-	      // get the current row and column
-	      curr_node =  upslope_pixel_list[cn];
-	      retrieve_current_row_and_col(curr_node,curr_row,curr_col);
-         
-	      // check to see if the drainage area is greater than the threshold
-	      // if so, calcualte chi
-	      DrainArea = PixelArea*NContributingNodes[curr_node];
-	      if(DrainArea > area_threshold)
-		{
-		  new_chi[curr_row][curr_col]= us_chi[cn];
-		}      
-	    }
-	}       
-    }
+      int n_chi_nodes = int(us_chi.size());
+      for (int cn = 0; cn<n_chi_nodes; cn++)
+      {
+        // get the current row and column
+        curr_node =  upslope_pixel_list[cn];
+        retrieve_current_row_and_col(curr_node,curr_row,curr_col);
+          
+        // check to see if the drainage area is greater than the threshold
+        // if so, calcualte chi
+        DrainArea = PixelArea*NContributingNodes[curr_node];
+        if(DrainArea > area_threshold)
+        {
+          new_chi[curr_row][curr_col]= us_chi[cn];
+        }      
+      }
+   }       
+  }
 
   LSDRaster chi_map(NRows, NCols, XMinimum, YMinimum, 
                     DataResolution, NoDataValue, new_chi,GeoReferencingStrings);
   return chi_map;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function takes a list of starting nodes and calucaltes chi
+// it assumes each chi value has the same base level. 
+// Same as above but calculates using discharge
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LSDRaster LSDFlowInfo::get_upslope_chi_from_multiple_starting_nodes(vector<int>& starting_nodes, 
+                              float m_over_n, float A_0, float area_threshold,
+                              LSDRaster& Discharge )
+{
+  // some variables for writing to the raster
+  int curr_row;
+  int curr_col;
+  int curr_node;
+  
+  float PixelArea = DataResolution*DataResolution;
+  float DrainArea;
+  
+  // an array to hold the chi values
+  Array2D<float> new_chi(NRows,NCols,NoDataValue);
+
+  int n_starting_nodes = int(starting_nodes.size());
+  
+  for(int sn = 0; sn<n_starting_nodes; sn++)
+  {
+    // first check to see if this node has already been visited. If it has 
+    // all upslope nodes have also been visited so there is no point continuing 
+    // with this node 
+    retrieve_current_row_and_col(starting_nodes[sn],curr_row,curr_col);
+    if(new_chi[curr_row][curr_col] == NoDataValue)
+    {
+      vector<float> us_chi = get_upslope_chi(starting_nodes[sn], m_over_n, A_0,Discharge);
+      vector<int> upslope_pixel_list = get_upslope_nodes(starting_nodes[sn]);
+       
+      int n_chi_nodes = int(us_chi.size());
+      for (int cn = 0; cn<n_chi_nodes; cn++)
+      {
+        // get the current row and column
+        curr_node =  upslope_pixel_list[cn];
+        retrieve_current_row_and_col(curr_node,curr_row,curr_col);
+          
+        // check to see if the drainage area is greater than the threshold
+        // if so, calcualte chi
+        DrainArea = PixelArea*NContributingNodes[curr_node];
+        if(DrainArea > area_threshold)
+        {
+          new_chi[curr_row][curr_col]= us_chi[cn];
+        }      
+      }
+   }       
+  }
+
+  LSDRaster chi_map(NRows, NCols, XMinimum, YMinimum, 
+                    DataResolution, NoDataValue, new_chi,GeoReferencingStrings);
+  return chi_map;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function assumes all base level nodes are at the same base level
@@ -2029,13 +2166,32 @@ LSDRaster LSDFlowInfo::get_upslope_chi_from_multiple_starting_nodes(vector<int>&
 // model results
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 LSDRaster LSDFlowInfo::get_upslope_chi_from_all_baselevel_nodes(float m_over_n, float A_0, 
-								float area_threshold)
+                  float area_threshold)
 {
   LSDRaster all_chi = get_upslope_chi_from_multiple_starting_nodes(BaseLevelNodeList, 
-								   m_over_n, A_0, area_threshold);
+                                      m_over_n, A_0, area_threshold);
   return all_chi;                       
 }                                                
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function assumes all base level nodes are at the same base level
+// and calculates chi for them. Essentially it covers the entire map in
+// chi values. 
+// This function is probably most appropriate for looking at numberical
+// model results
+// same as above but calculates with a discharge
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LSDRaster LSDFlowInfo::get_upslope_chi_from_all_baselevel_nodes(float m_over_n, float A_0, 
+                  float area_threshold, LSDRaster& Discharge)
+{
+  LSDRaster all_chi = get_upslope_chi_from_multiple_starting_nodes(BaseLevelNodeList, 
+                                m_over_n, A_0, area_threshold, Discharge);
+  return all_chi;                       
+}                                                
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2490,9 +2646,9 @@ void LSDFlowInfo::HilltopFlowRoutingOriginal(LSDRaster Elevation, LSDRaster Hill
 {                                                         
   //Declare parameters
   int i,j,a,b;
-  double X,Y;
+  //double X,Y;
   float dem_res = DataResolution;
-  float mean_slope, relief;
+  //float mean_slope, relief;
   int ndv = NoDataValue;
   double slope_total, length, d;
   int flag, count;
@@ -2506,7 +2662,7 @@ void LSDFlowInfo::HilltopFlowRoutingOriginal(LSDRaster Elevation, LSDRaster Hill
   double xmin = XMinimum;
   double ymin = YMinimum;
   double ymax = ymin + NRows*dem_res;
-  double xmax = xmin + NCols*dem_res;
+  //double xmax = xmin + NCols*dem_res;
 
   //Declare Arrays
   //Get data arrays from LSDRasters
