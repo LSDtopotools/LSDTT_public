@@ -1180,20 +1180,20 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension,
   if(extension == "csv")
     {
       if(input_switch != 0 && input_switch != 1 && input_switch != 2)
-	{
-	  cout << "\t Note, you have specified an unsupported value for the input switch.  Note: \n\t\t 0=take node index\n\t\t 1=take row and column indices\n\t\t 2=take x and y coordinates"  << endl;
-	  cout << "\t ...taking node index by default" << endl;
-	}
+  {
+    cout << "\t Note, you have specified an unsupported value for the input switch.  Note: \n\t\t 0=take node index\n\t\t 1=take row and column indices\n\t\t 2=take x and y coordinates"  << endl;
+    cout << "\t ...taking node index by default" << endl;
+  }
       ifstream ch_csv_in;
       string fname = filename +"."+extension;
       ch_csv_in.open(fname.c_str());
     
       if(not ch_csv_in.good())
-	{
-	  cout << "Hey DUDE, you are trying to ingest a sources file that doesn't exist!!" << endl;
-	  cout << "Check your filename" << endl;
-	  exit(EXIT_FAILURE);
-	}
+  {
+    cout << "Hey DUDE, you are trying to ingest a sources file that doesn't exist!!" << endl;
+    cout << "Check your filename" << endl;
+    exit(EXIT_FAILURE);
+  }
     
       cout << "fname is: " << fname << endl;
     
@@ -1203,95 +1203,95 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension,
       vector<int> nodeindex,rowindex,colindex;
       vector<float> x_coord,y_coord;    
       while(!ch_csv_in.eof())
-	{   
-	  char name[256];
-	  ch_csv_in.getline(name,256);
-	  sline = name;
+  {   
+    char name[256];
+    ch_csv_in.getline(name,256);
+    sline = name;
       
-	  // a very tedious way to get the right bit of data. There is probably a 
-	  // better way to do this but this way works
-	  if (sline.size() > 0)
-	    {
-	      // column index
-	      string prefix = sline.substr(0,sline.size());
-	      unsigned comma = sline.find_last_of(",");
-	      string suffix = prefix.substr(comma+1,prefix.size()); 
-	      colindex.push_back(atoi(suffix.c_str()));         
-	      // row index
-	      prefix = sline.substr(0,comma);
-	      comma = prefix.find_last_of(",");
-	      suffix = prefix.substr(comma+1,prefix.size());     
-	      rowindex.push_back(atoi(suffix.c_str()));        
-	      // node index
-	      prefix = sline.substr(0,comma);
-	      comma = prefix.find_last_of(",");
-	      suffix = prefix.substr(comma+1,prefix.size());
-	      nodeindex.push_back(atoi(suffix.c_str()));        
-	      // y coordinate
-	      prefix = sline.substr(0,comma);
-	      comma = prefix.find_last_of(",");
-	      suffix = prefix.substr(comma+1,prefix.size());     
-	      y_coord.push_back(atof(suffix.c_str()));      
-	      // x coordinate
-	      prefix = sline.substr(0,comma);
-	      comma = prefix.find_last_of(",");
-	      suffix = prefix.substr(comma+1,prefix.size());
-	      x_coord.push_back(atof(suffix.c_str()));
-	    }
-	}
+    // a very tedious way to get the right bit of data. There is probably a 
+    // better way to do this but this way works
+    if (sline.size() > 0)
+      {
+        // column index
+        string prefix = sline.substr(0,sline.size());
+        unsigned comma = sline.find_last_of(",");
+        string suffix = prefix.substr(comma+1,prefix.size()); 
+        colindex.push_back(atoi(suffix.c_str()));         
+        // row index
+        prefix = sline.substr(0,comma);
+        comma = prefix.find_last_of(",");
+        suffix = prefix.substr(comma+1,prefix.size());     
+        rowindex.push_back(atoi(suffix.c_str()));        
+        // node index
+        prefix = sline.substr(0,comma);
+        comma = prefix.find_last_of(",");
+        suffix = prefix.substr(comma+1,prefix.size());
+        nodeindex.push_back(atoi(suffix.c_str()));        
+        // y coordinate
+        prefix = sline.substr(0,comma);
+        comma = prefix.find_last_of(",");
+        suffix = prefix.substr(comma+1,prefix.size());     
+        y_coord.push_back(atof(suffix.c_str()));      
+        // x coordinate
+        prefix = sline.substr(0,comma);
+        comma = prefix.find_last_of(",");
+        suffix = prefix.substr(comma+1,prefix.size());
+        x_coord.push_back(atof(suffix.c_str()));
+      }
+  }
       int node;
       // use row and column indices to locate source nodes.
       if(input_switch == 1)
-	{
-	  for(int i = 0; i < int(rowindex.size()); ++i)
-	    {
-	      if(rowindex[i]<NRows && rowindex[i]>=0 && colindex[i]<NCols && colindex[i] >=0 && NodeIndex[rowindex[i]][colindex[i]]!=NoDataValue)
-		{
-		  node = retrieve_node_from_row_and_column(rowindex[i],colindex[i]);
-		  Sources.push_back(node);
-		}
-	    }
-	}
+  {
+    for(int i = 0; i < int(rowindex.size()); ++i)
+      {
+        if(rowindex[i]<NRows && rowindex[i]>=0 && colindex[i]<NCols && colindex[i] >=0 && NodeIndex[rowindex[i]][colindex[i]]!=NoDataValue)
+    {
+      node = retrieve_node_from_row_and_column(rowindex[i],colindex[i]);
+      Sources.push_back(node);
+    }
+      }
+  }
       // Use coordinates to locate source nodes. Note that this enables the use 
       // of LiDAR derived channel heads in coarser DEMs of the same area or
       // subsets of the original DEM for more efficient processing.
       else if(input_switch == 2)
-	{
-	  vector<int> Sources_temp;
-	  int N_coords = x_coord.size();
-	  int N_sources_1 = 0;
-	  for(int i = 0; i < N_coords; ++i)
-	    {
-	      node = get_node_index_of_coordinate_point(x_coord[i], y_coord[i]);
-	      if (node != NoDataValue) 
-		{
-		  // Test 1 - Check for channel heads that fall in same pixel
-		  int test1 = 0;
-		  N_sources_1 = Sources_temp.size();
-		  for(int i_test=0; i_test<N_sources_1;++i_test)
-		    {
-		      if(node==Sources_temp[i_test]) test1 = 1;
-		    }
-		  if(test1==0) Sources_temp.push_back(node);
-		  else cout << "\t\t ! removed node from sources list - coincident with another source node" << endl; 
-		}
-	    }
-	  // Test 2 - Need to do some extra checks to load sources correctly. 
-	  int N_sources_2 = Sources_temp.size();
-	  for(int i = 0; i<N_sources_2; ++i)
-	    {
-	      int test2 = 0;
-	      for(int i_test = 0; i_test<int(Sources_temp.size()); ++i_test)
-		{
-		  if(i!=i_test)
-		    {
-		      if(is_node_upstream(Sources_temp[i],Sources_temp[i_test])==true) test2 = 1;
-		    }
-		}
-	      if(test2 ==0) Sources.push_back(Sources_temp[i]);
-	      else cout << "\t\t ! removed node from sources list - other sources upstream" << endl; 
-	    }
-	}
+  {
+    vector<int> Sources_temp;
+    int N_coords = x_coord.size();
+    int N_sources_1 = 0;
+    for(int i = 0; i < N_coords; ++i)
+      {
+        node = get_node_index_of_coordinate_point(x_coord[i], y_coord[i]);
+        if (node != NoDataValue) 
+    {
+      // Test 1 - Check for channel heads that fall in same pixel
+      int test1 = 0;
+      N_sources_1 = Sources_temp.size();
+      for(int i_test=0; i_test<N_sources_1;++i_test)
+        {
+          if(node==Sources_temp[i_test]) test1 = 1;
+        }
+      if(test1==0) Sources_temp.push_back(node);
+      else cout << "\t\t ! removed node from sources list - coincident with another source node" << endl; 
+    }
+      }
+    // Test 2 - Need to do some extra checks to load sources correctly. 
+    int N_sources_2 = Sources_temp.size();
+    for(int i = 0; i<N_sources_2; ++i)
+      {
+        int test2 = 0;
+        for(int i_test = 0; i_test<int(Sources_temp.size()); ++i_test)
+    {
+      if(i!=i_test)
+        {
+          if(is_node_upstream(Sources_temp[i],Sources_temp[i_test])==true) test2 = 1;
+        }
+    }
+        if(test2 ==0) Sources.push_back(Sources_temp[i]);
+        else cout << "\t\t ! removed node from sources list - other sources upstream" << endl; 
+      }
+  }
       // Using Node Index directly (default)
       else Sources = nodeindex;
 
@@ -1303,14 +1303,14 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension,
       LSDIndexRaster CHeads(filename, extension);
     
       for (int i = 0; i < NRows; ++i){
-	for (int j = 0; j < NCols; ++j){
-	  if (CHeads.get_data_element(i,j) != NoDataValue){
-	    CH_node = retrieve_node_from_row_and_column(i,j);
-	    if (CH_node != NoDataValue){
-	      Sources.push_back(CH_node);
-	    } 
-	  }
-	}
+  for (int j = 0; j < NCols; ++j){
+    if (CHeads.get_data_element(i,j) != NoDataValue){
+      CH_node = retrieve_node_from_row_and_column(i,j);
+      if (CH_node != NoDataValue){
+        Sources.push_back(CH_node);
+      } 
+    }
+  }
       }
     }
   return Sources;
