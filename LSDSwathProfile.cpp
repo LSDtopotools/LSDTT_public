@@ -604,6 +604,55 @@ void LSDSwath::get_longitudinal_swath_profile(LSDRaster& Raster, vector<float> d
 }
 
 //------------------------------------------------------------------------------
+// CREATE RASTER FROM SWATH TOOL
+// This function creates a raster of values used by the Swath Profiler
+// FJC
+// 16/10/15
+//
+//------------------------------------------------------------------------------
+LSDRaster LSDSwath::get_raster_from_swath_profile(LSDRaster& Raster, int NormaliseToBaseline)
+{
+  vector<float> TransverseDistance, RasterValues;
+  Array2D<float> RasterValues_temp(NRows,NCols,NoDataValue);
+  float Resolution = Raster.get_DataResolution();
+  float XMinimum = Raster.get_XMinimum();
+  float YMinimum = Raster.get_YMinimum();
+  // Define bounding box of swath profile
+  int ColStart = int(floor((XMin)/Resolution));
+  int ColEnd = ColStart + int(ceil((XMax-XMin)/Resolution));
+  ColStart = ColStart - int(ceil(ProfileHalfWidth/Resolution));
+  ColEnd = ColEnd + int(ceil(ProfileHalfWidth/Resolution));
+  if (ColStart < 0) ColStart = 0;
+  if (ColEnd > NCols) ColEnd = NCols;
+  
+  int RowEnd = NRows - 1 - int(floor(YMin/Resolution));
+  int RowStart = RowEnd - int(ceil((YMax-YMin)/Resolution));
+  RowStart = RowStart - int(ceil(ProfileHalfWidth/Resolution));
+  RowEnd = RowEnd + int(ceil(ProfileHalfWidth/Resolution));  
+  if (RowEnd > NRows) RowEnd = NRows;
+  if (RowStart < 0) RowStart = 0;
+
+  for(int i = RowStart; i<RowEnd; ++i)
+  {
+    for(int j = ColStart; j<ColEnd; ++j)
+    {
+      if((DistanceToBaselineArray[i][j]!=NoDataValue) && (Raster.get_data_element(i,j)!=NoDataValue))
+      {
+        TransverseDistance.push_back(DistanceToBaselineArray[i][j]);
+        // To normalise the profile values, subtract baseline value from raster value
+        if (NormaliseToBaseline == 1) RasterValues_temp[i][j] = Raster.get_data_element(i,j)-BaselineValueArray[i][j];
+        // Otherwise, just get the raster value
+        else RasterValues_temp[i][j] = Raster.get_data_element(i,j);
+      }
+    }
+  } 
+  LSDRaster SwathRaster(NRows, NCols, XMinimum, YMinimum, Resolution, 
+                   NoDataValue, RasterValues_temp);
+  
+  return SwathRaster;  
+}
+
+//------------------------------------------------------------------------------
 // WRITE PROFILES TO FILE
 // These routines take a swath profile template, comprising the LSDSwath object,
 // and then uses this to construct either transverse (normal to profile) or

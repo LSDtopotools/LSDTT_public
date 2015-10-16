@@ -64,6 +64,14 @@ class LSDSwath
        vector<float>& mid_points, vector<float>& mean_profile, vector<float>& sd_profile, vector< vector<float> >& output_percentile_profiles,
        int NormaliseToBaseline);
        
+  ///@brief create a raster in the shape of the swath profile
+  ///@param Raster LSDRaster of interest
+  ///@param NormaliseToBaseline if 0 --> raster values; if 1 --> raster values normalised to baseline value
+  ///@return raster in shape of swath profile
+  ///@author FJC
+  ///@date 16/10/15
+  LSDRaster get_raster_from_swath_profile(LSDRaster& Raster, int NormaliseToBaseline);
+       
   // write profiles to file
   void write_transverse_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix, int NormaliseToBaseline);
   void write_longitudinal_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix, int NormaliseToBaseline);
