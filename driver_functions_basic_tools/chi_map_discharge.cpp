@@ -166,6 +166,14 @@ int main(int argc, char *argv[])
   LSDRaster VolumePrecipitation(Precip_f_name, DEM_ext);
   float dx = VolumePrecipitation.get_DataResolution();
   
+  
+  // load the precipitation raster
+  string precip_ext2 = "_PRECIP2";
+  string Precip2_f_name = full_DEM_name+precip_ext2;
+  // print the precip raster to see if it is crazy (a temporary measure)
+  VolumePrecipitation.write_raster(Precip2_f_name, DEM_ext);
+  
+  
   // volume precipitation per time precipitation times the cell areas
   VolumePrecipitation.raster_multiplier(dx*dx);
   
@@ -197,6 +205,12 @@ int main(int argc, char *argv[])
   hs_name = full_DEM_name+hs_name;
   LSDRaster HS = filled_raster.hillshade(45,315,1); 
   HS.write_raster(hs_name,DEM_ext);
+  
+  // print the node index just in case you need to select basins
+  string NI_name = "_NI";
+  NI_name = full_DEM_name+NI_name;
+  LSDIndexRaster NI = FI.write_NodeIndex_to_LSDIndexRaster(); 
+  NI.write_raster(NI_name,DEM_ext);
 
   float hundredtimesmn = m_over_n*100;
   int m_n = int(hundredtimesmn);
