@@ -905,7 +905,7 @@ void LSDAnalysisDriver::write_rasters_from_analysis_switches()
   }
 
   // write planform curvature
-  if(analyses_switches.find("write planform_curvature") != analyses_switches.end())
+  if(analyses_switches.find("write_planform_curvature") != analyses_switches.end())
   {
     // check to see if the slope map exists
     if(map_of_LSDRasters.find("planform_curvature") == map_of_LSDRasters.end())
@@ -920,7 +920,7 @@ void LSDAnalysisDriver::write_rasters_from_analysis_switches()
   }
 
   // write tangential curvature
-  if(analyses_switches.find("write tangential_curvature") != analyses_switches.end())
+  if(analyses_switches.find("write_tangential_curvature") != analyses_switches.end())
   {
     // check to see if the slope map exists
     if(map_of_LSDRasters.find("tangential_curvature") == map_of_LSDRasters.end())
@@ -935,7 +935,7 @@ void LSDAnalysisDriver::write_rasters_from_analysis_switches()
   }
 
   // write classification
-  if(analyses_switches.find("write polyfit_classification") != analyses_switches.end())
+  if(analyses_switches.find("write_polyfit_classification") != analyses_switches.end())
   {
     // check to see if the slope map exists
     if(map_of_LSDRasters.find("polyfit_classification") == map_of_LSDRasters.end())
