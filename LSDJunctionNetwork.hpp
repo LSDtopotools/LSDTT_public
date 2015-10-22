@@ -1050,6 +1050,14 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   
   void couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& D_inf_Flowdir, LSDIndexRaster& ChannelNodeNetwork, int OutletJunction, vector<int>& hillslope_nodes, vector<int>& baselevel_channel_nodes);
   
+  /// @details This function removes patches of floodplain that are not connected to the channel network.
+  /// It must be passed an LSDIndexRaster with the floodplain patches labelled with a specific ID
+  /// number (done using Dave's connected components algorithm)
+  /// @param FloodplainPatches LSDIndexRaster with patches labelled with ID number
+  /// @return LSDIndexRaster with binary mask of floodplain patches
+  /// @author FJC
+  /// @date 22/10/15
+  LSDIndexRaster remove_hillslope_patches_from_floodplain_mask(LSDIndexRaster& FloodplainPatches);
   
   protected:
 

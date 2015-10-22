@@ -4934,7 +4934,59 @@ void LSDJunctionNetwork::couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elev
 // 
 // }
 
-
+//----------------------------------------------------------------------------------------
+// This function removes patches of floodplain that are not connected to the channel network.
+// It must be passed an LSDIndexRaster with the floodplain patches labelled with a specific ID
+// number (done using Dave's connected components algorithm)
+// FJC 21/10/15
+//---------------------------------------------------------------------------------------- 
+LSDIndexRaster LSDJunctionNetwork::remove_hillslope_patches_from_floodplain_mask(LSDIndexRaster& FloodplainPatches)
+{
+  Array2D<int> FloodplainPatches_array(NRows,NCols,0);
+  vector<int> patch_ids_channel;
+  
+  //loop through the DEM and get the ID of all patches connected to the channel network
+  for (int row = 0; row < NRows; row++)
+  {
+    for (int col = 0; col < NCols; col++)
+    {
+      if (StreamOrderArray[row][col] > 0)
+      {
+        FloodplainPatches_array[row][col] = 1;  
+      }
+      if (FloodplainPatches.get_data_element(row, col) != NoDataValue)
+      {
+      //check if the pixel is part of the channel network
+        if (StreamOrderArray[row][col] > 0)
+        {
+          patch_ids_channel.push_back(FloodplainPatches.get_data_element(row,col));
+        }
+      }
+    }
+  }
+  
+  //for each pixel, find if it is in a patch with an ID in patch_ids_channel vector
+  vector<int>::iterator find_it;
+  for (int row = 0; row < NRows; row++)
+  {
+    for (int col = 0; col < NCols; col++)
+    {
+      if (FloodplainPatches.get_data_element(row, col) != NoDataValue)
+      {
+        float patch_id = FloodplainPatches.get_data_element(row, col);
+        find_it = find(patch_ids_channel.begin(), patch_ids_channel.end(), patch_id);   //search ID vector for patch ID of pixel
+        if (find_it != patch_ids_channel.end())
+        {
+          FloodplainPatches_array[row][col] = 1;                
+        }
+      }      
+    }
+  }
+  
+  //get the LSDIndexRaster from floodplain patches array
+  LSDIndexRaster FloodplainPatches_final(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, FloodplainPatches_array, GeoReferencingStrings);
+  return FloodplainPatches_final;  
+}
 
 
 #endif
