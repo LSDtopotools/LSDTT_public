@@ -4937,7 +4937,8 @@ void LSDJunctionNetwork::couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elev
 //----------------------------------------------------------------------------------------
 // This function removes patches of floodplain that are not connected to the channel network.
 // It must be passed an LSDIndexRaster with the floodplain patches labelled with a specific ID
-// number (done using Dave's connected components algorithm)
+// number (done using Dave's connected components algorithm). Return is a binary array where 
+// 0 is hillslope pixels; 1 is floodplain pixels; and 2 is channel pixels.
 // FJC 21/10/15
 //---------------------------------------------------------------------------------------- 
 LSDIndexRaster LSDJunctionNetwork::remove_hillslope_patches_from_floodplain_mask(LSDIndexRaster& FloodplainPatches)
@@ -4952,7 +4953,7 @@ LSDIndexRaster LSDJunctionNetwork::remove_hillslope_patches_from_floodplain_mask
     {
       if (StreamOrderArray[row][col] > 0)
       {
-        FloodplainPatches_array[row][col] = 1;  
+        FloodplainPatches_array[row][col] = 2;  
       }
       if (FloodplainPatches.get_data_element(row, col) != NoDataValue)
       {
