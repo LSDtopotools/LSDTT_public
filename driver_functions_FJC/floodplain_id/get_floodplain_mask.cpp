@@ -29,7 +29,6 @@
 #include "../../LSDFlowInfo.hpp"
 #include "../../LSDJunctionNetwork.hpp"
 #include "../../LSDIndexChannelTree.hpp"
-#include "../../LSDSwathProfile.hpp"
 #include "../../LSDShapeTools.hpp"
 
 
@@ -104,14 +103,14 @@ int main (int nNumberofArgs,char *argv[])
 	// load the DEM
 	LSDRaster topo_test((input_path+DEM_ID), flt_extension);  
   
-//   if(FilterTopo == 1)
-//   {
-//     // filter
-//     LSDRasterSpectral SpectralRaster(topo_test);
-//     topo_test = SpectralRaster.fftw2D_wiener();
-//     int border_width = 100;
-//     topo_test = topo_test.border_with_nodata(border_width);    
-//   }
+  if(FilterTopo == 1)
+  {
+    // filter using Perona Malik
+    int timesteps = 50;
+    float percentile_for_lambda = 90;
+    float dt = 0.1;
+    topo_test = topo_test.PeronaMalikFilter(timesteps, percentile_for_lambda, dt);    
+  }
   // fill
   LSDRaster filled_topo_test = topo_test.fill(Minimum_Slope);
   cout << "\t Flow routing..." << endl;
@@ -137,86 +136,54 @@ int main (int nNumberofArgs,char *argv[])
 	SOArray.write_raster((output_path+DEM_ID+SO_ext),flt_extension);
   JIArray.write_raster((output_path+DEM_ID+JI_ext),flt_extension);
   
-  // calculate relief based on a circular window
+  //load in the slope and relief rasters
+  LSDRaster Slope((input_path+DEM_ID+"_slope"), flt_extension);
+  LSDRaster Relief((input_path+DEM_ID+"_relief"), flt_extension);
+  
+//   //get the relief
 //   cout << "\t Calculating relief..." << endl;
 //   float kernelWidth = 100;
 //   int kernelType = 1;
-//   LSDRaster Relief = filled_topo_test.calculate_relief(kernelWidth, kernelType);
+//   LSDRaster Relief = topo_test.calculate_relief(kernelWidth, kernelType);
+//   cout << "\t Done!" << endl;
 //   string relief_name = "_relief";
 //   Relief.write_raster((output_path+DEM_ID+relief_name), flt_extension);
+//   
+//   //get the slope
+//   cout << "\t Calculating slope..." << endl;
+//   float surface_fitting_window_radius = 6;      // the radius of the fitting window in metres
+//   vector<LSDRaster> surface_fitting;
+//   LSDRaster Slope;
+//   vector<int> raster_selection(8, 0);
+//   raster_selection[1] = 1;             // this means you want the slope
+//   surface_fitting = filled_topo_test.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
+//   Slope = surface_fitting[1];
+//   cout << "\t Done!" << endl;
+//   string slope_name = "_slope";
+//   Slope.write_raster((output_path+DEM_ID+slope_name), flt_extension);
   
-	// now get a junction and look for the longest channel upstream
-	cout << "\t creating main stem" << endl;
-	LSDIndexChannel main_stem = ChanNetwork.generate_longest_index_channel_in_basin(junction_number, FlowInfo, DistanceFromOutlet);
-        cout << "\t\t got main stem channel, with n_nodes " << main_stem.get_n_nodes_in_channel() <<  endl;
-
-	// now create ChannelTree object that can be ingested by the swath profile tool
-	string Chan_fname = "_ChanNet";
-	string Chan_ext = ".chan";
-	string Chan_for_swath_profile_fname = output_path+DEM_ID+Chan_fname+jn_name+Chan_ext;
-	int organization_switch = 1;                                                  
-	int pruning_switch = 1;     // get mainstem only
-	LSDIndexChannelTree ChannelTree(FlowInfo, ChanNetwork, junction_number, organization_switch,
-                                        DistanceFromOutlet, pruning_switch, pruning_threshold);
-	ChannelTree.print_LSDChannels_for_chi_network_ingestion(FlowInfo, filled_topo_test, DistanceFromOutlet, Chan_for_swath_profile_fname);
-	ChannelTree.convert_chan_file_for_ArcMap_ingestion(Chan_for_swath_profile_fname);
-
-  // NOW GET SWATH PROFILE
-	cout << "\t SWATH PROFILES :-D" << endl;
-  cout << "\t loading baseline points" << endl;
-  PointData BaselinePoints = LoadChannelTree(Chan_for_swath_profile_fname);
+  //get the potential floodplain mask
+  cout << "\t Getting the floodplain mask" << endl;
+  float relief_threshold = 5;
+  float slope_threshold = 0.5;
+  LSDIndexRaster FloodplainRaster_temp = topo_test.get_potential_floodplain_patches(Relief, Slope, relief_threshold, slope_threshold);
   
-  cout << "\t creating swath template" << endl;
-  LSDRaster RasterTemplate((input_path+RASTER_NAME), flt_extension);  
-  LSDSwath TestSwath(BaselinePoints, RasterTemplate, HalfWidth);
-  vector<float> percentiles;
-  percentiles.push_back(2.5);
-  percentiles.push_back(25);
-  percentiles.push_back(50);
-  percentiles.push_back(75);
-  percentiles.push_back(97.5);
+  cout << "\t Connected components" << endl;
+  LSDIndexRaster ConnectedComponents = FloodplainRaster_temp.ConnectedComponents();
+  string CC_name = "_CC_filt";
+  ConnectedComponents.write_raster((output_path+DEM_ID+CC_name), flt_extension); 
   
-  cout << "\n\t writing output \n\t\t - transverse profile" << endl;
-  TestSwath.write_transverse_profile_to_file(RasterTemplate, percentiles, BinWidth, output_path+RASTER_NAME,NormaliseTransProfile);
+  cout << "\t Removing hillslope patches" << endl;
+  LSDIndexRaster FloodplainRaster_modified = ChanNetwork.remove_hillslope_patches_from_floodplain_mask(ConnectedComponents);
   
-  cout << "\t - longitudinal profile" << endl;
-  TestSwath.write_longitudinal_profile_to_file(RasterTemplate, percentiles, BinWidth, output_path+RASTER_NAME,NormaliseLongProfile);
+  cout << "\t Removing holes" << endl;
+  int window_radius = 50;
+  LSDIndexRaster FloodplainRaster_noholes = FloodplainRaster_modified.remove_holes_in_patches(window_radius);
   
-  cout << "\t - profile templates" << endl;
-  LSDRaster Swath(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_XMinimum(),RasterTemplate.get_YMinimum(),
-                  RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_BaselineValueArray());  
-  string output_file = output_path+RASTER_NAME+Swath_ext;
-  Swath.write_raster(output_file.c_str(),flt_extension);
-  
-  LSDRaster Long_Swath(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_XMinimum(),RasterTemplate.get_YMinimum(),
-                  RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_DistanceAlongBaselineArray());
-  string output_file2 = output_path+RASTER_NAME+Long_Swath_ext;
-  Long_Swath.write_raster(output_file2.c_str(),flt_extension); 
-  
-  LSDRaster ReliefSwath = TestSwath.get_raster_from_swath_profile(RasterTemplate, NormaliseTransProfile);
-  string relief_name = "_swath_relief";
-  ReliefSwath.write_raster((output_path+DEM_ID+relief_name), flt_extension); 
-  
-  // Now get histogram of stats above and below knickpoint
-//   vector<float> data_above, data_below;
-//   float val;
-//   for(int i = 0; i<RasterTemplate.get_NRows(); ++i)
-//   {
-//     for(int j = 0; j<RasterTemplate.get_NCols(); ++j)
-//     {
-//       if(RasterTemplate.get_data_element(i,j)!=RasterTemplate.get_NoDataValue())
-//       {
-//         val = RasterTemplate.get_data_element(i,j);
-//         if(val<0) val=0;
-//         if(Long_Swath.get_data_element(i,j)<knickpoint_position) data_above.push_back(val);
-//         else data_below.push_back(val); 
-//       }
-//     }
-//   }
-//   cout << "\t Getting histogram for region above knickpoint" << endl;  
-//   cout << data_above.size() << endl;
-//   print_histogram(data_above, histogram_bin_width, output_path+RASTER_NAME+"aboveKP.txt");
-//   cout << "\t Getting histogram for region below knickpoint" << endl;
-//   cout << data_below.size() << endl;
-//   print_histogram(data_below, histogram_bin_width, output_path+RASTER_NAME+"belowKP.txt");
+  int smaller_radius = 10;
+  LSDIndexRaster FloodplainRaster_final = FloodplainRaster_noholes.remove_holes_in_patches(smaller_radius);
+    
+  cout << "\t Done!" << endl;
+  string FP_name = "_FP_filt";
+  FloodplainRaster_final.write_raster((output_path+DEM_ID+FP_name), flt_extension); 
 }
