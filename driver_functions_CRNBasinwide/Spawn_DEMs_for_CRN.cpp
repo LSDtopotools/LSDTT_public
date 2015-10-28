@@ -135,6 +135,5 @@ int main (int nNumberofArgs,char *argv[])
   int padding_pixels = 20;
   CosmoData.BasinSpawnerMaster(path_name,param_name_prefix,padding_pixels);
 
-  
 }
   

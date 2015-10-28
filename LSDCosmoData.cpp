@@ -1133,7 +1133,7 @@ vector<string> LSDCosmoData::spawn_clipped_basins(string DEM_fname, int padding_
     string DEM_path = DEM_fname+ "/";
     
     //string DEM_newpath = ReformatPath(DEMpath);
-    string DEMnewname = DEM_path+ "SpawnedBasin_"+itoa(valid_cosmo_points[samp]);
+    string DEMnewname = DEM_path+ "SpawnedBasin_"+sample_name[valid_cosmo_points[samp]];
     
     cout << "Writing a new basin to: " << DEMnewname << endl;
         
