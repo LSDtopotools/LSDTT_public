@@ -1319,22 +1319,70 @@ void LSDCosmoData::RunShielding(string path, string prefix)
   
   string line_from_file;
   vector<string> lines;
-  string temp_string;
+  vector<string> this_string_vec;
+  vector<string> empty_string_vec;
+  
+  string zero = "0";
+  string comma = ",";
   
   // now loop through the rest of the lines, getting the data. 
   int i = 0;
   while( getline(ifs, line_from_file))
   {
-    // get rid of control characters. Stupid windows
-    string newline = RemoveControlCharacters(line_from_file);
-    cout << "line is: " << newline << " and shield name is: " << shield_names[i] << endl;
-    temp_string = newline+","+shield_names[i];
+    // reset the string vec
+    this_string_vec = empty_string_vec;
+    
+    // create a stringstream
+    stringstream ss(line_from_file);
+    
+    // read in the elements in the line
+    while( ss.good() )
+    {
+      string substr;
+      getline( ss, substr, ',' );
+      
+      // remove the spaces
+      substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
+      
+      // remove control characters
+      substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
+      
+      // add the string to the string vec
+      this_string_vec.push_back( substr );
+    }
+    
+    // a temporary string for holding the line
+    string temp_string;
+    
+    // now check on the size of the string
+    int n_params = this_string_vec.size();
+    
+    // this is logic to update the file depending on how many arguments are already in the line
+    if(n_params ==1 )
+    {
+      temp_string = this_string_vec[0]+comma+zero+comma+zero+comma+shield_names[i];
+    }
+    else if (n_params == 2)
+    {
+      temp_string = this_string_vec[0]+comma+this_string_vec[1]+comma+zero+comma+shield_names[i];
+    }
+    else if (n_params >= 3)
+    {
+      temp_string = this_string_vec[0]+comma+this_string_vec[1]+comma+this_string_vec[2]+comma+shield_names[i];
+    }
+    else
+    {
+      cout << "\nFATAL ERROR: Trying to load csv filenames file, but the file" << rasters_name
+         << "doesn't have the correct number of elements in the line; LINE 1375 LSDCosmoData" << endl;
+      exit(EXIT_FAILURE);    
+    }
+
+    // add the line to the list of lines
+    cout << "line is: " << temp_string << " and shield name is: " << shield_names[i] << endl;
     lines.push_back(temp_string);
     i++;
   }
   ifs.close();
-  
-  
   
   // now write the data
   ofstream rasters_out;
