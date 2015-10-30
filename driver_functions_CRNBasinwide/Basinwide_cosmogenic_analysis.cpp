@@ -68,20 +68,23 @@ using namespace std;
 int main (int nNumberofArgs,char *argv[])
 {
   // the driver version
-  string driver_version = "Driver_version: 0.01";
+  string driver_version = "Driver_version: 0.02";
 
   // some paramters
   //Test for correct input arguments
-  if (nNumberofArgs!=3)
+  if (nNumberofArgs!=4)
   {
     cout << "=========================================================" << endl;
     cout << "|| Welcome to the Basinwide cosmogenic analysis tool!  ||" << endl;
     cout << "=========================================================" << endl;
-    cout << "This program requires two inputs: " << endl;
+    cout << "This program requires three inputs: " << endl;
     cout << "* First the path to the parameter files." << endl;
     cout << "   The path must have a slash at the end." << endl;
     cout << "  (Either \\ or / depending on your operating system.)" << endl;
     cout << "* Second the prefix of the parameter files." << endl;
+    cout << "* The third is a method flag. 0 does things without error analysis or muons," << endl; 
+    cout << "  1 is a full analysis without spawned basins." << endl;
+    cout << "  2 is a full analysis with spawned basins." << endl;
     cout << "---------------------------------------------------------" << endl;
     cout << "There must be two parameter files in the named path." << endl;
     cout << "The first MUST have the extension _CRNRasters.csv" << endl;
@@ -109,6 +112,7 @@ int main (int nNumberofArgs,char *argv[])
 
   string path_name = argv[1];
   string param_name_prefix = argv[2];
+  int method_flag = atoi(argv[3]);
   
   // now load the CRNCosmoData object
   LSDCosmoData CosmoData(path_name,param_name_prefix); 
@@ -133,14 +137,6 @@ int main (int nNumberofArgs,char *argv[])
   cout << "http://www.geos.ed.ac.uk/~smudd/LSDTT_docs/html/gdal_notes.html" << endl;
   cout << "===========================================================" << endl;
 
-  // now run the analyses
-  // First test the basic cosmogenic analysis
-  int method_flag = 0;    // sets method to basic analysis
-  //CosmoData.calculate_erosion_rates(method_flag);
-
-  // now do it with the full method
-  method_flag = 1;    // sets method to basic analysis
-  
   //cout << "Getting data" << endl;
   CosmoData.calculate_erosion_rates(method_flag);
   

@@ -207,7 +207,7 @@ void LSDRasterInfo::read_header(string filename, string extension)
   string string_filename;
   string dot = ".";
   string_filename = filename+dot+extension;
-  cout << "\n\nLoading LSDRasterInfo, the filename is " << string_filename << endl;
+  //cout << "\n\nLoading LSDRasterInfo, the filename is " << string_filename << endl;
 
   if (extension == "asc")
   {
@@ -228,15 +228,15 @@ void LSDRasterInfo::read_header(string filename, string extension)
     data_in >> str >> NCols;
                 cout << "NCols: " << NCols << " str: " << endl;
     data_in >> str >> NRows;
-    cout << "NRows: " << NRows << " str: " << endl;
+    //cout << "NRows: " << NRows << " str: " << endl;
     data_in >> str >> XMinimum >> str >> YMinimum
           >> str >> DataResolution
           >> str >> NoDataValue;
 
-    cout << "Loading asc file; NCols: " << NCols << " NRows: " << NRows << endl
-         << "X minimum: " << XMinimum << " YMinimum: " << YMinimum << endl
-         << "Data Resolution: " << DataResolution << " and No Data Value: "
-         << NoDataValue << endl;
+    //cout << "Loading asc file; NCols: " << NCols << " NRows: " << NRows << endl
+    //     << "X minimum: " << XMinimum << " YMinimum: " << YMinimum << endl
+    //     << "Data Resolution: " << DataResolution << " and No Data Value: "
+    //     << NoDataValue << endl;
   }
   else if (extension == "flt")
   {
@@ -266,10 +266,10 @@ void LSDRasterInfo::read_header(string filename, string extension)
     }
     ifs.close();
 
-    cout << "Loading flt file; NCols: " << NCols << " NRows: " << NRows << endl
-         << "X minimum: " << XMinimum << " YMinimum: " << YMinimum << endl
-         << "Data Resolution: " << DataResolution << " and No Data Value: "
-         << NoDataValue << endl;
+    //cout << "Loading flt file; NCols: " << NCols << " NRows: " << NRows << endl
+    //     << "X minimum: " << XMinimum << " YMinimum: " << YMinimum << endl
+    //     << "Data Resolution: " << DataResolution << " and No Data Value: "
+    //     << NoDataValue << endl;
 
   }
   else if (extension == "bil")
@@ -512,10 +512,10 @@ void LSDRasterInfo::read_header(string filename, string extension)
       NoDataValue = -9999;
     }
 
-    cout << "Loading ENVI bil file; NCols: " << NCols << " NRows: " << NRows << endl
-       << "X minimum: " << XMinimum << " YMinimum: " << YMinimum << endl
-         << "Data Resolution: " << DataResolution << " and No Data Value: "
-         << NoDataValue << endl;
+    //cout << "Loading ENVI bil file; NCols: " << NCols << " NRows: " << NRows << endl
+    //   << "X minimum: " << XMinimum << " YMinimum: " << YMinimum << endl
+    //     << "Data Resolution: " << DataResolution << " and No Data Value: "
+    //     << NoDataValue << endl;
 
   }
   else
