@@ -161,7 +161,9 @@ void LSDCosmoData::create(string path_name, string param_name_prefix)
   check_parameter_values();
   
   // check the rasters
+  cout << "Hold on while I check the rasters. I don't want to eat dirty rasters!" << endl;
   check_rasters();
+  cout << "The rasters seem okay. Mmmm, rasters." << endl;
   
   // now print all the data into a report
   string outfile_name = path_name+param_name_prefix+outfile_ext;
@@ -356,14 +358,24 @@ void LSDCosmoData::load_csv_cosmo_data(string filename)
       this_string_vec.push_back( substr );
     }
     
-    // now convert the data
-    temp_sample_name.push_back( this_string_vec[0] );
-    temp_latitude.push_back( atof( this_string_vec[1].c_str() ) );
-    temp_longitude.push_back( atof(this_string_vec[2].c_str() ) );
-    temp_nuclide.push_back( this_string_vec[3] );
-    temp_Concentration_unstandardised.push_back( atof(this_string_vec[4].c_str() ) );
-    temp_Concentration_uncertainty_unstandardised.push_back( atof(this_string_vec[5].c_str() ) );
-    temp_standardisation.push_back( this_string_vec[6] );
+    //cout << "Yoyoma! size of the string vec: " <<  this_string_vec.size() << endl;
+    if ( int(this_string_vec.size()) < 7)
+    {
+      cout << "Hey there, I am trying to load your cosmo data but you seem not to have" << endl;
+      cout << "enough columns in your file. I am ignoring a line" << endl;
+    }
+    else
+    {
+      // now convert the data
+      //cout << "Getting sample name: " <<  this_string_vec[0] << endl;
+      temp_sample_name.push_back( this_string_vec[0] );
+      temp_latitude.push_back( atof( this_string_vec[1].c_str() ) );
+      temp_longitude.push_back( atof(this_string_vec[2].c_str() ) );
+      temp_nuclide.push_back( this_string_vec[3] );
+      temp_Concentration_unstandardised.push_back( atof(this_string_vec[4].c_str() ) );
+      temp_Concentration_uncertainty_unstandardised.push_back( atof(this_string_vec[5].c_str() ) );
+      temp_standardisation.push_back( this_string_vec[6] );
+    }
   
   }
   
@@ -709,6 +721,29 @@ void LSDCosmoData::load_DEM_and_shielding_filenames_csv(string filename)
     temp_snow_self_topo_shielding_params.push_back(this_snow_self);
   } 
   
+  // just check if there are no empty entries (thanks to hidden newline characters)
+  bool back_is_not_okay = 1;
+  cout << "HEY FAT ALBERT" << endl;
+  while(back_is_not_okay)
+  {
+    int NDEMS = int(temp_DEM_names_vecvec.size());
+    string last_DEM_name = temp_DEM_names_vecvec[NDEMS-1][0];
+    cout << "Last_DEM_name:" << last_DEM_name << endl;
+    if(last_DEM_name == "")
+    {
+      cout << "Oh, BUGGER, who put a bunch of empty lines at the back of this file!" << endl;
+      cout << "I'm getting rid of this one." <<endl;
+      temp_DEM_names_vecvec.pop_back();
+    }
+    else
+    {
+      back_is_not_okay = 0; 
+    }
+    
+    
+  }
+  
+
   DEM_names_vecvec = temp_DEM_names_vecvec;
   snow_self_topo_shielding_params = temp_snow_self_topo_shielding_params;
 
@@ -994,6 +1029,7 @@ void LSDCosmoData::check_rasters()
   {
     // get the names from this DEM
     vector<string>  DEM_names_vec = DEM_names_vecvec[iDEM];
+    cout << "Checking rasters, this raster is: " << DEM_names_vec[0] << endl;
     
     // get the info from the DEM
     LSDRasterInfo DEM_info(DEM_names_vec[0],bil_ext);
@@ -1385,8 +1421,9 @@ void LSDCosmoData::RunShielding(string path, string prefix)
   ifs.close();
   
   // now write the data
+  string rasters_out_name = path+prefix+"_Shield_CRNRasters.csv";
   ofstream rasters_out;
-  rasters_out.open(rasters_name.c_str());
+  rasters_out.open(rasters_out_name.c_str());
   
   int n_files = int(lines.size());
   cout << "N_files is: " << n_files << endl;
@@ -1395,6 +1432,12 @@ void LSDCosmoData::RunShielding(string path, string prefix)
     rasters_out << lines[i] << endl;
   }
   rasters_out.close();
+  
+  // now spawn a new cosmodata file with the correct prefix
+  string new_prefix = prefix+"_Shield";
+  print_renamed_cosmo_data(path, new_prefix);
+  print_renamed_parameter_data(path, new_prefix);
+  
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -1957,7 +2000,7 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
       
       if(write_TopoShield_raster)
       {
-        string TShield_name = Raster_names[0]+"_TopoShield";
+        string TShield_name = Raster_names[0]+"_SH";
         T_shield.write_raster(TShield_name,DEM_bil_extension);
       }
       
@@ -2186,13 +2229,56 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
   int basin_pixel_area;
   map<int,int> basin_area_map;
 
-  //cout << "\n\n\n====================================================\n";
-  //cout << "Performing analysis with snow and self shielding" << endl;
+  // We need to determine which sample number corresponds to the current raster
+  // The spawning routine names the rasters so that the raster name contains 
+  // the sample name after the final underscore character. So we need to find
+  // the sample name
+  
+  int valid_samp = 0;
+  // reset the string vec
+  vector<string> string_vec;
 
-  // now find valid points
-  vector<int> valid_cosmo_points;         // a vector to hold the valid nodes
-  vector<int> snapped_node_indices;       // a vector to hold the valid node indices
-  vector<int> snapped_junction_indices;   // a vector to hold the valid junction indices
+  // create a stringstream
+  stringstream ss(Raster_names[0]);
+    
+  while( ss.good() )
+  {
+    string substr;
+    getline( ss, substr, '_' );
+      
+    // remove the spaces
+    substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
+      
+    // remove constrol characters
+    substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
+      
+    // add the string to the string vec
+    string_vec.push_back( substr );
+  }
+  
+  // this extracts the sample name
+  int n_elements = int(string_vec.size());
+  string this_sample_name = string_vec[n_elements-1];
+  
+  // now find the index of the correct sample
+  bool found_sample = 0;
+  for (int i = 0; i< N_samples; i++)
+  {
+    if ( sample_name[i] == this_sample_name)
+    {
+      valid_samp = i;
+      found_sample = 1;
+    }
+  }
+  if(found_sample == 0)
+  {
+    cout << "LINE 2287 FATAL ERROR: Could not find sample!" << endl;
+    exit(EXIT_SUCCESS);
+  }
+
+  cout << "Correct sample name: " << this_sample_name 
+       << " the found sample name:" << sample_name[valid_samp] << endl;
+
   
   // Load the DEM
   string DEM_bil_extension = "bil";
@@ -2225,85 +2311,46 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
   // Now convert the data into this UTM zone
   convert_to_UTM(filled_raster);
   cout << "Converted to UTM" << endl;
+
+
+
+  // Some vectors to hold the valid node
+  // We need vectors rather than ints because the functions that are called
+  // during this routine expect vectors
+  vector<int> valid_cosmo_points;         // a vector to hold the valid nodes
+  vector<int> snapped_node_indices;       // a vector to hold the valid node indices
+  vector<int> snapped_junction_indices;   // a vector to hold the valid junction indices
   
   // convert UTM vectors to float
+  // Again, we only pass one value to these vectors, since that is needed by the 
+  // snap to points fuction
   vector<float> fUTM_easting;
   vector<float> fUTM_northing;
-  for (int i = 0; i< int(UTM_easting.size()); i++)
-  {
-    fUTM_easting.push_back( float(UTM_easting[i]));
-    fUTM_northing.push_back( float(UTM_northing[i]));
-  }
+  fUTM_easting.push_back( float(UTM_easting[valid_samp]));
+  fUTM_northing.push_back( float(UTM_northing[valid_samp]));
   cout << "Got point locations" << endl;
   
-  
-  //****************************************
-  // HERE YOU NEED TO ONLY SELECT THE POINTS THAT ARE IN THE BASIN!!!
-  //****************************************
-  
-  
+  // This snaps the junction network to the valid point
   JNetwork.snap_point_locations_to_channels(fUTM_easting, fUTM_northing, 
             search_radius_nodes, threshold_stream_order, FlowInfo, 
             valid_cosmo_points, snapped_node_indices, snapped_junction_indices);
   cout << "Snapped points" << endl;
   
-  // You need to extract the valid point that corresponds to the sample name
-  cout << endl << endl << "================================================" << endl;
-  cout << "Looking for basins that have spawned" << endl;
-  cout << "I am on Line 2245 of LSDCosmoData, and am looking for the correct point" << endl;
-  cout << "The raster name is: " << Raster_names[0] << endl;
   
-  
-  int valid_samp = 0;
-  // reset the string vec
-  vector<string> string_vec;
+  // Some parameters for debugging
+  // these are the values for the single snapped point
+  int single_snapped_node_index = snapped_node_indices[0];
+  int single_snapped_junction_index = snapped_junction_indices[0];
+  string single_snapped_nuclide_name =  nuclide[valid_samp];
+  double single_snapped_concentration = Concentration[valid_samp];
+  double single_snapped_uncertainty = Concentration_uncertainty[valid_samp];
+  cout << endl << endl <<"=============================================" << endl;
+  cout << "I've snapped the point, here are the vitalstatistix, chief:"  << endl;
+  cout << "snapped NI: " << single_snapped_node_index << " JI: " << single_snapped_junction_index
+       << " nuclide: " << single_snapped_nuclide_name << endl;
+  cout << "Conc: " << single_snapped_concentration << " uncert: " <<  single_snapped_uncertainty << endl;
+  cout << "=============================================" << endl;
 
-  // create a stringstream
-  stringstream ss(Raster_names[0]);
-    
-  while( ss.good() )
-  {
-    string substr;
-    getline( ss, substr, '_' );
-      
-    // remove the spaces
-    substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
-      
-    // remove constrol characters
-    substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
-      
-    // add the string to the string vec
-    string_vec.push_back( substr );
-  }
-  
-  int n_elements = int(string_vec.size());
-  string this_sample_name = string_vec[n_elements-1];
-  
-  // find the correct sample
-  bool found_sample = 0;
-  int n_valid_points = int(valid_cosmo_points.size());
-  cout << "Correct sample name: " << this_sample_name << " and names are";
-  for (int i = 0; i< int(n_valid_points); i++)
-  {
-    cout << ": " << sample_name[ valid_cosmo_points[i] ];  
-    if ( sample_name[ valid_cosmo_points[i] ] == this_sample_name)
-    {
-      valid_samp = i;
-      found_sample = 1;
-    }
-  }
-  cout << endl;
-  
-  if(found_sample == 0)
-  {
-    cout << "LINE 2287 FATAL ERROR: Could not find sample!" << endl;
-    exit(EXIT_SUCCESS);
-  }
-  cout << "LINE 2274 The sample name is:" << this_sample_name << " and the sample number is: " << valid_samp << endl;
-
-
-
-  
   // after this operation the three int vectors valid_cosmo_points, snapped_node_indices,
   // and snapped_junction_indices should be populated with valid points
   // you now need to get the concentrations and uncertainties from these
@@ -2314,15 +2361,11 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
   vector<double> valid_concentrations;
   vector<double> valid_concentration_uncertainties;
   
-  for (int i = 0; i< int(n_valid_points); i++)
-  {
-    valid_nuclide_names.push_back(nuclide[ valid_cosmo_points[i] ] );
-    valid_concentrations.push_back( Concentration[ valid_cosmo_points[i] ] );
-    valid_concentration_uncertainties.push_back( 
-                          Concentration_uncertainty[ valid_cosmo_points[i] ] );
-  }
-  //cout << "Got valid points" << endl;
-  
+  valid_nuclide_names.push_back(nuclide[valid_samp] );
+  valid_concentrations.push_back( Concentration[valid_samp] );
+  valid_concentration_uncertainties.push_back( 
+                          Concentration_uncertainty[valid_samp] );
+  //cout << "Got valid point" << endl;
   
   // Initiate pointers to the rasters
   LSDRaster Topographic_shielding;
@@ -2333,8 +2376,10 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
   // a flag for writing the initial basin index
   bool written_inital_basin_index = false;
   
+  int YoYoMa = int(valid_nuclide_names.size());
+  
   // now, IF there are valid points, go on to the rest of the analysis
-  if (valid_nuclide_names.size() != 0)
+  if ( YoYoMa != 0)
   {
     // if you need to write the inital raster, do so 
     LSDIndexRaster BasinIndex;   // initiate and empty raster
@@ -2356,7 +2401,7 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
       
       if(write_TopoShield_raster)
       {
-        string TShield_name = Raster_names[0]+"_TopoShield";
+        string TShield_name = Raster_names[0]+"_SH";
         T_shield.write_raster(TShield_name,DEM_bil_extension);
       }
       
@@ -2369,7 +2414,7 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
     double constant_self_depth = 0;
     if (Raster_names[1] != "NULL")
     {
-      cout << "LSDCosmoData, line 971: Loading the snow sheidling raster, " 
+      cout << "LSDCosmoData, line 2367: Loading the snow sheidling raster, " 
            << Raster_names[1] << ".bil" <<  endl;
       LSDRaster Snow_shield(Raster_names[1], DEM_bil_extension);
       Snow_shielding = Snow_shield;
@@ -2383,7 +2428,7 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
     }
     if (Raster_names[1] != "NULL")
      {
-      cout << "LSDCosmoData, line 977: Loading the self sheidling raster, " 
+      cout << "LSDCosmoData, line 2381: Loading the self sheidling raster, " 
            << Raster_names[2] << ".bil" <<  endl;
       LSDRaster Self_shield(Raster_names[2], DEM_bil_extension);
       Self_shielding = Self_shield;
@@ -2414,7 +2459,11 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
     else
     {
       cout << "The valid sample is: " << valid_samp << endl;
-      int samp = valid_samp;
+      
+      // The samp index is the index into the valid_concentrations, uncertainties, 
+      // etc vectors. These should all have only one element, since the routine
+      // should have only found one valid sample. 
+      int samp = 0;
       if( valid_nuclide_names[samp] == "Be10")
       {
         test_N10 = valid_concentrations[samp];
@@ -2534,24 +2583,29 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
       float R = thisBasin.CalculateBasinRange(FlowInfo, filled_raster);
       double relief = double(R);
 
-      MapOfProdAndScaling["BasinRelief"][ valid_cosmo_points[samp] ] = relief;
-      MapOfProdAndScaling["AverageProdScaling"][ valid_cosmo_points[samp] ] = param_for_calc[0];
-      MapOfProdAndScaling["AverageTopoShielding"][ valid_cosmo_points[samp] ] = param_for_calc[1];
-      MapOfProdAndScaling["AverageSelfShielding"][ valid_cosmo_points[samp] ] = param_for_calc[2];
-      MapOfProdAndScaling["AverageSnowShielding"][ valid_cosmo_points[samp] ] = param_for_calc[3];
-      MapOfProdAndScaling["AverageShielding"][ valid_cosmo_points[samp] ] =  param_for_calc[11];
-      MapOfProdAndScaling["AverageCombinedScaling"][ valid_cosmo_points[samp] ] = param_for_calc[4];
-      MapOfProdAndScaling["outlet_lat"][ valid_cosmo_points[samp] ] = param_for_calc[5];
-      MapOfProdAndScaling["OutletPressure"][ valid_cosmo_points[samp] ] = param_for_calc[6];
-      MapOfProdAndScaling["OutletEffectivePressure"][ valid_cosmo_points[samp] ] = param_for_calc[7];
-      MapOfProdAndScaling["centroid_lat"][ valid_cosmo_points[samp] ] = param_for_calc[8];
-      MapOfProdAndScaling["CentroidPressure"][ valid_cosmo_points[samp] ] = param_for_calc[9];
-      MapOfProdAndScaling["CentroidEffectivePressure"][ valid_cosmo_points[samp] ] = param_for_calc[10];
+      MapOfProdAndScaling["BasinRelief"][ valid_samp ] = relief;
+      MapOfProdAndScaling["AverageProdScaling"][ valid_samp ] = param_for_calc[0];
+      MapOfProdAndScaling["AverageTopoShielding"][ valid_samp ] = param_for_calc[1];
+      MapOfProdAndScaling["AverageSelfShielding"][ valid_samp ] = param_for_calc[2];
+      MapOfProdAndScaling["AverageSnowShielding"][ valid_samp ] = param_for_calc[3];
+      MapOfProdAndScaling["AverageShielding"][ valid_samp ] =  param_for_calc[11];
+      MapOfProdAndScaling["AverageCombinedScaling"][ valid_samp ] = param_for_calc[4];
+      MapOfProdAndScaling["outlet_lat"][ valid_samp ] = param_for_calc[5];
+      MapOfProdAndScaling["OutletPressure"][ valid_samp ] = param_for_calc[6];
+      MapOfProdAndScaling["OutletEffectivePressure"][ valid_samp ] = param_for_calc[7];
+      MapOfProdAndScaling["centroid_lat"][ valid_samp ] = param_for_calc[8];
+      MapOfProdAndScaling["CentroidPressure"][ valid_samp ] = param_for_calc[9];
+      MapOfProdAndScaling["CentroidEffectivePressure"][ valid_samp ] = param_for_calc[10];
     
       // add the erosion rate results to the holding data member
-      erosion_rate_results[ valid_cosmo_points[samp] ] = erate_analysis;
+      erosion_rate_results[ valid_samp ] = erate_analysis;
 
+      //cout << "Added the result to the " << valid_samp << " sample." << endl;
       //cout << "finished adding data" << endl;
+      
+      //cout << endl << endl << "LINE 2606=-=-=-=-=-=-=" << endl;
+      //cout << "Valid samp: " << valid_samp << " and fmor the vector: " 
+      //     << valid_cosmo_points[samp] << endl << endl << endl;
 
     }  // finished looping thorough basins
     
@@ -2563,7 +2617,7 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
       BasinIndex.write_raster(basin_fname, DEM_bil_extension);
     }
      
-  }    // finsiehd logic for a DEM with valid points
+  }    // finished logic for a DEM with valid points
   else
   {
     cout << "There are no valid CRN points in this raster" << endl;
@@ -2679,7 +2733,7 @@ void LSDCosmoData::full_shielding_raster_printer(vector<string> Raster_names,
       
       if(write_TopoShield_raster)
       {
-        string TShield_name = Raster_names[0]+"_TopoShield";
+        string TShield_name = Raster_names[0]+"_SH";
         T_shield.write_raster(TShield_name,DEM_bil_extension);
       }
       
@@ -2963,13 +3017,13 @@ void LSDCosmoData::print_results()
   CRONUS_out << "->Self shielding is embedded in the shielding calculation and so" << endl
              << "  sample thickness is set to 0." << endl;
   CRONUS_out << "->These results generated by the LSDCosmoBasin program," << endl
-             << " written by Simon M. Mudd, Martin D. Hurst and Stuart W.D. Grieve" << endl;
+             << " written by Simon M. Mudd Martin D. Hurst and Stuart W.D. Grieve" << endl;
   CRONUS_out << "=========================================================" << endl;           
     
   // first the header line
   results_out << "All concentrations are standardised to 07KNSTD using Balco et al 2008" << endl;
   results_out << "Results generated by the LSDCosmoBasin program," << endl
-              << "written by Simon M. Mudd, Martin D. Hurst and Stuart W.D. Grieve" << endl;
+              << "written by Simon M. Mudd Martin D. Hurst and Stuart W.D. Grieve" << endl;
   results_out << "basin_ID,sample_name,nuclide,latitude,longitude,concentration,concentration_uncert,"
        << "erate_g_percm2_peryr,AMS_uncert,muon_uncert,production_uncert,total_uncert,"
        << "AvgProdScaling,AverageTopoShielding,AverageSelfShielding,"
@@ -2985,6 +3039,8 @@ void LSDCosmoData::print_results()
   // now loop through the sampes, printing the ones with data
   for (int i = 0; i<N_samples; i++)
   {
+  
+    cout << "On sample number " << i << ", size of results vector: " << erosion_rate_results[i].size() << endl;
     // don't print the results unless they exist
     if (int(erosion_rate_results[i].size()) > 0)
     {

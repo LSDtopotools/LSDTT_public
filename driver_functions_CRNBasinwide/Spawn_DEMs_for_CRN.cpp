@@ -129,7 +129,8 @@ int main (int nNumberofArgs,char *argv[])
 
   
   // load the CRNCosmoData object
-  LSDCosmoData CosmoData(path_name,param_name_prefix); 
+  LSDCosmoData CosmoData(path_name,param_name_prefix);
+  cout << "Got the CosmoData, I am going to spawn the basins now." << endl; 
   
   // spawn the basins
   int padding_pixels = 20;

@@ -129,8 +129,7 @@ int main (int nNumberofArgs,char *argv[])
   // load the CRNCosmoData object
   LSDCosmoData CosmoData(path_name,param_name_prefix);
 
-  // spawn the basins
+  // Run the shielding on these basins
   CosmoData.RunShielding(path_name,param_name_prefix);
-
 
 }

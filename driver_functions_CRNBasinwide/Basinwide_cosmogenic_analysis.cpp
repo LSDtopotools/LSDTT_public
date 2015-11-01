@@ -143,7 +143,6 @@ int main (int nNumberofArgs,char *argv[])
   cout << "Printing results " << endl;
   // now print the data to a csv file
   CosmoData.print_results();
-  
   CosmoData.print_rasters();
   
 }
