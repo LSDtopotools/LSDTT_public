@@ -3040,7 +3040,7 @@ void LSDCosmoData::print_results()
   for (int i = 0; i<N_samples; i++)
   {
   
-    cout << "On sample number " << i << ", size of results vector: " << erosion_rate_results[i].size() << endl;
+    //cout << "On sample number " << i << ", size of results vector: " << erosion_rate_results[i].size() << endl;
     // don't print the results unless they exist
     if (int(erosion_rate_results[i].size()) > 0)
     {
