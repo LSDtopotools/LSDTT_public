@@ -1,18 +1,16 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// channel_heads_driver.cpp
+// channel_extraction_pelletier.cpp
 // A driver function for use with the Land Surace Dynamics Topo Toolbox
-// This program calculates channel heads using a chi method described in
-// Clubb et al. (2014)
+// This program calculates channel heads using Pelletier (2013)
 //
-// Reference: Clubb, F. J., S. M. Mudd, D. T. Milodowski, M. D. Hurst, 
-// and L. J. Slater (2014), Objective extraction of channel heads from 
-// high-resolution topographic data, Water Resour. Res., 50, doi: 10.1002/2013WR015167.
+// Reference: Pelletier, J.D. (2013) A robust, two-parameter method for the extraction of
+// drainage networks from high-resolution digital elevation models (DEMs): Evaluation using
+// synthetic and real-world DEMs, Water Resources Research 49(1): 75-89, doi:10.1029/2012WR012452
 //
 // Developed by:
 //  Fiona Clubb
 //  Simon M. Mudd
-//
-// Copyright (C) 2013 Fiona Clubb and Simon M. Mudd 2013
+//  David T. Milodowski
 //
 // Developer can be contacted by simon.m.mudd _at_ ed.ac.uk
 //
@@ -45,7 +43,9 @@
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// Fiona Clubb, Univertsity of Edinburgh
+// Fiona J. Clubb, University of Edinburgh
+// Simon M. Mudd, University of Edinburgh
+// David T. Milodowski, University of Edinburgh
 //
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

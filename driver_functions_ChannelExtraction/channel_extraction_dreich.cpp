@@ -1,14 +1,54 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// channel_extraction_dreich.cpp
+// A driver function for use with the Land Surace Dynamics Topo Toolbox
+// This program calculates channel heads using the Dreich method, Clubb et al. (2014)
 //
-// channel_heads_wiener_qq_driver.cpp
-// make with channel_heads_wiener_qq.make
+// Reference: Clubb, F. J., S. M. Mudd, D. T. Milodowski, M. D. Hurst,
+// and L. J. Slater (2014), Objective extraction of channel heads from
+// high-resolution topographic data, Water Resour. Res., 50, doi: 10.1002/2013WR015167.
+//
+// Developed by:
+//  Fiona Clubb
+//  Simon M. Mudd
+//  David T. Milodowski
+//  Stuart W.D. Grieve
+//
+// Developer can be contacted by simon.m.mudd _at_ ed.ac.uk
+//
+//    Simon Mudd
+//    University of Edinburgh
+//    School of GeoSciences
+//    Drummond Street
+//    Edinburgh, EH8 9XP
+//    Scotland
+//    United Kingdom
+//
+// This program is free software;
+// you can redistribute it and/or modify it under the terms of the
+// GNU General Public License as published by the Free Software Foundation;
+// either version 2 of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY;
+// without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the GNU General Public License for more details.
+//
+// You should have received a copy of the
+// GNU General Public License along with this program;
+// if not, write to:
+// Free Software Foundation, Inc.,
+// 51 Franklin Street, Fifth Floor,
+// Boston, MA 02110-1301
+// USA
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// David T Milodowski
-// Stuart W.D Grieve
-// Fiona J. Clubb
-// University of Edinburgh
+// Fiona J. Clubb, Univertsity of Edinburgh
+// Simon M. Mudd, University of Edinburgh
+// David T. Milodowski, University of Edinburgh
+// Stuart W.D. Grieve, University of Edinburgh
+//
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
