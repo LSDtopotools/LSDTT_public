@@ -351,7 +351,7 @@ void LSDCosmoData::load_csv_cosmo_data(string filename)
       // remove the spaces
       substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
       
-      // remove constrol characters
+      // remove control characters
       substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
       
       // add the string to the string vec
@@ -368,7 +368,19 @@ void LSDCosmoData::load_csv_cosmo_data(string filename)
     {
       // now convert the data
       //cout << "Getting sample name: " <<  this_string_vec[0] << endl;
-      temp_sample_name.push_back( this_string_vec[0] );
+      
+      // let the user know about offending underscores, and replace them
+      string s = this_string_vec[0];
+      string uscore = "_";
+      size_t found = s.find(uscore);
+      if (found!=std::string::npos)
+      {
+        cout << "I found an underscore in the sample name. Replacing with a dash." <<endl;
+        replace( s.begin(), s.end(), '_', '-');
+        cout << "New sample name is: " << s << endl;
+      }
+
+      temp_sample_name.push_back( s );
       temp_latitude.push_back( atof( this_string_vec[1].c_str() ) );
       temp_longitude.push_back( atof(this_string_vec[2].c_str() ) );
       temp_nuclide.push_back( this_string_vec[3] );
