@@ -123,9 +123,9 @@ int main (int nNumberofArgs,char *argv[])
   Ends.remove_downstream_endpoints(CC_raster, raster);
 
   //write some rasters
-  connected_components_filtered.write_raster(Output_name+"_cc", DEM_extension);
-  skeleton_raster.write_raster(Output_name+"_skeleton",DEM_extension);
-  Ends.write_raster(Output_name+"_end_points",DEM_extension);
+  //connected_components_filtered.write_raster(Output_name+"_cc", DEM_extension);
+  //skeleton_raster.write_raster(Output_name+"_skeleton",DEM_extension);
+  //Ends.write_raster(Output_name+"_end_points",DEM_extension);
     
   //Now we can process the end points to get only the channel heads - SWDG
   
