@@ -344,4 +344,8 @@ void LSDSoilHydroRaster::SetSnowEffDepthRichards(float MaximumEffDepth, float Ma
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This is an incredibly rudimentary function used to 
+
+
 #endif

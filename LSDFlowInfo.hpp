@@ -370,6 +370,14 @@ class LSDFlowInfo
   /// @date 01/016/12
   vector<int> get_upslope_nodes(int node_number_outlet);
 
+  /// @brief This function takes a list of sources and then creates a raster
+  ///  with nodata values where points are not upslope of the sources
+  ///  and 1.0 if they are upslope
+  /// @param source_nodes a vector of node indicies into the sources
+  /// @author SMM
+  /// @date 11/11/2015
+  LSDRaster get_upslope_node_mask(vector<int> source_nodes);
+
   ///@brief This function accumulates some variable from an LSDRaster
   ///The most probably use is to accumulate precipitation in order
   ///to get a discharge raster
@@ -574,7 +582,7 @@ class LSDFlowInfo
   ///@brief A get sources version that uses the flow accumulation pixels.
   ///@param FlowPixels LSDIndexRaster of flow accumulation in pixels.
   ///@param threshold Integer flow accumulation threshold.
-  ///@return Vector of source integers.
+  ///@return Vector of source integers: these refer to the node indices of the sources.
   /// @author SMM
   /// @date 01/016/12
   vector<int> get_sources_index_threshold(LSDIndexRaster& FlowPixels, int threshold);
@@ -583,7 +591,7 @@ class LSDFlowInfo
   /// @param FlowPixels LSDIndexRaster of flow accumulation in pixels.
   /// @param Slope LSDRaster of slope values
   /// @param threshold Integer AS^2 threshold
-  /// @return Vector of source integers.
+  /// @return Vector of source integers: these refer to the node indices of the sources.
   /// @author FJC
   /// @date 11/02/14
   vector<int> get_sources_slope_area(LSDIndexRaster& FlowPixels, LSDRaster& Slope, int threshold);

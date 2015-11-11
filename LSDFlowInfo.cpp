@@ -1720,7 +1720,7 @@ void LSDFlowInfo::calculate_upslope_reference_indices()
 //
 // SMM 01/06/2012
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 vector<int> LSDFlowInfo::get_upslope_nodes(int node_number_outlet)
 {
   vector<int> us_nodes;
@@ -1741,11 +1741,52 @@ vector<int> LSDFlowInfo::get_upslope_nodes(int node_number_outlet)
 
   return us_nodes;
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function takes a list of source nodes and creates a raster where 
+// the pixels have a value of 1 where there are upslope nodes and 0 otherwise
+LSDRaster LSDFlowInfo::get_upslope_node_mask(vector<int> source_nodes)
+{
+  // initiate the data array
+  Array2D<float> this_raster(NRows,NCols,NoDataValue);
+  
+  // loop through the nodes, collecting upslope nodes
+  int n_nodes = int(source_nodes.size());
+  int this_node;
+  int us_node;
+  int curr_row,curr_col;
+  float is_us = 1.0;
+  
+  // go through all the source nodes, find their upslope nodes
+  // and set the value of these nodes to 1.0 on the data array
+  for (int n = 0; n<n_nodes; n++)
+  {
+    this_node = source_nodes[n];
+    
+    // check if it is in the DEM
+    if (this_node < NDataNodes)
+    {
+      vector<int> upslope_nodes = get_upslope_nodes(this_node);
+      
+      int n_us_nodes =  int(upslope_nodes.size());
+      for(int us = 0; us<n_us_nodes; us++)
+      {
+        retrieve_current_row_and_col(upslope_nodes[us],curr_row,curr_col);
+        this_raster[curr_row][curr_col]=is_us;
+      }
+    }
+  }
+  
+  // now create the raster
+  LSDRaster temp_us(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,this_raster,GeoReferencingStrings);
+  return temp_us;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 //  Accumulate some variable (such a precipitation) from an accumulation raster
 //
@@ -2451,47 +2492,47 @@ vector<int> LSDFlowInfo::get_sources_index_threshold(LSDIndexRaster& FlowPixels,
 
       // see if node is greater than threshold
       if(FlowPixels.get_data_element(row,col)>=threshold)
-	{
-	  //cout << "node " << node << " is a potential source, it has a value of "
-	  //     << FlowPixels.get_data_element(row,col)
-	  //     << "and it has " << NDonorsVector[node] <<" donors " << endl;
+  {
+    //cout << "node " << node << " is a potential source, it has a value of "
+    //     << FlowPixels.get_data_element(row,col)
+    //     << "and it has " << NDonorsVector[node] <<" donors " << endl;
 
-	  // if it doesn't have donors, it is a source
-	  if(NDonorsVector[node] == 0)
-	    {
-	      sources.push_back(node);
-	    }
-	  else
-	    {
-	      thresh_switch = 1;
-	      // figure out where the donor nodes are, and if
-	      // the donor node is greater than the threshold
-	      for(int dnode = 0; dnode<NDonorsVector[node]; dnode++)
-		{
-		  donor_node = DonorStackVector[ DeltaVector[node]+dnode];
-		  donor_row = RowIndex[ donor_node ];
-		  donor_col = ColIndex[ donor_node ];
+    // if it doesn't have donors, it is a source
+    if(NDonorsVector[node] == 0)
+      {
+        sources.push_back(node);
+      }
+    else
+      {
+        thresh_switch = 1;
+        // figure out where the donor nodes are, and if
+        // the donor node is greater than the threshold
+        for(int dnode = 0; dnode<NDonorsVector[node]; dnode++)
+    {
+      donor_node = DonorStackVector[ DeltaVector[node]+dnode];
+      donor_row = RowIndex[ donor_node ];
+      donor_col = ColIndex[ donor_node ];
 
-		  // we don't float count base level nodes, which donate to themselves
-		  if (donor_node != node)
-		    {
-		      // if the donor node is greater than the threshold,
-		      // then this node is not a threhold
-		      if(FlowPixels.get_data_element(donor_row,donor_col)>=threshold)
-			{
-			  thresh_switch = 0;
-			}
-		    }
+      // we don't float count base level nodes, which donate to themselves
+      if (donor_node != node)
+      {
+        // if the donor node is greater than the threshold,
+        // then this node is not a threhold
+        if(FlowPixels.get_data_element(donor_row,donor_col)>=threshold)
+        {
+          thresh_switch = 0;
+        }
+      }
 
-		  //cout << "thresh_switch is: " << thresh_switch << endl;
-		}
-	      // if all of the donors are below the threhold, this is a source
-	      if (thresh_switch == 1)
-		{
-		  sources.push_back(node);
-		}
-	    }
-	}
+      //cout << "thresh_switch is: " << thresh_switch << endl;
+    }
+        // if all of the donors are below the threhold, this is a source
+        if (thresh_switch == 1)
+    {
+      sources.push_back(node);
+    }
+      }
+  }
     }
   return sources;
 }

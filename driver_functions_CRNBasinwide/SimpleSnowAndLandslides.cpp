@@ -141,6 +141,18 @@ int main (int nNumberofArgs,char *argv[])
  
   string snow_ext2 = "_SnowBL2";
   snow_out_name = path_name+DEM_name_prefix+snow_ext2;
-  SnowRaster.write_raster(snow_out_name,DEM_bil_extension);  
+  SnowRaster.write_raster(snow_out_name,DEM_bil_extension);
+  
+  
+  // now we go on to make a rudimetary landsliding raster
+  // First get some sources
+  int flow_threshold = 300;
+  LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+  vector<int> sources = FlowInfo.get_sources_index_threshold(ContributingPixels, flow_threshold);
+  LSDRaster NaiveLanslide = FlowInfo.get_upslope_node_mask(sources);
+  
+  string LS_ext = "_LS";
+  string LS_out_name = path_name+DEM_name_prefix+LS_ext;
+  NaiveLanslide.write_raster(LS_out_name,DEM_bil_extension);  
 }
   
