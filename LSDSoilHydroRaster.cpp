@@ -87,6 +87,7 @@
 #include <vector>
 #include <limits>
 #include <string>
+#include <cmath>
 #include "LSDRaster.hpp"
 #include "LSDSoilHydroRaster.hpp"
 #include "LSDStatsTools.hpp"
@@ -94,12 +95,16 @@
 #include "LSDShapeTools.hpp"
 using namespace std;
 
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // empty default create function
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDSoilHydroRaster::create()
 {}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Create function that just copies a raster into the hydro raster
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDSoilHydroRaster::create(LSDRaster& OtherRaster)
 {
   NRows = OtherRaster.get_NRows();
@@ -111,9 +116,13 @@ void LSDSoilHydroRaster::create(LSDRaster& OtherRaster)
   GeoReferencingStrings = OtherRaster.get_GeoReferencingStrings();
   RasterData = OtherRaster.get_RasterData();
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Create function that takes the dimensions and georeferencing of a raster
-// but then sets all data to value
+// but then sets all data to value, setting the NoDataValues to 
+// the NoData of the raster
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDSoilHydroRaster::create(LSDRaster& OtherRaster, float value)
 {
   NRows = OtherRaster.get_NRows();
@@ -125,12 +134,26 @@ void LSDSoilHydroRaster::create(LSDRaster& OtherRaster, float value)
   GeoReferencingStrings = OtherRaster.get_GeoReferencingStrings();
 
   // set the raster data to be a certain value
-  Array2D<float> data(NRows,NCols,value); 
+  Array2D<float> data(NRows,NCols,NoDataValue); 
+  
+  for (int row = 0; row <NRows; row++)
+  {
+    for (int col = 0; col<NCols; col++)
+    {
+      if (OtherRaster.get_data_element(row,col) != NoDataValue)
+      {
+        data[row][col] = value;
+      }
+    }
+  }
+  
   RasterData = data.copy();
-
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Creates a raster from raw data
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDSoilHydroRaster::create(int ncols, int nrows, float xmin, float ymin,
                 float cellsize, float ndv, Array2D<float> data)
 {
@@ -154,8 +177,11 @@ void LSDSoilHydroRaster::create(int ncols, int nrows, float xmin, float ymin,
     exit(EXIT_FAILURE);
   }
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Creates a raster from raw data, this time with the georeferencing strings
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDSoilHydroRaster::create(int ncols, int nrows, float xmin, float ymin,
             float cellsize, float ndv, Array2D<float> data, map<string,string> GRS)
 {
@@ -179,6 +205,143 @@ void LSDSoilHydroRaster::create(int ncols, int nrows, float xmin, float ymin,
     cout << "LSDSoilHydroRaster dimension of data is not the same as stated in NRows!" << endl;
     exit(EXIT_FAILURE);
   }
-}             
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This sets all non nodata pixels to value
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDSoilHydroRaster::SetHomogenousValues(float value)
+{
+  // set the raster data to be a certain value
+  Array2D<float> data(NRows,NCols,NoDataValue); 
+  
+  for (int row = 0; row <NRows; row++)
+  {
+    for (int col = 0; col<NCols; col++)
+    {
+      if (RasterData[row][col] != NoDataValue)
+      {
+        RasterData[row][col] = value;
+      }
+    }
+  }
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function calculates a snow thickenss (effective, in g cm^-2 for cosmogenic 
+// applications)  based on a bilinear model such as that of P Kirchner: http://escholarship.org/uc/item/9zn1c1mk#page-8
+// The paper is here: http://www.hydrol-earth-syst-sci.net/18/4261/2014/hess-18-4261-2014.html
+// This paper also agrees withy this general trend:
+// http://www.the-cryosphere.net/8/2381/2014/tc-8-2381-2014.pdf
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDSoilHydroRaster::SetSnowEffDepthBilinear(float SlopeAscend, float SlopeDescend, 
+                          float PeakElevation, float PeakSnowpack, LSDRaster& Elevation)
+{
+  float LocalElevation;
+  float ascendEffDepth;
+  float descendEffDepth;
+  float thisEffDepth = 0;
+  
+  for (int row = 0; row <NRows; row++)
+  {
+    for (int col = 0; col<NCols; col++)
+    {
+      if (RasterData[row][col] != NoDataValue)
+      {
+        LocalElevation = Elevation.get_data_element(row,col);
+        
+        if (LocalElevation != NoDataValue)
+        {
+          // get the effective depth on both the ascending and descending limb
+          ascendEffDepth = SlopeAscend*(LocalElevation-PeakElevation)+PeakSnowpack;
+          descendEffDepth = SlopeDescend*(LocalElevation-PeakElevation)+PeakSnowpack;
+          
+          // the correct depth is the lesser of the two
+          if (ascendEffDepth < descendEffDepth)
+          {
+            thisEffDepth =  ascendEffDepth;
+          }
+          else
+          {
+            thisEffDepth = descendEffDepth;
+          }
+          
+          // if the depth is less than zero, then set to zero
+          if(thisEffDepth <0)
+          {
+            thisEffDepth = 0;
+          }
+          
+          RasterData[row][col] =  thisEffDepth;
+
+        }
+        else        // if there ins't any elevation data, set the snow data to NoData
+        {
+          RasterData[row][col] = NoDataValue;
+        }
+      }
+    }
+  }
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function calculates a snow thickenss (effective, in g cm^-2 for cosmogenic 
+// applications)  based on a richard's equsion sigmoidal growth model
+// It was propoesd to represent peak SWE so we cruedly apply it to average annual SWE
+// see 
+// http://onlinelibrary.wiley.com/doi/10.1002/2015GL063413/epdf
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDSoilHydroRaster::SetSnowEffDepthRichards(float MaximumEffDepth, float MaximumSlope, float v, 
+                          float lambda, LSDRaster& Elevation)
+{
+  // Don't let V be less than or equal to zero
+  if (v <= 0)
+  {
+    v = 0.001;
+  }
+
+  // some variables to speed up compuation
+  float exp_term;
+  float thisEffDepth = 0;
+  float elev_mulitplier = (MaximumSlope/MaximumEffDepth)*pow((1+v),1+(1/v));
+  float LocalElevation;
+  
+  for (int row = 0; row <NRows; row++)
+  {
+    for (int col = 0; col<NCols; col++)
+    {
+      if (RasterData[row][col] != NoDataValue)
+      {
+        LocalElevation = Elevation.get_data_element(row,col);
+        
+        if (LocalElevation != NoDataValue)
+        {
+          // get the effective depth using the richards sigmoidal gorth function
+          exp_term = 1+v*exp(elev_mulitplier*(lambda-LocalElevation));
+          thisEffDepth = MaximumEffDepth*pow(exp_term,-(1/v));
+          
+          // if the depth is less than zero, then set to zero
+          if(thisEffDepth <0)
+          {
+            thisEffDepth = 0;
+          }
+          
+          // update the data
+          RasterData[row][col] =  thisEffDepth;
+
+        }
+        else        // if there ins't any elevation data, set the snow data to NoData
+        {
+          RasterData[row][col] = NoDataValue;
+        }
+      }
+    }
+  }
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 #endif

@@ -119,5 +119,28 @@ int main (int nNumberofArgs,char *argv[])
   // get a flow info object
   LSDFlowInfo FlowInfo(boundary_conditions,filled_topo_test);
   
+  // now make a snow raster
+  LSDSoilHydroRaster SnowRaster(filled_topo_test);
+  
+  // update it with a bilinear snow function
+  float SlopeAscend = 0.05;
+  float SlopeDescend = -0.1;
+  float PeakElevation = 3000;
+  float PeakSnowpack = 80;
+  SnowRaster.SetSnowEffDepthBilinear(SlopeAscend, SlopeDescend, PeakElevation, 
+                                     PeakSnowpack, filled_topo_test);
+                                 
+  string snow_ext = "_SnowBL";
+  string snow_out_name = path_name+DEM_name_prefix+snow_ext;
+  SnowRaster.write_raster(snow_out_name,DEM_bil_extension);
+  
+  float v = 0.01;
+  float lambda = 2000;
+  float MaximumSlope = 0.1;
+  SnowRaster.SetSnowEffDepthRichards(PeakSnowpack, MaximumSlope, v, lambda, filled_topo_test);
+ 
+  string snow_ext2 = "_SnowBL2";
+  snow_out_name = path_name+DEM_name_prefix+snow_ext2;
+  SnowRaster.write_raster(snow_out_name,DEM_bil_extension);  
 }
   
