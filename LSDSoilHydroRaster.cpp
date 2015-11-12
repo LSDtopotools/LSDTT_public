@@ -93,6 +93,7 @@
 #include "LSDStatsTools.hpp"
 #include "LSDIndexRaster.hpp"
 #include "LSDShapeTools.hpp"
+#include "LSDFlowInfo.hpp"
 using namespace std;
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -345,7 +346,70 @@ void LSDSoilHydroRaster::SetSnowEffDepthRichards(float MaximumEffDepth, float Ma
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// This is an incredibly rudimentary function used to 
+// This is an incredibly rudimentary function used to modify landslide raster
+// It takes a few rasters from the 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDSoilHydroRaster::NaiveLandslide(LSDRaster& FilledElevation, int initiationPixels,
+                                      int MinPixels, float landslide_thickness)
+{
+  // Get a flow info object
+  // set no flux boundary conditions
+  vector<string> boundary_conditions(4);
+  boundary_conditions[0] = "No";
+  boundary_conditions[1] = "no flux";
+  boundary_conditions[2] = "no flux";
+  boundary_conditions[3] = "No flux";
+  
+  
+  // some values from the rasters
+  float local_elev;
+  float local_mask;
+  
+  // get a flow info object
+  LSDFlowInfo FlowInfo(boundary_conditions,FilledElevation);  
+  
+  // get the contributing pixels
+  LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+  vector<int> sources = FlowInfo.get_sources_index_threshold(ContributingPixels, initiationPixels);
+  
+  // get a value vector for the landslides
+  vector<float> landslide_thicknesses;
+  for (int i = 0; i< int(sources.size()); i++)
+  {
+    landslide_thicknesses.push_back(landslide_thickness);
+  }
+  
+  
+  // get the mask
+  LSDRaster Mask = FlowInfo.get_upslope_node_mask(sources,landslide_thicknesses);
+  
+  // now set all points that have elevation data but not landslide data to 
+  // the value of the landslide thickness, removing data that is below the minium
+  // pixel area
+  for (int row = 0; row<NRows; row++)
+  {
+    for (int col = 0; col<NCols; col++)
+    {
+      local_elev =  FilledElevation.get_data_element(row,col);
+      local_mask =  Mask.get_data_element(row,col);
+      
+      RasterData[row][col] = local_mask;
+      
+      // Turn nodata points into 0s
+      if( local_mask == NoDataValue)
+      {
+        RasterData[row][col] = 0.0;
+      }
+      
+      // remove data where there is no topographic information
+      if( local_elev == NoDataValue)
+      {
+        RasterData[row][col] = NoDataValue;
+      }
+    }
+  }
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 #endif

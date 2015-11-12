@@ -211,6 +211,24 @@ class LSDSoilHydroRaster: public LSDRaster
     /// @date 11/11/2015
     void SetSnowEffDepthRichards(float MaximumEffDepth, float MaximumSlope, float v, 
                           float lambda, LSDRaster& Elevation);
+
+
+    /// @brief This is an extremely naivie "landlside" model that is just
+    ///  used to generate self shielding rasters to test the CRN basinwide code
+    ///  IT SHOULD NOT IN ANY WAY BE USED TO PREDICT SLOPE STABILITY
+    /// @param FilledElevation an elevation raster: needs to be filled or the code will crash!
+    /// @param intiationPixels and interger giving the number of pixels 
+    ///  that "initiates" a landslide. Lnadlides then form upslope of pixels meeting
+    ///  this threshold
+    /// @param MinPixels pixels upslope of the initiation point will not
+    ///  become part of the landslide unless they have at least this many contributing
+    ///  pixels
+    /// @param landslide_thickness The thickness of the landslides. For CRN purposes
+    ///   this should be in units g cm^-2
+    /// @author SMM
+    /// @date 12/11/2015
+    void NaiveLandslide(LSDRaster& FilledElevation, int initiationPixels,
+                                      int MinPixels, float landslide_thickness);
                                     
   protected:
   

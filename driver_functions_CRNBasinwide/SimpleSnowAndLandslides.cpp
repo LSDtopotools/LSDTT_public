@@ -147,12 +147,29 @@ int main (int nNumberofArgs,char *argv[])
   // now we go on to make a rudimetary landsliding raster
   // First get some sources
   int flow_threshold = 300;
-  LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
-  vector<int> sources = FlowInfo.get_sources_index_threshold(ContributingPixels, flow_threshold);
-  LSDRaster NaiveLanslide = FlowInfo.get_upslope_node_mask(sources);
-  
+  int minimum_pixels = 10;
+  float landslide_thickness = 60;  // this is in g cm^-2
+
+  LSDSoilHydroRaster LandslideRaster(filled_topo_test);
+  LandslideRaster.NaiveLandslide(filled_topo_test, flow_threshold,
+                                 minimum_pixels, landslide_thickness);
+
+  // get the contributing pixels
+  //LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+  //vector<int> sources = FlowInfo.get_sources_index_threshold(ContributingPixels, flow_threshold);
+
+  // get a value vector for the landslides
+  //vector<float> landslide_thicknesses;
+  //for (int i = 0; i< int(sources.size()); i++)
+  //{
+  //  landslide_thicknesses.push_back(landslide_thickness);
+  //}
+  // get the mask
+  //LSDRaster Mask = FlowInfo.get_upslope_node_mask(sources,landslide_thicknesses);
+
   string LS_ext = "_LS";
   string LS_out_name = path_name+DEM_name_prefix+LS_ext;
-  NaiveLanslide.write_raster(LS_out_name,DEM_bil_extension);  
+  //Mask.write_raster(LS_out_name,DEM_bil_extension); 
+  LandslideRaster.write_raster(LS_out_name,DEM_bil_extension);  
 }
   

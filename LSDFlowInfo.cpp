@@ -1746,7 +1746,8 @@ vector<int> LSDFlowInfo::get_upslope_nodes(int node_number_outlet)
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function takes a list of source nodes and creates a raster where 
-// the pixels have a value of 1 where there are upslope nodes and 0 otherwise
+// the pixels have a value of 1 where there are upslope nodes and nodata otherwise
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 LSDRaster LSDFlowInfo::get_upslope_node_mask(vector<int> source_nodes)
 {
   // initiate the data array
@@ -1784,6 +1785,57 @@ LSDRaster LSDFlowInfo::get_upslope_node_mask(vector<int> source_nodes)
   return temp_us;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function takes a list of source nodes and creates a raster where 
+// the pixels have a value of upslope_value
+// where there are upslope nodes and NoData otherwise
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LSDRaster LSDFlowInfo::get_upslope_node_mask(vector<int> source_nodes, vector<float> upslope_values)
+{
+  // initiate the data array
+  Array2D<float> this_raster(NRows,NCols,NoDataValue);
+  
+  if (source_nodes.size() == upslope_values.size())
+  {
+    // loop through the nodes, collecting upslope nodes
+    int n_nodes = int(source_nodes.size());
+    int this_node;
+    int us_node;
+    int curr_row,curr_col;
+    
+    // go through all the source nodes, find their upslope nodes
+    // and set the value of these nodes to 1.0 on the data array
+    for (int n = 0; n<n_nodes; n++)
+    {
+      this_node = source_nodes[n];
+      
+      // check if it is in the DEM
+      if (this_node < NDataNodes)
+      {
+        vector<int> upslope_nodes = get_upslope_nodes(this_node);
+        
+        int n_us_nodes =  int(upslope_nodes.size());
+        for(int us = 0; us<n_us_nodes; us++)
+        {
+          retrieve_current_row_and_col(upslope_nodes[us],curr_row,curr_col);
+          this_raster[curr_row][curr_col]= upslope_values[n];
+        }
+      }
+    }
+  }
+  else
+  {
+    cout << "The uplsope vlaues vector needs to be the same lengths as the sources vector!" << endl;
+    cout << "Returning an nodata raster" << endl;
+  }
+    
+  // now create the raster
+  LSDRaster temp_us(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,this_raster,GeoReferencingStrings);
+  return temp_us;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

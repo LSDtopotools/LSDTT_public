@@ -378,6 +378,16 @@ class LSDFlowInfo
   /// @date 11/11/2015
   LSDRaster get_upslope_node_mask(vector<int> source_nodes);
 
+  /// @brief This function takes a list of sources and then creates a raster
+  ///  with nodata values where points are not upslope of the sources
+  ///  and 1node_values if they are upslope
+  /// @param source_nodes a vector of node indicies into the sources
+  /// @param node_values a vector of the value of the nodes upslope of the sources
+  ///  this vector needs to be the same size as the source_nodes vector
+  /// @author SMM
+  /// @date 12/11/2015
+  LSDRaster get_upslope_node_mask(vector<int> source_nodes, vector<float> node_values);
+
   ///@brief This function accumulates some variable from an LSDRaster
   ///The most probably use is to accumulate precipitation in order
   ///to get a discharge raster
