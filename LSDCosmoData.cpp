@@ -1244,6 +1244,9 @@ void LSDCosmoData::BasinSpawnerMaster(string path, string prefix, int padding_pi
       cout << "Number of new DEMs is: " <<  NSpawn << endl;
       for(int ns = 0; ns<NSpawn; ns++)
       {
+        cout << "======================" << endl;
+        cout << "On spawn number " << ns << endl;
+        
         new_DEMs_vec.push_back(new_dem_names[ns]);
 
         // now check to see if there is a shielding raster
@@ -1257,29 +1260,50 @@ void LSDCosmoData::BasinSpawnerMaster(string path, string prefix, int padding_pi
         {
           // at least one of these rasters must be clipped. So load the basin
           cout << "I need to clip a snow or shielding raster!" << endl;
+          cout << "I am clipping from the raster: " << new_dem_names[ns] << endl;
           LSDRaster clipped_raster(new_dem_names[ns],DEM_bil_extension);
         
-          if(snow_fnames[ns] == "NULL")
+          cout << "First lets look for the snow raster. It is: " << snow_fnames[i] << endl;
+        
+          if(snow_fnames[i] == "NULL")
           {
             new_snow_vec.push_back(dtoa(this_ss_shielding[0]));
           }
           else
           {
+            cout << "There is a snow raster here, it is the file: " << snow_fnames[i] << endl;
+          
             // load the shielding dem
             LSDRaster Snow_Raster(snow_fnames[i],DEM_bil_extension);
+            
+            cout << "I loaded the snow raster" << endl;
+
+            //string DEMnewname = new_dem_names[ns]+"_hummahumma";
+
+            //clipped_raster.write_raster(DEMnewname,"bil");
             
             // clip this raster
             LSDRaster Snow_clip = Snow_Raster.clip_to_smaller_raster(clipped_raster);
             
+            cout << "I clipped that raster for you, buddy" << endl;
+            
             // save this raster
             Snow_clip.write_raster(new_dem_names[ns]+"_snowclip",DEM_bil_extension);
+            
+            cout << "I wrote that snow raster" << endl;
             
             // add the name to the list
             new_snow_vec.push_back(new_dem_names[ns]+"_snowclip");
             
+            cout << "The snow name has been pushed back" << endl;
+            
           }
-          if(self_fnames[ns] == "NULL")
+          
+          cout << "Now lets look for the self raster. It is: " << self_fnames[i] << endl;
+          
+          if(self_fnames[i] == "NULL")
           {
+            cout << "There isn't a self shielding raster, I'm pushing back a constant value" << endl;
             new_self_vec.push_back(dtoa(this_ss_shielding[1]));
           }
           else
@@ -1297,6 +1321,8 @@ void LSDCosmoData::BasinSpawnerMaster(string path, string prefix, int padding_pi
             new_self_vec.push_back(new_dem_names[ns]+"_selfclip");
           }
         }
+        cout << "I've finished clipping those rasters" << endl << endl;
+        
       }      // end if statement to see if there are shielding rasters
     
       int n_new_dems = new_DEMs_vec.size();
