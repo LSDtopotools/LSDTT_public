@@ -1,28 +1,31 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// PolyFitWindowSize.cpp
+// CurvatureRes.cpp
 //
-// Driver created to automate estimation of the corect window size to use for the
-// polyfit routine.
+// Driver created to generate curvature data at a range of input resolutions.
 //
-// Driver expects an unfilled DEM in the given directory of the given name and format.
+// Driver expects unfilled DEMs at a range of grid resolutions in the input directory 
 //
-// Run driver with the following arguments:
+// Run the driver with the following arguments:
 //
-// path to the DEM file with a trailing slash
-// DEM filename without the file extension or dot
+// path to the DEM files with a trailing slash
+// DEM filename Prefix
 // file extension without the dot
-
-// A usage example is:
-// nice ./PolyFitWindowSize.out /home/s0675405/DataStore/Final_Paper_Data/NC/ NC_DEM flt
+// Window size
+// Curvature type (3,4,5,6) which corresponds to total , plan, profile and  tan curvature, respectively.
 //
-// Output data is stored in the input directory in a file called <DEM_Name>_Window_Size_Data.txt
-// and can be plotted using WindowSize.py  found at https://github.com/sgrieve/GeneralAnalysis/
+// DEM naming convention should be <prefix>_<resolution>_DEM
+//
+// A usage example is:
+// nice ./CurvatureRes.out /home/s0675405/DataStore/Data/GM/ GM bil 5 3
+//
+// Output data is stored in the input directory in a file called <Prefix>_CurvatureResData_<curvature type>.txt
+// and can be plotted using CurvaturePlot.py  found at https://github.com/sgrieve/ResolutionPlotting/
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Stuart W.D. Grieve
 // University of Edinburgh
-// June 2015
+// November 2015
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 #include <iostream>
