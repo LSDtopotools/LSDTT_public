@@ -4989,5 +4989,73 @@ LSDIndexRaster LSDJunctionNetwork::remove_hillslope_patches_from_floodplain_mask
   return FloodplainPatches_final;  
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// Calculate relief relative to channel
+// This calculates relief of each pixel compared to the nearest channel pixel 
+// Uses a threshold stream order to avoid small tributaries
+//
+// FJC 17/11/15
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LSDRaster LSDJunctionNetwork::calculate_relief_from_channel(LSDRaster& ElevationRaster, LSDFlowInfo& FlowInfo, int threshold_SO)
+{
+  Array2D<float> ReliefArray(NRows, NCols, NoDataValue);
+  
+  for (int row = 0; row < NRows; row++)
+  {
+    for (int col = 0; col < NCols; col++)
+    {
+      float this_elevation = ElevationRaster.get_data_element(row,col);
+      if (this_elevation != NoDataValue)
+      {
+        //get the nearest channel pixel 
+        int CurrentNode = FlowInfo.retrieve_node_from_row_and_column(row,col);
+        int BaseLevel = FlowInfo.is_node_base_level(CurrentNode);
+        //if already at a channel then set relief to 0
+        if (StreamOrderArray[row][col] != NoDataValue && StreamOrderArray[row][col] >= threshold_SO
+        && BaseLevel == 0) 
+        {
+          ReliefArray[row][col] = 0;
+        }
+        //if not at a channel, move downstream
+        else
+        {
+          bool ReachedChannel = false;
+          while (ReachedChannel == false)
+          {
+            //get receiver information
+            int ReceiverNode, ReceiverRow, ReceiverCol;
+            FlowInfo.retrieve_receiver_information(CurrentNode, ReceiverNode, ReceiverRow, ReceiverCol); 
+            //if node is at baselevel then exit
+            if (CurrentNode == ReceiverNode)
+            {
+              ReachedChannel = true;
+            }          
+            //if receiver is a channel > threshold then get the relief
+            if (StreamOrderArray[ReceiverRow][ReceiverCol] != NoDataValue &&
+            StreamOrderArray[ReceiverRow][ReceiverCol] >= threshold_SO)
+            {
+              ReachedChannel = true;
+              float channel_elevation = ElevationRaster.get_data_element(ReceiverRow, ReceiverCol);
+              //get the relief of the pixel (Pixel Elevation - Channel Elevation)
+              ReliefArray[row][col] = (this_elevation - channel_elevation);
+            } 
+            else
+            {
+              //move downstream
+              CurrentNode = ReceiverNode;
+            }
+          }         
+        }
+      }         
+    }
+  }
+  
+  LSDRaster Relief(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ReliefArray, GeoReferencingStrings);
+  return Relief;
+}
+
 
 #endif
