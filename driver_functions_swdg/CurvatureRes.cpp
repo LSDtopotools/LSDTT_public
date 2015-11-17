@@ -12,7 +12,7 @@
 // DEM filename Prefix
 // file extension without the dot
 // Window size
-// Curvature type (3,4,5,6) which corresponds to total , plan, profile and  tan curvature, respectively.
+// Curvature type (3,4,5,6) which corresponds to total, plan, profile and tan curvature, respectively.
 //
 // DEM naming convention should be <prefix>_<resolution>_DEM
 //
