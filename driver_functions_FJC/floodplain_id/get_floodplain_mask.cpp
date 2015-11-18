@@ -1,17 +1,17 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// chi_map_sensitivity_analysis
+// get_floodplain_mask
 //
 // This program takes two arguments, the path name and the driver name
-// It then runs the chi analysis for the parameter space defined in the driver
-// file, allowing the user to examine the effects of changing m/n value,
-// number of target nodes, minimum segment length, sigma and target skip value.
-// At present it just spits out an output file for each iteration.
-// Now also kicks out a table with the parameters and best fit m/n.
+// It gets a mask of the floodplain from a DEM. User has the option to filter the DEM
+// using a Perona-Malik filter before getting the floodplain. After the inital floodplain mask
+// is found, patches identified that are not connected to the channel network are removed. 
+// Small holes are then removed from the floodplain mask.
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// 18/03/2014
-// David Milodowski
+// 26/10/15
+// Fiona J Clubb
 // University of Edinburgh
 //
 //
@@ -60,7 +60,6 @@ int main (int nNumberofArgs,char *argv[])
 	string DEM_ID;
 	string RASTER_NAME;
 	string input_path;
-	string output_path;
   string dem_ext = "_dem";
   string sources_ext = "_CH";
   string flt_extension = "flt";
@@ -69,28 +68,21 @@ int main (int nNumberofArgs,char *argv[])
   string Long_Swath_ext = "_swath_long";
   
   // initialise variables to be assigned from .driver file
-  int junction_number,NormaliseTransProfile,NormaliseLongProfile,FilterTopo;
-	float pruning_threshold = 1;
-	float HalfWidth,BinWidth,Minimum_Slope,histogram_bin_width,knickpoint_position;
+  int threshold_SO, FilterTopo, peak_distance;
+	float Minimum_Slope,bin_width_relief, bin_width_slope, peak_threshold;
   string temp;
                                                             
 	file_info_in >> temp >> DEM_ID
                >> temp >> RASTER_NAME
                >> temp >> input_path
-               >> temp >> output_path
-               >> temp >> junction_number
                >> temp >> Minimum_Slope
-               >> temp >> HalfWidth
-               >> temp >> BinWidth
-               >> temp >> NormaliseTransProfile
-               >> temp >> NormaliseLongProfile
                >> temp >> FilterTopo
-               >> temp >> histogram_bin_width
-               >> temp >> knickpoint_position;
+               >> temp >> threshold_SO
+               >> temp >> bin_width_relief
+               >> temp >> bin_width_slope
+               >> temp >> peak_threshold
+               >> temp >> peak_distance;
                    
-	string jn_name = itoa(junction_number);
-	string uscore = "_";
-	jn_name = uscore+jn_name;
 	file_info_in.close();
 
 	// set no flux boundary conditions
@@ -127,63 +119,67 @@ int main (int nNumberofArgs,char *argv[])
   cout << "\t Got sources!" << endl;
 	// now get the junction network
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
-  
-  string SO_ext = "_SO_DrEICH";
+  cout << "\t Got the channel network" << endl;
+  //string SO_ext = "_SO_DrEICH";
   string JI_ext = "_JI_DrEICH";
-  LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
+  //LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
  	LSDIndexRaster JIArray = ChanNetwork.JunctionIndexArray_to_LSDIndexRaster();
 
-	SOArray.write_raster((output_path+DEM_ID+SO_ext),flt_extension);
-  JIArray.write_raster((output_path+DEM_ID+JI_ext),flt_extension);
+	//SOArray.write_raster((output_path+DEM_ID+SO_ext),flt_extension);
+  JIArray.write_raster((input_path+DEM_ID+JI_ext),flt_extension);
   
   //load in the slope and relief rasters
-  LSDRaster Slope((input_path+DEM_ID+"_slope"), flt_extension);
-  LSDRaster Relief((input_path+DEM_ID+"_relief"), flt_extension);
+   //LSDRaster Slope((input_path+DEM_ID+"_slope"), flt_extension);
+   //LSDRaster Relief((input_path+DEM_ID+"_relief"), flt_extension);
+   
+   //calculate the channel relief
+   cout << "\t Getting relief relative to channel" << endl;
+   LSDRaster ChannelRelief = ChanNetwork.calculate_relief_from_channel(filled_topo_test, FlowInfo, threshold_SO);
+   string relief_name = "_channel_relief";
+   ChannelRelief.write_raster((input_path+DEM_ID+relief_name), flt_extension);
+   cout << "\t Got the relief!" << endl;
+     
+  //get the slope
+  cout << "\t Calculating slope..." << endl;
+  float surface_fitting_window_radius = 6;      // the radius of the fitting window in metres
+  vector<LSDRaster> surface_fitting;
+  LSDRaster Slope;
+  vector<int> raster_selection(8, 0);
+  raster_selection[1] = 1;             // this means you want the slope
+  surface_fitting = filled_topo_test.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
+  Slope = surface_fitting[1];
+  cout << "\t Done!" << endl;
+  string slope_name = "_slope";
+  Slope.write_raster((input_path+DEM_ID+slope_name), flt_extension);
+
+  //get the relief threshold
+  string relief_fname = DEM_ID+"_histogram_relief.txt";
+  float relief_threshold = ChannelRelief.get_threshold_for_floodplain(bin_width_relief, peak_threshold, peak_distance, relief_fname);
   
-//   //get the relief
-//   cout << "\t Calculating relief..." << endl;
-//   float kernelWidth = 100;
-//   int kernelType = 1;
-//   LSDRaster Relief = topo_test.calculate_relief(kernelWidth, kernelType);
-//   cout << "\t Done!" << endl;
-//   string relief_name = "_relief";
-//   Relief.write_raster((output_path+DEM_ID+relief_name), flt_extension);
-//   
-//   //get the slope
-//   cout << "\t Calculating slope..." << endl;
-//   float surface_fitting_window_radius = 6;      // the radius of the fitting window in metres
-//   vector<LSDRaster> surface_fitting;
-//   LSDRaster Slope;
-//   vector<int> raster_selection(8, 0);
-//   raster_selection[1] = 1;             // this means you want the slope
-//   surface_fitting = filled_topo_test.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
-//   Slope = surface_fitting[1];
-//   cout << "\t Done!" << endl;
-//   string slope_name = "_slope";
-//   Slope.write_raster((output_path+DEM_ID+slope_name), flt_extension);
-  
+  //get the slope threshold
+  string slope_fname = DEM_ID+"_histogram_slope.txt";
+  float slope_threshold = Slope.get_threshold_for_floodplain(bin_width_slope, peak_threshold, peak_distance, slope_fname);
+
   //get the potential floodplain mask
   cout << "\t Getting the floodplain mask" << endl;
-  float relief_threshold = 5;
-  float slope_threshold = 0.5;
-  LSDIndexRaster FloodplainRaster_temp = topo_test.get_potential_floodplain_patches(Relief, Slope, relief_threshold, slope_threshold);
+  LSDIndexRaster FloodplainRaster_temp = topo_test.get_potential_floodplain_patches(ChannelRelief, Slope, relief_threshold, slope_threshold);
   
   cout << "\t Connected components" << endl;
   LSDIndexRaster ConnectedComponents = FloodplainRaster_temp.ConnectedComponents();
   string CC_name = "_CC_filt";
-  ConnectedComponents.write_raster((output_path+DEM_ID+CC_name), flt_extension); 
+  ConnectedComponents.write_raster((input_path+DEM_ID+CC_name), flt_extension); 
   
   cout << "\t Removing hillslope patches" << endl;
   LSDIndexRaster FloodplainRaster_modified = ChanNetwork.remove_hillslope_patches_from_floodplain_mask(ConnectedComponents);
   
   cout << "\t Removing holes" << endl;
-  int window_radius = 50;
+  int window_radius = 60;
   LSDIndexRaster FloodplainRaster_noholes = FloodplainRaster_modified.remove_holes_in_patches(window_radius);
-  
-  int smaller_radius = 10;
-  LSDIndexRaster FloodplainRaster_final = FloodplainRaster_noholes.remove_holes_in_patches(smaller_radius);
+  LSDIndexRaster FloodplainRaster_final = FloodplainRaster_noholes.remove_holes_in_patches(window_radius);
+  LSDIndexRaster FloodplainRaster_superfinal = FloodplainRaster_final.remove_checkerboard_pattern();
     
   cout << "\t Done!" << endl;
-  string FP_name = "_FP_filt";
-  FloodplainRaster_final.write_raster((output_path+DEM_ID+FP_name), flt_extension); 
+  
+  string FP_name2 = "_FP_final";
+  FloodplainRaster_superfinal.write_raster((input_path+DEM_ID+FP_name2), flt_extension);
 }
