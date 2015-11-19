@@ -1,7 +1,7 @@
 CC = g++
-CFLAGS= -c -Wall -Og -g -std=gnu++11
-OFLAGS = -Wall -Og -g -std=gnu++11
-LDFLAGS= -Wall
+CFLAGS= -c -Wreturn-type -Og -g -std=gnu++11
+OFLAGS = -Wreturn-type -Og -g -std=gnu++11
+LDFLAGS= -Wreturn-type
 SOURCES = catchmentmodel_driver.cpp \
 			../LSDCatchmentModel.cpp \
 			../LSDRaster.cpp \
@@ -22,3 +22,7 @@ $(EXEC): $(OBJ)
 
 %.o: %.cpp
 	$(CC) $(CFLAGS) $< -o $@
+
+
+clean:
+	rm -f ../$(OBJ) catchmentmodel_driver.o
