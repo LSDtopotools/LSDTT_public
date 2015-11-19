@@ -44,11 +44,23 @@ int main(int argc, char *argv[])
 		// Remember: argc[0] is the program name that you just typed in to the terminal.
 		std::cout << "The pathname is: " << pname << " and the paramter file is: " << pfname << std::endl;
 		
-		LSDCatchmentModel modelrun(pname, pfname);
-		//LSDCatchmentModel modelrun;
-		std::cout << "The parameters have been successfully ingested and the model initialised" << std::endl;
+		LSDCatchmentModel modelrun(pname, pfname); // This create function calls 
+    // initialise_values() as well is done by this create.
+		std::cout << "The user-defined parameters have been ingested from the param file." << std::endl;
+    
+    modelrun.initialise_model_domain_extents();
+    std::cout << "The model domain has been set from reading the elevation DEM header." << std::endl;
+    
+    modelrun.initialise_arrays(); // could be part of create() ??
+    std::cout << "The model field arrays have been initialised and zeroed where necessary." << std::endl;
+    
 		modelrun.load_data(); // Loads data from external files (DEM, hydroindex etc.)
-		modelrun.initialise_arrays(); // could be part of create() ??
+    std::cout << "The terrain array and supplementary input data has been loaded." << std::endl;
+    
+    //modelrun.print_rainfall_data(); // Prints the rainfall data for checking
+  
+    
+    
 		modelrun.run_components();
 	}
 	
