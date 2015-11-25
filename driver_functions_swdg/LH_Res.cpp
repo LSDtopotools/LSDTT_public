@@ -124,7 +124,7 @@ int main (int nNumberofArgs,char *argv[])
   	LSDFlowInfo FlowInfo(BoundaryConditions,FilledDEM);
 
     //get stream net from channel heads
-    vector<int> sources = FlowInfo.Ingest_Channel_Heads((Filename+"_DEM_CH"), "csv", 2); //this filename may be wrong
+    vector<int> sources = FlowInfo.Ingest_Channel_Heads((Path+Prefix+"_CH"), "csv", 2);
     LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
     LSDIndexRaster StreamNetwork = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
 
@@ -156,9 +156,15 @@ int main (int nNumberofArgs,char *argv[])
     LSDRaster HFR_LH = hilltops.LSDRasterTemplate(HFR_Arrays[1]);
     LSDRaster relief = hilltops.LSDRasterTemplate(HFR_Arrays[3]);
 
-    //Filter Relief and LH data to remove any values < 2, as in Grieve et al (2015)
-    LSDRaster LH = HFR_LH.RemoveBelow(2.0);
-    LSDRaster Relief = relief.RemoveBelow(2.0);
+    //Filter Relief and LH data to remove any values < 2 pixels, as in Grieve et al (2015)
+    LSDRaster LH1 = HFR_LH.RemoveBelow(2.0*Resolutions[a]);
+    LSDRaster Relief1 = relief.RemoveBelow(2.0*Resolutions[a]);
+
+    //Filter Relief and LH data to remove any values > 10000
+    //These are created due to using 1m channel heads on low res data, and inadvertantly 
+    //sampling nodata values, which gives us massive relief values
+    LSDRaster LH = LH1.RemoveAbove(10000);
+    LSDRaster Relief = Relief1.RemoveAbove(10000);
 
     //go through the lh raster and get every value into a 1D vector
     vector<float> LH_vec = Flatten_Without_Nodata(LH.get_RasterData(), LH.get_NoDataValue());
