@@ -2727,11 +2727,173 @@ void LSDFlowInfo::D8_Trace(int i, int j, LSDIndexRaster StreamNetwork, float& le
 
     //update length
     if (retrieve_flow_length_code_of_node(reciever_node) == 1){ length += DataResolution; }
-    else if (retrieve_flow_length_code_of_node(reciever_node) == 1){ length += (DataResolution * root_2); }
+    else if (retrieve_flow_length_code_of_node(reciever_node) == 2){ length += (DataResolution * root_2); }
 
     reciever_node = node;
 
   }
+
+}
+
+// Move the location of the channel head downslope by a user defined distance.
+// Returns A vector of node indexes pointing to the moved heads.
+// SWDG 27/11/15
+vector<int> LSDFlowInfo::MoveChannelHeadDown(vector<int> Sources, float MoveDist){
+
+  float root_2 = 1.4142135623;
+
+  float length;
+
+  vector<int> DownSlopeSources;
+
+  int receiver_row;
+  int receiver_col;
+  int node;
+
+  //for loop goes here to iterate over the Sources vector
+  for(int q=0; q<int(Sources.size());++q){
+    length = 0;
+
+    int reciever_node = Sources[q];
+
+    while (length < MoveDist){
+
+      retrieve_receiver_information(reciever_node, node, receiver_row, receiver_col);
+
+      //update length
+      if (retrieve_flow_length_code_of_node(reciever_node) == 1){ length += DataResolution; }
+      else if (retrieve_flow_length_code_of_node(reciever_node) == 2){ length += (DataResolution * root_2); }
+
+      reciever_node = node;
+
+    }
+
+    DownSlopeSources.push_back(reciever_node);
+
+  }
+
+  //end of for loop
+
+  return DownSlopeSources;
+
+}
+
+// Move the location of the channel head upslope by a user defined distance.
+// Returns A vector of node indexes pointing to the moved heads.
+// SWDG 27/11/15
+vector<int> LSDFlowInfo::MoveChannelHeadUp(vector<int> Sources, float MoveDist, LSDRaster DEM){
+
+  float root_2 = 1.4142135623;
+
+  float length;
+
+  Array2D<float> Elevation = DEM.get_RasterData();
+
+  vector<int> UpSlopeSources;
+
+  int new_node;
+
+  int new_i;
+  int new_j;
+
+  //for loop goes here to iterate over the Sources vector
+  for(int q=0; q<int(Sources.size());++q){
+    length = 0;
+
+    int i;
+    int j;
+
+    retrieve_current_row_and_col(Sources[q], i, j);
+
+    while (length < MoveDist){
+
+      float currentElevation;
+      int Direction; //1 is cardinal 2 is diagonal
+
+      //find the neighbour with the maximum Elevation
+
+      currentElevation = Elevation[i][j];
+
+      //top left
+      if(currentElevation < Elevation[i-1][j-1]){
+        currentElevation = Elevation[i-1][j-1];
+        new_i = i-1;
+        new_j = j-1;
+        Direction = 2;
+      }
+      //top
+      if(currentElevation < Elevation[i][j-1]){
+        currentElevation = Elevation[i][j-1];
+        new_i = i;
+        new_j = j-1;
+        Direction = 1;
+      }
+      //top right
+      if(currentElevation < Elevation[i+1][j-1]){
+        currentElevation = Elevation[i+1][j-1];
+        new_i = i+1;
+        new_j = j-1;
+        Direction = 2;
+      }
+      //right
+      if(currentElevation < Elevation[i+1][j]){
+        currentElevation = Elevation[i+1][j];
+        new_i = i+1;
+        new_j = j;
+        Direction = 1;
+      }
+      //botom right
+      if(currentElevation < Elevation[i+1][j+1]){
+        currentElevation = Elevation[i+1][j+1];
+        new_i = i+1;
+        new_j = j+1;
+        Direction = 2;
+      }
+      //bottom
+      if(currentElevation < Elevation[i][j+1]){
+        currentElevation = Elevation[i][j+1];
+        new_i = i;
+        new_j = j+1;
+        Direction = 1;
+      }
+      //bottom left
+      if(currentElevation < Elevation[i-1][j+1]){
+        currentElevation = Elevation[i-1][j+1];
+        new_i = i-1;
+        new_j = j+1;
+        Direction = 2;
+      }
+      //left
+      if(currentElevation < Elevation[i-1][j]){
+        currentElevation = Elevation[i-1][j];
+        new_i = i-1;
+        new_j = j;
+        Direction = 1;
+      }
+      //test that we have not hit the ridge
+      //this will exit the loop and add the final visited
+      //node to the upper soureces vector
+      if (currentElevation == Elevation[i][j]){
+        break;
+      }
+
+      //update length
+      if (Direction == 1){ length += DataResolution; }
+      else if (Direction == 2){ length += (DataResolution * root_2); }
+
+      i = new_i;
+      j = new_j;
+
+    }
+    new_node = retrieve_node_from_row_and_column(i,j);
+
+    UpSlopeSources.push_back(new_node);
+
+  }
+
+  //end of for loop
+
+  return UpSlopeSources;
 
 }
 

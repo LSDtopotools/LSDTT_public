@@ -632,6 +632,23 @@ class LSDFlowInfo
   void D8_Trace(int i, int j, LSDIndexRaster StreamNetwork, float& length, 
                    int& receiver_row, int& receiver_col, Array2D<int>& Path);
 
+  /// @brief Move the location of the channel head downslope by a user defined distance.
+  /// @param Sources a vector of node indexes of the channel heads to be moved.
+  /// @param MoveDist The distance in spatial units the head is to be moved.
+  /// @return A vector of node indexes pointing to the moved heads.
+  /// @author SWDG
+  /// @date 27/11/15
+  vector<int> MoveChannelHeadDown(vector<int> Sources, float MoveDist);
+
+  /// @brief Move the location of the channel head upslope by a user defined distance.
+  /// @param Sources a vector of node indexes of the channel heads to be moved.
+  /// @param MoveDist The distance in spatial units the head is to be moved.
+  /// @param DEM the elevation data.
+  /// @return A vector of node indexes pointing to the moved heads.
+  /// @author SWDG
+  /// @date 27/11/15
+  vector<int> MoveChannelHeadUp(vector<int> Sources, float MoveDist, LSDRaster DEM);
+
   void HilltopFlowRoutingOriginal(LSDRaster Elevation, LSDRaster Hilltops, LSDRaster Slope, LSDRaster Aspect, LSDIndexRaster StreamNetwork);
   
   /// @brief Hilltop flow routing.
