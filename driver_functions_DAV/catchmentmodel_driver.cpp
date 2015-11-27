@@ -45,17 +45,24 @@ int main(int argc, char *argv[])
 		std::cout << "The pathname is: " << pname << " and the paramter file is: " << pfname << std::endl;
 		
 		LSDCatchmentModel modelrun(pname, pfname); // This create function calls 
-    // initialise_values() as well is done by this create.
+    // initialise_variables() as well as creating an instance of LSDCatchmentModel called 'modelrun'
 		std::cout << "The user-defined parameters have been ingested from the param file." << std::endl;
     
     modelrun.initialise_model_domain_extents();
     std::cout << "The model domain has been set from reading the elevation DEM header." << std::endl;
     
     modelrun.initialise_arrays(); // could be part of create() ??
+    // also calls zero_values()
     std::cout << "The model field arrays have been initialised and zeroed where necessary." << std::endl;
     
 		modelrun.load_data(); // Loads data from external files (DEM, hydroindex etc.)
     std::cout << "The terrain array and supplementary input data has been loaded." << std::endl;
+    
+    modelrun.check_DEM_edge_condition();
+    std::cout << "Checking edge cells for suitable catchment outlet point..." << std::endl;
+    // This function checks that there is at least one pixel on the edge of the
+    // model domain for water/sediment to flow out of. (i.e. DEM cannot 
+    // be surrounded entrely by NoData values.
     
     //modelrun.print_rainfall_data(); // Prints the rainfall data for checking
   

@@ -7,21 +7,24 @@ dem_read_extension:	.asc
 dem_write_extension:    .asc
 read_path:	./
 write_path:	./
-read_fname:	upper_swale_dem50
-write_fname:	swale_output
+read_fname:	boscastle5m_bedrock_fill
+write_fname:	bos_output
 save_interval: 10
 
 # Supplementary Files
 hydroindex_file: #bos5m_hydroindex.asc
-rainfall_data_file: rain1.txt
+rainfall_data_file: boscastle_rain_uniform.txt
 grain_data_file: 
 bedrock_data_file:
 
+# Options
+bedrock_layer_on: no
+
 # Numerical    
 min_time_step:    1
-max_time_step:		1000
+max_time_step:		3600
 run_time_start:		1
-max_run_duration:	100
+max_run_duration:	47
 memory_limit:    	1
 
 # Sediment
@@ -30,7 +33,7 @@ max_tau_velocity:	    127
 max_erode_limit:      0.05
 active_layer_thickness: 0.1
 recirculate_proportion: 1
-lateral_erosion_on:	  yes	#no
+lateral_erosion_on:	  yes
 lateral_ero_rate:     20
 edge_filter_passes:   100
 cells_shift_lat:      1

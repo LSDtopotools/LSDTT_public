@@ -9,7 +9,7 @@ read_path:	./
 write_path:	./
 read_fname:	boscastle5m_bedrock_fill
 write_fname:	boscastle_output
-save_interval: 10
+timeseries_save_interval: 60
 
 # Supplementary Files
 hydroindex_file: #bos5m_hydroindex.asc
@@ -30,7 +30,7 @@ max_tau_velocity:	    127
 max_erode_limit:      0.05
 active_layer_thickness: 0.1
 recirculate_proportion: 1
-lateral_erosion_on:	  yes	#no
+lateral_erosion_on:	  no
 lateral_ero_rate:     20
 edge_filter_passes:   100
 cells_shift_lat:      1
@@ -38,6 +38,7 @@ max_diff_cross_chan:  0.001
 
 # Hydrology
 m_value:              0.01
+rainfall_data_on:			yes
 rain_data_time_step:  60
 spatial_var_rain:		  no
 allow_in_out_diff:		no
