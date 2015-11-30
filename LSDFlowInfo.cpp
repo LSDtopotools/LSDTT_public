@@ -2874,6 +2874,7 @@ vector<int> LSDFlowInfo::MoveChannelHeadUp(vector<int> Sources, float MoveDist, 
       //this will exit the loop and add the final visited
       //node to the upper soureces vector
       if (currentElevation == Elevation[i][j]){
+        cout << "Warning, unable to move channel head " << Sources[q] << " up by user defined distance" << endl;
         break;
       }
 
