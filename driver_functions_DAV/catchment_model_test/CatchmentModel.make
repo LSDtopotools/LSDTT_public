@@ -1,6 +1,6 @@
 CC = g++
-CFLAGS= -c -Wreturn-type -Og -g -std=gnu++11
-OFLAGS = -Wreturn-type -Og -g -std=gnu++11
+CFLAGS= -c -Wreturn-type -O0 -g3 -std=gnu++11 -D_GLIBCXX_DEBUG
+OFLAGS = -Wreturn-type -O0 -g3 -std=gnu++11 -D_GLIBCXX_DEBUG
 LDFLAGS= -Wreturn-type
 SOURCES = ../catchmentmodel_driver.cpp \
 			../../LSDCatchmentModel.cpp \
