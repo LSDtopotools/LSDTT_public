@@ -65,9 +65,7 @@ int main(int argc, char *argv[])
     // be surrounded entrely by NoData values.
     
     //modelrun.print_rainfall_data(); // Prints the rainfall data for checking
-  
-    
-    
+
 		modelrun.run_components();
 	}
 	

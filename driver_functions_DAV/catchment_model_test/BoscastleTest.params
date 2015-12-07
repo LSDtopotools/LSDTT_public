@@ -43,7 +43,7 @@ rain_data_time_step:  60
 spatial_var_rain:		  no
 allow_in_out_diff:		no
 min_Q_for_depth:	    0.05
-water_depth_erosion_threshold:  0.01
+water_depth_erosion_threshold: 0.01
 slope_on_edge_cell:   0.001
 evaporation_rate:     0.0
 courant_number:       0.5
@@ -64,7 +64,11 @@ soil_erosion_rate:    0.0
 soil_j_mean_depends:	yes	#no
 call_muddpile_model:	yes	#no
 
-
+# Write Output Rasters
+raster_output_interval: 500
+write_waterdepth_file:       yes
+waterdepth_outfile_name: waterDepth
+write_elev_file:      yes
 
 
 
