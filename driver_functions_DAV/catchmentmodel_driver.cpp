@@ -58,8 +58,8 @@ int main(int argc, char *argv[])
 		modelrun.load_data(); // Loads data from external files (DEM, hydroindex etc.)
     std::cout << "The terrain array and supplementary input data has been loaded." << std::endl;
     
-    modelrun.check_DEM_edge_condition();
-    std::cout << "Checking edge cells for suitable catchment outlet point..." << std::endl;
+    //modelrun.check_DEM_edge_condition();
+    //std::cout << "Checking edge cells for suitable catchment outlet point..." << std::endl;
     // This function checks that there is at least one pixel on the edge of the
     // model domain for water/sediment to flow out of. (i.e. DEM cannot 
     // be surrounded entrely by NoData values.

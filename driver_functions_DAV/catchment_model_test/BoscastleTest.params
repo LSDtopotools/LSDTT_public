@@ -27,7 +27,6 @@ memory_limit:    	1
 # Sediment
 transport_law:		    wilcock  #einstein
 max_tau_velocity:	    127
-max_erode_limit:      0.02
 active_layer_thickness: 0.1
 recirculate_proportion: 1
 lateral_erosion_on:	  no
@@ -35,6 +34,7 @@ lateral_ero_rate:     20
 edge_filter_passes:   100
 cells_shift_lat:      1
 max_diff_cross_chan:  0.001
+erode_limit:          0.01         
 
 # Hydrology
 m_value:              0.01
@@ -46,7 +46,7 @@ min_Q_for_depth:	    0.05
 water_depth_erosion_threshold:  0.01
 slope_on_edge_cell:   0.001
 evaporation_rate:     0.0
-courant_number:       0.3
+courant_number:       0.5
 froude_num_limit:     0.8
 mannings_n:           0.04
 hflow_threshold:      0.00001
