@@ -329,7 +329,7 @@ class LSDFlowInfo
   /// @brief Method to ingest the channel heads raster generated using channel_heads_driver.cpp
   /// into a vector of source nodes so that an LSDJunctionNetwork can be created easily 
   /// from them.  **UPDATE** if the extension is a csv file it reads the node indices directly
-  ///
+  /// **UPDATE, FJC 20/01/16 - changed default input switch to 2**
   /// @details Assumes the FlowInfo object has the same dimensions as the channel heads raster.
   /// @param filename of the channel heads raster.
   /// @param extension of the channel heads raster.
@@ -337,7 +337,7 @@ class LSDFlowInfo
   /// @return Vector of source nodes.
   /// @author SWDG updated SMM updated DTM
   /// @date 6/6/14 Happy 3rd birthday Skye!! 
-  vector<int> Ingest_Channel_Heads(string filename, string extension, int input_switch = 0);
+  vector<int> Ingest_Channel_Heads(string filename, string extension, int input_switch = 2);
 
   // functions for getting flow, discharge, sediment flux, etc
 
