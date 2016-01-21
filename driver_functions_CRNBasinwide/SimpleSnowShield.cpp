@@ -70,14 +70,11 @@ int main (int nNumberofArgs,char *argv[])
     cout << "=========================================================" << endl;
     cout << "|| Welcome to the Basinwide cosmogenic analysis tool!  ||" << endl;
     cout << "=========================================================" << endl;
-    cout << "This program requires three inputs: " << endl;
+    cout << "This program requires two inputs: " << endl;
     cout << "* First the path to DEM files." << endl;
     cout << "   The path must have a slash at the end." << endl;
     cout << "  (Either \\ or / depending on your operating system.)" << endl;
     cout << "* Second the prefix of the DEM." << endl;
-    cout << "* The third is a method flag. 0 does things without error analysis or muons," << endl; 
-    cout << "  1 is a full analysis without spawned basins." << endl;
-    cout << "  2 is a full analysis with spawned basins." << endl;
     cout << "---------------------------------------------------------" << endl;
     cout << "Then the command line argument will be: " << endl;
     cout << "In linux:" << endl;
@@ -88,6 +85,12 @@ int main (int nNumberofArgs,char *argv[])
     cout << "For more documentation on cosmo data file format, " << endl;
     cout << " see readme and online documentation." << endl;
     cout << "=========================================================" << endl;
+    cout << " You WILL NEED a snow parameter file. " << endl;
+    cout << "This file will have the same prefix as the DEM but the extension .sparam" << endl;
+    cout << "It contains a method on the first line:" << endl;
+    cout << "Richards OR Bilinear are the options" << endl;
+    cout << "and the parameters for these two snow shielding functions" << endl;
+    cout << "=========================================================" << endl;
     exit(EXIT_SUCCESS);
   }
 
@@ -97,6 +100,49 @@ int main (int nNumberofArgs,char *argv[])
   
   string DEM_f_name = path_name+DEM_name_prefix;
   string DEM_bil_extension = "bil";
+  
+  string Param_f_name = path_name+DEM_name_prefix+".sparam";
+  
+  // load the snow parameters
+  ifstream snowparamf;
+  snowparamf.open(Param_f_name.c_str());
+  string method_name;
+  float SlopeAscend;
+  float SlopeDescend;
+  float PeakElevation;
+  float PeakSnowpack;
+  
+  float v;
+  float lambda;
+  float MaximumSlope;
+  
+  // get the method
+  snowparamf >> method_name;
+  
+  // get rid of any control characters
+  method_name = RemoveControlCharacters(string toRemove);
+  
+  if (method_name == "Bilinear");
+  {
+    snowparamf >> SlopeAscend;
+    snowparamf >> SlopeDescend;
+    snowparamf >> PeakElevation;
+    snowparamf >> PeakSnowpack;
+  }
+  else if (method_name == "Richards");
+  {
+    snowparamf >> v;
+    snowparamf >>  lambda;
+    snowparamf >>  MaximumSlope;  
+  }
+  else
+  {
+    cout << "You have not selected a valid method. Options are Bilinear and Richars" << endl;
+    cout << "You selected " << method_name << endl;
+    cout << "These names are case sensitive, and make sure there are no spaces on the line." << endl;
+    exit(EXIT_SUCCESS);
+  }
+  
   
   // set no flux boundary conditions
   vector<string> boundary_conditions(4);
@@ -122,54 +168,22 @@ int main (int nNumberofArgs,char *argv[])
   // now make a snow raster
   LSDSoilHydroRaster SnowRaster(filled_topo_test);
   
-  // update it with a bilinear snow function
-  float SlopeAscend = 0.05;
-  float SlopeDescend = -0.1;
-  float PeakElevation = 3000;
-  float PeakSnowpack = 80;
-  SnowRaster.SetSnowEffDepthBilinear(SlopeAscend, SlopeDescend, PeakElevation, 
-                                     PeakSnowpack, filled_topo_test);
-                                 
   string snow_ext = "_SnowBL";
   string snow_out_name = path_name+DEM_name_prefix+snow_ext;
-  SnowRaster.write_raster(snow_out_name,DEM_bil_extension);
   
-  float v = 0.01;
-  float lambda = 2000;
-  float MaximumSlope = 0.1;
-  SnowRaster.SetSnowEffDepthRichards(PeakSnowpack, MaximumSlope, v, lambda, filled_topo_test);
- 
-  string snow_ext2 = "_SnowBL2";
-  snow_out_name = path_name+DEM_name_prefix+snow_ext2;
-  SnowRaster.write_raster(snow_out_name,DEM_bil_extension);
+  // update it with a bilinear snow function
+  if (method_name == "Bilinear");
+  {
+    SnowRaster.SetSnowEffDepthBilinear(SlopeAscend, SlopeDescend, PeakElevation, 
+                                     PeakSnowpack, filled_topo_test);
+                                 
+    SnowRaster.write_raster(snow_out_name,DEM_bil_extension);
+  }
   
-  
-  // now we go on to make a rudimetary landsliding raster
-  // First get some sources
-  int flow_threshold = 300;
-  int minimum_pixels = 10;
-  float landslide_thickness = 60;  // this is in g cm^-2
-
-  LSDSoilHydroRaster LandslideRaster(filled_topo_test);
-  LandslideRaster.NaiveLandslide(filled_topo_test, flow_threshold,
-                                 minimum_pixels, landslide_thickness);
-
-  // get the contributing pixels
-  //LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
-  //vector<int> sources = FlowInfo.get_sources_index_threshold(ContributingPixels, flow_threshold);
-
-  // get a value vector for the landslides
-  //vector<float> landslide_thicknesses;
-  //for (int i = 0; i< int(sources.size()); i++)
-  //{
-  //  landslide_thicknesses.push_back(landslide_thickness);
-  //}
-  // get the mask
-  //LSDRaster Mask = FlowInfo.get_upslope_node_mask(sources,landslide_thicknesses);
-
-  string LS_ext = "_LS";
-  string LS_out_name = path_name+DEM_name_prefix+LS_ext;
-  //Mask.write_raster(LS_out_name,DEM_bil_extension); 
-  LandslideRaster.write_raster(LS_out_name,DEM_bil_extension);  
+  if (mathod_name == "Richards")
+  {
+    SnowRaster.SetSnowEffDepthRichards(PeakSnowpack, MaximumSlope, v, lambda, filled_topo_test);
+    SnowRaster.write_raster(snow_out_name,DEM_bil_extension);
+  }
 }
   
