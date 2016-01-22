@@ -1538,13 +1538,12 @@ void LSDCosmoBasin::populate_snow_and_self_eff_depth_vectors(LSDFlowInfo& FlowIn
 
   for (int q = 0; q < int(BasinNodes.size()); ++q)
   {
-    
+    // get the row and column of the node
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], row, col);
+
     //exclude NDV from average
     if (snow_eff_depth.get_data_element(row,col) != NoDataValue)
     {
-      // get the row and column of the node
-      FlowInfo.retrieve_current_row_and_col(BasinNodes[q], row, col);
-    
       // get the snow and self shielding
       this_eff_snow_depth = double(snow_eff_depth.get_data_element(row,col));
       this_eff_self_depth = double(self_eff_depth.get_data_element(row,col));
@@ -1584,13 +1583,12 @@ void LSDCosmoBasin::populate_snow_and_self_eff_depth_vectors(LSDFlowInfo& FlowIn
   // now loop through the other vector adding elements
   for (int q = 0; q < int(BasinNodes.size()); ++q)
   {
-    
+    // get the row and column of the node
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], row, col);
+
     //exclude NDV from average
     if (self_eff_depth.get_data_element(row,col) != NoDataValue)
     {
-      // get the row and column of the node
-      FlowInfo.retrieve_current_row_and_col(BasinNodes[q], row, col);
-    
       // get the snow and self shielding
       this_eff_self_depth = double(self_eff_depth.get_data_element(row,col));
     
@@ -1613,6 +1611,8 @@ void LSDCosmoBasin::populate_snow_and_self_eff_depth_vectors(LSDFlowInfo& FlowIn
                                               LSDRaster& snow_eff_depth, 
                                               double self_eff_depth)
 {
+
+  cout << "I am getting effective depths, I have a snow raster but not a self raster" << endl;
   int row,col;
   
   // the effective depths at individual nodes
@@ -1628,6 +1628,8 @@ void LSDCosmoBasin::populate_snow_and_self_eff_depth_vectors(LSDFlowInfo& FlowIn
   // now loop through the other vector adding elements
   for (int q = 0; q < int(BasinNodes.size()); ++q)
   {
+    // get the row and column of the node
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], row, col);
     
     //exclude NDV from average
     if (snow_eff_depth.get_data_element(row,col) != NoDataValue)

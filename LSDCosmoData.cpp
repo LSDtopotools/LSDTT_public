@@ -2592,26 +2592,34 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
       {
         if(have_self_raster)
         {
+          cout << "Getting effective depths" << endl;
           thisBasin.populate_snow_and_self_eff_depth_vectors(FlowInfo, 
                                 Snow_shielding, Self_shielding);
+          cout << "Done with effective depths" << endl;                       
         }
         else
         {
+          cout << "Getting effective depths" << endl;
           thisBasin.populate_snow_and_self_eff_depth_vectors(FlowInfo, 
-                                Snow_shielding, constant_self_depth);        
+                                Snow_shielding, constant_self_depth);
+          cout << "Done with effective depths" << endl;                               
         }
       }
       else
       {
         if(have_self_raster)
         {
+          cout << "Getting effective depths" << endl;
           thisBasin.populate_snow_and_self_eff_depth_vectors(FlowInfo, 
-                                constant_snow_depth, Self_shielding);      
+                                constant_snow_depth, Self_shielding);
+          cout << "Done with effective depths" << endl;                             
         }
         else
         {
+          cout << "Getting effective depths" << endl;
           thisBasin.populate_snow_and_self_eff_depth_vectors(constant_snow_depth, 
                                              constant_self_depth);
+          cout << "Done with effective depths" << endl;                                    
         }
       }
 
