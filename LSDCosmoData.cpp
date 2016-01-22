@@ -2812,7 +2812,7 @@ void LSDCosmoData::full_shielding_raster_printer(vector<string> Raster_names,
     double constant_self_depth = 0;
     if (Raster_names[1] != "NULL")
     {
-      cout << "LSDCosmoData, line 971: Loading the snow sheidling raster, " 
+      cout << "LSDCosmoData, line 971: Loading the snow shielding raster, " 
            << Raster_names[1] << ".bil" <<  endl;
       LSDRaster Snow_shield(Raster_names[1], DEM_bil_extension);
       Snow_shielding = Snow_shield;
@@ -2824,9 +2824,9 @@ void LSDCosmoData::full_shielding_raster_printer(vector<string> Raster_names,
       have_snow_raster = false;
       constant_snow_depth = CRN_params[0];
     }
-    if (Raster_names[1] != "NULL")
+    if (Raster_names[2] != "NULL")
      {
-      cout << "LSDCosmoData, line 977: Loading the self sheidling raster, " 
+      cout << "LSDCosmoData, line 977: Loading the self shielding raster, " 
            << Raster_names[2] << ".bil" <<  endl;
       LSDRaster Self_shield(Raster_names[2], DEM_bil_extension);
       Self_shielding = Self_shield;
@@ -3069,9 +3069,11 @@ void LSDCosmoData::print_results()
   // open the file
   ofstream results_out;
   results_out.open(crn_results_fname.c_str());
+  results_out.precision(8);
   
   ofstream CRONUS_out;
   CRONUS_out.open(CRONUS_results_fname.c_str());
+  CRONUS_out.precision(8);
   
   // a message for cronus file
   CRONUS_out << "->IMPORTANT nuclide concentrations are not original!" << endl
