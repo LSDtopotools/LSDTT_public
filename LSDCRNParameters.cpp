@@ -1097,7 +1097,7 @@ void LSDCRNParameters::set_Braucher_parameters()
   lambda_10Be = 500e-9;    // in yr-1
   lambda_26Al = 980e-9;    // in yr-1
   lambda_14C = 121e-6;     // in yr-1
-  lambda_36Cl = 230e-8;    // in yr-1
+  lambda_36Cl = 230e-8;    // in yr-1          
 
   // from Vermeesh 2007
   // These are calibrated to the Stone scaling

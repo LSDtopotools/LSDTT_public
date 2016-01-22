@@ -4,7 +4,7 @@ CC=g++
 CFLAGS=-c -Wall -O3
 OFLAGS = -Wall -O3
 LDFLAGS= -Wall
-SOURCES=SimpleSnowAndLandslides.cpp \
+SOURCES=SimpleSnowShield.cpp \
         ../LSDIndexRaster.cpp \
         ../LSDRaster.cpp \
         ../LSDShapeTools.cpp \

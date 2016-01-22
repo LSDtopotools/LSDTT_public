@@ -1511,6 +1511,10 @@ void LSDCosmoData::print_data_to_screen()
 void LSDCosmoData::print_renamed_cosmo_data(string path, string prefix)
 {
   ofstream new_CRN_data;
+  
+  // make sure you don't lose any information
+  new_CRN_data.precision(8);
+  
   string new_CRN_data_name = path+prefix+"_CRNData.csv";
   new_CRN_data.open(new_CRN_data_name.c_str());
   new_CRN_data << "Sample_name,Latitude,Longitude,Nuclide,Concentration,Uncertainty,Standardisation" << endl;
@@ -1979,10 +1983,11 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
     fUTM_northing.push_back( float(UTM_northing[i]));
   }
   
+  cout << "Getting snapped basins" << endl;
   JNetwork.snap_point_locations_to_channels(fUTM_easting, fUTM_northing, 
             search_radius_nodes, threshold_stream_order, FlowInfo, 
             valid_cosmo_points, snapped_node_indices, snapped_junction_indices);
-  //cout << "Snapped points" << endl;
+  cout << "Snapped points" << endl;
   
   
   // after this operation the three int vectors valid_cosmo_points, snapped_node_indices,
@@ -2003,7 +2008,7 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
     valid_concentration_uncertainties.push_back( 
                           Concentration_uncertainty[ valid_cosmo_points[i] ] );
   }
-  //cout << "Got valid points" << endl;
+  cout << "Got valid points, there are " << n_valid_points << " of them." << endl;
   
   
   // Initiate pointers to the rasters
@@ -2051,7 +2056,7 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
     double constant_self_depth = 0;
     if (Raster_names[1] != "NULL")
     {
-      cout << "LSDCosmoData, line 971: Loading the snow sheidling raster, " 
+      cout << "LSDCosmoData, line 2058: Loading the snow shielding raster, " 
            << Raster_names[1] << ".bil" <<  endl;
       LSDRaster Snow_shield(Raster_names[1], DEM_bil_extension);
       Snow_shielding = Snow_shield;
@@ -2063,9 +2068,9 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
       have_snow_raster = false;
       constant_snow_depth = CRN_params[0];
     }
-    if (Raster_names[1] != "NULL")
+    if (Raster_names[2] != "NULL")
      {
-      cout << "LSDCosmoData, line 977: Loading the self sheidling raster, " 
+      cout << "LSDCosmoData, line 977: Loading the self shielding raster, " 
            << Raster_names[2] << ".bil" <<  endl;
       LSDRaster Self_shield(Raster_names[2], DEM_bil_extension);
       Self_shielding = Self_shield;
@@ -2136,6 +2141,8 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
       // write the index basin if flag is set to true
       if(write_basin_index_raster)
       {
+        cout << "I'm writing a basin index number for you" << endl;
+      
         if (not written_inital_basin_index)
         {
         
@@ -2155,36 +2162,49 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
         }
       }
 
-      // we need to scale the sheilding parameters
-      // now do the snow and self sheilding
+      // we need to scale the shielding parameters
+      // now do the snow and self shielding
       if (have_snow_raster)
       {
+        cout << "I've got the snow raster" << endl;
+      
         if(have_self_raster)
         {
+          cout << "I've also got the self raster." << endl;
           thisBasin.populate_snow_and_self_eff_depth_vectors(FlowInfo, 
                                 Snow_shielding, Self_shielding);
+          cout << "Done with effective depths" << endl;                           
         }
         else
         {
+          cout << "No snow raster, but I'm getting the effective depths" << endl;
+          cout << "The constant self depth is: " <<  constant_self_depth << endl;
           thisBasin.populate_snow_and_self_eff_depth_vectors(FlowInfo, 
-                                Snow_shielding, constant_self_depth);        
+                                Snow_shielding, constant_self_depth);
+          cout << "Done with effective depths" << endl;        
         }
       }
       else
       {
         if(have_self_raster)
         {
+          cout << "Getting effective depths" << endl;
           thisBasin.populate_snow_and_self_eff_depth_vectors(FlowInfo, 
-                                constant_snow_depth, Self_shielding);      
+                                constant_snow_depth, Self_shielding);
+          cout << "Done with effective depths" << endl;                                
         }
         else
         {
+          cout << "Getting effective depths" << endl;
           thisBasin.populate_snow_and_self_eff_depth_vectors(constant_snow_depth, 
                                              constant_self_depth);
+          cout << "Done with effective depths" << endl;                                 
         }
       }
 
-      // Now topographic sheidling and production scaling
+
+      cout << "Now I will populate the scaling vectors." << endl;
+      // Now topographic shielding and production scaling
       thisBasin.populate_scaling_vectors(FlowInfo, filled_raster, 
                                          Topographic_shielding,
                                          path_to_atmospheric_data);
@@ -2194,7 +2214,7 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
                                           valid_nuclide_names[samp], test_dN, 
                                           prod_uncert_factor, Muon_scaling);
     
-      //cout << "Line 1493, doing analysis" << endl;
+      cout << "Line 2205, doing analysis" << endl;
     
     
       // now get parameters for cosmogenic calculators
@@ -2202,8 +2222,8 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
           thisBasin.calculate_effective_pressures_for_calculators(filled_raster,
                                             FlowInfo, path_to_atmospheric_data);
         
-      //cout << "Paramforcalc size: " << param_for_calc.size() << endl;              
-      //cout << "Getting pressures" << endl;
+      cout << "Paramforcalc size: " << param_for_calc.size() << endl;              
+      cout << "Getting pressures" << endl;
 
 
       // get the relief of the basin
@@ -2452,7 +2472,7 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
     double constant_self_depth = 0;
     if (Raster_names[1] != "NULL")
     {
-      cout << "LSDCosmoData, line 2367: Loading the snow sheidling raster, " 
+      cout << "LSDCosmoData, line 2367: Loading the snow shielding raster, " 
            << Raster_names[1] << ".bil" <<  endl;
       LSDRaster Snow_shield(Raster_names[1], DEM_bil_extension);
       Snow_shielding = Snow_shield;
@@ -2464,9 +2484,9 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
       have_snow_raster = false;
       constant_snow_depth = CRN_params[0];
     }
-    if (Raster_names[1] != "NULL")
+    if (Raster_names[2] != "NULL")
      {
-      cout << "LSDCosmoData, line 2381: Loading the self sheidling raster, " 
+      cout << "LSDCosmoData, line 2381: Loading the self shielding raster, " 
            << Raster_names[2] << ".bil" <<  endl;
       LSDRaster Self_shield(Raster_names[2], DEM_bil_extension);
       Self_shielding = Self_shield;

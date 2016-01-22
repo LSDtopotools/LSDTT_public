@@ -65,7 +65,7 @@ int main (int nNumberofArgs,char *argv[])
 
   // some paramters
   //Test for correct input arguments
-  if (nNumberofArgs!=4)
+  if (nNumberofArgs!=3)
   {
     cout << "=========================================================" << endl;
     cout << "|| Welcome to the Basinwide cosmogenic analysis tool!  ||" << endl;
@@ -96,7 +96,6 @@ int main (int nNumberofArgs,char *argv[])
 
   string path_name = argv[1];
   string DEM_name_prefix = argv[2];
-  int method_flag = atoi(argv[3]);
   
   string DEM_f_name = path_name+DEM_name_prefix;
   string DEM_bil_extension = "bil";
@@ -120,16 +119,16 @@ int main (int nNumberofArgs,char *argv[])
   snowparamf >> method_name;
   
   // get rid of any control characters
-  method_name = RemoveControlCharacters(string toRemove);
+  method_name = RemoveControlCharacters(method_name);
   
-  if (method_name == "Bilinear");
+  if (method_name == "Bilinear")
   {
     snowparamf >> SlopeAscend;
     snowparamf >> SlopeDescend;
     snowparamf >> PeakElevation;
     snowparamf >> PeakSnowpack;
   }
-  else if (method_name == "Richards");
+  else if (method_name == "Richards")
   {
     snowparamf >> v;
     snowparamf >>  lambda;
@@ -180,7 +179,7 @@ int main (int nNumberofArgs,char *argv[])
     SnowRaster.write_raster(snow_out_name,DEM_bil_extension);
   }
   
-  if (mathod_name == "Richards")
+  if (method_name == "Richards")
   {
     SnowRaster.SetSnowEffDepthRichards(PeakSnowpack, MaximumSlope, v, lambda, filled_topo_test);
     SnowRaster.write_raster(snow_out_name,DEM_bil_extension);

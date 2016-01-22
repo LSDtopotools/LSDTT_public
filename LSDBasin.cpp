@@ -1062,9 +1062,16 @@ LSDRaster LSDBasin::TrimPaddedRasterToBasin(int padding_pixels, LSDFlowInfo& Flo
   LSDRaster TrimmedRaster(new_row_dimension, new_col_dimension, new_XLL,
                           new_YLL, DataResolution, NoDataValue, TrimmedData,
                           GeoReferencingStrings);
-                          
+  
+  cout << "Trimming DataResolution: " << DataResolution << endl;
+  
+  
   // update the georeferencing
-  TrimmedRaster.Update_GeoReferencingStrings(new_XLL,YMax);      
+  TrimmedRaster.Update_GeoReferencingStrings(new_XLL,YMax); 
+  
+  // need to do this a second time to make sure the float data is passed to the
+  // header file
+  TrimmedRaster.Update_GeoReferencingStrings();     
 
   return TrimmedRaster;  
 }
