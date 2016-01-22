@@ -238,9 +238,25 @@ class LSDCosmoData
     ///  @param CRN_params this contains the single shielding depths for snow
     ///   and self shielding if the rasters are not supplied. 
     /// @author SMM
-    /// @date 30/10/2015
+    /// @date 30/01/2016
     void full_shielding_cosmogenic_analysis_for_spawned(vector<string> Raster_names,
                             vector<double> CRN_params);
+
+    /// @brief This function computes erosion rates and uncertainties for 
+    ///  a given det of soil data, 
+    /// @param Raster_names a vector of strings with 4 elements:
+    ///  [0] = DEM_filename
+    ///  [1] = Snow_shield_raster_name OR const_snow_shield in g/cm^2
+    ///  [2] = Self_shield_raster_name OR const_self_shield in g/cm^2
+    ///  [3] = Toposhield_raster_name 
+    ///  It there is no DEM then this is set to "NULL"
+    ///  @param CRN_params this contains the single shielding depths for snow
+    ///   and self shielding if the rasters are not supplied. 
+    /// @author SMM
+    /// @date 22/01/2016
+    void Soil_sample_calculator(vector<string> Raster_names,
+                            vector<double> CRN_params);
+
 
     /// @brief This function wraps the cosmogenic rate calculators.
     /// @detail Looks throught the vecvecs listing file locations and then

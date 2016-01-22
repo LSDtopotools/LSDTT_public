@@ -2693,6 +2693,68 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function gets the erosion rate from a soil sample.
+// IMPORTANT: it assumes that there is no sediment transport from upslope!
+// This is most appropriate for ridgetops or from samples at the soil-saprolite bondary
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::Soil_sample_calculator(vector<string> Raster_names,
+                            vector<double> CRN_params)
+{
+
+  // Load the DEM
+  string DEM_bil_extension = "bil";
+  //string fill_ext = "_fill";
+  string DEM_fname = Raster_names[0];
+  cout << "Loading raster: " << DEM_fname << endl;
+  LSDRaster topo_test(DEM_fname, DEM_bil_extension);
+  
+  // Some vectors to hold the valid node
+  // We need vectors rather than ints because the functions that are called
+  // during this routine expect vectors
+  vector<int> valid_cosmo_points;         // a vector to hold the valid nodes
+  vector<int> snapped_row;       // a vector to hold the valid rows
+  vector<int> snapped_col;   // a vector to hold the valid columns
+  
+  // convert UTM vectors to float
+  // Again, we only pass one value to these vectors, since that is needed by the 
+  // snap to points fuction
+  vector<float> fUTM_easting;
+  vector<float> fUTM_northing;
+  for (int i= 0; i<N_samples; i++)
+  {
+    fUTM_easting.push_back( float(UTM_easting[i]));
+    fUTM_northing.push_back( float(UTM_northing[i]));
+  }
+
+  cout << "Got point locations" << endl;
+  
+  
+  // now see if the point is in the raster
+  float X_coordinate,Y_coordinate;
+  for (int i = 0; i< N_samples; i++)
+  {
+    X_coordinate = fUTM_easting[i];
+    Y_coordinate = fUTM_northing[i];
+    
+    // if it is in the raster, record it
+    if(topo_test.check_if_point_is_in_raster(X_coordinate,Y_coordinate))
+    {
+      valid_cosmo_points.push_back(i);
+      
+      // get the row and column
+      int this_row,this_col;
+      topo_test.get_row_and_col_of_a_point(X_coordinate,Y_coordinate,this_row, this_col);
+      snapped_row.push_back(this_row);
+      snapped_col.push_back(this_col);
+    
+    }
+  }
+  
+  
+  
+}
+
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
