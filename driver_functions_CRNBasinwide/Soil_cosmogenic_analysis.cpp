@@ -72,12 +72,12 @@ int main (int nNumberofArgs,char *argv[])
 
   // some paramters
   //Test for correct input arguments
-  if (nNumberofArgs!=4)
+  if (nNumberofArgs!=3)
   {
     cout << "================================================================" << endl;
     cout << "|| Welcome to the cosmogenic analysis tool for soil samples!  ||" << endl;
     cout << "================================================================" << endl;
-    cout << "This program requires tow inputs: " << endl;
+    cout << "This program requires two inputs: " << endl;
     cout << "* First the path to the parameter files." << endl;
     cout << "   The path must have a slash at the end." << endl;
     cout << "  (Either \\ or / depending on your operating system.)" << endl;
@@ -134,9 +134,10 @@ int main (int nNumberofArgs,char *argv[])
   cout << "===========================================================" << endl;
 
   //cout << "Getting data" << endl;
-  //CosmoData.calculate_erosion_rates(method_flag);
+  int method_flag = 3;
+  CosmoData.calculate_erosion_rates(method_flag);
   
-  cout << "Printing results " << endl;
+  //cout << "Printing results " << endl;
   // now print the data to a csv file
   //CosmoData.print_results();
   //CosmoData.print_rasters();
