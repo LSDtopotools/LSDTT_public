@@ -2738,13 +2738,12 @@ void LSDFlowInfo::D8_Trace(int i, int j, LSDIndexRaster StreamNetwork, float& le
 // Move the location of the channel head downslope by a user defined distance.
 // Returns A vector of node indexes pointing to the moved heads.
 // SWDG 27/11/15
-vector<int> LSDFlowInfo::MoveChannelHeadDown(vector<int> Sources, float MoveDist){
+
+void LSDFlowInfo::MoveChannelHeadDown(vector<int> Sources, float MoveDist, vector<int>& DownslopeSources, vector<int>& FinalHeads){
 
   float root_2 = 1.4142135623;
 
   float length;
-
-  vector<int> DownSlopeSources;
 
   int receiver_row;
   int receiver_col;
@@ -2763,33 +2762,32 @@ vector<int> LSDFlowInfo::MoveChannelHeadDown(vector<int> Sources, float MoveDist
       //update length
       if (retrieve_flow_length_code_of_node(reciever_node) == 1){ length += DataResolution; }
       else if (retrieve_flow_length_code_of_node(reciever_node) == 2){ length += (DataResolution * root_2); }
+      else if (retrieve_flow_length_code_of_node(reciever_node) == 0){break;}
 
       reciever_node = node;
 
+
     }
 
-    DownSlopeSources.push_back(reciever_node);
+    DownslopeSources.push_back(reciever_node);
+    FinalHeads.push_back(Sources[q]);
 
   }
 
   //end of for loop
-
-  return DownSlopeSources;
 
 }
 
 // Move the location of the channel head upslope by a user defined distance.
 // Returns A vector of node indexes pointing to the moved heads.
 // SWDG 27/11/15
-vector<int> LSDFlowInfo::MoveChannelHeadUp(vector<int> Sources, float MoveDist, LSDRaster DEM){
+void LSDFlowInfo::MoveChannelHeadUp(vector<int> Sources, float MoveDist, LSDRaster DEM, vector<int>& UpslopeSources, vector<int>& FinalHeads){
 
   float root_2 = 1.4142135623;
 
   float length;
 
   Array2D<float> Elevation = DEM.get_RasterData();
-
-  vector<int> UpSlopeSources;
 
   int new_node;
 
@@ -2804,6 +2802,13 @@ vector<int> LSDFlowInfo::MoveChannelHeadUp(vector<int> Sources, float MoveDist, 
     int j;
 
     retrieve_current_row_and_col(Sources[q], i, j);
+
+    //test for channel heads at edges
+    if (i == 0 || i == NRows - 1 || j == 0 || j == NCols - 1){
+      cout << "Hit an edge, skipping" << endl;        
+    }
+
+    else{
 
     while (length < MoveDist){
 
@@ -2886,15 +2891,13 @@ vector<int> LSDFlowInfo::MoveChannelHeadUp(vector<int> Sources, float MoveDist, 
       j = new_j;
 
     }
+}
     new_node = retrieve_node_from_row_and_column(i,j);
 
-    UpSlopeSources.push_back(new_node);
+    UpslopeSources.push_back(new_node);
+    FinalHeads.push_back(Sources[q]);
 
-  }
-
-  //end of for loop
-
-  return UpSlopeSources;
+  } //end of for loop
 
 }
 
