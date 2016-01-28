@@ -182,6 +182,14 @@ class LSDCosmoData
     /// @date 15/07/2015
     void RunShielding(string path, string prefix);
 
+    /// @brief This function calculates and then returns a production raster
+    /// @param Elevation_data a raster holding the elevations
+    /// @param path_to_atmospheric_data a string that holds the path of the atmospheric data
+    /// @author SMM
+    /// @date 28/01/2016
+    LSDRaster calculate_production_raster(LSDRaster& Elevation_Data,
+                                          string path_to_atmospheric_data);
+
     /// @brief this function calculates the UTM coordinates of all the sample
     ///  points for a given UTM zone. 
     /// @param UTM_zone the UTM zone

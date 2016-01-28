@@ -64,7 +64,9 @@
 #include "LSDJunctionNetwork.hpp"
 #include "LSDBasin.hpp"
 #include "LSDRasterInfo.hpp"
+#include "TNT/tnt.h"
 using namespace std;
+using namespace TNT;
 
 #ifndef LSDCosmoData_CPP
 #define LSDCosmoData_CPP
@@ -1476,6 +1478,73 @@ void LSDCosmoData::RunShielding(string path, string prefix)
   print_renamed_cosmo_data(path, new_prefix);
   print_renamed_parameter_data(path, new_prefix);
   
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function prints a production raster for a basin
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LSDRaster LSDCosmoData::calculate_production_raster(LSDRaster& Elevation_Data,
+                                               string path_to_atmospheric_data)
+{
+  int NRows = Elevation_Data.get_NRows();
+  int NCols = Elevation_Data.get_NCols();
+  float NDV =  Elevation_Data.get_NoDataValue();
+  
+  Array2D<float> Production(NRows,NCols,NDV);
+
+  // variables for converting location and elevation
+  double this_elevation, this_pressure;
+
+  // now create the CRN parameters object
+  LSDCRNParameters LSDCRNP;
+  
+  // get the atmospheric parameters
+  LSDCRNP.load_parameters_for_atmospheric_scaling(path_to_atmospheric_data);
+  LSDCRNP.set_CRONUS_data_maps();
+  
+  // a function for scaling stone production, defaults to 1
+  double Fsp = 1.0;
+  
+  // the latitude and longitude
+  double lat,longitude;
+  
+  // decalre converter object
+  LSDCoordinateConverterLLandUTM Converter;
+  
+  for (int row = 0; row < NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      
+      //exclude NDV from average
+      if (Elevation_Data.get_data_element(row,col) != NDV)
+      {
+        // To get pressure, first get the lat and long
+        Elevation_Data.get_lat_and_long_locations(row, col, lat, longitude, Converter);
+        //Elevation_Data.get_lat_and_long_locations(row, col, lat, longitude);
+      
+        // now the elevation
+        this_elevation = Elevation_Data.get_data_element(row,col);
+      
+        // now the pressure
+        this_pressure = LSDCRNP.NCEPatm_2(double(lat), double(longitude), 
+                                        double(this_elevation));
+
+        // get the production
+        Production[row][col] = LSDCRNP.stone2000sp(lat,this_pressure, Fsp);
+      }
+    }
+  }
+
+  float XMinimum = Elevation_Data.get_XMinimum();
+  float YMinimum = Elevation_Data.get_YMinimum();
+  float DataResolution = Elevation_Data.get_DataResolution();
+  map<string,string> GeoReferencingStrings = Elevation_Data.get_GeoReferencingStrings();
+
+  LSDRaster Production_raster(NRows, NCols, XMinimum, YMinimum, DataResolution,
+                               NDV, Production,GeoReferencingStrings);
+  return Production_raster;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
