@@ -2961,7 +2961,7 @@ vector<double> LSDCosmoBasin::calculate_effective_pressures_for_calculators(LSDR
         }
       }
       
-      // now get the self shelding information
+      // now get the self shielding information
       if (self_shield_eff_depth.size() < 1)
       {
         this_self_shield = 1;

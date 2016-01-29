@@ -210,7 +210,16 @@ class LSDCRNParameters
   /// @date 27/01/2015
   void set_Braucher_parameters();
   
+  /// @brief This resets the F, Gamma and P0 values 
+  /// For 10Be, these correspond to new production curves provided by Shasta Marerro
+  //  For the rest they conform to 
+  /// Braucher et al (2009) scaling. Adopted from from Vermeesh 2007, 
+  /// @detail From version 2.0 of cosmocalc
+  /// @author SMM
+  /// @date 28/01/2016
+  void set_newCRONUS_parameters();
   
+    
   /// @brief this resets the production and decay coefficients of 10Be and 26Al
   ///  to mimic the parameters for stone scaling in CRONUS calculator
   /// @detail IMPORTANT the F and Gamma numbers are not changed so you will 

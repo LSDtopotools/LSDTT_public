@@ -2630,6 +2630,8 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
       cout << "Node index is: " <<  snapped_node_indices[samp] << " and junction is: " 
            << snapped_junction_indices[samp] << endl;
       cout << "-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -" << endl;
+      
+      // extract the basin
       LSDCosmoBasin thisBasin(snapped_junction_indices[samp],FlowInfo, JNetwork,
                               test_N10,test_dN10, test_N26,test_dN26);
 
@@ -2655,8 +2657,8 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
         }
       }
 
-      // we need to scale the sheilding parameters
-      // now do the snow and self sheilding
+      // we need to scale the shielding parameters
+      // now do the snow and self shielding
       if (have_snow_raster)
       {
         if(have_self_raster)
@@ -2697,7 +2699,7 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
                                          Topographic_shielding,
                                          path_to_atmospheric_data);
 
-      // now do the analysis
+      // GET THE EROSION RATES
       vector<double> erate_analysis = thisBasin.full_CRN_erosion_analysis(test_N, 
                                           valid_nuclide_names[samp], test_dN, 
                                           prod_uncert_factor, Muon_scaling);

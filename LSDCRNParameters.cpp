@@ -1143,6 +1143,71 @@ void LSDCRNParameters::set_Braucher_parameters()
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// 10Be is set to a new production curve provided by Shasta Marrero
+// All others: sets the parameters to those used by Braucher et al 2009
+// as implemented in cosmocalc v2.0
+// http://www.ucl.ac.uk/~ucfbpve/cosmocalc/updates.html
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParameters::set_newCRONUS_parameters()
+{
+  //S_t = 1;
+
+  // from Vermeesh 2007
+  // 10Be from Chmeleff/Korschinek 10Be decay constant;
+  lambda_10Be = 500e-9;    // in yr-1
+  lambda_26Al = 980e-9;    // in yr-1
+  lambda_14C = 121e-6;     // in yr-1
+  lambda_36Cl = 230e-8;    // in yr-1          
+
+  // from Data provided by Shasta mararreo for 10Be, everyting
+  // else is from the Braucher constants
+  //
+  // All but 10Be are calibrated to the Stone scaling
+  // Also linke to the nishizumii standards
+  // These come with Cosmocalc version 2.0
+  // http://www.ucl.ac.uk/~ucfbpve/cosmocalc/updates.html
+  P0_10Be = 4.075213;          // in a/g/yr
+  P0_26Al = 31.10;         // in a/g/yr
+  P0_14C = 15.21;          // in a/g/yr
+  P0_36Cl = 58.95;         // in a/g/yr
+  P0_21Ne = 18.23;         // in a/g/yr
+  P0_3He = 121.59;         // in a/g/yr
+
+  // in g/cm^2
+  Gamma[0] = 160;
+  Gamma[1] = 1459.76761923;
+  Gamma[2] = 11039.2402217;
+  Gamma[3] = 4320;
+
+  // dimensionless
+  F_10Be[0] = 0.98374;
+  F_10Be[1] = 0.0137188126531;
+  F_10Be[2] = 0.00252519164093;
+  F_10Be[3] = 0.0;
+
+  // dimensionless
+  F_26Al[0] = 0.9699;
+  F_26Al[1] = 0.0275;
+  F_26Al[2] = 0.000;
+  F_26Al[3] = 0.0026;
+
+  // dimensionless
+  F_14C[0] = 0.83;
+  F_14C[1] = 0.15;
+  F_14C[2] = 0.0;
+  F_14C[3] = 0.02;
+
+  // dimensionless
+  F_36Cl[0] = 0.9456;
+  F_36Cl[1] = 0.0324;
+  F_36Cl[2] = 0.00;
+  F_36Cl[3] = 0.022;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This sets the production rates to mimic those of CRONUS
