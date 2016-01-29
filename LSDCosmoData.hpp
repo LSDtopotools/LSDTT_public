@@ -290,6 +290,27 @@ class LSDCosmoData
     void full_shielding_raster_printer(vector<string> Raster_names,
                                         vector<double> CRN_params);
 
+    /// @brief This function uses the COSMOCALC functions of LSDParticles to
+    ///  calculate the erosion rates from point measurements using pre-calculated
+    ///  vectors of shielding and scaling data
+    /// @param valid_samples a vector continaing the indices into the samples
+    ///  you want to use
+    /// @param snow_thickness a vector of snow thickness in g/cm^2 (or any surface shielding)
+    ///  that is the same size as valid_samples
+    /// @param self_thickness the self thickness in g/cm^2. For soil samples
+    ///  this can be the thickness of the sample. Same size as valid_samples
+    /// @param toposhield a vecor with the local topographic shielding
+    /// @param production_scaling a vector with the production scaling
+    /// @param muon_scaling a string with a valid scaling scheme name
+    /// @author SMM
+    /// @date 29/01/2016
+    void point_measurements(vector<int> valid_samples,vector<double> snow_thickness, 
+                                      vector<double> self_thickness,
+                                      vector<double> toposhield,
+                                      vector<double> production_scaling, 
+                                      string muon_scaling);
+
+
     /// @brief this function prints the data held in the the data members
     ///  to screen. Is used for bug checking. 
     /// @detail Note the function does not print the standardised values, only raw values.

@@ -3144,6 +3144,145 @@ void LSDCosmoData::calculate_erosion_rates(int method_flag)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::point_measurements(vector<int> valid_samples,vector<double> snow_thickness, 
+                                      vector<double> self_thickness,
+                                      vector<double> toposhield,
+                                      vector<double> production_scaling, 
+                                      string muon_string)
+{
+  int N_valid_samples =  int(valid_samples.size());
+
+  // now loop through the samples, printing the ones with data
+  for (int i = 0; i<N_valid_samples; i++)
+  {
+    // initiate the vector for holding the erate
+    vector<double> erate_info;
+    vector<double> erate_info_AMS_err;
+    vector<double> erate_info_scaling_err;
+    vector<double> erate_info_prod_err;  
+    
+    // get this sample
+    int this_sample = valid_samples[i];
+    double this_C = Concentration[this_sample];
+    double this_dC = Concentration_uncertainty[this_sample];
+    string this_nuclide = nuclide[this_sample];
+    double top_eff_depth = snow_thickness[i];     // even if there is shielding these
+    double bottom_eff_depth = snow_thickness[i]+self_thickness[i];  // get subsumed into the combined scaling 
+    double combined_scaling = toposhield[i]* production_scaling[i];
+    
+    double rho = 2650;
+    
+    // now get apparent erosion rates that cosmocalc would have produced
+    int startType = 0; 
+    double Xloc = 0;
+    double Yloc = 0;
+    double  startdLoc = 0.0;
+    double  start_effdloc = 0.0;
+    double startzLoc = 0.0;
+      
+    LSDCRNParticle test_particle(startType, Xloc, Yloc,
+                              startdLoc, start_effdloc, startzLoc);
+      
+    LSDCRNParameters LSDCRNP;
+    // at this stage we will try to replicate the basin averaging that goes on in 
+    // most paper
+    // set scaling parameters. This is necessary since the F values are
+    // reset for local scaling
+    if (Muon_scaling == "Schaller" )
+    {
+      LSDCRNP.set_Schaller_parameters();
+    }
+      else if (Muon_scaling == "Braucher" )
+    {
+      LSDCRNP.set_Braucher_parameters();
+    }
+    else if (Muon_scaling == "Granger" )
+    {
+      LSDCRNP.set_Granger_parameters();
+    }
+    else if (Muon_scaling == "newCRONUS" )
+    {
+      LSDCRNP.set_newCRONUS_parameters();
+    }
+    else
+    {
+      cout << "You didn't set the muon scaling." << endl
+           << "Options are Schaller, Braucher, newCRONUS, and Granger." << endl
+           << "You chose: " << Muon_scaling << endl
+           << "Defaulting to Braucher et al (2009) scaling" << endl;
+      LSDCRNP.set_Braucher_parameters();     
+    }
+    
+    
+    if (nuclide[i] == "Be10")
+    {
+      test_particle.setConc_10Be(this_C);
+      erate_info=test_particle.apparent_erosion_10Be_COSMOCALC(rho, LSDCRNP, 
+                                 combined_scaling,
+                                 muon_string, top_eff_depth, bottom_eff_depth);
+    }
+    else if(nuclide[i] == "Al26")    
+    {
+      test_particle.setConc_26Al(this_C);
+      erate_info=test_particle.apparent_erosion_26Al_COSMOCALC(rho, LSDCRNP, 
+                                 combined_scaling,
+                                 muon_string, top_eff_depth, bottom_eff_depth);
+    }
+    
+    // now do the error from the AMS measurement
+    if (nuclide[i] == "Be10")
+    {
+      test_particle.setConc_10Be(this_C+this_dC);
+      erate_info_AMS_err=test_particle.apparent_erosion_10Be_COSMOCALC(rho, LSDCRNP, 
+                                 combined_scaling,
+                                 muon_string, top_eff_depth, bottom_eff_depth);
+    }
+    else if(nuclide[i] == "Al26")    
+    {
+      test_particle.setConc_26Al(this_C+this_dC);
+      erate_info_AMS_err=test_particle.apparent_erosion_26Al_COSMOCALC(rho, LSDCRNP, 
+                                 combined_scaling,
+                                 muon_string, top_eff_depth, bottom_eff_depth);
+    }
+    
+    // now do the error from the scaling
+    string new_muon_string = "Schaller";
+    if (nuclide[i] == "Be10")
+    {
+      test_particle.setConc_10Be(this_C);
+      erate_info_scaling_err=test_particle.apparent_erosion_10Be_COSMOCALC(rho, LSDCRNP, 
+                                 combined_scaling,
+                                 new_muon_string, top_eff_depth, bottom_eff_depth);
+    }
+    else if(nuclide[i] == "Al26")    
+    {
+      test_particle.setConc_26Al(this_C);
+      erate_info_scaling_err=test_particle.apparent_erosion_26Al_COSMOCALC(rho, LSDCRNP, 
+                                 combined_scaling,
+                                 new_muon_string, top_eff_depth, bottom_eff_depth);
+    }
+    
+    // now do the error from the production, assumes 10% production error
+    if (nuclide[i] == "Be10")
+    {
+      test_particle.setConc_10Be(this_C);
+      erate_info_scaling_err=test_particle.apparent_erosion_10Be_COSMOCALC(rho, LSDCRNP, 
+                                 combined_scaling*(1.1),
+                                 muon_string, top_eff_depth, bottom_eff_depth);
+    }
+    else if(nuclide[i] == "Al26")    
+    {
+      test_particle.setConc_26Al(this_C);
+      erate_info_scaling_err=test_particle.apparent_erosion_26Al_COSMOCALC(rho, LSDCRNP, 
+                                 combined_scaling*(1.1),
+                                 muon_string, top_eff_depth, bottom_eff_depth);
+    }
+  }
+      
+}
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // This function prints derivative rasters from the cosmogenic analysis
@@ -3259,7 +3398,7 @@ void LSDCosmoData::print_results()
       double Yloc = 0;
       double  startdLoc = 0.0;
       double  start_effdloc = 0.0;
-      double startzLoc = 100;
+      double startzLoc = 0;
       
       LSDCRNParticle test_particle(startType, Xloc, Yloc,
                               startdLoc, start_effdloc, startzLoc);
@@ -3281,7 +3420,7 @@ void LSDCosmoData::print_results()
       }
       else if(nuclide[i] == "Al26")    
       {
-        test_particle.setConc_10Be(Concentration[i]);
+        test_particle.setConc_26Al(Concentration[i]);
         erate_info=test_particle.apparent_erosion_26Al_COSMOCALC(rho, LSDCRNP, 
                                  MapOfProdAndScaling["AverageCombinedScaling"][i],
                                  muon_string, top_eff_depth, bottom_eff_depth);
@@ -3298,7 +3437,7 @@ void LSDCosmoData::print_results()
       }
       else if(nuclide[i] == "Al26")    
       {
-        test_particle.setConc_10Be(Concentration[i]);
+        test_particle.setConc_26Al(Concentration[i]);
         erate_info_CCCR=test_particle.apparent_erosion_26Al_COSMOCALC(rho, LSDCRNP, 
                                  MapOfProdAndScaling["AverageShielding"][i]*
                                  MapOfProdAndScaling["AverageProdScaling"][i],
