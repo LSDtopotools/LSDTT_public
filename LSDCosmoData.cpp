@@ -500,6 +500,11 @@ void LSDCosmoData::load_parameters(string filename)
         Muon_scaling = "Schaller";
         cout << "You have selected Schaller scaling" << endl;
       }
+      else if(value.find("newCRONUS") == 0 || value.find("newCRONUS") == 0)
+      {
+        Muon_scaling = "newCRONUS";
+        cout << "You have selected the new CRONUS scaling" << endl;
+      }
       else
       {
         Muon_scaling = "Braucher";
