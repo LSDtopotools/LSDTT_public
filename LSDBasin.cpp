@@ -1278,7 +1278,7 @@ void LSDCosmoBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo,
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //  This function populates the topographic and production shielding
-// It sets the snow sheilding to a default of 1
+// It sets the snow shielding to a default of 1
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCosmoBasin::populate_scaling_vectors(LSDFlowInfo& FlowInfo, 
                                                LSDRaster& Elevation_Data,
@@ -1332,7 +1332,6 @@ void LSDCosmoBasin::populate_scaling_vectors(LSDFlowInfo& FlowInfo,
       //cout << "r: " << row << " c: " << col << " lat: " << lat << " long: " << longitude
       //     << " elevation: " << this_elevation << " pressure: " << this_pressure << endl;
            
-      
       // now get the scaling
       prod_temp.push_back(LSDCRNP.stone2000sp(lat,this_pressure, Fsp));
       
@@ -1425,7 +1424,7 @@ void LSDCosmoBasin::populate_scaling_vectors(LSDFlowInfo& FlowInfo,
       this_tshield = double(T_Shield.get_data_element(row,col));
       tshield_temp.push_back(this_tshield);
       
-      // now get the snow sheilding
+      // now get the snow shielding
       this_sshield = double(S_Shield.get_data_element(row,col));
       snow_temp.push_back(this_sshield);
       
@@ -2042,8 +2041,18 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
     cout << "LSDCosmoBasin, trying to precalculate erosion rate." << endl
          << "Scaling vectors have not been set! You are about to get a seg fault" << endl;
   }
-  double total_shielding =  production_scaling[0]*topographic_shielding[0]*
+  
+  double total_shielding;
+  // if the shielding is based on effective depths
+  if (snow_shielding[0] == 0)
+  {
+    total_shielding =  production_scaling[0]*topographic_shielding[0];
+  }
+  else
+  {
+    total_shielding =  production_scaling[0]*topographic_shielding[0]*
                         snow_shielding[0];
+  }
                         
   //cout << "LSDBasin line 1128 Prod scaling is: " << production_scaling[0] << endl;
                         
@@ -2051,8 +2060,17 @@ double LSDCosmoBasin::predict_CRN_erosion(double Nuclide_conc, string Nuclide,
                       
   // now recalculate F values to match the total shielding
   LSDCRNP.scale_F_values(total_shielding,nuclide_scaling_switches);
-  LSDCRNP.set_neutron_scaling(production_scaling[0],topographic_shielding[0],
+  if (snow_shielding[0] == 0)
+  {
+    LSDCRNP.set_neutron_scaling(production_scaling[0],topographic_shielding[0],
                              snow_shielding[0]);
+  }
+  else
+  {
+    double this_sshield = 1.0;
+    LSDCRNP.set_neutron_scaling(production_scaling[0],topographic_shielding[0],
+                                this_sshield);
+  }
   
   // at the moment do only the outlet
   bool data_from_outlet_only = false;

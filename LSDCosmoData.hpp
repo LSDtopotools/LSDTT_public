@@ -265,6 +265,111 @@ class LSDCosmoData
     void Soil_sample_calculator(vector<string> Raster_names,
                             vector<double> CRN_params);
 
+    /// @brief This function wraps the erosion rate calculator, and returns 
+    ///  both the erosion rate as well as the uncertainties
+    /// @param Nuclide_conc Concetration of the nuclide
+    /// @param Nuclide a string denoting the name of the nuclide (at the moment
+    ///  options are 10Be and 26Al)
+    /// @param Nuclide_conc_err The instrument error in the nuclide concentration
+    /// @param prod_uncert_fracton This is a fraction of the total uncertainty
+    ///  for the production rates. It is a lumped parameter that can be used
+    ///  for just production, or for snow, topo and porduction uncertainty
+    /// @param Muon_scaling string that gives the muon scaling scheme
+    ///  options are Schaller, Granger and Braucher
+    /// @param snow_eff_depth the effective depth (in g/cm^2) of snow
+    /// @param self_eff_depth the effective depth (in g/cm^2) of self shielding
+    /// @param topo_shield the topographic shielding at this point
+    /// @param production the production rate of the nuclude at this point
+    /// @return  a vector of both the erosion rates and the uncertainties of the sample
+    /// @author SMM
+    /// @date 24/01/2016
+    vector<double> full_CRN_erosion_analysis_point(double Nuclide_conc, string Nuclide, 
+                            double Nuclide_conc_err, double prod_uncert_factor,
+                            string Muon_scaling, double snow_eff_depth,
+                            double self_eff_depth, double topo_shield,
+                            double production);
+
+    /// @brief this uses Newton Raphson iteration to retrieve the erosion rate
+    ///  from a basin given a nuclide concentration
+    /// @param eff_erosion rate The erosion rate in g/cm^2/yr
+    /// @param Nuclide a string with the nuclide name. At the moment the options are:
+    ///   Be10
+    ///   Al26
+    ///  These are case sensitive
+    /// @param prod_uncert_factor production uncertainty factor is a multiplier that sets the production 
+    ///  certainty. If it is 1.1, there is 10% production rate uncertainty, or
+    ///  if it is 0.9 there is -10% unvertainty. The reason why it is implemented
+    ///  like this is that this allows gaussian error propigation.
+    /// @param Muon_scaling a string that gives the muon scaling scheme. 
+    ///  options are Schaller, Braucher and Granger
+    /// @param production_uncertainty this gives the uncertainty in the production
+    ///  rates based on the production_uncert_factor; it is used in gaussian
+    ///  error propigation. The parameter is replaced within the function. 
+    /// @param average_production This gives the production rate average for the
+    ///  basin. It can be used for uncertainty analyis: if the scaling is
+    ///  changed the change in this production rate can be used to construct
+    ///  the gaussian error propigation terms   
+    /// @param is_production_uncertainty_plus_on a boolean that is true if the 
+    ///  production rate uncertainty (+) is switched on
+    /// @param is_production_uncertainty_minus_on a boolean that is true if the 
+    ///  production rate uncertainty (-) is switched on. If the + switch is 
+    ///  true this parameter defauts to false.         
+    /// @return The effective erosion rate in g/cm^-2/yr
+    /// @author SMM
+    /// @date 24/01/2016
+    double predict_CRN_erosion_point(double Nuclide_conc, string Nuclide, 
+                               double prod_uncert_factor,string Muon_scaling,
+                               double& production_uncertainty,
+                               double& average_production,
+                               bool is_production_uncertainty_plus_on,
+                               bool is_production_uncertainty_minus_on,
+                               double snow_eff_depth,
+                               double self_eff_depth, double topo_shield,
+                               double production);
+
+
+    /// @brief this predicts the mean concentration of a nuclide for a point location.
+    ///  It does a full analyitical solution to account for
+    ///  snow and self sheilding
+    /// @param eff_erosion rate The erosion rate in g/cm^2/yr
+    /// @param Nuclide a string with the nuclide name. At the moment the options are:
+    ///   Be10
+    ///   Al26
+    ///  These are case sensitive
+    /// @param prod_uncert_factor production uncertainty factor is a multiplier that sets the production 
+    ///  certainty. If it is 1.1, there is 10% production rate uncertainty, or
+    ///  if it is 0.9 there is -10% unvertainty. The reason why it is implemented
+    ///  like this is that this allows gaussian error propigation.
+    /// @param Muon_scaling a string that gives the muon scaling scheme. 
+    ///  options are Schaller, Braucher and Granger
+    /// @param data_from_outlet_only boolean that is true of you want 
+    ///  concentration calculated from the outlet only.
+    /// @param production_uncertainty this gives the uncertainty in the production
+    ///  rates based on the production_uncert_factor; it is used in gaussian
+    ///  error propigation. The parameter is replaced within the function.
+    /// @param is_production_uncertainty_plus_on a boolean that is true if the 
+    ///  production rate uncertainty (+) is switched on
+    /// @param is_production_uncertainty_minus_on a boolean that is true if the 
+    ///  production rate uncertainty (-) is switched on. If the + switch is 
+    ///  true this parameter defauts to false. 
+    /// @param snow_eff_depth the effective depth (in g/cm^2) of snow
+    /// @param self_eff_depth the effective depth (in g/cm^2) of self shielding
+    /// @param topo_shield the topographic shielding at this point
+    /// @param production the production rate of the nuclude at this point
+    /// @return the concentration of the nuclide averaged across the DEM
+    /// @author SMM
+    /// @date 24/01/2016
+    double predict_mean_CRN_conc_point(double eff_erosion_rate, string Nuclide,
+                                            double prod_uncert_factor, string Muon_scaling,
+                                            double& production_uncertainty, 
+                                            bool is_production_uncertainty_plus_on,
+                                            bool is_production_uncertainty_minus_on,
+                                            double snow_eff_depth,
+                                            double self_eff_depth,
+                                            double topo_shield,
+                                            double production);
+
+
 
     /// @brief This function wraps the cosmogenic rate calculators.
     /// @detail Looks throught the vecvecs listing file locations and then
