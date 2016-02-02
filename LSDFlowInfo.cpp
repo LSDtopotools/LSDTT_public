@@ -739,6 +739,65 @@ void LSDFlowInfo::print_vector_of_nodeindices_to_csv_file(vector<int>& nodeindex
 
   csv_out.close();
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Write nodeindex vector to csv file, and give each row a unique ID
+//
+// SWDG after SMM 2/2/2016
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDFlowInfo::print_vector_of_nodeindices_to_csv_file_Unique(vector<int>& nodeindex_vec, string outfilename)
+{
+
+  // fid the last '.' in the filename to use in the scv filename
+  unsigned dot = outfilename.find_last_of(".");
+
+  string prefix = outfilename.substr(0,dot);
+  //string suffix = str.substr(dot);
+  string insert = "_nodeindices_for_Arc.csv";
+  string outfname = prefix+insert;
+
+  cout << "the Arc filename is: " << outfname << endl;
+
+  int n_nodes = nodeindex_vec.size();
+  int n_nodeindeces = RowIndex.size();
+
+  // open the outfile
+  ofstream csv_out;
+  csv_out.open(outfname.c_str());
+  csv_out.precision(8);
+
+  csv_out << "x,y,node,row,col,unique_ID" << endl;
+
+  int current_row, current_col;
+  float x,y;
+
+  // loop through node indices in vector
+  for (int i = 0; i<n_nodes; i++)
+    {
+      int current_node = nodeindex_vec[i];
+
+      // make sure the nodeindex isn't out of bounds
+      if (current_node < n_nodeindeces)
+	{
+	  // get the row and column
+	  retrieve_current_row_and_col(current_node,current_row,
+				       current_col);
+
+	  // get the x and y location of the node
+	  // the last 0.0001*DataResolution is to make sure there are no integer data points
+	  x = XMinimum + float(current_col)*DataResolution + 0.5*DataResolution + 0.0001*DataResolution;
+
+	  // the last 0.0001*DataResolution is to make sure there are no integer data points
+	  // y coord a bit different since the DEM starts from the top corner
+	  y = YMinimum + float(NRows-current_row)*DataResolution - 0.5*DataResolution + 0.0001*DataResolution;;
+	  csv_out << x << "," << y << "," << current_node << "," << current_row << "," << current_col << "," << i << endl;
+	}
+    }
+
+  csv_out.close();
+}
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -1465,7 +1524,46 @@ LSDIndexRaster LSDFlowInfo::write_NodeIndexVector_to_LSDIndexRaster(vector<int>&
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// This function writes an LSDIndesxRaster given a list of node indices, and give every
+// pixel its nodeindex value, which is unique.
+//
+// SWDG after SMM 2/2/16
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+LSDIndexRaster LSDFlowInfo::write_NodeIndexVector_to_LSDIndexRaster_Unique(vector<int>& nodeindexvec)
+{
+  int n_node_indices = nodeindexvec.size();
+  Array2D<int> chan(NRows,NCols,NoDataValue);
 
+  int curr_row, curr_col;
+
+  for(int i = 0; i<n_node_indices; i++){
+    // make sure there is no segmentation fault for bad data
+    // Note: bad data is ignored
+    if(nodeindexvec[i] <= NDataNodes){
+	    retrieve_current_row_and_col(nodeindexvec[i], curr_row, curr_col);
+
+	    if(chan[curr_row][curr_col] == NoDataValue){
+	      chan[curr_row][curr_col] = i;
+	    }
+	    else{
+	      //revisted points will be overwritten, most recent id will be pres
+	      chan[curr_row][curr_col] = i;
+	    }
+	  }
+    else
+	  {
+	    cout << "WARNING: LSDFlowInfo::write_NodeIndexVector_to_LSDIndexRaster"
+	       << " node index does not exist!"<< endl;
+	  }
+  }
+
+  LSDIndexRaster temp_chan(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,chan,GeoReferencingStrings);
+  return temp_chan;
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
