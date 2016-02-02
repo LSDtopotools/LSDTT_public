@@ -113,8 +113,20 @@ class LSDCosmoData
     ///  the parameter value
     /// @param filename a string of the full filename
     /// @author SMM
-    /// @date 02/03/2015
+    /// @date 02/02/2016
     void load_parameters(string filename);
+   
+    /// @brief This loads information about any soil samples
+    /// The file contains several columns:
+    /// sampleID,sample_top_depth,sample_bottom_depth,density
+    /// The file prefix needs to be the same as the other files, and should
+    /// have the extension _CRNSoilInfo.csv
+    /// @detail The top depths and sample thicknesses need to be in cm
+    ///   The densities need to be in kg/m^3
+    /// @param filename a string of the full filename
+    /// @author SMM
+    /// @date 02/03/2015
+    void load_soil_info(string filename);
     
     /// @brief this gets the names of the DEMs to be used in the analysis
     /// @detail only returns the DEM, not snow shielding, topo shielding, etc
@@ -520,6 +532,17 @@ class LSDCosmoData
     
     /// A vector of the sample names
     vector<string> sample_name;
+    
+    /// A vector with the indices into the valid samples that have soil data
+    vector<int> soil_sample_index;
+    
+    /// The top depth (in soil, in g/cm^2) of a soil sample
+    /// This vector is indexed into the other vectors with valid_soil_samples
+    vector<double> soil_top_effective_depth;
+    
+    /// The thickness (in g/cm^2) of a soil sample
+    /// This vector is indexed into the other vectors with valid_soil_samples
+    vector<double> soil_effective_thickness;
     
     /// a vector holding the latitude of the samples
     vector<double> latitude;

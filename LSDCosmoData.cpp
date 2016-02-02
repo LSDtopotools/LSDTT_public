@@ -132,11 +132,13 @@ void LSDCosmoData::create(string path_name, string param_name_prefix)
   string csv_ext = "csv";
   string params_ext = ".CRNParam";
   string outfile_ext = ".CRNParamReport";
+  string soil_ext = "_CRNSoilInfo.csv";
   
   // get the filenames to open
   string crn_fname = path_name+param_name_prefix+crn_ext;
   string Rasters_fname =  path_name+param_name_prefix+files_ext;
   string parameters_fname = path_name+param_name_prefix+params_ext;
+  string soil_fname = path_name+param_name_prefix+params_ext;
 
   // load the data. 
   
@@ -166,6 +168,10 @@ void LSDCosmoData::create(string path_name, string param_name_prefix)
   cout << "Hold on while I check the rasters. I don't want to eat dirty rasters!" << endl;
   check_rasters();
   cout << "The rasters seem okay. Mmmm, rasters." << endl;
+  
+  // see if there is additional soil information
+  cout << "Checking soil information" << endl;
+  load_soil_info(parameters_fname);
   
   // now print all the data into a report
   string outfile_name = path_name+param_name_prefix+outfile_ext;
@@ -421,6 +427,132 @@ void LSDCosmoData::load_csv_cosmo_data(string filename)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This loads information from a soil file
+// The file contains several columns:
+// sampleID,sample_top_depth,sample_bottom_depth,density
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::load_soil_info(string filename)
+{
+
+  // initiate temporary vectors
+  vector<string> temp_sample_name;
+  vector<double> temp_top_depth;
+  vector<double> temp_sample_thickness;
+  vector<double> temp_density;
+
+  vector<int> valid_soil_samples;
+  vector<double> valid_top_eff_depth;
+  vector<double> valid_sample_eff_thickness;
+  double this_top_eff_depth;
+  double this_eff_thick;
+  
+  // initiate the string to hold the file
+  string line_from_file;
+  vector<string> empty_string_vec;
+  vector<string> this_string_vec;
+  string temp_string;
+
+  // make sure the filename works
+  ifstream ifs(filename.c_str());
+  if( ifs.fail() )
+  {
+    cout << "\nThere isn't any soil information. If you think there should be, check your filename." << endl;
+    cout << "You looked for: " << filename << endl;
+  }
+  else
+  {
+    // discard the first line
+    getline(ifs, line_from_file);
+  
+    // now loop through the rest of the lines, getting the data. 
+    while( getline(ifs, line_from_file))
+    {
+      // reset the string vec
+      this_string_vec = empty_string_vec;
+    
+      // create a stringstream
+      stringstream ss(line_from_file);
+    
+      while( ss.good() )
+      {
+        string substr;
+        getline( ss, substr, ',' );
+      
+        // remove the spaces
+        substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
+      
+        // remove control characters
+        substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
+      
+        // add the string to the string vec
+        this_string_vec.push_back( substr );
+      }
+    
+      //cout << "Yoyoma! size of the string vec: " <<  this_string_vec.size() << endl;
+      if ( int(this_string_vec.size()) < 4)
+      {
+        cout << "Hey there, I am trying to load your soil data but you seem not to have" << endl;
+        cout << "enough columns in your file. I am ignoring a line" << endl;
+      }
+      else
+      {
+        // now convert the data
+        //cout << "Getting sample name: " <<  this_string_vec[0] << endl;
+      
+        // let the user know about offending underscores, and replace them
+        string s = this_string_vec[0];
+        string uscore = "_";
+        size_t found = s.find(uscore);
+        if (found!=std::string::npos)
+        {
+          cout << "I found an underscore in the sample name. Replacing with a dash." <<endl;
+          replace( s.begin(), s.end(), '_', '-');
+          cout << "New sample name is: " << s << endl;
+        }
+
+        temp_sample_name.push_back( s );
+        temp_top_depth.push_back( atof( this_string_vec[1].c_str() ) );
+        temp_sample_thickness.push_back( atof(this_string_vec[2].c_str() ) );
+        temp_density.push_back( atof( this_string_vec[3].c_str() ) );
+      }  
+    }
+    
+
+    int n_soil_samples = int(temp_sample_name.size());
+    // now you need to check if the soil samples match up with and recorded samples
+    for (int i = 0; i< n_soil_samples; i++)
+    {
+      for (int samp = 0; samp < N_samples; samp++)
+      {
+        if(sample_name[samp] == temp_sample_name[i])
+        {
+          cout << "You found a valid sample: " << sample_name[samp] << endl;
+          valid_soil_samples.push_back(samp);
+          
+          // calculate the effective depths and thicknesses
+          // effective depths are in g/cm^2
+          // these assume that the density is in kg/m^3 and the
+          // thicknesses are in cm
+          this_top_eff_depth = temp_density[i]*temp_top_depth[i]*0.001;
+          valid_top_eff_depth.push_back( this_top_eff_depth );
+          
+          this_eff_thick = temp_density[i]*temp_sample_thickness[i]*0.001;
+          valid_sample_eff_thickness.push_back(this_eff_thick);
+          
+          cout << "This effective depth is: " << this_top_eff_depth << endl;
+          cout << "The eff thickness is: " <<  this_eff_thick << endl;
+        }
+      
+      }
+    }
+
+    // now update the data members
+    soil_sample_index = valid_soil_samples;
+    soil_top_effective_depth = valid_top_eff_depth;
+    soil_effective_thickness = valid_sample_eff_thickness;
+  }
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function loads parameters
@@ -2986,6 +3118,10 @@ void LSDCosmoData::Soil_sample_calculator(vector<string> Raster_names,
     }
 
   }
+  
+  // now you need to check to see if there is additional information about the soil
+  // samples. This will have the file data_name_CRNSoilInfo.csv
+  
 
   // so now you have all the shielding and production in the four vecs:
   //vector<double> snow_eff_depth_vec;
