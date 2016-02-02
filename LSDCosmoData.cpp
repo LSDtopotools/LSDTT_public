@@ -138,7 +138,7 @@ void LSDCosmoData::create(string path_name, string param_name_prefix)
   string crn_fname = path_name+param_name_prefix+crn_ext;
   string Rasters_fname =  path_name+param_name_prefix+files_ext;
   string parameters_fname = path_name+param_name_prefix+params_ext;
-  string soil_fname = path_name+param_name_prefix+params_ext;
+  string soil_fname = path_name+param_name_prefix+soil_ext;
 
   // load the data. 
   
@@ -170,8 +170,11 @@ void LSDCosmoData::create(string path_name, string param_name_prefix)
   cout << "The rasters seem okay. Mmmm, rasters." << endl;
   
   // see if there is additional soil information
-  cout << "Checking soil information" << endl;
-  load_soil_info(parameters_fname);
+  cout << "Checking soil information from the file:" << soil_fname <<  endl;
+  load_soil_info(soil_fname);
+  
+  cout << "I'm all done loading the CRN data!" << endl;
+  cout << "=================================================" << endl << endl << endl;
   
   // now print all the data into a report
   string outfile_name = path_name+param_name_prefix+outfile_ext;
@@ -525,8 +528,12 @@ void LSDCosmoData::load_soil_info(string filename)
     int soil_sample_counter = 0;
     for (int i = 0; i< n_soil_samples; i++)
     {
+      //cout << "I have a soil sample named " << temp_sample_name[i] 
+      //     << " and I'm trying to find it in the sample list" << endl;
+    
       for (int samp = 0; samp < N_samples; samp++)
       {
+        
         if(sample_name[samp] == temp_sample_name[i])
         {
           cout << "You found a valid sample: " << sample_name[samp] << endl;
@@ -551,6 +558,10 @@ void LSDCosmoData::load_soil_info(string filename)
           temp_has_soil_data_index[samp] = soil_sample_counter;
           soil_sample_counter++;
         }
+        else
+        {
+          //cout << "No, this sample is called: " << sample_name[samp] << endl;
+        }
       }
     }
 
@@ -558,9 +569,13 @@ void LSDCosmoData::load_soil_info(string filename)
     soil_sample_index = valid_soil_samples;
     soil_top_effective_depth = valid_top_eff_depth;
     soil_effective_thickness = valid_sample_eff_thickness;
+    
   }
   
   has_soil_data_index = temp_has_soil_data_index; 
+  
+  cout << "The number of samples is: " << soil_sample_index.size() << " "
+       << soil_top_effective_depth.size() << " " <<  soil_effective_thickness.size() << endl;
   
 }
 
@@ -3158,7 +3173,9 @@ void LSDCosmoData::Soil_sample_calculator(vector<string> Raster_names,
     {
       // check if the vectors reference back to the correct point
       int this_index = has_soil_data_index[i];
-      if (this_index <= int(soil_sample_index.size()))
+      cout << "This index is: " << this_index;
+      
+      if (this_index >= int(soil_sample_index.size()))
       {
         cout << "WARNING: your soil sample index is: " << this_index 
              << " which is bigger than the soil vectors." << endl;
@@ -3167,6 +3184,8 @@ void LSDCosmoData::Soil_sample_calculator(vector<string> Raster_names,
       {
         this_top_eff_depth = soil_top_effective_depth[this_index];
         this_eff_thickness = soil_effective_thickness[this_index];
+        cout << "The top eff depth of the soil sample is: " << this_top_eff_depth << endl;
+        cout << "The effective thickness is: " << this_eff_thickness << endl;
       }
     }
     
@@ -3174,12 +3193,14 @@ void LSDCosmoData::Soil_sample_calculator(vector<string> Raster_names,
     if(this_top_eff_depth>0)
     {
       snow_eff_depth_vec[i] = snow_eff_depth_vec[i]+this_top_eff_depth;
+      cout << "The updated snow is: "  << snow_eff_depth_vec[i] << endl;
     }
     
     // if there is a sample thickness, add it to the "self" shielding
     if(this_eff_thickness>0)
     {
       self_eff_depth_vec[i] = self_eff_depth_vec[i]+this_eff_thickness;
+      cout << "The updated self is: "  << self_eff_depth_vec[i] << endl;
     }
          
     vector<double> erate_analysis = full_CRN_erosion_analysis_point(test_N, 

@@ -111,9 +111,9 @@ int main (int nNumberofArgs,char *argv[])
   string param_name_prefix = argv[2];
   
   // now load the CRNCosmoData object
+  cout << "I'm gonna load some data for you buddy" << endl;
   LSDCosmoData CosmoData(path_name,param_name_prefix); 
-  
-  //cout << "Got the data" << endl;
+  cout << "Got the data" << endl;
 
   cout << "===========================================================" << endl;
   cout << "Welcome to the Basinwide cosmogenic analysis tool" << endl;
