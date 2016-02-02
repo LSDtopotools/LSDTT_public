@@ -440,6 +440,7 @@ void LSDCosmoData::load_soil_info(string filename)
   vector<double> temp_top_depth;
   vector<double> temp_sample_thickness;
   vector<double> temp_density;
+  vector<int> temp_has_soil_data_index(N_samples,-1);
 
   vector<int> valid_soil_samples;
   vector<double> valid_top_eff_depth;
@@ -521,6 +522,7 @@ void LSDCosmoData::load_soil_info(string filename)
 
     int n_soil_samples = int(temp_sample_name.size());
     // now you need to check if the soil samples match up with and recorded samples
+    int soil_sample_counter = 0;
     for (int i = 0; i< n_soil_samples; i++)
     {
       for (int samp = 0; samp < N_samples; samp++)
@@ -540,10 +542,15 @@ void LSDCosmoData::load_soil_info(string filename)
           this_eff_thick = temp_density[i]*temp_sample_thickness[i]*0.001;
           valid_sample_eff_thickness.push_back(this_eff_thick);
           
+          
           cout << "This effective depth is: " << this_top_eff_depth << endl;
           cout << "The eff thickness is: " <<  this_eff_thick << endl;
+          
+          // have and index that points from the CRN sample to the vectors
+          // of soil data
+          temp_has_soil_data_index[samp] = soil_sample_counter;
+          soil_sample_counter++;
         }
-      
       }
     }
 
@@ -552,6 +559,9 @@ void LSDCosmoData::load_soil_info(string filename)
     soil_top_effective_depth = valid_top_eff_depth;
     soil_effective_thickness = valid_sample_eff_thickness;
   }
+  
+  has_soil_data_index = temp_has_soil_data_index; 
+  
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -3139,6 +3149,38 @@ void LSDCosmoData::Soil_sample_calculator(vector<string> Raster_names,
     test_dN =  valid_concentration_uncertainties[i];
     
     cout << "    Nuclude: " << valid_nuclide_names[i] << " N: " << test_N << " sigma: " << test_dN << endl;
+    
+    
+    // find any additional soil data, if it is there:
+    double this_top_eff_depth = -99;
+    double this_eff_thickness = -99;
+    if (has_soil_data_index[i] != -1)
+    {
+      // check if the vectors reference back to the correct point
+      int this_index = has_soil_data_index[i];
+      if (this_index <= int(soil_sample_index.size()))
+      {
+        cout << "WARNING: your soil sample index is: " << this_index 
+             << " which is bigger than the soil vectors." << endl;
+      }
+      else
+      {
+        this_top_eff_depth = soil_top_effective_depth[this_index];
+        this_eff_thickness = soil_effective_thickness[this_index];
+      }
+    }
+    
+    // if there is a surface thickness, add it to the "snow" shielding
+    if(this_top_eff_depth>0)
+    {
+      snow_eff_depth_vec[i] = snow_eff_depth_vec[i]+this_top_eff_depth;
+    }
+    
+    // if there is a sample thickness, add it to the "self" shielding
+    if(this_eff_thickness>0)
+    {
+      self_eff_depth_vec[i] = self_eff_depth_vec[i]+this_eff_thickness;
+    }
          
     vector<double> erate_analysis = full_CRN_erosion_analysis_point(test_N, 
                                           valid_nuclide_names[i], test_dN, 
@@ -3304,10 +3346,14 @@ vector<double> LSDCosmoData::full_CRN_erosion_analysis_point(double Nuclide_conc
   {
     LSDCRNP.set_Granger_parameters();
   }
+  else if (Muon_scaling == "newCRONUS" )
+  {
+    LSDCRNP.set_newCRONUS_parameters();
+  }
   else
   {
     cout << "You didn't set the muon scaling." << endl
-         << "Options are Schaller, Braucher and Granger." << endl
+         << "Options are Schaller, Braucher, newCRONUS, and Granger." << endl
          << "You chose: " << Muon_scaling << endl
          << "Defaulting to Braucher et al (2009) scaling" << endl;
     LSDCRNP.set_Braucher_parameters();     
@@ -3473,10 +3519,14 @@ double LSDCosmoData::predict_CRN_erosion_point(double Nuclide_conc, string Nucli
   {
     LSDCRNP.set_Granger_parameters();
   }
+  else if (Muon_scaling == "newCRONUS" )
+  {
+    LSDCRNP.set_newCRONUS_parameters();
+  }
   else
   {
     cout << "You didn't set the muon scaling." << endl
-         << "Options are Schaller, Braucher and Granger." << endl
+         << "Options are Schaller, Braucher, newCRONUS and Granger." << endl
          << "You chose: " << Muon_scaling << endl
          << "Defaulting to Braucher et al (2009) scaling" << endl;
     LSDCRNP.set_Braucher_parameters();     
@@ -3683,10 +3733,14 @@ double LSDCosmoData::predict_mean_CRN_conc_point(double eff_erosion_rate, string
   {
     LSDCRNP.set_Granger_parameters();
   }
+  else if (Muon_scaling == "newCRONUS" )
+  {
+    LSDCRNP.set_newCRONUS_parameters();
+  }
   else
   {
     cout << "You didn't set the muon scaling." << endl
-         << "Options are Schaller, Braucher and Granger." << endl
+         << "Options are Schaller, Braucher, newCRONUS, and Granger." << endl
          << "You chose: " << Muon_scaling << endl
          << "Defaulting to Braucher et al (2009) scaling" << endl;
     LSDCRNP.set_Braucher_parameters();     

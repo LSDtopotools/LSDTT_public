@@ -536,6 +536,10 @@ class LSDCosmoData
     /// A vector with the indices into the valid samples that have soil data
     vector<int> soil_sample_index;
     
+    /// this is an index that points from a sample to an entry in the soil
+    /// vectors
+    vector<int> has_soil_data_index;
+    
     /// The top depth (in soil, in g/cm^2) of a soil sample
     /// This vector is indexed into the other vectors with valid_soil_samples
     vector<double> soil_top_effective_depth;
