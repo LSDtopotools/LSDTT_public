@@ -2978,7 +2978,7 @@ vector<double> LSDCosmoBasin::calculate_effective_pressures_for_calculators(LSDR
       }
       else if (snow_shield_eff_depth.size() == 1)
       {
-        if (self_shield_eff_depth[0] != 0)
+        if (snow_shield_eff_depth[0] != 0)
         {
           this_snow_shield = exp(-snow_shield_eff_depth[0]/gamma_spallation);
         }
@@ -2989,7 +2989,7 @@ vector<double> LSDCosmoBasin::calculate_effective_pressures_for_calculators(LSDR
       }
       else
       {
-        if (self_shield_eff_depth[q] != 0)
+        if (snow_shield_eff_depth[q] != 0)
         {
           this_snow_shield = exp(-snow_shield_eff_depth[q]/gamma_spallation);
         }

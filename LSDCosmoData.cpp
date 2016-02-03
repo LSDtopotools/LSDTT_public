@@ -3020,6 +3020,7 @@ void LSDCosmoData::Soil_sample_calculator(vector<string> Raster_names,
   vector<double> self_eff_depth_vec;
   vector<double> topo_shield_vec;
   vector<double> production_vec;
+  vector<double> pressure_vec;
 
   // Initiate pointers to the rasters
   LSDRaster Topographic_shielding;
@@ -3138,6 +3139,8 @@ void LSDCosmoData::Soil_sample_calculator(vector<string> Raster_names,
       this_pressure = LSDCRNP.NCEPatm_2(snapped_lat[vs], snapped_long[vs], 
                                         double(this_elevation));
     
+      pressure_vec.push_back(this_pressure);
+    
       // now get the scaling
       production_vec.push_back(LSDCRNP.stone2000sp(snapped_lat[vs],this_pressure, Fsp));
     }
@@ -3208,6 +3211,44 @@ void LSDCosmoData::Soil_sample_calculator(vector<string> Raster_names,
                                           prod_uncert_factor, Muon_scaling,
                                           snow_eff_depth_vec[i],self_eff_depth_vec[i],
                                           topo_shield_vec[i],production_vec[i]);
+                                          
+    double gamma_spallation = 160;
+                                          
+    // get the snow shielding. Assumes spallation only
+    double this_snow_shield = 1;
+    if (snow_eff_depth_vec[i] != 0)
+    {
+      this_snow_shield = exp(-snow_eff_depth_vec[i]/gamma_spallation);
+    }
+      
+    // now the self shiedling. Again assume spallation only
+    double this_self_shield = 1.0;
+    if (self_eff_depth_vec[i] != 0)
+    {
+      this_self_shield = gamma_spallation/self_eff_depth_vec[i]*
+                             (1-exp(-self_eff_depth_vec[i]/gamma_spallation));
+    }
+
+    double this_shielding = topo_shield_vec[i]*this_self_shield*this_snow_shield;
+    double this_comb_scaling = this_shielding*production_vec[i];
+
+    MapOfProdAndScaling["BasinRelief"][ valid_cosmo_points[i] ] = 0.0;
+    MapOfProdAndScaling["AverageProdScaling"][ valid_cosmo_points[i] ] = production_vec[i];
+    MapOfProdAndScaling["AverageTopoShielding"][ valid_cosmo_points[i] ] = topo_shield_vec[i];
+    MapOfProdAndScaling["AverageSelfShielding"][ valid_cosmo_points[i] ] = this_self_shield;
+    MapOfProdAndScaling["AverageSnowShielding"][ valid_cosmo_points[i] ] = this_snow_shield;
+    MapOfProdAndScaling["AverageShielding"][ valid_cosmo_points[i] ] =  this_shielding;
+    MapOfProdAndScaling["AverageCombinedScaling"][ valid_cosmo_points[i] ] = this_comb_scaling;
+    MapOfProdAndScaling["outlet_lat"][ valid_cosmo_points[i] ] = latitude[i];
+    MapOfProdAndScaling["OutletPressure"][ valid_cosmo_points[i] ] = pressure_vec[i];
+    MapOfProdAndScaling["OutletEffectivePressure"][ valid_cosmo_points[i] ] = pressure_vec[i];
+    MapOfProdAndScaling["centroid_lat"][ valid_cosmo_points[i] ] = latitude[i];
+    MapOfProdAndScaling["CentroidPressure"][ valid_cosmo_points[i] ] = pressure_vec[i];
+    MapOfProdAndScaling["CentroidEffectivePressure"][ valid_cosmo_points[i] ] = pressure_vec[i];
+    
+    // add the erosion rate results to the holding data member
+    erosion_rate_results[ valid_cosmo_points[i] ] = erate_analysis;
+
   }
 
 
