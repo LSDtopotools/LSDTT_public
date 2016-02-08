@@ -2662,7 +2662,285 @@ double LSDCosmoBasin::predict_mean_CRN_conc_with_snow_and_self(double eff_erosio
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// this function returns the concentration of a nuclide as  function of erosion rate
+// The erosion rate should be in g/cm^2/yr
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+double LSDCosmoBasin::predict_mean_CRN_conc_with_snow_and_self_nested(double eff_erosion_rate, 
+                                            LSDRaster& known_effective_erosion,
+                                            LSDFlowInfo& FlowInfo,
+                                            string Nuclide,
+                                            double prod_uncert_factor, string Muon_scaling,
+                                            double& production_uncertainty, 
+                                            double& average_production,
+                                            bool is_production_uncertainty_plus_on,
+                                            bool is_production_uncertainty_minus_on)
+{
+  // production uncertainty factor is a multiplier that sets the production 
+  // certainty. If it is 1.1, there is 10% production rate uncertainty, or
+  // if it is 0.9 there is -10% unvertainty. The reason why it is implemented
+  // like this is that this allows gaussian error propigation.
+  if (prod_uncert_factor <=0)
+  {
+    cout << "You have set an unrealistic production uncertainty factor." << endl;
+    cout << "Defaulting to 1." << endl;
+    prod_uncert_factor = 1;
+  }
+  
+  int end_node;
+  end_node =  int(BasinNodes.size());
+  
+  
+  // these parameters give the average production rate of the entore basin, 
+  // along with the magnitude of the production uncertainty
+  double cumulative_production_rate = 0;
+  double average_production_rate;
+  double average_production_uncertainty;
+  
+  // the average atoms per gram of the nuclide
+  double BasinAverage;
+  
+  // the total shielding. A product of snow, topographic and production scaling
+  double total_shielding;
+  double total_shielding_no_uncert;
+  
+  // the total atomic concentration of the nuclude in question
+  double Total_N = 0;
+  
+  int count_samples = 0;
+  
+  // initiate a particle. We'll just repeatedly call this particle
+  // for the sample. 
+  int startType = 0; 
+  double Xloc = 0;
+  double Yloc = 0;
+  double  startdLoc = 0.0;
+  double  start_effdloc = 0.0;
+  double startzLoc = 0.0;
+  
+  int row,col;    // these are for getting the row and column from the know erosion rate raster
+  
+  // create a particle at zero depth
+  LSDCRNParticle eroded_particle(startType, Xloc, Yloc,
+                               startdLoc, start_effdloc, startzLoc);
 
+  // now create the CRN parameters object
+  LSDCRNParameters LSDCRNP;
+  
+  // set the scaling vector
+  vector<bool> nuclide_scaling_switches(4,false);
+  if (Nuclide == "Be10")
+  {
+    nuclide_scaling_switches[0] = true;
+  }
+  else if (Nuclide == "Al26")
+  {
+    nuclide_scaling_switches[1] = true;
+  }
+  else
+  {
+    cout << "LSDBasin line 1583, You didn't choose a valid nuclide. Defaulting"
+         << " to 10Be." << endl;
+    Nuclide = "Be10";
+    nuclide_scaling_switches[0] = true; 
+  }
+  
+  // check the production uncertainty bools
+  if(is_production_uncertainty_plus_on)
+  {
+    if(is_production_uncertainty_minus_on)
+    {
+      cout << "You can't have both plus and minus production uncertainty on" << endl;
+      cout << "Setting minus uncertainty to false" << endl;
+      is_production_uncertainty_minus_on = false;
+    }
+  }
+  
+  // parameters for the shielding
+  double this_top_eff_depth;
+  double this_bottom_eff_depth;
+  
+  // loop through the elevation data
+  for (int q = 0; q < end_node; ++q)
+  {
+    
+    //exclude NDV from average
+    if(topographic_shielding[q] != NoDataValue)
+    {
+      count_samples++;
+            
+      // reset scaling parameters. This is necessary since the F values are
+      // reset for local scaling
+      if (Muon_scaling == "Schaller" )
+      {
+        LSDCRNP.set_Schaller_parameters();
+      }
+      else if (Muon_scaling == "Braucher" )
+      {
+        LSDCRNP.set_Braucher_parameters();
+      }
+      else if (Muon_scaling == "Granger" )
+      {
+        LSDCRNP.set_Granger_parameters();
+      }
+      else if (Muon_scaling == "newCRONUS" )
+      {
+        LSDCRNP.set_newCRONUS_parameters();
+      }
+      else
+      {
+        cout << "You didn't set the muon scaling." << endl
+             << "Options are Schaller, Braucher, newCRONUS, and Granger." << endl
+             << "You chose: " << Muon_scaling << endl
+             << "Defaulting to Braucher et al (2009) scaling" << endl;
+        LSDCRNP.set_Braucher_parameters();     
+      }
+      
+      // set the scaling to the correct production uncertainty
+      vector<double> test_uncert;
+      if(is_production_uncertainty_plus_on)
+      {
+        test_uncert = LSDCRNP.set_P0_CRONUS_uncertainty_plus();
+      }
+      else if(is_production_uncertainty_minus_on)
+      {
+        test_uncert = LSDCRNP.set_P0_CRONUS_uncertainty_minus();
+      }
+      
+      // the elevation, snow shielding, topographic shielding
+      // and production scaling are all independent of the erosion rate
+      // and are calculated seperately. 
+      if(  production_scaling.size() < 1 )
+      {
+        cout << "LSDCosmoBasin, trying to precalculate erosion rate." << endl
+             << "Scaling vectors have not been set! You are about to get a seg fault" << endl;
+      }
+      
+      // now you need logic to test if you are accounting for self shielding
+      total_shielding_no_uncert = production_scaling[q]*topographic_shielding[q];
+      total_shielding = prod_uncert_factor*total_shielding_no_uncert;
+      cumulative_production_rate += total_shielding_no_uncert;
+      
+      // scale the F values
+      LSDCRNP.scale_F_values(total_shielding,nuclide_scaling_switches);
+      
+      // check to see if the shielding data exist and if so get the top and bottom
+      // effective depths
+      // first get snow shielding (as implemented by and effective depth of snow)
+      if (snow_shield_eff_depth.size() < 1)
+      {
+        this_top_eff_depth = 0;
+      }
+      else if (snow_shield_eff_depth.size() == 1)
+      {
+        this_top_eff_depth = snow_shield_eff_depth[0];
+        //cout << "\n\nSnow shield depth: " <<   this_top_eff_depth << endl;
+      }
+      else
+      {
+        this_top_eff_depth = snow_shield_eff_depth[q];
+        //cout << "\n\nSnow shield depth: " <<   this_top_eff_depth << endl;
+      }
+      
+      // now get the self shielding. This is the thickness of the removed
+      // layer
+      if (self_shield_eff_depth.size() < 1)
+      {
+        this_bottom_eff_depth = this_top_eff_depth;
+      }
+      else if (self_shield_eff_depth.size() == 1)
+      {
+        this_bottom_eff_depth = this_top_eff_depth+self_shield_eff_depth[0];
+        //cout << "\n\n Self shield depth: " << self_shield_eff_depth[0]  << endl;
+      }
+      else
+      {
+        this_bottom_eff_depth = this_top_eff_depth+self_shield_eff_depth[q];
+        //cout << "\n\n Self shield depth: " << self_shield_eff_depth[q]  << endl;
+      }
+      
+      // get the nuclide concentration from this node
+      // get the row and column of the node
+      FlowInfo.retrieve_current_row_and_col(BasinNodes[q], row, col);
+    
+      // get the erosion rate from the raster
+      float this_erosion_rate = known_effective_erosion.get_data_element(row,col);
+    
+      // check if there is a data value in the raster, if this is the case then
+      // calculate the concentration based on the erosion from this raster 
+      if( this_erosion_rate != NoDataValue)
+      {
+        if (Nuclide == "Be10")
+        {
+          //cout << "LInE 2271, 10Be" << endl;
+          eroded_particle.update_10Be_SSfull_depth_integrated(this_erosion_rate,LSDCRNP,
+                                             this_top_eff_depth, this_bottom_eff_depth);
+           Total_N+=eroded_particle.getConc_10Be();
+        }
+        else if (Nuclide == "Al26")
+        {
+          //cout << "LINE 2278, 26Al" << endl;
+          eroded_particle.update_26Al_SSfull_depth_integrated(this_erosion_rate,LSDCRNP,
+                                             this_top_eff_depth, this_bottom_eff_depth);
+          Total_N+=eroded_particle.getConc_26Al();
+        }
+        else
+        {
+          cout << "You didn't give a valid nuclide. You chose: " << Nuclide << endl;
+          cout << "Choices are 10Be, 26Al.  Note these case sensitive and cannot" << endl;
+          cout << "contain spaces or control characters. Defaulting to 10Be." << endl;
+          eroded_particle.update_10Be_SSfull_depth_integrated(this_erosion_rate,LSDCRNP,
+                                             this_top_eff_depth, this_bottom_eff_depth);
+          Total_N+=eroded_particle.getConc_10Be();         
+        }
+      }
+      else  // this is the erosion rate not previously calculated (i.e., not in the raster)
+      {
+        if (Nuclide == "Be10")
+        {
+          //cout << "LInE 2271, 10Be" << endl;
+          eroded_particle.update_10Be_SSfull_depth_integrated(eff_erosion_rate,LSDCRNP,
+                                             this_top_eff_depth, this_bottom_eff_depth);
+           Total_N+=eroded_particle.getConc_10Be();
+        }
+        else if (Nuclide == "Al26")
+        {
+          //cout << "LINE 2278, 26Al" << endl;
+          eroded_particle.update_26Al_SSfull_depth_integrated(eff_erosion_rate,LSDCRNP,
+                                             this_top_eff_depth, this_bottom_eff_depth);
+          Total_N+=eroded_particle.getConc_26Al();
+        }
+        else
+        {
+          cout << "You didn't give a valid nuclide. You chose: " << Nuclide << endl;
+          cout << "Choices are 10Be, 26Al.  Note these case sensitive and cannot" << endl;
+          cout << "contain spaces or control characters. Defaulting to 10Be." << endl;
+          eroded_particle.update_10Be_SSfull_depth_integrated(eff_erosion_rate,LSDCRNP,
+                                             this_top_eff_depth, this_bottom_eff_depth);
+          Total_N+=eroded_particle.getConc_10Be();         
+        }
+      }
+      
+      //cout << endl << endl << "LINE 2052, total shield: " << total_shielding 
+      //     << " erosion: " << eff_erosion_rate << " erosion in cm/kyr with rho = 2650: "
+      //     << eff_erosion_rate*1e6/2650.0 << " and N: " << eroded_particle.getConc_10Be() << endl;      
+      
+    }                    
+  }
+
+  BasinAverage = Total_N/double(count_samples);
+  average_production_rate = cumulative_production_rate/double(count_samples);
+  average_production_uncertainty = average_production_rate*fabs(1-prod_uncert_factor);
+  
+  // replace the production uncertanty
+  production_uncertainty = average_production_uncertainty;
+  
+  // replace the average production rate
+  average_production = average_production_rate;
+      
+  return BasinAverage;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2695,7 +2973,7 @@ double LSDCosmoBasin::predict_mean_CRN_conc_centroid(double eff_erosion_rate, st
   // the average atoms per gram of the nuclide
   double AverageTopo;
   double AverageSnow;
-  double AverageProd;
+  //double AverageProd;
   double AverageSelf;
   
   // the total shielding. A product of snow, topographic and production scaling
@@ -2766,7 +3044,7 @@ double LSDCosmoBasin::predict_mean_CRN_conc_centroid(double eff_erosion_rate, st
 
   AverageSnow = snow_shield_total/double(count_samples);
   AverageTopo = topo_shield_total/double(count_samples);
-  AverageProd = total_prod_scaling/double(count_samples);
+  //AverageProd = total_prod_scaling/double(count_samples);
   
   if (self_shielding.size() > 1)
   {
@@ -3270,9 +3548,9 @@ void LSDCosmoBasin::print_scaling_and_shielding_rasters(string filename,
       }
       
       Production_Data[row][col] = production_scaling[q];
-      Combined_Shielding_Data[row][col] = topographic_shielding[q]*production_scaling[q]*
+      Combined_Shielding_Data[row][col] = topographic_shielding[q]*
                                 this_snow_shield*this_self_shield;
-      Combined_Scaling_Data[row][col] = topographic_shielding[q]*
+      Combined_Scaling_Data[row][col] = topographic_shielding[q]*production_scaling[q]*
                                 this_snow_shield*this_self_shield;
 
     }
@@ -3294,6 +3572,114 @@ void LSDCosmoBasin::print_scaling_and_shielding_rasters(string filename,
                                NoDataValue, Combined_Scaling_Data, GeoReferencingStrings);
   string CombScale_ext = "_CSCALE";
   ProductionRaster.write_raster(filename+CombScale_ext,bil_ext);                            
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This returns the combined scaling raster
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LSDRaster LSDCosmoBasin::get_combined_scaling_raster(string filename,
+                                          LSDFlowInfo& FlowInfo)
+{
+  // create arrays that will be used to generate rasters
+  Array2D<float> Combined_Scaling_Data(NRows,NCols,NoDataValue);
+
+  // now create the CRN parameters object
+  LSDCRNParameters LSDCRNP;
+  double gamma_spallation = 160;      // in g/cm^2: spallation attentuation depth
+
+  double this_snow_shield, this_self_shield;
+  int row,col;      // the row and column of the current node
+  int end_node = int(BasinNodes.size());
+  for (int q = 0; q < end_node; ++q)
+  {
+    
+    //exclude NDV from average
+    if(topographic_shielding[q] != NoDataValue)
+    {
+      
+      // get the row and column
+      FlowInfo.retrieve_current_row_and_col(BasinNodes[q], row, col);
+      
+      if(  production_scaling.size() < 1 )
+      {
+        cout << "LSDCosmoBasin, trying to precalculate erosion rate." << endl
+             << "Scaling vectors have not been set! You are about to get a seg fault" << endl;
+      }
+
+      // now get the snow shelding information
+      if (snow_shield_eff_depth.size() < 1)
+      {
+        this_snow_shield = 1;
+      }
+      else if (snow_shield_eff_depth.size() == 1)
+      {
+        if (self_shield_eff_depth[0] != 0)
+        {
+          this_snow_shield = exp(-snow_shield_eff_depth[0]/gamma_spallation);
+        }
+        else
+        {
+          this_snow_shield=1;
+        }
+      }
+      else
+      {
+        if (self_shield_eff_depth[q] != 0)
+        {
+          this_snow_shield = exp(-snow_shield_eff_depth[q]/gamma_spallation);
+        }
+        else
+        {
+          this_snow_shield=1;
+        }
+      }
+      
+      // now get the self shelding information
+      if (self_shield_eff_depth.size() < 1)
+      {
+        this_self_shield = 1;
+      }
+      else if (self_shield_eff_depth.size() == 1)
+      {
+        if (self_shield_eff_depth[0] != 0)
+        {
+          this_self_shield = gamma_spallation/self_shield_eff_depth[0]*
+                             (1-exp(-self_shield_eff_depth[0]/gamma_spallation));
+        }
+        else
+        {
+          this_self_shield = 1;
+        }
+      }
+      else
+      {
+        if (self_shield_eff_depth[q] != 0)
+        {
+          this_self_shield = gamma_spallation/self_shield_eff_depth[q]*
+                             (1-exp(-self_shield_eff_depth[q]/gamma_spallation));
+        }
+        else
+        {
+          this_self_shield=1;
+        }
+      }
+      
+      Combined_Scaling_Data[row][col] = topographic_shielding[q]*production_scaling[q]*
+                                this_snow_shield*this_self_shield;
+
+
+    }
+  }
+  
+  // now create and write the raster
+  LSDRaster CombinedScalingRaster(NRows, NCols, XMinimum, YMinimum, DataResolution,
+                               NoDataValue, Combined_Scaling_Data, GeoReferencingStrings);
+                               
+  return CombinedScalingRaster;
+                         
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

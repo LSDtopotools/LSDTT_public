@@ -1066,6 +1066,49 @@ class LSDCosmoBasin: public LSDBasin
                                  bool is_production_uncertainty_minus_on);
 
     /// @brief this predicts the mean concentration of a nuclide within 
+    ///  a basin. It does a full analyitical solution to account for
+    ///  snow and self sheilding. It uses a raster of known erosion rates 
+    ///  to predict the concentration from the basin: it is primarily used for 
+    ///  nesting. 
+    /// @param eff_erosion rate The erosion rate in g/cm^2/yr
+    /// @param known_effective_erosion a raster of known effective erosion rates (g/cm^2/yr)
+    /// @param FlowInfo the LSDFlowInfo object
+    /// @param Nuclide a string with the nuclide name. At the moment the options are:
+    ///   Be10
+    ///   Al26
+    ///  These are case sensitive
+    /// @param prod_uncert_factor production uncertainty factor is a multiplier that sets the production 
+    ///  certainty. If it is 1.1, there is 10% production rate uncertainty, or
+    ///  if it is 0.9 there is -10% unvertainty. The reason why it is implemented
+    ///  like this is that this allows gaussian error propigation.
+    /// @param Muon_scaling a string that gives the muon scaling scheme. 
+    ///  options are Schaller, Braucher and Granger
+    /// @param production_uncertainty this gives the uncertainty in the production
+    ///  rates based on the production_uncert_factor; it is used in gaussian
+    ///  error propigation. The parameter is replaced within the function.
+    /// @param production_rate This gives the production rate average for the
+    ///  basin. It can be used for uncertainty analyis: if the scaling is
+    ///  changed the change in this production rate can be used to construct
+    ///  the gaussian error propigation terms
+    /// @param is_production_uncertainty_plus_on a boolean that is true if the 
+    ///  production rate uncertainty (+) is switched on
+    /// @param is_production_uncertainty_minus_on a boolean that is true if the 
+    ///  production rate uncertainty (-) is switched on. If the + switch is 
+    ///  true this parameter defauts to false. 
+    /// @return the concentration of the nuclide averaged across the DEM
+    /// @author SMM
+    /// @date 06/02/2016
+    double predict_mean_CRN_conc_with_snow_and_self_nested(double eff_erosion_rate, 
+                                            LSDRaster& known_effective_erosion,
+                                            LSDFlowInfo& FlowInfo,
+                                            string Nuclide,
+                                            double prod_uncert_factor, string Muon_scaling,
+                                            double& production_uncertainty, 
+                                            double& average_production,
+                                            bool is_production_uncertainty_plus_on,
+                                            bool is_production_uncertainty_minus_on);
+
+    /// @brief this predicts the mean concentration of a nuclide within 
     ///  a basin, using the production scaling of the centroid
     ///  It replicates the technique used by many authors. This function
     ///  is mainly here to show how far off this method is compared to 
@@ -1160,12 +1203,31 @@ class LSDCosmoBasin: public LSDBasin
     /// @brief This function prints the production scaling as well as the 
     ///  combined scaling and combined shielding on a pixel by pixel basis to 
     ///  rasters
+    /// @detail The production rster _PROD has the latitude and elevation adjusted 
+    ///  scaling using the Stone scheme
+    ///   The combined shielding raster _CSHIELD is the product of topographic, 
+    ///   self and snow shielding, assuming that the snow and self shielding are
+    ///   from spallation only
+    ///   The combined scaling raster _CSCALE is the combined sheidling values mulitplied by 
+    ///   the production scaling.
     /// @param filename the name of the file: this is generally the DEM file with
     ///  an extension for the basin name
     /// @param FlowInfo The LSDFlowInfo object
     /// @author SMM
     /// @date 24/03/2015
     void print_scaling_and_shielding_rasters(string filename,LSDFlowInfo& FlowInfo);
+
+    /// @brief returns the combned scaling raster, which has the product of
+    ///  the topographic, snow and self shielding, multiplied by production scaling,
+    ///  for each pixel
+    /// @detail The snow and self shielding factors are calculate assuming spallation only!
+    /// @param filename the name of the file: this is generally the DEM file with
+    ///  an extension for the basin name
+    /// @param FlowInfo The LSDFlowInfo object
+    /// @author SMM
+    /// @date 6/02/2016
+    LSDRaster get_combined_scaling_raster(string filename,LSDFlowInfo& FlowInfo);
+
 
     /// @brief This function is run after the CRN erosion rate have been found
     ///  it prints a raster contiannig the spatially distributed concentration
