@@ -953,6 +953,9 @@ class LSDCosmoBasin: public LSDBasin
                             double Nuclide_conc_err, double prod_uncert_factor,
                             string Muon_scaling);
 
+
+
+
     /// @brief this uses Newton Raphson iteration to retrieve the erosion rate
     ///  from a basin given a nuclide concentration
     /// @param eff_erosion rate The erosion rate in g/cm^2/yr
@@ -987,6 +990,47 @@ class LSDCosmoBasin: public LSDBasin
                                double& average_production,
                                bool is_production_uncertainty_plus_on,
                                bool is_production_uncertainty_minus_on);
+
+    /// @brief this uses Newton Raphson iteration to retrieve the erosion rate
+    ///  from a basin given a nuclide concentration.  This is the nested version.
+    /// @detail The nesting can be done by setting the erosion rate of pixels within
+    ///  the basin
+    /// @param eff_erosion rate The erosion rate in g/cm^2/yr
+    /// @param Nuclide a string with the nuclide name. At the moment the options are:
+    ///   Be10
+    ///   Al26
+    ///  These are case sensitive
+    /// @param prod_uncert_factor production uncertainty factor is a multiplier that sets the production 
+    ///  certainty. If it is 1.1, there is 10% production rate uncertainty, or
+    ///  if it is 0.9 there is -10% unvertainty. The reason why it is implemented
+    ///  like this is that this allows gaussian error propigation.
+    /// @param Muon_scaling a string that gives the muon scaling scheme. 
+    ///  options are Schaller, Braucher and Granger
+    /// @param production_uncertainty this gives the uncertainty in the production
+    ///  rates based on the production_uncert_factor; it is used in gaussian
+    ///  error propigation. The parameter is replaced within the function. 
+    /// @param average_production This gives the production rate average for the
+    ///  basin. It can be used for uncertainty analyis: if the scaling is
+    ///  changed the change in this production rate can be used to construct
+    ///  the gaussian error propigation terms   
+    /// @param is_production_uncertainty_plus_on a boolean that is true if the 
+    ///  production rate uncertainty (+) is switched on
+    /// @param is_production_uncertainty_minus_on a boolean that is true if the 
+    ///  production rate uncertainty (-) is switched on. If the + switch is 
+    ///  true this parameter defauts to false.         
+    /// @return The effective erosion rate in g/cm^-2/yr
+    /// @author SMM
+    /// @date 03/01/2015
+    double predict_CRN_erosion_nested(double Nuclide_conc, string Nuclide, 
+                                          double prod_uncert_factor,
+                                          string Muon_scaling,
+                                          double& production_uncertainty,
+                                          double& average_production,
+                                          bool is_production_uncertainty_plus_on,
+                                          bool is_production_uncertainty_minus_on,
+                                          LSDRaster& eff_erosion_raster,
+                                          LSDFlowInfo& FlowInfo);
+
                                                
     /// @brief this predicts the mean concentration of a nuclide within 
     /// a basin
