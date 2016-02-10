@@ -1191,6 +1191,15 @@ class LSDCosmoBasin: public LSDBasin
                                     bool is_production_uncertainty_plus_on,
                                     bool is_production_uncertainty_minus_on);
 
+    /// @detail A function for testing if a known erosion rate raster contains
+    ///  any unknowns within a basin
+    /// @param known_erates  a raster of known erosion rates
+    /// @param FlowInfo a flow info object
+    /// @return a boolean that is true if there are unknown erosion rates and false if not
+    /// @author SMM
+    /// @date 10/02/2016
+    bool  are_there_unknown_erosion_rates_in_basin(LSDRaster& known_erates,LSDFlowInfo& FlowInfo);
+
     /// @brief Prints a csv with information about the nodes in a basin that
     ///  relate to cosmogenic paramters
     /// @detail the csv file out has the format:

@@ -1651,7 +1651,7 @@ void LSDCosmoBasin::populate_snow_and_self_eff_depth_vectors(LSDFlowInfo& FlowIn
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// This function creates the snow and shelf sheilding vectors based on a 
+// This function creates the snow and shelf shielding vectors based on a 
 // double and a float
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCosmoBasin::populate_snow_and_self_eff_depth_vectors(double snow_eff_depth, 
@@ -2419,12 +2419,15 @@ double LSDCosmoBasin::predict_CRN_erosion_nested(double Nuclide_conc, string Nuc
     //cout << "Taking a step, eff_e: " << eff_e_new << " data_outlet? " <<  data_from_outlet_only;
     if(self_shield_eff_depth.size() < 1 && snow_shield_eff_depth.size() < 1)
     {                                             
-      cout << "Error LSDBasin nesting calculation, you must have some form of snow and self shielding" << endl;
-      
-//  NEED TO PUT SOE VALID LOGIC HERE!!
-      
-      
+      cout << "You don't seem to have populated the snow and self shielding vectors." << endl;
+      cout << "Setting these to 0 shielding" << endl;
+      double snow_eff_depth = 0;
+      double self_eff_depth = 0;
+      populate_snow_and_self_eff_depth_vectors(snow_eff_depth, self_eff_depth);
     }
+    
+    // now check if there are unknown erosion rates in basin
+    
     else   // if self and snow sheilding are caluclated based on effective depths
     {
       //cout << "LSDBasin line 1649 You are doing this wih the effective depth driven shielding" << endl;
@@ -3460,6 +3463,43 @@ double LSDCosmoBasin::predict_mean_CRN_conc_centroid(double eff_erosion_rate, st
   return Total_N;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Check nesting: this loops through an erosion rate raster to see if there
+// are unknown erosion rates in the raster. It returns a boolean
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+bool  LSDCosmoBasin::are_there_unknown_erosion_rates_in_basin(LSDRaster& known_erates,LSDFlowInfo& FlowInfo)
+{
+  bool are_there_unknowns = false;
+  int row,col;
+  
+  // get the end nod of the basin
+  int end_node;
+  end_node =  int(BasinNodes.size());
+  
+  // loop through the basin nodes. The logic stops as soon as it finds one unknown
+  int q = 0;
+  while( are_there_unknowns == false && q <= end_node)
+  {
+    // get the row and column of the node
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], row, col);
+    
+    // get the erosion rate from the raster
+    float this_erosion_rate = known_erates.get_data_element(row,col);
+    
+    // switch to true if you find an unknown
+    if (this_erosion_rate == NoDataValue)
+    {
+      are_there_unknowns = true;
+    }
+    
+    q++;
+    
+  }
+  return are_there_unknowns;
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
