@@ -2412,11 +2412,17 @@ double LSDCosmoBasin::predict_CRN_erosion_nested(double Nuclide_conc, string Nuc
   
   double this_step_average_production;// the average production rate for this step
   double displace_average_production; // aveage production for the displace step
-  
-  do
+
+  // now check if there are unknown erosion rates in basin
+  bool there_are_unknowns = are_there_unknown_erosion_rates_in_basin(eff_erosion_raster,FlowInfo);
+  if (not there_are_unknowns)
   {
-    // get the new values
-    //cout << "Taking a step, eff_e: " << eff_e_new << " data_outlet? " <<  data_from_outlet_only;
+    eff_e_new = CalculateBasinMean(FlowInfo, eff_erosion_raster);
+  }
+  else
+  {
+  
+    // check to see if there are snow and shielding values, if not populate the vecotrs
     if(self_shield_eff_depth.size() < 1 && snow_shield_eff_depth.size() < 1)
     {                                             
       cout << "You don't seem to have populated the snow and self shielding vectors." << endl;
@@ -2425,12 +2431,10 @@ double LSDCosmoBasin::predict_CRN_erosion_nested(double Nuclide_conc, string Nuc
       double self_eff_depth = 0;
       populate_snow_and_self_eff_depth_vectors(snow_eff_depth, self_eff_depth);
     }
-    
-    // now check if there are unknown erosion rates in basin
-    
-    else   // if self and snow sheilding are caluclated based on effective depths
+  
+    // now use newton iteration to get the correct cocentration
+    do
     {
-      //cout << "LSDBasin line 1649 You are doing this wih the effective depth driven shielding" << endl;
       N_this_step = predict_mean_CRN_conc_with_snow_and_self_nested(eff_e_new, 
                                         eff_erosion_raster,FlowInfo,
                                         Nuclide,
@@ -2450,27 +2454,26 @@ double LSDCosmoBasin::predict_CRN_erosion_nested(double Nuclide_conc, string Nuc
                                        displace_average_production,
                                        is_production_uncertainty_plus_on,
                                        is_production_uncertainty_minus_on);
-    }
     
-    f_x =  N_this_step-Nuclide_conc;
-    f_x_displace =  N_displace-Nuclide_conc;
+      f_x =  N_this_step-Nuclide_conc;
+      f_x_displace =  N_displace-Nuclide_conc;
     
-    N_derivative = (f_x_displace-f_x)/eff_e_displace;
+      N_derivative = (f_x_displace-f_x)/eff_e_displace;
       
-    if(N_derivative != 0)
-    {
-      eff_e_new = eff_e_new-f_x/N_derivative;
-      
-      // check to see if the difference in erosion rates meet a tolerance
-      eff_e_change = f_x/N_derivative;
-      //cout << "Change is: " << eff_e_change << " and erosion rate is: " << eff_e_new << endl;
-    }
-    else
-    {
-      eff_e_change = 0;
-    }
-  
-  } while(fabs(eff_e_change) > tolerance);
+      if(N_derivative != 0)
+      {
+        eff_e_new = eff_e_new-f_x/N_derivative;
+        
+        // check to see if the difference in erosion rates meet a tolerance
+        eff_e_change = f_x/N_derivative;
+        //cout << "Change is: " << eff_e_change << " and erosion rate is: " << eff_e_new << endl;
+      }
+      else
+      {
+        eff_e_change = 0;
+      }
+    } while(fabs(eff_e_change) > tolerance);
+  }
 
   // replace the production uncertainty
   production_uncertainty = this_step_prod_uncert;
@@ -3469,7 +3472,7 @@ double LSDCosmoBasin::predict_mean_CRN_conc_centroid(double eff_erosion_rate, st
 // Check nesting: this loops through an erosion rate raster to see if there
 // are unknown erosion rates in the raster. It returns a boolean
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-bool  LSDCosmoBasin::are_there_unknown_erosion_rates_in_basin(LSDRaster& known_erates,LSDFlowInfo& FlowInfo)
+bool LSDCosmoBasin::are_there_unknown_erosion_rates_in_basin(LSDRaster& known_erates,LSDFlowInfo& FlowInfo)
 {
   bool are_there_unknowns = false;
   int row,col;

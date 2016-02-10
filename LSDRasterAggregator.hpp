@@ -1,0 +1,133 @@
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// LSDRasterAggregator.hpp
+// Land Surface Dynamics RasterAggregator
+//
+// An object within the University
+//  of Edinburgh Land Surface Dynamics group topographic toolbox
+//  that is a very general object for managing aggregated raster calculations
+//
+// Developed by:
+//  Simon M. Mudd
+//  Martin D. Hurst
+//  David T. Milodowski
+//  Stuart W.D. Grieve
+//  Declan A. Valters
+//  Fiona Clubb
+//
+// Copyright (C) 2013 Simon M. Mudd 2013
+//
+// Developer can be contacted by simon.m.mudd _at_ ed.ac.uk
+//
+//    Simon Mudd                                                    
+//    University of Edinburgh
+//    School of GeoSciences
+//    Drummond Street
+//    Edinburgh, EH8 9XP
+//    Scotland
+//    United Kingdom
+//
+// This program is free software;
+// you can redistribute it and/or modify it under the terms of the
+// GNU General Public License as published by the Free Software Foundation;
+// either version 2 of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY;
+// without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the GNU General Public License for more details.
+//
+// You should have received a copy of the
+// GNU General Public License along with this program;
+// if not, write to:
+// Free Software Foundation, Inc.,
+// 51 Franklin Street, Fifth Floor,
+// Boston, MA 02110-1301
+// USA
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+#include <fstream>
+#include <math.h>
+#include <iostream>
+#include <map>
+#include "LSDRaster.hpp"
+#include "LSDFlowInfo.hpp"
+using namespace std;
+
+#ifndef RasterAggregator_HPP
+#define RasterAggregator_HPP
+
+/// @brief A general object for holding several different raster layers
+class LSDRasterAggregator
+{
+  public:
+  
+    /// @brief the default constructor. This doesn't do anything. 
+    LSDRasterAggregator()                                { create(); }
+    
+    /// @brief This constructor requires a filename
+    /// @detail The filename and path point to files with the rasters
+    /// @param path The path to the files
+    /// @param file_prefix the prefix of the files
+    /// @author SMM
+    /// @date 10/02/2016
+    LSDRasterAggregator( string path, string file_prefix)  { create(path,file_prefix); }
+    
+    /// @brief This function load a csv file containing names of  a DEMs and 
+    ///  (possibly) other rasters
+    /// @detail The first row is assumed to be the DEM
+    /// @param filename the name of the file
+    /// @author SMM
+    /// @date 10/02/2016
+    void load_raster_filenames(string filename);
+    
+    /// @brief This loads parameters It creates a map of parameter values
+    /// @param filename a string of the full filename
+    /// @author SMM
+    /// @date 10/02/2016
+    void load_parameters(string filename);
+   
+    /// @brief this function checks the existence and georeferencing of 
+    ///  the rasters outlined in the file list
+    /// @author SMM
+    /// @date 03/03/2015
+    void check_rasters();
+
+
+  protected:
+    
+    /// the path to the cosmo data. Also used to print results
+    string path;
+    
+    /// the prefix of the parameter files
+    string param_name;
+    
+    /// a string for holding the raster names involved in the analysis
+    vector< string > raster_filenames;
+    
+    /// A map holding the parameter values. These are stored as strings
+    ///  and converted to the appropriate data type as needed
+    map<string,string> parameter_map;
+    
+    /// The minimum slope for the fill function
+    float min_slope;
+    
+    /// The boundary conditions for flow info calculations
+    vector<string> boundary_conditions;
+  
+  private:
+  
+    /// @brief the empty create function
+    void create();
+    
+    /// @brief the create function used when calling a file
+    /// @param the path to the file. Must have the "/" at the end
+    /// @param  file_prefice the prefix (without extension) of the parameter files
+    /// @author SMM
+    /// @date 02/02/2015
+    void create(string path, string file_prefix);
+};
+
+
+#endif

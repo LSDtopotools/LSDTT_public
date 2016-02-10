@@ -1198,7 +1198,7 @@ class LSDCosmoBasin: public LSDBasin
     /// @return a boolean that is true if there are unknown erosion rates and false if not
     /// @author SMM
     /// @date 10/02/2016
-    bool  are_there_unknown_erosion_rates_in_basin(LSDRaster& known_erates,LSDFlowInfo& FlowInfo);
+    bool are_there_unknown_erosion_rates_in_basin(LSDRaster& known_erates,LSDFlowInfo& FlowInfo);
 
     /// @brief Prints a csv with information about the nodes in a basin that
     ///  relate to cosmogenic paramters
