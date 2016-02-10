@@ -292,4 +292,212 @@ void LSDRasterAggregator::check_rasters()
 
 
 
+
+
+
+
+
+
+
+void LSDSedimentRouting::create(string path_name, string param_name_prefix)
+{
+  cout << "Hello friends. I am creating a LSDSedimentRouting object" << endl;
+
+  // set the names of the data members
+  path = path_name;
+  param_name = param_name_prefix;
+
+  // Set the parameters
+  // The default slope parameter for filling. Do not change. 
+  min_slope = 0.0001;
+
+  // a boundary condition for the flow info object
+  vector<string> boundary_conditionst(4);
+  boundary_conditionst[0] = "n";
+  boundary_conditionst[1] = "n";
+  boundary_conditionst[2] = "n";
+  boundary_conditionst[3] = "n";
+  boundary_conditions = boundary_conditionst;
+
+  // remove control characters from these strings
+  path_name.erase(remove_if(path_name.begin(), path_name.end(), ::iscntrl), path_name.end());
+  param_name_prefix.erase(remove_if(param_name_prefix.begin(), param_name_prefix.end(), ::iscntrl), param_name_prefix.end());
+  
+  string combined_filename = path_name+param_name_prefix;
+  
+  // load the file that contains the path to both the cosmo data and the 
+  // DEMs
+  
+  // set up extensions to the files
+  string rasters_ext = ".rasters";
+  string params_ext = ".param";
+  
+  // get the filenames to open
+  string rasters_fname =  path_name+param_name_prefix+rasters_ext;
+  string parameters_fname = path_name+param_name_prefix+params_ext;
+
+  // load the data. 
+  cout << "Loading the names of the rasters." << endl;
+  load_raster_filenames(rasters_fname);
+
+  cout << "Loading parameters" << endl;
+  load_parameters(parameters_fname);
+  
+  cout << "I am going to check the parameter values now. " << endl;
+  check_parameter_values();
+  print_parameter_values_to_screen();
+
+  // check the rasters
+  cout << "Hold on while I check the rasters. I don't want to eat dirty rasters!" << endl;
+  check_rasters();
+  cout << "The rasters seem okay. Mmmm, rasters." << endl;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This checks the parameter values
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDSedimentRouting::check_parameter_values()
+{
+  string this_string; 
+  
+  if(parameter_map.find("n_lithologies") == parameter_map.end())
+  {
+    cout << "You are missing the number of lithologies!!" << endl;
+  }
+  else
+  {
+    N_lithologies = atoi(parameter_map["n_lithologies"].c_str());
+  }
+  
+  
+  // check on the erodibility_coefficients
+  if(parameter_map.find("erodibility_coefficients") == parameter_map.end())
+  {
+    cout << "You are missing the erodibility_coefficients!!" << endl;
+  }
+  else
+  {
+    // create a stringstream
+    stringstream ss(parameter_map["erodibility_coefficients"]);
+    
+    // a temporary vector for holding the data
+    vector<float> temp_vec;
+    
+    while( ss.good() )
+    {
+      string substr;
+      getline( ss, substr, ',' );
+      
+      // remove the spaces
+      substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
+      
+      // remove control characters
+      substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
+      
+      // add the string to the string vec
+      temp_vec.push_back( atof(substr.c_str()) );
+    }
+    erodibility_coefficients = temp_vec;
+  }
+  
+  
+  // check on the fertility_coefficients
+  if(parameter_map.find("fertility_coefficients") == parameter_map.end())
+  {
+    cout << "You are missing the fertility_coefficients!!" << endl;
+  }
+  else
+  {
+    // create a stringstream
+    stringstream ss(parameter_map["fertility_coefficients"]);
+    
+    // a temporary vector for holding the data
+    vector<float> temp_vec;
+    
+    while( ss.good() )
+    {
+      string substr;
+      getline( ss, substr, ',' );
+      
+      // remove the spaces
+      substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
+      
+      // remove control characters
+      substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
+      
+      // add the string to the string vec
+      temp_vec.push_back( atof(substr.c_str()) );
+    }
+    fertility_coefficients = temp_vec;
+  }
+
+  // check on the source_1mm
+  if(parameter_map.find("source_1mm") == parameter_map.end())
+  {
+    cout << "You are missing the source_1mm!!" << endl;
+  }
+  else
+  {
+    // create a stringstream
+    stringstream ss(parameter_map["source_1mm"]);
+    
+    // a temporary vector for holding the data
+    vector<float> temp_vec;
+    
+    while( ss.good() )
+    {
+      string substr;
+      getline( ss, substr, ',' );
+      
+      // remove the spaces
+      substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
+      
+      // remove control characters
+      substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
+      
+      // add the string to the string vec
+      temp_vec.push_back( atof(substr.c_str()) );
+    }
+    source_1mm = temp_vec;
+  }
+  
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This checks the parameter values
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDSedimentRouting::print_parameter_values_to_screen()
+{
+  cout << "===================================================" << endl;
+  cout << "Here are your parameter values"  << endl;
+  cout << "===================================================" << endl;
+  cout << "N_lithologies: " << N_lithologies << endl;
+  cout << "erodibility_coefficients:" << endl;
+  for (int i = 0; i< int(erodibility_coefficients.size()); i++)
+  {
+    cout << " " <<erodibility_coefficients[i];
+  }
+  cout << endl;
+  cout << "fertility_coefficients:" << endl;
+  for (int i = 0; i< int(erodibility_coefficients.size()); i++)
+  {
+    cout << " " <<fertility_coefficients[i];
+  }
+  cout << endl;
+  cout << "source_1mm:" << endl;
+  for (int i = 0; i< int(erodibility_coefficients.size()); i++)
+  {
+    cout << " " <<source_1mm[i];
+  }
+  cout << endl;
+  
+  cout << "===================================================" << endl;
+}
+
+
 #endif

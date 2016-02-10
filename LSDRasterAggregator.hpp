@@ -91,7 +91,7 @@ class LSDRasterAggregator
     /// @brief this function checks the existence and georeferencing of 
     ///  the rasters outlined in the file list
     /// @author SMM
-    /// @date 03/03/2015
+    /// @date 10/02/2016
     void check_rasters();
 
 
@@ -123,11 +123,67 @@ class LSDRasterAggregator
     
     /// @brief the create function used when calling a file
     /// @param the path to the file. Must have the "/" at the end
-    /// @param  file_prefice the prefix (without extension) of the parameter files
+    /// @param  file_prefix the prefix (without extension) of the parameter files
     /// @author SMM
-    /// @date 02/02/2015
+    /// @date 10/02/2016
     void create(string path, string file_prefix);
 };
+
+/// @brief A derived class that is used to compute erosion rates based on 
+///  concentrations of in-situ cosmogenic nuclides such as 10Be and 26Al
+class LSDSedimentRouting: public LSDRasterAggregator
+{
+
+  public:
+
+    /// @brief This constructor requires a filename
+    /// @detail The filename and path point to files with the rasters
+    /// @param path The path to the files
+    /// @param file_prefix the prefix of the files
+    /// @author SMM
+    /// @date 10/02/2016
+    LSDSedimentRouting( string path, string file_prefix)  { create(path,file_prefix); }
+  #
+    /// @brief This checks for the parameter values specific to the sediment routing routines
+    /// @author SMM
+    /// @date 10/02/2016
+    void check_parameter_values();
+    
+    /// @brief Prints the parameter values to screen
+    /// @author SMM
+    /// @date 10/02/2016
+    void print_parameter_values_to_screen();
+
+  protected:
+  
+    /// The number of lithologies
+    int N_lithologies;
+    
+    /// the erosion rate in mm/yr
+    float erosion_rate;
+    
+    /// The erodibiliy coefficients in km^-1
+    vector<float> erodibility_coefficients;
+    
+    /// The fertility coefficients: states the fraction in the source material
+    ///  that contains zircon
+    vector<float> fertility_coefficients;
+    
+    /// The fraction of the source material that is entered as suspended load
+    vector<float> source_1mm;
+
+    
+  private:
+
+    /// @brief the create function used when calling a file
+    /// @param the path to the file. Must have the "/" at the end
+    /// @param  file_prefix the prefix (without extension) of the parameter files
+    /// @author SMM
+    /// @date 10/02/2016
+    void create(string path, string file_prefix);
+
+};
+
 
 
 #endif

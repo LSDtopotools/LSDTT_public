@@ -108,7 +108,7 @@ int main (int nNumberofArgs,char *argv[])
 
   // now load the CRNCosmoData object
   cout << "I'm gonna load some data for you buddy" << endl;
-  LSDRasterAggregator RasterAggregator(path_name,param_name_prefix);
+  LSDSedimentRouting SedimentRouter(path_name,param_name_prefix);
   cout << "Got the data" << endl;
 
 
