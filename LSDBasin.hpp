@@ -953,8 +953,26 @@ class LSDCosmoBasin: public LSDBasin
                             double Nuclide_conc_err, double prod_uncert_factor,
                             string Muon_scaling);
 
-
-
+    /// @brief This function wraps the erosion rate calculator, and returns 
+    ///  both the erosion rate as well as the uncertainties  ^
+    /// @param known_eff_erosion a raster containing known effective erosion rates (g/cm2/yr)
+    /// @param flow_info the LSDFlowInfo object
+    /// @param Nuclide_conc Concetration of the nuclide
+    /// @param Nuclide a string denoting the name of the nuclide (at the moment
+    ///  options are 10Be and 26Al)
+    /// @param Nuclide_conc_err The instrument error in the nuclide concentration
+    /// @param prod_uncert_fracton This is a fraction of the total uncertainty
+    ///  for the production rates. It is a lumped parameter that can be used
+    ///  for just production, or for snow, topo and porduction uncertainty
+    /// @param Muon_scaling string that gives the muon scaling scheme
+    ///  options are Schaller, Granger and Braucher
+    /// @return  a vector of both the erosion rates and the uncertainties of the sample
+    /// @author SMM
+    /// @date 11/02/2016
+    vector<double> full_CRN_erosion_analysis_nested(LSDRaster& known_eff_erosion,
+                              LSDFlowInfo& FlowInfo, double Nuclide_conc, string Nuclide, 
+                              double Nuclide_conc_err, double prod_uncert_factor,
+                              string Muon_scaling);
 
     /// @brief this uses Newton Raphson iteration to retrieve the erosion rate
     ///  from a basin given a nuclide concentration
