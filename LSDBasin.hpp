@@ -1270,7 +1270,36 @@ class LSDCosmoBasin: public LSDBasin
     vector<double> calculate_effective_pressures_for_calculators(LSDRaster& Elevation,
                         LSDFlowInfo& FlowInfo, string path_to_atmospheric_data);
 
-
+    /// @brief This function gets effective pressure for a basin by averageing
+    ///  production rates and then calculating the 'apparent' pressure that can 
+    ///  produce that production rate. It also returns a number of valriables
+    ///  that can be plugged into existing calculators to compare results
+    ///  from the LSDCosmo calulcator against other methods
+    ///  This version allows you to input a know erosion rate raster. Production and other
+    ///  scalings are masked anywhere the erosion rates are known.
+    /// @param Elevation_Data the DEM, an LSDRaster object. IMPORTANT!! This needs
+    ///  to contain georeferencing information for this to work!!!
+    /// @param FlowInfo the LSDFlowInfo object
+    /// @param path_to_atmospheric_data THis is a path to binary NCEP data. 
+    /// @param known_eros_erate An LSDRaster containing the known effective erosion rates
+    /// @return a vector of values used in open-source calculators
+    ///  vector[0] = AverageProd;
+    ///  vector[1] = AverageTopo;
+    ///  vector[2] = AverageSelf;
+    ///  vector[3] = AverageSnow;
+    ///  vector[4] = AverageCombined;
+    ///  vector[5] = lat_outlet;
+    ///  vector[6] = outlet_pressure;
+    ///  vector[7] = outlet_eff_pressure;
+    ///  vector[8] = lat_centroid;
+    ///  vector[9] = centroid_pressure;
+    ///  vector[10] = centroid_eff_pressure;
+    /// @author SMM
+    /// @date 11/03/2015
+    vector<double> calculate_effective_pressures_for_calculators_nested(LSDRaster& Elevation,
+                        LSDFlowInfo& FlowInfo, string path_to_atmospheric_data, 
+                        LSDRaster& known_eff_erosion);
+                        
     /// @brief This function prints the production scaling as well as the 
     ///  combined scaling and combined shielding on a pixel by pixel basis to 
     ///  rasters

@@ -4013,6 +4013,306 @@ vector<double> LSDCosmoBasin::calculate_effective_pressures_for_calculators(LSDR
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function gets information of effective elevations for use in
+// online calculators 
+//
+// This version calculates the locations if there are known erosion rates, 
+//  used in nesting calculations
+//
+// It returns a vector of values:
+//  vector<double> parameter_returns;
+//  parameter_returns.push_back(AverageProd);
+//  parameter_returns.push_back(AverageTopo);
+//  parameter_returns.push_back(AverageSelf);
+//  parameter_returns.push_back(AverageSnow);
+//  parameter_returns.push_back(AverageCombined);
+//  parameter_returns.push_back(lat_outlet);
+//  parameter_returns.push_back(outlet_pressure);
+//  parameter_returns.push_back(outlet_eff_pressure);
+//  parameter_returns.push_back(lat_centroid);
+//  parameter_returns.push_back(centroid_pressure);
+//  parameter_returns.push_back(centroid_eff_pressure);
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<double> LSDCosmoBasin::calculate_effective_pressures_for_calculators_nested(LSDRaster& Elevation,
+                        LSDFlowInfo& FlowInfo, string path_to_atmospheric_data, 
+                        LSDRaster& known_eff_erosion_rates)
+{
+
+  // make sure the rasters are the same size
+  if ( not Elevation.does_raster_have_same_dimensions(known_eff_erosion_rates))
+  {
+    cout << "LSDCosmoBasin::calculate_effective_pressures_for_calculators_nested ERROR!" << endl;
+    cout << "The erosion raster and DEM are not the same dimesions." <<endl;
+    exit(EXIT_SUCCESS);
+  }
+
+
+  // the average atoms per gram of the nuclide
+  double AverageTopo;
+  double AverageProd;
+  double AverageCombined;
+  double AverageCombinedShielding;
+  double AverageSnow;
+  double AverageSelf;
+
+  // the number of basin pixels
+  int count_samples = 0;
+  
+  // initiate a particle. We'll just repeatedly call this particle
+  // for the sample. 
+  int startType = 0; 
+  double Xloc = 0;
+  double Yloc = 0;
+  double  startdLoc = 0.0;
+  double  start_effdloc = 0.0;
+  double startzLoc = 0.0;
+  
+  // create a particle at zero depth
+  LSDCRNParticle eroded_particle(startType, Xloc, Yloc,
+                               startdLoc, start_effdloc, startzLoc);
+
+  // now create the CRN parameters object
+  LSDCRNParameters LSDCRNP;
+  double gamma_spallation = 160;      // in g/cm^2: spallation attentuation depth
+
+  // loop through the elevation data, averaging the snow and topo shielding
+  double topo_shield_total = 0;
+  double total_prod_scaling = 0;
+  double self_shield_total = 0;
+  double snow_shield_total = 0;
+  double total_combined_scaling = 0;
+  double total_combined_shielding = 0;
+  double this_snow_shield, this_self_shield;
+  int row,col;      // the row and column of the current node
+  int end_node = int(BasinNodes.size());
+  for (int q = 0; q < end_node; ++q)
+  {
+    // exclude known erosion rate locations from average
+    FlowInfo.retrieve_current_row_and_col(BasinNodes[q], row, col);
+    if(known_eff_erosion_rates.get_data_element(row,col) != NoDataValue)
+    {
+      //exclude NDV from average
+      if(topographic_shielding[q] != NoDataValue)
+      {
+        count_samples++;
+        
+        if(  production_scaling.size() < 1 )
+        {
+          cout << "LSDCosmoBasin, trying to precalculate erosion rate." << endl
+               << "Scaling vectors have not been set! You are about to get a seg fault" << endl;
+        }
+  
+        // now get the snow shelding information
+        if (snow_shield_eff_depth.size() < 1)
+        {
+          this_snow_shield = 1;
+        }
+        else if (snow_shield_eff_depth.size() == 1)
+        {
+          if (snow_shield_eff_depth[0] != 0)
+          {
+            this_snow_shield = exp(-snow_shield_eff_depth[0]/gamma_spallation);
+          }
+          else
+          {
+            this_snow_shield=1;
+          }
+        }
+        else
+        {
+          if (snow_shield_eff_depth[q] != 0)
+          {
+            this_snow_shield = exp(-snow_shield_eff_depth[q]/gamma_spallation);
+          }
+          else
+          {
+            this_snow_shield=1;
+          }
+        }
+        
+        // now get the self shielding information
+        if (self_shield_eff_depth.size() < 1)
+        {
+          this_self_shield = 1;
+        }
+        else if (self_shield_eff_depth.size() == 1)
+        {
+          if (self_shield_eff_depth[0] != 0)
+          {
+            this_self_shield = gamma_spallation/self_shield_eff_depth[0]*
+                               (1-exp(-self_shield_eff_depth[0]/gamma_spallation));
+          }
+          else
+          {
+            this_self_shield = 1;
+          }
+        }
+        else
+        {
+          if (self_shield_eff_depth[q] != 0)
+          {
+            this_self_shield = gamma_spallation/self_shield_eff_depth[q]*
+                               (1-exp(-self_shield_eff_depth[q]/gamma_spallation));
+          }
+          else
+          {
+            this_self_shield=1;
+          }
+        }
+        
+        snow_shield_total += this_snow_shield;
+        self_shield_total += this_self_shield;
+        topo_shield_total += topographic_shielding[q];
+        total_prod_scaling += production_scaling[q];
+        total_combined_scaling += topographic_shielding[q]*production_scaling[q]*
+                                  this_snow_shield*this_self_shield;
+        total_combined_shielding += topographic_shielding[q]*
+                                  this_snow_shield*this_self_shield;
+        
+        
+      }
+    }
+  }
+
+  AverageTopo = topo_shield_total/double(count_samples);
+  AverageProd = total_prod_scaling/double(count_samples);
+  AverageSelf = self_shield_total/double(count_samples);
+  AverageSnow = snow_shield_total/double(count_samples);
+  AverageCombined = total_combined_scaling/double(count_samples);
+  AverageCombinedShielding = total_combined_shielding/double(count_samples);
+  
+  // now find the latitude for both the outlet and the centroid
+  // first the outlet
+  double lat,longitude;
+  double lat_centroid, long_centroid;
+  double lat_outlet, long_outlet;
+  double this_elevation;
+  double centroid_pressure, outlet_pressure;
+  double centroid_eff_pressure, outlet_eff_pressure;
+  
+  
+  // declare converter object
+  LSDCoordinateConverterLLandUTM Converter;
+
+  // get the atmospheric parameters
+  LSDCRNP.load_parameters_for_atmospheric_scaling(path_to_atmospheric_data);
+  LSDCRNP.set_CRONUS_data_maps();
+
+  Elevation.get_lat_and_long_locations(Outlet_i, Outlet_j, lat, longitude, Converter);
+  lat_outlet = lat;
+  long_outlet = longitude;
+  Elevation.get_lat_and_long_locations(Centroid_i, Centroid_j, lat, longitude, Converter);
+  lat_centroid = lat;
+  long_centroid = longitude; 
+  
+  // get outlet and centroid pressures
+  this_elevation = Elevation.get_data_element(Centroid_i, Centroid_j);
+  centroid_pressure = LSDCRNP.NCEPatm_2(double(lat_centroid), double(long_centroid), 
+                                        double(this_elevation));
+
+  this_elevation = Elevation.get_data_element(Outlet_i, Outlet_j);
+  outlet_pressure = LSDCRNP.NCEPatm_2(double(lat_outlet), double(long_outlet), 
+                                        double(this_elevation));
+
+  // now we use newton iteration to calculate the 'effective' pressure for'
+  // both the cnetroid and outlet latitutde.
+  // First some variables that are used in the newton iteration
+  double f_x,f_x_displace;
+  double S_displace, S_this_step;
+  double P_displace = 0.01;
+  double P_change;
+  double P_derivative;
+  double tolerance = 1e-6;
+  double Fsp = 0.978;
+  
+  // First for the centroid
+  // initial guess is 1000hPa
+  double this_P = 1000;
+  lat = lat_centroid;
+  do
+  {
+    S_this_step = LSDCRNP.stone2000sp(lat,this_P, Fsp);
+    S_displace = LSDCRNP.stone2000sp(lat,this_P+P_displace, Fsp); 
+    
+    f_x =  S_this_step - AverageProd;
+    f_x_displace =  S_displace - AverageProd;
+    
+    P_derivative =  (f_x_displace-f_x)/P_displace;
+    
+    if(P_derivative != 0)
+    {
+      //cout << "Pressure before is: " <<this_P << " lat: " << lat;
+      
+      this_P = this_P-f_x/P_derivative;
+      
+      // check to see if the difference in erosion rates meet a tolerance
+      P_change = f_x/P_derivative;
+      //cout << " Change is: " << P_change << " target is: " << AverageProd << " and Shielding is: " << S_this_step << endl;
+      
+    }
+    else
+    {
+      P_change = 0;
+    }
+  } while(fabs(P_change) > tolerance);
+  centroid_eff_pressure = this_P;
+  
+  // Do it again for the outlet
+  // initial guess is 1000hPa
+  this_P = 1000;
+  lat = lat_outlet;
+  do
+  {
+    S_this_step = LSDCRNP.stone2000sp(lat,this_P, Fsp);
+    S_displace = LSDCRNP.stone2000sp(lat,this_P+P_displace, Fsp); 
+    
+    f_x =  S_this_step - AverageProd;
+    f_x_displace =  S_displace - AverageProd;
+    
+    P_derivative =  (f_x_displace-f_x)/P_displace;
+    
+    if(P_derivative != 0)
+    {
+      this_P = this_P-f_x/P_derivative;
+      
+      // check to see if the difference in erosion rates meet a tolerance
+      P_change = f_x/P_derivative;
+      //cout << "Change is: " << eff_e_change << " and erosion rate is: " << eff_e_new << endl;
+    }
+    else
+    {
+      P_change = 0;
+    }
+  } while(fabs(P_change) > tolerance);
+  outlet_eff_pressure = this_P; 
+  
+  vector<double> parameter_returns;
+  parameter_returns.push_back(AverageProd);
+  parameter_returns.push_back(AverageTopo);
+  parameter_returns.push_back(AverageSelf);
+  parameter_returns.push_back(AverageSnow);
+  parameter_returns.push_back(AverageCombined);
+  parameter_returns.push_back(lat_outlet);
+  parameter_returns.push_back(outlet_pressure);
+  parameter_returns.push_back(outlet_eff_pressure);
+  parameter_returns.push_back(lat_centroid);
+  parameter_returns.push_back(centroid_pressure);
+  parameter_returns.push_back(centroid_eff_pressure);
+  parameter_returns.push_back(AverageCombinedShielding);
+  
+    
+  return parameter_returns;
+  
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // THis prints shielding and scaling rasters. 

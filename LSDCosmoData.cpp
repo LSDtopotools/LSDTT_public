@@ -2462,9 +2462,10 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_nested(vector<string> Rast
     
       // now get parameters for cosmogenic calculators
       vector<double> param_for_calc = 
-          thisBasin.calculate_effective_pressures_for_calculators(filled_raster,
-                                            FlowInfo, path_to_atmospheric_data);
-        
+          thisBasin.calculate_effective_pressures_for_calculators_nested(filled_raster,
+                                            FlowInfo, path_to_atmospheric_data, 
+                                            known_eff_erosion);
+
       cout << "Paramforcalc size: " << param_for_calc.size() << endl;              
       cout << "Getting pressures" << endl;
 
