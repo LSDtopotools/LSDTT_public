@@ -245,6 +245,26 @@ class LSDCosmoData
     /// @brief This function computes erosion rates and uncertainties for 
     ///  a given DEM. It is wrapped by a function that goes through
     ///  the list of DEM, providing this function with the raster names
+    ///  and the parameters for the model run . This version can take a raster
+    ///  with known erosion rates that can be used for nesting of basins
+    /// @param Raster_names a vector of strings with 4 elements:
+    ///  [0] = DEM_filename
+    ///  [1] = Snow_shield_raster_name OR const_snow_shield in g/cm^2
+    ///  [2] = Self_shield_raster_name OR const_self_shield in g/cm^2
+    ///  [3] = Toposhield_raster_name 
+    ///  It there is no DEM then this is set to "NULL"
+    ///  @param CRN_params this contains the single shielding depths for snow
+    ///   and self shielding if the rasters are not supplied. 
+    /// @param known_eff_erosion an LSDRaster with known erosion rates in g/cm^2/yr
+    /// @author SMM
+    /// @date 12/02/2016
+    void full_shielding_cosmogenic_analysis_nested(vector<string> Raster_names,
+                            vector<double> CRN_params, 
+                            LSDRaster& known_eff_erosion);
+
+    /// @brief This function computes erosion rates and uncertainties for 
+    ///  a given DEM. It is wrapped by a function that goes through
+    ///  the list of DEM, providing this function with the raster names
     ///  and the parameters for the model run. This version is for spawned rasters
     /// @detail Because this is spawned, each raster only corresponds to one 
     ///   sample, which the function finds from the sample name corresponding
