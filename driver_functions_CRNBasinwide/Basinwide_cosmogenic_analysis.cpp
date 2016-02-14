@@ -112,12 +112,14 @@ int main (int nNumberofArgs,char *argv[])
 
   string path_name = argv[1];
   string param_name_prefix = argv[2];
-  int method_flag = atoi(argv[3]);
+  int method_flag = atoi(argv[3]);  
   
   // now load the CRNCosmoData object
   LSDCosmoData CosmoData(path_name,param_name_prefix); 
   
   //cout << "Got the data" << endl;
+  
+  
 
   cout << "===========================================================" << endl;
   cout << "Welcome to the Basinwide cosmogenic analysis tool" << endl;

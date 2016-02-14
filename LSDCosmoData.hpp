@@ -85,6 +85,14 @@ class LSDCosmoData
     /// @date 06/02/2015
     LSDCosmoData( string path, string file_prefix)  { create(path,file_prefix); }
     
+    //// @brief This initiates some default parameters
+    /// @detail These parameters will be overwritten by any parameters
+    ///  supplied by the parameter file
+    /// @author SMM
+    /// @date 14/02/2016
+    void initiate_default_parameters();
+    
+    
     /// @brief  THis function loads the crn data rom either a csv or text file
     /// @param filename the name of the file
     /// @param filetype this is either csv or txt
@@ -127,7 +135,17 @@ class LSDCosmoData
     /// @author SMM
     /// @date 02/03/2015
     void load_soil_info(string filename);
-    
+
+    /// @brief This checks on the filenames to see if the files exist.
+    /// @param crn_fname a string with the name (including path) of the CRN file
+    /// @param Rasters_fname a string with the name (including path) of the Rasters file
+    /// @param parameters_fname a string with the name (including path) of the parameters file
+    /// @param soil_fname a string with the name (including path) of the soil file
+    /// @author SMM
+    /// @date 14/02/2016 
+    void check_files(string crn_fname,string Rasters_fname,string parameters_fname,
+                               string soil_fname);
+
     /// @brief this gets the names of the DEMs to be used in the analysis
     /// @detail only returns the DEM, not snow shielding, topo shielding, etc
     ///  rasters

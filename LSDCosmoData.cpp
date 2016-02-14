@@ -76,56 +76,27 @@ using namespace TNT;
 // The default create function. Doesn't do anything
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCosmoData::create()
-{}
+{
+  Muon_scaling = "Braucher";
+}
 
 void LSDCosmoData::create(string path_name, string param_name_prefix)
 {
-  // flags for writing files
-  write_TopoShield_raster = true;
-  write_basin_index_raster = true;
+  cout << "I am loading an LSDCosmoData object" << endl;
+  cout << "Your pathname is: " << path_name << endl;
+  cout << "You parameter name prefix is: " << param_name_prefix << endl;
   
-  // set the names of the data members
-  path = path_name;
-  param_name = param_name_prefix;
-
-  // Set the parameters
-  // The default slope parameter for filling. Do not change. 
-  min_slope = 0.0001;
-  
-  // parameters for making stream networks and looking for channels
-  source_threshold = 12;
-  search_radius_nodes = 1;
-  threshold_stream_order = 1;
-
-  // the values of theta and phi step are based on testing by S. Grieve 
-  // Note that Codilian recommends 5,5 but 10,15 leads to minimal errors
-  theta_step = 30;
-  phi_step = 30;
-
-  // some environment variables
-  prod_uncert_factor = 1;          // this is a legacy parameter.
-  Muon_scaling = "Braucher";       // default muon scaling
-
-  // the atmospheric data is in the folder with the driver_functions
-  string path_to_atmospheric_data = "./";
-  
-  // a boundary condition for the flow info object
-  vector<string> boundary_conditionst(4);
-  boundary_conditionst[0] = "n";
-  boundary_conditionst[1] = "n";
-  boundary_conditionst[2] = "n";
-  boundary_conditionst[3] = "n";
-  boundary_conditions = boundary_conditionst;
-
   // remove control characters from these strings
   path_name.erase(remove_if(path_name.begin(), path_name.end(), ::iscntrl), path_name.end());
   param_name_prefix.erase(remove_if(param_name_prefix.begin(), param_name_prefix.end(), ::iscntrl), param_name_prefix.end());
   
   string combined_filename = path_name+param_name_prefix;
-  
-  // load the file that contains the path to both the cosmo data and the 
-  // DEMs
-  
+  cout << "The combined filename is: " << combined_filename << endl;
+
+  // set the names of the data members
+  path = path_name;
+  param_name = param_name_prefix;
+
   // set up extensions to the files
   string crn_ext = "_CRNData.csv";
   string files_ext = "_CRNRasters.csv";
@@ -140,8 +111,26 @@ void LSDCosmoData::create(string path_name, string param_name_prefix)
   string parameters_fname = path_name+param_name_prefix+params_ext;
   string soil_fname = path_name+param_name_prefix+soil_ext;
 
-  // load the data. 
+  // check the parameter files
+  check_files(crn_fname,Rasters_fname,parameters_fname,soil_fname);
   
+  //Muon_scaling = "Braucher";
+  //cout << "The muon scaling is empty at the moment. Here is what it is: " << endl;
+  //cout << Muon_scaling << endl;
+  //if(Muon_scaling.empty())
+  //{
+  //  cout << "You haven't defined the Muon scaling yet. " << endl;
+  //}
+  //else
+  //{
+  //  cout << "Muon scaling is: " << Muon_scaling << endl;
+  //}
+
+
+  // Initiate default parameters
+  initiate_default_parameters();
+
+  // load the data. 
   cout << "Loading CRN data" << endl;
   load_cosmogenic_data(crn_fname, csv_ext);
   
@@ -153,7 +142,6 @@ void LSDCosmoData::create(string path_name, string param_name_prefix)
   // set the map of scaling parameters with an empty map
   map< string, map<int,double> > empty_map;
   MapOfProdAndScaling = empty_map;
-
   
   cout << "Loading file structures" << endl;
   load_DEM_and_shielding_filenames_csv(Rasters_fname);
@@ -181,6 +169,67 @@ void LSDCosmoData::create(string path_name, string param_name_prefix)
   print_all_data_parameters_and_filestructures(outfile_name);
   
 }
+//==============================================================================
+
+
+//==============================================================================
+// This initiates default parameters in case they are not in the parameter file
+//==============================================================================
+void LSDCosmoData::initiate_default_parameters()
+{
+  cout << "I am initiating default parameters, these will be overwittern by the paramfile...";
+  // flags for writing files
+  write_TopoShield_raster = true;
+  write_basin_index_raster = true;
+  
+  // Set the parameters
+  // The default slope parameter for filling. Do not change. 
+  min_slope = 0.0001;
+  
+  //cout << "1" << endl;
+  
+  // parameters for making stream networks and looking for channels
+  source_threshold = 12;
+  search_radius_nodes = 1;
+  threshold_stream_order = 1;
+
+  // the values of theta and phi step are based on testing by S. Grieve 
+  // Note that Codilian recommends 5,5 but 10,15 leads to minimal errors
+  theta_step = 30;
+  phi_step = 30;
+
+  // some environment variables
+  prod_uncert_factor = 1;          // this is a legacy parameter.
+  
+
+  //cout << "Default theta and phi steps: " << theta_step << " " << phi_step << endl;
+
+  string test_scaling = "Braucher";
+  
+  //cout << "Test scaling is: " << test_scaling << endl;
+  //cout << "default production_uncer_factor: " <<   prod_uncert_factor << endl;
+  
+  Muon_scaling = test_scaling;       // default muon scaling
+
+  //cout << "default muon scaling: " << Muon_scaling << endl;
+
+  // the atmospheric data is in the folder with the driver_functions
+  string path_to_atmospheric_data = "./";
+  
+  //cout << "default path_to_atmospheric_data: " << path_to_atmospheric_data  << endl;
+  
+  // a boundary condition for the flow info object
+  vector<string> boundary_conditionst(4);
+  boundary_conditionst[0] = "n";
+  boundary_conditionst[1] = "n";
+  boundary_conditionst[2] = "n";
+  boundary_conditionst[3] = "n";
+  boundary_conditions = boundary_conditionst;
+  
+  cout << "done." << endl;
+  
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // The create function that actually loads the file
@@ -1004,6 +1053,70 @@ void LSDCosmoData::load_txt_cosmo_data(string filename)
   
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This checks to see if all the files exist
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::check_files(string crn_fname,string Rasters_fname,string parameters_fname,
+                               string soil_fname)
+{
+  cout << "=======================================================" << endl;
+  cout << "I am checking on your files to see if they exist." << endl;
+  // make sure the filename works
+  ifstream ifsc(crn_fname.c_str());
+  if( ifsc.fail() )
+  {
+    cout << "FATAL ERROR: The crn file: " << crn_fname
+         << "doesn't exist" << endl;
+    exit(EXIT_FAILURE);
+  }
+  else
+  {
+    cout << "The CRN file exists." << endl;
+  }
+
+  // make sure the filename works
+  ifstream ifsr(Rasters_fname.c_str());
+  if( ifsr.fail() )
+  {
+    cout << "FATAL ERROR: The rasters file: " << Rasters_fname
+         << "doesn't exist" << endl;
+    exit(EXIT_FAILURE);
+  }
+  else
+  {
+    cout << "The Rasters file exists." << endl;
+  }
+  
+  // make sure the filename works
+  ifstream ifsp(parameters_fname.c_str());
+  if( ifsp.fail() )
+  {
+    cout << "FATAL ERROR: The parameter file: " << parameters_fname
+         << "doesn't exist" << endl;
+    exit(EXIT_FAILURE);
+  }
+  else
+  {
+    cout << "The parameter file exists." << endl;
+  }
+  
+  // make sure the filename works
+  ifstream ifss(soil_fname.c_str());
+  if( ifss.fail() )
+  {
+    cout << "WARNING: The soil file: " << soil_fname
+         << "doesn't exist." << endl
+         << "This is fine as long as you are not doing soil analysis." << endl;
+  }
+  else
+  {
+    cout << "There is a soil file." << endl;
+  }
+  cout << "=====================================================" << endl;    
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2420,7 +2533,7 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_nested(vector<string> Rast
         }
         else
         {
-          cout << "No snow raster, but I'm getting the effective depths" << endl;
+          cout << "No self raster, but I'm getting the effective depths" << endl;
           cout << "The constant self depth is: " <<  constant_self_depth << endl;
           thisBasin.populate_snow_and_self_eff_depth_vectors(FlowInfo, 
                                 Snow_shielding, constant_self_depth);
@@ -2451,6 +2564,7 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_nested(vector<string> Rast
       thisBasin.populate_scaling_vectors(FlowInfo, filled_raster, 
                                          Topographic_shielding,
                                          path_to_atmospheric_data);
+      cout << "The scaling vectors are populated. I am moving on to the analysis" << endl;
 
       // now do the analysis
       vector<double> erate_analysis = thisBasin.full_CRN_erosion_analysis_nested(known_eff_erosion, FlowInfo, test_N, 
@@ -2775,7 +2889,7 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
         }
         else
         {
-          cout << "No snow raster, but I'm getting the effective depths" << endl;
+          cout << "No self raster, but I'm getting the effective depths" << endl;
           cout << "The constant self depth is: " <<  constant_self_depth << endl;
           thisBasin.populate_snow_and_self_eff_depth_vectors(FlowInfo, 
                                 Snow_shielding, constant_self_depth);
@@ -2806,6 +2920,7 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis(vector<string> Raster_name
       thisBasin.populate_scaling_vectors(FlowInfo, filled_raster, 
                                          Topographic_shielding,
                                          path_to_atmospheric_data);
+      cout << "Done populating the scaling vectors. " << endl;
 
       // now do the analysis
       vector<double> erate_analysis = thisBasin.full_CRN_erosion_analysis(test_N, 
