@@ -1544,7 +1544,6 @@ double LSDCRNParameters::stone2000sp(double lat,double P, double Fsp)
   m_index_at_given_P.push_back(mk[5]*exp( (1013.25-P)/242.0));
   m_index_at_given_P.push_back(mk[6]*exp( (1013.25-P)/242.0));
    
-
   // interpolate for actual elevation
   double M = interp1D_ordered(ilats, m_index_at_given_P, lat);
 
@@ -2311,7 +2310,7 @@ double LSDCRNParameters::NCEPatm_2(double site_lat, double site_lon, double site
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// This functioon gets the spallation attenuation lenth in g/cm^2
+// This function gets the spallation attenuation lenth in g/cm^2
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 double LSDCRNParameters::get_spallation_attenuation_length(bool use_CRONUS)
 {
@@ -2558,7 +2557,7 @@ void LSDCRNParameters::integrate_nonTD_spallation_flux_for_erosion(double E,
 
   //cout << "Integrating spallation, LINE 1719" << endl;
   //cout << "ThickSF: " << thick_SF << endl;
-  cout << "Psp10: " << P_sp_10Be << " Psp26: " << P_sp_26Al << endl;
+  //cout << "Psp10: " << P_sp_10Be << " Psp26: " << P_sp_26Al << endl;
   //cout << "decay10: " << decay[0] << " decay26: " << decay[1] << endl;
   //cout << "A10: " << A_10Be << " A26: " << A_26Al << endl;
   //cout << "thick/A: " <<  thick_SF/A_10Be << endl;
@@ -2715,5 +2714,125 @@ void LSDCRNParameters::print_parameters_to_file(string fname, string muon_scalin
   
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This  function prints out the production rates of a vector of depths
+// it is used to compare production rates amongst different production schemes
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCRNParameters::Print_10Beproduction_csv(string filename, string path_to_atmospheric_data)
+{
+  // open the file
+  ofstream prod_file_out;
+  prod_file_out.open(filename.c_str());
+  prod_file_out << "Production rates from muons, at 70N, 0W, 0 elevation."  << endl;
+  prod_file_out << "All prduction rates in atoms/g/yr" << endl;
+  prod_file_out << "eff_depth(g/cm^2),mu_CRONUS_prod,mu_Schaller_prod,mu_Granger_prod,"
+                << "mu_Braucher_prod,mu_newCRONUS_prod," 
+                << "total_CRONUS_prod,total_Schaller_prod,total_Granger_prod,"
+                << "total_Braucher_prod,total_newCRONUS_prod" << endl;
+  
+  // we are going to print these at a fixed location
+  double site_lat = 70;
+  double site_lon = 0;
+  double site_elev = 0;
+
+  // get the atmospheric parameters
+  load_parameters_for_atmospheric_scaling(path_to_atmospheric_data);
+  set_CRONUS_data_maps();
+  double pressure = NCEPatm_2(site_lat, site_lon, site_elev);
+  
+  // calculate the scaling. We assume no topographic, self or snow shielding
+  double Fsp = 1.0;
+  double this_P = stone2000sp(site_lat,pressure, Fsp);
+
+  // get some parameters for Stone production
+  vector<double> Prefs_st = get_Stone_Pref();
+
+  // retrieve the pre-scaling factors
+  double P_ref_St_10 = Prefs_st[0];
+  double Fsp_CRONUS = CRONUS_data_map["Fsp10"];
+
+  // also get the P0 for the CRONUS spallation
+  double CRONUS_P = this_P*P_ref_St_10*Fsp_CRONUS;
+  bool use_CRONUS = true;
+  double Gamma_CRONUS = get_spallation_attenuation_length(use_CRONUS);
+  
+  cout << "The pressure is: " << pressure << endl;
+  
+  // this tells the scaling routine to on;y scale for 10Be;
+  vector<bool> nuclides_for_scaling(4,false);
+  nuclides_for_scaling[0]= true;
+  
+  vector<double> z_mu;
+  vector<double> P_mu_z_10Be;
+  vector<double> P_total_z_10Be;
+  vector<double> P_mu_z_26Al;
+  
+  vector<double> P_mu_schaller;
+  vector<double> P_mu_granger;
+  vector<double> P_mu_braucher;
+  vector<double> P_mu_newCRONUS;
+  
+  vector<double> P_total_schaller;
+  vector<double> P_total_granger;
+  vector<double> P_total_braucher;
+  vector<double> P_total_newCRONUS;
+  
+  // get the production vectors from the CRONUS scheme
+  double sample_effective_depth = 0;
+  get_CRONUS_P_mu_vectors(pressure, sample_effective_depth, z_mu, P_mu_z_10Be,P_mu_z_26Al);
+  
+  // now the production vectors from the other schemes
+  int n_z = int(z_mu.size());
+  for(int i = 0; i<n_z; i++)
+  {
+    double z = z_mu[i];
+    
+    // get the CRONUS total production rates
+    double this_total_CRONUS = P_mu_z_10Be[i] + CRONUS_P*exp(-z/Gamma_CRONUS);
+    P_total_z_10Be.push_back(this_total_CRONUS);
+    
+    set_Braucher_parameters();
+    scale_F_values(this_P, nuclides_for_scaling);
+    P_mu_braucher.push_back( P0_10Be*(F_10Be[1]*exp(-z/Gamma[1]) + F_10Be[2]*exp(-z/Gamma[2]) +
+                             F_10Be[3]*exp(-z/Gamma[3])));
+    P_total_braucher.push_back( P0_10Be*(F_10Be[0]*exp(-z/Gamma[0])+F_10Be[1]*exp(-z/Gamma[1]) + 
+                             F_10Be[2]*exp(-z/Gamma[2]) + F_10Be[3]*exp(-z/Gamma[3])));
+                             
+    set_Schaller_parameters();
+    scale_F_values(this_P, nuclides_for_scaling);
+    P_mu_schaller.push_back( P0_10Be*(F_10Be[1]*exp(-z/Gamma[1]) + F_10Be[2]*exp(-z/Gamma[2]) +
+                             F_10Be[3]*exp(-z/Gamma[3])));
+    P_total_schaller.push_back( P0_10Be*(F_10Be[0]*exp(-z/Gamma[0])+F_10Be[1]*exp(-z/Gamma[1]) + 
+                             F_10Be[2]*exp(-z/Gamma[2]) + F_10Be[3]*exp(-z/Gamma[3])));
+                                                          
+    set_Granger_parameters();
+    scale_F_values(this_P, nuclides_for_scaling);
+    P_mu_granger.push_back( P0_10Be*(F_10Be[1]*exp(-z/Gamma[1]) + F_10Be[2]*exp(-z/Gamma[2]) +
+                             F_10Be[3]*exp(-z/Gamma[3])));
+    P_total_granger.push_back( P0_10Be*(F_10Be[0]*exp(-z/Gamma[0])+F_10Be[1]*exp(-z/Gamma[1]) + 
+                             F_10Be[2]*exp(-z/Gamma[2]) + F_10Be[3]*exp(-z/Gamma[3])));
+                                                          
+    set_newCRONUS_parameters();
+    scale_F_values(this_P, nuclides_for_scaling);
+    P_mu_newCRONUS.push_back( P0_10Be*(F_10Be[1]*exp(-z/Gamma[1]) + F_10Be[2]*exp(-z/Gamma[2]) +
+                             F_10Be[3]*exp(-z/Gamma[3])));
+    P_total_newCRONUS.push_back( P0_10Be*(F_10Be[0]*exp(-z/Gamma[0])+F_10Be[1]*exp(-z/Gamma[1]) + 
+                             F_10Be[2]*exp(-z/Gamma[2]) + F_10Be[3]*exp(-z/Gamma[3])));
+  }
+  
+  for(int i = 0; i<n_z; i++)
+  {
+    prod_file_out  << z_mu[i] << "," << P_mu_z_10Be[i] << "," << P_mu_schaller[i] << ","
+                   << P_mu_granger[i] << ","  << P_mu_braucher[i] << "," 
+                   << P_mu_newCRONUS[i] << "," << P_total_z_10Be[i] << "," 
+                   << P_total_schaller[i] << ","
+                   << P_total_granger[i] << ","  << P_total_braucher[i] << "," 
+                   << P_total_newCRONUS[i] << endl;
+  }
+  
+  prod_file_out.close();
+
+}
 
 #endif

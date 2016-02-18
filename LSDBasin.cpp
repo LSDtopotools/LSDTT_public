@@ -4802,6 +4802,4 @@ void LSDCosmoBasin::print_particle_csv(string path_to_file, string filename,
 }
 
 
-
-
 #endif

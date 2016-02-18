@@ -948,7 +948,7 @@ void LSDCosmoData::load_DEM_and_shielding_filenames_csv(string filename)
   
   // just check if there are no empty entries (thanks to hidden newline characters)
   bool back_is_not_okay = 1;
-  cout << "HEY FAT ALBERT" << endl;
+  //cout << "HEY FAT ALBERT" << endl;
   while(back_is_not_okay)
   {
     int NDEMS = int(temp_DEM_names_vecvec.size());
@@ -957,6 +957,7 @@ void LSDCosmoData::load_DEM_and_shielding_filenames_csv(string filename)
     if(last_DEM_name == "")
     {
       cout << "Oh, BUGGER, who put a bunch of empty lines at the back of this file!" << endl;
+      cout << "Microsoft is probably to blame if you opened in excel." << endl;
       cout << "I'm getting rid of this one." <<endl;
       temp_DEM_names_vecvec.pop_back();
     }
@@ -4607,7 +4608,7 @@ void LSDCosmoData::full_shielding_raster_printer(vector<string> Raster_names,
                                          Topographic_shielding,
                                          path_to_atmospheric_data);
 
-      // get the predix of the basin vectors
+      // get the prefix of the basin vectors
       string basin_ID =  itoa(valid_cosmo_points[samp]);
       string basin_ext = "_BASIN"+basin_ID;
       string thisfilename = Raster_names[0]+basin_ext;
@@ -5044,7 +5045,225 @@ void LSDCosmoData::print_results()
   results_out.close();
   CRONUS_out.close();
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function prints a production raster for any of the rasters in the list
+// that has a valid cosmo point
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::print_scaling_and_shielding_complete_rasters()
+{
+  // vector that will contain the snow and self shielding values, if they are constant
+  vector<double> this_Params;
+  
+  // loop through the lines in the files, checking to see if the 
+  // georeferencing is equivalent
+  string bil_ext = "bil";
+  string null_str = "NULL";
+  int N_DEMS = int(DEM_names_vecvec.size());
+  for(int iDEM = 0; iDEM<N_DEMS; iDEM++)
+  {
+    // get snow and self shielding parameters (this will only be used if the now and
+    // self shielding rasters are empty)
+    this_Params = snow_self_topo_shielding_params[iDEM];
+    
+    // get the names from this DEM
+    vector<string>  DEM_names_vec = DEM_names_vecvec[iDEM];
+    cout << "Checking rasters, this raster is: " << DEM_names_vec[0] << endl;
+    string DEM_fname = DEM_names_vec[0];
+    
+    // load the DEM
+    LSDRaster topo_test(DEM_fname, bil_ext);
+    
+    // Fill the DEM, since the production rates for the calculators are derived 
+    // the filled rasters
+    LSDRaster filled_raster = topo_test.fill(min_slope);
+    
+    // get the rows and columns
+    int NRows, NCols;
+    NRows = filled_raster.get_NRows();
+    NCols = filled_raster.get_NCols();
+    float NoDataValue =  filled_raster.get_NoDataValue();
+    float XMinimum =  filled_raster.get_XMinimum();
+    float YMinimum =  filled_raster.get_YMinimum();
+    float DataResolution = filled_raster.get_DataResolution();
+    map<string,string> GeoReferencingStrings = filled_raster.get_GeoReferencingStrings();
+    
+    // initiate the arrays that will contain the data
+    Array2D<float> NewPressure(NRows,NCols,NoDataValue);
+    Array2D<float> NewScaling(NRows,NCols,NoDataValue);
+    Array2D<float> NewCombinedShielding(NRows,NCols,NoDataValue);
+    Array2D<float> NewCombinedScaling(NRows,NCols,NoDataValue);
+
+    // see if there are raster for the snow, self and toposhield rasters
+    // now toposhielding. Initially, we assume there are none. 
+    bool there_is_toposhield = false;
+    bool there_is_snowshield = false;
+    bool there_is_selfshield = false;
+    
+    // First initiate pointers to the rasters
+    LSDRaster Topographic_shielding;
+    LSDRaster Snow_shielding;
+    LSDRaster Self_shielding;
+    
+
+
+    if(DEM_names_vec[1] != null_str)
+    {
+      there_is_snowshield = true;
+      LSDRaster Sn_shield(DEM_names_vec[1], bil_ext);
+      Snow_shielding = Sn_shield;
+    }
+    // now self shielding
+    if(DEM_names_vec[2] != null_str)
+    {
+      there_is_selfshield = true;
+      LSDRaster Slf_shield(DEM_names_vec[2], bil_ext);
+      Self_shielding = Slf_shield;
+    }
+    // now toposhielding
+    if(DEM_names_vec[3] != null_str)
+    {
+      there_is_toposhield = true;
+      LSDRaster T_shield(DEM_names_vec[3], bil_ext);
+      Topographic_shielding = T_shield;
+    }
+
+    // now create the CRN parameters object
+    LSDCRNParameters LSDCRNP;
+    double gamma_spallation = 160;      // in g/cm^2: spallation attentuation depth
+
+    // get the atmospheric parameters
+    LSDCRNP.load_parameters_for_atmospheric_scaling(path_to_atmospheric_data);
+    LSDCRNP.set_CRONUS_data_maps();
+  
+    // a function for scaling stone production, defaults to 1
+    double Fsp = 1.0;
+  
+    // the latitude and longitude
+    double lat,longitude;
+  
+    // decalre converter object
+    LSDCoordinateConverterLLandUTM Converter;
+    
+    // Get some temporary variables for holding the data. These will get printed
+    // to and array.
+    float this_elevation;
+    float this_pressure;
+    float this_scaling;
+    float this_shielding;
+    float this_combined_scaling;
+    
+    // teporary values for the shielding
+    float this_snowshield;
+    float this_selfshield;
+    float this_toposhield;
+
+    // now loop through the rows and columns, populating the scaling values
+    for(int row = 0; row<NRows; row++)
+    {
+      for(int col = 0; col<NCols; col++)
+      {
+        // now the elevation
+        this_elevation = filled_raster.get_data_element(row,col);
+
+        // Only do something if there is data
+        if(this_elevation != NoDataValue)
+        {
+          // To get pressure, first get the lat and long
+          filled_raster.get_lat_and_long_locations(row, col, lat, longitude, Converter);
+
+          // now the pressure
+          this_pressure = LSDCRNP.NCEPatm_2(double(lat), double(longitude), 
+                                        double(this_elevation));
+
+          // now get the scaling
+          this_scaling = LSDCRNP.stone2000sp(lat,this_pressure, Fsp);
+        
+          // update the scaling array
+          NewScaling[row][col] = this_scaling;
+          NewPressure[row][col] = this_pressure;
+          
+          // now get combined shielding and scaling
+          // first topographic shielding
+          if (there_is_toposhield)
+          {
+            this_toposhield = Topographic_shielding.get_data_element(row,col);
+          }
+          else
+          {
+            this_toposhield = 1;
+          }
+          
+          // now snow shielding
+          if (there_is_snowshield)
+          {
+            this_snowshield = exp(-Snow_shielding.get_data_element(row,col)/gamma_spallation);
+          }
+          else
+          {
+            this_snowshield = exp(-this_Params[0]/gamma_spallation);
+          }
+          if (there_is_selfshield)
+          {
+            this_selfshield = gamma_spallation/Self_shielding.get_data_element(row,col)*
+                             (1-exp(-Self_shielding.get_data_element(row,col)/gamma_spallation));
+          
+          }
+          else
+          {
+            this_selfshield = gamma_spallation/this_Params[1]*
+                             (1-exp(-this_Params[1]/gamma_spallation));
+          }
+          
+          // now get the products
+          this_shielding = this_toposhield*this_snowshield*this_selfshield;
+          this_combined_scaling = this_shielding*this_scaling;
+          
+          NewCombinedScaling[row][col]= this_combined_scaling;
+          NewCombinedShielding[row][col] = this_shielding;
+        }           // END test of no data
+      }             // END columns loop
+    }               // END rows loop
+    
+    // now get the rasters
+    LSDRaster CombinedScalingRaster(NRows, NCols, XMinimum, YMinimum, DataResolution,
+                               NoDataValue, NewCombinedScaling, GeoReferencingStrings);
+    LSDRaster CombinedShieldingRaster(NRows, NCols, XMinimum, YMinimum, DataResolution,
+                               NoDataValue, NewCombinedShielding, GeoReferencingStrings);
+    LSDRaster ScalingRaster(NRows, NCols, XMinimum, YMinimum, DataResolution,
+                               NoDataValue, NewScaling, GeoReferencingStrings);
+    LSDRaster PressureRaster(NRows, NCols, XMinimum, YMinimum, DataResolution,
+                               NoDataValue, NewPressure, GeoReferencingStrings);
+                               
+    // Format the filenames
+    string CShield_ext = "_CSHIELD";
+    string CScale_ext = "_CSCALE";
+    string P_ext = "_PRES";
+    string Prod_ext = "_PROD";
+    
+    // print the rasters
+    PressureRaster.write_raster(DEM_fname+P_ext,bil_ext);
+    ScalingRaster.write_raster(DEM_fname+Prod_ext,bil_ext);
+    CombinedScalingRaster.write_raster(DEM_fname+CScale_ext,bil_ext);
+    CombinedShieldingRaster.write_raster(DEM_fname+CShield_ext,bil_ext); 
+  }                 // END DEM loop
+  
+  
+  cout << endl << endl << "=====================================================" << endl;
+  cout << "++WARNING++"  << endl;
+  cout << "You have printed the scaling, sheilding and production rasters." << endl;
+  cout << " The snow and self shielding are determined by an approximation, " << endl;
+  cout << " where shielding is due to attenuation of spallation only." << endl;
+  cout << " This differs from the full analysis which uses an analytical solution" << endl;
+  cout << " of all the production mechanisms (incl. muons)." << endl;
+  cout << "See Mudd et al (2016) ESURF for details." << endl;
+  cout << "=====================================================" << endl;
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 #endif

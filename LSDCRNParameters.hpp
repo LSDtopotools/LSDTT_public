@@ -510,7 +510,16 @@ class LSDCRNParameters
   /// @date 15/03/2015
   void print_parameters_to_file(string fname, string muon_scaling);
 
-
+  /// @brief this Prints the prodcution rates for muons for various schemes to 
+  /// a csv file
+  /// @detail The parameter file contains a column for effective depth, and then
+  ///  columns for the production of muons from different production schemes
+  /// @param fname the filename with full file path
+  /// @param path_to_atmospheric_data the path to the folder containing atmospheric data
+  /// @author SMM
+  /// @date 18/02/2016
+  void Print_10Beproduction_csv(string filename, string path_to_atmospheric_data);
+  
   private:
   /// @brief This is called by the default constructor. 
   /// It is the only possible constructor

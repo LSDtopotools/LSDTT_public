@@ -557,6 +557,22 @@ class LSDCosmoData
     /// @date 23/03/2015
     void print_rasters();
     
+    /// @brief This prints scaling, shielding production and other rasters
+    ///  for entire DEMs.  It only prints topo, snow and self shielding if those
+    ///  rasters exists. That is, it does not calculate toposhielding automatically.
+    /// @detail The printed rasters are:
+    ///  extension _PRES the atmospheric pressure in hPa, determined from the
+    ///  NCEP atmospheric pressure compilation following Balco et al 2008
+    ///  extension _PROD the production scaling, based on stone/lal
+    ///  extension _CSHIELD the combined sheilding, that is the combination of
+    ///  snow, self and topographic shielding. Snow and self shielding are
+    ///  approximated with spallation only production
+    ///  extension _CSCALE the product of the combined shielding and production
+    ///  for each pixel.
+    /// @author SMM
+    /// @date 15/02/2016
+    void print_scaling_and_shielding_complete_rasters();
+    
   protected:
     
     /// the number of samples
