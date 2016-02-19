@@ -2278,6 +2278,7 @@ vector<double> LSDCRNParticle::CRONUS_get_Al_Be_erosion(LSDCRNParameters& LSDCRN
   
   // first scale the thickness
   double thickSF = thickness_scaling_factor(LSDCRNP, use_CRONUS);
+  cout << "thickSF is: " << thickSF << endl;
   
   // Now get the initial guess
   vector<double> initial_guess = CRONUS_initial_guess(LSDCRNP, pressure, lat, 

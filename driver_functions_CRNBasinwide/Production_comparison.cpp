@@ -134,7 +134,7 @@ int main (int nNumberofArgs,char *argv[])
   // get the scaled production rates
   double P_sp_10Be = P_ref_St_10*stoneP;
   double P_sp_26Al = P_ref_St_26*stoneP;
-  double thickSF = 0;     // no self shielding
+  double thickSF = 1;     // no self shielding, the scaling factor is 1
   double N_Be10, N_Al26;
   
   double N_Schaller, N_Granger, N_Braucher, N_newCRONUS;
@@ -156,7 +156,8 @@ int main (int nNumberofArgs,char *argv[])
   N_out.open("Nuclide_Conc_vs_Erate.csv");
   N_out << "Nuclide concetrations as a function of erosion rates for different production schemes" << endl;
   N_out << "All concentrations are in atoms/g" << endl;
-  N_out << "Erate(g/cm^2/yr),CRONUS,Schaller,Granger,Braucher,newCRONUS" << endl;
+  N_out << "Erate(g/cm^2/yr),CRONUS,Schaller,Granger,Braucher,newCRONUS," 
+        << "logN_CRONUS,logN_Schaller,logN_Granger,logN_Braucher,logN_newCRONUS" << endl;
   
   // Loop through the erosion rates getting the nuclude concentrations
   for (int i = 0; i<N_Erate; i++)
@@ -196,6 +197,28 @@ int main (int nNumberofArgs,char *argv[])
   }
 
   N_out.close();
+  
 
+  // error checking
+  this_erate = 0.001;
+  eroded_particle.CRONUS_calculate_N_forward(this_erate, LSDCRNP, z_mu, P_mu_z_10Be, 
+                               P_mu_z_26Al, thickSF, P_sp_10Be, P_sp_26Al,
+                               N_Be10,  N_Al26);
+  cout << "Erate is: " << this_erate << " and N_Be10 is: " << N_Be10 << endl;
+
+
+  // now get the cronus emulator
+  double rho = 2650;
+  double topo_scale =1;
+  double snow_scale = 1;
+  double N_26Al = 2690000;
+  double sample_del26 =  88000 ;
+  double N_10Be_test = 176015;
+  double sample_del10 = 13000;
+  vector<double> erateinfo = eroded_particle.CRONUS_get_Al_Be_erosion(LSDCRNP, pressure,
+                      site_lat, rho, N_10Be_test, N_26Al,sample_del10, sample_del26,
+                      topo_scale,  snow_scale);
+                      
+  cout << "Effective erate is: " << erateinfo[0] << endl;
 }
   
