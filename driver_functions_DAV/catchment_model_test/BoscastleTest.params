@@ -9,7 +9,7 @@ read_path:	./
 write_path:	./
 read_fname:	bos_spunup_elev5m
 write_fname:	boscastle_output
-timeseries_save_interval: 60
+timeseries_save_interval: 5
 
 # Supplementary Files
 hydroindex_file: #bos5m_hydroindex.asc
@@ -26,7 +26,7 @@ memory_limit:    	1
 
 # Sediment
 transport_law:		    wilcock  #einstein
-max_tau_velocity:	    127
+max_tau_velocity:	    5
 active_layer_thickness: 0.1
 recirculate_proportion: 1
 lateral_erosion_on:	  no
@@ -34,22 +34,24 @@ lateral_ero_rate:     20
 edge_filter_passes:   100
 cells_shift_lat:      1
 max_diff_cross_chan:  0.001
-erode_limit:          0.01         
+erode_limit:          0.02        
 
 # Hydrology
-m_value:              0.01
+TOPMODEL_m_value:     0.01
 rainfall_data_on:			yes
 rain_data_time_step:  60
 spatial_var_rain:		  no
-allow_in_out_diff:		no
-min_Q_for_depth:	    0.05
+in_out_difference:		0
+min_Q_for_depth_calc:	0.05
+max_Q_for_depth_calc: 1000.0
 water_depth_erosion_threshold: 0.01
-slope_on_edge_cell:   0.001
+slope_on_edge_cell:   0.0005
 evaporation_rate:     0.0
-courant_number:       0.5
+courant_number:       0.25
 froude_num_limit:     0.8
 mannings_n:           0.04
 hflow_threshold:      0.00001
+num_unique_rain_cells: 1
 
 # Vegetation
 vegetation_on:	       no
@@ -65,9 +67,9 @@ soil_j_mean_depends:	yes	#no
 call_muddpile_model:	yes	#no
 
 # Write Output Rasters
-raster_output_interval: 500
+raster_output_interval: 50
 write_waterdepth_file:       yes
-waterdepth_outfile_name: waterDepth
+waterdepth_outfile_name: waterDepthSLOW
 write_elev_file:      yes
 
 
