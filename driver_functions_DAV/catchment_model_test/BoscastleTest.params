@@ -37,6 +37,7 @@ max_diff_cross_chan:  0.001
 erode_limit:          0.02        
 
 # Hydrology
+hydro_model_only:     yes
 TOPMODEL_m_value:     0.01
 rainfall_data_on:			yes
 rain_data_time_step:  60
