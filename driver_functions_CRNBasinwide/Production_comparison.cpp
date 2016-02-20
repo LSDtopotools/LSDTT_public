@@ -143,7 +143,7 @@ int main (int nNumberofArgs,char *argv[])
   // These are in g/cm^2/yr
   int N_Erate = 101;
   double erate_begin = 0.001;
-  double erate_end = 1;
+  double erate_end = 0.2;
   double derate = (erate_end-erate_begin)/N_Erate;
   vector<double> erate_vec;
   double this_erate; 
