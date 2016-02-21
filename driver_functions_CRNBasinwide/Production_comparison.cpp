@@ -137,7 +137,7 @@ int main (int nNumberofArgs,char *argv[])
   double thickSF = 1;     // no self shielding, the scaling factor is 1
   double N_Be10, N_Al26;
   
-  double N_Schaller, N_Granger, N_Braucher, N_newCRONUS;
+  double N_Schaller, N_Granger, N_Braucher, N_newCRONUS, N_newCRONUSShielded;
   
   // now create an erosion gradient, with particles. 
   // These are in g/cm^2/yr
@@ -157,7 +157,7 @@ int main (int nNumberofArgs,char *argv[])
   N_out << "Nuclide concetrations as a function of erosion rates for different production schemes" << endl;
   N_out << "All concentrations are in atoms/g" << endl;
   N_out << "Erate(g/cm^2/yr),CRONUS,Schaller,Granger,Braucher,newCRONUS," 
-        << "logN_CRONUS,logN_Schaller,logN_Granger,logN_Braucher,logN_newCRONUS" << endl;
+        << "logN_CRONUS,logN_Schaller,logN_Granger,logN_Braucher,logN_newCRONUS,N_newCronus_0p9shielded" << endl;
   
   // Loop through the erosion rates getting the nuclude concentrations
   for (int i = 0; i<N_Erate; i++)
@@ -189,11 +189,17 @@ int main (int nNumberofArgs,char *argv[])
     LSDCRNP.scale_F_values(stoneP,nuclide_scaling_switches);
     eroded_particle.update_10Be_SSfull(this_erate,LSDCRNP);
     N_newCRONUS = eroded_particle.getConc_10Be();
+    
+    LSDCRNP.set_newCRONUS_parameters();
+    LSDCRNP.scale_F_values(stoneP*0.8,nuclide_scaling_switches);
+    eroded_particle.update_10Be_SSfull(this_erate,LSDCRNP);
+    N_newCRONUSShielded = eroded_particle.getConc_10Be();
+    
         
     N_out << this_erate << "," << N_Be10 << "," << N_Schaller << "," << N_Granger
           << "," << N_Braucher << "," << N_newCRONUS <<","
           << log(N_Be10) << "," << log(N_Schaller) << "," << log(N_Granger) 
-          << "," << log(N_Braucher) << "," << log(N_newCRONUS) << endl;  
+          << "," << log(N_Braucher) << "," << log(N_newCRONUS) << "," << N_newCRONUSShielded <<  endl;  
   }
 
   N_out.close();
