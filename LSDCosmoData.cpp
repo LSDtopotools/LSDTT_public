@@ -1234,7 +1234,7 @@ void LSDCosmoData::check_parameter_values()
   }
   
   if (Muon_scaling != "Braucher" && Muon_scaling != "Granger" && 
-      Muon_scaling != "Schaller")
+      Muon_scaling != "Schaller" && Muon_scaling != "newCRONUS")
   {
     cout << "You have not seleceted a valid scaling. Defaulting to Braucher" << endl;
     Muon_scaling = "Braucher";
