@@ -4697,6 +4697,69 @@ void LSDCosmoData::calculate_erosion_rates(int method_flag)
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function loops though the file structures calculating 
+// cosmogenic-derived denudation rates and uncertainties
+// This version uses nesting: it points to rasters with known erosion rates
+// in order to calculate the nested erosion rate. 
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::calculate_nested_erosion_rates()
+{
+
+  // find out how many DEMs there are:
+  int n_DEMS = int(DEM_names_vecvec.size());
+
+  vector<string> this_Raster_names;
+  vector<double> this_Param_names;
+  
+  // now loop through the DEMs
+  for (int iDEM = 0; iDEM< n_DEMS; iDEM++)
+  {
+    this_Raster_names = DEM_names_vecvec[iDEM];
+    this_Param_names = snow_self_topo_shielding_params[iDEM];
+    
+    // check if the raster has a known erosion rate raster
+    string DEM_name = this_Raster_names[0];
+    string known_erate_name = DEM_name+"_ERKknown";
+    string known_erate_header = known_erate_name+".hdr";
+    
+    // see if the known erate file exists
+    // make sure the filename works
+    ifstream ifs(known_erate_header.c_str());
+    if( ifs.fail() )
+    {
+      cout << "\nThere is no known erosion rate raster for this DEM." << endl;
+    }
+    else
+    {
+      // check to make sure the dimensions of this raster match
+      string bil_ext = "bil";
+      LSDRasterInfo RI_ER(known_erate_name,bil_ext);
+      LSDRasterInfo RI_DEM(this_Raster_names[0],bil_ext);
+      if(RI_ER == RI_DEM)
+      {
+        LSDRaster known_rate_raster(known_erate_name,bil_ext);
+        full_shielding_cosmogenic_analysis_nested(this_Raster_names,this_Param_names, 
+                            known_rate_raster);
+      }
+      else
+      {
+        cout << "Your known erosion rate raster does not have the same dimensions" << endl;
+        cout << "as your DEM." << endl;
+        cout << "The rasters are:" << endl;
+        cout << this_Raster_names[0] << endl;
+        cout << known_erate_name << endl;
+      }
+    }
+    
+  }
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDCosmoData::point_measurements(vector<int> valid_samples,vector<double> snow_thickness, 
                                       vector<double> self_thickness,
                                       vector<double> toposhield,

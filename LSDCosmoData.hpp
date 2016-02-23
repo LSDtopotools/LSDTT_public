@@ -433,6 +433,18 @@ class LSDCosmoData
     /// @date 28/02/2015
     void calculate_erosion_rates(int method_flag);
 
+
+    /// @brief This function wraps the cosmogenic rate calculators. THis one is used with
+    /// nested basins.
+    /// @detail Looks throught the vecvecs listing file locations and then
+    ///   finds valid CRN data, and runs the erosion rate routine for these
+    ///   data.
+    ///  It assumes that any known erosion rates will have the same name as the
+    ///   base DEM with the extension _ERKnown
+    /// @author SMM
+    /// @date 23/02/2016    
+    void calculate_nested_erosion_rates();
+
     /// @brief This function prints sevear rasters to file:
     ///  1) Pixel-by-pixel production scaling
     ///  2) Pixel-by-pixel combined scaling (production plus combined shielding)
