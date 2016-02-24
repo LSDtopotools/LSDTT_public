@@ -2568,11 +2568,12 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_nested(vector<string> Rast
       cout << "The scaling vectors are populated. I am moving on to the analysis" << endl;
 
       // now do the analysis
+      cout << "Line 2571, doing analysis" << endl;
       vector<double> erate_analysis = thisBasin.full_CRN_erosion_analysis_nested(known_eff_erosion, FlowInfo, test_N, 
                                           valid_nuclide_names[samp], test_dN, 
                                           prod_uncert_factor, Muon_scaling);
-
-      cout << "Line 2205, doing analysis" << endl;
+       cout << "erate: " << erate_analysis[0] << endl;
+      
     
     
       // now get parameters for cosmogenic calculators
@@ -4721,7 +4722,7 @@ void LSDCosmoData::calculate_nested_erosion_rates()
     
     // check if the raster has a known erosion rate raster
     string DEM_name = this_Raster_names[0];
-    string known_erate_name = DEM_name+"_ERKknown";
+    string known_erate_name = DEM_name+"_ERKnown";
     string known_erate_header = known_erate_name+".hdr";
     
     // see if the known erate file exists
@@ -5130,7 +5131,7 @@ void LSDCosmoData::print_scaling_and_shielding_complete_rasters()
     // get snow and self shielding parameters (this will only be used if the now and
     // self shielding rasters are empty)
     this_Params = snow_self_topo_shielding_params[iDEM];
-    
+            
     // get the names from this DEM
     vector<string>  DEM_names_vec = DEM_names_vecvec[iDEM];
     cout << "Checking rasters, this raster is: " << DEM_names_vec[0] << endl;
@@ -5253,6 +5254,7 @@ void LSDCosmoData::print_scaling_and_shielding_complete_rasters()
           if (there_is_toposhield)
           {
             this_toposhield = Topographic_shielding.get_data_element(row,col);
+            //cout << "Toposhield is: " << this_toposhield << endl;
           }
           else
           {
@@ -5262,7 +5264,9 @@ void LSDCosmoData::print_scaling_and_shielding_complete_rasters()
           // now snow shielding
           if (there_is_snowshield)
           {
+
             this_snowshield = exp(-Snow_shielding.get_data_element(row,col)/gamma_spallation);
+            //cout <<  "Snowshield is: " << this_snowshield << endl;
           }
           else
           {
@@ -5272,17 +5276,25 @@ void LSDCosmoData::print_scaling_and_shielding_complete_rasters()
           {
             this_selfshield = gamma_spallation/Self_shielding.get_data_element(row,col)*
                              (1-exp(-Self_shielding.get_data_element(row,col)/gamma_spallation));
-          
           }
           else
           {
-            this_selfshield = gamma_spallation/this_Params[1]*
+            if(this_Params[1] == 0)
+            {
+              this_selfshield = 1;
+            }
+            else
+            {
+              this_selfshield = gamma_spallation/this_Params[1]*
                              (1-exp(-this_Params[1]/gamma_spallation));
+            }
           }
           
           // now get the products
+          
           this_shielding = this_toposhield*this_snowshield*this_selfshield;
           this_combined_scaling = this_shielding*this_scaling;
+          //cout << "shield: " << this_shielding << " scale " << this_combined_scaling << endl;
           
           NewCombinedScaling[row][col]= this_combined_scaling;
           NewCombinedShielding[row][col] = this_shielding;

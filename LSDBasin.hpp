@@ -76,6 +76,9 @@ class LSDBasin
   /// @return Boolean value of whether a basin is beheaded or not.
   bool get_Beheaded() const { return Beheaded; }
   
+  /// @return the node index of the outlet
+  int get_Outlet_node() const{ return BasinNodes[0]; }
+  
   /// @return i index of outlet pixel.
   int get_Outlet_i() const { return Outlet_i; }
 
@@ -441,6 +444,21 @@ class LSDBasin
   /// @author FJC
   /// @date 21/02/14
   int is_node_in_basin(int test_node);
+  
+  /// @brief This checks the dimensions of the base DEMs along with georeferencing strings
+  ///  to see if the other basin is from the same DEM as the current basin
+  /// @param other the other LSDBasin
+  /// @return true if the other basin if from the same DEM, false otherwise
+  /// @author SMM
+  /// @date 23/2/2016
+  bool are_basins_from_same_base_DEM(LSDBasin& other);
+  
+  /// @brief This checks to see if a supplied basin is a subbasin of the other
+  /// @param other the other LSDBasin
+  /// @return true if the other basin is a subbasin of the first basin
+  /// @author SMM
+  /// @date 23/2/2016
+  bool is_this_a_subbasin(LSDBasin& other);  
   
   /// @brief remove hilltop curvature values that are at the edge of the basin
   /// @param hilltop_curvature raster of CHT

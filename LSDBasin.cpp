@@ -882,6 +882,66 @@ int LSDBasin::is_node_in_basin(int test_node)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// THis function test if the basins are from the same base DEM
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+bool LSDBasin::are_basins_from_same_base_DEM(LSDBasin& other)
+{
+  map<string,string> DRS = other.get_GeoReferencingStrings();
+  string mi_str_key = "ENVI_map_info";
+  string cs_str_key = "ENVI_coordinate_system";
+  
+  bool is_georef_and_dimensions_same;
+
+  if (NRows == other.get_NRows() &&
+      NCols == other.get_NCols() &&
+      XMinimum == other.get_XMinimum() &&
+      YMinimum == other.get_YMinimum() &&
+      DataResolution == other.get_DataResolution() &&
+      NoDataValue == other.get_NoDataValue() &&
+      GeoReferencingStrings[mi_str_key] == DRS[mi_str_key] &&
+      GeoReferencingStrings[cs_str_key] == DRS[cs_str_key])
+  {
+    is_georef_and_dimensions_same = true;
+  }
+  else
+  {
+    is_georef_and_dimensions_same = false;
+  }
+  
+  return is_georef_and_dimensions_same;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Function to check whether a node is in the basin
+// FJC 21/02/14
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+bool LSDBasin::is_this_a_subbasin(LSDBasin& DifferentBasin)
+{
+  bool is_this_a_subbasin = false;
+
+  // first check to see if the basins are from the same DEM
+  if (are_basins_from_same_base_DEM(DifferentBasin))
+  {
+    // if the second basin is a subbasin, the outlet will be within the base 
+    // DEM
+    int outlet_node = DifferentBasin.get_Outlet_node();
+    int in_basin = is_node_in_basin(outlet_node);
+    if (in_basin == 1)
+    {
+      is_this_a_subbasin = true;
+    }
+    
+  }
+
+  return is_this_a_subbasin;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Function to provide an alternative (integer) index (e.g. lithology) based on
 // majority
@@ -1972,6 +2032,8 @@ vector<double> LSDCosmoBasin::full_CRN_erosion_analysis_nested(LSDRaster& known_
                               is_production_uncertainty_plus_on,
                               is_production_uncertainty_minus_on,
                               known_eff_erosion, FlowInfo);
+                              
+  cout << "Hey Bubba, I got the erosion rate!!!: " << erate << endl << endl << endl;
   
   double no_prod_uncert = 1.0;    // set the scheme to no production uncertainty
                                   // for the external uncertainty
@@ -2148,6 +2210,15 @@ vector<double> LSDCosmoBasin::full_CRN_erosion_analysis_nested(LSDRaster& known_
   erate_uncert_vec.push_back(Muon_uncert);
   erate_uncert_vec.push_back(Prod_uncert);
   erate_uncert_vec.push_back(total_uncert);
+  
+  cout << endl << endl;
+  cout << "erate: " << erate << endl;
+  cout << "Ext uncert: " <<  External_uncert << endl;
+  cout << "Muon uncert: " <<  Muon_uncert << endl;
+  cout << "Prod uncert: " <<  Prod_uncert << endl;
+  cout << "total uncert: " <<  total_uncert << endl;
+
+
   
   return erate_uncert_vec;
 } 
@@ -2598,7 +2669,7 @@ double LSDCosmoBasin::predict_CRN_erosion_nested(double Nuclide_conc, string Nuc
     //cout << "LINE 1134 LSDBasin Nuclide conc is: " << Nuclide_conc << endl;
     eroded_particle.setConc_10Be(Nuclide_conc);
     erate_guess = eroded_particle.apparent_erosion_10Be_neutron_only(rho, LSDCRNP);
-    //cout << "Be10, initial erate guess in m/yr with density " << rho << ": " << erate_guess << endl;
+    cout << "Be10, initial erate guess in m/yr with density " << rho << ": " << erate_guess << endl;
   }
   else if (Nuclide == "Al26")
   {
@@ -2643,6 +2714,8 @@ double LSDCosmoBasin::predict_CRN_erosion_nested(double Nuclide_conc, string Nuc
   bool there_are_unknowns = are_there_unknown_erosion_rates_in_basin(eff_erosion_raster,FlowInfo);
   if (not there_are_unknowns)
   {
+    cout << "There are no unknown erosion rates in this basin." << endl;
+    cout << " Taking the average of the known erosion rates." << endl;
     eff_e_new = CalculateBasinMean(FlowInfo, eff_erosion_raster);
   }
   else
@@ -3229,6 +3302,7 @@ double LSDCosmoBasin::predict_mean_CRN_conc_with_snow_and_self_nested(double eff
   
   // the total atomic concentration of the nuclude in question
   double Total_N = 0;
+  double Total_Mass = 0;
   
   int count_samples = 0;
   
@@ -3393,19 +3467,23 @@ double LSDCosmoBasin::predict_mean_CRN_conc_with_snow_and_self_nested(double eff
       // calculate the concentration based on the erosion from this raster 
       if( this_erosion_rate != NoDataValue)
       {
+        //cout << "This pixel at " << row << "," << col << " has an erate of: " << this_erosion_rate << endl;
+
         if (Nuclide == "Be10")
         {
           //cout << "LInE 2271, 10Be" << endl;
           eroded_particle.update_10Be_SSfull_depth_integrated(this_erosion_rate,LSDCRNP,
                                              this_top_eff_depth, this_bottom_eff_depth);
-           Total_N+=eroded_particle.getConc_10Be();
+           Total_N+=this_erosion_rate*eroded_particle.getConc_10Be();
+           Total_Mass+=this_erosion_rate;
         }
         else if (Nuclide == "Al26")
         {
           //cout << "LINE 2278, 26Al" << endl;
           eroded_particle.update_26Al_SSfull_depth_integrated(this_erosion_rate,LSDCRNP,
                                              this_top_eff_depth, this_bottom_eff_depth);
-          Total_N+=eroded_particle.getConc_26Al();
+          Total_N+=this_erosion_rate*eroded_particle.getConc_26Al();
+          Total_Mass+=this_erosion_rate;
         }
         else
         {
@@ -3414,7 +3492,8 @@ double LSDCosmoBasin::predict_mean_CRN_conc_with_snow_and_self_nested(double eff
           cout << "contain spaces or control characters. Defaulting to 10Be." << endl;
           eroded_particle.update_10Be_SSfull_depth_integrated(this_erosion_rate,LSDCRNP,
                                              this_top_eff_depth, this_bottom_eff_depth);
-          Total_N+=eroded_particle.getConc_10Be();         
+          Total_N+=this_erosion_rate*eroded_particle.getConc_10Be();
+          Total_Mass+=this_erosion_rate;
         }
       }
       else  // this is the erosion rate not previously calculated (i.e., not in the raster)
@@ -3424,14 +3503,16 @@ double LSDCosmoBasin::predict_mean_CRN_conc_with_snow_and_self_nested(double eff
           //cout << "LInE 2271, 10Be" << endl;
           eroded_particle.update_10Be_SSfull_depth_integrated(eff_erosion_rate,LSDCRNP,
                                              this_top_eff_depth, this_bottom_eff_depth);
-           Total_N+=eroded_particle.getConc_10Be();
+           Total_N+=eff_erosion_rate*eroded_particle.getConc_10Be();
+           Total_Mass+=eff_erosion_rate;
         }
         else if (Nuclide == "Al26")
         {
           //cout << "LINE 2278, 26Al" << endl;
           eroded_particle.update_26Al_SSfull_depth_integrated(eff_erosion_rate,LSDCRNP,
                                              this_top_eff_depth, this_bottom_eff_depth);
-          Total_N+=eroded_particle.getConc_26Al();
+          Total_N+=eff_erosion_rate*eroded_particle.getConc_26Al();
+          Total_Mass+=eff_erosion_rate;
         }
         else
         {
@@ -3440,20 +3521,21 @@ double LSDCosmoBasin::predict_mean_CRN_conc_with_snow_and_self_nested(double eff
           cout << "contain spaces or control characters. Defaulting to 10Be." << endl;
           eroded_particle.update_10Be_SSfull_depth_integrated(eff_erosion_rate,LSDCRNP,
                                              this_top_eff_depth, this_bottom_eff_depth);
-          Total_N+=eroded_particle.getConc_10Be();         
+          Total_N+=eff_erosion_rate*eroded_particle.getConc_10Be();
+          Total_Mass+=eff_erosion_rate;
         }
       }
-      
-      //cout << endl << endl << "LINE 2052, total shield: " << total_shielding 
-      //     << " erosion: " << eff_erosion_rate << " erosion in cm/kyr with rho = 2650: "
-      //     << eff_erosion_rate*1e6/2650.0 << " and N: " << eroded_particle.getConc_10Be() << endl;      
       
     }                    
   }
 
-  BasinAverage = Total_N/double(count_samples);
+
+  BasinAverage = Total_N/Total_Mass;
   average_production_rate = cumulative_production_rate/double(count_samples);
   average_production_uncertainty = average_production_rate*fabs(1-prod_uncert_factor);
+  
+  //cout << "Basin average is: " << BasinAverage << " and effective erosion: " << eff_erosion_rate << endl;
+
   
   // replace the production uncertanty
   production_uncertainty = average_production_uncertainty;
@@ -4092,7 +4174,7 @@ vector<double> LSDCosmoBasin::calculate_effective_pressures_for_calculators_nest
   {
     // exclude known erosion rate locations from average
     FlowInfo.retrieve_current_row_and_col(BasinNodes[q], row, col);
-    if(known_eff_erosion_rates.get_data_element(row,col) != NoDataValue)
+    if(known_eff_erosion_rates.get_data_element(row,col) == NoDataValue)
     {
       //exclude NDV from average
       if(topographic_shielding[q] != NoDataValue)
@@ -4367,7 +4449,7 @@ void LSDCosmoBasin::print_scaling_and_shielding_rasters(string filename,
       }
       else
       {
-        if (self_shield_eff_depth[q] != 0)
+        if (snow_shield_eff_depth[q] != 0)
         {
           this_snow_shield = exp(-snow_shield_eff_depth[q]/gamma_spallation);
         }
@@ -4407,6 +4489,7 @@ void LSDCosmoBasin::print_scaling_and_shielding_rasters(string filename,
         }
       }
       
+      
       Production_Data[row][col] = production_scaling[q];
       Combined_Shielding_Data[row][col] = topographic_shielding[q]*
                                 this_snow_shield*this_self_shield;
@@ -4418,20 +4501,23 @@ void LSDCosmoBasin::print_scaling_and_shielding_rasters(string filename,
   
   // now create and write the rasters
   string bil_ext = "bil";
+  cout << "Printing production raster" << endl;
   LSDRaster ProductionRaster(NRows, NCols, XMinimum, YMinimum, DataResolution,
                                NoDataValue, Production_Data, GeoReferencingStrings);
   string Prod_ext = "_PROD";   
   ProductionRaster.write_raster(filename+Prod_ext,bil_ext);
                             
+  cout << "Printing CombinedShielding raster" << endl;
   LSDRaster CombinedShieldingRaster(NRows, NCols, XMinimum, YMinimum, DataResolution,
                                NoDataValue, Combined_Shielding_Data, GeoReferencingStrings);
   string CombShield_ext = "_CSHIELD";
-  ProductionRaster.write_raster(filename+CombShield_ext,bil_ext);
+  CombinedShieldingRaster.write_raster(filename+CombShield_ext,bil_ext);
                                  
+  cout << "Printing CombinedSscaling raster" << endl;
   LSDRaster CombinedScalingRaster(NRows, NCols, XMinimum, YMinimum, DataResolution,
                                NoDataValue, Combined_Scaling_Data, GeoReferencingStrings);
   string CombScale_ext = "_CSCALE";
-  ProductionRaster.write_raster(filename+CombScale_ext,bil_ext);                            
+  CombinedScalingRaster.write_raster(filename+CombScale_ext,bil_ext);                            
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -4719,6 +4805,7 @@ void LSDCosmoBasin::print_CRN_conc_raster(string filename,
   string Conc_ext = "_CONC";
   string bil_ext = "bil";
   
+  cout << "Printing concentration raster" << endl;
   LSDRaster ConcRaster(NRows, NCols, XMinimum, YMinimum, DataResolution,
                                NoDataValue, Conc_Data, GeoReferencingStrings);
   ConcRaster.write_raster(filename+Conc_ext,bil_ext);     
