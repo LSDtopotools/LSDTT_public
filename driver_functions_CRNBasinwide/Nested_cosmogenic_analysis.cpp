@@ -72,19 +72,16 @@ int main (int nNumberofArgs,char *argv[])
 
   // some paramters
   //Test for correct input arguments
-  if (nNumberofArgs!=4)
+  if (nNumberofArgs!=3)
   {
     cout << "=========================================================" << endl;
     cout << "|| Welcome to the Basinwide cosmogenic analysis tool!  ||" << endl;
     cout << "=========================================================" << endl;
-    cout << "This program requires three inputs: " << endl;
+    cout << "This program requires two inputs: " << endl;
     cout << "* First the path to the parameter files." << endl;
     cout << "   The path must have a slash at the end." << endl;
     cout << "  (Either \\ or / depending on your operating system.)" << endl;
     cout << "* Second the prefix of the parameter files." << endl;
-    cout << "* The third is a method flag. 0 does things without error analysis or muons," << endl; 
-    cout << "  1 is a full analysis without spawned basins." << endl;
-    cout << "  2 is a full analysis with spawned basins." << endl;
     cout << "---------------------------------------------------------" << endl;
     cout << "There must be two parameter files in the named path." << endl;
     cout << "The first MUST have the extension _CRNRasters.csv" << endl;
@@ -94,6 +91,10 @@ int main (int nNumberofArgs,char *argv[])
     cout << "  and MUST have the extension _CRNData.csv" << endl;
     cout << "There is also an optional field to set parameter values. " << endl;
     cout << "This file has the extension .CRNParam" << endl;
+    cout << "---------------------------------------------------------"  << endl;
+    cout << "For nesting, there must be a raster with the same prefix" << endl;
+    cout << " as those in the _CRNRasters.csv file, " << endl;
+    cout << " with the extension _ERKnown" << endl;
     cout << "---------------------------------------------------------" << endl;
     cout << "For example if you parameter files are in home/fieldwork/Chile/CRN/" << endl;
     cout << " in this folder you will have two parameter files, for example" << endl;
@@ -112,8 +113,7 @@ int main (int nNumberofArgs,char *argv[])
 
   string path_name = argv[1];
   string param_name_prefix = argv[2];
-  int method_flag = atoi(argv[3]);  
-  
+
   // now load the CRNCosmoData object
   LSDCosmoData CosmoData(path_name,param_name_prefix); 
   
@@ -140,12 +140,12 @@ int main (int nNumberofArgs,char *argv[])
   cout << "===========================================================" << endl;
 
   //cout << "Getting data" << endl;
-  CosmoData.calculate_erosion_rates(method_flag);
+  CosmoData.calculate_nested_erosion_rates();
   
   cout << "Printing results " << endl;
   // now print the data to a csv file
   CosmoData.print_results();
-  CosmoData.print_rasters();
+  //CosmoData.print_rasters();
   
 }
   
