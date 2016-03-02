@@ -4958,7 +4958,7 @@ LSDIndexRaster LSDJunctionNetwork::remove_hillslope_patches_from_floodplain_mask
       if (FloodplainPatches.get_data_element(row, col) != NoDataValue)
       {
       //check if the pixel is part of the channel network
-        if (StreamOrderArray[row][col] > threshold_SO)
+        if (StreamOrderArray[row][col] >= threshold_SO)
         {
           patch_ids_channel.push_back(FloodplainPatches.get_data_element(row,col));
         }
