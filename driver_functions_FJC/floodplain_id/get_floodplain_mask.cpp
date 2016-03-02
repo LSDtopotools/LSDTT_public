@@ -69,7 +69,7 @@ int main (int nNumberofArgs,char *argv[])
   
   // initialise variables to be assigned from .driver file
   int threshold_SO, FilterTopo, window_radius;
-	float Minimum_Slope, surface_fitting_window_radius;
+	float Minimum_Slope, surface_fitting_window_radius, threshold_condition;
   string temp;
   
   // read in the parameters                                                          
@@ -80,7 +80,8 @@ int main (int nNumberofArgs,char *argv[])
                >> temp >> threshold_SO
                >> temp >> FilterTopo
                >> temp >> surface_fitting_window_radius
-               >> temp >> window_radius;
+               >> temp >> window_radius
+							 >> temp >> threshold_condition;
                    
 	file_info_in.close();
 
@@ -167,11 +168,11 @@ int main (int nNumberofArgs,char *argv[])
   // get the channel relief and slope threshold using quantile-quantile plots
   cout << "Getting channel relief threshold from QQ plots" << endl;
   string qq_fname = path_name+DEM_ID+"_qq_relief.txt";
-  float relief_threshold_from_qq = ChannelRelief.get_threshold_for_floodplain_QQ(qq_fname);
+  float relief_threshold_from_qq = ChannelRelief.get_threshold_for_floodplain_QQ(qq_fname, threshold_condition);
   
   cout << "Getting slope threshold from QQ plots" << endl;
   string qq_slope = path_name+DEM_ID+"_qq_slope.txt";
-  float slope_threshold_from_qq = Slope.get_threshold_for_floodplain_QQ(qq_slope);
+  float slope_threshold_from_qq = Slope.get_threshold_for_floodplain_QQ(qq_slope, threshold_condition);
 
   //get the potential floodplain mask
   cout << "\t Getting the floodplain mask" << endl;
@@ -192,14 +193,10 @@ int main (int nNumberofArgs,char *argv[])
   string CC_new_name = "_CC_no_holes";
   ConnectedComponents_final.write_raster((input_path+DEM_ID+CC_new_name), flt_extension); 
   
-  
-  //remove small holes in the data - post-processing step
-  //LSDIndexRaster FloodplainRaster_noholes = FloodplainRaster_modified.remove_holes_in_patches(window_radius);
-  //LSDIndexRaster FloodplainRaster_final = FloodplainRaster_noholes.remove_holes_in_patches(window_radius);
-  //LSDIndexRaster FloodplainRaster_superfinal = FloodplainRaster_final.remove_checkerboard_pattern();
-    
-  //cout << "\t Done!" << endl;
-  //write raster of final floodplain mask
-  //string FP_name2 = "_FP_test";
-  //FloodplainRaster_modified.write_raster((input_path+DEM_ID+FP_name2), flt_extension);
+  //get a binary raster of floodplain pixels
+  int value = 1;
+  int ndv = -9999;
+  LSDIndexRaster FloodplainMask = ConnectedComponents_final.ConvertToBinary(value, ndv);
+  string mask_name = "_FP";
+  FloodplainMask.write_raster((input_path+DEM_ID+mask_name), flt_extension); 
 }
