@@ -4941,7 +4941,7 @@ void LSDJunctionNetwork::couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elev
 // raster with the hillslope patches removed.
 // FJC 21/10/15
 //---------------------------------------------------------------------------------------- 
-LSDIndexRaster LSDJunctionNetwork::remove_hillslope_patches_from_floodplain_mask(LSDIndexRaster& FloodplainPatches)
+LSDIndexRaster LSDJunctionNetwork::remove_hillslope_patches_from_floodplain_mask(LSDIndexRaster& FloodplainPatches, float threshold_SO)
 {
   Array2D<int> FloodplainPatches_array(NRows,NCols,NoDataValue);
   vector<int> patch_ids_channel;
@@ -4958,7 +4958,7 @@ LSDIndexRaster LSDJunctionNetwork::remove_hillslope_patches_from_floodplain_mask
       if (FloodplainPatches.get_data_element(row, col) != NoDataValue)
       {
       //check if the pixel is part of the channel network
-        if (StreamOrderArray[row][col] > 1)
+        if (StreamOrderArray[row][col] > threshold_SO)
         {
           patch_ids_channel.push_back(FloodplainPatches.get_data_element(row,col));
         }

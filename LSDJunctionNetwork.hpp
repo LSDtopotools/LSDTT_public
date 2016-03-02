@@ -1057,7 +1057,7 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @return LSDIndexRaster with binary mask of floodplain patches
   /// @author FJC
   /// @date 22/10/15
-  LSDIndexRaster remove_hillslope_patches_from_floodplain_mask(LSDIndexRaster& FloodplainPatches);
+  LSDIndexRaster remove_hillslope_patches_from_floodplain_mask(LSDIndexRaster& FloodplainPatches, float threshold_SO);
   
   /// @details This function calculates the relief of each pixel compared to the nearest downstream
   /// channel pixel equal or greater to the threshold stream order
