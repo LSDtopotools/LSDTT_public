@@ -54,14 +54,14 @@
 #include <iomanip>
 #include <math.h>
 #include <string.h>
-#include "../LSDStatsTools.hpp"
-#include "../LSDRaster.hpp"
-#include "../LSDIndexRaster.hpp"
-#include "../LSDFlowInfo.hpp"
-#include "../LSDJunctionNetwork.hpp"
-#include "../LSDIndexChannelTree.hpp"
-#include "../LSDChiNetwork.hpp"
-#include "../LSDBasin.hpp"
+#include "../../LSDStatsTools.hpp"
+#include "../../LSDRaster.hpp"
+#include "../../LSDIndexRaster.hpp"
+#include "../../LSDFlowInfo.hpp"
+#include "../../LSDJunctionNetwork.hpp"
+#include "../../LSDIndexChannelTree.hpp"
+#include "../../LSDChiNetwork.hpp"
+#include "../../LSDBasin.hpp"
 
 int main (int nNumberofArgs,char *argv[])
 {
@@ -77,7 +77,8 @@ int main (int nNumberofArgs,char *argv[])
 
 	cout << "The path is: " << path_name << " and the filename is: " << f_name << endl;
 
-	string full_name = path_name+f_name; 
+	string full_name = path_name+f_name;
+   
 
 	ifstream file_info_in;
 	file_info_in.open(full_name.c_str());
@@ -141,8 +142,8 @@ int main (int nNumberofArgs,char *argv[])
 	LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
 	
 	// get all the junctions of the second order basins
-	int BasinOrder = 2;
-	vector<int> second_order_junctions = ChanNetwork.extract_basins_order_outlet_junctions(BasinOrder, FlowInfo);
+	//int BasinOrder = 2;
+	//vector<int> second_order_junctions = ChanNetwork.extract_basins_order_outlet_junctions(BasinOrder, FlowInfo);
 	
   
   //-------------------------------------//
@@ -175,14 +176,15 @@ int main (int nNumberofArgs,char *argv[])
   
  
   cout << "Snapping to channel; getting upstream junctions" << endl;
-  int threshold_SO = 1;
-  int search_radius = 5;
+  int threshold_SO = 2;
+  int search_radius = 20;
   vector<int> junction_vector;
   for (unsigned int i = 0; i < X_coords.size(); i++)
   {
     cout << flush << "Snapped = " << i+1 << " of " << X_coords.size() << "\r";
     int NICosmo = ChanNetwork.get_nodeindex_of_nearest_channel_for_specified_coordinates(X_coords[i], Y_coords[i],
                                                                 search_radius, threshold_SO, FlowInfo);
+    cout << "Node index: " << NICosmo << endl;
 
     int JunctionCosmo = ChanNetwork.find_upstream_junction_from_channel_nodeindex(NICosmo, FlowInfo);
     cout << "Junction of cosmo point: " << JunctionCosmo << endl;
@@ -224,18 +226,18 @@ int main (int nNumberofArgs,char *argv[])
   int no_junctions = junction_vector.size();  
   cout << "Number of basins: " << no_junctions << endl;
   string string_filename2;
-  string filename2 = "_drainage_density_cosmo";
+  string filename2 = "_drainage_density_cosmo_test";
   string_filename2 = DEM_name+filename2+dot+extension;
   ofstream DD_cosmo;
   DD_cosmo.open(string_filename2.c_str());
   
   cout << "Created the drainage density file" << endl;
   
-  cout << "Calculating DINF area for boomerang plotting" << endl;
+  //cout << "Calculating DINF area for boomerang plotting" << endl;
   
   // D-infinty flowdirection   
-  Array2D<float> FlowDir = filled_topo_test.D_inf_FlowDir();
-  LSDRaster DinfArea = filled_topo_test.D_inf_FlowArea(FlowDir);
+  //Array2D<float> FlowDir = filled_topo_test.D_inf_FlowDir();
+  //LSDRaster DinfArea = filled_topo_test.D_inf_FlowArea(FlowDir);
   
   //declaring variables for boomerang plotting
   //float log_bin_width = 0.1;
@@ -257,22 +259,7 @@ int main (int nNumberofArgs,char *argv[])
     int MaxOrder = StreamOrder-1;
     LSDRaster Hilltops = ChanNetwork.ExtractRidges(FlowInfo, MinOrder, MaxOrder);
     LSDRaster CHT_temp = filled_topo_test.get_hilltop_curvature(Curvature, Hilltops);
-  
-    // Remove hilltop pixels with positive curvature (noise)
-  
-    Array2D<float> CHT_array = CHT_temp.get_RasterData();
-    Array2D<float> CHT_array_final(NRows, NCols, NoDataValue);
-    for (int row = 0; row < NRows; row++)
-    {
-      for (int col = 0; col < NCols; col++)
-      {
-        if (CHT_array[row][col] < 0)
-        {
-          CHT_array_final[row][col] = CHT_array[row][col];
-        }
-      }
-    }
-    LSDRaster CHT(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,CHT_array_final);
+    LSDRaster CHT = filled_topo_test.remove_positive_hilltop_curvature(CHT_temp);
     
     // set basin parameters
     LSDBasin Basin(junction_number, FlowInfo, ChanNetwork);

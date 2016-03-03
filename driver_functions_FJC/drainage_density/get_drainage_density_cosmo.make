@@ -1,11 +1,23 @@
 # make with make -f get_drainage_density_cosmo.make
 
 CC=g++
-DEBUG = -g
-CFLAGS=-c -Wall -O3 -pg $(DEBUG)
-OFLAGS = -Wall -O3 -pg $(DEBUG)
-LDFLAGS= -Wall $(DEBUG) 
-SOURCES=get_drainage_density_cosmo_driver.cpp ../LSDIndexRaster.cpp ../LSDRaster.cpp ../LSDFlowInfo.cpp ../LSDIndexChannel.cpp ../LSDStatsTools.cpp ../LSDJunctionNetwork.cpp ../LSDChannel.cpp ../LSDMostLikelyPartitionsFinder.cpp ../LSDBasin.cpp ../LSDShapeTools.cpp
+CFLAGS=-c -Wall -O3 -pg
+OFLAGS = -Wall -O3 -pg
+LDFLAGS= -Wall
+SOURCES=get_drainage_density_cosmo_driver.cpp \
+    ../../LSDMostLikelyPartitionsFinder.cpp \
+    ../../LSDIndexRaster.cpp \
+    ../../LSDRaster.cpp \
+    ../../LSDFlowInfo.cpp \
+    ../../LSDJunctionNetwork.cpp \
+    ../../LSDIndexChannel.cpp \
+    ../../LSDChannel.cpp \
+    ../../LSDIndexChannelTree.cpp \
+    ../../LSDStatsTools.cpp \
+    ../../LSDShapeTools.cpp \
+    ../../LSDBasin.cpp \
+    ../../LSDParticle.cpp \
+    ../../LSDCRNParameters.cpp
 LIBS   = -lm -lstdc++
 OBJECTS=$(SOURCES:.cpp=.o)
 #EXECUTABLE=Chile_test3.exe
