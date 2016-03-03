@@ -1,14 +1,54 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// channel_extraction_dreich.cpp
+// A driver function for use with the Land Surace Dynamics Topo Toolbox
+// This program calculates channel heads using the Dreich method, Clubb et al. (2014)
 //
-// channel_heads_wiener_qq_driver.cpp
-// make with channel_heads_wiener_qq.make
+// Reference: Clubb, F. J., S. M. Mudd, D. T. Milodowski, M. D. Hurst,
+// and L. J. Slater (2014), Objective extraction of channel heads from
+// high-resolution topographic data, Water Resour. Res., 50, doi: 10.1002/2013WR015167.
+//
+// Developed by:
+//  Fiona Clubb
+//  Simon M. Mudd
+//  David T. Milodowski
+//  Stuart W.D. Grieve
+//
+// Developer can be contacted by simon.m.mudd _at_ ed.ac.uk
+//
+//    Simon Mudd
+//    University of Edinburgh
+//    School of GeoSciences
+//    Drummond Street
+//    Edinburgh, EH8 9XP
+//    Scotland
+//    United Kingdom
+//
+// This program is free software;
+// you can redistribute it and/or modify it under the terms of the
+// GNU General Public License as published by the Free Software Foundation;
+// either version 2 of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY;
+// without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the GNU General Public License for more details.
+//
+// You should have received a copy of the
+// GNU General Public License along with this program;
+// if not, write to:
+// Free Software Foundation, Inc.,
+// 51 Franklin Street, Fifth Floor,
+// Boston, MA 02110-1301
+// USA
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// David T Milodowski
-// Stuart W.D Grieve
-// Fiona J. Clubb
-// University of Edinburgh
+// Fiona J. Clubb, Univertsity of Edinburgh
+// Simon M. Mudd, University of Edinburgh
+// David T. Milodowski, University of Edinburgh
+// Stuart W.D. Grieve, University of Edinburgh
+//
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -18,13 +58,13 @@
 #include <fstream>
 #include <sstream>
 #include <math.h>
-#include "../../LSDStatsTools.hpp"
-#include "../../LSDRaster.hpp"
-#include "../../LSDRasterSpectral.hpp"
-#include "../../LSDIndexRaster.hpp"
-#include "../../TNT/tnt.h"
-#include "../../LSDFlowInfo.hpp"
-#include "../../LSDJunctionNetwork.hpp"
+#include "../LSDStatsTools.hpp"
+#include "../LSDRaster.hpp"
+#include "../LSDRasterSpectral.hpp"
+#include "../LSDIndexRaster.hpp"
+#include "../TNT/tnt.h"
+#include "../LSDFlowInfo.hpp"
+#include "../LSDJunctionNetwork.hpp"
 int main (int nNumberofArgs,char *argv[])
 {
   //Test for correct input arguments
@@ -54,13 +94,12 @@ int main (int nNumberofArgs,char *argv[])
   string Output_name;
   string q_q_filename_prefix;
   float area_threshold,window_radius, A_0, m_over_n;
-  string DEM_extension = "flt";
+  string DEM_extension = "bil";
   string temp;
   int connected_components_threshold;
   int NJunctions;
   file_info_in >> temp >> Raster_name
                >> temp >> Output_name
-               >> temp >> q_q_filename_prefix 
                >> temp >> window_radius
                >> temp >> area_threshold
 	             >> temp >> connected_components_threshold
@@ -71,7 +110,7 @@ int main (int nNumberofArgs,char *argv[])
   // Now create the raster selection vector based on user's selection
   // Elevation
   LSDRasterSpectral raster(Raster_name, DEM_extension);
-  LSDIndexRaster connected_components = raster.IsolateChannelsWienerQQ(area_threshold, window_radius, q_q_filename_prefix+".txt");
+  LSDIndexRaster connected_components = raster.IsolateChannelsWienerQQ(area_threshold, window_radius, Output_name+".txt");
   cout << "filter by connected components" << endl;
   //LSDIndexRaster output_raster(Output_name,DEM_extension);
   LSDIndexRaster connected_components_filtered = connected_components.filter_by_connected_components(connected_components_threshold);
@@ -84,11 +123,10 @@ int main (int nNumberofArgs,char *argv[])
   Ends.remove_downstream_endpoints(CC_raster, raster);
 
   //write some rasters
-  connected_components_filtered.write_raster(Output_name+"_cc", DEM_extension);
-  skeleton_raster.write_raster(Output_name+"_skeleton",DEM_extension);
-  Ends.write_raster(Output_name+"_end_points",DEM_extension);
-  
-  
+  //connected_components_filtered.write_raster(Output_name+"_cc", DEM_extension);
+  //skeleton_raster.write_raster(Output_name+"_skeleton",DEM_extension);
+  //Ends.write_raster(Output_name+"_end_points",DEM_extension);
+    
   //Now we can process the end points to get only the channel heads - SWDG
   
   cout << "Starting channel head processing" << endl;
@@ -128,36 +166,31 @@ int main (int nNumberofArgs,char *argv[])
 	//JIArray.write_raster(Output_name+JN_name, DEM_extension);
   
   LSDIndexRaster StreamNetwork = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
-  string SO_name = "_SO";
+  string SO_name = "_SO_valley";
   StreamNetwork.write_raster(Output_name+SO_name, DEM_extension);
-    
-  //Get the outlet junctions of each of the valleys
-  //vector<int> valley_nodes = JunctionNetwork.get_outlet_nodes_from_sources(FlowInfo, FinalSources);
-  //cout << "Got valley nodes, proceeding to chi analysis" << endl;
-  
+      
   LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
   
 	// Calculate the channel head nodes
-  int MinSegLength = 30;  
-  vector<int> ChannelHeadNodes = JunctionNetwork.GetChannelHeadsChiMethodFromSources(FinalSources, MinSegLength, A_0, m_over_n,
+  int MinSegLength = 10;  
+  vector<int> ChannelHeadNodes_temp = JunctionNetwork.GetChannelHeadsChiMethodFromSources(FinalSources, MinSegLength, A_0, m_over_n,
 									                    FlowInfo, DistanceFromOutlet, FilledDEM, NJunctions);
 									                    
-	//LSDIndexRaster ChannelsFromDreich = JunctionNetwork.GetChannelsDreich(FinalSources, MinSegLength, A_0, m_over_n,
-	//								                    FlowInfo, DistanceFromOutlet, FilledDEM, path_name, NJunctions);
-									                    
-	//string channels_name = "_channels";
-	//ChannelsFromDreich.write_raster((Output_name+channels_name), DEM_extension);								                    
+	LSDIndexRaster Channel_heads_raster_temp = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(ChannelHeadNodes_temp);
+										                    							                    
                                                  
   //write channel heads to a raster
   string CH_name = "_CH_DrEICH";
-  LSDIndexRaster Channel_heads_raster = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(ChannelHeadNodes);
-  Channel_heads_raster.write_raster((Output_name+CH_name),DEM_extension);
+  Channel_heads_raster_temp.write_raster((Output_name+CH_name),DEM_extension);
+  
+  //write channel heads to csv file
+  FlowInfo.print_vector_of_nodeindices_to_csv_file(ChannelHeadNodes_temp,(Output_name+CH_name));
 
   //create a channel network based on these channel heads
-  LSDJunctionNetwork NewChanNetwork(ChannelHeadNodes, FlowInfo);
+  LSDJunctionNetwork NewChanNetwork(ChannelHeadNodes_temp, FlowInfo);
   //int n_junctions = NewChanNetwork.get_Number_of_Junctions();
   LSDIndexRaster SOArrayNew = NewChanNetwork.StreamOrderArray_to_LSDIndexRaster();
-  string SO_name_new = "_SO_from_CH_DrEICH";
+  string SO_name_new = "_SO_DrEICH";
 
   SOArrayNew.write_raster((Output_name+SO_name_new),DEM_extension);                                               
 }

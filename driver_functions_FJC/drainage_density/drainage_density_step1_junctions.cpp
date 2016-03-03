@@ -1,24 +1,17 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// get_drainage_density_driver.cpp
+// drainage_density_step1_junctions.cpp
 // A driver function for use with the Land Surace Dynamics Topo Toolbox
-// This program gets the drainage density of all basins with a threshold area of
-// 0.5 km^2 to compare drainage density with mean basin slope and mean hilltop
-// curvature (used as a proxy for erosion rate). It gets drainage density based on a channel
-// network methodology described by Clubb et al. (2014). The data are also binned (bin width = 0.01)
+// This is the first step of the drainage density analysis, which outputs a text file with the
+// junction numbers of each 3rd order basin in the DEM. It also outputs a raster of hilltop 
+// curvature.
 //
-// Outputs a txt file for the data cloud with the format
-// drainage_density mean_hilltop_curvature mean_basin_slope 
-//
-// Outputs a txt file for the binned data with the format
-// binned_CHT CHT_standard_deviation CHT_standard_error binned_DD DD_standard_deviation
-// DD_standard_error binned_slope slope_standard_deviation slope_standard_error
 //
 // Developed by:
 //  Fiona J. Clubb
 //  Simon M. Mudd
 //  Stuart W. D. Grieve
 //
-// Copyright (C) 2013 Fiona Clubb and Simon M. Mudd 2013
+// Copyright (C) 2016 Fiona Clubb and Simon M. Mudd 2016
 //
 // Developer can be contacted by simon.m.mudd _at_ ed.ac.uk
 //
@@ -58,15 +51,15 @@
 #include <iomanip>
 #include <math.h>
 #include <string.h>
-#include "../LSDStatsTools.hpp"
-#include "../LSDRaster.hpp"
-#include "../LSDIndexRaster.hpp"
-#include "../LSDFlowInfo.hpp"
-#include "../LSDJunctionNetwork.hpp"
-#include "../LSDIndexChannelTree.hpp"
-#include "../LSDChiNetwork.hpp"
-#include "../LSDBasin.hpp"
-#include "../LSDCRNParameters.hpp"
+#include "../../LSDStatsTools.hpp"
+#include "../../LSDRaster.hpp"
+#include "../../LSDIndexRaster.hpp"
+#include "../../LSDFlowInfo.hpp"
+#include "../../LSDJunctionNetwork.hpp"
+#include "../../LSDIndexChannelTree.hpp"
+#include "../../LSDChiNetwork.hpp"
+#include "../../LSDBasin.hpp"
+#include "../../LSDCRNParameters.hpp"
 
 int main (int nNumberofArgs,char *argv[])
 {
@@ -102,7 +95,7 @@ int main (int nNumberofArgs,char *argv[])
 
 	// get some file names
 	string DEM_f_name = path_name+DEM_name+fill_ext;
-	string DEM_flt_extension = "flt";
+	string DEM_flt_extension = "bil";
 
 	// Set the no flux boundary conditions
   vector<string> boundary_conditions(4);
@@ -111,12 +104,10 @@ int main (int nNumberofArgs,char *argv[])
 	boundary_conditions[2] = "no flux";
 	boundary_conditions[3] = "No flux";
 	
-		// get the filled file
-	LSDRaster filled_topo_test((path_name+DEM_name+fill_ext), DEM_flt_extension);
-	
-	// get the roughness raster
-	string rough_ext = "_roughness";
-	LSDRaster roughness((path_name+DEM_name+rough_ext), DEM_flt_extension);
+  // get the DEM
+  LSDRaster topo_test((path_name+DEM_name), DEM_flt_extension);
+  LSDRaster filled_topo_test = topo_test.fill(Minimum_Slope);
+  filled_topo_test.write_raster((path_name+DEM_name+fill_ext), DEM_flt_extension);
   
   //get a FlowInfo object
 	LSDFlowInfo FlowInfo(boundary_conditions,filled_topo_test); 
@@ -129,11 +120,14 @@ int main (int nNumberofArgs,char *argv[])
 	LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
 	string SO_name = "_SO";
 	SOArray.write_raster((path_name+DEM_name+SO_name), DEM_flt_extension);
+    
+  string JI_name = "_JI";
+  LSDIndexRaster JIArray = ChanNetwork.JunctionIndexArray_to_LSDIndexRaster();
+  JIArray.write_raster((path_name+DEM_name+JI_name), DEM_flt_extension);
 	
-	// get all the basins greater than 200,000 m^2
-	float AreaThreshold = 200000;
-	vector<int> basin_nodes = ChanNetwork.extract_basin_nodes_by_drainage_area(AreaThreshold, FlowInfo);
-	vector<int> basin_junctions = ChanNetwork.extract_basin_junctions_from_nodes(basin_nodes, FlowInfo);
+	// get all the 3rd order basins
+	int BasinOrder = 3;
+	vector<int> basin_junctions = ChanNetwork.extract_basins_order_outlet_junctions(BasinOrder, FlowInfo);
 	  
   cout << "Writing basin junctions to text file" << endl;
   
@@ -141,7 +135,7 @@ int main (int nNumberofArgs,char *argv[])
   string string_filename;
   string dot = ".";
   string extension = "txt";
-  string filename = "_DD_junctions";
+  string filename = "_DD_junctions_bedrock";
   string_filename = DEM_name+filename+dot+extension;
   ofstream DD_junctions;
   DD_junctions.open(string_filename.c_str());
@@ -151,8 +145,6 @@ int main (int nNumberofArgs,char *argv[])
     DD_junctions << basin_junctions[i] << endl;
   }
   
-  // get flow directions - D8 flowdir for drainage density calculations 
-  Array2D<int> FlowDir_array = FlowInfo.get_FlowDirection();
  
   //get the curvature from polynomial fitting and write to a raster
   
@@ -164,7 +156,6 @@ int main (int nNumberofArgs,char *argv[])
   
   surface_fitting = filled_topo_test.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
   LSDRaster Curvature = surface_fitting[3]; 
-  //Curvature.write_raster((path_name+DEM_name+curv_name), DEM_flt_extension);
   
   // Get the hilltop curvature
   LSDRaster Hilltops = ChanNetwork.ExtractRidges(FlowInfo);
@@ -172,9 +163,5 @@ int main (int nNumberofArgs,char *argv[])
   LSDRaster CHT = filled_topo_test.remove_positive_hilltop_curvature(CHT_temp);
   string CHT_name = "_CHT";
   CHT.write_raster((path_name+DEM_name+CHT_name), DEM_flt_extension);
-  
-  float threshold = 0.015;
-  float percentage_bedrock = filled_topo_test.get_percentage_bedrock_ridgetops(roughness, CHT, threshold);
-  cout << "Percentage bedrock pixels: " << percentage_bedrock << endl;
   
 }
