@@ -68,7 +68,7 @@ int main (int nNumberofArgs,char *argv[])
   string Long_Swath_ext = "_swath_long";
   
   // initialise variables to be assigned from .driver file
-  int threshold_SO, FilterTopo, window_radius;
+  int threshold_SO, FilterTopo, window_radius, lower_percentile, upper_percentile;
 	float Minimum_Slope, surface_fitting_window_radius, threshold_condition;
   string temp;
   
@@ -81,7 +81,9 @@ int main (int nNumberofArgs,char *argv[])
                >> temp >> FilterTopo
                >> temp >> surface_fitting_window_radius
                >> temp >> window_radius
-							 >> temp >> threshold_condition;
+							 >> temp >> threshold_condition
+							 >> temp >> lower_percentile
+		           >> temp >> upper_percentile;
                    
 	file_info_in.close();
 
@@ -127,8 +129,8 @@ int main (int nNumberofArgs,char *argv[])
 
 	cout << "\t Loading Sources..." << endl;
 	// load the sources
-	string CH_name = "_CH_DrEICH_nodeindices_for_Arc";
-  vector<int> sources = FlowInfo.Ingest_Channel_Heads((path_name+DEM_ID+CH_name), csv_extension, 1);
+	string CH_name = "_CH_DrEICH";
+  vector<int> sources = FlowInfo.Ingest_Channel_Heads((path_name+DEM_ID+CH_name), flt_extension, 1);
   cout << "\t Got sources!" << endl;
   
 	// now get the junction network
@@ -168,11 +170,11 @@ int main (int nNumberofArgs,char *argv[])
   // get the channel relief and slope threshold using quantile-quantile plots
   cout << "Getting channel relief threshold from QQ plots" << endl;
   string qq_fname = path_name+DEM_ID+"_qq_relief.txt";
-  float relief_threshold_from_qq = ChannelRelief.get_threshold_for_floodplain_QQ(qq_fname, threshold_condition);
+  float relief_threshold_from_qq = ChannelRelief.get_threshold_for_floodplain_QQ(qq_fname, threshold_condition, lower_percentile, upper_percentile);
   
   cout << "Getting slope threshold from QQ plots" << endl;
   string qq_slope = path_name+DEM_ID+"_qq_slope.txt";
-  float slope_threshold_from_qq = Slope.get_threshold_for_floodplain_QQ(qq_slope, threshold_condition);
+  float slope_threshold_from_qq = Slope.get_threshold_for_floodplain_QQ(qq_slope, threshold_condition, lower_percentile, upper_percentile);
 
   //get the potential floodplain mask
   cout << "\t Getting the floodplain mask" << endl;
@@ -185,7 +187,8 @@ int main (int nNumberofArgs,char *argv[])
   
   //remove patches of identified floodplain that are not connected to the channel network
   cout << "\t Removing hillslope patches" << endl;
-  LSDIndexRaster ChannelPatches = ChanNetwork.remove_hillslope_patches_from_floodplain_mask(ConnectedComponents);
+	float threshold = threshold_SO -1;
+  LSDIndexRaster ChannelPatches = ChanNetwork.remove_hillslope_patches_from_floodplain_mask(ConnectedComponents, threshold);
   
   //remove holes in the connected components raster
   cout << "\t Removing holes" << endl;
