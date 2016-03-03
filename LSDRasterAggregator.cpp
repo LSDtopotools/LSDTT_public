@@ -498,14 +498,101 @@ void LSDSedimentRouting::print_parameter_values_to_screen()
   
   cout << "===================================================" << endl;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This checks to make sure there are the correct number of rasters
+// You should have at a minimum a DEM and a lithology raster
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDSedimentRouting::check_rasters_for_routing()
+{
+  
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This gets the required rasters
+// The required rasters are: 
+// 1) the DEM
+// 2) The lithology raster
+// 3) The distance to outlet raster 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 vector<LSDRaster> LSDSedimentRouting::get_required_rasters(LSDFlowInfo& FlowInfo)
 {
-  // this loads the
+  int N_rasters = int(raster_filenames.size());
+  cout << endl << endl << endl << "====================================" << endl;
+  cout << "I am getting rasters for the sediment routing routine." << endl;
+  cout << "The rasters have to be in a specific order for this to work!" << endl;
+  cout << "The order is as follows (square brackets are for optional rasters):" << endl;
+  cout << "1) DEM" << endl;
+  cout << "2) Lithology" << endl;
+  cout << "[3) Flow distance]" << endl;
+  cout << "[4) Erosion rate]" << endl;
+  cout << "==================================" << endl;
+  cout << "Your rasters are: " << endl;
+  for (int i = 0; i<N_rasters; i++)
+  {
+    cout << i+1 << ") " << raster_filenames[i]  << endl;
+  }
+  cout << "==================================" << endl << endl << endl;
+
+
+  // check the rasters
+  check_rasters();
+
+  string bil_ext = "bil";
+  string null_str = "NULL";
+  string raster_ext;
+  if(parameter_map.find("dem read extension") == parameter_map.end())
+  {
+    cout << "You did not set the read extension. Defaulting to bil" << endl;
+    raster_ext = bil_ext;
+  }
+  else
+  {
+    raster_ext = parameter_map["dem read extension"];
+  }
+
+  vector<LSDRaster> RasterVec;
+  if (N_rasters <2)
+  {
+    cout << "Fatal error!" << endl;
+    cout << "You need to supply a DEM and a lithology raster." << endl;
+    cout << "Go back and check your raster filenames." << endl;
+    exit(EXIT_FAILURE);
+  }
+  else
+  {
+    // this loads the required rasters for the sediment routing 
+    for(int iRaster = 0; iRaster<N_rasters; iRaster++)
+    {
+      
+      if(raster_filenames[iRaster] != null_str)
+      {
+        LSDRaster ThisRaster(raster_filenames[iRaster],bil_ext);
+        RasterVec.push_back(ThisRaster);
+      }
+    }
+  }
+  
+  // now check to see if the flow distance raster exists. It will be the third raster
+  if (N_rasters <3)
+  {
+    cout << "You do not seem to have a flow length raster." << endl;
+    cout << "I am getting that for you now. This might take some time." << endl;
+    
+    // create a fill raster
+    LSDRaster filled_raster = RasterVec[0].fill(min_slope);
+
+    LSDFlowInfo FI(boundary_conditions,filled_raster);
+    
+    LSDRaster DistFromOutlet = FI.distance_from_outlet();
+  }
+  
+  
+  
+  
+  
+  return RasterVec;
 }
 
 
