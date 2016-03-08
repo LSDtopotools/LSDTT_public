@@ -115,6 +115,10 @@ int main (int nNumberofArgs,char *argv[])
   // Load in data
   string DEM_f_name = data_path+raster_name;
   LSDRaster raw_raster(DEM_f_name, raster_ext);
+  
+  
+  // print the raw raster for bug checking
+  raw_raster.write_raster(data_path+"raw",raster_ext);
 
   // convert to float by using the polyfit function
   //float window_radius = 61.0;
