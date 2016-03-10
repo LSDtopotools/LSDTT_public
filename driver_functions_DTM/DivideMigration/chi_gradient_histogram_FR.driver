@@ -1,0 +1,7 @@
+RASTER1 /home/s1143956/DTMDataStore/data/FR/DivideMigration/fr_5m_chi_gradient
+RASTER2 /home/s1143956/DTMDataStore/data/FR/DivideMigration/fr_temp_chi_gradient
+RASTER3 /home/s1143956/DTMDataStore/data/FR/DivideMigration/fr_ned_chi_gradient
+EXTENSION flt
+UPPERLIMIT 50
+LOWERLIMIT 0
+BINWIDTH 0.2

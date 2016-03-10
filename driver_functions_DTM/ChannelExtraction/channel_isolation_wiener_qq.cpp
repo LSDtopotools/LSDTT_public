@@ -66,6 +66,11 @@ int main (int nNumberofArgs,char *argv[])
   // Now create the raster selection vector based on user's selection
   // Elevation
   LSDRasterSpectral raster(Raster_name, DEM_extension);
+  //LSDRaster FilteredTopo = raster.fftw2D_wiener();
+  //int irregular_switch=1;
+  //int border_width = 25;
+  //FilteredTopo=FilteredTopo.border_with_nodata(border_width, irregular_switch);
+  LSDRasterSpectral FilteredTopo(Raster_name+"_wiener",DEM_extension);
   LSDIndexRaster connected_components = raster.IsolateChannelsWienerQQ(area_threshold, window_radius, q_q_filename_prefix+".txt");
   cout << "filter by connected components" << endl;
   //LSDIndexRaster output_raster(Output_name,DEM_extension);
@@ -88,9 +93,10 @@ int main (int nNumberofArgs,char *argv[])
   cout << "Starting channel head processing" << endl;
   
   //First we need to load the elevation data, fill it and generate a FlowInfo object
-  LSDRaster DEM(Raster_name, DEM_extension);
+  //LSDRaster DEM(Raster_name, DEM_extension);
   float MinSlope = 0.0001;
-  LSDRaster FilledDEM = DEM.fill(MinSlope);
+  LSDRaster FilledDEM = FilteredTopo.fill(MinSlope);
+  cout << "calculating FlowInfo" << endl;
   vector<string> BoundaryConditions(4, "No Flux");
   LSDFlowInfo FlowInfo(BoundaryConditions,FilledDEM);
   

@@ -72,10 +72,12 @@ int main (int nNumberofArgs,char *argv[])
 
   //load dem
   LSDRaster DEM((path+filename+"_dem"), "flt");  
+  //LSDRaster DEM_filt((path+filename+"_dem_wiener"), "flt");  
   
   //Fill 
   float MinSlope = 0.0001;
   LSDRaster FilledDEM = DEM.fill(MinSlope);
+  //LSDRaster FilledDEM_filt = DEM_filt.fill(MinSlope);
   
   //surface fitting
   vector<int> raster_selection;
@@ -144,6 +146,7 @@ int main (int nNumberofArgs,char *argv[])
   LSDRaster cht_raster = FilledDEM.get_hilltop_curvature(Surfaces[3], hilltops);
   LSDRaster CHT = FilledDEM.remove_positive_hilltop_curvature(cht_raster);  
   
+  CHT.write_raster((path+filename+"_CHT"),"flt");
   //get d infinity flowdirection and flow area
   Array2D<float> dinf = FilledDEM.D_inf_FlowDir();
   LSDRaster dinf_rast = FilledDEM.LSDRasterTemplate(dinf);

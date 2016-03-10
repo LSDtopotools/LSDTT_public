@@ -48,6 +48,7 @@ int main (int nNumberofArgs,char *argv[])
   string Output_name;
   string q_q_filename_prefix;
   int timesteps;  
+  int connected_components_threshold;
   float area_threshold,window_radius;
   string DEM_extension = "flt";
   string temp;
@@ -56,12 +57,16 @@ int main (int nNumberofArgs,char *argv[])
                >> temp >> q_q_filename_prefix 
                >> temp >> timesteps
                >> temp >> window_radius
-               >> temp >> area_threshold;
+               >> temp >> area_threshold
+	       >> temp >> connected_components_threshold;
   file_info_in.close();
   // Now create the raster selection vector based on user's selection
   // Elevation
   LSDRaster raster(Raster_name, DEM_extension);
-  LSDIndexRaster output_raster = raster.IsolateChannelsGeonet(timesteps, area_threshold, window_radius, q_q_filename_prefix+".txt");
-  output_raster.write_raster(Output_name,DEM_extension);
+  LSDIndexRaster curvature_mask = raster.IsolateChannelsGeonet(timesteps, area_threshold, window_radius, q_q_filename_prefix+".txt");
+  cout << "filter by connected components" << endl;
+  //LSDIndexRaster output_raster(Output_name,DEM_extension);
+  LSDIndexRaster connected_components_filtered = curvature_mask.filter_by_connected_components(connected_components_threshold);
+  connected_components_filtered.write_raster(Output_name,DEM_extension);
   cout << "DONE" << endl;
 }

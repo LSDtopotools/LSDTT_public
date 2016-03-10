@@ -1,0 +1,8 @@
+DATADIR /home/s1143956/DTMDataStore/data/FR/fr_data/
+OUTPUTDIR /home/s1143956/DTMDataStore/data/FR/DivideMigration/
+DEMFILE fr_5m
+CHEADSFILE fr_CH_dreich_nodeindices_for_Arc
+CHIGRADIENTARRAY ChiGradientMap/fr_5m_chi_gradient
+COSMODATAFILE cosmo_data.txt
+DEM_ext flt
+MinSlope 0.0001
