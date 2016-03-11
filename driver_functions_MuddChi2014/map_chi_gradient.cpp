@@ -24,7 +24,6 @@
 #include "../LSDStatsTools.hpp"
 #include "../LSDChiNetwork.hpp"
 #include "../LSDRaster.hpp"
-#include "../LSDRasterSpectral.hpp"
 #include "../LSDIndexRaster.hpp"
 #include "../LSDFlowInfo.hpp"
 #include "../LSDJunctionNetwork.hpp"
@@ -154,7 +153,6 @@ int main (int nNumberofArgs,char *argv[])
     sources = FlowInfo.Ingest_Channel_Heads((DATA_DIR+CHeads_file), "csv",2);
     cout << "\t Got sources!" << endl;
   }
-
 
   // now get the junction network
   LSDJunctionNetwork JunctionNetwork(sources, FlowInfo);
