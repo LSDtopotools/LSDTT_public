@@ -150,6 +150,14 @@ class LSDJunctionNetwork
   /// @author SMM
   /// @date 01/09/12
   int get_maximum_stream_order();
+	
+	/// @brief This function returns the number of streams of a given stream order
+	/// @param FlowInfo LSDFlowInfo object
+	/// @param stream_order Stream order of interest
+  /// @return integer with number of streams.
+  /// @author FJC
+  /// @date 15/03/16
+	int get_number_of_streams(LSDFlowInfo& FlowInfo, int stream_order);
   
   /// @brief This gets the junction number of a given node.
   /// @param Node

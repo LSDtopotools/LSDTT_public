@@ -848,6 +848,43 @@ int LSDJunctionNetwork::get_maximum_stream_order()
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// this function returns the number of streams of a given stream order
+//
+// FJC 15/03/16
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+int LSDJunctionNetwork::get_number_of_streams(LSDFlowInfo& FlowInfo, int stream_order)
+{
+	int count = 0;
+	cout << "Stream order = " << stream_order << endl;
+	for (int CurrentJN = 0; CurrentJN<NJunctions; ++CurrentJN)
+	{
+		int CurrentSO = get_StreamOrder_of_Junction(FlowInfo, CurrentJN);
+		int ReceiverJN = get_Receiver_of_Junction(CurrentJN);
+		if (CurrentSO == stream_order && CurrentJN == ReceiverJN)
+		{
+			count++;
+		}
+		else
+		{
+			int ReceiverSO = get_StreamOrder_of_Junction(FlowInfo, ReceiverJN);
+			if (CurrentSO == stream_order)
+			{
+				//check that you have increased SO downstream
+				if (ReceiverSO > CurrentSO)
+				{
+					//reached end of stream segment, count
+					count++;		
+				}
+			}
+		}
+	}
+	return count;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function gets the junction index of a node.  If there is not a junction at this node
