@@ -4819,7 +4819,7 @@ int LSDJunctionNetwork::find_upstream_junction_from_channel_nodeindex(int Channe
 // FJC and MAH 18/03/16
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-int LSDJunctionNetwork::check_steam_order_of_upsteam_nodes(int junction, LSDFlowInfo& FlowInfo)
+int LSDJunctionNetwork::check_stream_order_of_upstream_nodes(int junction, LSDFlowInfo& FlowInfo)
 {
   int same_SO = 0;
   //get the node of the current junction
@@ -4835,7 +4835,7 @@ int LSDJunctionNetwork::check_steam_order_of_upsteam_nodes(int junction, LSDFlow
   vector<int> donors = FlowInfo.get_donor_nodes(CurrentNode);
   for(int i = 0; i < donors.size(); i++)
   {
-    // get the upsteam row and column
+    // get the upstream row and column
     FlowInfo.retrieve_current_row_and_col(donors[i],UpstreamRow,UpstreamCol);        
     // get the stream order
     int UpstreamSO = StreamOrderArray[UpstreamRow][UpstreamCol];

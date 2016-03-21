@@ -942,7 +942,7 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @return integer value 0 or 1
   /// @author FJC and MAH
   /// @date 18/03/16  
-  int check_steam_order_of_upsteam_nodes(int junction, LSDFlowInfo& FlowInfo);
+  int check_stream_order_of_upstream_nodes(int junction, LSDFlowInfo& FlowInfo);
 
   /// @brief this function is a wrapper that takes a list of x and y locations, 
   ///  filters them to make sure they are in the data bounds, 

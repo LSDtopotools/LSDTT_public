@@ -197,7 +197,7 @@ void LSDStrahlerLinks::create(LSDJunctionNetwork& JNetwork, LSDFlowInfo& FlowInf
           // check to see if it is a new receiver
           if(thisOrderReceivers[r] != LastReceiver)
           {
-            int same_SO = JNetwork.check_steam_order_of_upsteam_nodes(thisOrderReceivers[r], FlowInfo);
+            int same_SO = JNetwork.check_stream_order_of_upstream_nodes(thisOrderReceivers[r], FlowInfo);
             if (same_SO == 0)
             {
               LastReceiver = thisOrderReceivers[r];
