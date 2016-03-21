@@ -933,6 +933,16 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @author SMM
   /// @date 21/10/2013
   int find_upstream_junction_from_channel_nodeindex(int ChannelNodeIndex, LSDFlowInfo& FlowInfo);
+	
+	/// @brief This function checks whether any of the upstream nodes of a given junction are the same
+  /// steam order as the junction itself. It returns an integer value which is 1 if the SO is the same 
+  /// and 0 if it is not the same.
+  /// @param junction junction of interest
+  /// @param FlowInfo LSDFlowInfo object.
+  /// @return integer value 0 or 1
+  /// @author FJC and MAH
+  /// @date 18/03/16  
+  int check_steam_order_of_upsteam_nodes(int junction, LSDFlowInfo& FlowInfo);
 
   /// @brief this function is a wrapper that takes a list of x and y locations, 
   ///  filters them to make sure they are in the data bounds, 

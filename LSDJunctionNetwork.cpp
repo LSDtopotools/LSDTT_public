@@ -865,7 +865,8 @@ int LSDJunctionNetwork::get_number_of_streams(LSDFlowInfo& FlowInfo, int stream_
 		int ReceiverJN = get_Receiver_of_Junction(CurrentJN);
 		if (CurrentSO == stream_order && CurrentJN == ReceiverJN)
 		{
-			count++;
+			//count++;
+			CurrentJN++;
 		}
 		else
 		{
@@ -4808,6 +4809,42 @@ int LSDJunctionNetwork::find_upstream_junction_from_channel_nodeindex(int Channe
   }
 
   return UpstreamJunction;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// 
+// This function checks the upslope nodes of a junction to test if any of them
+// are the same stream order as the junction
+// FJC and MAH 18/03/16
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+int LSDJunctionNetwork::check_steam_order_of_upsteam_nodes(int junction, LSDFlowInfo& FlowInfo)
+{
+  int same_SO = 0;
+  //get the node of the current junction
+  int CurrentNode = get_Node_of_Junction(junction);
+  int CurrentRow, CurrentCol, UpstreamRow, UpstreamCol;
+  // get the current row and column
+  FlowInfo.retrieve_current_row_and_col(CurrentNode,CurrentRow,CurrentCol);
+  
+  // get the stream order
+  int CurrentSO = StreamOrderArray[CurrentRow][CurrentCol];
+  
+  //loop through all the donor nodes and check the stream order
+  vector<int> donors = FlowInfo.get_donor_nodes(CurrentNode);
+  for(int i = 0; i < donors.size(); i++)
+  {
+    // get the upsteam row and column
+    FlowInfo.retrieve_current_row_and_col(donors[i],UpstreamRow,UpstreamCol);        
+    // get the stream order
+    int UpstreamSO = StreamOrderArray[UpstreamRow][UpstreamCol];
+    if(UpstreamSO == CurrentSO)
+    {
+      same_SO = 1;
+    }   
+  }  
+  return same_SO;  
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

@@ -172,6 +172,12 @@ class LSDStrahlerLinks
     /// @author SMM
     /// @date 01/11/2014
     LSDRaster get_no_edge_influence_raster(LSDFlowInfo& FI, LSDRaster& topography);
+	
+	  /// @brief Function to get the number of streams of each order
+    /// @return integer vector with number of streams of each order (first order --> max order)
+    /// @author FJC and MAH
+    /// @date 17/03/16
+    vector<int> get_number_of_streams();
 
 
   protected:

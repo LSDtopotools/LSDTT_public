@@ -197,11 +197,16 @@ void LSDStrahlerLinks::create(LSDJunctionNetwork& JNetwork, LSDFlowInfo& FlowInf
           // check to see if it is a new receiver
           if(thisOrderReceivers[r] != LastReceiver)
           {
-            LastReceiver = thisOrderReceivers[r];
-            thisOrderSources.push_back(LastReceiver);
+            int same_SO = JNetwork.check_steam_order_of_upsteam_nodes(thisOrderReceivers[r], FlowInfo);
+            if (same_SO == 0)
+            {
+              LastReceiver = thisOrderReceivers[r];
+              thisOrderSources.push_back(LastReceiver);
+            }
           }                  
         }
       }
+      
       
       NThisOrderSources = int(thisOrderSources.size());
     }
@@ -528,5 +533,24 @@ LSDRaster LSDStrahlerLinks::get_no_edge_influence_raster(LSDFlowInfo& FI,
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function gets the number of streams for each stream order
+// FJC and MAH 17/03/16
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDStrahlerLinks::get_number_of_streams()
+{
+  vector<int> number_streams;
+  
+  for (int i =0; i < int(SourceJunctions.size()); i++)
+  {
+    number_streams.push_back(int(SourceJunctions[i].size()));
+    cout << SourceJunctions[i].size() << endl;
+  }
+  
+  return number_streams;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 #endif
