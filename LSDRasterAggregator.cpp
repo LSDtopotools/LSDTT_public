@@ -588,13 +588,51 @@ vector<LSDRaster> LSDSedimentRouting::get_required_rasters(LSDFlowInfo& FlowInfo
     LSDRaster DistFromOutlet = FI.distance_from_outlet();
   }
   
-  
-  
-  
-  
   return RasterVec;
 }
 
-
+//-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This calculates the bedload from a given node
+//-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<float> LSDSedimentRouting::calculate_suspended_and_bedload(int node, LSDFlowInfo& FlowInfo,
+                                                    vector<LSDRaster> RasterVec)
+{
+  // get the vectors for each lithology
+  map<int,vector<float>> suspended;
+  map<int,vector<float>> bedload;
+  map<int,int> count;
+  
+  // Get all the nodes upslope of the outlet node
+  vector<int> upslope_nodes = FI.get_upslope_nodes(node);
+  
+  // now loop through these nodes
+  int n_nodes  = upslope_nodes.size();
+  int outlet_row,outlet_col;
+  int this_row,this_col;
+  FI.retrieve_current_row_and_col(node,outlet_row,outlet_col);
+  
+  // the  RasterVec[2] is the flow distance raster
+  float distance_at_outlet_node = RasterVec[2].get_data_element(outlet_row,outlet_col);
+  float distance_at_this_node;
+  float distance_from_node;
+  for (this_node = 0; this_node<n_nodes; this_node++)
+  {
+    // get the row and col of this node
+    FI.retrieve_current_row_and_col(this_node,this_row,this_col);
+    
+    // get the distance rfom outlet of this node
+    distance_at_this_node = RasterVec[2].get_data_element(this_row,this_col);
+    
+    // get the distance between the two nodes
+    distance_from_node =  distance_at_this_node-distance_at_outlet_node;
+    
+    // now calculate suspended and bedload
+    //
+    // !!! THIS NEEDS TO BE DONE
+    //
+    
+    
+  }
+}
 
 #endif

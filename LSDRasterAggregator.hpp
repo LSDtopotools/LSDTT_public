@@ -154,6 +154,20 @@ class LSDSedimentRouting: public LSDRasterAggregator
     /// @date 10/02/2016
     void print_parameter_values_to_screen();
 
+    /// @brief This calculates the suspended and bedload for a given node in the DEM
+    ///  It can be called repeatedly to get the entire DEM
+    /// @param node The node at which you want to calculate suspended and bedload
+    /// @param FlowInfo the LSDFlowinfo object
+    /// @param RasterVec a vector of LSDRasters, the first element is the DEM, 
+    ///  the second element is the lithology, the third element is the flow distance
+    ///  and the fourth element is the erosion rate
+    /// @return a vector containg the bedload and suspended load information
+    /// @author SMM
+    /// @date 22/03/2016
+    vector<float> calculate_suspended_and_bedload(int node, LSDFlowInfo& FlowInfo,
+                                                    vector<LSDRaster> RasterVec)
+
+
   protected:
   
     /// The number of lithologies
