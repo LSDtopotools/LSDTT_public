@@ -85,33 +85,20 @@ int main (int nNumberofArgs,char *argv[])
 	string JI_name = "_JI";
 	JIArray.write_raster((path_name+DEM_ID+JI_name),DEM_extension);
 	
-	//get the number of streams of each order and print to file
-	
-	string string_filename;
-	string filename = "_stream_orders";
-	string_filename = DEM_ID+filename+".txt";
-	ofstream output_file;
-	output_file.open(string_filename.c_str());
+	//get the number of streams of each order and print to screen
 
 	int max_SO = ChanNetwork.get_maximum_stream_order();
 	cout << "Max stream order = " << max_SO << endl;
 	for (int i = 1; i < int(max_SO+1); i++)
 	{
 		int n_streams = ChanNetwork.get_number_of_streams(FlowInfo, i);
-		output_file << i << " " << n_streams << endl;
+		cout << "Stream order: " << i << " Number streams: " << n_streams << endl;
 	}
-	
-	output_file.close();    
-	cout << "\t Created the output file: " << string_filename << endl;
   
-  //TESTING SIMON'S CODE
+  //TESTING STRAHLER LINKS CODE
   
   LSDStrahlerLinks Links(ChanNetwork, FlowInfo);
   vector<int> number_streams = Links.get_number_of_streams();
 	
-	// CHECK THE BADLY BEHAVED JUNCTION
-	int junction_number = 11;
-	int same_SO = ChanNetwork.check_stream_order_of_upstream_nodes(junction_number, FlowInfo);
-	cout << "SO check = " << same_SO << endl;
     
 }

@@ -143,8 +143,7 @@ void LSDStrahlerLinks::create(LSDJunctionNetwork& JNetwork, LSDFlowInfo& FlowInf
   while(NThisOrderSources>0)
   {
   
-     cout << "This stream order is: " << SO << " and the number of sources is: " 
-          << NThisOrderSources << endl;
+     //cout << "This stream order is: " << SO << " and the number of sources is: " << NThisOrderSources << endl;
      SO++;
   
     // reset the sources and receivers
@@ -161,7 +160,6 @@ void LSDStrahlerLinks::create(LSDJunctionNetwork& JNetwork, LSDFlowInfo& FlowInf
       if(ds_SO_link != NoDataValue)
       {
         thinnedSources.push_back(thisOrderSources[s]);
-				cout << "Source Junctions: " << thisOrderSources[s] << " Receiver junctions: " << ds_SO_link << endl;
         thisOrderReceivers.push_back(ds_SO_link);
       }     
     }
@@ -172,7 +170,7 @@ void LSDStrahlerLinks::create(LSDJunctionNetwork& JNetwork, LSDFlowInfo& FlowInf
       SJunctions.push_back(thinnedSources);
       RJunctions.push_back(thisOrderReceivers);
       
-      cout <<"Order: " << SO-1 << " NS: " << SJunctions[SO-2].size() << " and NR: " << RJunctions[SO-2].size() << endl;
+      //cout <<"Order: " << SO-1 << " NS: " << SJunctions[SO-2].size() << " and NR: " << RJunctions[SO-2].size() << endl;
       
       // now sort and then loop through receivers to get the sources for the next
       // stream order.
@@ -182,14 +180,18 @@ void LSDStrahlerLinks::create(LSDJunctionNetwork& JNetwork, LSDFlowInfo& FlowInf
       // reset the sources 
       thisOrderSources = emptyvec;
 			
-			// remove any receivers that have the any upstream nodes of the same stream order - added by FJC to fix a problem with counting the same link twice in some occasions
+			// remove any receivers that have a stream order more than 1 greater than the order you are checking
 			vector<int> NewReceivers;
-			for (int i = 0; i < NReceivers; i++)
+			for (int r = 0; r < NReceivers; r++)
 			{
-				int same_SO = JNetwork.check_stream_order_of_upstream_nodes(thisOrderReceivers[i], FlowInfo);
-				if (same_SO == 0)
+				int ReceiverSO = JNetwork.get_StreamOrder_of_Junction(FlowInfo, thisOrderReceivers[r]);
+				if (ReceiverSO == SO)
 				{
-					NewReceivers.push_back(thisOrderReceivers[i]);
+          int same_SO = JNetwork.check_stream_order_of_upstream_nodes(thisOrderReceivers[r], FlowInfo);
+          if (same_SO == 0)
+          {
+				    NewReceivers.push_back(thisOrderReceivers[r]);
+          }
 				}
 			}
 		
@@ -211,8 +213,8 @@ void LSDStrahlerLinks::create(LSDJunctionNetwork& JNetwork, LSDFlowInfo& FlowInf
           // check to see if it is a new receiver
 					if(NewReceivers[r] != LastReceiver)
 					{
-						 LastReceiver = NewReceivers[r];
-             thisOrderSources.push_back(LastReceiver);
+						LastReceiver = NewReceivers[r];
+            thisOrderSources.push_back(LastReceiver);
           }                  
         }
       }
