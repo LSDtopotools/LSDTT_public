@@ -108,11 +108,10 @@ int main (int nNumberofArgs,char *argv[])
   
   LSDStrahlerLinks Links(ChanNetwork, FlowInfo);
   vector<int> number_streams = Links.get_number_of_streams();
-  int starting_SO = 1;
-  for (int i =0; i < int(number_streams.size()); i++)
-  {
-    cout << "Stream order: " << starting_SO << " Number of streams: " << number_streams[i] << endl;
-    starting_SO++;
-  }
+	
+	// CHECK THE BADLY BEHAVED JUNCTION
+	int junction_number = 11;
+	int same_SO = ChanNetwork.check_stream_order_of_upstream_nodes(junction_number, FlowInfo);
+	cout << "SO check = " << same_SO << endl;
     
 }

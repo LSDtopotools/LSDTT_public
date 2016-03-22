@@ -161,6 +161,7 @@ void LSDStrahlerLinks::create(LSDJunctionNetwork& JNetwork, LSDFlowInfo& FlowInf
       if(ds_SO_link != NoDataValue)
       {
         thinnedSources.push_back(thisOrderSources[s]);
+				cout << "Source Junctions: " << thisOrderSources[s] << " Receiver junctions: " << ds_SO_link << endl;
         thisOrderReceivers.push_back(ds_SO_link);
       }     
     }
@@ -180,12 +181,25 @@ void LSDStrahlerLinks::create(LSDJunctionNetwork& JNetwork, LSDFlowInfo& FlowInf
       
       // reset the sources 
       thisOrderSources = emptyvec;
-      
+			
+			// remove any receivers that have the any upstream nodes of the same stream order - added by FJC to fix a problem with counting the same link twice in some occasions
+			vector<int> NewReceivers;
+			for (int i = 0; i < NReceivers; i++)
+			{
+				int same_SO = JNetwork.check_stream_order_of_upstream_nodes(thisOrderReceivers[i], FlowInfo);
+				if (same_SO == 0)
+				{
+					NewReceivers.push_back(thisOrderReceivers[i]);
+				}
+			}
+		
+			NReceivers = int(NewReceivers.size());
+			
       // get the starting receiver
       int LastReceiver;
       if (NReceivers > 0)
       {
-        LastReceiver = thisOrderReceivers[0];
+				LastReceiver = NewReceivers[0];
         thisOrderSources.push_back(LastReceiver);
       }
           
@@ -195,14 +209,10 @@ void LSDStrahlerLinks::create(LSDJunctionNetwork& JNetwork, LSDFlowInfo& FlowInf
         for(int r = 1; r<NReceivers; r++)
         {
           // check to see if it is a new receiver
-          if(thisOrderReceivers[r] != LastReceiver)
-          {
-            int same_SO = JNetwork.check_stream_order_of_upstream_nodes(thisOrderReceivers[r], FlowInfo);
-            if (same_SO == 0)
-            {
-              LastReceiver = thisOrderReceivers[r];
-              thisOrderSources.push_back(LastReceiver);
-            }
+					if(NewReceivers[r] != LastReceiver)
+					{
+						 LastReceiver = NewReceivers[r];
+             thisOrderSources.push_back(LastReceiver);
           }                  
         }
       }

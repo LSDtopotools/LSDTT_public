@@ -878,6 +878,7 @@ int LSDJunctionNetwork::get_number_of_streams(LSDFlowInfo& FlowInfo, int stream_
 				{
 					//reached end of stream segment, count
 					count++;		
+					cout << "Receiver junctions Fiona: " << ReceiverJN << endl;
 				}
 			}
 		}
@@ -4830,15 +4831,17 @@ int LSDJunctionNetwork::check_stream_order_of_upstream_nodes(int junction, LSDFl
   
   // get the stream order
   int CurrentSO = StreamOrderArray[CurrentRow][CurrentCol];
+	//cout << "Current SO: " << CurrentSO << endl;
   
   //loop through all the donor nodes and check the stream order
   vector<int> donors = FlowInfo.get_donor_nodes(CurrentNode);
-  for(int i = 0; i < donors.size(); i++)
+  for(int i = 0; i < int(donors.size()); i++)
   {
     // get the upstream row and column
     FlowInfo.retrieve_current_row_and_col(donors[i],UpstreamRow,UpstreamCol);        
     // get the stream order
     int UpstreamSO = StreamOrderArray[UpstreamRow][UpstreamCol];
+		//cout << "Upstream stream order: " << UpstreamSO << endl;
     if(UpstreamSO == CurrentSO)
     {
       same_SO = 1;
