@@ -96,7 +96,7 @@ int main (int nNumberofArgs,char *argv[])
   string Output_name;
   string q_q_filename_prefix;
   float area_threshold,window_radius, A_0, m_over_n;
-  string DEM_extension = "bil";
+  string DEM_extension = "flt";
   string temp;
   int connected_components_threshold;
   int NJunctions;

@@ -554,11 +554,13 @@ LSDRaster LSDStrahlerLinks::get_no_edge_influence_raster(LSDFlowInfo& FI,
 vector<int> LSDStrahlerLinks::get_number_of_streams()
 {
   vector<int> number_streams;
+	int SO = 1;
   
   for (int i =0; i < int(SourceJunctions.size()); i++)
   {
     number_streams.push_back(int(SourceJunctions[i].size()));
-    cout << SourceJunctions[i].size() << endl;
+    cout << "Stream order: " << SO << " N streams: " << SourceJunctions[i].size() << endl;
+		SO++;
   }
   
   return number_streams;
