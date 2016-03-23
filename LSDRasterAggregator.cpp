@@ -297,8 +297,9 @@ void LSDRasterAggregator::check_rasters()
 
 
 
-
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This creates and LSDSedimentRouting function
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDSedimentRouting::create(string path_name, string param_name_prefix)
 {
   cout << "Hello friends. I am creating a LSDSedimentRouting object" << endl;
@@ -609,6 +610,9 @@ vector<float> LSDSedimentRouting::calculate_suspended_and_bedload(int node, LSDF
   int n_nodes  = upslope_nodes.size();
   int outlet_row,outlet_col;
   int this_row,this_col;
+  int this_lithology;
+  float this_bedload;
+  float this_suspended;
   FI.retrieve_current_row_and_col(node,outlet_row,outlet_col);
   
   // the  RasterVec[2] is the flow distance raster
@@ -626,10 +630,20 @@ vector<float> LSDSedimentRouting::calculate_suspended_and_bedload(int node, LSDF
     // get the distance between the two nodes
     distance_from_node =  distance_at_this_node-distance_at_outlet_node;
     
+    // get the lithology
+    this_lithology = int(RasterVec[1].get_data_element(outlet_row,outlet_col));
+    
     // now calculate suspended and bedload
-    //
-    // !!! THIS NEEDS TO BE DONE
-    //
+    // check if the lithology has been recorded before:
+    
+    count[this_litholgy]
+            # add contribution of each pixel to bedload:            
+            bedload=bedload + (1-source_1mm[i-1])*eros*pixel_size*pixel_size*exp(-length2outlet[j]/1000*erod[i-1]/100)
+            # add contribution of each pixel to suspended load:
+            suspended=suspended + source_1mm[i-1]*eros*pixel_size*pixel_size + (1-source_1mm[i-1])*eros*pixel_size*pixel_size*(1-exp(-length2outlet[j]/1000*erod[i-1]/100))
+            # count the number of pixels of lithology i:
+            count = count + 1
+
     
     
   }
