@@ -178,6 +178,12 @@ class LSDStrahlerLinks
     /// @author FJC and MAH
     /// @date 17/03/16
     vector<int> get_number_of_streams();
+    
+    /// @brief Function to calculate the length of each link of each order
+    /// @param FlowInfo LSDFlowInfo object 
+    /// @author FJC and MAH
+    /// @date 24/03/16
+    void calculate_lengths(LSDFlowInfo& FlowInfo);
 
 
   protected:
@@ -229,7 +235,10 @@ class LSDStrahlerLinks
     vector< vector<int> > ReceiverCols;  
     
     /// a vec vec containing drops of every link
-    vector< vector<float> > DropData;      
+    vector< vector<float> > DropData;   
+    
+    /// a vec vec containing lengths of every link
+    vector< vector<float> > LengthData;    
  
     
   private:

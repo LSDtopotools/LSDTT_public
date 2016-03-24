@@ -569,9 +569,92 @@ vector<int> LSDStrahlerLinks::get_number_of_streams()
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
-// This function gets the number of streams for each stream order
-// FJC and MAH 17/03/16
+// This function gets the length of streams for each stream order
+// FJC and MAH 24/03/16
 //
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDStrahlerLinks::calculate_lengths(LSDFlowInfo& FlowInfo)
+{
+  vector< vector<float> > lengths;
+  vector<float> this_length;
+  vector<float> empty_vec;
+  
+  int ThisNode, EndNode, FLCode;
+  float node_length = 0;
+  
+  // get the number of orders
+  int NOrders = int(SourceJunctions.size());
+  
+  // loop through orders collecting data
+  for (int order = 0; order<NOrders; order++)
+  { 
+    int n_links_in_order = int(SourceJunctions[order].size());
+    
+    // reset drop vector
+    this_length = empty_vec;   
+    //loop through each link and get the flow lengths
+    for(int link = 0; link<n_links_in_order; link++)
+    {
+      float link_length = 0;
+      int receiver_node, receiver_row, receiver_col;
+      ThisNode = SourceNodes[order][link];
+      EndNode = ReceiverNodes[order][link];
+      //move downstream from the source node
+      while(ThisNode != EndNode)
+      {
+        // get the flow length code: 1 if cardinal direction, 2 if diagonal, 0 if base level
+        FLCode = FlowInfo.retrieve_flow_length_code_of_node(ThisNode);
+        // check cardinal direction
+        if(FLCode == 1)
+        {
+          node_length = DataResolution; 
+        }
+        // check diagonal direction
+        if(FLCode == 2)
+        {
+          node_length = DataResolution*(1/sqrt(2));
+        }
+        // check base level direction
+        if(FLCode == 0)
+        {
+          node_length = 0;
+        }
+        link_length = link_length+node_length;
+        FlowInfo.retrieve_receiver_information(ThisNode, receiver_node, receiver_row, receiver_col);
+        ThisNode = receiver_node;
+      }
+
+      // Get the last node to junction
+      // get the flow length code: 1 if cardinal direction, 2 if diagonal, 0 if base level
+      FLCode = FlowInfo.retrieve_flow_length_code_of_node(ThisNode);
+      // check cardinal direction
+      if(FLCode == 1)
+      {
+        node_length = DataResolution; 
+      }
+      // check diagonal direction
+      if(FLCode == 2)
+      {
+        node_length = DataResolution*(1/sqrt(2));
+      }
+      // check base level direction
+      if(FLCode == 0)
+      {
+        node_length = 0;
+      }
+      link_length = link_length+node_length;
+      //cout << "link_length = " << link_length << endl;
+      FlowInfo.retrieve_receiver_information(ThisNode, receiver_node, receiver_row, receiver_col);
+      this_length.push_back(link_length); 
+    }
+    
+    // add the length vector to the vecvec
+    lengths.push_back(this_length);
+  }
+  
+  LengthData = lengths;
+    
+}                                                   
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 

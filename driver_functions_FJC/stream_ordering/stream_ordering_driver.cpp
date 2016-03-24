@@ -107,5 +107,7 @@ int main (int nNumberofArgs,char *argv[])
 	// Print the drops
 	string threshold_string = ".txt";
 	Links.print_drops(path_name, DEM_ID + threshold_string);
-    
+                        
+  // Get the stream order length
+	Links.calculate_lengths(FlowInfo);
 }
