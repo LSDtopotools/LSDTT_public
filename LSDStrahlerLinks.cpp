@@ -244,7 +244,7 @@ void LSDStrahlerLinks::create(LSDJunctionNetwork& JNetwork, LSDFlowInfo& FlowInf
          << " and n receivers: " << ReceiverJunctions[o].size() << endl;
   }
   cout << "Total sources: " << t_sources << endl;
-
+  
   // now get the nodes of the sources and recievers
   populate_NodeRowCol_vecvecs(JNetwork, FlowInfo);
                                 
@@ -415,7 +415,7 @@ void LSDStrahlerLinks::print_drops(string data_directory, string threshold_strin
   {
     for(int order = 0; order<NOrders; order++)
     {
-      order_string = itoa(order);
+      order_string = itoa(order+1);
       fname = data_directory+"Drops_Order_"+order_string+ "_Thresh_"+threshold_string;
       cout << "fname is: " << fname << endl;
       
@@ -566,5 +566,14 @@ vector<int> LSDStrahlerLinks::get_number_of_streams()
   return number_streams;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function gets the number of streams for each stream order
+// FJC and MAH 17/03/16
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 
 #endif

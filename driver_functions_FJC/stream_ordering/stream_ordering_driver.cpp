@@ -93,6 +93,7 @@ int main (int nNumberofArgs,char *argv[])
 	{
 		int n_streams = ChanNetwork.get_number_of_streams(FlowInfo, i);
 		cout << "Stream order: " << i << " Number streams: " << n_streams << endl;
+		cout << "Fionas stream order: " << n_streams << endl;
 	}
   
   //TESTING STRAHLER LINKS CODE
@@ -100,5 +101,11 @@ int main (int nNumberofArgs,char *argv[])
   LSDStrahlerLinks Links(ChanNetwork, FlowInfo);
   vector<int> number_streams = Links.get_number_of_streams();
 	
+	// Get the stream order drops
+	Links.calculate_drops(FlowInfo, FilledDEM);
+	
+	// Print the drops
+	string threshold_string = ".txt";
+	Links.print_drops(path_name, DEM_ID + threshold_string);
     
 }
