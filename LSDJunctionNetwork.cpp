@@ -4475,27 +4475,39 @@ bool LSDJunctionNetwork::node_tester(LSDFlowInfo& FlowInfo, int input_junction)
       
   //get reciever junction of the input junction
   int receiver_junc = ReceiverVector[input_junction];
-      
-  // Create channel segement from input junction down to receiver junction 
-  LSDIndexChannel StreamLinkVector = LSDIndexChannel(input_junction, JunctionVector[input_junction],
+  
+  // This is the node where I will check all the upstream nodes 
+  int basin_outlet;
+  
+  
+  // Now see if it is the reciever junction
+  if(input_junction == receiver_junc)
+  {
+    basin_outlet = JunctionVector[input_junction];
+  }
+  else   // this is a bit more complux but saves masses of computational time
+  {
+    //cout << "input junction:" << input_junction << " and reciever junction " << receiver_junc << endl;
+    // Create channel segement from input junction down to receiver junction 
+    LSDIndexChannel StreamLinkVector = LSDIndexChannel(input_junction, JunctionVector[input_junction],
                                                      receiver_junc, JunctionVector[receiver_junc], FlowInfo);
                 
-  // Get the number of nodes (DEM Cells) that make up the channel segment
-  int n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
+    // Get the number of nodes (DEM Cells) that make up the channel segment
+    int n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
        
-  // get the penultimate node in the channel. Eg one pixel upstream from the outlet node of a basin.
-  // -2 is used due to zero indexing.
-  int basin_outlet;
-//   if(n_nodes_in_channel == 1) basin_outlet = StreamLinkVector.get_node_in_channel(0); // test for 1 pixel tributary
-//   else basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);     
-  basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);     
+    // get the penultimate node in the channel. Eg one pixel upstream from the outlet node of a basin.
+    // -2 is used due to zero indexing.
+    //   if(n_nodes_in_channel == 1) basin_outlet = StreamLinkVector.get_node_in_channel(0); // test for 1 pixel tributary
+    //   else basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);     
+    basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
+  }    
 
   //Get all cells upslope of a junction - eg every cell of the drainage basin of interest
   vector<int> upslope_nodes = FlowInfo.get_upslope_nodes(basin_outlet);
 
   //loop over each cell in the basin and test for No Data values
-  for(vector<int>::iterator it = upslope_nodes.begin(); it != upslope_nodes.end(); ++it){
-
+  for(vector<int>::iterator it = upslope_nodes.begin(); it != upslope_nodes.end(); ++it)
+  {
     int i;
     int j;
     FlowInfo.retrieve_current_row_and_col(*it,i,j);

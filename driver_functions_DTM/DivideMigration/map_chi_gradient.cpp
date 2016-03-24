@@ -21,15 +21,15 @@
 #include <string>
 #include <vector>
 #include <fstream>
-#include "../../LSDStatsTools.hpp"
-#include "../../LSDChiNetwork.hpp"
-#include "../../LSDRaster.hpp"
-#include "../../LSDRasterSpectral.hpp"
-#include "../../LSDIndexRaster.hpp"
-#include "../../LSDFlowInfo.hpp"
-#include "../../LSDJunctionNetwork.hpp"
-#include "../../LSDIndexChannelTree.hpp"
-#include "../../LSDBasin.hpp"
+#include "../LSDStatsTools.hpp"
+#include "../LSDChiNetwork.hpp"
+#include "../LSDRaster.hpp"
+#include "../LSDRasterSpectral.hpp"
+#include "../LSDIndexRaster.hpp"
+#include "../LSDFlowInfo.hpp"
+#include "../LSDJunctionNetwork.hpp"
+#include "../LSDIndexChannelTree.hpp"
+#include "../LSDBasin.hpp"
 
 
 int main (int nNumberofArgs,char *argv[])
@@ -62,10 +62,10 @@ int main (int nNumberofArgs,char *argv[])
   string fill_ext = "_fill";
   string acc_ext = "_ACC";
   string txt_extension = ".txt";
-  
+
   // initialise variables to be assigned from .driver file
   string DATA_DIR, OUTPUT_DIR, CHeads_file;
-  int threshold; 
+  int threshold;
   float minimum_stream_order;
   float A_0;
   float movern;
@@ -76,7 +76,7 @@ int main (int nNumberofArgs,char *argv[])
   float sigma;
   int target_nodes;
   int skip;
-  
+
   file_info_in >> temp >> DATA_DIR
                >> temp >> OUTPUT_DIR
                >> temp >> DEM_ID
@@ -91,13 +91,13 @@ int main (int nNumberofArgs,char *argv[])
                >> temp >> minimum_segment_length
                >> temp >> sigma
                >> temp >> skip;
-               
+
   file_info_in.close();
 
   cout << "PARAMETERS FOR SENSITIVITY ANALYSIS\n\t DEM_ID = " << DEM_ID
                << "\n\t Basin Stream Order " << minimum_stream_order
                << "\n\t Minimum Slope (for fill function) " << Minimum_Slope
-               << "\n\t A_0 " <<  A_0              
+               << "\n\t A_0 " <<  A_0
                << "\n\t m/n: " <<  movern
                << "\n\t number of MC iterations " << n_iterations
                << "\n\t min segment length: " <<  minimum_segment_length
@@ -108,7 +108,7 @@ int main (int nNumberofArgs,char *argv[])
   // Additional parameters for chi analysis
   int organization_switch = 1;
   int pruning_switch = 3;
-  float pruning_threshold;// = target_stream_order - 1; 
+  float pruning_threshold;// = target_stream_order - 1;
 
   // set no flux boundary conditions
   vector<string> boundary_conditions(4);
@@ -123,15 +123,15 @@ int main (int nNumberofArgs,char *argv[])
   int NRows = topography_raster.get_NRows();
   int NCols = topography_raster.get_NCols();
   float NoData = topography_raster.get_NoDataValue();
-  float XMin =topography_raster.get_XMinimum(); 
+  float XMin =topography_raster.get_XMinimum();
   float YMin = topography_raster.get_YMinimum();
   float Resolution = topography_raster.get_DataResolution();
-  
-  LSDRaster filled_topography = topography_raster.fill(Minimum_Slope);  
+
+  LSDRaster filled_topography = topography_raster.fill(Minimum_Slope);
   cout << "\t Flow routing..." << endl;
 	// get a flow info object
  	LSDFlowInfo FlowInfo(boundary_conditions,filled_topography);
-	
+
   // calcualte the distance from outlet
   LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
 
@@ -139,10 +139,10 @@ int main (int nNumberofArgs,char *argv[])
   // load the sources
   vector<int> sources = FlowInfo.Ingest_Channel_Heads((DATA_DIR+CHeads_file), "csv",2);;
   cout << "\t Got sources!" << endl;
-  
+
   // now get the junction network
   LSDJunctionNetwork JunctionNetwork(sources, FlowInfo);
-  
+
   string SO_ext = "_SO";
   string JI_ext = "_JI";
   LSDIndexRaster SOArray = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
@@ -151,10 +151,10 @@ int main (int nNumberofArgs,char *argv[])
   JIArray.write_raster((OUTPUT_DIR+DEM_ID+JI_ext),raster_ext);
   int max_stream_order = JunctionNetwork.get_maximum_stream_order();
   Array2D<float> ChiGradientArray(NRows,NCols,NoData);
-  
+
   // need to get base-level nodes , otherwise these catchments will be missed!
-  vector< int > BaseLevelJunctions_Initial = JunctionNetwork.get_BaseLevel_DonorJunctions(); 
-  vector< int > BaseLevelJunctions; 
+  vector< int > BaseLevelJunctions_Initial = JunctionNetwork.get_BaseLevel_DonorJunctions();
+  vector< int > BaseLevelJunctions;
   int N_BaseLevelJuncs = BaseLevelJunctions_Initial.size();
   // remove base level junctions for which catchment is truncated
   for(int i = 0; i < N_BaseLevelJuncs; ++i)
@@ -180,23 +180,23 @@ int main (int nNumberofArgs,char *argv[])
   for(int target_stream_order_this_iter = minimum_stream_order; target_stream_order_this_iter<=max_stream_order; ++target_stream_order_this_iter)
   {
     pruning_threshold = target_stream_order_this_iter - 1;
-    
+
     // Find all junctions for target stream order basins
     vector< int > BasinOutletNodes = JunctionNetwork.extract_basins_order_outlet_junctions(target_stream_order_this_iter, FlowInfo);
-  
+
     for(int i = 0; i < N_BaseLevelJuncs; ++i)
     {
       int order = JunctionNetwork.get_StreamOrder_of_Junction(BaseLevelJunctions[i]);
       if(order == target_stream_order_this_iter) BasinOutletNodes.push_back(BaseLevelJunctions[i]);
     }
-    
+
     int N_basins = BasinOutletNodes.size();
-    
+
     vector<float> MeanChiGradient;
     vector<int> OutletJunctions;
     for(int i_basin = 0; i_basin < N_basins; ++i_basin)
     {
-      int outlet_junction = BasinOutletNodes[i_basin];  
+      int outlet_junction = BasinOutletNodes[i_basin];
       OutletJunctions.push_back(outlet_junction);
       string jn_name = itoa(outlet_junction);
       string uscore = "_";
@@ -205,10 +205,10 @@ int main (int nNumberofArgs,char *argv[])
       cout << "outlet junction " << outlet_junction << ", catchment " << i_basin+1 << " of " << N_basins << ":- creating main stem" << endl;
       LSDIndexChannel main_stem = JunctionNetwork.generate_longest_index_channel_in_basin(outlet_junction, FlowInfo, DistanceFromOutlet);
       cout << "got main stem channel, with " << main_stem.get_n_nodes_in_channel() << " nodes" <<  endl;
-  
+
       // now get the best fit m over n for all the tributaries
       LSDIndexChannelTree ChannelTree(FlowInfo, JunctionNetwork, outlet_junction, organization_switch, DistanceFromOutlet, pruning_switch, pruning_threshold);
-  
+
     // print a file that can be ingested bt the chi fitting algorithm
       string Chan_fname = "_ChanNet";
       string Chan_ext = ".chan";
@@ -219,7 +219,7 @@ int main (int nNumberofArgs,char *argv[])
       // create the chi network
       LSDChiNetwork ChiNetwork(Chan_for_chi_ingestion_fname);
       ChiNetwork.extend_tributaries_to_outlet();
-  
+
       // Now run the chi-analysis to contruct the best fit m/n value for each
       // scenario, and kick out chi-profiles for each iteration.
       // first get a string with some paramter values; needed for file names
@@ -233,7 +233,7 @@ int main (int nNumberofArgs,char *argv[])
       msl_str = static_cast<ostringstream*>( &(ostringstream() << minimum_segment_length) )->str();
       tn_str = static_cast<ostringstream*>( &(ostringstream() << target_nodes) )->str();
       param_str = uscore+sigma_str+uscore+skip_str+uscore+msl_str+uscore+tn_str;
-  
+
       string fpt_ext = ".tree";
       // convert the m/n ratio to a string for the output filename
       string prefix_movn = static_cast<ostringstream*>( &(ostringstream() << movern) )->str();
@@ -243,14 +243,14 @@ int main (int nNumberofArgs,char *argv[])
       ChiNetwork.monte_carlo_sample_river_network_for_best_fit_after_breaks(A_0, movern, n_iterations, skip, minimum_segment_length, sigma);
       string fpt_mc = "_fullProfileMC_forced_" + prefix_movn+param_str;
       ChiNetwork.print_channel_details_to_file_full_fitted((OUTPUT_DIR+DEM_ID+fpt_mc+jn_name+fpt_ext));
-      
+
       // Loop through ChiNetwork object.  Calculate average steepness of each node that has a stream order >= (basin order - 1)
       vector< vector<int> > NetworkNodes = ChiNetwork.get_node_indices();
       vector< vector<float> > NetworkChiGradients = ChiNetwork.get_m_means();
-      
+
       int N_channels = NetworkNodes.size();
       vector<float> ChannelChiGradient;
-        
+
       for(int i_channel = 0; i_channel < N_channels; ++i_channel)
       {
         int N_nodes = NetworkNodes[i_channel].size();
@@ -264,9 +264,9 @@ int main (int nNumberofArgs,char *argv[])
             ChannelChiGradient.push_back(NetworkChiGradients[i_channel][i_node]);
           }
         }
-      } 
+      }
       MeanChiGradient.push_back(get_mean(ChannelChiGradient));
-    }  
+    }
     // Now write output rasters - a raster of the outlet junction number for the catchment, and a raster of the mean chi gradient for that catchment
     Array2D<float> BasinAverageChiGradients(NRows,NCols,NoData);
     Array2D<int> BasinJunctionNumbers(NRows,NCols,NoData);
@@ -284,17 +284,17 @@ int main (int nNumberofArgs,char *argv[])
       }
     }
     string stream_order_string = itoa(target_stream_order_this_iter);
-      
+
     string output_ext_1 = "_" + stream_order_string + "_basin_steepness";
     string output_ext_2 = "_" + stream_order_string + "_basin_ID";
-    
+
     LSDRaster BasinChiGradients(NRows,NCols,XMin,YMin,Resolution,NoData,BasinAverageChiGradients);
-    LSDIndexRaster BasinJunctions(NRows,NCols,XMin,YMin,Resolution,NoData,BasinJunctionNumbers);  
+    LSDIndexRaster BasinJunctions(NRows,NCols,XMin,YMin,Resolution,NoData,BasinJunctionNumbers);
     BasinChiGradients.write_raster((OUTPUT_DIR+DEM_ID+output_ext_1),raster_ext);
     BasinJunctions.write_raster((OUTPUT_DIR+DEM_ID+output_ext_2),raster_ext);
   }
   string output_ext_3 = "_chi_gradient";
   LSDRaster BasinChiGradients(NRows,NCols,XMin,YMin,Resolution,NoData,ChiGradientArray);
   BasinChiGradients.write_raster((OUTPUT_DIR+DEM_ID+output_ext_3),raster_ext);
-    
+
 }
