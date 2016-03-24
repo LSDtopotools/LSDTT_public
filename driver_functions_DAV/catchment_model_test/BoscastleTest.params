@@ -14,10 +14,10 @@ timeseries_save_interval: 5
 # Supplementary Files
 hydroindex_file: #bos5m_hydroindex.asc
 rainfall_data_file: boscastle_rain_uniform.txt
-grain_data_file: 
+grain_data_file:
 bedrock_data_file:
 
-# Numerical    
+# Numerical
 min_time_step:    0
 max_time_step:		3600
 run_time_start:		0
@@ -25,7 +25,7 @@ max_run_duration:	47
 memory_limit:    	1
 
 # Sediment
-transport_law:		    wilcock  #einstein
+transport_law:		    einstein
 max_tau_velocity:	    5
 active_layer_thickness: 0.1
 recirculate_proportion: 1
@@ -34,7 +34,7 @@ lateral_ero_rate:     20
 edge_filter_passes:   100
 cells_shift_lat:      1
 max_diff_cross_chan:  0.001
-erode_limit:          0.02        
+erode_limit:          0.02
 
 # Hydrology
 hydro_model_only:     no
@@ -61,7 +61,7 @@ vegetation_crit_shear: 0.0
 veg_erosion_prop:      0.0
 
 # Hillslope
-creep_rate:	          0.0025	
+creep_rate:	          0.0025
 slope_failure_thresh: 45
 soil_erosion_rate:    0.0
 soil_j_mean_depends:	yes	#no
@@ -75,4 +75,4 @@ write_elev_file:      yes
 
 
 
-	
+
