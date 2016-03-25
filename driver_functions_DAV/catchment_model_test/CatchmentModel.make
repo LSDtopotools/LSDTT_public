@@ -1,7 +1,7 @@
 CC = g++
-CFLAGS= -c -Wreturn-type -Og -pg -ggdb -std=gnu++11 
-OFLAGS = -Wreturn-type -Og -pg -ggdb -std=gnu++11 
-LDFLAGS= -Wreturn-type
+CFLAGS= -c -Wall -Og -pg -ggdb -std=gnu++11 
+OFLAGS = -Wall -Og -pg -ggdb -std=gnu++11 
+LDFLAGS= -Wall
 SOURCES = ../catchmentmodel_driver.cpp \
 			../../LSDCatchmentModel.cpp \
 			../../LSDRaster.cpp \
