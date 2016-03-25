@@ -564,7 +564,7 @@ void LSDStrahlerLinks::print_number_of_streams(string data_directory, string DEM
   for (int i =0; i < int(SourceJunctions.size()); i++)
   {
     number_streams.push_back(int(SourceJunctions[i].size()));
-    output_file << "Stream order: " << SO << " N streams: " << SourceJunctions[i].size() << endl;
+    output_file << SO << " " << SourceJunctions[i].size() << endl;
 		SO++;
   }
 	output_file.close(); 
