@@ -88,11 +88,14 @@ int main (int nNumberofArgs,char *argv[])
 	}   
 
 	string DEM_name; 
-  string sources_name; 
+  string sources_name;
+	string n_value;
 	string fill_ext = "_fill";
 	file_info_in >> DEM_name >> sources_name;
 	float Minimum_Slope;
 	file_info_in >> Minimum_Slope;
+	int uprate;
+	file_info_in >> uprate >> n_value;
 
 	// get some file names
 	string DEM_f_name = path_name+DEM_name+fill_ext;
@@ -157,8 +160,15 @@ int main (int nNumberofArgs,char *argv[])
       CHT_array[row][col] = CHT.get_data_element(row,col);      
     }
   }
+	
+	// create the output file
+	string string_filename;
+  string filename = "child_drainage_density_n_";
+  string_filename = filename+n_value+"_2.5mRes.txt";
+  ofstream output_file;
+  output_file.open(string_filename.c_str(), ios_base::app);
   
   float mean_cht = get_mean_ignore_ndv(CHT_array, NoDataValue);
-  cout << "Mean CHT: " << mean_cht << " Drainage density: " << drainage_density << endl;
+  output_file << mean_cht << " " << drainage_density << " " << uprate << endl;
 
 }
