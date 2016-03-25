@@ -184,6 +184,15 @@ class LSDStrahlerLinks
     /// @author FJC and MAH
     /// @date 24/03/16
     void calculate_lengths(LSDFlowInfo& FlowInfo);
+	
+	  /// @brief this function prints the lengths. Creates a different file for each stream order.
+    /// @param data_directory a string containing the data dierctory. Should be
+    ///  terminated with a slash
+    /// @param DEM_name a string that is used to identify the file
+    ///  (typically this will be the name of the DEM)
+    /// @author FJC
+    /// @date 25/03/16
+    void print_lengths(string data_directory, string DEM_name);
 
 
   protected:

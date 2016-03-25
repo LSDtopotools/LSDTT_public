@@ -657,6 +657,44 @@ void LSDStrahlerLinks::calculate_lengths(LSDFlowInfo& FlowInfo)
 }                                                   
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function prints the lengths for assimilation into R or python
+// FJC 25/03/16
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDStrahlerLinks::print_lengths(string data_directory, string DEM_name)
+{
+  int NOrders = int(LengthData.size()); 
+  string fname;
+  string order_string;
+
+  if (NOrders == 0)
+  {
+    cout << "You haven't calculated the lengths yet! Not printing" << endl; 
+  }
+  else
+  {
+    for(int order = 0; order<NOrders; order++)
+    {
+      order_string = itoa(order+1);
+      fname = data_directory+"Lengths_Order_"+order_string+DEM_name+".txt";
+      cout << "fname is: " << fname << endl;
+      
+      ofstream lengths_out;
+      lengths_out.open(fname.c_str());
+      
+      int n_links_in_order = int(LengthData[order].size());
+    
+      for(int link = 0; link<n_links_in_order; link++)
+      {
+      	lengths_out << LengthData[order][link] << endl;
+      }
+      lengths_out.close(); 
+    
+    }
+  }
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 
 #endif

@@ -110,4 +110,5 @@ int main (int nNumberofArgs,char *argv[])
                         
   // Get the stream order length
 	Links.calculate_lengths(FlowInfo);
+	Links.print_lengths(path_name, DEM_ID);
 }
