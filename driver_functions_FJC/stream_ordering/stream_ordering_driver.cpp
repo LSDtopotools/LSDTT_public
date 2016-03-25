@@ -84,29 +84,15 @@ int main (int nNumberofArgs,char *argv[])
 
 	string JI_name = "_JI";
 	JIArray.write_raster((path_name+DEM_ID+JI_name),DEM_extension);
-	
-	//get the number of streams of each order and print to screen
-
-	int max_SO = ChanNetwork.get_maximum_stream_order();
-	cout << "Max stream order = " << max_SO << endl;
-	for (int i = 1; i < int(max_SO+1); i++)
-	{
-		int n_streams = ChanNetwork.get_number_of_streams(FlowInfo, i);
-		cout << "Stream order: " << i << " Number streams: " << n_streams << endl;
-		cout << "Fionas stream order: " << n_streams << endl;
-	}
   
   //TESTING STRAHLER LINKS CODE
   
   LSDStrahlerLinks Links(ChanNetwork, FlowInfo);
-  vector<int> number_streams = Links.get_number_of_streams();
+  Links.print_number_of_streams(path_name, DEM_ID);
 	
 	// Get the stream order drops
 	Links.calculate_drops(FlowInfo, FilledDEM);
-	
-	// Print the drops
-	string threshold_string = ".txt";
-	Links.print_drops(path_name, DEM_ID + threshold_string);
+	Links.print_drops(path_name, DEM_ID);
                         
   // Get the stream order length
 	Links.calculate_lengths(FlowInfo);

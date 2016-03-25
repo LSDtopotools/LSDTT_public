@@ -401,7 +401,7 @@ void LSDStrahlerLinks::calculate_drops(LSDFlowInfo& FlowInfo, LSDRaster& topo_ra
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function prints the drops for assimilation into R or python
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDStrahlerLinks::print_drops(string data_directory, string threshold_string)
+void LSDStrahlerLinks::print_drops(string data_directory, string DEM_name)
 {
   int NOrders = int(DropData.size()); 
   string fname;
@@ -416,7 +416,7 @@ void LSDStrahlerLinks::print_drops(string data_directory, string threshold_strin
     for(int order = 0; order<NOrders; order++)
     {
       order_string = itoa(order+1);
-      fname = data_directory+"Drops_Order_"+order_string+ "_Thresh_"+threshold_string;
+      fname = data_directory+"Drops_Order_"+order_string+"_"+DEM_name+".txt";
       cout << "fname is: " << fname << endl;
       
       ofstream drops_out;
@@ -547,23 +547,27 @@ LSDRaster LSDStrahlerLinks::get_no_edge_influence_raster(LSDFlowInfo& FI,
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
-// This function gets the number of streams for each stream order
+// This function prints the number of streams for each stream order
 // FJC and MAH 17/03/16
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-vector<int> LSDStrahlerLinks::get_number_of_streams()
+void LSDStrahlerLinks::print_number_of_streams(string data_directory, string DEM_name)
 {
   vector<int> number_streams;
 	int SO = 1;
+	
+	string fname = data_directory+"Number_Streams_"+DEM_name+".txt";
+	ofstream output_file;
+	output_file.open(fname.c_str());
+	cout << "fname is: " << fname << endl;
   
   for (int i =0; i < int(SourceJunctions.size()); i++)
   {
     number_streams.push_back(int(SourceJunctions[i].size()));
-    cout << "Stream order: " << SO << " N streams: " << SourceJunctions[i].size() << endl;
+    output_file << "Stream order: " << SO << " N streams: " << SourceJunctions[i].size() << endl;
 		SO++;
   }
-  
-  return number_streams;
+	output_file.close(); 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -676,7 +680,7 @@ void LSDStrahlerLinks::print_lengths(string data_directory, string DEM_name)
     for(int order = 0; order<NOrders; order++)
     {
       order_string = itoa(order+1);
-      fname = data_directory+"Lengths_Order_"+order_string+DEM_name+".txt";
+      fname = data_directory+"Lengths_Order_"+order_string+"_"+DEM_name+".txt";
       cout << "fname is: " << fname << endl;
       
       ofstream lengths_out;
