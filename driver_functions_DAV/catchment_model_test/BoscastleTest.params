@@ -37,7 +37,7 @@ max_diff_cross_chan:  0.001
 erode_limit:          0.02
 
 # Hydrology
-hydro_model_only:     no
+hydro_model_only:    no
 TOPMODEL_m_value:     0.01
 rainfall_data_on:			yes
 rain_data_time_step:  60
@@ -69,9 +69,9 @@ call_muddpile_model:	yes	#no
 
 # Write Output Rasters
 raster_output_interval: 50
-write_waterdepth_file:  yes
+write_waterdepth_file:  no
 waterdepth_outfile_name: waterDepthSLOW
-write_elev_file:        yes
+write_elev_file:        no
 
 
 
