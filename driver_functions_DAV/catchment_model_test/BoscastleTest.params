@@ -68,10 +68,10 @@ soil_j_mean_depends:	yes	#no
 call_muddpile_model:	yes	#no
 
 # Write Output Rasters
-raster_output_interval: 50
+raster_output_interval: 2300
 write_waterdepth_file:  no
 waterdepth_outfile_name: waterDepthSLOW
-write_elev_file:        no
+write_elev_file:        yes
 
 
 
