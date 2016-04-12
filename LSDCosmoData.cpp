@@ -110,6 +110,11 @@ void LSDCosmoData::create(string path_name, string param_name_prefix)
   string Rasters_fname =  path_name+param_name_prefix+files_ext;
   string parameters_fname = path_name+param_name_prefix+params_ext;
   string soil_fname = path_name+param_name_prefix+soil_ext;
+  
+  cout << "The files I am checking are: " << endl;
+  cout << crn_fname << endl;
+  cout << Rasters_fname << endl;
+  cout << parameters_fname << endl;
 
   // check the parameter files
   check_files(crn_fname,Rasters_fname,parameters_fname,soil_fname);
@@ -2094,7 +2099,7 @@ void LSDCosmoData::convert_to_UTM(int UTM_zone)
   int eId = 22;             // defines the ellipsiod. This is WGS
   for(int i = 0; i<N_samples; i++)
   {
-    Converter.LLtoUTM(eId, latitude[i], longitude[i], 
+    Converter.LLtoUTM_ForceZone(eId, latitude[i], longitude[i], 
                       this_Northing, this_Easting, UTM_zone);
     this_UTMN[i] = this_Northing;
     this_UTME[i] = this_Easting;
@@ -5339,6 +5344,5 @@ void LSDCosmoData::print_scaling_and_shielding_complete_rasters()
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 #endif

@@ -760,5 +760,4 @@ class LSDCosmoData
     void load_csv_cosmo_data(string filename);
 };
 
-
 #endif
