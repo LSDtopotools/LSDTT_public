@@ -119,19 +119,6 @@ void LSDCosmoData::create(string path_name, string param_name_prefix)
   // check the parameter files
   check_files(crn_fname,Rasters_fname,parameters_fname,soil_fname);
   
-  //Muon_scaling = "Braucher";
-  //cout << "The muon scaling is empty at the moment. Here is what it is: " << endl;
-  //cout << Muon_scaling << endl;
-  //if(Muon_scaling.empty())
-  //{
-  //  cout << "You haven't defined the Muon scaling yet. " << endl;
-  //}
-  //else
-  //{
-  //  cout << "Muon scaling is: " << Muon_scaling << endl;
-  //}
-
-
   // Initiate default parameters
   initiate_default_parameters();
 
@@ -628,8 +615,11 @@ void LSDCosmoData::load_soil_info(string filename)
   
   has_soil_data_index = temp_has_soil_data_index; 
   
-  cout << "The number of samples is: " << soil_sample_index.size() << " "
-       << soil_top_effective_depth.size() << " " <<  soil_effective_thickness.size() << endl;
+  if (soil_sample_index.size() != 0)
+  {
+    cout << "The number of soil samples are: " << soil_sample_index.size() << " "
+         << soil_top_effective_depth.size() << " " <<  soil_effective_thickness.size() << endl;
+  }
   
 }
 
@@ -2099,6 +2089,7 @@ void LSDCosmoData::convert_to_UTM(int UTM_zone)
   int eId = 22;             // defines the ellipsiod. This is WGS
   for(int i = 0; i<N_samples; i++)
   {
+    cout << "Converting point " << i << " to UTM." << endl;
     Converter.LLtoUTM_ForceZone(eId, latitude[i], longitude[i], 
                       this_Northing, this_Easting, UTM_zone);
     this_UTMN[i] = this_Northing;
@@ -5342,7 +5333,133 @@ void LSDCosmoData::print_scaling_and_shielding_complete_rasters()
   cout << "=====================================================" << endl;
 
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function prints all the basins. Smaller basins should nest within bigger
+// basins
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDCosmoData::print_basins_to_for_checking()
+{
+  // first get the names of the DEMs:
+  vector<string> dfnames = get_DEM_fnames();
+  string DEM_bil_extension = "bil";
+  
+  int n_DEMs = dfnames.size();
+  for(int i = 0; i<n_DEMs; i++)
+  {
+    string DEM_fname = dfnames[i];
+    string basin_raster_name = DEM_fname+"_AllBasins";
+    
+    // now find valid points
+    vector<int> valid_cosmo_points;         // a vector to hold the valid nodes
+    vector<int> snapped_node_indices;       // a vector to hold the valid node indices
+    vector<int> snapped_junction_indices;   // a vector to hold the valid junction indices
+  
+    // Load the DEM
+    string DEM_bil_extension = "bil";
+    LSDRaster topo_test(DEM_fname, DEM_bil_extension);
+  
+    // Fill this raster
+    LSDRaster filled_raster = topo_test.fill(min_slope);
+  
+    // get the flow info
+    LSDFlowInfo FlowInfo(boundary_conditions, filled_raster);
+
+    // get contributing pixels (needed for junction network)
+    LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+  
+    // get the sources
+    vector<int> sources;
+    sources = FlowInfo.get_sources_index_threshold(ContributingPixels, source_threshold);
+
+    // now get the junction network
+    LSDJunctionNetwork JNetwork(sources, FlowInfo);
+    
+    // print the stream order raster (to check against points)
+    LSDIndexRaster SO_raster = JNetwork.StreamOrderArray_to_LSDIndexRaster();
+    string SO_filename = DEM_fname+"_SO";
+    SO_raster.write_raster(SO_filename,DEM_bil_extension);
+
+    // Now convert the data into this UTM zone
+    convert_to_UTM(filled_raster);
+
+    // convert UTM vectors to float
+    vector<float> fUTM_easting;
+    vector<float> fUTM_northing;
+    for (int i = 0; i< int(UTM_easting.size()); i++)
+    {
+      fUTM_easting.push_back( float(UTM_easting[i]));
+      fUTM_northing.push_back( float(UTM_northing[i]));
+    }
+  
+    JNetwork.snap_point_locations_to_channels(fUTM_easting, fUTM_northing, 
+              search_radius_nodes, threshold_stream_order, FlowInfo, 
+              valid_cosmo_points, snapped_node_indices, snapped_junction_indices);
+
+    int n_valid_points = int(valid_cosmo_points.size());
+    
+    string sample_string_name = DEM_fname+"_BasinKey.csv";
+    
+    // a file for holding a key to the basins. 
+    ofstream basin_key_out;
+    basin_key_out.open(sample_string_name.c_str());
+    basin_key_out << "basin_ID,sample_name,basin_area" << endl;
+    
+    LSDIndexRaster BasinMasterRaster;   // Bow before the BasinMasterRaster
+    
+    // this holds all the basins. We need this because we need to know the area of the other basins
+    // for the nesting. 
+    vector<LSDBasin> AllTheBasins;
+    
+    map<int,int> drainage_of_other_basins;
+    map<int,float> drainage_of_other_basins_area;
+
+    //========================
+    // LOOPING THROUGH BASINS
+    //========================
+    // now loop through the valid points, getting the cosmo data 
+    cout << "I am trying to print basins, found " << n_valid_points << " valid points." << endl;
+    for(int samp = 0; samp<n_valid_points; samp++)
+    {
+       
+      cout << "Valid point is: " << valid_cosmo_points[samp] << " X: " 
+           << UTM_easting[valid_cosmo_points[samp]] << " Y: "
+           << UTM_northing[valid_cosmo_points[samp]] << endl;
+      cout << "Node index is: " <<  snapped_node_indices[samp] << " and junction is: " 
+           << snapped_junction_indices[samp] << " and sample name is: " << sample_name[valid_cosmo_points[samp]] << endl;
+           
+      cout << "Getting basin" << endl;
+      LSDBasin thisBasin(snapped_junction_indices[samp],FlowInfo, JNetwork);
+      AllTheBasins.push_back(thisBasin);
+      
+      drainage_of_other_basins[snapped_node_indices[samp]] = thisBasin.get_NumberOfCells();
+      drainage_of_other_basins_area[snapped_node_indices[samp]] = thisBasin.get_Area();
+      
+      basin_key_out << valid_cosmo_points[samp] << "," << sample_name[valid_cosmo_points[samp]] 
+                    << "," << thisBasin.get_Area() << endl;
+    }
+    basin_key_out.close();
+    
+    // now loop through everything again getting the raster
+    if (n_valid_points > 0)     // this gets the first raster
+    {
+      BasinMasterRaster = AllTheBasins[0].write_integer_data_to_LSDIndexRaster(valid_cosmo_points[0], FlowInfo);
+    }
+    
+    // now add on the subsequent basins
+    for(int samp = 1; samp<n_valid_points; samp++)
+    {
+      AllTheBasins[samp].add_basin_to_LSDIndexRaster(BasinMasterRaster, FlowInfo,
+                              drainage_of_other_basins, valid_cosmo_points[samp]);
+    }
+    
+    BasinMasterRaster.write_raster(basin_raster_name, DEM_bil_extension);
+    cout << "Finished with this DEM!" << endl; 
+  }
+
+}
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 #endif

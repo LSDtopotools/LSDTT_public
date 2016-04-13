@@ -584,7 +584,16 @@ class LSDCosmoData
     /// @author SMM
     /// @date 15/02/2016
     void print_scaling_and_shielding_complete_rasters();
-    
+
+    /// @brief This prints the basins to a raster, along with the stream order raster
+    ///  so that users can check if their basins are in the correct place
+    /// @detail THis prints out a raster for each raster supplied in the CRNRaster
+    ///  data file that contains the basins, a file with a key to the basins, 
+    ///  and a stream order raster to help in refining the location of the data
+    /// @author SMM
+    /// @date 11/04/2016
+    void print_basins_to_for_checking();
+
   protected:
     
     /// the number of samples

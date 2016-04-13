@@ -1,8 +1,8 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// Spawn_DEMs_for_CRN.cpp
-// A program to spawn small rasters for more efficient CRN analysis
-// Mainly used to reduce compute time for shielding calculations
+// Check_CRN_basins.cpp
+// This program snaps the cosmogenic data to basins so that you can check if
+//  your basin locations are correct. 
 // 
 // Developed by:
 //  Simon M. Mudd, University of Edinburgh, School of GeoSciences
@@ -11,7 +11,7 @@
 //  Martin D. Hurst, British Geological Survey
 // 
 //
-// Copyright (C) 2015 Simon M. Mudd 2015
+// Copyright (C) 2016 Simon M. Mudd 2016
 //
 // Developer can be contacted by simon.m.mudd _at_ ed.ac.uk
 //
@@ -71,10 +71,11 @@ int main (int nNumberofArgs,char *argv[])
   if (nNumberofArgs!=3)
   {
     cout << "=========================================================" << endl;
-    cout << "|| Welcome to the Spawn_DEMs_for_CRN tool!             ||" << endl;
-    cout << "|| This program is used prior to CRN analysis to speed ||" << endl;
-    cout << "|| shielding calculations.                             ||" << endl;
-    cout << "|| WARNING this will write a lot of data to storage!!  ||" << endl;
+    cout << "|| Welcome to the Check_CRN_basins tool!               ||" << endl;
+    cout << "|| This program is used prior to CRN analysis to       ||" << endl;
+    cout << "|| ensure that your samples are snapping to the correct||" << endl;
+    cout << "|| drainage basin. If the basins are not correct,      ||" << endl;
+    cout << "|| you will need to manually modify the CRN coordinates||" << endl;
     cout << "=========================================================" << endl;
     cout << "This program requires two inputs: " << endl;
     cout << "* First the path to the parameter files." << endl;
@@ -101,7 +102,8 @@ int main (int nNumberofArgs,char *argv[])
     cout << "Spawn_DEMs_for_CRN.exe c:\\fieldwork\\Chile\\CRN\\ My_data" << endl;
     cout << "=========================================================" << endl;
     cout << "For more documentation on cosmo data file format, " << endl;
-    cout << " see readme and online documentation." << endl;
+    cout << " see readme and online documentation:" << endl;
+    cout << "http://lsdtopotools.github.io/LSDTT_book/#_basin_averaged_cosmogenic_analysis" << endl;
     cout << "=========================================================" << endl;
     exit(EXIT_SUCCESS);
   }
@@ -130,11 +132,10 @@ int main (int nNumberofArgs,char *argv[])
   
   // load the CRNCosmoData object
   LSDCosmoData CosmoData(path_name,param_name_prefix);
-  cout << "Got the CosmoData, I am going to spawn the basins now." << endl; 
+  cout << "Got the CosmoData, I am going to write the basin data and stream order rasters now." << endl; 
   
-  // spawn the basins
-  int padding_pixels = 20;
-  CosmoData.BasinSpawnerMaster(path_name,param_name_prefix,padding_pixels);
+  // check the basins
+  CosmoData.print_basins_to_for_checking();
 
 }
   
