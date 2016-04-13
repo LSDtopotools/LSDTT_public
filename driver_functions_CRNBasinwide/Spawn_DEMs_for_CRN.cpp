@@ -3,13 +3,13 @@
 // Spawn_DEMs_for_CRN.cpp
 // A program to spawn small rasters for more efficient CRN analysis
 // Mainly used to reduce compute time for shielding calculations
-// 
+//
 // Developed by:
 //  Simon M. Mudd, University of Edinburgh, School of GeoSciences
 //  Stuart W.D. Grieve, University of Edinburgh, School of GeoSciences
 //  Marie-Alice Harel, University of Edinburgh, School of GeoSciences
 //  Martin D. Hurst, British Geological Survey
-// 
+//
 //
 // Copyright (C) 2015 Simon M. Mudd 2015
 //
@@ -102,6 +102,7 @@ int main (int nNumberofArgs,char *argv[])
     cout << "=========================================================" << endl;
     cout << "For more documentation on cosmo data file format, " << endl;
     cout << " see readme and online documentation." << endl;
+    cout << " http://lsdtopotools.github.io/LSDTT_book/#_basin_averaged_cosmogenic_analysis" << endl;
     cout << "=========================================================" << endl;
     exit(EXIT_SUCCESS);
   }
@@ -127,14 +128,13 @@ int main (int nNumberofArgs,char *argv[])
   cout << "http://lsdtopotools.github.io/LSDTT_book/#_gdal_2" << endl;
   cout << "===========================================================" << endl;
 
-  
+
   // load the CRNCosmoData object
   LSDCosmoData CosmoData(path_name,param_name_prefix);
-  cout << "Got the CosmoData, I am going to spawn the basins now." << endl; 
-  
+  cout << "Got the CosmoData, I am going to spawn the basins now." << endl;
+
   // spawn the basins
   int padding_pixels = 20;
   CosmoData.BasinSpawnerMaster(path_name,param_name_prefix,padding_pixels);
 
 }
-  

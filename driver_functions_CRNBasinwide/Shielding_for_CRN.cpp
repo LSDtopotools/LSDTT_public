@@ -100,6 +100,7 @@ int main (int nNumberofArgs,char *argv[])
     cout << "=========================================================" << endl;
     cout << "For more documentation on cosmo data file format, " << endl;
     cout << " see readme and online documentation." << endl;
+    cout << " http://lsdtopotools.github.io/LSDTT_book/#_basin_averaged_cosmogenic_analysis" << endl;
     cout << "=========================================================" << endl;
     exit(EXIT_SUCCESS);
   }
@@ -122,7 +123,7 @@ int main (int nNumberofArgs,char *argv[])
   cout << "ENVI bil files are required because, unlike asc or flt files, " << endl;
   cout << "they use georeferencing information, which is used in the analyses." << endl;
   cout << "For more information about changing DEM formatting, see: " << endl;
-  cout << "http://www.geos.ed.ac.uk/~smudd/LSDTT_docs/html/gdal_notes.html" << endl;
+  cout << "http://lsdtopotools.github.io/LSDTT_book/#_gdal_2" << endl;
   cout << "===========================================================" << endl;
 
 

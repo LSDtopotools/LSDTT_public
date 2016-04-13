@@ -3,12 +3,12 @@
 // shielding_driver.cpp
 //
 // Driver file for calculating topographic shielding functions for CRN production
-// 
+//
 // Code based on Codilean (2006):
-// Codilean, A. T. (2006) Calculation of the cosmogenic nuclide production 
+// Codilean, A. T. (2006) Calculation of the cosmogenic nuclide production
 //  topographic shielding scaling factor for large areas using DEMs
 //  Earth Surf. Proc. Land. 31(6), pg 785-794
-//  doi: 10.1002/esp.1336 
+//  doi: 10.1002/esp.1336
 //
 // Developed by:
 //  Simon M. Mudd, University of Edinburgh, School of GeoSciences
@@ -64,7 +64,7 @@ int main (int nNumberofArgs,char *argv[])
 {
   // the driver version
   string driver_version = "Driver_version: 0.01";
-  
+
   // some paramters
   //Test for correct input arguments
   if (nNumberofArgs!=5)
@@ -81,11 +81,11 @@ int main (int nNumberofArgs,char *argv[])
     cout << "  (Either \\ or / depending on your operating system.)" << endl;
     cout << "* Second the prefix of the DEM (that is, without the .bil)." << endl;
     cout << "   For example if you DEM is Ladakh.bil, you should enter Ladakh" << endl;
-    cout << "   (Note that the DEM should be in *.bil format)" << endl; 
+    cout << "   (Note that the DEM should be in *.bil format)" << endl;
     cout << "* Third the increment in azimuth (in degrees) over which you" << endl;
     cout << "   want shielding calculated. Recommended values is 5" << endl;
     cout << "* Fourth the increment in inclination (in degrees) over which you" << endl;
-    cout << "   want shielding calculated. Recommended values is 5" << endl;    
+    cout << "   want shielding calculated. Recommended values is 5" << endl;
     cout << "=====================================================================" << endl;
     cout << "For more documentation, see readme and online documentation" << endl;
     cout << "=====================================================================" << endl;
@@ -106,33 +106,33 @@ int main (int nNumberofArgs,char *argv[])
   cout << "ENVI bil files are required because, unlike asc or flt files, " << endl;
   cout << "they use georeferencing information." << endl;
   cout << "For more information about changing DEM formatting, see: " << endl;
-  cout << "http://www.geos.ed.ac.uk/~smudd/LSDTT_docs/html/gdal_notes.html" << endl;
+  cout << "http://lsdtopotools.github.io/LSDTT_book/#_gdal_2" << endl;
   cout << "================================================================" << endl;
-  
-  
+
+
   //Assign values from input arguments
   string path_name = argv[1];
   string file_name = argv[2];
   string azimuth_str = argv[3];
   string inclination_str = argv[4];
-  
+
   //Set the DEM filename
   file_name = path_name+file_name;
-  
+
   //Convert the angle increments to integers
   int azimuth_step =  atoi(azimuth_str.c_str());
   int inclination_step =  atoi(inclination_str.c_str());
-  
+
   // check the parameter values
   check_azimuth_and_inclination(azimuth_step,inclination_step);
 
   //load dem
-  LSDRaster DEM(file_name, "bil");  
+  LSDRaster DEM(file_name, "bil");
 
   //launch toposhielding
   LSDRaster TopoShielding = DEM.TopographicShielding(azimuth_step,inclination_step);
   TopoShielding.write_raster(file_name+"_TopoShield","bil");
-  
+
   cout << "Done!" << endl << endl;
 }
 

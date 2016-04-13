@@ -7,13 +7,13 @@
 // The first is the data folder. This is the folder in which the parameter
 // files are stored
 // The second is the prefix of the parameter files
-// 
+//
 // Developed by:
 //  Simon M. Mudd, University of Edinburgh, School of GeoSciences
 //  Stuart W.D. Grieve, University of Edinburgh, School of GeoSciences
 //  Marie-Alice Harel, University of Edinburgh, School of GeoSciences
 //  Martin D. Hurst, British Geological Survey
-// 
+//
 //
 // Copyright (C) 2015 Simon M. Mudd 2015
 //
@@ -74,15 +74,15 @@ int main (int nNumberofArgs,char *argv[])
   //Test for correct input arguments
   if (nNumberofArgs!=4)
   {
-    cout << "=========================================================" << endl;
-    cout << "|| Welcome to the Basinwide cosmogenic analysis tool!  ||" << endl;
-    cout << "=========================================================" << endl;
+    cout << "============================================================||" << endl;
+    cout << "|| Welcome to the Basin averaged cosmogenic analysis tool!  ||" << endl;
+    cout << "============================================================||" << endl;
     cout << "This program requires three inputs: " << endl;
     cout << "* First the path to the parameter files." << endl;
     cout << "   The path must have a slash at the end." << endl;
     cout << "  (Either \\ or / depending on your operating system.)" << endl;
     cout << "* Second the prefix of the parameter files." << endl;
-    cout << "* The third is a method flag. 0 does things without error analysis or muons," << endl; 
+    cout << "* The third is a method flag. 0 does things without error analysis or muons," << endl;
     cout << "  1 is a full analysis without spawned basins." << endl;
     cout << "  2 is a full analysis with spawned basins." << endl;
     cout << "---------------------------------------------------------" << endl;
@@ -105,21 +105,22 @@ int main (int nNumberofArgs,char *argv[])
     cout << "Basinwide_CRN.exe c:\\fieldwork\\Chile\\CRN\\ My_data" << endl;
     cout << "=========================================================" << endl;
     cout << "For more documentation on cosmo data file format, " << endl;
-    cout << " see readme and online documentation." << endl;
+    cout << " see readme and online documentation:" << endl;
+    cout << " http://lsdtopotools.github.io/LSDTT_book/#_basin_averaged_cosmogenic_analysis" << endl;
     cout << "=========================================================" << endl;
     exit(EXIT_SUCCESS);
   }
 
   string path_name = argv[1];
   string param_name_prefix = argv[2];
-  int method_flag = atoi(argv[3]);  
-  
+  int method_flag = atoi(argv[3]);
+
   // now load the CRNCosmoData object
-  LSDCosmoData CosmoData(path_name,param_name_prefix); 
-  
+  LSDCosmoData CosmoData(path_name,param_name_prefix);
+
   //cout << "Got the data" << endl;
-  
-  
+
+
 
   cout << "===========================================================" << endl;
   cout << "Welcome to the Basinwide cosmogenic analysis tool" << endl;
@@ -136,17 +137,16 @@ int main (int nNumberofArgs,char *argv[])
   cout << "ENVI bil files are required because, unlike asc or flt files, " << endl;
   cout << "they use georeferencing information, which is used in the analyses." << endl;
   cout << "For more information about changing DEM formatting, see: " << endl;
-  cout << "http://www.geos.ed.ac.uk/~smudd/LSDTT_docs/html/gdal_notes.html" << endl;
+  cout << "http://lsdtopotools.github.io/LSDTT_book/#_gdal_2" << endl;
   cout << "===========================================================" << endl;
 
   //cout << "Getting data" << endl;
   CosmoData.calculate_erosion_rates(method_flag);
-  
+
   cout << "Printing results " << endl;
   // now print the data to a csv file
   CosmoData.print_results();
   CosmoData.print_rasters();
   CosmoData.print_scaling_and_shielding_complete_rasters();
-  
+
 }
-  

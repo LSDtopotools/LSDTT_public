@@ -7,13 +7,13 @@
 // The first is the data folder. This is the folder in which the parameter
 // files are stored
 // The second is the prefix of the parameter files
-// 
+//
 // Developed by:
 //  Simon M. Mudd, University of Edinburgh, School of GeoSciences
 //  Stuart W.D. Grieve, University of Edinburgh, School of GeoSciences
 //  Marie-Alice Harel, University of Edinburgh, School of GeoSciences
 //  Martin D. Hurst, British Geological Survey
-// 
+//
 //
 // Copyright (C) 2015 Simon M. Mudd 2015
 //
@@ -107,6 +107,7 @@ int main (int nNumberofArgs,char *argv[])
     cout << "=========================================================" << endl;
     cout << "For more documentation on cosmo data file format, " << endl;
     cout << " see readme and online documentation." << endl;
+    cout << " http://lsdtopotools.github.io/LSDTT_book/#_basin_averaged_cosmogenic_analysis" << endl;
     cout << "=========================================================" << endl;
     exit(EXIT_SUCCESS);
   }
@@ -115,14 +116,14 @@ int main (int nNumberofArgs,char *argv[])
   string param_name_prefix = argv[2];
 
   // now load the CRNCosmoData object
-  LSDCosmoData CosmoData(path_name,param_name_prefix); 
-  
+  LSDCosmoData CosmoData(path_name,param_name_prefix);
+
   //cout << "Got the data" << endl;
-  
-  
+
+
 
   cout << "===========================================================" << endl;
-  cout << "Welcome to the Basinwide cosmogenic analysis tool" << endl;
+  cout << "Welcome to the Nested cosmogenic analysis tool" << endl;
   cout << "This software was developed at the University of Edinburgh," << endl;
   cout << "by the Land Surface Dynamics group. For questions email" << endl;
   cout << "simon.m.mudd _at_ ed.ac.uk" << endl;
@@ -136,16 +137,15 @@ int main (int nNumberofArgs,char *argv[])
   cout << "ENVI bil files are required because, unlike asc or flt files, " << endl;
   cout << "they use georeferencing information, which is used in the analyses." << endl;
   cout << "For more information about changing DEM formatting, see: " << endl;
-  cout << "http://www.geos.ed.ac.uk/~smudd/LSDTT_docs/html/gdal_notes.html" << endl;
+  cout << "http://lsdtopotools.github.io/LSDTT_book/#_gdal_2" << endl;
   cout << "===========================================================" << endl;
 
   //cout << "Getting data" << endl;
   CosmoData.calculate_nested_erosion_rates();
-  
+
   cout << "Printing results " << endl;
   // now print the data to a csv file
   CosmoData.print_results();
   //CosmoData.print_rasters();
-  
+
 }
-  
