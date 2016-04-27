@@ -355,7 +355,10 @@ void LSDSedimentRouting::create(string path_name, string param_name_prefix)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-
+// TODO
+// Currently the create function is loading the parameters for fertility etc
+// into vectoers but these need to be changed to maps so we can have different
+// lithologies where there is an integrer index into each lithology
 
 
 
@@ -375,6 +378,34 @@ void LSDSedimentRouting::check_parameter_values()
     N_lithologies = atoi(parameter_map["n_lithologies"].c_str());
   }
   
+  if(parameter_map.find("lithology_indices") == parameter_map.end())
+  {
+    cout << "You are missing the lithology indices!!" << endl;
+  }
+  else
+  {
+    // create a stringstream
+    stringstream ss(parameter_map["lithology_indices"]);
+    
+    // a temporary vector for holding the data
+    vector<int> temp_vec;
+    
+    while( ss.good() )
+    {
+      string substr;
+      getline( ss, substr, ',' );
+      
+      // remove the spaces
+      substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
+      
+      // remove control characters
+      substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
+      
+      // add the string to the string vec
+      temp_vec.push_back( atof(substr.c_str()) );
+    }
+    lithology_indices = temp_vec;
+  }
   
   // check on the erodibility_coefficients
   if(parameter_map.find("erodibility_coefficients") == parameter_map.end())
@@ -571,6 +602,16 @@ vector<LSDRaster> LSDSedimentRouting::get_required_rasters(LSDFlowInfo& FlowInfo
       {
         LSDRaster ThisRaster(raster_filenames[iRaster],bil_ext);
         RasterVec.push_back(ThisRaster);
+        
+        if (iRaster == 0)
+        {
+          raster_map["DEM"] = 0;
+        }
+        if (iRaster == 1)
+        {
+          raster_map["lithology"] = 1;
+        }
+        
       }
     }
   }
@@ -598,6 +639,14 @@ vector<LSDRaster> LSDSedimentRouting::get_required_rasters(LSDFlowInfo& FlowInfo
 vector<float> LSDSedimentRouting::calculate_suspended_and_bedload(int node, LSDFlowInfo& FlowInfo,
                                                     vector<LSDRaster> RasterVec)
 {
+  // See if there is an erosion rate raster
+  bool is_there_an_erosion_raster = false;
+  if(raster_map.find("erosion") != raster_map.end())
+  {
+    cout << "I found an erosion raster!" << endl;
+    is_there_an_erosion_raster = true;
+  }
+
   // get the vectors for each lithology
   map<int,vector<float>> suspended;
   map<int,vector<float>> bedload;
@@ -619,9 +668,14 @@ vector<float> LSDSedimentRouting::calculate_suspended_and_bedload(int node, LSDF
   float distance_at_outlet_node = RasterVec[2].get_data_element(outlet_row,outlet_col);
   float distance_at_this_node;
   float distance_from_node;
-  for (this_node = 0; this_node<n_nodes; this_node++)
+  
+  // Now loop through all the upslope nodes
+  for (upslope_node = 0; upslope_node<n_nodes; upslope_node++)
   {
-    // get the row and col of this node
+    // get the node number from the upslope_nodes vector
+    this_node = upslope_nodes[upslope_node];
+    
+    // get the row and col of this upslope node
     FI.retrieve_current_row_and_col(this_node,this_row,this_col);
     
     // get the distance rfom outlet of this node
@@ -635,17 +689,40 @@ vector<float> LSDSedimentRouting::calculate_suspended_and_bedload(int node, LSDF
     
     // now calculate suspended and bedload
     // check if the lithology has been recorded before:
+    if(suspended.find(this_lithology) == suspended.end())
+    {
+      cout "I have found the first instance of lithology " << this_lithology << endl;
+      
+      // if it hasn't been recorded before, set the suspended to zero
+      suspended[lithology] = 0;
+      bedload[lithology] = 0;
+    }
     
-    count[this_litholgy]
-            # add contribution of each pixel to bedload:            
-            bedload=bedload + (1-source_1mm[i-1])*eros*pixel_size*pixel_size*exp(-length2outlet[j]/1000*erod[i-1]/100)
-            # add contribution of each pixel to suspended load:
-            suspended=suspended + source_1mm[i-1]*eros*pixel_size*pixel_size + (1-source_1mm[i-1])*eros*pixel_size*pixel_size*(1-exp(-length2outlet[j]/1000*erod[i-1]/100))
-            # count the number of pixels of lithology i:
-            count = count + 1
+    
+    
+    // now add the bedload and suspended load for this lithology to the map 
+    // of bedload and suspended loads
+    float this_erosion
+    if(is_there_an_erosion_raster)
+    {
+      this_erosion = RasterVec[3].get_data_element(this_row,this_col);
+    }
+    else
+    {
+      this_erosion = erosion;
+    }
+    
+    // first the bedoad
+    bedload[lithology]=bedload[lithology] + (1-source_1mm[lithology])*this_erosion*pixel_size*pixel_size
+                    *exp(-distance_from_node/1000*erodibility_coefficients[lithology]/100);
+    
+    // Now suspended sediment
+    suspended[lithology] = suspended[lithology] + source_1mm[lithology]*this_erosion*pixel_size*pixel_size 
+                           + (1-source_1mm[lithology])*this_erosion*pixel_size*pixel_size
+                           *(1-exp(-distance_from_node/1000*erodibility_coefficients[lithology]/100));
+    // count the number of pixels of lithology
+    pixel_count[lithology] = pixel_count[lithology] + 1;
 
-    
-    
   }
 }
 

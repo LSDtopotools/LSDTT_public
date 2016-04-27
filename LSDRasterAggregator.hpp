@@ -110,6 +110,10 @@ class LSDRasterAggregator
     ///  and converted to the appropriate data type as needed
     map<string,string> parameter_map;
     
+    /// This map holds an index into different rasters. The mapping values
+    /// are the raster types, and the integer is the index into a raster vec
+    map<string,int> raster_map;
+    
     /// The minimum slope for the fill function
     float min_slope;
     
@@ -177,14 +181,17 @@ class LSDSedimentRouting: public LSDRasterAggregator
     float erosion_rate;
     
     /// The erodibiliy coefficients in km^-1
-    vector<float> erodibility_coefficients;
+    /// The int is the index into the lithology (coded with an integer)
+    map<int,float> erodibility_coefficients;
     
     /// The fertility coefficients: states the fraction in the source material
     ///  that contains zircon
-    vector<float> fertility_coefficients;
+    /// The int is the index into the lithology (coded with an integer)
+    map<int,float> fertility_coefficients;
     
     /// The fraction of the source material that is entered as suspended load
-    vector<float> source_1mm;
+    /// The int is the index into the lithology (coded with an integer)
+    map<int,float> source_1mm;
 
     
   private:
