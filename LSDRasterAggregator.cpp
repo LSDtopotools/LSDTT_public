@@ -183,18 +183,13 @@ void LSDRasterAggregator::load_parameters(string filename)
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function loads the filenames 
-// for the DEMs or single value parameters.
-// It reads the DEM, either the snow shield raster or a single value
-// the self shield raster name or a single value, and the topo shield raster
+// of the rasters. The input file is a csv file with the first line being
+// the comumn names and the data thereafter
+// The file should have two columns, comma seperated, with the raster
+// type first and the raster name second. 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterAggregator::load_raster_filenames(string filename)
 {
-  //cout << "Getting filenames" << endl;
-  
-  // this vecvec holds data for determining the dem, the snow shielding
-  // the self shielding and the topographic sheilding
-  vector< string > temp_raster_names;
-  
   // a string for null values
   string null_str = "NULL";
   
@@ -203,21 +198,38 @@ void LSDRasterAggregator::load_raster_filenames(string filename)
   if( ifs.fail() )
   {
     cout << "\nFATAL ERROR: Trying to load csv filenames file, but the file" << filename
-         << "doesn't exist; LINE 348 LSDCosmoData" << endl;
+         << "doesn't exist"<< endl;
     exit(EXIT_FAILURE);
   }
-  
   
   string line_from_file;
   // now loop through the rest of the lines, getting the data. 
   while( getline(ifs, line_from_file))
   {
-    line_from_file = RemoveControlCharactersFromEndOfString(line_from_file);
-    temp_raster_names.push_back(line_from_file);
+    vector<string> this_string_vec;
+  
+    // create a stringstream
+    stringstream ss(line_from_file);
+    
+    while( ss.good() )
+    {
+      string substr;
+      getline( ss, substr, ',' );
+      
+      // remove the spaces
+      substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
+      
+      // remove control characters
+      substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
+      
+      // add the string to the string vec
+      this_string_vec.push_back( substr );
+    }
+    
+    // The first element in the raster filenames file is the raster type, 
+    // the second is the filename (with full path)
+    raster_filenames[this_string_vec[0]] =  this_string_vec[1];
   }
-
-  raster_filenames = temp_raster_names;
-
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -367,6 +379,8 @@ void LSDSedimentRouting::create(string path_name, string param_name_prefix)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDSedimentRouting::check_parameter_values()
 {
+  vector<int> lithology_indices;
+  
   string this_string; 
   
   if(parameter_map.find("n_lithologies") == parameter_map.end())
@@ -376,6 +390,14 @@ void LSDSedimentRouting::check_parameter_values()
   else
   {
     N_lithologies = atoi(parameter_map["n_lithologies"].c_str());
+    
+    // this sets the default lithology indices. If no lithology indicies are given
+    // Lithologies are assumed to start at index 0 and the fertility, erodibility
+    // etc vectors have lithology indices that correspond to their vector indices. 
+    for(int i = 0; i< N_lithologies; i++)
+    {
+      lithology_indices.push_back(i);
+    }
   }
   
   if(parameter_map.find("lithology_indices") == parameter_map.end())
@@ -434,7 +456,21 @@ void LSDSedimentRouting::check_parameter_values()
       // add the string to the string vec
       temp_vec.push_back( atof(substr.c_str()) );
     }
-    erodibility_coefficients = temp_vec;
+    
+    if (int(temp_vec.size())!=N_lithologies)
+    {
+      cout << "Fatal error, you do not have the same number of erodibility_coefficients" << endl;
+      cout << "as you have lithologies" << endl;
+      exit(EXIT_FAILURE);
+    }
+    else
+    {
+      for(int i = 0; i< N_lithologies; i++)
+      {
+        int lith_index = lithology_indices[i];
+        erodibility_coefficients[lith_index] = temp_vec[i];
+      }
+    }
   }
   
   
@@ -465,7 +501,21 @@ void LSDSedimentRouting::check_parameter_values()
       // add the string to the string vec
       temp_vec.push_back( atof(substr.c_str()) );
     }
-    fertility_coefficients = temp_vec;
+
+    if (int(temp_vec.size())!=N_lithologies)
+    {
+      cout << "Fatal error, you do not have the same number of fertility_coefficients" << endl;
+      cout << "as you have lithologies" << endl;
+      exit(EXIT_FAILURE);
+    }
+    else
+    {
+      for(int i = 0; i< N_lithologies; i++)
+      {
+        int lith_index = lithology_indices[i];
+        fertility_coefficients[lith_index] = temp_vec[i];
+      }
+    }
   }
 
   // check on the source_1mm
@@ -495,7 +545,21 @@ void LSDSedimentRouting::check_parameter_values()
       // add the string to the string vec
       temp_vec.push_back( atof(substr.c_str()) );
     }
-    source_1mm = temp_vec;
+
+    if (int(temp_vec.size())!=N_lithologies)
+    {
+      cout << "Fatal error, you do not have the same number of source_1mm" << endl;
+      cout << "as you have lithologies" << endl;
+      exit(EXIT_FAILURE);
+    }
+    else
+    {
+      for(int i = 0; i< N_lithologies; i++)
+      {
+        int lith_index = lithology_indices[i];
+        source_1mm[lith_index] = temp_vec[i];
+      }
+    }
   }
   
 }
@@ -553,20 +617,13 @@ vector<LSDRaster> LSDSedimentRouting::get_required_rasters(LSDFlowInfo& FlowInfo
   int N_rasters = int(raster_filenames.size());
   cout << endl << endl << endl << "====================================" << endl;
   cout << "I am getting rasters for the sediment routing routine." << endl;
-  cout << "The rasters have to be in a specific order for this to work!" << endl;
-  cout << "The order is as follows (square brackets are for optional rasters):" << endl;
-  cout << "1) DEM" << endl;
-  cout << "2) Lithology" << endl;
-  cout << "[3) Flow distance]" << endl;
-  cout << "[4) Erosion rate]" << endl;
+  cout << "You need at least the DEM and lithology rasters. " << endl;
+  cout << "The rasters MUST be denoted by the appropriate raster type in the raster filenames file" << endl;
+  cout << "DEM must be called DEM" << endl;
+  cout << "Lithology -> Lithology" << endl;
+  cout << "Erosion -> Erosion" << endl;
+  cout << "Distance from Outlet -> DistFromOutlet" << endl;
   cout << "==================================" << endl;
-  cout << "Your rasters are: " << endl;
-  for (int i = 0; i<N_rasters; i++)
-  {
-    cout << i+1 << ") " << raster_filenames[i]  << endl;
-  }
-  cout << "==================================" << endl << endl << endl;
-
 
   // check the rasters
   check_rasters();
@@ -584,7 +641,7 @@ vector<LSDRaster> LSDSedimentRouting::get_required_rasters(LSDFlowInfo& FlowInfo
     raster_ext = parameter_map["dem read extension"];
   }
 
-  vector<LSDRaster> RasterVec;
+  map<string,LSDRaster> RasterMap;
   if (N_rasters <2)
   {
     cout << "Fatal error!" << endl;
@@ -594,43 +651,62 @@ vector<LSDRaster> LSDSedimentRouting::get_required_rasters(LSDFlowInfo& FlowInfo
   }
   else
   {
-    // this loads the required rasters for the sediment routing 
-    for(int iRaster = 0; iRaster<N_rasters; iRaster++)
+    
+    if(raster_filenames.find("DEM") == raster_filenames.end())
     {
+      cout << "Fatal error, you have not designated a raster of type DEM" << endl;
+      exit(EXIT_FAILURE);
+    }
+    else
+    {
+      LSDRaster ThisRaster(raster_filenames["DEM"],bil_ext);
+      RasterMap["DEM"] = ThisRaster;
+    }
+
+    if(raster_filenames.find("Lithology") == raster_filenames.end())
+    {
+      cout << "Fatal error, you have not designated a raster of type Lithology" << endl;
+      exit(EXIT_FAILURE);
+    }
+    else
+    {
+      LSDRaster ThisRaster(raster_filenames["Lithology"],bil_ext);
+      RasterMap["Lithology"] = ThisRaster;
+    }
+
+    if(raster_filenames.find("Erosion") == raster_filenames.end())
+    {
+      cout << "I did not find a raster of type erosion, so I will assume a constant erosion rate." << endl;
+    }
+    else
+    {
+      LSDRaster ThisRaster(raster_filenames["Erosion"],bil_ext);
+      RasterMap["Erosion"] = ThisRaster;
+    }
+
+    if(raster_filenames.find("Flow_distance") == raster_filenames.end())
+    {
+      cout << "I did not find a raster of typeFlow_distance" << endl;
+      cout << "I will compute that from the DEM now." << endl;
       
-      if(raster_filenames[iRaster] != null_str)
-      {
-        LSDRaster ThisRaster(raster_filenames[iRaster],bil_ext);
-        RasterVec.push_back(ThisRaster);
-        
-        if (iRaster == 0)
-        {
-          raster_map["DEM"] = 0;
-        }
-        if (iRaster == 1)
-        {
-          raster_map["lithology"] = 1;
-        }
-        
-      }
+      // create a fill raster
+      LSDRaster filled_raster = RasterMap["DEM"].fill(min_slope);
+
+      LSDFlowInfo FI(boundary_conditions,filled_raster);
+    
+      LSDRaster DistFromOutlet = FI.distance_from_outlet();
+      RasterMap["DistFromOutlet"] = DistFromOutlet;
+      
+    }
+    else
+    {
+      LSDRaster ThisRaster(raster_filenames["DistFromOutlet"],bil_ext);
+      RasterMap["DistFromOutlet"] = ThisRaster;
     }
   }
-  
-  // now check to see if the flow distance raster exists. It will be the third raster
-  if (N_rasters <3)
-  {
-    cout << "You do not seem to have a flow length raster." << endl;
-    cout << "I am getting that for you now. This might take some time." << endl;
-    
-    // create a fill raster
-    LSDRaster filled_raster = RasterVec[0].fill(min_slope);
 
-    LSDFlowInfo FI(boundary_conditions,filled_raster);
-    
-    LSDRaster DistFromOutlet = FI.distance_from_outlet();
-  }
   
-  return RasterVec;
+  return RasterMap;
 }
 
 //-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

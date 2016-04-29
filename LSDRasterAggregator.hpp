@@ -76,7 +76,10 @@ class LSDRasterAggregator
     
     /// @brief This function load a csv file containing names of  a DEMs and 
     ///  (possibly) other rasters
-    /// @detail The first row is assumed to be the DEM
+    /// @detail The first row of the file contains column headers and is ignored
+    ///  Thereafter you have two columns in each row, comma seperated, 
+    ///  with the raster type as the first column and the raster filename
+    ///  (with full path) as the second. 
     /// @param filename the name of the file
     /// @author SMM
     /// @date 10/02/2016
@@ -103,16 +106,16 @@ class LSDRasterAggregator
     /// the prefix of the parameter files
     string param_name;
     
-    /// a string for holding the raster names involved in the analysis
-    vector< string > raster_filenames;
+    /// A map for holding the different raster filenames
+    /// The index into the raster filenames is the raster type. 
+    /// There are some commone raster types:
+    /// DEM is the DEM
+    /// ---more to come here---
+    map< string,string > raster_filenames;
     
     /// A map holding the parameter values. These are stored as strings
     ///  and converted to the appropriate data type as needed
     map<string,string> parameter_map;
-    
-    /// This map holds an index into different rasters. The mapping values
-    /// are the raster types, and the integer is the index into a raster vec
-    map<string,int> raster_map;
     
     /// The minimum slope for the fill function
     float min_slope;
