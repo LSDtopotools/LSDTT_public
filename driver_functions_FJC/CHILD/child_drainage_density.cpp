@@ -164,7 +164,7 @@ int main (int nNumberofArgs,char *argv[])
 	// create the output file
 	string string_filename;
   string filename = "child_drainage_density_n_";
-  string_filename = filename+n_value+"_2.5mRes.txt";
+  string_filename = filename+n_value+"_Geometric.txt";
   ofstream output_file;
   output_file.open(string_filename.c_str(), ios_base::app);
   
