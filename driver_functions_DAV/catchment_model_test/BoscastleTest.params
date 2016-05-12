@@ -70,9 +70,9 @@ call_muddpile_model:	yes	#no
 # Write Output Rasters
 raster_output_interval: 50
 write_waterdepth_file:  yes
-waterdepth_outfile_name: waterDepthSLOW
+waterdepth_outfile_name: WaterDepths
 write_elev_file:        yes
-
+write_elevation_file:   Elevations
 
 
 
