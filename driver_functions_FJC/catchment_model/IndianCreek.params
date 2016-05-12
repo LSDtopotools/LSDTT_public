@@ -1,0 +1,78 @@
+# LSDCatchmentModel (DAV Version) Parameter File
+# 04/10/2014
+
+# File Information
+dem_name:	indian_creek
+dem_read_extension:	.asc
+dem_write_extension:    .asc
+read_path:	/home/s0923330/Datastore/DEMs_for_analysis/indian_creek/hydro_model/
+write_path:	/home/s0923330/Datastore/DEMs_for_analysis/indian_creek/hydro_model/
+read_fname:	indian_creek
+write_fname:	indian_creek_output
+timeseries_save_interval: 5
+
+# Supplementary Files
+hydroindex_file:
+rainfall_data_file: indian_creek_rainfall_data_all_6_hr.txt
+grain_data_file:
+bedrock_data_file:
+
+# Numerical
+min_time_step:    0
+max_time_step:		3600
+run_time_start:		0
+max_run_duration:	101
+memory_limit:    	1
+
+# Sediment
+transport_law:		    einstein
+max_tau_velocity:	    5
+active_layer_thickness: 0.1
+recirculate_proportion: 1
+lateral_erosion_on:	  no
+lateral_ero_rate:     20
+edge_filter_passes:   100
+cells_shift_lat:      1
+max_diff_cross_chan:  0.001
+erode_limit:          0.02
+
+# Hydrology
+hydro_model_only:    yes
+TOPMODEL_m_value:     0.01
+rainfall_data_on:			yes
+rain_data_time_step:  60
+spatial_var_rain:		  no
+in_out_difference:		0
+min_Q_for_depth_calc:	0.05
+max_Q_for_depth_calc: 1000.0
+water_depth_erosion_threshold: 0.01
+slope_on_edge_cell:   0.0005
+evaporation_rate:     0.0
+courant_number:       0.25
+froude_num_limit:     0.8
+mannings_n:           0.04
+hflow_threshold:      0.00001
+num_unique_rain_cells: 1
+
+# Vegetation
+vegetation_on:	       no
+grass_grow_rate:       0.0
+vegetation_crit_shear: 0.0
+veg_erosion_prop:      0.0
+
+# Hillslope
+creep_rate:	          0.0025
+slope_failure_thresh: 45
+soil_erosion_rate:    0.0
+soil_j_mean_depends:	yes	#no
+call_muddpile_model:	yes	#no
+
+# Write Output Rasters
+raster_output_interval: 50
+write_waterdepth_file:  yes
+waterdepth_outfile_name: waterDepthSLOW
+write_elev_file:        no
+
+
+
+
