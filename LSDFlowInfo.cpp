@@ -245,16 +245,16 @@ void LSDFlowInfo::create(vector<string>& temp_BoundaryConditions,
   for (row = 0; row<NRows; row++)
     {
       for (col = 0; col<NCols; col++)
-	{
-	  // only do calcualtions if there is data
-	  if(TopoRaster.RasterData[row][col] != NoDataValue)
-	    {
-	      RowIndex.push_back(row);
-	      ColIndex.push_back(col);
-	      NodeIndex[row][col] = NDataNodes;
-	      NDataNodes++;
-	    }
-	}
+  {
+    // only do calcualtions if there is data
+    if(TopoRaster.RasterData[row][col] != NoDataValue)
+      {
+        RowIndex.push_back(row);
+        ColIndex.push_back(col);
+        NodeIndex[row][col] = NDataNodes;
+        NDataNodes++;
+      }
+  }
     }
 
   //cout << "3" << endl;
@@ -649,8 +649,8 @@ bool LSDFlowInfo::check_if_point_is_in_raster(float X_coordinate, float Y_coordi
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::retrieve_receiver_information(int current_node,
-						int& receiver_node, int& receiver_row,
-						int& receiver_col)
+                     int& receiver_node, int& receiver_row,
+                     int& receiver_col)
 {
   int rn, rr, rc;
   rn = ReceiverVector[current_node];
@@ -670,7 +670,7 @@ void LSDFlowInfo::retrieve_receiver_information(int current_node,
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::retrieve_current_row_and_col(int current_node,int& curr_row,
-					       int& curr_col)
+                                               int& curr_col)
 {
   int cr, cc;
   cr = RowIndex[current_node];

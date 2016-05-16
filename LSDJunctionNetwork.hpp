@@ -187,27 +187,29 @@ class LSDJunctionNetwork
   /// @return LSDIndexRaster of StreamOrderArray.
   /// @author SMM
   /// @date 01/09/12
-	LSDIndexRaster StreamOrderArray_to_LSDIndexRaster();
-	/// @brief This sends the JunctionArray to a LSDIndexRaster.
+  LSDIndexRaster StreamOrderArray_to_LSDIndexRaster();
+  
+  /// @brief This sends the JunctionArray to a LSDIndexRaster.
   /// @return LSDIndexRaster of JunctionArray.
   /// @author SMM
   /// @date 01/09/12
-	LSDIndexRaster JunctionArray_to_LSDIndexRaster();
-	/// @brief This sends the JunctionIndexArray to a LSDIndexRaster.
+  LSDIndexRaster JunctionArray_to_LSDIndexRaster();
+  
+  /// @brief This sends the JunctionIndexArray to a LSDIndexRaster.
   /// @return LSDIndexRaster of JunctionIndexArray.
   /// @author SMM
   /// @date 01/09/12
-	LSDIndexRaster JunctionIndexArray_to_LSDIndexRaster();
-	/// @brief Turns the StreamOrderArray into a binary rastser where 1 is channel and 0 is hillslope.
+  LSDIndexRaster JunctionIndexArray_to_LSDIndexRaster();
+  
+  /// @brief Turns the StreamOrderArray into a binary rastser where 1 is channel and 0 is hillslope.
   /// @return Binary LSDIndexRaster of the channel network.
   /// @author SMM
   /// @date 01/09/12
-	LSDIndexRaster StreamOrderArray_to_BinaryNetwork_LSDIndexRaster();
+  LSDIndexRaster StreamOrderArray_to_BinaryNetwork_LSDIndexRaster();
 
-	// this gets the largest donor junction to the baselevel nodes so that you can
-	// automate basin selection (e.g. for use with chi analysis)
-	/// @brief This gets the largest donor junction to the baselevel nodes so that you can
-	/// automate basin selection.
+
+  /// @brief This gets the largest donor junction to the baselevel nodes so that you can
+  /// automate basin selection. (e.g. for use with chi analysis)
   ///
   /// @details This function returns a integer vector containing the junction number of the largest
   /// donor catchment (i.e. donor junction with greatest drainage area) upslope of each
@@ -223,14 +225,40 @@ class LSDJunctionNetwork
   /// @date 19/6/13
   vector<int> get_BaseLevel_DonorJunctions();
 
-	/// @brief Get Junction number at a location.
+  /// @brief This function takes a list of base level junctions and then prunes
+  ///  junctions based whether they drain from the edge. This attempts to 
+  ///  remove junctions that are through-flowing and thus do not have the 
+  ///  correct drainage area
+  /// @param BaseLevelJunctions_Initial a vector of integers containg an inital
+  ///  list of base level nodes
+  /// @param FlowInfo The LSDFlowInfo object
+  /// @return a pruned list of base level nodes
+  /// @author SMM
+  /// @date 16/05/16
+  vector<int> Prune_BaseLevel_DonorJunctions_Edge(vector<int>& BaseLevelJunctions_Initial,LSDFlowInfo& FlowInfo);
+
+  /// @brief This function takes a list of base level junctions and then prunes
+  ///  junctions based on their number of contributing pixels
+  /// @param BaseLevelJunctions_Initial a vector of integers containg an inital
+  ///  list of base level nodes
+  /// @param FlowInfo The LSDFlowInfo object
+  /// @param FlowAcc an LSDIndexRaster with the number of pixels for flow accumulation
+  /// @param Threshold The minimum number of accumulated pixels needed to keep 
+  ///   a base level node. 
+  /// @return a pruned list of base level nodes
+  /// @author SMM
+  /// @date 16/05/16
+  vector<int> Prune_BaseLevel_DonorJunctions_Area(vector<int>& BaseLevelJunctions_Initial,LSDFlowInfo& FlowInfo,
+                              LSDIndexRaster& FlowAcc, double Threshold);
+
+  /// @brief Get Junction number at a location.
   /// @param row Integer row index.
   /// @param col Integer column index.
   /// @return Junction number at location row,col.
   /// @author SMM
   /// @date 01/09/12
   int retrieve_junction_number_at_row_and_column(int row,int col)
-										{ return JunctionIndexArray[ row ][ col ]; }
+                       { return JunctionIndexArray[ row ][ col ]; }
 
 	/// @brief Function for printing out the longest channel upstream of a point.
   /// @param outlet_junction
@@ -240,15 +268,15 @@ class LSDJunctionNetwork
   /// @author SMM
   /// @date 01/09/12
   void print_longest_channel(int outlet_junction, LSDFlowInfo& FInfo, LSDIndexRaster& dist_code,
-									LSDRaster& dist_from_outlet);
+                             LSDRaster& dist_from_outlet);
 
-	/// @brief Prints the information about the junctions to file.
+  /// @brief Prints the information about the junctions to file.
   /// @param filename Output filename to be appended with '.txt'.
   /// @author SMM
   /// @date 01/09/12
-	void print_junction_info_vectors(string filename);
+  void print_junction_info_vectors(string filename);
 
-	/// @brief This generates an LSDChannelIndex object given a junction.
+  /// @brief This generates an LSDChannelIndex object given a junction.
   ///
   /// @details NOTE: junctions start at the upstream end of the channel section.
   /// @param start_junction Junction to extract the channel from.

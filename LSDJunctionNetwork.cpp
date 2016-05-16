@@ -4543,7 +4543,7 @@ bool LSDJunctionNetwork::node_tester(LSDFlowInfo& FlowInfo, int input_junction)
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // This function returns a integer vector containing the junction number of the largest
 // donor catchment (i.e. donor junction with greatest drainage area) upslope of each
@@ -4557,7 +4557,7 @@ bool LSDJunctionNetwork::node_tester(LSDFlowInfo& FlowInfo, int input_junction)
 //
 // MDH 19/6/13
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 vector<int> LSDJunctionNetwork::get_BaseLevel_DonorJunctions()
 {
   vector<int> BL_Donor_junctions;
@@ -4577,7 +4577,95 @@ vector<int> LSDJunctionNetwork::get_BaseLevel_DonorJunctions()
   }
   return BL_Donor_junctions;
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prunes a list of baselevel junctions by removing juntions that have
+// basins bouned by NoData. 
+// It seeks to remove basins draining from the edge. 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDJunctionNetwork::Prune_BaseLevel_DonorJunctions_Edge(vector<int>& BaseLevelJunctions_Initial, 
+                                              LSDFlowInfo& FlowInfo)
+{
+  vector<int> BL_Donor_junctions_pruned;
+  int N_BaseLevelJuncs = int(BaseLevelJunctions_Initial.size());
+  cout << endl << endl << "I am going to remove any basins draining to the edge." << endl;
+  
+  for(int i = 0; i < N_BaseLevelJuncs; ++i)
+  {
+    //cout << "I'm checking node " << i << " to see if it is truncated." << endl;
+    bool keep_base_level_node = true;
+    
+    // get donor nodes to base level nodes node
+    vector<int> DonorJunctions = get_donor_nodes(BaseLevelJunctions_Initial[i]);
+    int N_Donors = DonorJunctions.size();
+    //cout << "It has " << N_Donors << " donor junctions." << endl;
+      
+    if (N_Donors == 1)    // this is a tiny base level node with no donors, we won't keep it. 
+    {
+      //cout << "This is a base level junction! Junction is: " << BaseLevelJunctions_Initial[i] << endl
+      //     << "and donor is: " << DonorJunctions[0] << endl;
+      keep_base_level_node = false; 
+    }
+    else
+    {
+      // check to see if either donor nodes are truncated - basically want to keep
+      // basins that flow onto edge of DEM
+      
+      for(int i_donor = 0; i_donor < N_Donors; ++ i_donor)
+      {
+        bool IsTruncated = node_tester(FlowInfo,DonorJunctions[i_donor]);
+        if(IsTruncated == true)
+        {
+          keep_base_level_node = false;
+        }
+      }
+    }
+    if(keep_base_level_node == true)
+    { 
+      BL_Donor_junctions_pruned.push_back(BaseLevelJunctions_Initial[i]);
+    }
+  }
+  
+  cout << "I have removed the channels that are draining from the edge of the DEM." << endl;
+  cout << "I now have " << BL_Donor_junctions_pruned.size() << " base level junctions" << endl;
+  return BL_Donor_junctions_pruned;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prunes a list of baselevel junctions by removing junctions whose 
+// contributing pixels are less than a threshold
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDJunctionNetwork::Prune_BaseLevel_DonorJunctions_Area(vector<int>& BaseLevelJunctions_Initial, 
+                                              LSDFlowInfo& FlowInfo, LSDIndexRaster& FlowAcc, double Threshold)
+{
+  vector<int> BL_Donor_junctions_pruned;
+  int N_BaseLevelJuncs = int(BaseLevelJunctions_Initial.size());
+  cout << endl << endl << "I am going to remove any basins draining to the edge." << endl;
+  
+  int row,col, current_node;
+  
+  for(int i = 0; i < N_BaseLevelJuncs; ++i)
+  {
+    current_node = BaseLevelJunctions_Initial[i];
+    FlowInfo.retrieve_current_row_and_col(current_node,row,col);
+    
+    // get the flow accumulation
+    int Acc =  FlowAcc.get_data_element(row,col);
+    
+    if(Acc >= Threshold)
+    {
+      BL_Donor_junctions_pruned.push_back(BaseLevelJunctions_Initial[i]);
+    }
+  }
+  
+  cout << "I have removed the channels that are draining from the edge of the DEM." << endl;
+  cout << "I now have " << BL_Donor_junctions_pruned.size() << " base level junctions" << endl;
+  return BL_Donor_junctions_pruned;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
