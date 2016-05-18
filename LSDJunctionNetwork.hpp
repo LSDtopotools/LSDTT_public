@@ -1018,6 +1018,17 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @date 21/02/2014
   int find_base_level_node_of_junction(int StartingJunction);
 
+  /// @brief Prints a list of junctions, with their locations in both UTM and 
+  ///  in lat long WGS1984 to file
+  /// @detail The format of the file is:
+  ///  junction,node,x,y,latitude,longitude
+  /// @param FlowInfo an LSDFlowInfo object
+  /// @param JunctionList A list of junctions in an integer vector
+  /// @param fname The filename of the csv file
+  /// @author SMM
+  /// @date 18/05/2016
+  void print_junctions_to_csv(LSDFlowInfo& FlowInfo, vector<int> JunctionList, string fname);
+
   // Get functions
 
   /// @return Number of rows as an integer.
