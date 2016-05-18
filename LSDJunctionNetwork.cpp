@@ -744,7 +744,7 @@ void LSDJunctionNetwork::add_to_stack(int lm_index, int& j_index, int bl_node)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 vector<int> LSDJunctionNetwork::get_upslope_junctions(int junction_number_outlet)
 {
-	vector<int> us_junctions;
+  vector<int> us_junctions;
 
   if(junction_number_outlet < 0 || junction_number_outlet > NJunctions-1)
   {
@@ -766,11 +766,33 @@ vector<int> LSDJunctionNetwork::get_upslope_junctions(int junction_number_outlet
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function takes a junction and finds all the source junction upstream of the
+// junction. 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDJunctionNetwork::get_all_source_junctions_of_an_outlet_junction(int junction_number_outlet)
+{
+  vector<int> us_junctions = get_upslope_junctions(junction_number_outlet);
+  vector<int> source_junctions;
+  
+  int n_upslope_junctions = int(us_junctions.size());
+  for (int j = 0; j<n_upslope_junctions; j++)
+  {
+    // if the junction has no donors, it is a source
+    if (NDonorsVector[ us_junctions[j] ] == 0)
+    {
+      source_junctions.push_back(us_junctions[j]);
+    }
+  }
+  return source_junctions;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
-// This function redurns a vector of node indices to all the donor
+// This function returns a vector of node indices to all the donor
 // nodes of a particular node
 //
 // SMM 16/6/2015
@@ -4638,7 +4660,7 @@ vector<int> LSDJunctionNetwork::Prune_BaseLevel_DonorJunctions_Edge(vector<int>&
 // contributing pixels are less than a threshold
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 vector<int> LSDJunctionNetwork::Prune_BaseLevel_DonorJunctions_Area(vector<int>& BaseLevelJunctions_Initial, 
-                                              LSDFlowInfo& FlowInfo, LSDIndexRaster& FlowAcc, double Threshold)
+                                              LSDFlowInfo& FlowInfo, LSDIndexRaster& FlowAcc, int Threshold)
 {
   vector<int> BL_Donor_junctions_pruned;
   int N_BaseLevelJuncs = int(BaseLevelJunctions_Initial.size());

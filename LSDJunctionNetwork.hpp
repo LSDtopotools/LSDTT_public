@@ -126,6 +126,14 @@ class LSDJunctionNetwork
   /// @date 01/09/12
   vector<int> get_upslope_junctions(int junction_number_outlet);
 
+  /// @brief This finds all the junctions that are source junctions upslope of a 
+  ///  given junction
+  /// @param junction_number_outlet The junction number of the outlet
+  /// @return source_junctions a vector of junction numbers: these are the sources
+  /// @author SMM
+  /// @date 18/05/2016
+  vector<int> get_all_source_junctions_of_an_outlet_junction(int junction_number_outlet);
+
   /// @brief this function gets a list of the node indices of the donors to a particular node
   /// @param node this is the nodeindex of the node for which you want to find the donors
   /// @return a vector of the donor nodes
@@ -249,7 +257,7 @@ class LSDJunctionNetwork
   /// @author SMM
   /// @date 16/05/16
   vector<int> Prune_BaseLevel_DonorJunctions_Area(vector<int>& BaseLevelJunctions_Initial,LSDFlowInfo& FlowInfo,
-                              LSDIndexRaster& FlowAcc, double Threshold);
+                              LSDIndexRaster& FlowAcc, int Threshold);
 
   /// @brief Get Junction number at a location.
   /// @param row Integer row index.

@@ -1687,10 +1687,10 @@ LSDRaster LSDFlowInfo::write_DrainageArea_to_LSDRaster()
   for (int row = 0; row < NRows; row++)
     {
       for (int col = 0; col < NCols; col++)
-	{
-	  n_i = NodeIndex[row][col];
-	  DrainageArea_local[row][col] = float(NContributingNodes[n_i])*DataResolution*DataResolution;
-	}
+  {
+    n_i = NodeIndex[row][col];
+    DrainageArea_local[row][col] = float(NContributingNodes[n_i])*DataResolution*DataResolution;
+  }
     }
   // create the LSDRaster object
   LSDRaster DrainageArea(NRows,NCols,XMinimum,YMinimum,DataResolution,ndv,DrainageArea_local,GeoReferencingStrings);
@@ -1727,9 +1727,9 @@ LSDIndexRaster LSDFlowInfo::calculate_n_pixels_contributing_from_upslope()
       // change from nodata to zero
 
       if(contributing_pixels[row][col] == NoDataValue)
-	{
-	  contributing_pixels[row][col] = 0;
-	}
+  {
+    contributing_pixels[row][col] = 0;
+  }
 
       receiver_node = ReceiverVector[ SVector[node] ] ;
       receive_row = RowIndex[ receiver_node ];
@@ -1739,19 +1739,19 @@ LSDIndexRaster LSDFlowInfo::calculate_n_pixels_contributing_from_upslope()
       cout << "contributing: " << contributing_pixels[row][col] << endl;
 
       if ( receiver_node  == SVector[node])
-	{
-	  // do nothing
-	}
+  {
+    // do nothing
+  }
       else if ( contributing_pixels[receive_row][receive_col] == NoDataValue)
-	{
-	  contributing_pixels[receive_row][receive_col] =
-	    contributing_pixels[row][col]+1;
-	}
+  {
+    contributing_pixels[receive_row][receive_col] =
+      contributing_pixels[row][col]+1;
+  }
       else
-	{
-	  contributing_pixels[receive_row][receive_col] +=
-	    contributing_pixels[row][col]+1;
-	}
+  {
+    contributing_pixels[receive_row][receive_col] +=
+      contributing_pixels[row][col]+1;
+  }
 
       cout << "recieving: " << contributing_pixels[receive_row][receive_col] << endl;
     }
@@ -1799,9 +1799,9 @@ void LSDFlowInfo::calculate_upslope_reference_indices()
       // for base level nodes since they donate to themselves and
       // we must avoid float counting
       if (donor_node != receiver_node)
-	{
-	  vectorized_area[ receiver_node ] +=  vectorized_area[ donor_node ];
-	}
+  {
+    vectorized_area[ receiver_node ] +=  vectorized_area[ donor_node ];
+  }
     }
 
   NContributingNodes = vectorized_area;
@@ -1975,27 +1975,27 @@ LSDRaster LSDFlowInfo::upslope_variable_accumulator(LSDRaster& accum_raster)
         
       // loop through all the nodes, accumulating the areas
       for(int this_node = 0; this_node <NDataNodes; this_node++)
-	{
-	  // get the upslope nodes
-	  vector<int> node_vec = get_upslope_nodes(this_node);
+  {
+    // get the upslope nodes
+    vector<int> node_vec = get_upslope_nodes(this_node);
       
-	  // loop through these nodes, adding them to the accumulator
-	  float this_node_accumulated = 0;
-	  int this_row, this_col;
-	  for (int ni = 0; ni<int(node_vec.size()); ni++)
-	    {
-	      retrieve_current_row_and_col(node_vec[ni],this_row,this_col);
-	      this_node_accumulated += accum_raster.get_data_element(this_row, this_col);
-	    }
+    // loop through these nodes, adding them to the accumulator
+    float this_node_accumulated = 0;
+    int this_row, this_col;
+    for (int ni = 0; ni<int(node_vec.size()); ni++)
+      {
+        retrieve_current_row_and_col(node_vec[ni],this_row,this_col);
+        this_node_accumulated += accum_raster.get_data_element(this_row, this_col);
+      }
       
-	  // write the accumulated variable to the array
-	  int curr_row, curr_col; 
-	  retrieve_current_row_and_col(this_node,curr_row,curr_col);
-	  accumulated_data_array[curr_row][curr_col] = this_node_accumulated; 
-	}
+    // write the accumulated variable to the array
+    int curr_row, curr_col; 
+    retrieve_current_row_and_col(this_node,curr_row,curr_col);
+    accumulated_data_array[curr_row][curr_col] = this_node_accumulated; 
+  }
       // create the raster
       LSDRaster accumulated_flow(NRows, NCols, XMinimum, YMinimum, 
-				 DataResolution, NoDataValue, accumulated_data_array,GeoReferencingStrings);
+            DataResolution, NoDataValue, accumulated_data_array,GeoReferencingStrings);
       return accumulated_flow;      
     }  
 }
@@ -2021,12 +2021,12 @@ int LSDFlowInfo::is_node_upstream(int current_node, int test_node)
   int SVector_test_node = SVectorIndex[test_node];
 
   for(int node = start_SVector_node; node < end_SVector_node; node++)
+  {
+    if (node == SVector_test_node)
     {
-      if (node == SVector_test_node)
-	{
-	  i = 1;
-	}
+      i = 1;
     }
+  }
 
   return i;
 }
@@ -2070,10 +2070,10 @@ vector<int> LSDFlowInfo::get_donor_nodes(int current_node)
 
   vector<int> donor_nodes;
   for(int this_node = start_D; this_node<end_D; this_node++)
-    {
-      //cout << "node " << current_node << " and donor: " << DonorStackVector[ this_node ] << endl;
-      donor_nodes.push_back( DonorStackVector[ this_node ] );
-    }
+  {
+    //cout << "node " << current_node << " and donor: " << DonorStackVector[ this_node ] << endl;
+    donor_nodes.push_back( DonorStackVector[ this_node ] );
+  }
 
   return donor_nodes;
 }

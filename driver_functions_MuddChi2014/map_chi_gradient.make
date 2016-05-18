@@ -20,7 +20,7 @@ SOURCES=map_chi_gradient.cpp \
              ../LSDParticle.cpp \
              ../LSDCRNParameters.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=map_chi_gradient.exe
+EXECUTABLE=map_chi_gradient_v2.exe
 
 all: $(SOURCES) $(EXECUTABLE)
 
