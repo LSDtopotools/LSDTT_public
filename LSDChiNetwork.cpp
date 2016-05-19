@@ -78,6 +78,8 @@
 #include "LSDChiNetwork.hpp"
 #include "LSDMostLikelyPartitionsFinder.hpp"
 #include "LSDStatsTools.hpp"
+#include "LSDRaster.hpp"
+#include "LSDFlowInfo.hpp"
 using namespace std;
 using namespace TNT;
 
@@ -209,6 +211,199 @@ void LSDChiNetwork::create(string channel_network_fname)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This version of the create function only creates a single channel
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiNetwork::create(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode, LSDRaster& Elevation,
+                           LSDRaster& FlowDistance, LSDRaster& DrainageArea)
+{
+  int current_node, reciever_node;
+  int row;
+  int col;
+
+  float flow_dist;
+  float elev;
+  float drain_area;
+
+  int last_cn = 0;		// this is 1 if this is the first node in a channel
+  int last_receiver_node = -1;
+  int last_receiver_channel = -1;
+
+  vector<int> empty_int;
+  vector<float> empty_float;
+
+  vector<int> node_vec;
+  vector<int> row_vec;
+  vector<int> col_vec;
+  vector<float> flow_dist_vec;
+  vector<float> elev_vec;
+  vector<float> drain_area_vec;
+  vector<float> chi_vec;
+  
+  // we start from the top, accumulating data along the way
+  FlowInfo.retrieve_current_row_and_col(SourceNode,row,col);
+  flow_dist = FlowDistance.get_data_element(row,col);
+  elev = Elevation.get_data_element(row,col);
+  drain_area = DrainageArea.get_data_element(row,col);
+  
+  // now push back the data
+  node_vec.push_back(SourceNode);
+  row_vec.push_back(row);
+  col_vec.push_back(col);
+  flow_dist_vec.push_back(flow_dist);
+  elev_vec.push_back(elev);
+  drain_area_vec.push_back(drain_area);
+  chi_vec.push_back(0.0);
+  
+  
+  current_node = SourceNode;
+  
+  // now move downstream
+  while(current_node != OutletNode)
+  {
+    FlowInfo.retrieve_receiver_information(current_node,reciever_node, row, col);
+    
+    // catch the loop if the OutletNode is not on the flow path
+    if(current_node == reciever_node)
+    {
+      cout <<"Making a chi network, but you reached a base level node before expected." << endl;
+      cout <<"You need to make sure you've got the right source and outlet nodes." << endl;
+      current_node = OutletNode;
+    }
+    else
+    {
+      // write the data to the vectors
+      flow_dist = FlowDistance.get_data_element(row,col);
+      elev = Elevation.get_data_element(row,col);
+      drain_area = DrainageArea.get_data_element(row,col);
+      
+      node_vec.push_back(reciever_node);
+      row_vec.push_back(row);
+      col_vec.push_back(col);
+      flow_dist_vec.push_back(flow_dist);
+      elev_vec.push_back(elev);
+      drain_area_vec.push_back(drain_area);
+      chi_vec.push_back(0.0);         // in this version the chi vec is calculated seperately. 
+      
+    }
+    
+    // set the current node to the reciever
+    current_node = reciever_node;
+  }
+  
+  // update the data elements
+  node_indices.push_back(node_vec);
+  row_indices.push_back(row_vec);
+  col_indices.push_back(col_vec);
+  elevations.push_back(elev_vec);
+  flow_distances.push_back(flow_dist_vec);
+  drainage_areas.push_back(drain_area_vec);
+  node_on_receiver_channel.push_back(OutletNode);
+  receiver_channel.push_back(0);
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This version of the create function only creates a single channel, but this time 
+// it uses existing chi data
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiNetwork::create(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode, LSDRaster& Elevation,
+                           LSDRaster& FlowDistance, LSDRaster& DrainageArea, 
+                           LSDRaster& Chi)
+{
+  int current_node, reciever_node;
+  int row;
+  int col;
+
+  float flow_dist;
+  float elev;
+  float drain_area;
+  float chi;
+
+  int last_cn = 0;		// this is 1 if this is the first node in a channel
+  int last_receiver_node = -1;
+  int last_receiver_channel = -1;
+
+  vector<int> empty_int;
+  vector<float> empty_float;
+
+  vector<int> node_vec;
+  vector<int> row_vec;
+  vector<int> col_vec;
+  vector<float> flow_dist_vec;
+  vector<float> elev_vec;
+  vector<float> drain_area_vec;
+  vector<float> chi_vec;
+  
+  // we start from the top, accumulating data along the way
+  FlowInfo.retrieve_current_row_and_col(SourceNode,row,col);
+  flow_dist = FlowDistance.get_data_element(row,col);
+  elev = Elevation.get_data_element(row,col);
+  drain_area = DrainageArea.get_data_element(row,col);
+  chi = Chi.get_data_element(row,col);
+  
+  // now push back the data
+  node_vec.push_back(SourceNode);
+  row_vec.push_back(row);
+  col_vec.push_back(col);
+  flow_dist_vec.push_back(flow_dist);
+  elev_vec.push_back(elev);
+  drain_area_vec.push_back(drain_area);
+  chi_vec.push_back(chi);
+  
+  current_node = SourceNode;
+  
+  // now move downstream
+  while(current_node != OutletNode)
+  {
+    FlowInfo.retrieve_receiver_information(current_node,reciever_node, row, col);
+    
+    // catch the loop if the OutletNode is not on the flow path
+    if(current_node == reciever_node)
+    {
+      cout <<"Making a chi network, but you reached a base level node before expected." << endl;
+      cout <<"You need to make sure you've got the right source and outlet nodes." << endl;
+      current_node = OutletNode;
+    }
+    else
+    {
+      // write the data to the vectors
+      flow_dist = FlowDistance.get_data_element(row,col);
+      elev = Elevation.get_data_element(row,col);
+      drain_area = DrainageArea.get_data_element(row,col);
+      chi = Chi.get_data_element(row,col);
+      
+      node_vec.push_back(reciever_node);
+      row_vec.push_back(row);
+      col_vec.push_back(col);
+      flow_dist_vec.push_back(flow_dist);
+      elev_vec.push_back(elev);
+      drain_area_vec.push_back(drain_area);
+      chi_vec.push_back(chi);
+    }
+    
+    // set the current node to the reciever
+    current_node = reciever_node;
+  }
+  
+  // update the data elements
+  node_indices.push_back(node_vec);
+  row_indices.push_back(row_vec);
+  col_indices.push_back(col_vec);
+  elevations.push_back(elev_vec);
+  flow_distances.push_back(flow_dist_vec);
+  drainage_areas.push_back(drain_area_vec);
+  node_on_receiver_channel.push_back(OutletNode);
+  receiver_channel.push_back(0);
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
@@ -230,30 +425,30 @@ void LSDChiNetwork::create(string channel_network_fname)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDChiNetwork::extend_tributaries_to_outlet()
 {
-	int n_channels = elevations.size();
-	int n_nodes_on_mainstem = elevations[0].size();
+  int n_channels = elevations.size();
+  int n_nodes_on_mainstem = elevations[0].size();
 
-	if(n_channels>1)
-	{
-		for(int chan = 1; chan<n_channels; chan++)
-		{
-			int this_receiver_channel = receiver_channel[chan];
-			int this_node_on_receiver_channel = node_on_receiver_channel[chan];
-			for(int node = this_node_on_receiver_channel+1; node< n_nodes_on_mainstem; node++)
-			{
-				node_indices[chan].push_back( node_indices[this_receiver_channel][node] );
-				row_indices[chan].push_back ( row_indices[this_receiver_channel][node] );
-				col_indices[chan].push_back ( col_indices[this_receiver_channel][node] );
-				elevations[chan].push_back ( elevations[this_receiver_channel][node] );
-				flow_distances[chan].push_back ( flow_distances[this_receiver_channel][node] );
-				drainage_areas[chan].push_back ( drainage_areas[this_receiver_channel][node] );
-				chis[chan].push_back ( chis[this_receiver_channel][node] );
-			}
+  if(n_channels>1)
+  {
+    for(int chan = 1; chan<n_channels; chan++)
+    {
+      int this_receiver_channel = receiver_channel[chan];
+      int this_node_on_receiver_channel = node_on_receiver_channel[chan];
+      for(int node = this_node_on_receiver_channel+1; node< n_nodes_on_mainstem; node++)
+      {
+        node_indices[chan].push_back( node_indices[this_receiver_channel][node] );
+        row_indices[chan].push_back ( row_indices[this_receiver_channel][node] );
+        col_indices[chan].push_back ( col_indices[this_receiver_channel][node] );
+        elevations[chan].push_back ( elevations[this_receiver_channel][node] );
+        flow_distances[chan].push_back ( flow_distances[this_receiver_channel][node] );
+        drainage_areas[chan].push_back ( drainage_areas[this_receiver_channel][node] );
+        chis[chan].push_back ( chis[this_receiver_channel][node] );
+      }
 
-			node_on_receiver_channel[chan] = int( node_indices[chan].size() )-1;
-			receiver_channel[chan] = chan;
-		}
-	}
+      node_on_receiver_channel[chan] = int( node_indices[chan].size() )-1;
+      receiver_channel[chan] = chan;
+    }
+  }
 }
 
 
@@ -271,22 +466,22 @@ void LSDChiNetwork::print_channel_details_to_screen(int channel_number)
       channel_number = int( elevations.size())-1;
     }
 
-	vector<int> node = node_indices[channel_number];
-	vector<int> row = row_indices[channel_number];
-	vector<int> col = col_indices[channel_number];
-	vector<float> elevation = elevations[channel_number];
-	vector<float> flow_distance = flow_distances[channel_number];
-	vector<float> drainage_area = drainage_areas[channel_number];
-	vector<float> chi = chis[channel_number];
+  vector<int> node = node_indices[channel_number];
+  vector<int> row = row_indices[channel_number];
+  vector<int> col = col_indices[channel_number];
+  vector<float> elevation = elevations[channel_number];
+  vector<float> flow_distance = flow_distances[channel_number];
+  vector<float> drainage_area = drainage_areas[channel_number];
+  vector<float> chi = chis[channel_number];
 
-	int n_nodes = node.size();
-	for (int i = 0; i< n_nodes; i++)
-	  {
-	    cout << channel_number << " " << receiver_channel[channel_number] << " "
-                 << node_on_receiver_channel[channel_number] << " "
-                 << node[i] << " " << row[i] << " " << col[i] << " " << flow_distance[i] << " "
-		         << chi[i] << " " << elevation[i] << " " << drainage_area[i] << endl;
-	  }
+  int n_nodes = node.size();
+  for (int i = 0; i< n_nodes; i++)
+  {
+    cout << channel_number << " " << receiver_channel[channel_number] << " "
+         << node_on_receiver_channel[channel_number] << " "
+         << node[i] << " " << row[i] << " " << col[i] << " " << flow_distance[i] << " "
+         << chi[i] << " " << elevation[i] << " " << drainage_area[i] << endl;
+  }
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -303,32 +498,32 @@ void LSDChiNetwork::print_channel_details_to_screen(int channel_number)
 void LSDChiNetwork::print_channel_details_to_file(string fname, float A_0, float m_over_n)
 {
 
-	ofstream channel_profile_out;
-	channel_profile_out.open(fname.c_str());
-	calculate_chi(A_0, m_over_n);
+  ofstream channel_profile_out;
+  channel_profile_out.open(fname.c_str());
+  calculate_chi(A_0, m_over_n);
 
-	channel_profile_out << A_0 << " " << m_over_n << endl;
-	int n_channels = chis.size();
-	for (int channel_number = 0; channel_number< n_channels; channel_number++)
-	{
-		vector<int> node = node_indices[channel_number];
-		vector<int> row = row_indices[channel_number];
-		vector<int> col = col_indices[channel_number];
-		vector<float> elevation = elevations[channel_number];
-		vector<float> flow_distance = flow_distances[channel_number];
-		vector<float> drainage_area = drainage_areas[channel_number];
-		vector<float> chi = chis[channel_number];
+  channel_profile_out << A_0 << " " << m_over_n << endl;
+  int n_channels = chis.size();
+  for (int channel_number = 0; channel_number< n_channels; channel_number++)
+  {
+    vector<int> node = node_indices[channel_number];
+    vector<int> row = row_indices[channel_number];
+    vector<int> col = col_indices[channel_number];
+    vector<float> elevation = elevations[channel_number];
+    vector<float> flow_distance = flow_distances[channel_number];
+    vector<float> drainage_area = drainage_areas[channel_number];
+    vector<float> chi = chis[channel_number];
 
-		int n_nodes = node.size();
-		for (int i = 0; i< n_nodes; i++)
-		{
-		    channel_profile_out << channel_number << " " << receiver_channel[channel_number] << " "
-    	             << node_on_receiver_channel[channel_number] << " "
-    	             << node[i] << " " << row[i] << " " << col[i] << " " << flow_distance[i] << " "
-			         << chi[i] << " " << elevation[i] << " " << drainage_area[i] << endl;
-		}
-	}
-	channel_profile_out.close();
+    int n_nodes = node.size();
+    for (int i = 0; i< n_nodes; i++)
+    {
+      channel_profile_out << channel_number << " " << receiver_channel[channel_number] << " "
+                 << node_on_receiver_channel[channel_number] << " "
+                 << node[i] << " " << row[i] << " " << col[i] << " " << flow_distance[i] << " "
+                 << chi[i] << " " << elevation[i] << " " << drainage_area[i] << endl;
+    }
+  }
+  channel_profile_out.close();
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

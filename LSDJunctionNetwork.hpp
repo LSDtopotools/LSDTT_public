@@ -158,14 +158,14 @@ class LSDJunctionNetwork
   /// @author SMM
   /// @date 01/09/12
   int get_maximum_stream_order();
-	
-	/// @brief This function returns the number of streams of a given stream order
-	/// @param FlowInfo LSDFlowInfo object
-	/// @param stream_order Stream order of interest
+  
+  /// @brief This function returns the number of streams of a given stream order
+  /// @param FlowInfo LSDFlowInfo object
+  /// @param stream_order Stream order of interest
   /// @return integer with number of streams.
   /// @author FJC
   /// @date 15/03/16
-	int get_number_of_streams(LSDFlowInfo& FlowInfo, int stream_order);
+  int get_number_of_streams(LSDFlowInfo& FlowInfo, int stream_order);
   
   /// @brief This gets the junction number of a given node.
   /// @param Node
@@ -268,7 +268,7 @@ class LSDJunctionNetwork
   int retrieve_junction_number_at_row_and_column(int row,int col)
                        { return JunctionIndexArray[ row ][ col ]; }
 
-	/// @brief Function for printing out the longest channel upstream of a point.
+  /// @brief Function for printing out the longest channel upstream of a point.
   /// @param outlet_junction
   /// @param FInfo LSDFlowInfo object.
   /// @param dist_code
@@ -292,9 +292,9 @@ class LSDJunctionNetwork
   /// @return The channel for the given junction.
   /// @author SMM
   /// @date 01/09/12
-	LSDIndexChannel generate_link_index_channel_from_junction(int start_junction,LSDFlowInfo& FlowInfo);
+  LSDIndexChannel generate_link_index_channel_from_junction(int start_junction,LSDFlowInfo& FlowInfo);
 
-	/// @brief This function extracts the longest channel originating from a junction number
+  /// @brief This function extracts the longest channel originating from a junction number
   /// outlet_junction.
   /// @param outlet_junction Outlet of junction.
   /// @param FInfo LSDFlowInfo object.
@@ -302,7 +302,7 @@ class LSDJunctionNetwork
   /// @return LSDIndexRaster of the longest channel.
   /// @author SMM
   /// @date 01/09/12
-	LSDIndexChannel generate_longest_index_channel_from_junction(int outlet_junction,LSDFlowInfo& FInfo,LSDRaster& dist_from_outlet);
+  LSDIndexChannel generate_longest_index_channel_from_junction(int outlet_junction,LSDFlowInfo& FInfo,LSDRaster& dist_from_outlet);
 
   // this generates the longest channel in a basin. The basin starts where a channel of
   // some order intersects with a channel of higher order. So the bain includes the

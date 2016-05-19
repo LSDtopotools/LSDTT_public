@@ -267,36 +267,36 @@ void LSDJunctionNetwork::create(vector<int> Sources, LSDFlowInfo& FlowInfo)
         // if junction switch is zero it means this is the first visit of a previously visited channel
         if (junction_switch == 0)
         {
-        	junction_switch = 1;
-        	JunctionArray[current_row][current_col]  = 1;
+          junction_switch = 1;
+          JunctionArray[current_row][current_col]  = 1;
 
-					// if it is the the first junction for this source, the current_stream_order
-					// is one. Therefore any junction will result in a stream order
-					// of at least 2.
-					// If the junction is currently at a stream order of 1, then it
-					// gets incremented
-					if (StreamOrderArray[current_row][current_col] == current_stream_order)
-					{
+          // if it is the the first junction for this source, the current_stream_order
+          // is one. Therefore any junction will result in a stream order
+          // of at least 2.
+          // If the junction is currently at a stream order of 1, then it
+          // gets incremented
+          if (StreamOrderArray[current_row][current_col] == current_stream_order)
+          {
 						current_stream_order ++;
 						StreamOrderArray[current_row][current_col]= current_stream_order;
-					}
-					// if the junction is two or greater, the loop exits since there can
-					// be no more incrementing of the stream order
-					else
-					{
+          }
+          // if the junction is two or greater, the loop exits since there can
+          // be no more incrementing of the stream order
+          else
+          {
 						baselevel_switch = 2;
-					}
+          }
 				}
 				else
 				{
-					// first, we check to see if it is not a junction. if not, we update the
-					// stream order. If the stream order hasn't changed, then something
-					// is amiss since there is no point moving downstream
-					// when the current stream order is the same as the previous stream order,
-					// since it can't increase stream order downstream
-					// nodes following downstream will be at the current stream order
-					if (JunctionArray[current_row][current_col]  != 1)
-					{
+          // first, we check to see if it is not a junction. if not, we update the
+          // stream order. If the stream order hasn't changed, then something
+          // is amiss since there is no point moving downstream
+          // when the current stream order is the same as the previous stream order,
+          // since it can't increase stream order downstream
+          // nodes following downstream will be at the current stream order
+          if (JunctionArray[current_row][current_col]  != 1)
+          {
 						// THIS IS NOT A JUNCTION
 						// if the current stream order is bigger than the existing stream order
 						// at this point, then increase the existing stream order
@@ -309,15 +309,15 @@ void LSDJunctionNetwork::create(vector<int> Sources, LSDFlowInfo& FlowInfo)
 							baselevel_switch = 2;
 						}
 
-					}
-					// if it is a junction, see if there is an increment
-					// in the current stream order
-					// the node it has come from has an updated current stream order
-					// so just look at the donor nodes to
-					// see if there are two or more
-					// donors at a higher stream order
-					else if (JunctionArray[current_row][current_col]  == 1)
-					{
+          }
+          // if it is a junction, see if there is an increment
+          // in the current stream order
+          // the node it has come from has an updated current stream order
+          // so just look at the donor nodes to
+          // see if there are two or more
+          // donors at a higher stream order
+          else if (JunctionArray[current_row][current_col]  == 1)
+          {
 						// THIS IS A JUNCTION
 						// first, check to see if this has a higher stream order than the current stream
 						// order
@@ -378,7 +378,7 @@ void LSDJunctionNetwork::create(vector<int> Sources, LSDFlowInfo& FlowInfo)
 								 << " array: " << StreamOrderArray[current_row][current_col]<<" and src: " << SourcesVector[src] << endl;
 						}
 
-					}	// end logic for if this is a downstream junction
+          }	// end logic for if this is a downstream junction
 				}		// end logic for if this is not the first junction
 			}			// end logic for if this is not a NoData node
 
@@ -477,11 +477,11 @@ void LSDJunctionNetwork::create(vector<int> Sources, LSDFlowInfo& FlowInfo)
         	// this junction has the this_junction index. Set the JunctionIndexArray
         	JunctionIndexArray[current_row][current_col] = this_junction;
 
-					// the receiver node of the previous junction is the new junction
-					ReceiverVector.push_back( JunctionIndexArray[current_row][current_col] );
+          // the receiver node of the previous junction is the new junction
+          ReceiverVector.push_back( JunctionIndexArray[current_row][current_col] );
 
-					//push back the junction vector
-					JunctionVector.push_back(current_node);
+          //push back the junction vector
+          JunctionVector.push_back(current_node);
 
       		// because this is a baselevel node, the Receiver of this junction
       		// is iteself
@@ -943,7 +943,7 @@ vector<int> LSDJunctionNetwork::get_Junctions_of_Sources(LSDFlowInfo& FlowInfo)
 int LSDJunctionNetwork::get_penultimate_node_from_stream_link(int upstream_junction, LSDFlowInfo& FlowInfo)
 {
   int current_junc = upstream_junction;
-	int receiver_junc = ReceiverVector[current_junc];
+  int receiver_junc = ReceiverVector[current_junc];
   // First, get channel pixels draining from the current junction.
   LSDIndexChannel StreamLinkVector = LSDIndexChannel(current_junc, JunctionVector[current_junc],
                                                      receiver_junc, JunctionVector[receiver_junc], FlowInfo);
@@ -970,24 +970,24 @@ int LSDJunctionNetwork::get_penultimate_node_from_stream_link(int upstream_junct
 LSDIndexChannel LSDJunctionNetwork::generate_link_index_channel_from_junction(int start_junction,
 													LSDFlowInfo& FlowInfo)
 {
-	// check bounds on junction
-	if(start_junction < 0 || start_junction > NJunctions-1)
-	{
-		cout << "Tried LSDJunctionNetwork::generate_link_index_channel_from_junction"
-		     << "  but the junction number does not exist" << endl;
-		exit(0);
-	}
+  // check bounds on junction
+  if(start_junction < 0 || start_junction > NJunctions-1)
+  {
+    cout << "Tried LSDJunctionNetwork::generate_link_index_channel_from_junction"
+         << "  but the junction number does not exist" << endl;
+    exit(0);
+  }
 
-	// get the starting and ending junctions and nodes
-	int end_junction = ReceiverVector[start_junction];
-	int start_node = JunctionVector[start_junction];
-	int end_node = JunctionVector[end_junction];;
+  // get the starting and ending junctions and nodes
+  int end_junction = ReceiverVector[start_junction];
+  int start_node = JunctionVector[start_junction];
+  int end_node = JunctionVector[end_junction];;
 
-	// extract the channel segment
-	LSDIndexChannel this_channel(start_junction, start_node,
-	                			 end_junction, end_node, FlowInfo);
+  // extract the channel segment
+  LSDIndexChannel this_channel(start_junction, start_node,
+                               end_junction, end_node, FlowInfo);
 
-	return this_channel;
+  return this_channel;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
