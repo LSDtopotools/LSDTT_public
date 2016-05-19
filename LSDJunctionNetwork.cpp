@@ -218,8 +218,8 @@ void LSDJunctionNetwork::create(vector<int> Sources, LSDFlowInfo& FlowInfo)
   // the second will generate the stream link information
   for(int src = 0; src<n_sources; src++)
   {
-    baselevel_switch =0;			// 0 == not base level
-    junction_switch = 0;			// 0 == no junction so far
+    baselevel_switch =0;    // 0 == not base level
+    junction_switch = 0;    // 0 == no junction so far
     current_node = SourcesVector[src];
     current_row = FlowInfo.RowIndex[current_node];
     current_col = FlowInfo.ColIndex[current_node];
@@ -277,18 +277,18 @@ void LSDJunctionNetwork::create(vector<int> Sources, LSDFlowInfo& FlowInfo)
           // gets incremented
           if (StreamOrderArray[current_row][current_col] == current_stream_order)
           {
-						current_stream_order ++;
-						StreamOrderArray[current_row][current_col]= current_stream_order;
+            current_stream_order ++;
+            StreamOrderArray[current_row][current_col]= current_stream_order;
           }
           // if the junction is two or greater, the loop exits since there can
           // be no more incrementing of the stream order
           else
           {
-						baselevel_switch = 2;
+            baselevel_switch = 2;
           }
-				}
-				else
-				{
+        }
+        else
+        {
           // first, we check to see if it is not a junction. if not, we update the
           // stream order. If the stream order hasn't changed, then something
           // is amiss since there is no point moving downstream
@@ -297,17 +297,17 @@ void LSDJunctionNetwork::create(vector<int> Sources, LSDFlowInfo& FlowInfo)
           // nodes following downstream will be at the current stream order
           if (JunctionArray[current_row][current_col]  != 1)
           {
-						// THIS IS NOT A JUNCTION
-						// if the current stream order is bigger than the existing stream order
-						// at this point, then increase the existing stream order
-						if ( current_stream_order > StreamOrderArray[current_row][current_col])
-						{
-							StreamOrderArray[current_row][current_col] = current_stream_order;
-						}
-						else
-						{
-							baselevel_switch = 2;
-						}
+            // THIS IS NOT A JUNCTION
+            // if the current stream order is bigger than the existing stream order
+            // at this point, then increase the existing stream order
+            if ( current_stream_order > StreamOrderArray[current_row][current_col])
+            {
+              StreamOrderArray[current_row][current_col] = current_stream_order;
+            }
+            else
+            {
+              baselevel_switch = 2;
+            }
 
           }
           // if it is a junction, see if there is an increment
@@ -318,69 +318,69 @@ void LSDJunctionNetwork::create(vector<int> Sources, LSDFlowInfo& FlowInfo)
           // donors at a higher stream order
           else if (JunctionArray[current_row][current_col]  == 1)
           {
-						// THIS IS A JUNCTION
-						// first, check to see if this has a higher stream order than the current stream
-						// order
-						if (StreamOrderArray[current_row][current_col] > current_stream_order)
-						{
-							// yes, the stream order at this junction is higher than the current stream order
-							// even if the junction is incremented the downstream search would
-							// stop here, so get out with the baselevel switch
-							baselevel_switch = 2;
-						}
-						else if ( StreamOrderArray[current_row][current_col] == current_stream_order)
-						{
+            // THIS IS A JUNCTION
+            // first, check to see if this has a higher stream order than the current stream
+            // order
+            if (StreamOrderArray[current_row][current_col] > current_stream_order)
+            {
+              // yes, the stream order at this junction is higher than the current stream order
+              // even if the junction is incremented the downstream search would
+              // stop here, so get out with the baselevel switch
+              baselevel_switch = 2;
+            }
+            else if ( StreamOrderArray[current_row][current_col] == current_stream_order)
+            {
 
 
-							// this means that the current stream order is equal to or less than the streamorder
-							// currently at this node this means you need to check and see if the thing is incremented
-							n_current_stream_order_donors = 0;
-							for(int dnode = 0; dnode<FlowInfo.NDonorsVector[current_node]; dnode++)
-							{
-								donor_node = FlowInfo.DonorStackVector[ FlowInfo.DeltaVector[current_node]+dnode];
+              // this means that the current stream order is equal to or less than the streamorder
+              // currently at this node this means you need to check and see if the thing is incremented
+              n_current_stream_order_donors = 0;
+              for(int dnode = 0; dnode<FlowInfo.NDonorsVector[current_node]; dnode++)
+              {
+                donor_node = FlowInfo.DonorStackVector[ FlowInfo.DeltaVector[current_node]+dnode];
 
-								// ignore the base level donor
-								if (donor_node != current_node)
-								{
-									donor_row = FlowInfo.RowIndex[ donor_node ];
-									donor_col = FlowInfo.ColIndex[ donor_node ];
+                // ignore the base level donor
+                if (donor_node != current_node)
+                {
+                  donor_row = FlowInfo.RowIndex[ donor_node ];
+                  donor_col = FlowInfo.ColIndex[ donor_node ];
 
-									if (StreamOrderArray[donor_row][donor_col] == current_stream_order)
-									{
-										n_current_stream_order_donors++;
-									}
-								}
-							}
+                  if (StreamOrderArray[donor_row][donor_col] == current_stream_order)
+                  {
+                    n_current_stream_order_donors++;
+                  }
+                }
+              }
 
-							// now check to see if the stream order has increased
-							if (n_current_stream_order_donors >= 2)
-							{
-								current_stream_order++;
-								StreamOrderArray[current_row][current_col] = current_stream_order;
-							}
-							else			// if it hasn't, the loop ends here.
-							{
-								baselevel_switch = 2;
-							}
+              // now check to see if the stream order has increased
+              if (n_current_stream_order_donors >= 2)
+              {
+                current_stream_order++;
+                StreamOrderArray[current_row][current_col] = current_stream_order;
+              }
+              else    // if it hasn't, the loop ends here.
+              {
+                baselevel_switch = 2;
+              }
 
-						}
-						else if (StreamOrderArray[current_row][current_col] < current_stream_order)
-						{
+            }
+            else if (StreamOrderArray[current_row][current_col] < current_stream_order)
+            {
 
-							// the current stream order is higher than the stream order at this point.
-							// the node needs to update its stream order and keep going
-							StreamOrderArray[current_row][current_col] = current_stream_order;
-						}
-						else
-						{
-							cout << "something about the logic has gone wrong. " <<endl;
-							cout << "hhh node: " << current_node << ", current_stream_order " << current_stream_order
-								 << " array: " << StreamOrderArray[current_row][current_col]<<" and src: " << SourcesVector[src] << endl;
-						}
+              // the current stream order is higher than the stream order at this point.
+              // the node needs to update its stream order and keep going
+              StreamOrderArray[current_row][current_col] = current_stream_order;
+            }
+            else
+            {
+              cout << "something about the logic has gone wrong. " <<endl;
+              cout << "hhh node: " << current_node << ", current_stream_order " << current_stream_order
+                   << " array: " << StreamOrderArray[current_row][current_col]<<" and src: " << SourcesVector[src] << endl;
+            }
 
-          }	// end logic for if this is a downstream junction
-				}		// end logic for if this is not the first junction
-			}			// end logic for if this is not a NoData node
+          }  // end logic for if this is a downstream junction
+        }    // end logic for if this is not the first junction
+      }      // end logic for if this is not a NoData node
 
 
       // get the next current node, which is this nodes receiver
@@ -483,53 +483,53 @@ void LSDJunctionNetwork::create(vector<int> Sources, LSDFlowInfo& FlowInfo)
           //push back the junction vector
           JunctionVector.push_back(current_node);
 
-      		// because this is a baselevel node, the Receiver of this junction
-      		// is iteself
-      		ReceiverVector.push_back( JunctionIndexArray[current_row][current_col] );
+          // because this is a baselevel node, the Receiver of this junction
+          // is iteself
+          ReceiverVector.push_back( JunctionIndexArray[current_row][current_col] );
 
-      		// the stream order of this node is also determined by the node
-      		StreamOrderVector.push_back( StreamOrderArray[current_row][current_col] );
+          // the stream order of this node is also determined by the node
+          StreamOrderVector.push_back( StreamOrderArray[current_row][current_col] );
 
-      		// finally, this is the first time we have visted this baselevel node.
-      		// So it gets added to the baselevel vector
-      		BaseLevelJunctions.push_back(this_junction);
+          // finally, this is the first time we have visted this baselevel node.
+          // So it gets added to the baselevel vector
+          BaseLevelJunctions.push_back(this_junction);
 
-      	}
-      	else				// this junction does have an index number, no new junction is created
-      	{
-      		// the receiver node of the previous junction is the new junction
-      		ReceiverVector.push_back( JunctionIndexArray[current_row][current_col] );
-      	}
-      	junction_switch = 2;
-      	baselevel_switch = 1;      // this is a baselevel. It will exit the
+        }
+        else    // this junction does have an index number, no new junction is created
+        {
+          // the receiver node of the previous junction is the new junction
+          ReceiverVector.push_back( JunctionIndexArray[current_row][current_col] );
+        }
+        junction_switch = 2;
+        baselevel_switch = 1;      // this is a baselevel. It will exit the
                                     // loop and move to the next source
       }
       else                  // this is not a baselevel node
       {
-      	//cout << "LINE 330, not baselevel; src: " << src << " and node: " << current_node << " rnde: " << receiver_node << endl;
-      	// the node in the junction array is zero if it is not a
-      	// junction, 1 if it is an unvisited junction, and 2 or more if it
-      	// is a visited junction
-      	if(JunctionArray[current_row][current_col] != NoDataValue)
-      	{
-      		//cout << "LINE 338, found a junction at node: " << current_node
-      		//	 << " JArray: " << JunctionArray[current_row][current_col]  << endl;
-      		junction_switch = JunctionArray[current_row][current_col];
-      		JunctionArray[current_row][current_col] ++;		// increment the junction array
+        //cout << "LINE 330, not baselevel; src: " << src << " and node: " << current_node << " rnde: " << receiver_node << endl;
+        // the node in the junction array is zero if it is not a
+        // junction, 1 if it is an unvisited junction, and 2 or more if it
+        // is a visited junction
+        if(JunctionArray[current_row][current_col] != NoDataValue)
+        {
+          //cout << "LINE 338, found a junction at node: " << current_node
+          //	 << " JArray: " << JunctionArray[current_row][current_col]  << endl;
+          junction_switch = JunctionArray[current_row][current_col];
+          JunctionArray[current_row][current_col] ++;		// increment the junction array
                         // it will be greater than 1 if
                         // the junction has been visited
 
-      		// if this junction has been visited, it will have a junction number
-      		// include the receiver vector
-      		if (JunctionIndexArray[current_row][current_col] != NoDataValue )
-      		{
+          // if this junction has been visited, it will have a junction number
+          // include the receiver vector
+          if (JunctionIndexArray[current_row][current_col] != NoDataValue )
+          {
             ReceiverVector.push_back( JunctionIndexArray[current_row][current_col] );
 
             // the loop will not continue; it will move onto the next
             // source since it has visited an already visited junction
-      		}
-      		else			// the junction has not been visited
-      		{
+          }
+          else    // the junction has not been visited
+          {
             // this is a new junction. Increment the 'last junction' int
             this_junction++;
 
@@ -544,11 +544,11 @@ void LSDJunctionNetwork::create(vector<int> Sources, LSDFlowInfo& FlowInfo)
 
             // get the stream order of this new junction
             StreamOrderVector.push_back( StreamOrderArray[current_row][current_col] );
-      		}
-      	}	// end logic for is this a junction
-      }		// end logic for not a baselevel node
-		}				// end baselevel logic
-	}					// end sources loop
+          }
+        }   // end logic for is this a junction
+      }     // end logic for not a baselevel node
+    }       // end baselevel logic
+  }         // end sources loop
 
   //cout << "ChanNet; LINE 368; sz ReceiverVec: " << ReceiverVector.size() << " sz JuncVec: " << JunctionVector.size()
   //   << " sz SOVec: " << StreamOrderVector.size() << endl;
@@ -968,7 +968,7 @@ int LSDJunctionNetwork::get_penultimate_node_from_stream_link(int upstream_junct
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexChannel LSDJunctionNetwork::generate_link_index_channel_from_junction(int start_junction,
-													LSDFlowInfo& FlowInfo)
+                                       LSDFlowInfo& FlowInfo)
 {
   // check bounds on junction
   if(start_junction < 0 || start_junction > NJunctions-1)
@@ -1002,45 +1002,45 @@ LSDIndexChannel LSDJunctionNetwork::generate_link_index_channel_from_junction(in
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexChannel LSDJunctionNetwork::generate_longest_index_channel_from_junction(int outlet_junction, LSDFlowInfo& FInfo,
-									LSDRaster& dist_from_outlet)
+                                        LSDRaster& dist_from_outlet)
 {
 
-	if (outlet_junction >= int(JunctionVector.size()))
-	{
-		cout << "LSDJunctionNetwork::generate_longest_index_channel_from_junction junction not in list" << endl;
-		exit(EXIT_FAILURE);
-	}
+  if (outlet_junction >= int(JunctionVector.size()))
+  {
+    cout << "LSDJunctionNetwork::generate_longest_index_channel_from_junction junction not in list" << endl;
+    exit(EXIT_FAILURE);
+  }
 
-	// first get the number of nodes within the junction
-	vector<int> us_junctions = get_upslope_junctions(outlet_junction);
+  // first get the number of nodes within the junction
+  vector<int> us_junctions = get_upslope_junctions(outlet_junction);
 
-	int n_us_junctions = int(us_junctions.size());
-	int farthest_junc = outlet_junction;
-	float farthest_dist = 0;
-	float current_dist;
-	int current_junc, current_row, current_col, current_node;
+  int n_us_junctions = int(us_junctions.size());
+  int farthest_junc = outlet_junction;
+  float farthest_dist = 0;
+  float current_dist;
+  int current_junc, current_row, current_col, current_node;
 
-	// loop through these junctions, looking for the one that is farthest from the outlet
-	for (int j = 0; j<n_us_junctions; j++)
-	{
-		current_junc = us_junctions[j];
-		current_node = JunctionVector[current_junc];
-		current_row = FInfo.RowIndex[current_node];
-		current_col = FInfo.ColIndex[current_node];
-		current_dist = dist_from_outlet.get_data_element(current_row,current_col);
-		if(current_dist > farthest_dist)
-		{
-			farthest_dist = current_dist;
-			farthest_junc = current_junc;
-		}
-	}
+  // loop through these junctions, looking for the one that is farthest from the outlet
+  for (int j = 0; j<n_us_junctions; j++)
+  {
+    current_junc = us_junctions[j];
+    current_node = JunctionVector[current_junc];
+    current_row = FInfo.RowIndex[current_node];
+    current_col = FInfo.ColIndex[current_node];
+    current_dist = dist_from_outlet.get_data_element(current_row,current_col);
+    if(current_dist > farthest_dist)
+    {
+      farthest_dist = current_dist;
+      farthest_junc = current_junc;
+    }
+  }
 
-	int start_junction_node = JunctionVector[farthest_junc];
-	int end_junction_node = JunctionVector[outlet_junction];
-	LSDIndexChannel Longest_channel(farthest_junc, start_junction_node,
-	                outlet_junction, end_junction_node, FInfo);
+  int start_junction_node = JunctionVector[farthest_junc];
+  int end_junction_node = JunctionVector[outlet_junction];
+  LSDIndexChannel Longest_channel(farthest_junc, start_junction_node,
+                  outlet_junction, end_junction_node, FInfo);
 
-	return Longest_channel;
+  return Longest_channel;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -1076,16 +1076,16 @@ LSDIndexChannel LSDJunctionNetwork::generate_longest_index_channel_in_basin(int 
 	// loop through these junctions, looking for the one that is farthest from the outlet
 	for (int j = 0; j<n_us_junctions; j++)
 	{
-		current_junc = us_junctions[j];
-		current_node = JunctionVector[current_junc];
-		current_row = FInfo.RowIndex[current_node];
-		current_col = FInfo.ColIndex[current_node];
-		current_dist = dist_from_outlet.get_data_element(current_row,current_col);
-		if(current_dist > farthest_dist)
-		{
-			farthest_dist = current_dist;
-			farthest_junc = current_junc;
-		}
+    current_junc = us_junctions[j];
+    current_node = JunctionVector[current_junc];
+    current_row = FInfo.RowIndex[current_node];
+    current_col = FInfo.ColIndex[current_node];
+    current_dist = dist_from_outlet.get_data_element(current_row,current_col);
+    if(current_dist > farthest_dist)
+    {
+    	farthest_dist = current_dist;
+    	farthest_junc = current_junc;
+    }
 	}
 
 	int start_junction_node = JunctionVector[farthest_junc];
@@ -1140,30 +1140,30 @@ void LSDJunctionNetwork::extract_tributary_junctions_to_main_stem(LSDIndexChanne
 	// now loop through channel, starting at the top
 	for(int ch_node = 1; ch_node<n_channel_nodes; ch_node++)
 	{
-		// get the node index as well as the row and column of the current node in the channel
-		MainStem.get_node_row_col_in_channel(ch_node, node, row, col);
+    // get the node index as well as the row and column of the current node in the channel
+    MainStem.get_node_row_col_in_channel(ch_node, node, row, col);
 
-		curr_junc = JunctionIndexArray[row][col];
-		// if the current junction does not equal the no data value, look for
-		// donor nodes
-		if(curr_junc != NoDataValue)
-		{
+    curr_junc = JunctionIndexArray[row][col];
+    // if the current junction does not equal the no data value, look for
+    // donor nodes
+    if(curr_junc != NoDataValue)
+    {
 			// use the delta vector to get the donor nodes
 			n_donors = NDonorsVector[curr_junc];
 			for(int donor = 0; donor<n_donors; donor++)
 			{
-				donor_junc = DonorStackVector[ DeltaVector[curr_junc]+donor ];
-				if (donor_junc!=previous_junc)
-				{
-					temp_tributary_junctions.push_back( donor_junc );
-					temp_nodes_on_main_stem_of_tributaries.push_back( ch_node );
-				}
+        donor_junc = DonorStackVector[ DeltaVector[curr_junc]+donor ];
+        if (donor_junc!=previous_junc)
+        {
+        	temp_tributary_junctions.push_back( donor_junc );
+        	temp_nodes_on_main_stem_of_tributaries.push_back( ch_node );
+        }
 			}
 
 			// now set the current junction to the previous junction in order to adnvance further down
 			// the channel
 			previous_junc = curr_junc;
-		}
+    }
 	}
 
 	tributary_junctions = temp_tributary_junctions;
@@ -1287,22 +1287,22 @@ vector<int> LSDJunctionNetwork::extract_basin_nodes_by_drainage_area(float Drain
     // the nodes in this stream link to find the exact node for which to extract the basin
     if ((CurrentJuncDrainageArea <= DrainageAreaThreshold) && (ReceiverJuncDrainageArea > DrainageAreaThreshold))
     {
-		  cout << "JUNCTION " << CurrentJunc << "/" << NJunctions << " Drainage area = " << CurrentJuncDrainageArea << endl;
+      cout << "JUNCTION " << CurrentJunc << "/" << NJunctions << " Drainage area = " << CurrentJuncDrainageArea << endl;
       cout << "\t -> found channel segment... upstream drainage area = " << CurrentJuncDrainageArea << " downstream = "
            << ReceiverJuncDrainageArea << "starting search to find the threshold" << endl;
 
       // First, get a vector containing channel link nodes
-		  LSDIndexChannel StreamLinkVector = LSDIndexChannel(CurrentJunc, JunctionVector[CurrentJunc],
+      LSDIndexChannel StreamLinkVector = LSDIndexChannel(CurrentJunc, JunctionVector[CurrentJunc],
                                                            ReceiverJunc, JunctionVector[ReceiverJunc], FlowInfo);
       // Find number of nodes in channel
       //int n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
 
       // Loop through nodes in stream link vector until we reach required drainage area threshold
-		  int flag = 0;
-		  //int ChannelSizeTest;
+      int flag = 0;
+      //int ChannelSizeTest;
       int NodeCount = 0;
-		  while ((flag == 0))
-		  {
+      while ((flag == 0))
+      {
         int TargetNode = StreamLinkVector.get_node_in_channel(NodeCount);
         float TargetNodeDrainageArea = FlowInfo.NContributingNodes[TargetNode] * PixelArea;
 
@@ -1593,11 +1593,11 @@ vector<int> LSDJunctionNetwork::extract_basins_order_outlet_nodes(vector<int>& B
 
   	for (int basinID=0; basinID<n_basins; ++basinID)
   	{
-		current_junc = BasinOutletJunctions[basinID];
-		receiver_junc = ReceiverVector[current_junc];
+    current_junc = BasinOutletJunctions[basinID];
+    receiver_junc = ReceiverVector[current_junc];
 
-		// First, get channel pixels draining from the current junction.
-		LSDIndexChannel StreamLinkVector = LSDIndexChannel(current_junc, JunctionVector[current_junc],
+    // First, get channel pixels draining from the current junction.
+    LSDIndexChannel StreamLinkVector = LSDIndexChannel(current_junc, JunctionVector[current_junc],
                                                            receiver_junc, JunctionVector[receiver_junc], FlowInfo);
 
         // Find final nth order channel pixel, which is the penultimate pixel
@@ -1706,7 +1706,7 @@ vector<int> LSDJunctionNetwork::ExtractBasinJunctionOrder(int BasinOrder, LSDFlo
     }
   }
  
-	return Junctions;
+  return Junctions;
 }
 
 
@@ -1733,9 +1733,9 @@ vector<int> LSDJunctionNetwork::FindFarthestUpslopeHilltopsFromSources(int Junct
 	int n_upslope_juncs = upslope_juncs.size();
 	for(int i = 0; i<n_upslope_juncs; i++)
 	{
-		// test to see if the junction has donor, if not it is a source
-		if (NDonorsVector[ upslope_juncs[i] ] == 0)
-		{
+    // test to see if the junction has donor, if not it is a source
+    if (NDonorsVector[ upslope_juncs[i] ] == 0)
+    {
 			//cout << "source found, junction: " << upslope_juncs[i] << endl;
 
 			// get the node
@@ -1746,7 +1746,7 @@ vector<int> LSDJunctionNetwork::FindFarthestUpslopeHilltopsFromSources(int Junct
 
 			// add it to the vector
 			hilltops_from_sources.push_back(upslope_node_index);
-		}
+    }
 	}
 
 	return hilltops_from_sources;
@@ -1769,24 +1769,24 @@ int LSDJunctionNetwork::GetChannelHeadsChiMethodFromNode(int NodeNumber,
                                       int MinSegLength, float A_0, float m_over_n,
 											                LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance, LSDRaster& ElevationRaster)
 {
-	//vector<int> ChannelHeadNodes;
-	float downslope_chi = 0;
-	
-	// get the second order junction from this node
-	int node_at_junction = FlowInfo.ReceiverVector[NodeNumber];
-	int first_order_junction = get_Junction_of_Node (node_at_junction, FlowInfo);
-	int second_order_junction = get_Receiver_of_Junction(first_order_junction);
-	int second_order_node = get_Node_of_Junction(second_order_junction);
-	
-	// get the hilltop node from this junction
-	int hilltop_node = FlowInfo.find_farthest_upslope_node(NodeNumber, FlowDistance);
-	
-	//perform chi segment fitting
-	LSDChannel new_channel(hilltop_node, second_order_node, downslope_chi, m_over_n, A_0, FlowInfo,  ElevationRaster);
+  //vector<int> ChannelHeadNodes;
+  float downslope_chi = 0;
+  
+  // get the second order junction from this node
+  int node_at_junction = FlowInfo.ReceiverVector[NodeNumber];
+  int first_order_junction = get_Junction_of_Node (node_at_junction, FlowInfo);
+  int second_order_junction = get_Receiver_of_Junction(first_order_junction);
+  int second_order_node = get_Node_of_Junction(second_order_junction);
+  
+  // get the hilltop node from this junction
+  int hilltop_node = FlowInfo.find_farthest_upslope_node(NodeNumber, FlowDistance);
+  
+  //perform chi segment fitting
+  LSDChannel new_channel(hilltop_node, second_order_node, downslope_chi, m_over_n, A_0, FlowInfo,  ElevationRaster);
   int channel_head_node = new_channel.calculate_channel_heads(MinSegLength, A_0, m_over_n, FlowInfo);
 
-	// get the nodes of the hilltops.
-	//vector<int> hilltop_nodes = FindFarthestUpslopeHilltopsFromSources(JunctionNumber,
+  // get the nodes of the hilltops.
+  //vector<int> hilltop_nodes = FindFarthestUpslopeHilltopsFromSources(JunctionNumber,
   //                                        FlowInfo, FlowDistance);
 
   return channel_head_node;
@@ -2398,26 +2398,26 @@ vector<int> LSDJunctionNetwork::GetSourceNodesChiMethodAllPixels(int JunctionNum
   vector<float> channel_chi;
   vector<float> channel_elev;
   vector<float>::iterator vec_iter_start;
-	vector<float>::iterator vec_iter_end;
-	float max_r2 = 0;
-	float elev_limit = 0;
+  vector<float>::iterator vec_iter_end;
+  float max_r2 = 0;
+  float elev_limit = 0;
 
   for (int channel_segment = min_seg_length; channel_segment <= n_bins-min_seg_length; channel_segment++)
   {
     //assigning the chi values of the channel segment
     channel_chi.resize(channel_segment);
     vec_iter_start = mean_chi.begin();
-	  vec_iter_end = vec_iter_start+channel_segment;
-	  channel_chi.assign(vec_iter_start,vec_iter_end);
+    vec_iter_end = vec_iter_start+channel_segment;
+    channel_chi.assign(vec_iter_start,vec_iter_end);
 
-	  // assigning the elevation values of the channel segment
+    // assigning the elevation values of the channel segment
     channel_elev.resize(channel_segment);
-	  vec_iter_start = range_min.begin();
-	  vec_iter_end = vec_iter_start+channel_segment;
-	  channel_elev.assign(vec_iter_start,vec_iter_end);
+    vec_iter_start = range_min.begin();
+    vec_iter_end = vec_iter_start+channel_segment;
+    channel_elev.assign(vec_iter_start,vec_iter_end);
 
-	  //performing linear regression on channel segment: getting highest r2
-	  vector<float> residuals_chan;
+    //performing linear regression on channel segment: getting highest r2
+    vector<float> residuals_chan;
     vector<float> results_chan = simple_linear_regression(channel_chi,channel_elev, residuals_chan);
     float r2 = results_chan[2];
     if (r2 > max_r2)
@@ -2535,14 +2535,14 @@ vector<int> LSDJunctionNetwork::GetSourceNodesChiMethodAllPixels(int JunctionNum
 
 vector<int> LSDJunctionNetwork::calculate_pelletier_channel_heads(float tan_curv_threshold, LSDFlowInfo& FlowInfo, Array2D<float>& tan_curv_array)
 {
-	cout << "Getting Pelletier channel heads" << endl;
+  cout << "Getting Pelletier channel heads" << endl;
   Array2D<float> chan_head_locations(NRows,NCols,NoDataValue);
-	float total_curv = 0;
-	int n_observations = 0;
+  float total_curv = 0;
+  int n_observations = 0;
 
   //get the mean of the tangential curvature
   for (int row = 0; row < NRows; row++)
-	{
+  {
     for(int col = 0; col < NCols; col++)
     {
       if (tan_curv_array[row][col] != NoDataValue)
@@ -2577,7 +2577,7 @@ vector<int> LSDJunctionNetwork::calculate_pelletier_channel_heads(float tan_curv
   int CurrentNodeIndex = 0;
   
   for (int row = 0; row < NRows; row++)
-	{
+  {
     for(int col = 0; col < NCols; col++)
     {
       if (tan_curv_array[row][col] > tan_curv_threshold)
@@ -2732,22 +2732,22 @@ vector<int> LSDJunctionNetwork::identify_upstream_limits(LSDFlowInfo& FlowInfo, 
   //sort the 1D elevation vector and produce an index
   matlab_float_sort_descending(flat, sorted, index_map);
  
-	//int i_source = 0;
+  //int i_source = 0;
   for(int q = 0 ;q < int(flat.size()); ++q)
   {
 
     if (sorted[q] != NoDataValue)
     {
       //use row major ordering to reconstruct each cell's i,j coordinates
-  	  int i = index_map[q] / NCols;
-   	  int j = index_map[q] % NCols;
+      int i = index_map[q] / NCols;
+       int j = index_map[q] % NCols;
 
       //skip edge cells and cells above the source pixel
       if (i != 0 && j != 0 && i != NRows-1 && j != NCols-1){
 
         //reset variables on each loop
-			  float total = 0;
-			  float slope1 = 0;
+        float total = 0;
+        float slope1 = 0;
         float slope2 = 0;
         float slope3 = 0;
         float slope4 = 0;
@@ -2758,42 +2758,42 @@ vector<int> LSDJunctionNetwork::identify_upstream_limits(LSDFlowInfo& FlowInfo, 
 
         //Get sum of magnitude of downslope flow, total, and store the magnitude of
         //each of the 8 downslope cells as slope1->8 *Avoids NDVs*
-			  if (topography[i][j] > topography[i-1][j-1] && topography[i-1][j-1] != NoDataValue){
+        if (topography[i][j] > topography[i-1][j-1] && topography[i-1][j-1] != NoDataValue){
           slope1 = pow(((topography[i][j] - topography[i-1][j-1]) * one_ov_root_2),p);
           total += slope1;
           if(times_visited[i][j] > 0 && tan_curv[i-1][j-1]>0) times_visited[i-1][j-1]+=1;
         }
-			  if (topography[i][j] > topography[i-1][j] && topography[i-1][j] != NoDataValue){
+        if (topography[i][j] > topography[i-1][j] && topography[i-1][j] != NoDataValue){
           slope2 = pow((topography[i][j] - topography[i-1][j]),p);
           total += slope2;
           if(times_visited[i][j] > 0 && tan_curv[i-1][j]>0) times_visited[i-1][j]+=1;
-			  }
-		  	if (topography[i][j] > topography[i-1][j+1] && topography[i-1][j+1] != NoDataValue){
+        }
+        if (topography[i][j] > topography[i-1][j+1] && topography[i-1][j+1] != NoDataValue){
           slope3 = pow(((topography[i][j] - topography[i-1][j+1]) * one_ov_root_2),p);
           total += slope3;
           if(times_visited[i][j] > 0 && tan_curv[i-1][j+1]>0) times_visited[i-1][j+1] += 1;
-		  	}
-			  if (topography[i][j] > topography[i][j+1] && topography[i][j+1] != NoDataValue){
+        }
+        if (topography[i][j] > topography[i][j+1] && topography[i][j+1] != NoDataValue){
           slope4 = pow((topography[i][j] - topography[i][j+1]),p);
           total += slope4;
           if(times_visited[i][j] > 0 && tan_curv[i][j+1]>0) times_visited[i][j+1] += 1;
         }
-			  if (topography[i][j] > topography[i+1][j+1] && topography[i+1][j+1] != NoDataValue){
+        if (topography[i][j] > topography[i+1][j+1] && topography[i+1][j+1] != NoDataValue){
           slope5 = pow(((topography[i][j] - topography[i+1][j+1]) * one_ov_root_2),p);
           total += slope5;
           if(times_visited[i][j] > 0 && tan_curv[i+1][j+1]>0) times_visited[i+1][j+1]+=1;
-		  	}
-			  if (topography[i][j] > topography[i+1][j] && topography[i+1][j] != NoDataValue){
+        }
+        if (topography[i][j] > topography[i+1][j] && topography[i+1][j] != NoDataValue){
           slope6 = pow((topography[i][j] - topography[i+1][j]),p);
           total += slope6;
           if(times_visited[i][j] > 0 && tan_curv[i+1][j]>0) times_visited[i+1][j]+=1;
         }
-			  if (topography[i][j] > topography[i+1][j-1] && topography[i+1][j-1] != NoDataValue){
+        if (topography[i][j] > topography[i+1][j-1] && topography[i+1][j-1] != NoDataValue){
           slope7 = pow(((topography[i][j] - topography[i+1][j-1]) * one_ov_root_2),p);
           total += slope7;
           if(times_visited[i][j] > 0 && tan_curv[i+1][j-1]>0) times_visited[i+1][j-1]+=1;
-			  }
-			  if (topography[i][j] > topography[i][j-1] && topography[i][j-1] != NoDataValue){
+        }
+        if (topography[i][j] > topography[i][j-1] && topography[i][j-1] != NoDataValue){
           slope8 = pow((topography[i][j] - topography[i][j-1]),p);
           total += slope8;
           if(times_visited[i][j] > 0 && tan_curv[i][j-1]>0) times_visited[i][j-1]+=1;
@@ -2802,14 +2802,14 @@ vector<int> LSDJunctionNetwork::identify_upstream_limits(LSDFlowInfo& FlowInfo, 
         //divide slope by total to get the proportion of flow directed to each cell
         //and increment the downslope cells. If no downslope flow to a node, 0 is
         //added, so no change is seen.
-  			area[i-1][j-1] += (area[i][j] * (slope1)/total);
-  			area[i-1][j] += (area[i][j] * (slope2)/total);
-  			area[i-1][j+1] += (area[i][j] * (slope3)/total);
-  			area[i][j+1] += (area[i][j] * (slope4)/total);
-  			area[i+1][j+1] += (area[i][j] * (slope5)/total);
-  			area[i+1][j] += (area[i][j] * (slope6)/total);
-  			area[i+1][j-1] += (area[i][j] * (slope7)/total);
-  			area[i][j-1] += (area[i][j] * (slope8)/total);
+        area[i-1][j-1] += (area[i][j] * (slope1)/total);
+        area[i-1][j] += (area[i][j] * (slope2)/total);
+        area[i-1][j+1] += (area[i][j] * (slope3)/total);
+        area[i][j+1] += (area[i][j] * (slope4)/total);
+        area[i+1][j+1] += (area[i][j] * (slope5)/total);
+        area[i+1][j] += (area[i][j] * (slope6)/total);
+        area[i+1][j-1] += (area[i][j] * (slope7)/total);
+        area[i][j-1] += (area[i][j] * (slope8)/total);
       } 
     }
   }                              
@@ -3260,11 +3260,11 @@ LSDRaster LSDJunctionNetwork::ExtractRidges(LSDFlowInfo& FlowInfo)
           if (row == 0 && col == 0)
           {
             if ((basins.get_data_element(row, col) != basins.get_data_element(row+1, col)
-            		&& basins.get_data_element(row+1, col) != NoDataValue) ||
+                && basins.get_data_element(row+1, col) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row+1, col+1)
-              		&& basins.get_data_element(row+1, col+1) != NoDataValue) ||
+                  && basins.get_data_element(row+1, col+1) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row, col+1)
-              		&& basins.get_data_element(row, col+1) != NoDataValue))
+                  && basins.get_data_element(row, col+1) != NoDataValue))
             {
               RidgeNetwork[row][col] = 1;
             }
@@ -3272,11 +3272,11 @@ LSDRaster LSDJunctionNetwork::ExtractRidges(LSDFlowInfo& FlowInfo)
           else if (row == 0 && col == NCols - 1)
           {
             if ((basins.get_data_element(row, col) != basins.get_data_element(row+1, col)
-            		&& basins.get_data_element(row+1, col) != NoDataValue) ||
+                && basins.get_data_element(row+1, col) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row+1, col-1)
-              		&& basins.get_data_element(row+1, col-1) != NoDataValue) ||
+                  && basins.get_data_element(row+1, col-1) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row, col-1)
-              		&& basins.get_data_element(row, col-1) != NoDataValue))
+                  && basins.get_data_element(row, col-1) != NoDataValue))
             {
               RidgeNetwork[row][col] = 1;
             }
@@ -3284,11 +3284,11 @@ LSDRaster LSDJunctionNetwork::ExtractRidges(LSDFlowInfo& FlowInfo)
           else if (row == NRows - 1  && col == 0)
           {
             if ((basins.get_data_element(row, col) != basins.get_data_element(row-1, col)
-            		&& basins.get_data_element(row-1, col) != NoDataValue) ||
+                && basins.get_data_element(row-1, col) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row, col+1)
-              		&& basins.get_data_element(row, col+1) != NoDataValue) ||
+                  && basins.get_data_element(row, col+1) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row-1, col+1)
-              		&& basins.get_data_element(row-1, col+1) != NoDataValue))
+                  && basins.get_data_element(row-1, col+1) != NoDataValue))
             {
               RidgeNetwork[row][col] = 1;
             }
@@ -3296,11 +3296,11 @@ LSDRaster LSDJunctionNetwork::ExtractRidges(LSDFlowInfo& FlowInfo)
           else if (row == NRows - 1  && col == NCols - 1)
           {
             if ((basins.get_data_element(row, col) != basins.get_data_element(row-1, col)
-            		&& basins.get_data_element(row-1, col) != NoDataValue) ||
+                && basins.get_data_element(row-1, col) != NoDataValue) ||
               (basins.get_data_element(row, col) != basins.get_data_element(row, col-1)
-             		&& basins.get_data_element(row, col-1) != NoDataValue) ||
+                 && basins.get_data_element(row, col-1) != NoDataValue) ||
               (basins.get_data_element(row, col) != basins.get_data_element(row-1, col-1)
-              		&& basins.get_data_element(row-1, col-1) != NoDataValue))
+                  && basins.get_data_element(row-1, col-1) != NoDataValue))
             {
               RidgeNetwork[row][col] = 1;
             }
@@ -3309,15 +3309,15 @@ LSDRaster LSDJunctionNetwork::ExtractRidges(LSDFlowInfo& FlowInfo)
          else if (row == 0)
          {
             if ((basins.get_data_element(row, col) != basins.get_data_element(row+1, col)
-            		&& basins.get_data_element(row+1, col) != NoDataValue) ||
+                && basins.get_data_element(row+1, col) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row+1, col+1)
-              		&& basins.get_data_element(row+1, col+1) != NoDataValue) ||
+                  && basins.get_data_element(row+1, col+1) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row+1, col-1)
-              		&& basins.get_data_element(row+1, col-1) != NoDataValue) ||
+                  && basins.get_data_element(row+1, col-1) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row, col-1)
-              		&& basins.get_data_element(row, col-1) != NoDataValue) ||
+                  && basins.get_data_element(row, col-1) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row, col+1)
-              		&& basins.get_data_element(row, col+1) != NoDataValue))
+                  && basins.get_data_element(row, col+1) != NoDataValue))
             {
               RidgeNetwork[row][col] = 1;
             }
@@ -3325,15 +3325,15 @@ LSDRaster LSDJunctionNetwork::ExtractRidges(LSDFlowInfo& FlowInfo)
           else if (row == NRows -1)
           {
             if ((basins.get_data_element(row, col) != basins.get_data_element(row-1, col)
-            		&& basins.get_data_element(row-1, col) != NoDataValue) ||
+                && basins.get_data_element(row-1, col) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row-1, col+1)
-              		&& basins.get_data_element(row-1, col+1) != NoDataValue) ||
+                  && basins.get_data_element(row-1, col+1) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row-1, col-1)
-              		&& basins.get_data_element(row-1, col-1) != NoDataValue) ||
+                  && basins.get_data_element(row-1, col-1) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row, col-1)
-              		&& basins.get_data_element(row, col-1) != NoDataValue) ||
+                  && basins.get_data_element(row, col-1) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row, col+1)
-              		&& basins.get_data_element(row, col+1) != NoDataValue))
+                  && basins.get_data_element(row, col+1) != NoDataValue))
             {
               RidgeNetwork[row][col] = 1;
             }
@@ -3341,15 +3341,15 @@ LSDRaster LSDJunctionNetwork::ExtractRidges(LSDFlowInfo& FlowInfo)
           else if (col == 0)
           {
             if ((basins.get_data_element(row, col) != basins.get_data_element(row+1, col+1)
-            		&& basins.get_data_element(row+1, col+1) != NoDataValue) ||
+                && basins.get_data_element(row+1, col+1) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row-1, col+1)
-              		&& basins.get_data_element(row-1, col+1) != NoDataValue) ||
+                  && basins.get_data_element(row-1, col+1) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row, col+1)
-              		&& basins.get_data_element(row, col+1) != NoDataValue) ||
+                  && basins.get_data_element(row, col+1) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row-1, col)
-              		&& basins.get_data_element(row-1, col) != NoDataValue) ||
+                  && basins.get_data_element(row-1, col) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row+1, col)
-              		&& basins.get_data_element(row+1, col) != NoDataValue))
+                  && basins.get_data_element(row+1, col) != NoDataValue))
             {
               RidgeNetwork[row][col] = 1;
             }
@@ -3357,15 +3357,15 @@ LSDRaster LSDJunctionNetwork::ExtractRidges(LSDFlowInfo& FlowInfo)
           else if (col == NCols - 1)
           {
             if ((basins.get_data_element(row, col) != basins.get_data_element(row+1, col-1)
-            		&& basins.get_data_element(row+1, col-1) != NoDataValue) ||
+                && basins.get_data_element(row+1, col-1) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row-1, col-1)
-              		&& basins.get_data_element(row-1, col-1) != NoDataValue) ||
+                  && basins.get_data_element(row-1, col-1) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row, col-1)
-              		&& basins.get_data_element(row, col-1) != NoDataValue) ||
+                  && basins.get_data_element(row, col-1) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row-1, col)
-              		&& basins.get_data_element(row-1, col) != NoDataValue) ||
+                  && basins.get_data_element(row-1, col) != NoDataValue) ||
               	(basins.get_data_element(row, col) != basins.get_data_element(row+1, col)
-              		&& basins.get_data_element(row+1, col) != NoDataValue))
+                  && basins.get_data_element(row+1, col) != NoDataValue))
             {
               RidgeNetwork[row][col] = 1;
             }
@@ -3373,21 +3373,21 @@ LSDRaster LSDJunctionNetwork::ExtractRidges(LSDFlowInfo& FlowInfo)
 
           // Non edge pixels
           else if ((basins.get_data_element(row, col) != basins.get_data_element(row-1, col-1)
-          				&& basins.get_data_element(row-1, col-1) != NoDataValue) ||
-            		(basins.get_data_element(row, col) != basins.get_data_element(row-1, col)
-            			&& basins.get_data_element(row-1, col) != NoDataValue) ||
-            		(basins.get_data_element(row, col) != basins.get_data_element(row-1, col+1)
-            			&& basins.get_data_element(row-1, col+1) != NoDataValue) ||
-            		(basins.get_data_element(row, col) != basins.get_data_element(row, col-1)
-           			 && basins.get_data_element(row, col-1) != NoDataValue) ||
-            		(basins.get_data_element(row, col) != basins.get_data_element(row, col+1)
-            			&& basins.get_data_element(row, col+1) != NoDataValue) ||
-            		(basins.get_data_element(row, col) != basins.get_data_element(row+1, col-1)
-            			&& basins.get_data_element(row+1, col-1) != NoDataValue) ||
-            		(basins.get_data_element(row, col) != basins.get_data_element(row+1, col)
-            			&& basins.get_data_element(row+1, col) != NoDataValue) ||
-            		(basins.get_data_element(row, col) != basins.get_data_element(row+1, col+1)
-            			&& basins.get_data_element(row+1, col+1) != NoDataValue))
+                  && basins.get_data_element(row-1, col-1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row-1, col)
+                	&& basins.get_data_element(row-1, col) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row-1, col+1)
+                	&& basins.get_data_element(row-1, col+1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row, col-1)
+               	 && basins.get_data_element(row, col-1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row, col+1)
+                	&& basins.get_data_element(row, col+1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row+1, col-1)
+                	&& basins.get_data_element(row+1, col-1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row+1, col)
+                	&& basins.get_data_element(row+1, col) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row+1, col+1)
+                	&& basins.get_data_element(row+1, col+1) != NoDataValue))
           {
             RidgeNetwork[row][col] = 1;
           }
@@ -3461,11 +3461,11 @@ LSDRaster LSDJunctionNetwork::ExtractRidges(LSDFlowInfo& FlowInfo, int& min_orde
           if (row == 0 && col == 0)
           {
             if ((basins.get_data_element(row, col) != basins.get_data_element(row+1, col)
-            		&& basins.get_data_element(row+1, col) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row+1, col+1)
-              		&& basins.get_data_element(row+1, col+1) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row, col+1)
-              		&& basins.get_data_element(row, col+1) != NoDataValue))
+                && basins.get_data_element(row+1, col) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row+1, col+1)
+                  && basins.get_data_element(row+1, col+1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row, col+1)
+                  && basins.get_data_element(row, col+1) != NoDataValue))
             {
               RidgeNetwork[row][col] = order;
             }
@@ -3473,11 +3473,11 @@ LSDRaster LSDJunctionNetwork::ExtractRidges(LSDFlowInfo& FlowInfo, int& min_orde
           else if (row == 0 && col == NCols - 1)
           {
             if ((basins.get_data_element(row, col) != basins.get_data_element(row+1, col)
-            		&& basins.get_data_element(row+1, col) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row+1, col-1)
-              		&& basins.get_data_element(row+1, col-1) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row, col-1)
-              		&& basins.get_data_element(row, col-1) != NoDataValue))
+                && basins.get_data_element(row+1, col) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row+1, col-1)
+                  && basins.get_data_element(row+1, col-1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row, col-1)
+                  && basins.get_data_element(row, col-1) != NoDataValue))
             {
               RidgeNetwork[row][col] = order;
             }
@@ -3485,11 +3485,11 @@ LSDRaster LSDJunctionNetwork::ExtractRidges(LSDFlowInfo& FlowInfo, int& min_orde
           else if (row == NRows - 1  && col == 0)
           {
             if ((basins.get_data_element(row, col) != basins.get_data_element(row-1, col)
-            		&& basins.get_data_element(row-1, col) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row, col+1)
-              		&& basins.get_data_element(row, col+1) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row-1, col+1)
-              		&& basins.get_data_element(row-1, col+1) != NoDataValue))
+                && basins.get_data_element(row-1, col) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row, col+1)
+                  && basins.get_data_element(row, col+1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row-1, col+1)
+                  && basins.get_data_element(row-1, col+1) != NoDataValue))
             {
               RidgeNetwork[row][col] = order;
             }
@@ -3497,11 +3497,11 @@ LSDRaster LSDJunctionNetwork::ExtractRidges(LSDFlowInfo& FlowInfo, int& min_orde
           else if (row == NRows - 1  && col == NCols - 1)
           {
             if ((basins.get_data_element(row, col) != basins.get_data_element(row-1, col)
-            		&& basins.get_data_element(row-1, col) != NoDataValue) ||
+                && basins.get_data_element(row-1, col) != NoDataValue) ||
               (basins.get_data_element(row, col) != basins.get_data_element(row, col-1)
-             		&& basins.get_data_element(row, col-1) != NoDataValue) ||
+                 && basins.get_data_element(row, col-1) != NoDataValue) ||
               (basins.get_data_element(row, col) != basins.get_data_element(row-1, col-1)
-              		&& basins.get_data_element(row-1, col-1) != NoDataValue))
+                  && basins.get_data_element(row-1, col-1) != NoDataValue))
             {
               RidgeNetwork[row][col] = order;
             }
@@ -3510,15 +3510,15 @@ LSDRaster LSDJunctionNetwork::ExtractRidges(LSDFlowInfo& FlowInfo, int& min_orde
          else if (row == 0)
          {
             if ((basins.get_data_element(row, col) != basins.get_data_element(row+1, col)
-            		&& basins.get_data_element(row+1, col) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row+1, col+1)
-              		&& basins.get_data_element(row+1, col+1) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row+1, col-1)
-              		&& basins.get_data_element(row+1, col-1) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row, col-1)
-              		&& basins.get_data_element(row, col-1) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row, col+1)
-              		&& basins.get_data_element(row, col+1) != NoDataValue))
+                && basins.get_data_element(row+1, col) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row+1, col+1)
+                  && basins.get_data_element(row+1, col+1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row+1, col-1)
+                  && basins.get_data_element(row+1, col-1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row, col-1)
+                  && basins.get_data_element(row, col-1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row, col+1)
+                  && basins.get_data_element(row, col+1) != NoDataValue))
             {
               RidgeNetwork[row][col] = order;
             }
@@ -3526,15 +3526,15 @@ LSDRaster LSDJunctionNetwork::ExtractRidges(LSDFlowInfo& FlowInfo, int& min_orde
           else if (row == NRows -1)
           {
             if ((basins.get_data_element(row, col) != basins.get_data_element(row-1, col)
-            		&& basins.get_data_element(row-1, col) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row-1, col+1)
-              		&& basins.get_data_element(row-1, col+1) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row-1, col-1)
-              		&& basins.get_data_element(row-1, col-1) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row, col-1)
-              		&& basins.get_data_element(row, col-1) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row, col+1)
-              		&& basins.get_data_element(row, col+1) != NoDataValue))
+                && basins.get_data_element(row-1, col) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row-1, col+1)
+                  && basins.get_data_element(row-1, col+1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row-1, col-1)
+                  && basins.get_data_element(row-1, col-1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row, col-1)
+                  && basins.get_data_element(row, col-1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row, col+1)
+                  && basins.get_data_element(row, col+1) != NoDataValue))
             {
               RidgeNetwork[row][col] = order;
             }
@@ -3542,15 +3542,15 @@ LSDRaster LSDJunctionNetwork::ExtractRidges(LSDFlowInfo& FlowInfo, int& min_orde
           else if (col == 0)
           {
             if ((basins.get_data_element(row, col) != basins.get_data_element(row+1, col+1)
-            		&& basins.get_data_element(row+1, col+1) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row-1, col+1)
-              		&& basins.get_data_element(row-1, col+1) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row, col+1)
-              		&& basins.get_data_element(row, col+1) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row-1, col)
-              		&& basins.get_data_element(row-1, col) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row+1, col)
-              		&& basins.get_data_element(row+1, col) != NoDataValue))
+                && basins.get_data_element(row+1, col+1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row-1, col+1)
+                  && basins.get_data_element(row-1, col+1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row, col+1)
+                  && basins.get_data_element(row, col+1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row-1, col)
+                  && basins.get_data_element(row-1, col) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row+1, col)
+                  && basins.get_data_element(row+1, col) != NoDataValue))
             {
               RidgeNetwork[row][col] = order;
             }
@@ -3558,15 +3558,15 @@ LSDRaster LSDJunctionNetwork::ExtractRidges(LSDFlowInfo& FlowInfo, int& min_orde
           else if (col == NCols - 1)
           {
             if ((basins.get_data_element(row, col) != basins.get_data_element(row+1, col-1)
-            		&& basins.get_data_element(row+1, col-1) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row-1, col-1)
-              		&& basins.get_data_element(row-1, col-1) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row, col-1)
-              		&& basins.get_data_element(row, col-1) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row-1, col)
-              		&& basins.get_data_element(row-1, col) != NoDataValue) ||
-              	(basins.get_data_element(row, col) != basins.get_data_element(row+1, col)
-              		&& basins.get_data_element(row+1, col) != NoDataValue))
+                && basins.get_data_element(row+1, col-1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row-1, col-1)
+                  && basins.get_data_element(row-1, col-1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row, col-1)
+                  && basins.get_data_element(row, col-1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row-1, col)
+                  && basins.get_data_element(row-1, col) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row+1, col)
+                  && basins.get_data_element(row+1, col) != NoDataValue))
             {
               RidgeNetwork[row][col] = order;
             }
@@ -3574,21 +3574,21 @@ LSDRaster LSDJunctionNetwork::ExtractRidges(LSDFlowInfo& FlowInfo, int& min_orde
 
           // Non edge pixels
           else if ((basins.get_data_element(row, col) != basins.get_data_element(row-1, col-1)
-          				&& basins.get_data_element(row-1, col-1) != NoDataValue) ||
-            		(basins.get_data_element(row, col) != basins.get_data_element(row-1, col)
-            			&& basins.get_data_element(row-1, col) != NoDataValue) ||
-            		(basins.get_data_element(row, col) != basins.get_data_element(row-1, col+1)
-            			&& basins.get_data_element(row-1, col+1) != NoDataValue) ||
-            		(basins.get_data_element(row, col) != basins.get_data_element(row, col-1)
-           			 && basins.get_data_element(row, col-1) != NoDataValue) ||
-            		(basins.get_data_element(row, col) != basins.get_data_element(row, col+1)
-            			&& basins.get_data_element(row, col+1) != NoDataValue) ||
-            		(basins.get_data_element(row, col) != basins.get_data_element(row+1, col-1)
-            			&& basins.get_data_element(row+1, col-1) != NoDataValue) ||
-            		(basins.get_data_element(row, col) != basins.get_data_element(row+1, col)
-            			&& basins.get_data_element(row+1, col) != NoDataValue) ||
-            		(basins.get_data_element(row, col) != basins.get_data_element(row+1, col+1)
-            			&& basins.get_data_element(row+1, col+1) != NoDataValue))
+                  && basins.get_data_element(row-1, col-1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row-1, col)
+                  && basins.get_data_element(row-1, col) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row-1, col+1)
+                  && basins.get_data_element(row-1, col+1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row, col-1)
+                  && basins.get_data_element(row, col-1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row, col+1)
+                  && basins.get_data_element(row, col+1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row+1, col-1)
+                  && basins.get_data_element(row+1, col-1) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row+1, col)
+                  && basins.get_data_element(row+1, col) != NoDataValue) ||
+                (basins.get_data_element(row, col) != basins.get_data_element(row+1, col+1)
+                  && basins.get_data_element(row+1, col+1) != NoDataValue))
           {
             RidgeNetwork[row][col] = order;
           }
@@ -4068,10 +4068,11 @@ vector<int> LSDJunctionNetwork::Get_Channel_Head_Junctions(vector<int> Sources, 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 LSDIndexRaster LSDJunctionNetwork::extract_hollow(int CH_junction, LSDFlowInfo& FlowInfo){
 
-	if (CH_junction >= int(JunctionVector.size())){
-		cout << "LSDJunctionNetwork::extract_hollow junction not in list" << endl;
-		exit(EXIT_FAILURE);
-	}
+  if (CH_junction >= int(JunctionVector.size()))
+  {
+    cout << "LSDJunctionNetwork::extract_hollow junction not in list" << endl;
+    exit(EXIT_FAILURE);
+  }
 
   // declare variables used during the extraction of the hollows
   int channel_head_row;
@@ -4098,8 +4099,9 @@ LSDIndexRaster LSDJunctionNetwork::extract_hollow(int CH_junction, LSDFlowInfo& 
   vector<int> HollowNodeVector = FlowInfo.get_upslope_nodes(hollow_outlet);
   
   // Loop through basin to label basin pixels with basin ID
-  for (int HollowIndex = 0; HollowIndex < int(HollowNodeVector.size()); ++HollowIndex){
-	  node = HollowNodeVector[HollowIndex];
+  for (int HollowIndex = 0; HollowIndex < int(HollowNodeVector.size()); ++HollowIndex)
+  {
+    node = HollowNodeVector[HollowIndex];
     FlowInfo.retrieve_current_row_and_col(node,row,col);
   
     Hollow[row][col] = CH_junction;  
@@ -4109,8 +4111,8 @@ LSDIndexRaster LSDJunctionNetwork::extract_hollow(int CH_junction, LSDFlowInfo& 
   //remove channel head pixel from hollow
   Hollow[channel_head_row][channel_head_col] = NoDataValue;
     
-	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Hollow,GeoReferencingStrings);
-	return IR;
+  LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Hollow,GeoReferencingStrings);
+  return IR;
 }  
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
@@ -4133,10 +4135,10 @@ LSDIndexRaster LSDJunctionNetwork::extract_hollow(vector<int> CH_junctions, LSDF
    
   for (int q = 0; q < int(CH_junctions.size()); ++q){
 
-		if (CH_junctions[q] >= int(JunctionVector.size())){
-			cout << "LSDJunctionNetwork::extract_hollow junction not in list" << endl;
-			exit(EXIT_FAILURE);
-		}
+    if (CH_junctions[q] >= int(JunctionVector.size())){
+      cout << "LSDJunctionNetwork::extract_hollow junction not in list" << endl;
+      exit(EXIT_FAILURE);
+    }
   
     //get the coordinates of the channel head
     node_of_ch = get_Node_of_Junction(CH_junctions[q]);
@@ -4153,7 +4155,7 @@ LSDIndexRaster LSDJunctionNetwork::extract_hollow(vector<int> CH_junctions, LSDF
     
     // Loop through basin to label basin pixels with basin ID
     for (int HollowIndex = 0; HollowIndex < int(HollowNodeVector.size()); ++HollowIndex){
-		  node = HollowNodeVector[HollowIndex];
+      node = HollowNodeVector[HollowIndex];
       FlowInfo.retrieve_current_row_and_col(node,row,col);   
      
       Hollows[row][col] = CH_junctions[q];  
@@ -4165,8 +4167,8 @@ LSDIndexRaster LSDJunctionNetwork::extract_hollow(vector<int> CH_junctions, LSDF
     
   }
     
-	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Hollows,GeoReferencingStrings);
-	return IR;
+  LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Hollows,GeoReferencingStrings);
+  return IR;
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
@@ -4298,8 +4300,8 @@ LSDIndexRaster LSDJunctionNetwork::JunctionArray_to_LSDIndexRaster()
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexRaster LSDJunctionNetwork::JunctionIndexArray_to_LSDIndexRaster()
 {
-	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, JunctionIndexArray,GeoReferencingStrings);
-	return IR;
+  LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, JunctionIndexArray,GeoReferencingStrings);
+  return IR;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -4316,24 +4318,24 @@ LSDIndexRaster LSDJunctionNetwork::JunctionIndexArray_to_LSDIndexRaster()
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexRaster LSDJunctionNetwork::StreamOrderArray_to_BinaryNetwork_LSDIndexRaster()
 {
-	Array2D<int> BinaryNetwork(NRows,NCols,0);
-	for(int row = 0; row<NRows; row++)
-	{
-		for (int col = 0; col<NCols; col++)
-		{
-			if(StreamOrderArray[row][col] == NoDataValue)
-			{
-				BinaryNetwork[row][col] = NoDataValue;
-			}
-			else if (StreamOrderArray[row][col] >= 1)
-			{
-				BinaryNetwork[row][col] = 1;
-			}
-		}
-	}
+  Array2D<int> BinaryNetwork(NRows,NCols,0);
+  for(int row = 0; row<NRows; row++)
+  {
+    for (int col = 0; col<NCols; col++)
+    {
+      if(StreamOrderArray[row][col] == NoDataValue)
+      {
+        BinaryNetwork[row][col] = NoDataValue;
+      }
+      else if (StreamOrderArray[row][col] >= 1)
+      {
+        BinaryNetwork[row][col] = 1;
+      }
+    }
+  }
 
-	LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, BinaryNetwork,GeoReferencingStrings);
-	return IR;
+  LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, BinaryNetwork,GeoReferencingStrings);
+  return IR;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
