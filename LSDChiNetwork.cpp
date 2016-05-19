@@ -94,123 +94,123 @@ using namespace TNT;
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDChiNetwork::create(string channel_network_fname)
 {
-	ifstream channel_data_in;
-	channel_data_in.open(channel_network_fname.c_str());
+  ifstream channel_data_in;
+  channel_data_in.open(channel_network_fname.c_str());
 
-	if( channel_data_in.fail() )
-	{
-		cout << "\nFATAL ERROR: the channel network file \"" << channel_network_fname
-		     << "\" doesn't exist" << endl;
-		exit(EXIT_FAILURE);
-	}
+  if( channel_data_in.fail() )
+  {
+    cout << "\nFATAL ERROR: the channel network file \"" << channel_network_fname
+         << "\" doesn't exist" << endl;
+    exit(EXIT_FAILURE);
+  }
 
-	int channel_number;
-	int receiver_cnumber;
-	int recevier_cnode;
+  int channel_number;
+  int receiver_cnumber;
+  int recevier_cnode;
 
-	int node;
-	int row;
-	int col;
+  int node;
+  int row;
+  int col;
 
-	float flow_dist;
-	float elev;
-	float drain_area;
+  float flow_dist;
+  float elev;
+  float drain_area;
 
-	int last_cn = 0;		// this is 1 if this is the first node in a channel
-	int last_receiver_node = -1;
-	int last_receiver_channel = -1;
+  int last_cn = 0;		// this is 1 if this is the first node in a channel
+  int last_receiver_node = -1;
+  int last_receiver_channel = -1;
 
-	vector<int> empty_int;
-	vector<float> empty_float;
+  vector<int> empty_int;
+  vector<float> empty_float;
 
-	vector<int> node_vec;
-	vector<int> row_vec;
-	vector<int> col_vec;
-	vector<float> flow_dist_vec;
-	vector<float> elev_vec;
-	vector<float> drain_area_vec;
+  vector<int> node_vec;
+  vector<int> row_vec;
+  vector<int> col_vec;
+  vector<float> flow_dist_vec;
+  vector<float> elev_vec;
+  vector<float> drain_area_vec;
 
-	channel_data_in >> NRows >> NCols >> XMinimum >> YMinimum >> DataResolution >> NoDataValue;
+  channel_data_in >> NRows >> NCols >> XMinimum >> YMinimum >> DataResolution >> NoDataValue;
 
-	while( channel_data_in >> channel_number >> receiver_cnumber >> recevier_cnode
-	                       >> node >> row >> col >> flow_dist >> elev >> drain_area)
-	{
+  while( channel_data_in >> channel_number >> receiver_cnumber >> recevier_cnode
+                         >> node >> row >> col >> flow_dist >> elev >> drain_area)
+  {
 
-		// get the receiver_channel and receiver node for the first channel (these will be recursive)
-		if (last_receiver_node == -1)
-		{
-			last_receiver_node = recevier_cnode;
-			last_receiver_channel = receiver_cnumber;
-		}
+    // get the receiver_channel and receiver node for the first channel (these will be recursive)
+    if (last_receiver_node == -1)
+    {
+      last_receiver_node = recevier_cnode;
+      last_receiver_channel = receiver_cnumber;
+    }
 
-		// if this is a new channel add the old channel data to the data members and reset the
-		// vectors for assimilating data
-		if (channel_number != last_cn)
-		{
+    // if this is a new channel add the old channel data to the data members and reset the
+    // vectors for assimilating data
+    if (channel_number != last_cn)
+    {
 
-			cout << "new channel: " << channel_number << " last cn: " << last_cn << endl;
+      cout << "new channel: " << channel_number << " last cn: " << last_cn << endl;
 
-			node_indices.push_back(node_vec);
-			row_indices.push_back(row_vec);
-			col_indices.push_back(col_vec);
+      node_indices.push_back(node_vec);
+      row_indices.push_back(row_vec);
+      col_indices.push_back(col_vec);
 
-			elevations.push_back(elev_vec);
-			flow_distances.push_back(flow_dist_vec);
-			drainage_areas.push_back(drain_area_vec);
+      elevations.push_back(elev_vec);
+      flow_distances.push_back(flow_dist_vec);
+      drainage_areas.push_back(drain_area_vec);
 
-			node_on_receiver_channel.push_back(last_receiver_node);
-			receiver_channel.push_back(last_receiver_channel);
+      node_on_receiver_channel.push_back(last_receiver_node);
+      receiver_channel.push_back(last_receiver_channel);
 
-			node_vec = empty_int;
-			row_vec = empty_int;
-			col_vec = empty_int;
-			flow_dist_vec = empty_float;
-			elev_vec = empty_float;
-			drain_area_vec = empty_float;
+      node_vec = empty_int;
+      row_vec = empty_int;
+      col_vec = empty_int;
+      flow_dist_vec = empty_float;
+      elev_vec = empty_float;
+      drain_area_vec = empty_float;
 
-			// reset the receiver nodde and channel
-			last_receiver_node = recevier_cnode;
-			last_receiver_channel = receiver_cnumber;
+      // reset the receiver nodde and channel
+      last_receiver_node = recevier_cnode;
+      last_receiver_channel = receiver_cnumber;
 
-			last_cn = channel_number;
-		}
+      last_cn = channel_number;
+    }
 
-		// now push back the data
-		node_vec.push_back(node);
-		row_vec.push_back(row);
-		col_vec.push_back(col);
-		flow_dist_vec.push_back(flow_dist);
-		elev_vec.push_back(elev);
-		drain_area_vec.push_back(drain_area);
-	}
+    // now push back the data
+    node_vec.push_back(node);
+    row_vec.push_back(row);
+    col_vec.push_back(col);
+    flow_dist_vec.push_back(flow_dist);
+    elev_vec.push_back(elev);
+    drain_area_vec.push_back(drain_area);
+  }
 
 
-	// push back the data for the final channel
-	node_indices.push_back(node_vec);
-	row_indices.push_back(row_vec);
-	col_indices.push_back(col_vec);
-	elevations.push_back(elev_vec);
-	flow_distances.push_back(flow_dist_vec);
-	drainage_areas.push_back(drain_area_vec);
-	node_on_receiver_channel.push_back(last_receiver_node);
-	receiver_channel.push_back(last_receiver_channel);
+  // push back the data for the final channel
+  node_indices.push_back(node_vec);
+  row_indices.push_back(row_vec);
+  col_indices.push_back(col_vec);
+  elevations.push_back(elev_vec);
+  flow_distances.push_back(flow_dist_vec);
+  drainage_areas.push_back(drain_area_vec);
+  node_on_receiver_channel.push_back(last_receiver_node);
+  receiver_channel.push_back(last_receiver_channel);
 
-	// now initiate the chi values
-	int n_channels = int(elevations.size());
-	for (int i = 0; i< n_channels; i++)
-	{
-		int n_nodes_in_channel = (node_indices[i].size());
-		vector<float> empty_chi(n_nodes_in_channel,0.0);
-		chis.push_back(empty_chi);
-	}
+  // now initiate the chi values
+  int n_channels = int(elevations.size());
+  for (int i = 0; i< n_channels; i++)
+  {
+    int n_nodes_in_channel = (node_indices[i].size());
+    vector<float> empty_chi(n_nodes_in_channel,0.0);
+    chis.push_back(empty_chi);
+  }
 
-	// close the infile
-	channel_data_in.close();
+  // close the infile
+  channel_data_in.close();
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // this function extends the tributaries so all tributaries start from their source and then
 // run all the way down to the outlet. That is, downstream nodes are reapeated in each
@@ -1918,7 +1918,7 @@ vector< vector<float> > LSDChiNetwork::get_m_means()
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // Monte carlo segment fitter
-// This takes a fixed m_over_n value and then samples the indivudal nodes in the full channel profile
+// This takes a fixed m_over_n value and then samples the individual nodes in the full channel profile
 // to repeadetly get the best fit segments on thinned data. the m, b fitted elevation, r^2 and DW statistic are all
 // stored for every iteration on every node. These can then be queried later for mean, standard deviation and
 // standard error information
