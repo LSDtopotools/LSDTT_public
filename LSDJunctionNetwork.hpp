@@ -134,6 +134,15 @@ class LSDJunctionNetwork
   /// @date 18/05/2016
   vector<int> get_all_source_junctions_of_an_outlet_junction(int junction_number_outlet);
 
+  /// @brief This finds all the nodes that are source nodes upslope of a 
+  ///  given junction
+  /// @param junction_number_outlet The junction number of the outlet
+  /// @return source_nodes a vector of node numbers: these are the sources
+  ///   the nodes are node indices from the FlowInof object
+  /// @author SMM
+  /// @date 19/05/2016
+  vector<int> get_all_source_nodes_of_an_outlet_junction(int junction_number_outlet);
+
   /// @brief this function gets a list of the node indices of the donors to a particular node
   /// @param node this is the nodeindex of the node for which you want to find the donors
   /// @return a vector of the donor nodes

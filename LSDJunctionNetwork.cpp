@@ -788,6 +788,28 @@ vector<int> LSDJunctionNetwork::get_all_source_junctions_of_an_outlet_junction(i
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function takes a junction and finds all the source nodes
+// from the flowinfo nodefile upstream of the
+// outlet junction. 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDJunctionNetwork::get_all_source_nodes_of_an_outlet_junction(int junction_number_outlet)
+{
+  vector<int> us_junctions = get_upslope_junctions(junction_number_outlet);
+  vector<int> source_nodes;
+  
+  int n_upslope_junctions = int(us_junctions.size());
+  for (int j = 0; j<n_upslope_junctions; j++)
+  {
+    // if the junction has no donors, it is a source
+    if (NDonorsVector[ us_junctions[j] ] == 0)
+    {
+      source_nodes.push_back(JunctionVector[ us_junctions[j] ]);
+    }
+  }
+  return source_nodes;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
