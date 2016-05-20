@@ -921,7 +921,24 @@ class LSDFlowInfo
   /// @author SWDG
   /// @date 23/7/15
   vector<int> RemoveSinglePxChannels(LSDIndexRaster StreamNetwork, vector<int> Sources);
-  
+
+  /// @brief This function starts from a source and goes downstream until it 
+  ///  either accumulates n_nodes_to_visit or hits a base level node
+  /// @param source_node The starting node
+  /// @param outlet_node A node that serves as an end to the channel before
+  ///  the base level. If this is set to a node not on the channel (e.g., -9999)
+  ///  then the node looks for accuulation or a base level node only
+  /// @param n_nodes_to_visit the number of visited pixels the flow function will 
+  ///   travese before it stops
+  /// @VisitedRaster A raster that has pixels indicating if they have been visited
+  ///  or not. A visited pixel is denoted by 1, non visted by 0
+  /// @return outlet_nde the node at the end of the flow path
+  /// @author SMM
+  /// @date 19/05/2016
+  int get_downslope_node_after_fixed_visited_nodes(int source_node, 
+                 int outlet_node, int n_nodes_to_visit, LSDIndexRaster& VisitedRaster);
+
+
   protected:
 
   ///Number of rows.

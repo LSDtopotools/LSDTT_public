@@ -6795,16 +6795,16 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRoutingBedrock(LSDRaster Elevat
       }
     }   //for loop i,j
   }
-	
+
   ofs.close();
-	
+
   //add the data arrays to the output vector
   OutputArrays.push_back(RoutedHilltops);
   OutputArrays.push_back(HillslopeLength_Array);
   OutputArrays.push_back(Slope_Array);
   OutputArrays.push_back(Relief_Array);
   OutputArrays.push_back(Rock_Array);
-	
+
   //Print debugging info to screen
   cout << endl; //push output onto new line
   cout << "Hilltop count: " << ht_count << endl;
@@ -6885,11 +6885,14 @@ vector<int> LSDFlowInfo::ProcessEndPointsToChannelHeads(LSDIndexRaster Ends){
 
   return Sources;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This method removes single pixel channels from a channel network.
 // SWDG 23/7/15
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 vector<int> LSDFlowInfo::RemoveSinglePxChannels(LSDIndexRaster StreamNetwork, vector<int> Sources){
 
   for (int q = 0; q < int(Sources.size());++q){
@@ -6916,6 +6919,66 @@ vector<int> LSDFlowInfo::RemoveSinglePxChannels(LSDIndexRaster StreamNetwork, ve
 
   return Sources;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function starts from a given node index and then goes downstream
+// until it either hits a baselevel node or until it has accumulated a
+// number of visited pixels
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+int LSDFlowInfo::get_downslope_node_after_fixed_visited_nodes(int source_node, 
+                 int outlet_node, int n_nodes_to_visit, LSDIndexRaster& VisitedRaster)
+{
+  int n_visited = 0;
+  int current_node, receiver_node,row, col;
+  int bottom_node;
+  
+  bool Am_I_at_the_bottom_of_the_channel = false;
+  
+  current_node = source_node;
+  
+  // you start from the source node and work your way downstream
+  while( Am_I_at_the_bottom_of_the_channel == false )
+  {
+    // get the reciever node
+    retrieve_receiver_information(current_node,receiver_node, row,col);
+    
+    // check if this is a base level node
+    if (current_node == receiver_node)
+    {
+      Am_I_at_the_bottom_of_the_channel = true;
+      bottom_node = receiver_node;
+    }
+    else if (receiver_node == outlet_node)
+    {
+      Am_I_at_the_bottom_of_the_channel = true;
+      bottom_node = receiver_node;
+    }
+    else
+    {
+      // check to see if this node has been visited, if so increment the n_visited 
+      // iterator
+      if (VisitedRaster.get_data_element(row,col) == 1)
+      {
+        n_visited++;
+      }
+      else
+      {
+        VisitedRaster.set_data_element(row, col, 1);
+      }
+      
+      // see if we have collected enough nodes to visit
+      if (n_visited >= n_nodes_to_visit)
+      {
+        Am_I_at_the_bottom_of_the_channel = true;
+        bottom_node = receiver_node;
+      }
+    }
+    current_node = receiver_node;
+  }
+  return bottom_node;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 #endif

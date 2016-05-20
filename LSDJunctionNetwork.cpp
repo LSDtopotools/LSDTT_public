@@ -5319,6 +5319,33 @@ void LSDJunctionNetwork::print_junctions_to_csv(LSDFlowInfo& FlowInfo, vector<in
   sources_out.close();
 
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function is for calculating a bonehead version of the chi slope
+// and the chi intercept
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDJunctionNetwork::bonehead_chi_map(LSDFlowInfo& FlowInfo, LSDRaster& Chi, LSDRaster& Elevation, 
+                                      LSDRaster& FlowDistance, vector<int> BaseLevel_Junctions)
+{
+  // Get the number of baselevel nodes
+  int N_baselevel_nodes = int(BaseLevel_Junctions.size());
+  
+  // loop through these nodes
+  for (int BL = 0; BL < N_baselevel_nodes; BL++)
+  {
+    // get all the source nodes
+    vector<int> source_nodes = get_all_source_nodes_of_an_outlet_junction(BaseLevel_Junctions[BL]);
+    
+    
+  
+  }
+  
+  // First, we find all the sources 
+
+
+}
 
 
 
