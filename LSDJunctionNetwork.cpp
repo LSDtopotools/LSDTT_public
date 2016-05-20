@@ -4688,17 +4688,19 @@ vector<int> LSDJunctionNetwork::Prune_BaseLevel_DonorJunctions_Area(vector<int>&
 {
   vector<int> BL_Donor_junctions_pruned;
   int N_BaseLevelJuncs = int(BaseLevelJunctions_Initial.size());
-  cout << endl << endl << "I am going to remove any basins draining to the edge." << endl;
+  cout << endl << endl << "I am going to remove any basins smaller than " << Threshold << " pixels." << endl;
   
   int row,col, current_node;
   
   for(int i = 0; i < N_BaseLevelJuncs; ++i)
   {
-    current_node = BaseLevelJunctions_Initial[i];
+    current_node = JunctionVector[BaseLevelJunctions_Initial[i]];
     FlowInfo.retrieve_current_row_and_col(current_node,row,col);
     
     // get the flow accumulation
     int Acc =  FlowAcc.get_data_element(row,col);
+    
+    cout << "The flow accumulation for this baselevel node is: " << Acc << endl;
     
     if(Acc >= Threshold)
     {
@@ -4706,7 +4708,7 @@ vector<int> LSDJunctionNetwork::Prune_BaseLevel_DonorJunctions_Area(vector<int>&
     }
   }
   
-  cout << "I have removed the channels that are draining from the edge of the DEM." << endl;
+  cout << "I have removed the channels smaller than a threshold area." << endl;
   cout << "I now have " << BL_Donor_junctions_pruned.size() << " base level junctions" << endl;
   return BL_Donor_junctions_pruned;
 }
@@ -5276,9 +5278,9 @@ LSDRaster LSDJunctionNetwork::calculate_relief_from_channel(LSDRaster& Elevation
   return Relief;
 }
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // This function takes a list of junctions and prints them to a csv file
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDJunctionNetwork::print_junctions_to_csv(LSDFlowInfo& FlowInfo, vector<int> JunctionList, string fname)
 {
   int n_junctions = (JunctionList.size());
@@ -5319,7 +5321,7 @@ void LSDJunctionNetwork::print_junctions_to_csv(LSDFlowInfo& FlowInfo, vector<in
   sources_out.close();
 
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

@@ -859,24 +859,71 @@ void LSDFlowInfo::print_vector_of_nodeindices_to_csv_file(vector<int>& nodeindex
 
       // make sure the nodeindex isn't out of bounds
       if (current_node < n_nodeindeces)
-	{
-	  // get the row and column
-	  retrieve_current_row_and_col(current_node,current_row,
-				       current_col);
+  {
+    // get the row and column
+    retrieve_current_row_and_col(current_node,current_row,
+                                 current_col);
 
-	  // get the x and y location of the node
-	  // the last 0.0001*DataResolution is to make sure there are no integer data points
-	  x = XMinimum + float(current_col)*DataResolution + 0.5*DataResolution + 0.0001*DataResolution;
+    // get the x and y location of the node
+    // the last 0.0001*DataResolution is to make sure there are no integer data points
+    x = XMinimum + float(current_col)*DataResolution + 0.5*DataResolution + 0.0001*DataResolution;
 
-	  // the last 0.0001*DataResolution is to make sure there are no integer data points
-	  // y coord a bit different since the DEM starts from the top corner
-	  y = YMinimum + float(NRows-current_row)*DataResolution - 0.5*DataResolution + 0.0001*DataResolution;;
-	  csv_out << x << "," << y << "," << current_node << "," << current_row << "," << current_col << endl;
-	}
+    // the last 0.0001*DataResolution is to make sure there are no integer data points
+    // y coord a bit different since the DEM starts from the top corner
+    y = YMinimum + float(NRows-current_row)*DataResolution - 0.5*DataResolution + 0.0001*DataResolution;;
+    csv_out << x << "," << y << "," << current_node << "," << current_row << "," << current_col << endl;
+  }
     }
 
   csv_out.close();
 }
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This function takes a list of junctions and prints them to a csv file
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDFlowInfo::print_vector_of_nodeindices_to_csv_file_with_latlong(vector<int>& nodeindex_vec, string outfilename)
+{
+  int n_nodes = (nodeindex_vec.size());
+  int this_node;
+  int row,col;
+  double x_loc,y_loc;
+  double latitude,longitude;
+  
+  // open the outfile
+  ofstream sources_out;
+  sources_out.open(outfilename.c_str());
+  sources_out.precision(9); 
+  
+  sources_out << "node,x,y,latitude,longitude" << endl;
+  
+  // this is for latitude and longitude
+  LSDCoordinateConverterLLandUTM Converter;
+  
+  for (int i = 0; i<n_nodes; i++)
+  {
+    this_node = nodeindex_vec[i];
+    
+    // get the row and column
+    retrieve_current_row_and_col(this_node,row,col);
+    
+    // get the x and y locations
+    get_x_and_y_locations(row, col, x_loc, y_loc);
+    
+    // get the lat and long locations
+    get_lat_and_long_locations(row, col, latitude, longitude, Converter);
+    
+    // print to file
+    sources_out << this_node << "," << x_loc << ","
+                << y_loc << "," << latitude << "," << longitude << endl;
+    
+  }
+  
+  sources_out.close();
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Write nodeindex vector to csv file, and give each row a unique ID

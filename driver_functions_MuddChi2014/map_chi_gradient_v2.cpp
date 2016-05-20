@@ -78,6 +78,7 @@ int main (int nNumberofArgs,char *argv[])
   int skip;
   int threshold_pixels_for_chi;
   int threshold_contributing_pixels;
+  int minimum_basin_size_pixels;
   bool test_drainage_boundaries = true;
 
   file_info_in >> temp >> DATA_DIR
@@ -95,15 +96,19 @@ int main (int nNumberofArgs,char *argv[])
                >> temp >> sigma
                >> temp >> skip
                >> temp >> threshold_pixels_for_chi
-               >> temp >> test_drainage_boundaries
-               >> temp >> threshold_contributing_pixels;
+               >> temp >> threshold_contributing_pixels
+               >> temp >> minimum_basin_size_pixels
+               >> temp >> test_drainage_boundaries;
+
 
   file_info_in.close();
 
   // make sure the threshold contributing pixel data is not nonsense
   if(threshold_contributing_pixels<=0)
   {
-    threshold_contributing_pixels = 1;
+    cout << "You gave me a nonsense threshold contributing pixel value: " << threshold_contributing_pixels << endl;
+    cout << "Defaulting to 50" << endl;
+    threshold_contributing_pixels = 50;
   }
 
 
@@ -123,6 +128,7 @@ int main (int nNumberofArgs,char *argv[])
                << "\n\t Skip: " <<  skip 
                << "\n\t threshold_pixels_for_chi: " << threshold_pixels_for_chi 
                << "\n\t test_drainage_boundaries: " << test_drainage_boundaries 
+               << "\n\t minimum_basin_size_pixels: " << minimum_basin_size_pixels
                << "\n\t threshold_contributing_pixels: " << threshold_contributing_pixels
                << endl << endl;
 
@@ -177,11 +183,10 @@ int main (int nNumberofArgs,char *argv[])
   vector<int> sources;
   if (CHeads_file == "NULL" || CHeads_file == "Null" || CHeads_file != "null")
   {
-      cout << endl << endl << endl << "==================================" << endl;
-    cout << "The channel head file is null. Getting sources from a deafault threshold of 50 pixels." <<endl;
-    cout << "If you want to change the threshold you need to go into map_chi_gradient.cpp," << endl;
-    cout << "and change it. Search for LeighGriffiths in the source code, the threshold is two lines below that." << endl;
-    sources = FlowInfo.get_sources_index_threshold(FlowAcc, threshold_pixels_for_chi);
+    cout << endl << endl << endl << "==================================" << endl;
+    cout << "The channel head file is null. " << endl;
+    cout << "Getting sources from a threshold of "<< threshold_contributing_pixels << " pixels." <<endl;
+    sources = FlowInfo.get_sources_index_threshold(FlowAcc, threshold_contributing_pixels);
     
     cout << "The number of sources is: " << sources.size() << endl;
     
@@ -214,19 +219,24 @@ int main (int nNumberofArgs,char *argv[])
   cout << "The number of base level junctions is: " << N_BaseLevelJuncs << endl; 
 
   // remove basins drainage from edge if that is what the user wants
+  
+  cout << "Right, let me check the drainage basins. " << endl;
   if (test_drainage_boundaries)
   {
+    cout << "Test_dreainage_bondaries: " << test_drainage_boundaries << endl;
+  
     cout << endl << endl << "I am going to remove any basins draining to the edge." << endl;
     BaseLevelJunctions = JunctionNetwork.Prune_BaseLevel_DonorJunctions_Edge(BaseLevelJunctions_Initial,FlowInfo); 
   }
   else
   {
+    cout << "I'm not going to remove any drainage basins drainage to the edge." << endl;
     BaseLevelJunctions = BaseLevelJunctions_Initial;
   }
   
-  // remove base level junctions for which catchment is truncated
+  // remove base level junctions for which catchment is too small
   BaseLevelJunctions = JunctionNetwork.Prune_BaseLevel_DonorJunctions_Area(BaseLevelJunctions, 
-                                              FlowInfo, FlowAcc, threshold_contributing_pixels);
+                                              FlowInfo, FlowAcc, minimum_basin_size_pixels);
 
   // Correct number of base level junctions
   N_BaseLevelJuncs = BaseLevelJunctions.size();
@@ -235,7 +245,7 @@ int main (int nNumberofArgs,char *argv[])
   float threshold_area_for_chi = Resolution*Resolution*float(threshold_pixels_for_chi);
   LSDRaster chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,A_0,threshold_area_for_chi);
   
-  string chi_coord_string = OUTPUT_DIR+DEM_ID+"chi_coord";
+  string chi_coord_string = OUTPUT_DIR+DEM_ID+"_chi_coord";
   chi_coordinate.write_raster(chi_coord_string,raster_ext);
 
   string csv_fname = OUTPUT_DIR+DEM_ID+"_FullChi_tree.csv";
@@ -250,7 +260,15 @@ int main (int nNumberofArgs,char *argv[])
     // initilise the converter
   LSDCoordinateConverterLLandUTM Converter;
   
+  // check the sources routine
+  vector<int> source_nodes = JunctionNetwork.get_all_source_nodes_of_an_outlet_junction(BaseLevelJunctions[0]);
+  
+  string sources_fname = OUTPUT_DIR+DEM_ID+"_SourcesList.csv";
+  FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(source_nodes, sources_fname);
+  
+  
   // now get the overlapping channels from the junction network file
+  
 
 
 }

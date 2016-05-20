@@ -208,6 +208,14 @@ class LSDFlowInfo
   void print_vector_of_nodeindices_to_csv_file(vector<int>& nodeindex_vec, string outfilename);
 
   ///@brief This function takes a vector of node indices and prints a csv 
+  ///file that can be read by arcmap: similar to above but also prints lat and long
+  ///@param nodeindex vec is a vector of nodeindices (which are ints)
+  ///@param outfilename is a string of the filename
+  /// @author SMM
+  /// @date 20/05/16
+  void print_vector_of_nodeindices_to_csv_file_with_latlong(vector<int>& nodeindex_vec, string outfilename);
+
+  ///@brief This function takes a vector of node indices and prints a csv 
   ///file that can be read by arcmap, adding in a unique id to each row, independent of the nodeindex.
   ///
   ///@details The unique ID is used to tie triplets of channel heads together for hollow analysis.
