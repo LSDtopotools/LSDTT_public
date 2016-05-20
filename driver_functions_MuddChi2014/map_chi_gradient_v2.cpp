@@ -260,15 +260,18 @@ int main (int nNumberofArgs,char *argv[])
     // initilise the converter
   LSDCoordinateConverterLLandUTM Converter;
   
-  // check the sources routine
-  vector<int> source_nodes = JunctionNetwork.get_all_source_nodes_of_an_outlet_junction(BaseLevelJunctions[0]);
-  
+  // now get the overlapping channels from the junction network file
+  vector<int> source_nodes;
+  vector<int> outlet_nodes;
+  int n_nodes_to_visit = 50;
+  JunctionNetwork.get_overlapping_channels(FlowInfo, BaseLevelJunctions, DistanceFromOutlet, 
+                                    source_nodes,outlet_nodes,n_nodes_to_visit);
+
+
   string sources_fname = OUTPUT_DIR+DEM_ID+"_SourcesList.csv";
   FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(source_nodes, sources_fname);
-  
-  
-  // now get the overlapping channels from the junction network file
-  
 
+  string outlet_fname = OUTPUT_DIR+DEM_ID+"_OutletList.csv";
+  FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(outlet_nodes, outlet_fname);
 
 }

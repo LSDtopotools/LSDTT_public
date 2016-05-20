@@ -5355,8 +5355,11 @@ void LSDJunctionNetwork::get_overlapping_channels(LSDFlowInfo& FlowInfo,
     // get all the source nodes of the base level
     vector<int> source_nodes = get_all_source_nodes_of_an_outlet_junction(BaseLevel_Junctions[BL]);
     
-    // sort the nodes by flow distance
+    // sort the nodes by flow distance in ascending order
     vector<int> SortedSources = FlowInfo.sort_node_list_based_on_raster(source_nodes, DistanceFromOutlet);
+    
+    // get them in descending order
+    reverse(SortedSources.begin(),SortedSources.end());
     
     // now loop through the sorted sources
     int n_sources = int(SortedSources.size());

@@ -959,26 +959,26 @@ void LSDFlowInfo::print_vector_of_nodeindices_to_csv_file_Unique(vector<int>& no
 
   // loop through node indices in vector
   for (int i = 0; i<n_nodes; i++)
+  {
+    int current_node = nodeindex_vec[i];
+
+    // make sure the nodeindex isn't out of bounds
+    if (current_node < n_nodeindeces)
     {
-      int current_node = nodeindex_vec[i];
+      // get the row and column
+      retrieve_current_row_and_col(current_node,current_row,
+                                 current_col);
 
-      // make sure the nodeindex isn't out of bounds
-      if (current_node < n_nodeindeces)
-	{
-	  // get the row and column
-	  retrieve_current_row_and_col(current_node,current_row,
-				       current_col);
+      // get the x and y location of the node
+      // the last 0.0001*DataResolution is to make sure there are no integer data points
+      x = XMinimum + float(current_col)*DataResolution + 0.5*DataResolution + 0.0001*DataResolution;
 
-	  // get the x and y location of the node
-	  // the last 0.0001*DataResolution is to make sure there are no integer data points
-	  x = XMinimum + float(current_col)*DataResolution + 0.5*DataResolution + 0.0001*DataResolution;
-
-	  // the last 0.0001*DataResolution is to make sure there are no integer data points
-	  // y coord a bit different since the DEM starts from the top corner
-	  y = YMinimum + float(NRows-current_row)*DataResolution - 0.5*DataResolution + 0.0001*DataResolution;;
-	  csv_out << x << "," << y << "," << current_node << "," << current_row << "," << current_col << "," << i << endl;
-	}
+      // the last 0.0001*DataResolution is to make sure there are no integer data points
+      // y coord a bit different since the DEM starts from the top corner
+      y = YMinimum + float(NRows-current_row)*DataResolution - 0.5*DataResolution + 0.0001*DataResolution;;
+      csv_out << x << "," << y << "," << current_node << "," << current_row << "," << current_col << "," << i << endl;
     }
+  }
 
   csv_out.close();
 }
@@ -999,9 +999,9 @@ int LSDFlowInfo::retrieve_largest_base_level()
   for (int i = 0; i<n_bl; i++)
     {
       if(NContributingNodes[ BaseLevelNodeList[i] ] > max_bl)
-	{
-	  max_bl = NContributingNodes[ BaseLevelNodeList[i] ];
-	}
+  {
+    max_bl = NContributingNodes[ BaseLevelNodeList[i] ];
+  }
     }
   return max_bl;
 }
@@ -1106,15 +1106,15 @@ void LSDFlowInfo::pickle(string filename)
 
   // print the header file
   header_out <<  "ncols         		" << NCols
-	     << "\nnrows         		" << NRows
-	     << "\nxllcorner     		" << setprecision(14) << XMinimum
-	     << "\nyllcorner     		" << setprecision(14) << YMinimum
-	     << "\ncellsize      		" << DataResolution
-	     << "\nNODATA_value  		" << NoDataValue
-	     << "\nNDataNodes    		" << NDataNodes
-	     << "\nNBaseLevelNodes    " << BLNodes
-	     << "\nNContributingNodes " << contributing_nodes
-	     << "\nBoundaryConditions ";
+       << "\nnrows         		" << NRows
+       << "\nxllcorner     		" << setprecision(14) << XMinimum
+       << "\nyllcorner     		" << setprecision(14) << YMinimum
+       << "\ncellsize      		" << DataResolution
+       << "\nNODATA_value  		" << NoDataValue
+       << "\nNDataNodes    		" << NDataNodes
+       << "\nNBaseLevelNodes    " << BLNodes
+       << "\nNContributingNodes " << contributing_nodes
+       << "\nBoundaryConditions ";
   for(int i = 0; i<4; i++)
     {
       header_out << " " << BoundaryConditions[i];
@@ -1135,29 +1135,31 @@ void LSDFlowInfo::pickle(string filename)
   ofstream data_ofs(data_fname.c_str(), ios::out | ios::binary);
   int temp;
   for (int i=0; i<NRows; ++i)
+  {
+    for (int j=0; j<NCols; ++j)
     {
-      for (int j=0; j<NCols; ++j)
-	{
-	  temp = NodeIndex[i][j];
-	  data_ofs.write(reinterpret_cast<char *>(&temp),sizeof(temp));
-	}
+      temp = NodeIndex[i][j];
+      data_ofs.write(reinterpret_cast<char *>(&temp),sizeof(temp));
     }
+  }
+  
   for (int i=0; i<NRows; ++i)
+  {
+    for (int j=0; j<NCols; ++j)
     {
-      for (int j=0; j<NCols; ++j)
-	{
-	  temp = FlowDirection[i][j];
-	  data_ofs.write(reinterpret_cast<char *>(&temp),sizeof(temp));
-	}
+      temp = FlowDirection[i][j];
+      data_ofs.write(reinterpret_cast<char *>(&temp),sizeof(temp));
     }
+  }
+  
   for (int i=0; i<NRows; ++i)
+  {
+    for (int j=0; j<NCols; ++j)
     {
-      for (int j=0; j<NCols; ++j)
-	{
-	  temp = FlowLengthCode[i][j];
-	  data_ofs.write(reinterpret_cast<char *>(&temp),sizeof(temp));
-	}
+      temp = FlowLengthCode[i][j];
+      data_ofs.write(reinterpret_cast<char *>(&temp),sizeof(temp));
     }
+  }
   for (int i = 0; i<NDataNodes; i++)
     {
       temp = RowIndex[i];
@@ -1244,11 +1246,11 @@ void LSDFlowInfo::unpickle(string filename)
   int BLNodes;
 
   header_in >> temp_str >> NCols >> temp_str >> NRows >> temp_str >> XMinimum
-	    >> temp_str >> YMinimum >> temp_str >> DataResolution
-	    >> temp_str >> NoDataValue >> temp_str >> NDataNodes
-	    >> temp_str >> BLNodes
-	    >> temp_str >> contributing_nodes
-	    >> temp_str >> bc[0] >> bc[1] >> bc[2] >> bc[3];
+      >> temp_str >> YMinimum >> temp_str >> DataResolution
+      >> temp_str >> NoDataValue >> temp_str >> NDataNodes
+      >> temp_str >> BLNodes
+      >> temp_str >> contributing_nodes
+      >> temp_str >> bc[0] >> bc[1] >> bc[2] >> bc[3];
   header_in.close();
   BoundaryConditions = bc;
 
