@@ -1992,7 +1992,7 @@ LSDRaster LSDFlowInfo::get_upslope_node_mask(vector<int> source_nodes)
   // loop through the nodes, collecting upslope nodes
   int n_nodes = int(source_nodes.size());
   int this_node;
-  int us_node;
+  //int us_node;
   int curr_row,curr_col;
   float is_us = 1.0;
   
@@ -2037,7 +2037,7 @@ LSDRaster LSDFlowInfo::get_upslope_node_mask(vector<int> source_nodes, vector<fl
     // loop through the nodes, collecting upslope nodes
     int n_nodes = int(source_nodes.size());
     int this_node;
-    int us_node;
+    //int us_node;
     int curr_row,curr_col;
     
     // go through all the source nodes, find their upslope nodes
@@ -2702,29 +2702,105 @@ int LSDFlowInfo::find_farthest_upslope_node(int node, LSDRaster& DistFromOutlet)
   float farthest = 0.0;
   int n_upslope_nodes = upslope_node_list.size();
   for (int i = 0; i<n_upslope_nodes; i++)
+  {
+    // get the row and col of upslope nodes
+    row = RowIndex[ upslope_node_list[i] ];
+    col = ColIndex[ upslope_node_list[i] ];
+
+    // get the flow distance
+    this_flow_distance = DistFromOutlet.get_data_element(row, col);
+
+    // test if it is the farthest
+    if (this_flow_distance > farthest)
     {
-      // get the row and col of upslope nodes
-      row = RowIndex[ upslope_node_list[i] ];
-      col = ColIndex[ upslope_node_list[i] ];
-
-      // get the flow distance
-      this_flow_distance = DistFromOutlet.get_data_element(row, col);
-
-      // test if it is the farthest
-      if (this_flow_distance > farthest)
-	{
-	  farthest = this_flow_distance;
-	  farthest_upslope_node =  upslope_node_list[i];
-	}
+      farthest = this_flow_distance;
+      farthest_upslope_node =  upslope_node_list[i];
     }
+  }
 
   return farthest_upslope_node;
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function takes a list of nodes and sorts them according to a sorting 
+// raster
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDFlowInfo::sort_node_list_based_on_raster(vector<int> node_vec, LSDRaster& SortingRaster)
+{
+  // First make a vector of the data from the sorting vector
+  vector<float> VectorisedData;
+  vector<float> SortedData;
+  vector<int> SortedNodes;
+  
+  vector<size_t> index_map;
+  
+  int row,col;
+  
+  // loop through node vec, getting the value of the raster at each node
+  int n_nodes = int(node_vec.size());
+  for (int n = 0; n<n_nodes; n++)
+  {
+    retrieve_current_row_and_col(node_vec[n],row,col);
+    
+    // now get the data element
+    VectorisedData.push_back(SortingRaster.get_data_element(row,col));
+  }
+  
+  // now sort that data using the matlab sort
+  matlab_float_sort(VectorisedData, SortedData, index_map);
+  
+  // now sort the nodes based on this sorting
+  matlab_int_reorder(node_vec, index_map, SortedNodes);
+  
+  return SortedNodes;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function takes a list of nodes and sorts them according to a sorting 
+// raster
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDFlowInfo::sort_node_list_based_on_raster(vector<int> node_vec, LSDIndexRaster& SortingRaster)
+{
+  // First make a vector of the data from the sorting vector
+  vector<int> VectorisedData;
+  vector<int> SortedData;
+  vector<int> SortedNodes;
+  
+  vector<size_t> index_map;
+  
+  int row,col;
+  
+  // loop through node vec, getting the value of the raster at each node
+  int n_nodes = int(node_vec.size());
+  for (int n = 0; n<n_nodes; n++)
+  {
+    retrieve_current_row_and_col(node_vec[n],row,col);
+    
+    // now get the data element
+    VectorisedData.push_back(SortingRaster.get_data_element(row,col));
+  }
+  
+  // now sort that data using the matlab sort
+  matlab_int_sort(VectorisedData, SortedData, index_map);
+  
+  // now sort the nodes based on this sorting
+  matlab_int_reorder(node_vec, index_map, SortedNodes);
+  
+  return SortedNodes;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // get node index of point from X and Y coordinates
 // this is different from the above function in that it does not snap to the nearest channel
 //
@@ -2744,8 +2820,14 @@ int LSDFlowInfo::get_node_index_of_coordinate_point(float X_coordinate, float Y_
 
   // Get node of point
   int CurrentNode;
-  if(col_point>=0 && col_point<NCols && row_point>=0 && row_point<NRows) CurrentNode = retrieve_node_from_row_and_column(row_point, col_point);
-  else CurrentNode = NoDataValue;
+  if(col_point>=0 && col_point<NCols && row_point>=0 && row_point<NRows) 
+  {
+    CurrentNode = retrieve_node_from_row_and_column(row_point, col_point);
+  }
+  else
+  {
+    CurrentNode = NoDataValue;
+  }
   return CurrentNode;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

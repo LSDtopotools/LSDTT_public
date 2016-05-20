@@ -1142,7 +1142,21 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @author FJC
   /// @date 17/11/15
   LSDRaster calculate_relief_from_channel(LSDRaster& ElevationRaster, LSDFlowInfo& FlowInfo, int threshold_SO);
-  
+
+  /// @detail This calucaltes chi slopes and intercepts in a bonehead way:
+  ///  simply calculating the slopes over an average distance without any 
+  ///  regard for segments
+  /// @param FlowInfo an LSDFlowInfo object
+  /// @param Chi an LSDRaster with the chi coordinate
+  /// @param Elevation an LSDRaster with the elevation
+  /// @param FlowDistance an LSDRaster with the flow distance
+  /// @param BaseLevel_Junctions an integer vector that contains the base level junctions
+  ///   to be analysed
+  /// @author SMM
+  /// @date 20/05/2016
+  void bonehead_chi_map(LSDFlowInfo& FlowInfo, LSDRaster& Chi, LSDRaster& Elevation, 
+                                      LSDRaster& FlowDistance, vector<int> BaseLevel_Junctions);
+
   protected:
 
   ///Number of rows.

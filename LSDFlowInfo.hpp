@@ -639,6 +639,29 @@ class LSDFlowInfo
   /// @date 25/19/13
   int find_farthest_upslope_node(int node, LSDRaster& DistFromOutlet);
 
+  /// @brief This takes a list of nodes and sorts them according to a 
+  ///  sorting raster (it could be anything) fin ascending order
+  ///  nodes are then reordered to reflect the sorting of the raster
+  /// @param node_vec A vector of nodes
+  /// @param SortingRaster a raster that contains some values that will
+  ///  be used to sort the nodes. 
+  /// @return sorted_nodes a vector containing the sorted nodes
+  /// @author SMM
+  /// @date 20/05/2016
+  vector<int> sort_node_list_based_on_raster(vector<int> node_vec, LSDRaster& SortingRaster);
+
+  /// @brief This takes a list of nodes and sorts them according to a 
+  ///  sorting raster (it could be anything) fin ascending order
+  ///  nodes are then reordered to reflect the sorting of the raster
+  /// @param node_vec A vector of nodes
+  /// @param SortingRaster a raster that contains some values that will
+  ///  be used to sort the nodes. 
+  /// @return sorted_nodes a vector containing the sorted nodes
+  /// @author SMM
+  /// @date 20/05/2016
+  vector<int> sort_node_list_based_on_raster(vector<int> node_vec, LSDIndexRaster& SortingRaster);
+
+
   /// @brief Function to get the node index for a point using its X and Y coordinates
   /// @param X_coordinate X_coord of point
   /// @param Y_coordinate Y_coord of point
