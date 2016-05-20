@@ -5326,27 +5326,52 @@ void LSDJunctionNetwork::print_junctions_to_csv(LSDFlowInfo& FlowInfo, vector<in
 // This function is for calculating a bonehead version of the chi slope
 // and the chi intercept
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDJunctionNetwork::bonehead_chi_map(LSDFlowInfo& FlowInfo, LSDRaster& Chi, LSDRaster& Elevation, 
-                                      LSDRaster& FlowDistance, vector<int> BaseLevel_Junctions)
+void LSDJunctionNetwork::get_overlapping_channels(LSDFlowInfo& FlowInfo, 
+                                    vector<int> BaseLevel_Junctions,
+                                    LSDRaster& DistanceFromOutlet, 
+                                    vector<int>& source_nodes,
+                                    vector<int>& outlet_nodes,
+                                    int n_nodes_to_visit)
 {
   // Get the number of baselevel nodes
   int N_baselevel_nodes = int(BaseLevel_Junctions.size());
   
+  // create the visited array
+  int not_visited = 0;
+  LSDIndexRaster VisitedRaster(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, GeoReferencingStrings,not_visited);
+  
+  vector<int> NewSources;
+  vector<int> NewOutlets;
+  int thisOutlet;
+  
+  
   // loop through these nodes
   for (int BL = 0; BL < N_baselevel_nodes; BL++)
   {
-    // get all the source nodes
+    int outlet_node = JunctionVector[BaseLevel_Junctions[BL] ];
+    
+    // get all the source nodes of the base level
     vector<int> source_nodes = get_all_source_nodes_of_an_outlet_junction(BaseLevel_Junctions[BL]);
     
+    // sort the nodes by flow distance
+    vector<int> SortedSources = FlowInfo.sort_node_list_based_on_raster(source_nodes, DistanceFromOutlet);
     
-  
+    // now loop through the sorted sources
+    int n_sources = int(SortedSources.size());
+    for(int s = 0; s<n_sources; s++)
+    {
+      // get the channel from this source and mark up the covered raster
+      thisOutlet = FlowInfo.get_downslope_node_after_fixed_visited_nodes(SortedSources[s], 
+                  outlet_node, n_nodes_to_visit, VisitedRaster);
+                  
+      NewSources.push_back(SortedSources[s]);
+      NewOutlets.push_back(thisOutlet);
+    }
+
   }
   
-  // First, we find all the sources 
-
-
+  outlet_nodes = NewOutlets;
+  source_nodes = NewSources; 
 }
-
-
 
 #endif

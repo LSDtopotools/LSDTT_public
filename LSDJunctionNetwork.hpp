@@ -1143,19 +1143,21 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @date 17/11/15
   LSDRaster calculate_relief_from_channel(LSDRaster& ElevationRaster, LSDFlowInfo& FlowInfo, int threshold_SO);
 
-  /// @detail This calucaltes chi slopes and intercepts in a bonehead way:
-  ///  simply calculating the slopes over an average distance without any 
-  ///  regard for segments
+  /// @detail This overwrites two vecotrs that give all of the starting and 
+  ///  finishing nodes of channels in a basin
   /// @param FlowInfo an LSDFlowInfo object
-  /// @param Chi an LSDRaster with the chi coordinate
-  /// @param Elevation an LSDRaster with the elevation
-  /// @param FlowDistance an LSDRaster with the flow distance
   /// @param BaseLevel_Junctions an integer vector that contains the base level junctions
-  ///   to be analysed
+  /// @param DistanceFromOutlet an LSDRaster with the flow distance
+  /// @param source_nodes a vector continaing the sorted sorce nodes (by flow distance)
+  ///  THIS GETS OVERWRITTEN
+  /// @param outlet_nodes a vector continaing the outlet nodes
+  ///  THIS GETS OVERWRITTEN
   /// @author SMM
   /// @date 20/05/2016
-  void bonehead_chi_map(LSDFlowInfo& FlowInfo, LSDRaster& Chi, LSDRaster& Elevation, 
-                                      LSDRaster& FlowDistance, vector<int> BaseLevel_Junctions);
+  void get_overlapping_channels(LSDFlowInfo& FlowInfo, vector<int> BaseLevel_Junctions,
+                                LSDRaster& DistanceFromOutlet, 
+                                vector<int>& source_nodes, vector<int>& outlet_nodes,
+                                int n_nodes_to_visit);
 
   protected:
 
