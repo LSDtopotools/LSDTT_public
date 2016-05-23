@@ -242,7 +242,7 @@ class LSDJunctionNetwork
   /// @date 19/6/13
   vector<int> get_BaseLevel_DonorJunctions();
 
-  /// @brief This function takes a list of base level junctions and then prunes
+  /// @brief This function takes a list of junctions and then prunes
   ///  junctions based whether they drain from the edge. This attempts to 
   ///  remove junctions that are through-flowing and thus do not have the 
   ///  correct drainage area
@@ -252,9 +252,9 @@ class LSDJunctionNetwork
   /// @return a pruned list of base level nodes
   /// @author SMM
   /// @date 16/05/16
-  vector<int> Prune_BaseLevel_DonorJunctions_Edge(vector<int>& BaseLevelJunctions_Initial,LSDFlowInfo& FlowInfo);
+  vector<int> Prune_Junctions_Edge(vector<int>& BaseLevelJunctions_Initial,LSDFlowInfo& FlowInfo);
 
-  /// @brief This function takes a list of base level junctions and then prunes
+  /// @brief This function takes a list of junctions and then prunes
   ///  junctions based on their number of contributing pixels
   /// @param BaseLevelJunctions_Initial a vector of integers containg an inital
   ///  list of base level nodes
@@ -265,7 +265,7 @@ class LSDJunctionNetwork
   /// @return a pruned list of base level nodes
   /// @author SMM
   /// @date 16/05/16
-  vector<int> Prune_BaseLevel_DonorJunctions_Area(vector<int>& BaseLevelJunctions_Initial,LSDFlowInfo& FlowInfo,
+  vector<int> Prune_Junctions_Area(vector<int>& BaseLevelJunctions_Initial,LSDFlowInfo& FlowInfo,
                               LSDIndexRaster& FlowAcc, int Threshold);
 
   /// @brief Get Junction number at a location.
@@ -384,9 +384,9 @@ class LSDJunctionNetwork
   /// @param nodes_on_main_stem_of_tributaries
   /// @author SMM
   /// @date 01/09/12
-	void extract_tributary_junctions_to_main_stem(LSDIndexChannel& MainStem, LSDFlowInfo& FlowInfo,
-				vector<int>& tributary_junctions,
-                    		vector<int>& nodes_on_main_stem_of_tributaries);
+  void extract_tributary_junctions_to_main_stem(LSDIndexChannel& MainStem, LSDFlowInfo& FlowInfo,
+                        vector<int>& tributary_junctions,
+                        vector<int>& nodes_on_main_stem_of_tributaries);
 
   /// @brief this function gets the tributary junctions upstream of the starting_junction based on
   /// pruning criteria.
@@ -410,7 +410,7 @@ class LSDJunctionNetwork
   /// @author DTM
   /// @date 30/04/2013
   vector<int> get_pruned_tributaries_from_main_stem(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& ChannelNetwork,
-			int starting_junction, LSDRaster& DistanceFromOutlet, 
+                        int starting_junction, LSDRaster& DistanceFromOutlet, 
                         int pruning_switch, float pruning_threshold);
 
   /// @brief This function extracts basin nodes according to their accumulated drainage area.
@@ -420,7 +420,7 @@ class LSDJunctionNetwork
   /// @author DTM
   /// @date 07/05/2013
   vector<int> extract_basin_nodes_by_drainage_area(float DrainageAreaThreshold, LSDFlowInfo& FlowInfo);
-	
+
   /// @brief This function extracts basin junctions from a list of basin outlet nodes.
   /// @param basin_nodes list of basin outlet nodes
   /// @param FlowInfo LSDFlowInfo object

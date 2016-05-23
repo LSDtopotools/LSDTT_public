@@ -1078,26 +1078,26 @@ LSDIndexChannel LSDJunctionNetwork::generate_longest_index_channel_from_junction
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDIndexChannel LSDJunctionNetwork::generate_longest_index_channel_in_basin(int basin_junction, LSDFlowInfo& FInfo,
-									LSDRaster& dist_from_outlet)
+                           LSDRaster& dist_from_outlet)
 {
-	if (basin_junction >= int(JunctionVector.size()))
-	{
-		cout << "LSDJunctionNetwork::generate_longest_index_channel_in_basin junction not in list" << endl;
-		exit(EXIT_FAILURE);
-	}
+  if (basin_junction >= int(JunctionVector.size()))
+  {
+    cout << "LSDJunctionNetwork::generate_longest_index_channel_in_basin junction not in list" << endl;
+    exit(EXIT_FAILURE);
+  }
 
-	// first get the number of junctions upslope of the junction
-	vector<int> us_junctions = get_upslope_junctions(basin_junction);
+  // first get the number of junctions upslope of the junction
+  vector<int> us_junctions = get_upslope_junctions(basin_junction);
 
-	int n_us_junctions = int(us_junctions.size());
-	int farthest_junc = basin_junction;
-	float farthest_dist = 0;
-	float current_dist;
-	int current_junc, current_row, current_col, current_node;
+  int n_us_junctions = int(us_junctions.size());
+  int farthest_junc = basin_junction;
+  float farthest_dist = 0;
+  float current_dist;
+  int current_junc, current_row, current_col, current_node;
 
-	// loop through these junctions, looking for the one that is farthest from the outlet
-	for (int j = 0; j<n_us_junctions; j++)
-	{
+  // loop through these junctions, looking for the one that is farthest from the outlet
+  for (int j = 0; j<n_us_junctions; j++)
+  {
     current_junc = us_junctions[j];
     current_node = JunctionVector[current_junc];
     current_row = FInfo.RowIndex[current_node];
@@ -1105,19 +1105,19 @@ LSDIndexChannel LSDJunctionNetwork::generate_longest_index_channel_in_basin(int 
     current_dist = dist_from_outlet.get_data_element(current_row,current_col);
     if(current_dist > farthest_dist)
     {
-    	farthest_dist = current_dist;
-    	farthest_junc = current_junc;
+      farthest_dist = current_dist;
+      farthest_junc = current_junc;
     }
-	}
+  }
 
-	int start_junction_node = JunctionVector[farthest_junc];
+  int start_junction_node = JunctionVector[farthest_junc];
 
-	int outlet_junction = ReceiverVector[basin_junction];
-	int end_junction_node = JunctionVector[outlet_junction];
-	LSDIndexChannel Longest_channel(farthest_junc, start_junction_node,
-	                outlet_junction, end_junction_node, FInfo);
+  int outlet_junction = ReceiverVector[basin_junction];
+  int end_junction_node = JunctionVector[outlet_junction];
+  LSDIndexChannel Longest_channel(farthest_junc, start_junction_node,
+                  outlet_junction, end_junction_node, FInfo);
 
-	return Longest_channel;
+  return Longest_channel;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -1141,27 +1141,27 @@ LSDIndexChannel LSDJunctionNetwork::generate_longest_index_channel_in_basin(int 
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDJunctionNetwork::extract_tributary_junctions_to_main_stem(LSDIndexChannel& MainStem, LSDFlowInfo& FlowInfo,
-																		vector<int>& tributary_junctions,
-																		vector<int>& nodes_on_main_stem_of_tributaries)
+                              vector<int>& tributary_junctions,
+                              vector<int>& nodes_on_main_stem_of_tributaries)
 {
-	int n_channel_nodes = MainStem.get_n_nodes_in_channel();
-	int node, row, col;
-	int curr_junc;
-	int previous_junc;
-	int n_donors;
-	int donor_junc;
+  int n_channel_nodes = MainStem.get_n_nodes_in_channel();
+  int node, row, col;
+  int curr_junc;
+  int previous_junc;
+  int n_donors;
+  int donor_junc;
 
-	vector<int> temp_tributary_junctions;
-	vector<int> temp_nodes_on_main_stem_of_tributaries;
+  vector<int> temp_tributary_junctions;
+  vector<int> temp_nodes_on_main_stem_of_tributaries;
 
-	// the channel starts at a junction, get this junction and set it to
-	// be the previous_junction
-	MainStem.get_node_row_col_in_channel(0, node, row, col);
-	previous_junc = JunctionIndexArray[row][col];
+  // the channel starts at a junction, get this junction and set it to
+  // be the previous_junction
+  MainStem.get_node_row_col_in_channel(0, node, row, col);
+  previous_junc = JunctionIndexArray[row][col];
 
-	// now loop through channel, starting at the top
-	for(int ch_node = 1; ch_node<n_channel_nodes; ch_node++)
-	{
+  // now loop through channel, starting at the top
+  for(int ch_node = 1; ch_node<n_channel_nodes; ch_node++)
+  {
     // get the node index as well as the row and column of the current node in the channel
     MainStem.get_node_row_col_in_channel(ch_node, node, row, col);
 
@@ -1170,26 +1170,26 @@ void LSDJunctionNetwork::extract_tributary_junctions_to_main_stem(LSDIndexChanne
     // donor nodes
     if(curr_junc != NoDataValue)
     {
-			// use the delta vector to get the donor nodes
-			n_donors = NDonorsVector[curr_junc];
-			for(int donor = 0; donor<n_donors; donor++)
-			{
+      // use the delta vector to get the donor nodes
+      n_donors = NDonorsVector[curr_junc];
+      for(int donor = 0; donor<n_donors; donor++)
+      {
         donor_junc = DonorStackVector[ DeltaVector[curr_junc]+donor ];
         if (donor_junc!=previous_junc)
         {
-        	temp_tributary_junctions.push_back( donor_junc );
-        	temp_nodes_on_main_stem_of_tributaries.push_back( ch_node );
+          temp_tributary_junctions.push_back( donor_junc );
+          temp_nodes_on_main_stem_of_tributaries.push_back( ch_node );
         }
-			}
+      }
 
-			// now set the current junction to the previous junction in order to adnvance further down
-			// the channel
-			previous_junc = curr_junc;
+      // now set the current junction to the previous junction in order to adnvance further down
+      // the channel
+      previous_junc = curr_junc;
     }
-	}
+  }
 
-	tributary_junctions = temp_tributary_junctions;
-	nodes_on_main_stem_of_tributaries = temp_nodes_on_main_stem_of_tributaries;
+  tributary_junctions = temp_tributary_junctions;
+  nodes_on_main_stem_of_tributaries = temp_nodes_on_main_stem_of_tributaries;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -1218,12 +1218,12 @@ int starting_junction, LSDRaster& DistanceFromOutlet, int pruning_switch, float 
   NoDataValue = ChannelNetwork.get_NoDataValue();
   float pixel_area = DataResolution*DataResolution;
 
-  int nodes_in_channel;
+  //int nodes_in_channel;
 
   // initiate the main stem
   LSDIndexChannel main_stem = ChannelNetwork.generate_longest_index_channel_in_basin(starting_junction,
-  FlowInfo, DistanceFromOutlet);
-  nodes_in_channel = main_stem.get_n_nodes_in_channel();
+                                           FlowInfo, DistanceFromOutlet);
+  //nodes_in_channel = main_stem.get_n_nodes_in_channel();
 
   // Get drainage area of main stem - for pruning tributaries later on
   float main_stem_drainage_area = float(main_stem.get_contributing_pixels_at_outlet(FlowInfo))*pixel_area;
@@ -1605,33 +1605,32 @@ vector<int> LSDJunctionNetwork::extract_basins_order_outlet_junctions(int BasinO
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 vector<int> LSDJunctionNetwork::extract_basins_order_outlet_nodes(vector<int>& BasinOutletJunctions, LSDFlowInfo& FlowInfo)
 {
-	// declare the vector containeing the ##Node## numbers of the basin outlets
-  	vector<int> outlet_nodes_of_basins_of_order_x;
+  // declare the vector containeing the ##Node## numbers of the basin outlets
+  vector<int> outlet_nodes_of_basins_of_order_x;
 
-  	// find how many basins there are
-  	int n_basins = BasinOutletJunctions.size();
+  // find how many basins there are
+  int n_basins = BasinOutletJunctions.size();
 
-  	int current_junc, receiver_junc, n_nodes_in_channel,basin_outlet;
-
-  	for (int basinID=0; basinID<n_basins; ++basinID)
-  	{
+  int current_junc, receiver_junc, n_nodes_in_channel,basin_outlet;
+  for (int basinID=0; basinID<n_basins; ++basinID)
+  {
     current_junc = BasinOutletJunctions[basinID];
     receiver_junc = ReceiverVector[current_junc];
 
     // First, get channel pixels draining from the current junction.
     LSDIndexChannel StreamLinkVector = LSDIndexChannel(current_junc, JunctionVector[current_junc],
-                                                           receiver_junc, JunctionVector[receiver_junc], FlowInfo);
+                     receiver_junc, JunctionVector[receiver_junc], FlowInfo);
 
-        // Find final nth order channel pixel, which is the penultimate pixel
-        // in channel.
-        n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
-        // ======================
-        // gets crazy again here.
-        basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
-        outlet_nodes_of_basins_of_order_x.push_back(basin_outlet);
-  	}
-  	// Return vector with the relevant junction numbers
-  	return outlet_nodes_of_basins_of_order_x;
+    // Find final nth order channel pixel, which is the penultimate pixel
+    // in channel.
+    n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
+    // ======================
+    // gets crazy again here.
+    basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
+    outlet_nodes_of_basins_of_order_x.push_back(basin_outlet);
+  }
+  // Return vector with the relevant junction numbers
+  return outlet_nodes_of_basins_of_order_x;
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
@@ -1743,35 +1742,34 @@ vector<int> LSDJunctionNetwork::ExtractBasinJunctionOrder(int BasinOrder, LSDFlo
 vector<int> LSDJunctionNetwork::FindFarthestUpslopeHilltopsFromSources(int JunctionNumber,
                                           LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance)
 {
-	// get the list of upslope junctions
-	vector<int> upslope_juncs = get_upslope_junctions(JunctionNumber);
+  // get the list of upslope junctions
+  vector<int> upslope_juncs = get_upslope_junctions(JunctionNumber);
 
+  vector<int> hilltops_from_sources;
+  int upslope_node_index;
+  int this_source_node;
 
-	vector<int> hilltops_from_sources;
-	int upslope_node_index;
-	int this_source_node;
-
-	// loop through these junctions, looking for sources
-	int n_upslope_juncs = upslope_juncs.size();
-	for(int i = 0; i<n_upslope_juncs; i++)
-	{
+  // loop through these junctions, looking for sources
+  int n_upslope_juncs = upslope_juncs.size();
+  for(int i = 0; i<n_upslope_juncs; i++)
+  {
     // test to see if the junction has donor, if not it is a source
     if (NDonorsVector[ upslope_juncs[i] ] == 0)
     {
-			//cout << "source found, junction: " << upslope_juncs[i] << endl;
+      //cout << "source found, junction: " << upslope_juncs[i] << endl;
 
-			// get the node
-			this_source_node =  JunctionVector[ upslope_juncs[i] ];
+      // get the node
+      this_source_node =  JunctionVector[ upslope_juncs[i] ];
 
-			// now find the upslope node of this souce
-			upslope_node_index =  FlowInfo.find_farthest_upslope_node(this_source_node, FlowDistance);
+      // now find the upslope node of this souce
+      upslope_node_index =  FlowInfo.find_farthest_upslope_node(this_source_node, FlowDistance);
 
-			// add it to the vector
-			hilltops_from_sources.push_back(upslope_node_index);
+      // add it to the vector
+      hilltops_from_sources.push_back(upslope_node_index);
     }
-	}
+  }
 
-	return hilltops_from_sources;
+  return hilltops_from_sources;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-
 
@@ -1789,7 +1787,8 @@ vector<int> LSDJunctionNetwork::FindFarthestUpslopeHilltopsFromSources(int Junct
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-
 int LSDJunctionNetwork::GetChannelHeadsChiMethodFromNode(int NodeNumber,
                                       int MinSegLength, float A_0, float m_over_n,
-											                LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance, LSDRaster& ElevationRaster)
+                                      LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance, 
+                                      LSDRaster& ElevationRaster)
 {
   //vector<int> ChannelHeadNodes;
   float downslope_chi = 0;
@@ -1813,8 +1812,8 @@ int LSDJunctionNetwork::GetChannelHeadsChiMethodFromNode(int NodeNumber,
 
   return channel_head_node;
 }       
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 // This function returns a vector of nodeindex values of potential channel heads
 // above a given junction
 //
@@ -1825,32 +1824,33 @@ int LSDJunctionNetwork::GetChannelHeadsChiMethodFromNode(int NodeNumber,
 // Modified by FC 18/11/13 to extract the channel head from the outlet junction rather than from
 // the sources.
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 int LSDJunctionNetwork::GetChannelHeadsChiMethodFromSourceNode(int NodeNumber,
                                       int MinSegLength, float A_0, float m_over_n,
-											                LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance, LSDRaster& ElevationRaster, int NJunctions)
+                                      LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance, 
+                                      LSDRaster& ElevationRaster, int NJunctions)
 {
-	int channel_head_node;
+  int channel_head_node;
   //vector<int> ChannelHeadNodes;
-	float downslope_chi = 0;
-	
-	// get the hilltop node from this source node
-	int hilltop_node = FlowInfo.find_farthest_upslope_node(NodeNumber, FlowDistance);
-	
-	//get the junction at the source node
-	int source_junction = get_Junction_of_Node(NodeNumber, FlowInfo);
-	
-	if (NJunctions == 0)
-	{
+  float downslope_chi = 0;
+  
+  // get the hilltop node from this source node
+  int hilltop_node = FlowInfo.find_farthest_upslope_node(NodeNumber, FlowDistance);
+  
+  //get the junction at the source node
+  int source_junction = get_Junction_of_Node(NodeNumber, FlowInfo);
+  
+  if (NJunctions == 0)
+  {
     LSDChannel new_channel(hilltop_node, NodeNumber, downslope_chi, m_over_n, A_0, FlowInfo,  ElevationRaster);
     channel_head_node = new_channel.calculate_channel_heads(MinSegLength, A_0, m_over_n, FlowInfo);   
   }
   else if (NJunctions > 0)
   {
     int count = 0;
-	  // get the nth junction downstream
-	  for (int i = 0; i < NJunctions; i++)
-	  {
+    // get the nth junction downstream
+    for (int i = 0; i < NJunctions; i++)
+    {
       //cout << "Source junction: " << source_junction << endl;
       int downstream_junction = get_downstream_junction(source_junction, FlowInfo);
       //cout << "downstream junction: " << downstream_junction << endl;
@@ -1862,8 +1862,13 @@ int LSDJunctionNetwork::GetChannelHeadsChiMethodFromSourceNode(int NodeNumber,
     //cout << "Node of downstream junction: " << final_node << endl;
     //cout << "Start node of channel: " << hilltop_node << endl;
     //perform chi segment fitting
-	  LSDChannel new_channel(hilltop_node, final_node, downslope_chi, m_over_n, A_0, FlowInfo,  ElevationRaster);
+    LSDChannel new_channel(hilltop_node, final_node, downslope_chi, m_over_n, A_0, FlowInfo,  ElevationRaster);
     channel_head_node = new_channel.calculate_channel_heads(MinSegLength, A_0, m_over_n, FlowInfo);
+  }
+  else
+  {
+    cout << "Something has gone wrong, you have a negative number of Junctions." << endl;
+    channel_head_node = NoDataValue;
   }
   return channel_head_node;
 }      
@@ -1883,31 +1888,32 @@ int LSDJunctionNetwork::GetChannelHeadsChiMethodFromSourceNode(int NodeNumber,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-
 LSDIndexRaster LSDJunctionNetwork::GetChannelfromDreich(int NodeNumber,
                                       int MinSegLength, float A_0, float m_over_n,
-											                LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance, LSDRaster& ElevationRaster, string path_name, int NJunctions)
+                                      LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance, 
+                                      LSDRaster& ElevationRaster, string path_name, int NJunctions)
 {
-	//vector<int> ChannelHeadNodes;
-	float downslope_chi = 0;
-	
-	//get the junction at the source node
+  //vector<int> ChannelHeadNodes;
+  float downslope_chi = 0;
+  
+  //get the junction at the source node
   int Junction = get_Junction_of_Node(NodeNumber, FlowInfo);
-		// get the hilltop node from this junction
-	int hilltop_node = FlowInfo.find_farthest_upslope_node(NodeNumber, FlowDistance);
-	
-	// get the nth junction downstream
-	for (int i = 0; i < NJunctions; i++)
-	{
+  // get the hilltop node from this junction
+  int hilltop_node = FlowInfo.find_farthest_upslope_node(NodeNumber, FlowDistance);
+  
+  // get the nth junction downstream
+  for (int i = 0; i < NJunctions; i++)
+  {
     int downstream_junction = get_Receiver_of_Junction(Junction);
     Junction = downstream_junction;
   }
   int final_node = get_Node_of_Junction(Junction);
-	
-	//perform chi segment fitting
-	LSDChannel new_channel(hilltop_node, final_node, downslope_chi, m_over_n, A_0, FlowInfo,  ElevationRaster);	
-	//string node = static_cast<ostringstream*>( &(ostringstream() << NodeNumber) )->str();
-	//string file_name = "full_profile_"+node;
-	//int channel_head_node = new_channel.calculate_channel_heads_with_profile(MinSegLength, A_0, m_over_n, FlowInfo, node);
-	//new_channel.write_channel_to_csv(path_name, file_name, FlowDistance);
-	LSDIndexRaster ChannelRaster = new_channel.print_channel_to_IndexRaster(FlowInfo);
+  
+  //perform chi segment fitting
+  LSDChannel new_channel(hilltop_node, final_node, downslope_chi, m_over_n, A_0, FlowInfo,  ElevationRaster);	
+  //string node = static_cast<ostringstream*>( &(ostringstream() << NodeNumber) )->str();
+  //string file_name = "full_profile_"+node;
+  //int channel_head_node = new_channel.calculate_channel_heads_with_profile(MinSegLength, A_0, m_over_n, FlowInfo, node);
+  //new_channel.write_channel_to_csv(path_name, file_name, FlowDistance);
+  LSDIndexRaster ChannelRaster = new_channel.print_channel_to_IndexRaster(FlowInfo);
 
   return ChannelRaster;
 }      
@@ -1996,11 +2002,11 @@ LSDIndexRaster LSDJunctionNetwork::GetChannelfromDreich(int NodeNumber,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-
 vector<int> LSDJunctionNetwork::GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
                                       int MinSegLength, float A_0, float m_over_n,
-									                    LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance,
-									                    LSDRaster& ElevationRaster)
+                                      LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance,
+                                      LSDRaster& ElevationRaster)
 {
-	vector<int> ChannelHeadNodes;
-	vector<int> ChannelHeadNodes_temp;
+  vector<int> ChannelHeadNodes;
+  vector<int> ChannelHeadNodes_temp;
   
   int max_nodes = ValleyNodes.size();
   int node_number = 0;
@@ -2008,10 +2014,10 @@ vector<int> LSDJunctionNetwork::GetChannelHeadsChiMethodFromValleys(vector<int> 
   //loop through junctions collecting channel heads
   for (int i = 0; i < max_nodes; i++)
   {
-	  cout << flush << "Node = " << i+1 << " of " << max_nodes << "\r";
+    cout << flush << "Node = " << i+1 << " of " << max_nodes << "\r";
 
     // get the junction number
-	  node_number = ValleyNodes[i];
+    node_number = ValleyNodes[i];
   
     // get a local list of channel heads
 	  int channel_head_node = GetChannelHeadsChiMethodFromNode(node_number,
@@ -2019,15 +2025,15 @@ vector<int> LSDJunctionNetwork::GetChannelHeadsChiMethodFromValleys(vector<int> 
                                        			FlowDistance, ElevationRaster);
 
      // now append these channel heads to the master list
-	  ChannelHeadNodes_temp.push_back(channel_head_node);
-	}
-	
-	//removing any nodes that are not the furthest upstream
-	int upstream_test = 0;
-	vector<int>::iterator find_it;
-	
-	for (int node = 0; node < int(ChannelHeadNodes_temp.size()); node++)
-	{
+    ChannelHeadNodes_temp.push_back(channel_head_node);
+  }
+  
+  //removing any nodes that are not the furthest upstream
+  int upstream_test = 0;
+  vector<int>::iterator find_it;
+  
+  for (int node = 0; node < int(ChannelHeadNodes_temp.size()); node++)
+  {
     vector<int> tests;
     int current_node = ChannelHeadNodes_temp[node];
     for (int i = 0; i < int(ChannelHeadNodes_temp.size()); i++)
@@ -2065,11 +2071,11 @@ vector<int> LSDJunctionNetwork::GetChannelHeadsChiMethodFromValleys(vector<int> 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-
 vector<int> LSDJunctionNetwork::GetChannelHeadsChiMethodFromSources(vector<int> ValleySources,
                                       int MinSegLength, float A_0, float m_over_n,
-									                    LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance,
-									                    LSDRaster& ElevationRaster, int NJunctions)
+                                      LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance,
+                                      LSDRaster& ElevationRaster, int NJunctions)
 {
-	vector<int> ChannelHeadNodes;
-	vector<int> ChannelHeadNodes_temp;
+  vector<int> ChannelHeadNodes;
+  vector<int> ChannelHeadNodes_temp;
   
   int max_nodes = ValleySources.size();
   int node_number = 0;
@@ -2077,26 +2083,26 @@ vector<int> LSDJunctionNetwork::GetChannelHeadsChiMethodFromSources(vector<int> 
   //loop through junctions collecting channel heads
   for (int i = 0; i < max_nodes; i++)
   {
-	  cout << flush << "Node = " << i+1 << " of " << max_nodes << "\r";
+    cout << flush << "Node = " << i+1 << " of " << max_nodes << "\r";
 
     // get the junction number
-	  node_number = ValleySources[i];
+    node_number = ValleySources[i];
   
     // get a local list of channel heads
-	  int channel_head_node = GetChannelHeadsChiMethodFromSourceNode(node_number,
-                                      			MinSegLength, A_0, m_over_n, FlowInfo,
-                                       			FlowDistance, ElevationRaster, NJunctions);                                   			
+    int channel_head_node = GetChannelHeadsChiMethodFromSourceNode(node_number,
+                                      MinSegLength, A_0, m_over_n, FlowInfo,
+                                      FlowDistance, ElevationRaster, NJunctions);
 
      // now append these channel heads to the master list
-	  ChannelHeadNodes_temp.push_back(channel_head_node);
-	}
-	
-	//removing any nodes that are not the furthest upstream
-	int upstream_test = 0;
-	vector<int>::iterator find_it;
-	
-	for (int node = 0; node < int(ChannelHeadNodes_temp.size()); node++)
-	{
+    ChannelHeadNodes_temp.push_back(channel_head_node);
+  }
+  
+  //removing any nodes that are not the furthest upstream
+  int upstream_test = 0;
+  vector<int>::iterator find_it;
+  
+  for (int node = 0; node < int(ChannelHeadNodes_temp.size()); node++)
+  {
     vector<int> tests;
     int current_node = ChannelHeadNodes_temp[node];
     for (int i = 0; i < int(ChannelHeadNodes_temp.size()); i++)
@@ -2115,7 +2121,7 @@ vector<int> LSDJunctionNetwork::GetChannelHeadsChiMethodFromSources(vector<int> 
     }
     
   }
-	    
+      
   cout << "No of source nodes: " << ChannelHeadNodes.size() << endl;   
 
   return ChannelHeadNodes;
@@ -2131,10 +2137,10 @@ vector<int> LSDJunctionNetwork::GetChannelHeadsChiMethodFromSources(vector<int> 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-
 LSDIndexRaster LSDJunctionNetwork::GetChannelsDreich(vector<int> ValleySources,
                                       int MinSegLength, float A_0, float m_over_n,
-									                    LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance,
-									                    LSDRaster& ElevationRaster, string path_name, int NJunctions)
+                                      LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance,
+                                      LSDRaster& ElevationRaster, string path_name, int NJunctions)
 {
-	Array2D<int> channel_nodes(NRows,NCols,NoDataValue);
+  Array2D<int> channel_nodes(NRows,NCols,NoDataValue);
   
   int max_nodes = ValleySources.size();
   int node_number = 0;
@@ -2142,20 +2148,19 @@ LSDIndexRaster LSDJunctionNetwork::GetChannelsDreich(vector<int> ValleySources,
   //loop through junctions collecting channels
   for (int i = 0; i < max_nodes; i++)
   {
-	  cout << flush << "Node = " << i+1 << " of " << max_nodes << "\r";
+    cout << flush << "Node = " << i+1 << " of " << max_nodes << "\r";
 
     // get the junction number
-	  node_number = ValleySources[i];
+    node_number = ValleySources[i];
   
     // get an index raster with the channel data
-	  LSDIndexRaster Channel = GetChannelfromDreich(node_number, MinSegLength, A_0, m_over_n,
-											               FlowInfo, FlowDistance, ElevationRaster, path_name, NJunctions);
-		Array2D<int> ChannelData = Channel.get_RasterData();
+    LSDIndexRaster Channel = GetChannelfromDreich(node_number, MinSegLength, A_0, m_over_n,
+                         FlowInfo, FlowDistance, ElevationRaster, path_name, NJunctions);
+    Array2D<int> ChannelData = Channel.get_RasterData();
     
-    									               
-		//copy this array to a master array
+    //copy this array to a master array
     for (int row = 0; row < NRows; row++)
-		{
+    {
       for (int col = 0; col < NCols; col++)
       {
         if(ChannelData[row][col] != NoDataValue)
@@ -2164,11 +2169,11 @@ LSDIndexRaster LSDJunctionNetwork::GetChannelsDreich(vector<int> ValleySources,
         }  
       }
     }
-	}
-	
-	//now create the final LSDIndexRaster with the channels
-	LSDIndexRaster AllChannels(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, channel_nodes, GeoReferencingStrings);
-	return AllChannels;
+  } 
+  
+  //now create the final LSDIndexRaster with the channels
+  LSDIndexRaster AllChannels(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, channel_nodes, GeoReferencingStrings);
+  return AllChannels;
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-
@@ -2193,10 +2198,10 @@ Array2D<int> LSDJunctionNetwork::GetChannelHeadsChiMethodAllPixels(int JunctionN
 {
   Array2D<int> channel_pixels(NRows,NCols,NoDataValue);
   // get the node index of this junction
-	int starting_node = JunctionVector[JunctionNumber];
-	string jn_name = itoa(JunctionNumber);
-	string uscore = "_";
-	jn_name = uscore+jn_name;
+  int starting_node = JunctionVector[JunctionNumber];
+  string jn_name = itoa(JunctionNumber);
+  string uscore = "_";
+  jn_name = uscore+jn_name;
 
   //get the chi and elevation values of each upslope node
   vector<int> upslope_nodes = FlowInfo.get_upslope_nodes(starting_node);
@@ -2205,13 +2210,13 @@ Array2D<int> LSDJunctionNetwork::GetChannelHeadsChiMethodAllPixels(int JunctionN
   int row,col;
 
   string string_filename_all;
-	string filename_all = "chi_profile_all";
-	string dot = ".";
-	string extension = "txt";
-	string_filename_all = filename_all+jn_name+dot+extension;
-	ofstream chi_profile_all;
-	chi_profile_all.open(string_filename_all.c_str());
-	//cout << "The filename is " << string_filename_all << endl;
+  string filename_all = "chi_profile_all";
+  string dot = ".";
+  string extension = "txt";
+  string_filename_all = filename_all+jn_name+dot+extension;
+  ofstream chi_profile_all;
+  chi_profile_all.open(string_filename_all.c_str());
+  //cout << "The filename is " << string_filename_all << endl;
 
   for (int node=0; node < int(upslope_nodes.size()); node++)
   {
@@ -2221,13 +2226,13 @@ Array2D<int> LSDJunctionNetwork::GetChannelHeadsChiMethodAllPixels(int JunctionN
     chi_profile_all << upslope_chi[node] << " " << elev << endl;
   }
 
-	string string_filename;
-	string filename = "chi_profile";
-	string_filename = filename+jn_name+dot+extension;
-	//cout << "The filename is " << string_filename << endl;
+  string string_filename;
+  string filename = "chi_profile";
+  string_filename = filename+jn_name+dot+extension;
+  //cout << "The filename is " << string_filename << endl;
 
-	ofstream chi_profile;
-	chi_profile.open(string_filename.c_str());
+  ofstream chi_profile;
+  chi_profile.open(string_filename.c_str());
 
   float lower_limit = 0;
   vector<float> mean_chi;
@@ -2252,26 +2257,26 @@ Array2D<int> LSDJunctionNetwork::GetChannelHeadsChiMethodAllPixels(int JunctionN
   vector<float> channel_chi;
   vector<float> channel_elev;
   vector<float>::iterator vec_iter_start;
-	vector<float>::iterator vec_iter_end;
-	float max_r2 = 0;
-	float elev_limit = 0;
+  vector<float>::iterator vec_iter_end;
+  float max_r2 = 0;
+  float elev_limit = 0;
 
   for (int channel_segment = min_seg_length; channel_segment <= n_bins-min_seg_length; channel_segment++)
   {
     //assigning the chi values of the channel segment
     channel_chi.resize(channel_segment);
     vec_iter_start = mean_chi.begin();
-	  vec_iter_end = vec_iter_start+channel_segment;
-	  channel_chi.assign(vec_iter_start,vec_iter_end);
+    vec_iter_end = vec_iter_start+channel_segment;
+    channel_chi.assign(vec_iter_start,vec_iter_end);
 
-	  // assigning the elevation values of the channel segment
+    // assigning the elevation values of the channel segment
     channel_elev.resize(channel_segment);
-	  vec_iter_start = range_min.begin();
-	  vec_iter_end = vec_iter_start+channel_segment;
-	  channel_elev.assign(vec_iter_start,vec_iter_end);
+    vec_iter_start = range_min.begin();
+    vec_iter_end = vec_iter_start+channel_segment;
+    channel_elev.assign(vec_iter_start,vec_iter_end);
 
-	  //performing linear regression on channel segment: getting highest r2
-	  vector<float> residuals_chan;
+    //performing linear regression on channel segment: getting highest r2
+    vector<float> residuals_chan;
     vector<float> results_chan = simple_linear_regression(channel_chi,channel_elev, residuals_chan);
     float r2 = results_chan[2];
     if (r2 > max_r2)
@@ -2379,10 +2384,10 @@ vector<int> LSDJunctionNetwork::GetSourceNodesChiMethodAllPixels(int JunctionNum
                                       LSDRaster& ElevationRaster)
 {
   // get the node index of this junction
-	int starting_node = JunctionVector[JunctionNumber];
-	string jn_name = itoa(JunctionNumber);
-	string uscore = "_";
-	jn_name = uscore+jn_name;
+  int starting_node = JunctionVector[JunctionNumber];
+  string jn_name = itoa(JunctionNumber);
+  string uscore = "_";
+  jn_name = uscore+jn_name;
 
   //get the chi and elevation values of each upslope node
   vector<int> upslope_nodes = FlowInfo.get_upslope_nodes(starting_node);
@@ -2682,7 +2687,7 @@ vector<int> LSDJunctionNetwork::calculate_pelletier_channel_heads_DTM(LSDFlowInf
   vector<float> possible_sources_elev;
   // Get all the locations where the tan curvature is greater than the user defined threshold
   for (int row = 0; row < NRows; row++)
-	{
+  {
     for(int col = 0; col < NCols; col++)
     {
       if (tan_curv_array[row][col] > tan_curv_threshold && tan_curv_array_LW[row][col] > 0)
@@ -4165,7 +4170,7 @@ LSDIndexRaster LSDJunctionNetwork::extract_hollow(vector<int> CH_junctions, LSDF
     //get the coordinates of the channel head
     node_of_ch = get_Node_of_Junction(CH_junctions[q]);
     FlowInfo.retrieve_current_row_and_col(node_of_ch, channel_head_row, channel_head_col);
-    	
+
     // get the reciever junction
     receiver_junc = ReceiverVector[CH_junctions[q]];
   
@@ -4630,7 +4635,7 @@ vector<int> LSDJunctionNetwork::get_BaseLevel_DonorJunctions()
 // basins bouned by NoData. 
 // It seeks to remove basins draining from the edge. 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-vector<int> LSDJunctionNetwork::Prune_BaseLevel_DonorJunctions_Edge(vector<int>& BaseLevelJunctions_Initial, 
+vector<int> LSDJunctionNetwork::Prune_Junctions_Edge(vector<int>& BaseLevelJunctions_Initial, 
                                               LSDFlowInfo& FlowInfo)
 {
   vector<int> BL_Donor_junctions_pruned;
@@ -4683,7 +4688,7 @@ vector<int> LSDJunctionNetwork::Prune_BaseLevel_DonorJunctions_Edge(vector<int>&
 // This prunes a list of baselevel junctions by removing junctions whose 
 // contributing pixels are less than a threshold
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-vector<int> LSDJunctionNetwork::Prune_BaseLevel_DonorJunctions_Area(vector<int>& BaseLevelJunctions_Initial, 
+vector<int> LSDJunctionNetwork::Prune_Junctions_Area(vector<int>& BaseLevelJunctions_Initial, 
                                               LSDFlowInfo& FlowInfo, LSDIndexRaster& FlowAcc, int Threshold)
 {
   vector<int> BL_Donor_junctions_pruned;
@@ -4969,7 +4974,7 @@ int LSDJunctionNetwork::check_stream_order_of_upstream_nodes(int junction, LSDFl
   
   // get the stream order
   int CurrentSO = StreamOrderArray[CurrentRow][CurrentCol];
-	//cout << "Current SO: " << CurrentSO << endl;
+  //cout << "Current SO: " << CurrentSO << endl;
   
   //loop through all the donor nodes and check the stream order
   vector<int> donors = FlowInfo.get_donor_nodes(CurrentNode);
@@ -4979,7 +4984,7 @@ int LSDJunctionNetwork::check_stream_order_of_upstream_nodes(int junction, LSDFl
     FlowInfo.retrieve_current_row_and_col(donors[i],UpstreamRow,UpstreamCol);        
     // get the stream order
     int UpstreamSO = StreamOrderArray[UpstreamRow][UpstreamCol];
-		//cout << "Upstream stream order: " << UpstreamSO << endl;
+    //cout << "Upstream stream order: " << UpstreamSO << endl;
     if(UpstreamSO == CurrentSO)
     {
       same_SO = 1;
@@ -5346,7 +5351,6 @@ void LSDJunctionNetwork::get_overlapping_channels(LSDFlowInfo& FlowInfo,
   vector<int> NewOutlets;
   int thisOutlet;
   
-  
   // loop through these nodes
   for (int BL = 0; BL < N_baselevel_nodes; BL++)
   {
@@ -5368,6 +5372,10 @@ void LSDJunctionNetwork::get_overlapping_channels(LSDFlowInfo& FlowInfo,
       // get the channel from this source and mark up the covered raster
       thisOutlet = FlowInfo.get_downslope_node_after_fixed_visited_nodes(SortedSources[s], 
                   outlet_node, n_nodes_to_visit, VisitedRaster);
+      
+      cout << "Source number " << s << " source node is: " << SortedSources[s] << " BL node: " << outlet_node
+           << " and new outlet: " << thisOutlet << endl;
+      
                   
       NewSources.push_back(SortedSources[s]);
       NewOutlets.push_back(thisOutlet);

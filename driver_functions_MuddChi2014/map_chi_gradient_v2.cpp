@@ -213,7 +213,7 @@ int main (int nNumberofArgs,char *argv[])
   cout << "The maximum stream order is: " << max_stream_order << endl;
 
   // need to get base-level nodes , otherwise these catchments will be missed!
-  vector< int > BaseLevelJunctions_Initial = JunctionNetwork.get_BaseLevel_DonorJunctions();
+  vector< int > BaseLevelJunctions_Initial = JunctionNetwork.get_BaseLevelJunctions();
   vector< int > BaseLevelJunctions;
   int N_BaseLevelJuncs = BaseLevelJunctions_Initial.size();
   cout << "The number of base level junctions is: " << N_BaseLevelJuncs << endl; 
@@ -226,7 +226,7 @@ int main (int nNumberofArgs,char *argv[])
     cout << "Test_dreainage_bondaries: " << test_drainage_boundaries << endl;
   
     cout << endl << endl << "I am going to remove any basins draining to the edge." << endl;
-    BaseLevelJunctions = JunctionNetwork.Prune_BaseLevel_DonorJunctions_Edge(BaseLevelJunctions_Initial,FlowInfo); 
+    BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge(BaseLevelJunctions_Initial,FlowInfo); 
   }
   else
   {
@@ -235,7 +235,7 @@ int main (int nNumberofArgs,char *argv[])
   }
   
   // remove base level junctions for which catchment is too small
-  BaseLevelJunctions = JunctionNetwork.Prune_BaseLevel_DonorJunctions_Area(BaseLevelJunctions, 
+  BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Area(BaseLevelJunctions, 
                                               FlowInfo, FlowAcc, minimum_basin_size_pixels);
 
   // Correct number of base level junctions
@@ -263,7 +263,7 @@ int main (int nNumberofArgs,char *argv[])
   // now get the overlapping channels from the junction network file
   vector<int> source_nodes;
   vector<int> outlet_nodes;
-  int n_nodes_to_visit = 50;
+  int n_nodes_to_visit = 10;
   JunctionNetwork.get_overlapping_channels(FlowInfo, BaseLevelJunctions, DistanceFromOutlet, 
                                     source_nodes,outlet_nodes,n_nodes_to_visit);
 
