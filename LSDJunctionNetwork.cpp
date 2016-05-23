@@ -5386,5 +5386,45 @@ void LSDJunctionNetwork::get_overlapping_channels(LSDFlowInfo& FlowInfo,
   outlet_nodes = NewOutlets;
   source_nodes = NewSources; 
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+/*
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function is for calculating a bonehead version of the chi slope
+// and the chi intercept
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDJunctionNetwork::chi_map_automator(LSDFlowInfo& FlowInfo, 
+                                    vector<int> source_nodes,
+                                    vector<int> outlet_nodes,
+                                    LSDRaster& Elevation, LSRaster& FlowDistance, 
+                                    LSDRaster& DrainageArea, 
+                                    float A_0, float m_over_n,
+                                    int n_iterations, int skip, 
+                                    int minimum_segment_length, float sigma)
+{
+  // generate a csv with the points on it
+  
+  
+  // get the number of channels
+  in n_channels = int(source_nodes.size());
+  
+  for(chan = 0; chan<n_channels; chan++)
+  {
+    // get this particualr channel (it is a chi network with only one channel)
+    LSDChiNetwork ThisChiChannel(FlowInfo, source_nodes[chan], outlet_nodes[chan], 
+                                Elevation, FlowDistance, DrainageArea);
+    
+    // split the channel
+    ThisChiChannel.split_all_channels(A_0, movern, n_iterations, skip, target_nodes, minimum_segment_length, sigma);
+    
+    // monte carlo sample all channels
+    ThisChiChannel.monte_carlo_sample_river_network_for_best_fit_after_breaks(A_0, movern, n_iterations, skip, minimum_segment_length, sigma);
+  
+  }
+
+
+}
+*/
+                                    
 
 #endif

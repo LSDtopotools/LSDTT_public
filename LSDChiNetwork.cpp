@@ -3770,7 +3770,7 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_dchi(float A_0
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_after_breaks(float A_0, float m_over_n,
-				int n_iterations, int skip, int minimum_segment_length, float sigma)
+                    int n_iterations, int skip, int minimum_segment_length, float sigma)
 
 {
 	// get the contributing channel and downstream chi
