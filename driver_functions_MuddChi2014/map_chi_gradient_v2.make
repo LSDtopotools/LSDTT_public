@@ -18,6 +18,7 @@ SOURCES=map_chi_gradient_v2.cpp \
              ../LSDChiNetwork.cpp \
              ../LSDBasin.cpp \
              ../LSDParticle.cpp \
+             ../LSDChiTools.cpp \
              ../LSDCRNParameters.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=map_chi_gradient_v2.exe

@@ -2540,7 +2540,7 @@ LSDRaster LSDFlowInfo::get_upslope_chi_from_multiple_starting_nodes(vector<int>&
 // This function assumes all base level nodes are at the same base level
 // and calculates chi for them. Essentially it covers the entire map in
 // chi values. 
-// This function is probably most appropriate for looking at numberical
+// This function is probably most appropriate for looking at numerical
 // model results
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 LSDRaster LSDFlowInfo::get_upslope_chi_from_all_baselevel_nodes(float m_over_n, float A_0, 
@@ -2557,7 +2557,7 @@ LSDRaster LSDFlowInfo::get_upslope_chi_from_all_baselevel_nodes(float m_over_n, 
 // This function assumes all base level nodes are at the same base level
 // and calculates chi for them. Essentially it covers the entire map in
 // chi values. 
-// This function is probably most appropriate for looking at numberical
+// This function is probably most appropriate for looking at numerical
 // model results
 // same as above but calculates with a discharge
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

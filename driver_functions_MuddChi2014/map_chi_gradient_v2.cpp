@@ -29,6 +29,7 @@
 #include "../LSDJunctionNetwork.hpp"
 #include "../LSDIndexChannelTree.hpp"
 #include "../LSDBasin.hpp"
+#include "../LSDChiTools.hpp"
 #include "../LSDShapeTools.hpp"
 
 
@@ -223,7 +224,7 @@ int main (int nNumberofArgs,char *argv[])
   cout << "Right, let me check the drainage basins. " << endl;
   if (test_drainage_boundaries)
   {
-    cout << "Test_dreainage_bondaries: " << test_drainage_boundaries << endl;
+    cout << "Test_drainage_bondaries: " << test_drainage_boundaries << endl;
   
     cout << endl << endl << "I am going to remove any basins draining to the edge." << endl;
     BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge(BaseLevelJunctions_Initial,FlowInfo); 
@@ -251,11 +252,17 @@ int main (int nNumberofArgs,char *argv[])
   string csv_fname = OUTPUT_DIR+DEM_ID+"_FullChi_tree.csv";
   ofstream chitree_out;
   
+  string chi_csv_fname =  OUTPUT_DIR+DEM_ID+"_Chi.csv";
+  
+  // now use a ChiTool object to print the chi tree to csv
+  LSDChiTools ChiTool(FlowInfo);
+  ChiTool.chi_map_to_csv(FlowInfo, chi_csv_fname, A_0, movern, threshold_area_for_chi);
+  
   // the precision needs to be high for the lat long and UTM coordinates to acutally
   // give a reasonable number of significant digits. 
-  chitree_out.precision(12);
-  chitree_out.open(csv_fname.c_str());
-  chitree_out << "id,x,y,lat,long,chi,mean_chi_gradient" << endl;
+  //chitree_out.precision(12);
+  //chitree_out.open(csv_fname.c_str());
+  //chitree_out << "id,x,y,lat,long,chi,mean_chi_gradient" << endl;
   
     // initilise the converter
   LSDCoordinateConverterLLandUTM Converter;
@@ -273,5 +280,8 @@ int main (int nNumberofArgs,char *argv[])
 
   string outlet_fname = OUTPUT_DIR+DEM_ID+"_OutletList.csv";
   FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(outlet_nodes, outlet_fname);
+  
+  
+  
 
 }

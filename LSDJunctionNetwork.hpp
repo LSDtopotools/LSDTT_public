@@ -1159,34 +1159,6 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
                                 vector<int>& source_nodes, vector<int>& outlet_nodes,
                                 int n_nodes_to_visit);
 
-  /// @detail Takes vector so source and outlet nodes and performs the segment 
-  ///  fitting routine on them
-  /// @param FlowInfo an LSDFlowInfo object
-  /// @param source_nodes a vector continaing the sorted sorce nodes (by flow distance)
-  /// @param outlet_nodes a vector continaing the outlet nodes
-  /// @param Elevation an LSDRaster containing elevation info
-  /// @param DistanceFromOutlet an LSDRaster with the flow distance
-  /// @param DrainageArea an LSDRaster with the drainage area
-  /// @param A_0 float the reference area
-  /// @param n_movern int the number of m over n ratios to iterate through
-  /// @param d_movern float the change in m/n in each iterations
-  /// @param start_movern float the starting value of m/n
-  /// @param minimum_segment_length How many nodes the mimimum segment will have.
-  /// @param sigma Standard deviation of error on elevation data
-  /// @param target_skip int the mean skipping value
-  /// @param target_nodes int the target number of nodes in a break
-  /// @param n_iterations  int the number of iterations
-  /// @author SMM
-  /// @date 23/05/2016
-  void chi_map_automator(LSDFlowInfo& FlowInfo, 
-                         vector<int> source_nodes,
-                         vector<int> outlet_nodes,
-                         LSDRaster& Elevation, LSDRaster& DistanceFromOutlet, 
-                         LSDRaster& DrainageArea, 
-                         float A_0, float m_over_n,
-                         int n_iterations, int skip, 
-                         int minimum_segment_length, float sigma);
-
   protected:
 
   ///Number of rows.
