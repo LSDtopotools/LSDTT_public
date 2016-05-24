@@ -294,6 +294,8 @@ void LSDChiTools::chi_map_to_csv(LSDFlowInfo& FlowInfo, string chi_map_fname,
   ofstream chi_map_csv_out;
   chi_map_csv_out.open(chi_map_fname.c_str());
   
+  chi_map_csv_out.precision(9);
+  
   float chi_coord;
   double latitude,longitude;
   LSDCoordinateConverterLLandUTM Converter;
@@ -338,8 +340,27 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
                                     int n_iterations, int skip,
                                     int minimum_segment_length, float sigma)
 {
-  // generate a csv with the points on it
   
+  // create the visited array
+  int not_visited = 0;
+  LSDIndexRaster VisitedRaster(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, GeoReferencingStrings,not_visited);
+  
+  
+  // These elements access the chi data
+  vector< vector<float> > chi_m_means;
+  vector< vector<float> > chi_b_means;
+  vector< vector<int> > chi_node_indices;
+  
+  // these are for the individual channels
+  vector<float> these_chi_m_means;
+  vector<float> these_chi_b_means;
+  vector<int> these_chi_node_indices;
+  
+  int this_node, row,col;
+  
+  // these are maps that will store the data
+  map<int,float> m_means_map;
+  map<int,float> b_means_map;
   
   // get the number of channels
   int n_channels = int(source_nodes.size());
@@ -356,7 +377,40 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
     // monte carlo sample all channels
     ThisChiChannel.monte_carlo_sample_river_network_for_best_fit_after_breaks(A_0, m_over_n, n_iterations, skip, minimum_segment_length, sigma);
   
+    // okay the ChiNetwork has all the data about the m vales at this stage. 
+    // Get these vales and print them to a raster
+    chi_m_means = ThisChiChannel.get_m_means();
+    chi_b_means = ThisChiChannel.get_b_means();
+    chi_node_indices = ThisChiChannel.get_node_indices();
+    
+    // now get the number of channels. This should be 1!
+    int n_channels = int(chi_m_means.size());
+    if (n_channels != 1)
+    {
+      cout << "Whoa there, I am trying to make a chi map but something seems to have gone wrong with the channel extraction."  << endl;
+      cout << "I should only have one channel per look but I have " << n_channels << " channels." << endl;
+    }
+    
+    // now get the m_means out
+    these_chi_m_means = chi_m_means[0];
+    these_chi_b_means = chi_b_means[0];
+    these_chi_node_indices = chi_node_indices[0];
+    
+    int n_nodes_in_channel = int(these_chi_m_means.size());
+    for (int node = 0; node< n_nodes_in_channel; node++)
+    {
+      this_node =  these_chi_node_indices[node];
+      
+      // only take the nodes that have not been found
+      if (m_means_map.find(this_node) != m_means_map.end() )
+      {
+        m_means_map[this_node] = these_chi_m_means[node];
+        b_means_map[this_node] = these_chi_b_means[node];
+      }
+    }
   }
+  
+  // now print these bad boys to a file
 }
 
 

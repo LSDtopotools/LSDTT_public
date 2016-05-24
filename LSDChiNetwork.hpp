@@ -831,6 +831,24 @@ class LSDChiNetwork
     /// @date 04/08/14
     vector< vector<float> > get_m_means();
 
+    /// @brief This gets the m_means for the channel network
+    /// @return vector of vectors with m means
+    /// @ author FJC
+    /// @date 04/08/14
+    vector< vector<float> > get_m_standard_deviations()  { return chi_m_standard_deviations; }
+
+    /// @brief This gets the b_means for the channel network
+    /// @return vector of vectors with b means
+    /// @ author SMM
+    /// @date 24/05/16
+    vector< vector<float> > get_b_means()  { return chi_b_means; }
+
+    /// @brief This gets the b_standard deviations for the channel network
+    /// @return vector of vectors with b tandard deviations
+    /// @ author SMM
+    /// @date 24/05/16
+    vector< vector<float> > get_b_standard_deviations()  { return chi_b_standard_deviations; }
+
     /// @brief This gets the node_indices for the channel network
     /// @return vector of vectors with m means
     /// @ author DTM
