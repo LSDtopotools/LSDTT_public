@@ -178,6 +178,7 @@ int main (int nNumberofArgs,char *argv[])
 
   // calculate the flow accumulation
   LSDIndexRaster FlowAcc = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+  LSDRaster DrainageArea = FlowInfo.write_DrainageArea_to_LSDRaster();
   
   cout << "\t Loading Sources..." << endl;
   // load the sources
@@ -280,6 +281,13 @@ int main (int nNumberofArgs,char *argv[])
 
   string outlet_fname = OUTPUT_DIR+DEM_ID+"_OutletList.csv";
   FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(outlet_nodes, outlet_fname);
+  
+  
+  ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes,
+                            topography_raster, DistanceFromOutlet, 
+                            DrainageArea, A_0, movern, target_nodes, 
+                            n_iterations, skip, minimum_segment_length, sigma,
+                            csv_fname);
   
   
   

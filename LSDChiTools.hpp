@@ -188,6 +188,8 @@ class LSDChiTools
     /// @param target_skip int the mean skipping value
     /// @param target_nodes int the target number of nodes in a break
     /// @param n_iterations  int the number of iterations
+    /// @param filename The name of the filename to print to (should have full
+    ///   path and the extension .csv
     /// @author SMM
     /// @date 23/05/2016
     void chi_map_automator(LSDFlowInfo& FlowInfo, 
@@ -198,7 +200,8 @@ class LSDChiTools
                          float A_0, float m_over_n,
                          int target_nodes, 
                          int n_iterations, int skip, 
-                         int minimum_segment_length, float sigma);
+                         int minimum_segment_length, float sigma,
+                         string filename);
   
   
   protected:

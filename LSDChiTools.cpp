@@ -338,35 +338,57 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
                                     float A_0, float m_over_n,
                                     int target_nodes, 
                                     int n_iterations, int skip,
-                                    int minimum_segment_length, float sigma)
+                                    int minimum_segment_length, float sigma,
+                                    string filename)
 {
   
+  // open the data file
+  ofstream  chi_data_out;
+  chi_data_out.open(filename.c_str());
+  chi_data_out << "latitude,longitude,chi,elevation,m_chi,b_chi" << endl;
+  
   // create the visited array
-  int not_visited = 0;
-  LSDIndexRaster VisitedRaster(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, GeoReferencingStrings,not_visited);
+  //int not_visited = 0;
+  //LSDIndexRaster VisitedRaster(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, GeoReferencingStrings,not_visited);
   
   
   // These elements access the chi data
   vector< vector<float> > chi_m_means;
   vector< vector<float> > chi_b_means;
+  vector< vector<float> > chi_coordinates;
   vector< vector<int> > chi_node_indices;
   
   // these are for the individual channels
   vector<float> these_chi_m_means;
   vector<float> these_chi_b_means;
+  vector<float> these_chi_coordinates;
   vector<int> these_chi_node_indices;
   
+  // these are for extracting element-wise data from the channel profiles. 
   int this_node, row,col;
+  double latitude,longitude;
+  LSDCoordinateConverterLLandUTM Converter;
   
   // these are maps that will store the data
   map<int,float> m_means_map;
   map<int,float> b_means_map;
+  map<int,float> chi_coord_map;
   
+  // the iterator for the map
+  map<int,float>::iterator iter;
+
+  float this_m_mean;
+  float this_b_mean;
+  float this_chi_coord;
+  float this_elevation;
+
   // get the number of channels
   int n_channels = int(source_nodes.size());
   
   for(int chan = 0; chan<n_channels; chan++)
   {
+    cout << "Sampling channel " << chan << " of " << n_channels << endl;
+    
     // get this particualr channel (it is a chi network with only one channel)
     LSDChiNetwork ThisChiChannel(FlowInfo, source_nodes[chan], outlet_nodes[chan], 
                                 Elevation, FlowDistance, DrainageArea);
@@ -381,7 +403,9 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
     // Get these vales and print them to a raster
     chi_m_means = ThisChiChannel.get_m_means();
     chi_b_means = ThisChiChannel.get_b_means();
+    chi_coordinates = ThisChiChannel.get_chis();
     chi_node_indices = ThisChiChannel.get_node_indices();
+    
     
     // now get the number of channels. This should be 1!
     int n_channels = int(chi_m_means.size());
@@ -394,6 +418,7 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
     // now get the m_means out
     these_chi_m_means = chi_m_means[0];
     these_chi_b_means = chi_b_means[0];
+    these_chi_coordinates = chi_coordinates[0];
     these_chi_node_indices = chi_node_indices[0];
     
     int n_nodes_in_channel = int(these_chi_m_means.size());
@@ -406,11 +431,32 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
       {
         m_means_map[this_node] = these_chi_m_means[node];
         b_means_map[this_node] = these_chi_b_means[node];
+        chi_coord_map[this_node] = these_chi_coordinates[node];
       }
     }
   }
   
-  // now print these bad boys to a file
+  // now print the data to a file
+  for (iter = m_means_map.begin(); iter!= m_means_map.end(); iter++)
+  {
+    this_node = iter->first;
+    this_m_mean = m_means_map[this_node];
+    this_b_mean = b_means_map[this_node];
+    this_chi_coord = chi_coord_map[this_node];
+    this_elevation = Elevation.get_data_element(row,col);
+  
+    FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+    get_lat_and_long_locations(row, col, latitude, longitude, Converter); 
+    
+    chi_data_out << latitude << ","
+                 << longitude << ","
+                 << this_chi_coord << ","
+                 << this_elevation << ","
+                 << this_m_mean << ","
+                 << this_b_mean << endl;
+    
+  }
+  chi_data_out.close();
 }
 
 
