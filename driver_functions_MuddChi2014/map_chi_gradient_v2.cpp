@@ -288,8 +288,6 @@ int main (int nNumberofArgs,char *argv[])
                             DrainageArea, A_0, movern, target_nodes, 
                             n_iterations, skip, minimum_segment_length, sigma,
                             csv_fname);
-  
-  
-  
+
 
 }

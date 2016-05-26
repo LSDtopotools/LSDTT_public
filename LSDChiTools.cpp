@@ -387,16 +387,18 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
   
   for(int chan = 0; chan<n_channels; chan++)
   {
-    cout << "Sampling channel " << chan << " of " << n_channels << endl;
+    cout << "Sampling channel " << chan+1 << " of " << n_channels << endl;
     
     // get this particualr channel (it is a chi network with only one channel)
     LSDChiNetwork ThisChiChannel(FlowInfo, source_nodes[chan], outlet_nodes[chan], 
                                 Elevation, FlowDistance, DrainageArea);
     
     // split the channel
+    cout << "Splitting channels" << endl;
     ThisChiChannel.split_all_channels(A_0, m_over_n, n_iterations, skip, target_nodes, minimum_segment_length, sigma);
     
     // monte carlo sample all channels
+    cout << "Entering the monte carlo sampling" << endl;
     ThisChiChannel.monte_carlo_sample_river_network_for_best_fit_after_breaks(A_0, m_over_n, n_iterations, skip, minimum_segment_length, sigma);
   
     // okay the ChiNetwork has all the data about the m vales at this stage. 
@@ -405,6 +407,8 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
     chi_b_means = ThisChiChannel.get_b_means();
     chi_coordinates = ThisChiChannel.get_chis();
     chi_node_indices = ThisChiChannel.get_node_indices();
+    
+    
     
     
     // now get the number of channels. This should be 1!
@@ -421,31 +425,42 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
     these_chi_coordinates = chi_coordinates[0];
     these_chi_node_indices = chi_node_indices[0];
     
+    cout << "I have " << these_chi_m_means.size() << " nodes." << endl;
+    
     int n_nodes_in_channel = int(these_chi_m_means.size());
     for (int node = 0; node< n_nodes_in_channel; node++)
     {
+      
       this_node =  these_chi_node_indices[node];
+      //cout << "This node is " << this_node << endl;
       
       // only take the nodes that have not been found
-      if (m_means_map.find(this_node) != m_means_map.end() )
+      if (m_means_map.find(this_node) == m_means_map.end() )
       {
+        //cout << "This is a new node; " << this_node << endl;
         m_means_map[this_node] = these_chi_m_means[node];
         b_means_map[this_node] = these_chi_b_means[node];
         chi_coord_map[this_node] = these_chi_coordinates[node];
+      }
+      else
+      {
+        cout << "I already have node: " << this_node << endl;
       }
     }
   }
   
   // now print the data to a file
+  cout << "Now I am going to loop through the nodes." << endl;
   for (iter = m_means_map.begin(); iter!= m_means_map.end(); iter++)
   {
+    
     this_node = iter->first;
     this_m_mean = m_means_map[this_node];
     this_b_mean = b_means_map[this_node];
     this_chi_coord = chi_coord_map[this_node];
-    this_elevation = Elevation.get_data_element(row,col);
-  
+    
     FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+    this_elevation = Elevation.get_data_element(row,col);
     get_lat_and_long_locations(row, col, latitude, longitude, Converter); 
     
     chi_data_out << latitude << ","

@@ -301,6 +301,7 @@ void LSDChiNetwork::create(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode
   flow_distances.push_back(flow_dist_vec);
   drainage_areas.push_back(drain_area_vec);
   node_on_receiver_channel.push_back(OutletNode);
+  chis.push_back(chi_vec);
   receiver_channel.push_back(0);
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -398,6 +399,7 @@ void LSDChiNetwork::create(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode
   elevations.push_back(elev_vec);
   flow_distances.push_back(flow_dist_vec);
   drainage_areas.push_back(drain_area_vec);
+  chis.push_back(chi_vec);
   node_on_receiver_channel.push_back(OutletNode);
   receiver_channel.push_back(0);
 }
@@ -2134,10 +2136,10 @@ void LSDChiNetwork::monte_carlo_split_channel(float A_0, float m_over_n, int n_i
   int skip_range;
   vector<int> node_reference;
 
-    int n_channels = chis.size();
+  int n_channels = chis.size();
 
-    if(chan > n_channels-1)
-    {
+  if(chan > n_channels-1)
+  {
     cout << "You have selected a channel that doesn't exist. Switching to mainstem" << endl;
     chan = 0;
   }
@@ -2163,6 +2165,7 @@ void LSDChiNetwork::monte_carlo_split_channel(float A_0, float m_over_n, int n_i
   {
     max_nodes_in_section = (target_nodes*(-target_skip+2))/(-target_skip+1);
   }
+  
 
   // get the data from the channel
   vector<float> reverse_Chi = chis[chan];
@@ -2433,12 +2436,14 @@ void LSDChiNetwork::monte_carlo_split_channel(float A_0, float m_over_n, int n_i
   // put the breaks into the break_nodes vector
   br_iter = breaks.begin();
   vector<int> br_nds;
+  //cout << "Entering the breaks"  << endl;
   while(br_iter != breaks.end())
   {
     //cout << "break at: " << (*br_iter) << endl;
     br_nds.push_back( (*br_iter) );
     br_iter++;
   }
+  //cout << "Finished with the breaks" << endl;
 
   break_nodes = br_nds;
   // now that you have the splits, it is time to accumulate the data
@@ -2763,40 +2768,43 @@ void LSDChiNetwork::monte_carlo_split_channel_colinear(float A_0, float m_over_n
   // now that you have the splits, it is time to accumulate the data
 
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // This function splits all the channels and writes the data into the break_nodes_vecvec data member
 //
 // SMM 01/03/2013
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::split_all_channels(float A_0, float m_over_n, int n_iterations,
         int target_skip, int target_nodes, int minimum_segment_length, float sigma)
 {
   int n_channels = chis.size();
   vector<int> break_nodes;
   vector< vector<int> > this_break_vecvecvec;
+  
+  //cout << "The number of channels is: " << n_channels << endl;
 
   // loop through the channels, breaking into smaller bits
   for (int chan = 0; chan<n_channels; chan++)
   {
+    //cout << "Splitting channel " << chan << endl;
     monte_carlo_split_channel(A_0, m_over_n, n_iterations, target_skip, target_nodes,
         minimum_segment_length, sigma, chan, break_nodes);
 
-        this_break_vecvecvec.push_back(break_nodes);
+    this_break_vecvecvec.push_back(break_nodes);
   }
 
   break_nodes_vecvec = this_break_vecvecvec;
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // this calculates the AICc of a channel after it has been broken
 // it also replaces the data members n_total_segments, int& n_total_nodes, float& cumulative_MLE
@@ -2805,7 +2813,7 @@ void LSDChiNetwork::split_all_channels(float A_0, float m_over_n, int n_iteratio
 //
 // SMM 01/06/2013
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float LSDChiNetwork::calculate_AICc_after_breaks(float A_0, float m_over_n,
         int skip, int minimum_segment_length, float sigma, int chan, vector<int> break_nodes,
         int& n_total_segments, int& n_total_nodes, float& cumulative_MLE)
@@ -4098,6 +4106,9 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_after_breaks(f
     reverse(fitted_elev_standard_error.begin(), fitted_elev_standard_error.end());
 
     reverse(n_data_points_in_this_channel_node.begin(),n_data_points_in_this_channel_node.end());
+
+    //cout << "Hey bubba, I have got this many nodes!!!: " << m_means.size() << " in channel " << chan << endl;
+
 
     // now store all the data
     chi_m_means.push_back(m_means);
