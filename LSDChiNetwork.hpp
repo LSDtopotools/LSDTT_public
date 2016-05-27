@@ -878,6 +878,9 @@ class LSDChiNetwork
     float DataResolution;
     ///No data value.
     int NoDataValue;
+    
+    /// This boolean lets the routine know if it is to calculate chi
+    bool I_should_calculate_chi; 
 
     /// Node indices: used in conjunction with other LSD topographic tool objects and not necessary for standalone program.
     vector< vector<int> > node_indices;

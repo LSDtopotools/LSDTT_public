@@ -208,6 +208,9 @@ void LSDChiNetwork::create(string channel_network_fname)
 
   // close the infile
   channel_data_in.close();
+  
+  I_should_calculate_chi = true;
+  
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -303,6 +306,8 @@ void LSDChiNetwork::create(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode
   node_on_receiver_channel.push_back(OutletNode);
   chis.push_back(chi_vec);
   receiver_channel.push_back(0);
+  
+  I_should_calculate_chi = true;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -402,6 +407,8 @@ void LSDChiNetwork::create(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode
   chis.push_back(chi_vec);
   node_on_receiver_channel.push_back(OutletNode);
   receiver_channel.push_back(0);
+  
+  I_should_calculate_chi = false;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -502,7 +509,11 @@ void LSDChiNetwork::print_channel_details_to_file(string fname, float A_0, float
 
   ofstream channel_profile_out;
   channel_profile_out.open(fname.c_str());
-  calculate_chi(A_0, m_over_n);
+  
+  if (I_should_calculate_chi)
+  {
+    calculate_chi(A_0, m_over_n);
+  }
 
   channel_profile_out << A_0 << " " << m_over_n << endl;
   int n_channels = chis.size();
@@ -547,7 +558,11 @@ void LSDChiNetwork::print_channel_details_to_file_full_fitted(string fname)
 
   ofstream channel_profile_out;
   channel_profile_out.open(fname.c_str());
-  calculate_chi(A_0, m_over_n);
+
+  if (I_should_calculate_chi)
+  {
+    calculate_chi(A_0, m_over_n);
+  }
 
   channel_profile_out << A_0 << " " << m_over_n << endl;
   int n_channels = chis.size();
@@ -627,7 +642,12 @@ void LSDChiNetwork::print_channel_details_to_file_full_fitted(string fname, int 
 
   ofstream channel_profile_out;
   channel_profile_out.open(fname.c_str());
-  calculate_chi(A_0, m_over_n);
+
+  if (I_should_calculate_chi)
+  {
+    calculate_chi(A_0, m_over_n);
+  }
+
 
   channel_profile_out << A_0 << " " << m_over_n << endl;
   int n_channels = chis.size();
@@ -720,7 +740,12 @@ void LSDChiNetwork::print_channel_details_to_file_full_fitted_for_ArcMap(string 
   // get the paramaters and calculate chi
   float m_over_n = m_over_n_for_fitted_data;
   float A_0 = A_0_for_fitted_data;
-  calculate_chi(A_0, m_over_n);
+
+  if (I_should_calculate_chi)
+  {
+    calculate_chi(A_0, m_over_n);
+  }
+
 
   // set up an id placeholder. This is for arcmap
   int id = 0;
@@ -1630,7 +1655,7 @@ void LSDChiNetwork::find_most_likeley_segments(int channel,
   thinned_chi = channel_MLE_finder.get_x_data();
   thinned_elev = channel_MLE_finder.get_y_data();
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 
@@ -1638,7 +1663,7 @@ void LSDChiNetwork::find_most_likeley_segments(int channel,
 
 
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function gets the most likely channel segments for a particular channel
 // channel is the index into the channel
 // miniumum segment length is how many nodes the mimimum segment will have
@@ -1649,7 +1674,7 @@ void LSDChiNetwork::find_most_likeley_segments(int channel,
 //
 // SMM 01/03/2013
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::find_most_likeley_segments_dchi(int channel,
              int minimum_segment_length,
              float sigma, float dchi, vector<float>& b_vec,
@@ -1689,9 +1714,9 @@ void LSDChiNetwork::find_most_likeley_segments_dchi(int channel,
   thinned_chi = channel_MLE_finder.get_x_data();
   thinned_elev = channel_MLE_finder.get_y_data();
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this gets the most likely segments but uses the monte carlo data thinning method
 // the mean_dchi is the mean value of dchi, and the variation is how miuch the
 // chi chan vary, such that minimum_dchi = dchi-variation_dchi.
@@ -1700,7 +1725,7 @@ void LSDChiNetwork::find_most_likeley_segments_dchi(int channel,
 //
 // SMM 01/06/2013
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::find_most_likeley_segments_monte_carlo(int channel, int minimum_segment_length,
              float sigma, int mean_skip, int skip_range,  vector<float>& b_vec,
                vector<float>& m_vec, vector<float>& r2_vec,vector<float>& DW_vec,
@@ -1828,8 +1853,13 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit(float A_0, flo
         int minimum_segment_length, float sigma)
 {
 
-    int n_channels = chis.size();
-  calculate_chi(A_0, m_over_n);
+  int n_channels = chis.size();
+  
+  if (I_should_calculate_chi)
+  {
+    calculate_chi(A_0, m_over_n);
+  }
+  
   m_over_n_for_fitted_data = m_over_n;    // store this m_over_n value
   A_0_for_fitted_data = A_0;
 
@@ -1897,16 +1927,16 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit(float A_0, flo
       cout << "LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit, iteration: " << it << endl;
     }
 
-        // now loop through channels
-        for (int chan = 0; chan<n_channels; chan++)
-      {
+    // now loop through channels
+    for (int chan = 0; chan<n_channels; chan++)
+    {
       //cout << endl << "LINE 501 LSDChiNetwork channel: " << chan << endl;
 
       // get the most liekely segments
-          find_most_likeley_segments_monte_carlo(chan,minimum_segment_length, sigma,
-                        mean_skip, skip_range,
+      find_most_likeley_segments_monte_carlo(chan,minimum_segment_length, sigma,
+                      mean_skip, skip_range,
                       b_vec, m_vec, r2_vec, DW_vec, chi_thinned, elev_thinned,
-                        elev_fitted, node_ref_thinned, these_segment_lengths,
+                      elev_fitted, node_ref_thinned, these_segment_lengths,
                       this_MLE, this_n_segments, n_data_nodes, this_AIC, this_AICc);
 
       // print the segment properties for bug checking
@@ -2819,8 +2849,10 @@ float LSDChiNetwork::calculate_AICc_after_breaks(float A_0, float m_over_n,
         int& n_total_segments, int& n_total_nodes, float& cumulative_MLE)
 
 {
-
-  calculate_chi(A_0, m_over_n);
+  if (I_should_calculate_chi)
+  {
+    calculate_chi(A_0, m_over_n);
+  }
 
   // get the data from the channel
   vector<float> reverse_Chi = chis[chan];
@@ -2974,8 +3006,10 @@ vector<float> LSDChiNetwork::calculate_AICc_after_breaks_monte_carlo(float A_0, 
         int n_iterations)
 
 {
-
-  calculate_chi(A_0, m_over_n);
+  if (I_should_calculate_chi)
+  {
+    calculate_chi(A_0, m_over_n);
+  }
 
   // get the data from the channel
   vector<float> reverse_Chi = chis[chan];
@@ -3459,15 +3493,10 @@ vector<float> LSDChiNetwork::calculate_AICc_after_breaks_colinear_monte_carlo(fl
   return AICc_values;
 
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-
-
-
-
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // Monte carlo segment fitter
 // This takes a fixed m_over_n value and then samples the indivudal nodes in the full channel profile
@@ -3484,14 +3513,17 @@ vector<float> LSDChiNetwork::calculate_AICc_after_breaks_colinear_monte_carlo(fl
 //
 // SMM 01/05/2013
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_dchi(float A_0, float m_over_n, int n_iterations,
         float fraction_dchi_for_variation,
         int minimum_segment_length, float sigma, int target_nodes_mainstem)
 {
 
-    int n_channels = chis.size();
-  calculate_chi(A_0, m_over_n);
+  int n_channels = chis.size();
+  if (I_should_calculate_chi)
+  {
+    calculate_chi(A_0, m_over_n);
+  }
   m_over_n_for_fitted_data = m_over_n;    // store this m_over_n value
   A_0_for_fitted_data = A_0;
 
@@ -3790,7 +3822,10 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_after_breaks(f
 
 
   int n_channels = chis.size();
-  calculate_chi(A_0, m_over_n);
+  if (I_should_calculate_chi)
+  {
+    calculate_chi(A_0, m_over_n);
+  }
   m_over_n_for_fitted_data = m_over_n;    // store this m_over_n value
   A_0_for_fitted_data = A_0;
   int skip_range = 2*skip;
@@ -4142,122 +4177,122 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit_after_breaks(f
 float LSDChiNetwork::search_for_best_fit_m_over_n_dchi(float A_0, int n_movern, float d_movern, float start_movern,
                    int minimum_segment_length, float sigma, int target_nodes_mainstem, string fname)
 {
-    float m_over_n;
-    int n_channels = chis.size();
-    float dchi;          // spacing of the chi vector. This is calcuated to be optimal for the
+  float m_over_n;
+  int n_channels = chis.size();
+  float dchi;          // spacing of the chi vector. This is calcuated to be optimal for the
                     // main stem
 
-    // data structures to hold information about segments from all channels
-    // these are the best fit data for individual channels
-    vector< vector<float> > b_vecvec(n_channels);
-    vector< vector<float> > m_vecvec(n_channels);
-    vector< vector<float> > DW_vecvec(n_channels);
-    vector< vector<float> > r2_vecvec(n_channels);
-    vector< vector<float> > thinned_chi_vecvec(n_channels);
-    vector< vector<float> > thinned_elev_vecvec(n_channels);
-    vector< vector<float> > fitted_elev_vecvec(n_channels);
-    vector< vector<int> > node_ref_thinned_vecvec(n_channels);
-    vector< vector<int> > these_segment_lengths_vecvec(n_channels);
-    vector<float> MLE_vec(n_channels);
-    vector<int> n_segments_vec(n_channels);
-    vector<int> n_data_nodes_vec(n_channels);
-    vector<float> AICc_vec(n_channels, 9999);
-    vector<float> best_m_over_n(n_channels);
+  // data structures to hold information about segments from all channels
+  // these are the best fit data for individual channels
+  vector< vector<float> > b_vecvec(n_channels);
+  vector< vector<float> > m_vecvec(n_channels);
+  vector< vector<float> > DW_vecvec(n_channels);
+  vector< vector<float> > r2_vecvec(n_channels);
+  vector< vector<float> > thinned_chi_vecvec(n_channels);
+  vector< vector<float> > thinned_elev_vecvec(n_channels);
+  vector< vector<float> > fitted_elev_vecvec(n_channels);
+  vector< vector<int> > node_ref_thinned_vecvec(n_channels);
+  vector< vector<int> > these_segment_lengths_vecvec(n_channels);
+  vector<float> MLE_vec(n_channels);
+  vector<int> n_segments_vec(n_channels);
+  vector<int> n_data_nodes_vec(n_channels);
+  vector<float> AICc_vec(n_channels, 9999);
+  vector<float> best_m_over_n(n_channels);
+  
+  // data structures to hold information about segments from all channels
+  // these are the best fit data for the cumulative channels
+  vector< vector<float> > cum_b_vecvec(n_channels);
+  vector< vector<float> > cum_m_vecvec(n_channels);
+  vector< vector<float> > cum_DW_vecvec(n_channels);
+  vector< vector<float> > cum_r2_vecvec(n_channels);
+  vector< vector<float> > cum_thinned_chi_vecvec(n_channels);
+  vector< vector<float> > cum_thinned_elev_vecvec(n_channels);
+  vector< vector<float> > cum_fitted_elev_vecvec(n_channels);
+  vector< vector<int> > cum_node_ref_thinned_vecvec(n_channels);
+  vector<vector<int> > cum_these_segment_lengths_vecvec(n_channels);
 
-    // data structures to hold information about segments from all channels
-    // these are the best fit data for the cumulative channels
-    vector< vector<float> > cum_b_vecvec(n_channels);
-    vector< vector<float> > cum_m_vecvec(n_channels);
-    vector< vector<float> > cum_DW_vecvec(n_channels);
-    vector< vector<float> > cum_r2_vecvec(n_channels);
-    vector< vector<float> > cum_thinned_chi_vecvec(n_channels);
-    vector< vector<float> > cum_thinned_elev_vecvec(n_channels);
-    vector< vector<float> > cum_fitted_elev_vecvec(n_channels);
-    vector< vector<int> > cum_node_ref_thinned_vecvec(n_channels);
-    vector<vector<int> > cum_these_segment_lengths_vecvec(n_channels);
+  // these data are for the cumulative AICs
+  vector<float> AICc_combined_vec(n_movern);
+  vector<float> m_over_n_vec(n_movern);
 
-    // these data are for the cumulative AICs
-    vector<float> AICc_combined_vec(n_movern);
-    vector<float> m_over_n_vec(n_movern);
-
-    // these are from the individual channels, which are replaced each time a new channel is analyzed
-    vector<float> m_vec;
-    vector<float> b_vec;
-    vector<float> r2_vec;
-    vector<float> DW_vec;
-    vector<float> fitted_y;
-    int n_data_nodes;
-    int this_n_segments;
-    float this_MLE, this_AIC, this_AICc;
-    vector<int> these_segment_lengths;
-    vector<float> chi_thinned;
-    vector<float> elev_thinned;
-    vector<float> elev_fitted;
+  // these are from the individual channels, which are replaced each time a new channel is analyzed
+  vector<float> m_vec;
+  vector<float> b_vec;
+  vector<float> r2_vec;
+  vector<float> DW_vec;
+  vector<float> fitted_y;
+  int n_data_nodes;
+  int this_n_segments;
+  float this_MLE, this_AIC, this_AICc;
+  vector<int> these_segment_lengths;
+  vector<float> chi_thinned;
+  vector<float> elev_thinned;
+  vector<float> elev_fitted;
   vector<int> node_ref_thinned;
 
     // loop through m_over_n values
   for(int movn = 0; movn< n_movern; movn++)
-    {
+  {
     m_over_n = float(movn)*d_movern+start_movern;
-      cout << "m/n: " << m_over_n << endl;
+    cout << "m/n: " << m_over_n << endl;
 
-        // get the transformed channel profiles for this m_over_n
-      calculate_chi(A_0, m_over_n);
-      dchi = calculate_optimal_chi_spacing(target_nodes_mainstem);
+    // get the transformed channel profiles for this m_over_n
+    calculate_chi(A_0, m_over_n);
+    dchi = calculate_optimal_chi_spacing(target_nodes_mainstem);
 
-       vector<float> MLEs_thischan(n_channels);
+    vector<float> MLEs_thischan(n_channels);
     vector<int> n_segs_thischan(n_channels);
-        vector<int> n_datanodes_thischan(n_channels);
+    vector<int> n_datanodes_thischan(n_channels);
 
-       // now loop through channels
-        for (int chan = 0; chan<n_channels; chan++)
-      {
+    // now loop through channels
+    for (int chan = 0; chan<n_channels; chan++)
+    {
       //cout << "LINE439 LSDChiNetwork channel: " << chan << endl;
-        // get the channels for this m over n ratio
-          find_most_likeley_segments_dchi(chan, minimum_segment_length, sigma, dchi,
+      // get the channels for this m over n ratio
+      find_most_likeley_segments_dchi(chan, minimum_segment_length, sigma, dchi,
               b_vec, m_vec, r2_vec,DW_vec,chi_thinned, elev_thinned,
               elev_fitted, node_ref_thinned,these_segment_lengths,
               this_MLE, this_n_segments, n_data_nodes,
-                    this_AIC, this_AICc );
+              this_AIC, this_AICc );
       //cout << "LINE443 LSDChiNetwork channel: " << chan << endl;
 
       // check to see if the AICc value is the smallest
-        // if so add the data to the best fit data elements
-        if (this_AICc < AICc_vec[chan])
-        {
-             b_vecvec[chan] = b_vec;
-             m_vecvec[chan] = m_vec;
-             DW_vecvec[chan] = DW_vec;
-             r2_vecvec[chan] = r2_vec;
-             thinned_chi_vecvec[chan] = chi_thinned;
-             thinned_elev_vecvec[chan] = elev_thinned;
-             fitted_elev_vecvec[chan] = elev_fitted;
-             node_ref_thinned_vecvec[chan] = node_ref_thinned;
-             these_segment_lengths_vecvec[chan] = these_segment_lengths;
-             MLE_vec[chan] = this_MLE;
-             n_segments_vec[chan] = this_n_segments;
-             n_data_nodes_vec[chan] = n_data_nodes;
-             AICc_vec[chan] = this_AICc;
-             best_m_over_n[chan] = m_over_n;
+      // if so add the data to the best fit data elements
+      if (this_AICc < AICc_vec[chan])
+      {
+        b_vecvec[chan] = b_vec;
+        m_vecvec[chan] = m_vec;
+        DW_vecvec[chan] = DW_vec;
+        r2_vecvec[chan] = r2_vec;
+        thinned_chi_vecvec[chan] = chi_thinned;
+        thinned_elev_vecvec[chan] = elev_thinned;
+        fitted_elev_vecvec[chan] = elev_fitted;
+        node_ref_thinned_vecvec[chan] = node_ref_thinned;
+        these_segment_lengths_vecvec[chan] = these_segment_lengths;
+        MLE_vec[chan] = this_MLE;
+        n_segments_vec[chan] = this_n_segments;
+        n_data_nodes_vec[chan] = n_data_nodes;
+        AICc_vec[chan] = this_AICc;
+        best_m_over_n[chan] = m_over_n;
       }
 
-        // add the data from this channel to the vectors that will be used to calcualte cumulative AICc
-        MLEs_thischan[chan] = this_MLE;
-        n_segs_thischan[chan] = this_n_segments;
-        n_datanodes_thischan[chan] = n_data_nodes;
+      // add the data from this channel to the vectors that will be used to calcualte cumulative AICc
+      MLEs_thischan[chan] = this_MLE;
+      n_segs_thischan[chan] = this_n_segments;
+      n_datanodes_thischan[chan] = n_data_nodes;
     }
 
-        //now calculate the cumulative AICc for this m over n
-        float thismn_AIC;
-        float thismn_AICc;
+    //now calculate the cumulative AICc for this m over n
+    float thismn_AIC;
+    float thismn_AICc;
 
-        int n_total_segments = 0;
-        int n_total_nodes = 0;
-        float cumulative_MLE = 1;
-        float log_cum_MLE = 0;
+    int n_total_segments = 0;
+    int n_total_nodes = 0;
+    float cumulative_MLE = 1;
+    float log_cum_MLE = 0;
 
     // get the cumulative maximum likelihood estimators
-        for (int chan = 0; chan<n_channels; chan++)
+    for (int chan = 0; chan<n_channels; chan++)
     {
       n_total_segments += n_segs_thischan[chan];
         n_total_nodes += n_datanodes_thischan[chan];
@@ -4275,41 +4310,41 @@ float LSDChiNetwork::search_for_best_fit_m_over_n_dchi(float A_0, int n_movern, 
     }
 
 
-        // these AIC and AICc values are cumulative for a given m_over_n
-        //thismn_AIC = 4*n_total_segments-2*log(cumulative_MLE);    // the 4 comes from the fact that
-                                                             // for each segment there are 2 parameters
-        thismn_AIC = 4*n_total_segments-2*log_cum_MLE;
-        thismn_AICc =  thismn_AIC + 2*n_total_segments*(n_total_segments+1)/(n_total_nodes-n_total_segments-1);
-        AICc_combined_vec[movn] = thismn_AICc;
-        m_over_n_vec[movn] = m_over_n;
+    // these AIC and AICc values are cumulative for a given m_over_n
+    //thismn_AIC = 4*n_total_segments-2*log(cumulative_MLE);    // the 4 comes from the fact that
+                                                         // for each segment there are 2 parameters
+    thismn_AIC = 4*n_total_segments-2*log_cum_MLE;
+    thismn_AICc =  thismn_AIC + 2*n_total_segments*(n_total_segments+1)/(n_total_nodes-n_total_segments-1);
+    AICc_combined_vec[movn] = thismn_AICc;
+    m_over_n_vec[movn] = m_over_n;
+  
+     //cout << "m_over_n: " << m_over_n << " and combined AICc: " << thismn_AICc << endl;
+    //cout << "this cumulative MLE: " << cumulative_MLE << " n_segs: " << n_total_segments << " and n_nodes: " << n_total_nodes << endl;
 
-        //cout << "m_over_n: " << m_over_n << " and combined AICc: " << thismn_AICc << endl;
-        //cout << "this cumulative MLE: " << cumulative_MLE << " n_segs: " << n_total_segments << " and n_nodes: " << n_total_nodes << endl;
+  }
 
-    }
-
-    cout << "and the cumulative m_over n values"<< endl;
-    float min_cum_AICc = 9999;
-    float bf_cum_movn = start_movern;
-    for (int mn = 0; mn< int(m_over_n_vec.size()); mn++)
-    {
+  cout << "and the cumulative m_over n values"<< endl;
+  float min_cum_AICc = 9999;
+  float bf_cum_movn = start_movern;
+  for (int mn = 0; mn< int(m_over_n_vec.size()); mn++)
+  {
     cout << "m over n: " << m_over_n_vec[mn] << " and AICc: " << AICc_combined_vec[mn] << endl;
     // if this is the minimum, store the m over n value
     if(AICc_combined_vec[mn] < min_cum_AICc)
-      {
-          min_cum_AICc = AICc_combined_vec[mn];
-        bf_cum_movn = m_over_n_vec[mn];
-      }
+    {
+      min_cum_AICc = AICc_combined_vec[mn];
+      bf_cum_movn = m_over_n_vec[mn];
+    }
   }
   cout << "LSDChiNetwork Line 537 so the best fit m over n is: " << bf_cum_movn << endl;
 
-    // now get the cumulative best fit channels
-    calculate_chi(A_0, bf_cum_movn);
-    dchi = calculate_optimal_chi_spacing(target_nodes_mainstem);
-    cout << "LSDChiNetwork Line 542 dchi is: " << dchi << endl;
-    // now loop through channels
-    for (int chan = 0; chan<n_channels; chan++)
-    {
+  // now get the cumulative best fit channels
+  calculate_chi(A_0, bf_cum_movn);
+  dchi = calculate_optimal_chi_spacing(target_nodes_mainstem);
+  cout << "LSDChiNetwork Line 542 dchi is: " << dchi << endl;
+  // now loop through channels
+  for (int chan = 0; chan<n_channels; chan++)
+  {
 
     // get the channels for this m over n ratio
     find_most_likeley_segments_dchi(chan, minimum_segment_length, sigma, dchi,
@@ -4317,35 +4352,35 @@ float LSDChiNetwork::search_for_best_fit_m_over_n_dchi(float A_0, int n_movern, 
               elev_fitted, node_ref_thinned,these_segment_lengths,
               this_MLE, this_n_segments, n_data_nodes,
                                             this_AIC, this_AICc );
-     cum_b_vecvec[chan] = b_vec;
-     cum_m_vecvec[chan] = m_vec;
-        cum_DW_vecvec[chan] = DW_vec;
-        cum_r2_vecvec[chan] = r2_vec;
-        cum_thinned_chi_vecvec[chan] = chi_thinned;
-        cum_thinned_elev_vecvec[chan] = elev_thinned;
-        cum_fitted_elev_vecvec[chan] = elev_fitted;
-        cum_node_ref_thinned_vecvec[chan] = node_ref_thinned;
-        cum_these_segment_lengths_vecvec[chan] = these_segment_lengths;
+    cum_b_vecvec[chan] = b_vec;
+    cum_m_vecvec[chan] = m_vec;
+    cum_DW_vecvec[chan] = DW_vec;
+    cum_r2_vecvec[chan] = r2_vec;
+    cum_thinned_chi_vecvec[chan] = chi_thinned;
+    cum_thinned_elev_vecvec[chan] = elev_thinned;
+    cum_fitted_elev_vecvec[chan] = elev_fitted;
+    cum_node_ref_thinned_vecvec[chan] = node_ref_thinned;
+    cum_these_segment_lengths_vecvec[chan] = these_segment_lengths;
   }
 
-    // write a file
-    ofstream best_fit_info;
+  // write a file
+  ofstream best_fit_info;
   best_fit_info.open(fname.c_str());
 
-    best_fit_info << "N_channels: " << n_channels << endl;
-    best_fit_info << "m_over_n_for_channels ";
-    for (int ch = 0; ch<n_channels; ch++)
-    {
+  best_fit_info << "N_channels: " << n_channels << endl;
+  best_fit_info << "m_over_n_for_channels ";
+  for (int ch = 0; ch<n_channels; ch++)
+  {
     best_fit_info << "  " << best_m_over_n[ch];
-    }
-    best_fit_info << endl << "m_over_n_values ";
-    for (int mn = 0; mn< int(m_over_n_vec.size()); mn++)
-    {
+  }
+  best_fit_info << endl << "m_over_n_values ";
+  for (int mn = 0; mn< int(m_over_n_vec.size()); mn++)
+  {
     best_fit_info << " " << m_over_n_vec[mn];
   }
   best_fit_info << endl << "cumulative_AICc: ";
-    for (int mn = 0; mn< int(m_over_n_vec.size()); mn++)
-    {
+  for (int mn = 0; mn< int(m_over_n_vec.size()); mn++)
+  {
     best_fit_info << " " << AICc_combined_vec[mn];
   }
   best_fit_info << endl;
@@ -4392,38 +4427,38 @@ float LSDChiNetwork::search_for_best_fit_m_over_n_dchi(float A_0, int n_movern, 
   }
 
   best_fit_info << endl << endl << "Cumulative_fit_channels:" << endl;
-    for (int chan = 0; chan<n_channels; chan++)
-    {
+  for (int chan = 0; chan<n_channels; chan++)
+  {
     chi_thinned = cum_thinned_chi_vecvec[chan];
     elev_thinned = cum_thinned_elev_vecvec[chan];
     elev_fitted = cum_fitted_elev_vecvec[chan];
 
     // print the cumulative best fit profiles
-        int thin_n_nodes = chi_thinned.size();
+    int thin_n_nodes = chi_thinned.size();
 
     for(int i = 0; i<thin_n_nodes; i++)
-      {
-        best_fit_info << chan << " " << chi_thinned[i] << " " << elev_thinned[i] << " " << elev_fitted[i] << endl;
-      }
-     }
+    {
+      best_fit_info << chan << " " << chi_thinned[i] << " " << elev_thinned[i] << " " << elev_fitted[i] << endl;
+    }
+  }
 
 
   best_fit_info << endl << endl << "Individually_fit_channels:" << endl;
-    for (int chan = 0; chan<n_channels; chan++)
-    {
+  for (int chan = 0; chan<n_channels; chan++)
+  {
     chi_thinned = thinned_chi_vecvec[chan];
     elev_thinned = thinned_elev_vecvec[chan];
     elev_fitted = fitted_elev_vecvec[chan];
 
     // print the cumulative best fit profiles
-        int thin_n_nodes = chi_thinned.size();
+    int thin_n_nodes = chi_thinned.size();
 
     for(int i = 0; i<thin_n_nodes; i++)
-      {
-        best_fit_info << chan << " " << chi_thinned[i] << " " << elev_thinned[i] << " " << elev_fitted[i] << endl;
-      }
-     }
-     return bf_cum_movn;
+    {
+      best_fit_info << chan << " " << chi_thinned[i] << " " << elev_thinned[i] << " " << elev_fitted[i] << endl;
+    }
+  }
+  return bf_cum_movn;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -4619,15 +4654,15 @@ float LSDChiNetwork::search_for_best_fit_m_over_n(float A_0, int n_movern, float
               elev_fitted, node_ref_thinned,these_segment_lengths,
               this_MLE, this_n_segments, n_data_nodes,
                                             this_AIC, this_AICc );
-     cum_b_vecvec[chan] = b_vec;
-     cum_m_vecvec[chan] = m_vec;
-        cum_DW_vecvec[chan] = DW_vec;
-        cum_r2_vecvec[chan] = r2_vec;
-        cum_thinned_chi_vecvec[chan] = chi_thinned;
-        cum_thinned_elev_vecvec[chan] = elev_thinned;
-        cum_fitted_elev_vecvec[chan] = elev_fitted;
-        cum_node_ref_thinned_vecvec[chan] = node_ref_thinned;
-        cum_these_segment_lengths_vecvec[chan] = these_segment_lengths;
+    cum_b_vecvec[chan] = b_vec;
+    cum_m_vecvec[chan] = m_vec;
+    cum_DW_vecvec[chan] = DW_vec;
+    cum_r2_vecvec[chan] = r2_vec;
+    cum_thinned_chi_vecvec[chan] = chi_thinned;
+    cum_thinned_elev_vecvec[chan] = elev_thinned;
+    cum_fitted_elev_vecvec[chan] = elev_fitted;
+    cum_node_ref_thinned_vecvec[chan] = node_ref_thinned;
+    cum_these_segment_lengths_vecvec[chan] = these_segment_lengths;
   }
 
     // write a file
