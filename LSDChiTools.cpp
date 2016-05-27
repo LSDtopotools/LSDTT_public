@@ -334,7 +334,7 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
                                     vector<int> source_nodes,
                                     vector<int> outlet_nodes,
                                     LSDRaster& Elevation, LSDRaster& FlowDistance, 
-                                    LSDRaster& DrainageArea, 
+                                    LSDRaster& DrainageArea, LSDRaster& chi_coordinate, 
                                     float A_0, float m_over_n,
                                     int target_nodes, 
                                     int n_iterations, int skip,
@@ -391,14 +391,14 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
     
     // get this particualr channel (it is a chi network with only one channel)
     LSDChiNetwork ThisChiChannel(FlowInfo, source_nodes[chan], outlet_nodes[chan], 
-                                Elevation, FlowDistance, DrainageArea);
+                                Elevation, FlowDistance, DrainageArea,chi_coordinate);
     
     // split the channel
-    cout << "Splitting channels" << endl;
+    //cout << "Splitting channels" << endl;
     ThisChiChannel.split_all_channels(A_0, m_over_n, n_iterations, skip, target_nodes, minimum_segment_length, sigma);
     
     // monte carlo sample all channels
-    cout << "Entering the monte carlo sampling" << endl;
+    //cout << "Entering the monte carlo sampling" << endl;
     ThisChiChannel.monte_carlo_sample_river_network_for_best_fit_after_breaks(A_0, m_over_n, n_iterations, skip, minimum_segment_length, sigma);
   
     // okay the ChiNetwork has all the data about the m vales at this stage. 
@@ -407,9 +407,6 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
     chi_b_means = ThisChiChannel.get_b_means();
     chi_coordinates = ThisChiChannel.get_chis();
     chi_node_indices = ThisChiChannel.get_node_indices();
-    
-    
-    
     
     // now get the number of channels. This should be 1!
     int n_channels = int(chi_m_means.size());
@@ -425,7 +422,7 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
     these_chi_coordinates = chi_coordinates[0];
     these_chi_node_indices = chi_node_indices[0];
     
-    cout << "I have " << these_chi_m_means.size() << " nodes." << endl;
+    //cout << "I have " << these_chi_m_means.size() << " nodes." << endl;
     
     int n_nodes_in_channel = int(these_chi_m_means.size());
     for (int node = 0; node< n_nodes_in_channel; node++)
@@ -444,7 +441,7 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
       }
       else
       {
-        cout << "I already have node: " << this_node << endl;
+        //cout << "I already have node: " << this_node << endl;
       }
     }
   }

@@ -285,7 +285,7 @@ int main (int nNumberofArgs,char *argv[])
   
   ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes,
                             topography_raster, DistanceFromOutlet, 
-                            DrainageArea, A_0, movern, target_nodes, 
+                            DrainageArea, chi_coordinate, A_0, movern, target_nodes, 
                             n_iterations, skip, minimum_segment_length, sigma,
                             csv_fname);
 

@@ -408,6 +408,8 @@ void LSDChiNetwork::create(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode
   node_on_receiver_channel.push_back(OutletNode);
   receiver_channel.push_back(0);
   
+  //cout << "I got chi from a raster, DUDE!" << endl;
+  
   I_should_calculate_chi = false;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2174,7 +2176,11 @@ void LSDChiNetwork::monte_carlo_split_channel(float A_0, float m_over_n, int n_i
     chan = 0;
   }
 
-  calculate_chi(A_0, m_over_n);
+  if (I_should_calculate_chi)
+  {
+    calculate_chi(A_0, m_over_n);
+  }
+  
   m_over_n_for_fitted_data = m_over_n;    // store this m_over_n value
   A_0_for_fitted_data = A_0;
 
@@ -2824,7 +2830,7 @@ void LSDChiNetwork::split_all_channels(float A_0, float m_over_n, int n_iteratio
   {
     //cout << "Splitting channel " << chan << endl;
     monte_carlo_split_channel(A_0, m_over_n, n_iterations, target_skip, target_nodes,
-        minimum_segment_length, sigma, chan, break_nodes);
+                              minimum_segment_length, sigma, chan, break_nodes);
 
     this_break_vecvecvec.push_back(break_nodes);
   }

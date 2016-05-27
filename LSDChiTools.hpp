@@ -196,7 +196,7 @@ class LSDChiTools
                          vector<int> source_nodes,
                          vector<int> outlet_nodes,
                          LSDRaster& Elevation, LSDRaster& DistanceFromOutlet, 
-                         LSDRaster& DrainageArea, 
+                         LSDRaster& DrainageArea, LSDRaster& chi_coordinate, 
                          float A_0, float m_over_n,
                          int target_nodes, 
                          int n_iterations, int skip, 
