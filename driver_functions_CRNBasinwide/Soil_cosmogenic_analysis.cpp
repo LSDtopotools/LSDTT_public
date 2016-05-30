@@ -83,12 +83,15 @@ int main (int nNumberofArgs,char *argv[])
     cout << "  (Either \\ or / depending on your operating system.)" << endl;
     cout << "* Second the prefix of the parameter files." << endl;
     cout << "---------------------------------------------------------" << endl;
-    cout << "There must be two parameter files in the named path." << endl;
+    cout << "There must be three parameter files in the named path." << endl;
     cout << "The first MUST have the extension _CRNRasters.csv" << endl;
     cout << " This contains the filenames (including full path) of" << endl;
     cout << " names of the DEMs (without file extensions) to be analysed." << endl;
     cout << "The second file contains the CRN data" << endl;
     cout << "  and MUST have the extension _CRNData.csv" << endl;
+    cout << "The third file must have the extension _CRNSoilInfo.csv." << endl;
+    cout << "This file contains information about the soil density and sampling thickness." << endl;
+    cout << "See documentation for details." << endl;
     cout << "There is also an optional field to set parameter values. " << endl;
     cout << "This file has the extension .CRNParam" << endl;
     cout << "---------------------------------------------------------" << endl;

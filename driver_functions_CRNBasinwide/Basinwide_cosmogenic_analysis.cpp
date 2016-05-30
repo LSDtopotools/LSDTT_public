@@ -100,9 +100,12 @@ int main (int nNumberofArgs,char *argv[])
     cout << " My_data_CRNData.csv and My_data_CRNRasters.csv" << endl;
     cout << "Then the command line argument will be: " << endl;
     cout << "In linux:" << endl;
-    cout << "./Basinwide_CRN.exe home/fieldwork/Chile/CRN/ My_data" << endl;
+    cout << "./Basinwide_CRN.exe home/fieldwork/Chile/CRN/ My_data 2" << endl;
     cout << "In windows (the slash directions will change and there is no leading ./)" << endl;
-    cout << "Basinwide_CRN.exe c:\\fieldwork\\Chile\\CRN\\ My_data" << endl;
+    cout << "Basinwide_CRN.exe c:\\fieldwork\\Chile\\CRN\\ My_data 2" << endl;
+    cout << "Note that the 2 at the end of te command line means you have spawned basins." < endl;
+    cout << " If you do not have spawned basins the command line would be:" << endl;
+    cout << "./Basinwide_CRN.exe home/fieldwork/Chile/CRN/ My_data 1" << endl;
     cout << "=========================================================" << endl;
     cout << "For more documentation on cosmo data file format, " << endl;
     cout << " see readme and online documentation:" << endl;

@@ -68,25 +68,29 @@ int main (int nNumberofArgs,char *argv[])
   if (nNumberofArgs!=3)
   {
     cout << "=========================================================" << endl;
-    cout << "|| Welcome to the Basinwide cosmogenic analysis tool!  ||" << endl;
+    cout << "|| Welcome to the Simplified snow shielding tool!      ||" << endl;
+    cout << "|| This program makes a snow shielding raster for use  ||" << endl;
+    cout << "|| with the CRNBasinwide tools. The output is a snow   ||" << endl;
+    cout << "|| shielding raster with annual average SWE values in  ||" << endl;
+    cout << "|| units of effective depth (g per cm^2).              ||" << endl;
     cout << "=========================================================" << endl;
     cout << "This program requires two inputs: " << endl;
-    cout << "* First the path to DEM files." << endl;
+    cout << "* First the path to the parameter file." << endl;
     cout << "   The path must have a slash at the end." << endl;
     cout << "  (Either \\ or / depending on your operating system.)" << endl;
-    cout << "* Second the prefix of the DEM." << endl;
+    cout << "* Second the prefix of sparam file (see below)." << endl;
     cout << "---------------------------------------------------------" << endl;
     cout << "Then the command line argument will be: " << endl;
     cout << "In linux:" << endl;
-    cout << "./SimpleSnowAndLandslides.exe home/fieldwork/Chile/CRN/ My_data" << endl;
+    cout << "./SimpleSnowShield .exe home/fieldwork/Chile/CRN/ My_data" << endl;
     cout << "In windows (the slash directions will change and there is no leading ./)" << endl;
-    cout << "SimpleSnowAndLandslides.exe c:\\fieldwork\\Chile\\CRN\\ My_data" << endl;
+    cout << "SimpleSnowShield.exe c:\\fieldwork\\Chile\\CRN\\ My_data" << endl;
     cout << "=========================================================" << endl;
     cout << "For more documentation on cosmo data file format, " << endl;
     cout << " see readme and online documentation." << endl;
     cout << "=========================================================" << endl;
     cout << " You WILL NEED a snow parameter file. " << endl;
-    cout << "This file will have the same prefix as the DEM but the extension .sparam" << endl;
+    cout << "This file will have the same prefix as the DEM to be printed but the extension .sparam" << endl;
     cout << "It contains a method on the first line:" << endl;
     cout << "Richards OR Bilinear are the options" << endl;
     cout << "and the parameters for these two snow shielding functions" << endl;
