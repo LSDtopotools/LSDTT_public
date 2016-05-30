@@ -327,8 +327,10 @@ void LSDChiTools::chi_map_to_csv(LSDFlowInfo& FlowInfo, string chi_map_fname,
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// This function is for calculating a bonehead version of the chi slope
-// and the chi intercept
+// This function is for calculating segments from all sources in a DEM
+// The sources and their outlets are supplied by the source and outlet nodes
+// vectors. These are generated from the LSDJunctionNetwork function
+// get_overlapping_channels
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo, 
                                     vector<int> source_nodes,
@@ -470,8 +472,59 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
   }
   chi_data_out.close();
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function is a much more rudimentary version that mimics the
+// channel steepness caluclations.
+// chi needs tobe calculated outside of the function 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo, 
+                                    vector<int> source_nodes,
+                                    vector<int> outlet_nodes,
+                                    LSDRaster& Elevation, LSDRaster& FlowDistance, 
+                                    LSDRaster& DrainageArea, LSDRaster& chi_coordinate, 
+                                    float A_0, float m_over_n,
+                                    int target_nodes, 
+                                    int n_iterations, int skip,
+                                    int minimum_segment_length, float sigma,
+                                    string filename)
+{
+  float this_m_mean;
+  float this_b_mean;
+  float this_chi_coord;
+  float this_elevation;
+  
+  float midpoint_flow_distance;
+  float end_flow_distance;
+  int midpoint_node;
+  int end_node;
 
+  // The way this works is that it starts at the top of a channel. It then works 
+  // its way down and find the node that is the midpoint and the node that is the
+  // end point. The midpoint node is where the data will be recorded.
+  // It then puts the data from the start node to the end node into a vector 
+  // and performs a linear regression of this vector. The regression data from these
+  // vectors are recorded at the nodes.
+  // We then want to cover all the nodes with data so what happens if some nodes
+  // do not become midpoints? 
+  // We could start at the top and get the first midpoint. 
+  // From there we can work our way down checking if the top of the regression segment
+  // is more than one node down from the end point...
+
+  // get the number of channels
+  int n_channels = int(source_nodes.size());
+  // now loop through the channels
+  for(int chan = 0; chan<n_channels; chan++)
+  {
+    // we generate node points by searching for the midpoint of a section of
+    // fixed length 
+  
+  }
+ 
+  
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 #endif
