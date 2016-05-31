@@ -75,7 +75,8 @@ int main (int nNumberofArgs,char *argv[])
   if (nNumberofArgs!=3)
   {
     cout << "=========================================================" << endl;
-    cout << "|| Welcome to the Basinwide cosmogenic analysis tool!  ||" << endl;
+    cout << "|| Welcome to the Basinwide cosmogenic analysis tool,  ||" << endl;
+    cout << "|| for calculating denudation rates from nested basins.||" << endl;
     cout << "=========================================================" << endl;
     cout << "This program requires two inputs: " << endl;
     cout << "* First the path to the parameter files." << endl;
@@ -92,7 +93,7 @@ int main (int nNumberofArgs,char *argv[])
     cout << "There is also an optional field to set parameter values. " << endl;
     cout << "This file has the extension .CRNParam" << endl;
     cout << "---------------------------------------------------------"  << endl;
-    cout << "For nesting, there must be a raster with the same prefix" << endl;
+    cout << "For nesting, there MUST be a raster with the same prefix" << endl;
     cout << " as those in the _CRNRasters.csv file, " << endl;
     cout << " with the extension _ERKnown" << endl;
     cout << "---------------------------------------------------------" << endl;
