@@ -50,18 +50,18 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // LSDChiTools.cpp
 // LSDChiTools object
 // LSD stands for Land Surface Dynamics
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // This object is written by
 // Simon M. Mudd, University of Edinburgh
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //-----------------------------------------------------------------
 //DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
 //-----------------------------------------------------------------
@@ -349,11 +349,6 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
   chi_data_out.open(filename.c_str());
   chi_data_out << "latitude,longitude,chi,elevation,m_chi,b_chi" << endl;
   
-  // create the visited array
-  //int not_visited = 0;
-  //LSDIndexRaster VisitedRaster(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, GeoReferencingStrings,not_visited);
-  
-  
   // These elements access the chi data
   vector< vector<float> > chi_m_means;
   vector< vector<float> > chi_b_means;
@@ -485,21 +480,56 @@ void LSDChiTools::chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo,
                                     vector<int> outlet_nodes,
                                     LSDRaster& Elevation, LSDRaster& FlowDistance, 
                                     LSDRaster& DrainageArea, LSDRaster& chi_coordinate, 
-                                    float A_0, float m_over_n,
-                                    int target_nodes, 
-                                    int n_iterations, int skip,
-                                    int minimum_segment_length, float sigma,
+                                    int regression_nodes;
                                     string filename)
 {
-  float this_m_mean;
-  float this_b_mean;
-  float this_chi_coord;
-  float this_elevation;
+
+  // the data is stored in maps, for easier testing if a node has been
+  // visited. 
+  // You might consider having these as data elements in the object so you don't 
+  // have to pass them
+  map<int,float> gradient_data_map;
+  map<int,float> intercept_data_map;
+  map<int,float> R2_data_map;
+  map<int_float> chi_coordinate_data_map;
+  map<int,float> elevation_data_map;
+  map<int,float> ksn_data_map;
+  vector<int> node_order;
   
-  float midpoint_flow_distance;
-  float end_flow_distance;
-  int midpoint_node;
-  int end_node;
+
+  // check if the number of nodes are odd .If not add 1
+  if (regression_nodes % 2 == 0)
+  {
+    cout << "Hello user. You need an odd number of regression nodes." << endl;
+    regression_nodes = regression_nodes+1;
+    cout << " Changing your regression nodes to " << regression_nodes << endl;
+  }
+  
+  // now get the midpoint
+  int mp_nodes = (regression_nodes-1)/2;
+  
+  // these keep track of the beginning and ending nodes of a given channel
+  int channel_start_node;
+  int channel_end_node;
+  float channel_end_elevation;
+  
+  // vectors for holding the chi elevation data
+  vector<float> chi_vec;
+  vector<float> elev_vec;
+  vector<float> empty_vec;
+  
+  // these are extracted from the channel segments using linear regression
+  float intercept,gradient,R_squared;
+  
+  float this_chi;
+  float this_elev;
+  int this_midpoint_node;
+  int this_end_node;
+  int this_start_node;
+  
+  // these are for getting information out of the FlowInfo object
+  int row,col, this_node;
+  int r_row,r_col;          // reciever row and column. 
 
   // The way this works is that it starts at the top of a channel. It then works 
   // its way down and find the node that is the midpoint and the node that is the
@@ -518,12 +548,109 @@ void LSDChiTools::chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo,
   // now loop through the channels
   for(int chan = 0; chan<n_channels; chan++)
   {
-    // we generate node points by searching for the midpoint of a section of
-    // fixed length 
-  
-  }
- 
-  
+    channel_start_node = source_nodes[chan];
+    channel_end_node = outlet_nodes[chan];
+    
+    // Get the elevation of the end node as a secondary check of the ending of the channel
+    // segment
+    FlowInfo.retrieve_current_row_and_col(channel_end_node,row,col);
+    channel_end_elevation = Elevation.get_data_element(row,col);
+    
+    // reset the flag for ending the channel
+    bool is_end_of_channel = false
+
+    // set the segment start node to the channel start node
+    this_start_node = channel_start_node;
+
+    // now retrieve the midpoint node
+    this_node = channel_start_node;
+    for(int n = 0; n<mp_nodes; n++)
+    {
+      FlowInfo.retrieve_receiver_information(this_node,r_node,r_row,r_col);
+      this_node = r_node;
+    }
+    this_mp_node = this_node;
+    
+    // now get the end node
+    for(int n = 0; n<mp_nodes; n++)
+    {
+      FlowInfo.retrieve_receiver_information(this_node,r_node,r_row,r_col);
+      this_node = r_node;
+    }
+    this_end_node = this_node;
+
+    // we search down the channel, collecting linear regressions at the 
+    // midpoint of the intervals
+    while (not is_end_of_channel)
+    {
+      // get a vector of chi and elevation from the start node to the end node
+      chi_vec = empty_vec;
+      elev_vec = empty_vec;
+      
+      // copy the data elements into the vecotrs. This is a little stupid
+      // because one might just use a deque to pop the first element
+      // and push the last, but the linear regression takes vectors, 
+      // not deques so you would have to copy the deque element-wise anyway
+      // If you wanted, you could speed this up by implementing a linear regression
+      // of deques, but that will need to wait for another day. 
+      this_node = this_start_node;
+      while(this_node != this_end_node)
+      {
+        // get the elevation and chi vectors by following the flow
+        FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+        chi_vec.push_back(chi_coordinate.get_data_element(row,col));
+        elev_vec.push_back(Elevation.get_data_element(row,col));
+        
+        FlowInfo.retrieve_receiver_information(this_node,r_node,r_row,r_col);
+        this_node = r_node;
+      }
+      
+      // do a linear regression on the segment
+      least_squares_linear_regression(chi_vec,elev_vec, intercept, gradient, R_squared);
+      
+      // now add the intercept and gradient data to the correct node
+      // only take data that has not been calculated before
+      // The channels are in order of descending length so data from
+      // longer channels take precidence. 
+      if (gradient_data_map.find(this_mp_node) == m_means_map.end() )
+      {
+        FlowInfo.retrieve_current_row_and_col(this_mp_node,row,col);
+        gradient_data_map[this_mp_node] = gradient; 
+        intercept_data_map[this_mp_node] = intercept;
+        R2_data_map[this_mp_node] = R_squared;
+        chi_coordinate_data_map[this_mp_node] = chi_coordinate.get_data_element(row,col);
+        elevation_data_map[this_mp_node] = Elevation.get_data_element(row,col);
+        node_order.push_back(this_mp_node);
+      }
+      else
+      {
+        is_end_of_channel = True;
+      }
+      
+      // now move all the nodes down one
+      FlowInfo.retrieve_receiver_information(this_start_node,r_node,r_row,r_col);
+      this_start_node = r_node;
+      
+      FlowInfo.retrieve_receiver_information(this_mp_node,r_node,r_row,r_col);
+      this_mp_node = r_node;
+      
+      FlowInfo.retrieve_receiver_information(this_end_node,r_node,r_row,r_col);
+      this_end_node = r_node;
+      
+      // check if we are at the end of the channel
+      if (this_end_node == channel_end_node)
+      {
+        is_end_of_channel = True;
+      }
+      // also check if the end node is lower elevation than the end node,
+      // just to try and stop the channel passing the end node
+      FlowInfo.retrieve_current_row_and_col(this_end_node,row,col);
+      if (channel_end_elevation > Elevation.get_data_element(row,col))
+      {
+        is_end_of_channel = True;
+      }
+    }          // This finishes the regression segment loop
+  }            // This finishes the channel and resets channel start and end nodes
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
