@@ -165,13 +165,16 @@ int main (int nNumberofArgs,char *argv[])
   cout << "Filling topography." << endl;
   LSDRaster filled_topography = topography_raster.fill(Minimum_Slope);
   
-  string filled_raster_name = DATA_DIR+DEM_ID+"_Fill";
+  string filled_raster_name = OUTPUT_DIR+DEM_ID+"_Fill";
+  filled_topography.write_raster(filled_raster_name,raster_ext);
   
   //filled_topography.write_raster(filled_raster_name,raster_ext);
   
   cout << "\t Flow routing..." << endl;
   // get a flow info object
   LSDFlowInfo FlowInfo(boundary_conditions,filled_topography);
+
+  cout << "\t Calculating flow distance..." << endl;
 
   // calcualte the distance from outlet
   LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();

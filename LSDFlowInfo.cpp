@@ -2599,6 +2599,8 @@ LSDRaster LSDFlowInfo::distance_from_outlet()
 
   //cout << "FlowLengthCode: " << FlowLengthCode << endl;
 
+
+
   int start_node = 0;
   int end_node;
   int nodes_in_bl_tree;
@@ -2606,47 +2608,47 @@ LSDRaster LSDFlowInfo::distance_from_outlet()
   // loop through the base level node list
   int n_base_level_nodes = BaseLevelNodeList.size();
   for(int bl = 0; bl<n_base_level_nodes; bl++)
-    {
-
-      baselevel_node = BaseLevelNodeList[bl];
-
-      bl_row = RowIndex[baselevel_node];
-      bl_col = ColIndex[baselevel_node];
-      // get the number of nodes upslope and including this node
-      nodes_in_bl_tree = NContributingNodes[baselevel_node];
-      //cout << "LINE 938, FlowInfo, base level: " << bl << " with " << nodes_in_bl_tree << " nodes upstream" << endl;
-
-      end_node = start_node+nodes_in_bl_tree;
-
-      // set the distance of the outlet to zero
-      flow_distance[bl_row][bl_col] = 0;
-
-      // now loop through stack
-      for(int s_node = start_node; s_node < end_node; s_node++)
   {
-    //cout << "Line 953 flow info, s_node is: " << s_node << endl;
 
-    //cout << SVector.size() << " " << ReceiverVector.size() << " " << RowIndex.size() << " " << ColIndex.size() << endl;
-    row = RowIndex[ SVector[ s_node]  ];
-    col = ColIndex[ SVector[ s_node]  ];
-    //cout << "got rows and columns " << row << " " << col << endl;
-    receive_row = RowIndex[ ReceiverVector[SVector[s_node] ]];
-    receive_col = ColIndex[ ReceiverVector[SVector[s_node] ]];
-    //cout <<  "get receive " << receive_row << " " << receive_col << endl;
+    baselevel_node = BaseLevelNodeList[bl];
 
-    if ( FlowLengthCode[row][col] == 1)
+    bl_row = RowIndex[baselevel_node];
+    bl_col = ColIndex[baselevel_node];
+    // get the number of nodes upslope and including this node
+    nodes_in_bl_tree = NContributingNodes[baselevel_node];
+    //cout << "LINE 938, FlowInfo, base level: " << bl << " with " << nodes_in_bl_tree << " nodes upstream" << endl;
+
+    end_node = start_node+nodes_in_bl_tree;
+
+    // set the distance of the outlet to zero
+    flow_distance[bl_row][bl_col] = 0;
+
+    // now loop through stack
+    for(int s_node = start_node; s_node < end_node; s_node++)
+    {
+      //cout << "Line 953 flow info, s_node is: " << s_node << endl;
+
+      //cout << SVector.size() << " " << ReceiverVector.size() << " " << RowIndex.size() << " " << ColIndex.size() << endl;
+      row = RowIndex[ SVector[ s_node]  ];
+      col = ColIndex[ SVector[ s_node]  ];
+      //cout << "got rows and columns " << row << " " << col << endl;
+      receive_row = RowIndex[ ReceiverVector[SVector[s_node] ]];
+      receive_col = ColIndex[ ReceiverVector[SVector[s_node] ]];
+      //cout <<  "get receive " << receive_row << " " << receive_col << endl;
+
+      if ( FlowLengthCode[row][col] == 1)
       {
         flow_distance[row][col] = flow_distance[receive_row][receive_col]+DataResolution;
       }
-    else if ( FlowLengthCode[row][col] == 2 )
+      else if ( FlowLengthCode[row][col] == 2 )
       {
         flow_distance[row][col] = flow_distance[receive_row][receive_col]
-    + diag_length;
+                                  + diag_length;
       }
-    //cout << "Flow distance: " << flow_distance << endl;
-  }
-      start_node = end_node;
+      //cout << "Flow distance: " << flow_distance << endl;
     }
+    start_node = end_node;
+  }
   //cout << "LINE 971 FlowInfo Flow distance complete, flow_distance is: " << endl;
   //cout << flow_distance << endl;
   LSDRaster FlowLength(NRows,NCols,XMinimum,YMinimum,DataResolution,ndv,
