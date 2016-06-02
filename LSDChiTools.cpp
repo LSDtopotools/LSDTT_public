@@ -511,7 +511,7 @@ void LSDChiTools::chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo,
   // now get the midpoint
   int mp_nodes = (regression_nodes-1)/2;
   
-  cout << "The number of mp nodes is: " << mp_nodes << endl;
+  //cout << "The number of mp nodes is: " << mp_nodes << endl;
   
   // these keep track of the beginning and ending nodes of a given channel
   int channel_start_node;
@@ -579,6 +579,7 @@ void LSDChiTools::chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo,
     
     // now go down one step
     FlowInfo.retrieve_receiver_information(this_node,r_node,r_row,r_col);
+    this_node = r_node;
     
     // now get the end node
     for(int n = 0; n<mp_nodes; n++)
@@ -588,18 +589,21 @@ void LSDChiTools::chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo,
     }
     this_end_node = this_node;
     
-    // a testing function
-    this_node = this_start_node;
-    while(this_node != this_end_node)
-    {
-      // get the elevation and chi vectors by following the flow
-      cout << "This node is: " << this_node;
-      FlowInfo.retrieve_current_row_and_col(this_node,row,col);
-      FlowInfo.retrieve_receiver_information(this_node,r_node,r_row,r_col);
-      this_node = r_node;
-    }
-    cout << "And the midpoint node was: " << this_mp_node << endl;
-      
+    //================================================
+    // This loop is for bug checking
+    //this_node = this_start_node;
+    //do
+    //{
+    //  // get the elevation and chi vectors by following the flow
+    //  cout << "This node is: " << this_node << endl;
+    //  FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+    //  FlowInfo.retrieve_receiver_information(this_node,r_node,r_row,r_col);
+    //  this_node = r_node;
+    //}
+    //while(this_node != this_end_node);
+    //
+    //cout << "And the midpoint node was: " << this_mp_node << endl;
+    //================================================  
       
     // we search down the channel, collecting linear regressions at the 
     // midpoint of the intervals
@@ -616,7 +620,7 @@ void LSDChiTools::chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo,
       // If you wanted, you could speed this up by implementing a linear regression
       // of deques, but that will need to wait for another day. 
       this_node = this_start_node;
-      while(this_node != this_end_node)
+      do
       {
         // get the elevation and chi vectors by following the flow
         FlowInfo.retrieve_current_row_and_col(this_node,row,col);
@@ -625,7 +629,7 @@ void LSDChiTools::chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo,
         
         FlowInfo.retrieve_receiver_information(this_node,r_node,r_row,r_col);
         this_node = r_node;
-      }
+      } while(this_node != this_end_node);
       
       // do a linear regression on the segment
       least_squares_linear_regression(chi_vec,elev_vec, intercept, gradient, R_squared);

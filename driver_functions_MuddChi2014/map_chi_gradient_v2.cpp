@@ -66,7 +66,7 @@ int main (int nNumberofArgs,char *argv[])
 
   // initialise variables to be assigned from .driver file
   string DATA_DIR, OUTPUT_DIR, CHeads_file;
-  int threshold;
+  //int threshold;
   float minimum_stream_order;
   float A_0;
   float movern;
@@ -134,9 +134,9 @@ int main (int nNumberofArgs,char *argv[])
                << endl << endl;
 
   // Additional parameters for chi analysis
-  int organization_switch = 1;
-  int pruning_switch = 3;
-  float pruning_threshold;// = target_stream_order - 1;
+  //int organization_switch = 1;
+  //int pruning_switch = 3;
+  //float pruning_threshold;// = target_stream_order - 1;
   
   cout << "Setting boundary conditions" << endl;
 
@@ -154,11 +154,11 @@ int main (int nNumberofArgs,char *argv[])
   LSDRaster topography_raster((DATA_DIR+DEM_ID), raster_ext);
   cout << "Got the dem: " <<  DATA_DIR+DEM_ID << endl;
   
-  int NRows = topography_raster.get_NRows();
-  int NCols = topography_raster.get_NCols();
-  float NoData = topography_raster.get_NoDataValue();
-  float XMin =topography_raster.get_XMinimum();
-  float YMin = topography_raster.get_YMinimum();
+  //int NRows = topography_raster.get_NRows();
+  //int NCols = topography_raster.get_NCols();
+  //float NoData = topography_raster.get_NoDataValue();
+  //float XMin =topography_raster.get_XMinimum();
+  //float YMin = topography_raster.get_YMinimum();
   float Resolution = topography_raster.get_DataResolution();
   map<string,string> GRS = topography_raster.get_GeoReferencingStrings();
 
@@ -210,7 +210,7 @@ int main (int nNumberofArgs,char *argv[])
   SOArray.write_raster((OUTPUT_DIR+DEM_ID+SO_ext),raster_ext);
   JIArray.write_raster((OUTPUT_DIR+DEM_ID+JI_ext),raster_ext);
   int max_stream_order = JunctionNetwork.get_maximum_stream_order();
-  Array2D<float> ChiGradientArray(NRows,NCols,NoData);
+  //Array2D<float> ChiGradientArray(NRows,NCols,NoData);
   
   cout << "The maximum stream order is: " << max_stream_order << endl;
 
@@ -272,24 +272,32 @@ int main (int nNumberofArgs,char *argv[])
                                     source_nodes,outlet_nodes,n_nodes_to_visit);
 
 
-  string sources_fname = OUTPUT_DIR+DEM_ID+"_SourcesList.csv";
-  FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(source_nodes, sources_fname);
+  //string sources_fname = OUTPUT_DIR+DEM_ID+"_SourcesList.csv";
+  //FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(source_nodes, sources_fname);
 
-  string outlet_fname = OUTPUT_DIR+DEM_ID+"_OutletList.csv";
-  FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(outlet_nodes, outlet_fname);
+  //string outlet_fname = OUTPUT_DIR+DEM_ID+"_OutletList.csv";
+  //FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(outlet_nodes, outlet_fname);
   
   
-  ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes,
-                            topography_raster, DistanceFromOutlet, 
-                            DrainageArea, chi_coordinate, target_nodes, 
-                            n_iterations, skip, minimum_segment_length, sigma);
+  //ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes,
+  //                          topography_raster, DistanceFromOutlet, 
+  //                          DrainageArea, chi_coordinate, target_nodes, 
+  //                          n_iterations, skip, minimum_segment_length, sigma);
   
 
-  string csv_fname = OUTPUT_DIR+DEM_ID+"_ChiSegmented_tree.csv";
+  //string csv_fname = OUTPUT_DIR+DEM_ID+"_ChiSegmented_tree.csv";
   string csv_full_fname = OUTPUT_DIR+DEM_ID+"_ChiFullSegmented_tree.csv";
-  string chi_csv_fname =  OUTPUT_DIR+DEM_ID+"_Chi.csv";
-  ChiTool.print_data_maps_to_file_basic(FlowInfo, csv_fname);
+  //string chi_csv_fname =  OUTPUT_DIR+DEM_ID+"_Chi.csv";
+  //ChiTool.print_data_maps_to_file_basic(FlowInfo, csv_fname);
   ChiTool.print_data_maps_to_file_full(FlowInfo, csv_full_fname);
+  
+  //LSDChiTools ChiTool2(FlowInfo);
+  //int segment_nodes = 11;
+  //ChiTool2.chi_map_automator_rudimentary(FlowInfo, source_nodes, outlet_nodes,
+  //                          topography_raster, DistanceFromOutlet, 
+  //                          DrainageArea, chi_coordinate, segment_nodes);
+  //string csvbasic_full_fname = OUTPUT_DIR+DEM_ID+"_ChiFullBasic_tree.csv";
+  //ChiTool2.print_data_maps_to_file_full(FlowInfo, csvbasic_full_fname);
 
 
 }
