@@ -250,14 +250,10 @@ int main (int nNumberofArgs,char *argv[])
   string chi_coord_string = OUTPUT_DIR+DEM_ID+"_chi_coord";
   chi_coordinate.write_raster(chi_coord_string,raster_ext);
 
-  string csv_fname = OUTPUT_DIR+DEM_ID+"_FullChi_tree.csv";
-  ofstream chitree_out;
-  
-  string chi_csv_fname =  OUTPUT_DIR+DEM_ID+"_Chi.csv";
   
   // now use a ChiTool object to print the chi tree to csv
   LSDChiTools ChiTool(FlowInfo);
-  ChiTool.chi_map_to_csv(FlowInfo, chi_csv_fname, A_0, movern, threshold_area_for_chi);
+  //ChiTool.chi_map_to_csv(FlowInfo, chi_csv_fname, A_0, movern, threshold_area_for_chi);
   
   // the precision needs to be high for the lat long and UTM coordinates to acutally
   // give a reasonable number of significant digits. 
@@ -285,9 +281,15 @@ int main (int nNumberofArgs,char *argv[])
   
   ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes,
                             topography_raster, DistanceFromOutlet, 
-                            DrainageArea, chi_coordinate, A_0, movern, target_nodes, 
-                            n_iterations, skip, minimum_segment_length, sigma,
-                            csv_fname);
+                            DrainageArea, chi_coordinate, target_nodes, 
+                            n_iterations, skip, minimum_segment_length, sigma);
+  
+
+  string csv_fname = OUTPUT_DIR+DEM_ID+"_ChiSegmented_tree.csv";
+  string csv_full_fname = OUTPUT_DIR+DEM_ID+"_ChiFullSegmented_tree.csv";
+  string chi_csv_fname =  OUTPUT_DIR+DEM_ID+"_Chi.csv";
+  ChiTool.print_data_maps_to_file_basic(FlowInfo, csv_fname);
+  ChiTool.print_data_maps_to_file_full(FlowInfo, csv_full_fname);
 
 
 }

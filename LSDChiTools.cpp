@@ -150,6 +150,25 @@ void LSDChiTools::create(LSDJunctionNetwork& ThisJN)
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
+// This resets all the data maps
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::reset_data_maps()
+{
+  map<int,float> empty_map;
+  vector<int> empty_vec;
+  
+  M_chi_data_map = empty_map;
+  b_chi_data_map = empty_map;
+  elev_data_map = empty_map;
+  chi_data_map = empty_map;
+  flow_distance_data_map = empty_map;
+  drainage_area_data_map = empty_map;
+  node_sequence = empty_vec;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
 // This function returns the x and y location of a row and column
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -337,18 +356,17 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
                                     vector<int> outlet_nodes,
                                     LSDRaster& Elevation, LSDRaster& FlowDistance, 
                                     LSDRaster& DrainageArea, LSDRaster& chi_coordinate, 
-                                    float A_0, float m_over_n,
                                     int target_nodes, 
                                     int n_iterations, int skip,
-                                    int minimum_segment_length, float sigma,
-                                    string filename)
+                                    int minimum_segment_length, float sigma)
 {
   
-  // open the data file
-  ofstream  chi_data_out;
-  chi_data_out.open(filename.c_str());
-  chi_data_out << "latitude,longitude,chi,elevation,m_chi,b_chi" << endl;
-  
+  // IMPORTANT THESE PARAMETERS ARE NOT USED BECAUSE CHI IS CALUCALTED SEPARATELY
+  // However we need to give something to pass to the Monte carlo functions
+  // even through they are not used (they are inherited)
+  float A_0 = 1;
+  float m_over_n = 0.5;
+
   // These elements access the chi data
   vector< vector<float> > chi_m_means;
   vector< vector<float> > chi_b_means;
@@ -361,23 +379,17 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
   vector<float> these_chi_coordinates;
   vector<int> these_chi_node_indices;
   
-  // these are for extracting element-wise data from the channel profiles. 
-  int this_node, row,col;
-  double latitude,longitude;
-  LSDCoordinateConverterLLandUTM Converter;
-  
   // these are maps that will store the data
   map<int,float> m_means_map;
   map<int,float> b_means_map;
   map<int,float> chi_coord_map;
-  
-  // the iterator for the map
-  map<int,float>::iterator iter;
+  map<int,float> elev_map;
+  map<int,float> area_map;
+  map<int,float> flow_distance_map;
+  vector<int> node_sequence_vec;
 
-  float this_m_mean;
-  float this_b_mean;
-  float this_chi_coord;
-  float this_elevation;
+  // these are for working with the FlowInfo object
+  int this_node,row,col;
 
   // get the number of channels
   int n_channels = int(source_nodes.size());
@@ -431,10 +443,16 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
       // only take the nodes that have not been found
       if (m_means_map.find(this_node) == m_means_map.end() )
       {
+        FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+      
         //cout << "This is a new node; " << this_node << endl;
         m_means_map[this_node] = these_chi_m_means[node];
         b_means_map[this_node] = these_chi_b_means[node];
         chi_coord_map[this_node] = these_chi_coordinates[node];
+        elev_map[this_node] = Elevation.get_data_element(row,col);
+        area_map[this_node] = DrainageArea.get_data_element(row,col);
+        flow_distance_map[this_node] = FlowDistance.get_data_element(row,col);
+        node_sequence_vec.push_back(this_node);
       }
       else
       {
@@ -443,29 +461,15 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
     }
   }
   
-  // now print the data to a file
-  cout << "Now I am going to loop through the nodes." << endl;
-  for (iter = m_means_map.begin(); iter!= m_means_map.end(); iter++)
-  {
-    
-    this_node = iter->first;
-    this_m_mean = m_means_map[this_node];
-    this_b_mean = b_means_map[this_node];
-    this_chi_coord = chi_coord_map[this_node];
-    
-    FlowInfo.retrieve_current_row_and_col(this_node,row,col);
-    this_elevation = Elevation.get_data_element(row,col);
-    get_lat_and_long_locations(row, col, latitude, longitude, Converter); 
-    
-    chi_data_out << latitude << ","
-                 << longitude << ","
-                 << this_chi_coord << ","
-                 << this_elevation << ","
-                 << this_m_mean << ","
-                 << this_b_mean << endl;
-    
-  }
-  chi_data_out.close();
+  // set the opject data members
+  M_chi_data_map =m_means_map; 
+  b_chi_data_map = b_means_map;
+  elev_data_map = elev_map;
+  chi_data_map = chi_coord_map;
+  flow_distance_data_map = flow_distance_map;
+  drainage_area_data_map = area_map;
+  node_sequence = node_sequence_vec;
+  
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -480,8 +484,7 @@ void LSDChiTools::chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo,
                                     vector<int> outlet_nodes,
                                     LSDRaster& Elevation, LSDRaster& FlowDistance, 
                                     LSDRaster& DrainageArea, LSDRaster& chi_coordinate, 
-                                    int regression_nodes;
-                                    string filename)
+                                    int regression_nodes)
 {
 
   // the data is stored in maps, for easier testing if a node has been
@@ -491,12 +494,12 @@ void LSDChiTools::chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo,
   map<int,float> gradient_data_map;
   map<int,float> intercept_data_map;
   map<int,float> R2_data_map;
-  map<int_float> chi_coordinate_data_map;
+  map<int,float> chi_coordinate_data_map;
   map<int,float> elevation_data_map;
-  map<int,float> ksn_data_map;
+  map<int,float> flow_distance_map;
+  map<int,float> area_map;
   vector<int> node_order;
   
-
   // check if the number of nodes are odd .If not add 1
   if (regression_nodes % 2 == 0)
   {
@@ -507,6 +510,8 @@ void LSDChiTools::chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo,
   
   // now get the midpoint
   int mp_nodes = (regression_nodes-1)/2;
+  
+  cout << "The number of mp nodes is: " << mp_nodes << endl;
   
   // these keep track of the beginning and ending nodes of a given channel
   int channel_start_node;
@@ -521,15 +526,15 @@ void LSDChiTools::chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo,
   // these are extracted from the channel segments using linear regression
   float intercept,gradient,R_squared;
   
-  float this_chi;
-  float this_elev;
-  int this_midpoint_node;
+  //float this_chi;
+  //float this_elev;
+  int this_mp_node;
   int this_end_node;
   int this_start_node;
   
   // these are for getting information out of the FlowInfo object
   int row,col, this_node;
-  int r_row,r_col;          // reciever row and column. 
+  int r_node, r_row,r_col;          // reciever row and column. 
 
   // The way this works is that it starts at the top of a channel. It then works 
   // its way down and find the node that is the midpoint and the node that is the
@@ -557,7 +562,7 @@ void LSDChiTools::chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo,
     channel_end_elevation = Elevation.get_data_element(row,col);
     
     // reset the flag for ending the channel
-    bool is_end_of_channel = false
+    bool is_end_of_channel = false;
 
     // set the segment start node to the channel start node
     this_start_node = channel_start_node;
@@ -570,6 +575,10 @@ void LSDChiTools::chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo,
       this_node = r_node;
     }
     this_mp_node = this_node;
+    this_node = r_node;
+    
+    // now go down one step
+    FlowInfo.retrieve_receiver_information(this_node,r_node,r_row,r_col);
     
     // now get the end node
     for(int n = 0; n<mp_nodes; n++)
@@ -578,7 +587,20 @@ void LSDChiTools::chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo,
       this_node = r_node;
     }
     this_end_node = this_node;
-
+    
+    // a testing function
+    this_node = this_start_node;
+    while(this_node != this_end_node)
+    {
+      // get the elevation and chi vectors by following the flow
+      cout << "This node is: " << this_node;
+      FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+      FlowInfo.retrieve_receiver_information(this_node,r_node,r_row,r_col);
+      this_node = r_node;
+    }
+    cout << "And the midpoint node was: " << this_mp_node << endl;
+      
+      
     // we search down the channel, collecting linear regressions at the 
     // midpoint of the intervals
     while (not is_end_of_channel)
@@ -612,7 +634,7 @@ void LSDChiTools::chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo,
       // only take data that has not been calculated before
       // The channels are in order of descending length so data from
       // longer channels take precidence. 
-      if (gradient_data_map.find(this_mp_node) == m_means_map.end() )
+      if (gradient_data_map.find(this_mp_node) == gradient_data_map.end() )
       {
         FlowInfo.retrieve_current_row_and_col(this_mp_node,row,col);
         gradient_data_map[this_mp_node] = gradient; 
@@ -620,11 +642,13 @@ void LSDChiTools::chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo,
         R2_data_map[this_mp_node] = R_squared;
         chi_coordinate_data_map[this_mp_node] = chi_coordinate.get_data_element(row,col);
         elevation_data_map[this_mp_node] = Elevation.get_data_element(row,col);
+        flow_distance_map[this_mp_node] = FlowDistance.get_data_element(row,col);
+        area_map[this_mp_node] = DrainageArea.get_data_element(row,col);
         node_order.push_back(this_mp_node);
       }
       else
       {
-        is_end_of_channel = True;
+        is_end_of_channel = true;
       }
       
       // now move all the nodes down one
@@ -640,18 +664,127 @@ void LSDChiTools::chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo,
       // check if we are at the end of the channel
       if (this_end_node == channel_end_node)
       {
-        is_end_of_channel = True;
+        is_end_of_channel = true;
       }
       // also check if the end node is lower elevation than the end node,
       // just to try and stop the channel passing the end node
       FlowInfo.retrieve_current_row_and_col(this_end_node,row,col);
       if (channel_end_elevation > Elevation.get_data_element(row,col))
       {
-        is_end_of_channel = True;
+        is_end_of_channel = true;
       }
     }          // This finishes the regression segment loop
   }            // This finishes the channel and resets channel start and end nodes
+  
+  // set the data objects
+  M_chi_data_map = gradient_data_map; 
+  b_chi_data_map = intercept_data_map;
+  elev_data_map = elevation_data_map;
+  chi_data_map = chi_coordinate_data_map;
+  flow_distance_data_map = flow_distance_map;
+  drainage_area_data_map = area_map;
+  node_sequence = node_order;
+
+  
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Print data maps to file
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string filename)
+{
+  
+  // these are for extracting element-wise data from the channel profiles. 
+  int this_node, row,col;
+  double latitude,longitude;
+  LSDCoordinateConverterLLandUTM Converter;
+  
+  // open the data file
+  ofstream  chi_data_out;
+  chi_data_out.open(filename.c_str());
+  chi_data_out << "latitude,longitude,chi,elevation,flow distance,drainage area,m_chi,b_chi" << endl;
+  
+  // find the number of nodes
+  int n_nodes = (node_sequence.size());
+  if (n_nodes <= 0)
+  {
+    cout << "Cannot print since you have not calculated channel properties yet." << endl;
+  }
+  else
+  {
+    for (int n = 0; n< n_nodes; n++)
+    {
+      this_node = node_sequence[n];
+      FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+      get_lat_and_long_locations(row, col, latitude, longitude, Converter); 
+
+      chi_data_out.precision(9);
+      chi_data_out << latitude << ","
+                   << longitude << ",";
+      chi_data_out.precision(5);
+      chi_data_out << chi_data_map[this_node] << ","
+                   << elev_data_map[this_node] << ","
+                   << flow_distance_data_map[this_node] << ","
+                   << drainage_area_data_map[this_node] << ","
+                   << M_chi_data_map[this_node] << ","
+                   << b_chi_data_map[this_node] << endl;
+    }
+  }
+
+  chi_data_out.close();
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Print data maps to file
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::print_data_maps_to_file_basic(LSDFlowInfo& FlowInfo, string filename)
+{
+  
+  // these are for extracting element-wise data from the channel profiles. 
+  int this_node, row,col;
+  double latitude,longitude;
+  LSDCoordinateConverterLLandUTM Converter;
+  
+  // open the data file
+  ofstream  chi_data_out;
+  chi_data_out.open(filename.c_str());
+  chi_data_out << "latitude,longitude,m_chi,b_chi" << endl;
+  
+  // find the number of nodes
+  int n_nodes = (node_sequence.size());
+  if (n_nodes <= 0)
+  {
+    cout << "Cannot print since you have not calculated channel properties yet." << endl;
+  }
+  else
+  {
+    for (int n = 0; n< n_nodes; n++)
+    {
+      this_node = node_sequence[n];
+      FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+      get_lat_and_long_locations(row, col, latitude, longitude, Converter); 
+
+      chi_data_out.precision(9);
+      chi_data_out << latitude << ","
+                   << longitude << ",";
+      chi_data_out.precision(6);
+      chi_data_out << M_chi_data_map[this_node] << ","
+                   << b_chi_data_map[this_node] << "," << endl;
+    }
+  }
+
+  chi_data_out.close();
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
 
 #endif
