@@ -165,8 +165,8 @@ int main (int nNumberofArgs,char *argv[])
   cout << "Filling topography." << endl;
   LSDRaster filled_topography = topography_raster.fill(Minimum_Slope);
   
-  string filled_raster_name = OUTPUT_DIR+DEM_ID+"_Fill";
-  filled_topography.write_raster(filled_raster_name,raster_ext);
+  //string filled_raster_name = OUTPUT_DIR+DEM_ID+"_Fill";
+  //filled_topography.write_raster(filled_raster_name,raster_ext);
   
   //filled_topography.write_raster(filled_raster_name,raster_ext);
   
@@ -174,14 +174,18 @@ int main (int nNumberofArgs,char *argv[])
   // get a flow info object
   LSDFlowInfo FlowInfo(boundary_conditions,filled_topography);
 
-  cout << "\t Calculating flow distance..." << endl;
+  // calculate the flow accumulation
+  cout << "\t Calculating flow accumulation (in pixels)..." << endl;
+  LSDIndexRaster FlowAcc = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+  
+  cout << "\t Converting to flow area..." << endl;
+  LSDRaster DrainageArea = FlowInfo.write_DrainageArea_to_LSDRaster();
 
   // calcualte the distance from outlet
+  cout << "\t Calculating flow distance..." << endl;
   LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
 
-  // calculate the flow accumulation
-  LSDIndexRaster FlowAcc = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
-  LSDRaster DrainageArea = FlowInfo.write_DrainageArea_to_LSDRaster();
+
   
   cout << "\t Loading Sources..." << endl;
   // load the sources

@@ -1772,11 +1772,11 @@ LSDIndexRaster LSDFlowInfo::write_NContributingNodes_to_LSDIndexRaster()
 
   // loop through the node vector, adding pixels to receiver nodes
   for(int node = 0; node<NDataNodes; node++)
-    {
-      row = RowIndex[node];
-      col = ColIndex[node];
-      contributing_pixels[row][col] = NContributingNodes[node];
-    }
+  {
+    row = RowIndex[node];
+    col = ColIndex[node];
+    contributing_pixels[row][col] = NContributingNodes[node];
+  }
 
   LSDIndexRaster temp_cp(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,contributing_pixels,GeoReferencingStrings);
   return temp_cp;
@@ -1866,19 +1866,19 @@ LSDIndexRaster LSDFlowInfo::write_FlowDirection_to_LSDIndexRaster_Arcformat()
 LSDRaster LSDFlowInfo::write_DrainageArea_to_LSDRaster()
 {
   // initialise the 2D array
-  int n_i;                // node index
+  int row,col;                // node index
   float ndv = float(NoDataValue);
+  float this_DA;
   Array2D<float> DrainageArea_local(NRows,NCols,ndv);
 
-  //get the contributing nodes
-  for (int row = 0; row < NRows; row++)
+  for(int node = 0; node<NDataNodes; node++)
     {
-      for (int col = 0; col < NCols; col++)
-  {
-    n_i = NodeIndex[row][col];
-    DrainageArea_local[row][col] = float(NContributingNodes[n_i])*DataResolution*DataResolution;
-  }
+      row = RowIndex[node];
+      col = ColIndex[node];
+      this_DA = float(NContributingNodes[node])*DataResolution*DataResolution;
+      DrainageArea_local[row][col] = this_DA;
     }
+  
   // create the LSDRaster object
   LSDRaster DrainageArea(NRows,NCols,XMinimum,YMinimum,DataResolution,ndv,DrainageArea_local,GeoReferencingStrings);
   return DrainageArea;
@@ -1906,42 +1906,42 @@ LSDIndexRaster LSDFlowInfo::calculate_n_pixels_contributing_from_upslope()
 
   // loop through the s vector, adding pixels to receiver nodes
   for(int node = NDataNodes-1; node>=0; node--)
+  {
+
+    row = RowIndex[SVector[node]];
+    col = ColIndex[SVector[node]];
+    // if the pixel exists and has no contributing pixels,
+    // change from nodata to zero
+
+    if(contributing_pixels[row][col] == NoDataValue)
     {
-
-      row = RowIndex[SVector[node]];
-      col = ColIndex[SVector[node]];
-      // if the pixel exists and has no contributing pixels,
-      // change from nodata to zero
-
-      if(contributing_pixels[row][col] == NoDataValue)
-  {
-    contributing_pixels[row][col] = 0;
-  }
-
-      receiver_node = ReceiverVector[ SVector[node] ] ;
-      receive_row = RowIndex[ receiver_node ];
-      receive_col = ColIndex[ receiver_node ];
-
-      cout << "node " << node << " pixel: " << SVector[node] << " receiver: " << receiver_node << endl;
-      cout << "contributing: " << contributing_pixels[row][col] << endl;
-
-      if ( receiver_node  == SVector[node])
-  {
-    // do nothing
-  }
-      else if ( contributing_pixels[receive_row][receive_col] == NoDataValue)
-  {
-    contributing_pixels[receive_row][receive_col] =
-      contributing_pixels[row][col]+1;
-  }
-      else
-  {
-    contributing_pixels[receive_row][receive_col] +=
-      contributing_pixels[row][col]+1;
-  }
-
-      cout << "recieving: " << contributing_pixels[receive_row][receive_col] << endl;
+      contributing_pixels[row][col] = 0;
     }
+
+    receiver_node = ReceiverVector[ SVector[node] ] ;
+    receive_row = RowIndex[ receiver_node ];
+    receive_col = ColIndex[ receiver_node ];
+
+    cout << "node " << node << " pixel: " << SVector[node] << " receiver: " << receiver_node << endl;
+    cout << "contributing: " << contributing_pixels[row][col] << endl;
+
+    if ( receiver_node  == SVector[node])
+    {
+      // do nothing
+    }
+    else if ( contributing_pixels[receive_row][receive_col] == NoDataValue)
+    {
+      contributing_pixels[receive_row][receive_col] =
+      contributing_pixels[row][col]+1;
+    }
+    else
+    {
+      contributing_pixels[receive_row][receive_col] +=
+      contributing_pixels[row][col]+1;
+    }
+
+    cout << "recieving: " << contributing_pixels[receive_row][receive_col] << endl;
+  }
 
   LSDIndexRaster temp_cp(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,contributing_pixels,GeoReferencingStrings);
   return temp_cp;
@@ -2597,10 +2597,6 @@ LSDRaster LSDFlowInfo::distance_from_outlet()
 
   int row,col,bl_row,bl_col,receive_row,receive_col;
 
-  //cout << "FlowLengthCode: " << FlowLengthCode << endl;
-
-
-
   int start_node = 0;
   int end_node;
   int nodes_in_bl_tree;
@@ -2609,7 +2605,6 @@ LSDRaster LSDFlowInfo::distance_from_outlet()
   int n_base_level_nodes = BaseLevelNodeList.size();
   for(int bl = 0; bl<n_base_level_nodes; bl++)
   {
-
     baselevel_node = BaseLevelNodeList[bl];
 
     bl_row = RowIndex[baselevel_node];
