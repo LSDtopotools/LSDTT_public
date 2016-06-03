@@ -165,7 +165,8 @@ class LSDChiTools
     void get_UTM_information(int& UTM_zone, bool& is_North);
 
 
-    /// @detail This function makes a chi map and prints to a csv file
+    /// @brief This function makes a chi map and prints to a csv file
+    /// @detail the lat and long coordinates in the csv are in WGS84
     /// @param FlowInfo an LSDFlowInfo object
     /// @param filename The string filename including path and extension
     /// @param A_0 the A_0 parameter
@@ -175,6 +176,15 @@ class LSDChiTools
     /// @date 24/05/2016
     void chi_map_to_csv(LSDFlowInfo& FlowInfo, string filename, 
                         float A_0, float m_over_n, float area_threshold);
+ 
+    /// @brief This function takes a raster prints to a csv file 
+    /// @detail the lat and long coordinates in the csv are in WGS84
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param filename The string filename including path and extension
+    /// @param chi_coord the raster of the chi coordinate (printed elsewhere)
+    /// @author SMM
+    /// @date 03/06/2016 
+    void chi_map_to_csv(LSDFlowInfo& FlowInfo, string chi_map_fname, LSDRaster& chi_coord);
   
     /// @brief This function maps out the chi steepness and other channel
     ///  metrics in chi space from all the sources supplied in the 

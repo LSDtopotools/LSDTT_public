@@ -340,9 +340,50 @@ void LSDChiTools::chi_map_to_csv(LSDFlowInfo& FlowInfo, string chi_map_fname,
   }
   
   chi_map_csv_out.close();
-
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prints a chi map to csv with an area threshold in m^2. You feed it the chi map
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::chi_map_to_csv(LSDFlowInfo& FlowInfo, string chi_map_fname, 
+                                 LSDRaster& chi_coord)
+{
+  
+  ofstream chi_map_csv_out;
+  chi_map_csv_out.open(chi_map_fname.c_str());
+  
+  
+  
+  float this_chi_coord;
+  double latitude,longitude;
+  LSDCoordinateConverterLLandUTM Converter;
+  
+  chi_map_csv_out << "latitude,longitude,chi" << endl;
+
+  float NDV = chi_coord.get_NoDataValue();
+
+  for(int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      this_chi_coord = chi_coord.get_data_element(row,col);
+      
+      if (this_chi_coord != NDV)
+      {
+        get_lat_and_long_locations(row, col, latitude, longitude, Converter);
+        chi_map_csv_out.precision(9);
+        chi_map_csv_out << latitude << "," << longitude  << ",";
+        chi_map_csv_out.precision(5);
+        chi_map_csv_out << this_chi_coord << endl;
+      }
+    }
+  }
+  
+  chi_map_csv_out.close();
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

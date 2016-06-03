@@ -4719,7 +4719,46 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_Area(vector<int>& BaseLevelJunct
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prunes a list of baselevel junctions by retaining ONLY the largest 
+//  basin in the list of junctions
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDJunctionNetwork::Prune_Junctions_Largest(vector<int>& BaseLevelJunctions_Initial, 
+                                              LSDFlowInfo& FlowInfo, LSDIndexRaster& FlowAcc)
+{
+  vector<int> BL_Donor_junctions_pruned;
+  int N_BaseLevelJuncs = int(BaseLevelJunctions_Initial.size());
 
+  int row,col, current_node;
+  if(BaseLevelJunctions_Initial.size() <= 0)
+  {
+    cout << "I am afraid you have no junctions in your junction list. Exiting." << endl;
+    exit(0);
+  }
+  
+  int largest_junc = BaseLevelJunctions_Initial[0];
+  int largest_ncontrib = 0;
+  
+  for(int i = 0; i < N_BaseLevelJuncs; ++i)
+  {
+    current_node = JunctionVector[BaseLevelJunctions_Initial[i]];
+    FlowInfo.retrieve_current_row_and_col(current_node,row,col);
+    
+    // get the flow accumulation
+    int Acc =  FlowAcc.get_data_element(row,col);
+    
+    if (Acc > largest_ncontrib)
+    {
+      largest_ncontrib = Acc;
+      largest_junc = current_node;
+    }
+  }
+  
+  BL_Donor_junctions_pruned.push_back(largest_junc);
+
+  return BL_Donor_junctions_pruned;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

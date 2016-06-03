@@ -32,7 +32,6 @@
 #include "../LSDChiTools.hpp"
 #include "../LSDShapeTools.hpp"
 
-
 int main (int nNumberofArgs,char *argv[])
 {
   //Test for correct input arguments
@@ -58,117 +57,278 @@ int main (int nNumberofArgs,char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  string DEM_ID,raster_ext;
-  string dem_ext = "_dem";
-  string fill_ext = "_fill";
-  string acc_ext = "_ACC";
-  string txt_extension = ".txt";
+  // strings for filenames. Some set to defaults
+  string DATA_DIR,OUTPUT_DIR,DEM_ID;
+  string CHeads_file = "Null";
+  string raster_ext = "bil";
 
   // initialise variables to be assigned from .driver file
-  string DATA_DIR, OUTPUT_DIR, CHeads_file;
-  //int threshold;
-  float minimum_stream_order;
-  float A_0;
-  float movern;
-  float Minimum_Slope;
-  int n_iterations;
-  string temp;
-  int minimum_segment_length;
-  float sigma;
-  int target_nodes;
-  int skip;
-  int threshold_pixels_for_chi;
-  int threshold_contributing_pixels;
-  int minimum_basin_size_pixels;
+  // These will all be assigned default values
+  float A_0 = 1000;
+  float movern = 0.5;
+  float Minimum_Slope = 0.001;
+  int n_iterations = 20;
+  int minimum_segment_length = 10;
+  float sigma = 20;
+  int target_nodes = 80;
+  int skip = 2;
+  int threshold_pixels_for_chi = 1000;
+  int threshold_contributing_pixels = 1000;
+  int minimum_basin_size_pixels = 1000;
   bool test_drainage_boundaries = true;
+  bool only_take_largest_basin = true;
 
-  file_info_in >> temp >> DATA_DIR
-               >> temp >> OUTPUT_DIR
-               >> temp >> DEM_ID
-               >> temp >> CHeads_file
-               >> temp >> raster_ext
-               >> temp >> minimum_stream_order
-               >> temp >> Minimum_Slope
-               >> temp >> A_0
-               >> temp >> movern
-               >> temp >> n_iterations
-               >> temp >> target_nodes
-               >> temp >> minimum_segment_length
-               >> temp >> sigma
-               >> temp >> skip
-               >> temp >> threshold_pixels_for_chi
-               >> temp >> threshold_contributing_pixels
-               >> temp >> minimum_basin_size_pixels
-               >> temp >> test_drainage_boundaries;
+  // bools for what the program will print
+  bool only_check_parameters = false;
+  bool print_stream_order_raster = false; 
+  bool print_junction_index_raster = false; 
+  bool print_fill_raster = false; 
+  bool print_DrainageArea_raster = false; 
+  bool print_chi_coordinate_raster = false;
+  bool print_simple_chi_map_to_csv = false; 
+
+  //============================================================================
+  // Ingest parameters
+  //============================================================================
+  string parameter, value, lower, lower_val;
+  string bc;
+  while (file_info_in.good())
+  {
+    parse_line(file_info_in, parameter, value);
+    lower = parameter;
+    if (parameter == "NULL")
+      continue;
+    for (unsigned int i=0; i<parameter.length(); ++i)
+    {
+      lower[i] = tolower(parameter[i]);
+    }
+
+    cout << "parameter is: " << lower << " and value is: " << value << endl;
+
+    // get rid of control characters
+    value = RemoveControlCharactersFromEndOfString(value);
+
+    if (lower == "read path")
+    {
+      DATA_DIR = value;
+      // get rid of any control characters from the end (if param file was made in DOS)
+      DATA_DIR = RemoveControlCharactersFromEndOfString(DATA_DIR);
+    }
+    else if (lower == "write path")
+    {
+      OUTPUT_DIR = value;
+      // get rid of any control characters from the end (if param file was made in DOS)
+      OUTPUT_DIR = RemoveControlCharactersFromEndOfString(OUTPUT_DIR);
+    }
+    else if (lower == "read fname")
+    {
+      DEM_ID = value;
+      // get rid of any control characters from the end (if param file was made in DOS)
+      DEM_ID = RemoveControlCharactersFromEndOfString(DEM_ID);
+      //cout << "Got the read name, it is: " << read_fname << endl;
+    }
+    else if (lower == "channel heads fname")
+    {
+      CHeads_file = value;
+      // get rid of any control characters from the end (if param file was made in DOS)
+      CHeads_file = RemoveControlCharactersFromEndOfString(CHeads_file);
+      //cout << "Got the channel heads name, it is: " << CHeads_file << endl;
+    }
+    
+    //============================================================
+    // Parameters for fill
+    //============================================================
+    else if (lower == "min_slope_for_fill")
+    {
+      Minimum_Slope = atof(value.c_str());
+    }
+    
+    //============================================================
+    // Parameters for chi
+    //============================================================
+    else if (lower == "a_0")
+    {
+      A_0 = atof(value.c_str());
+    }
+    else if (lower == "m_over_n")
+    {
+      movern = atof(value.c_str());
+    }
+    else if (lower == "threshold_pixels_for_chi")
+    {
+      threshold_pixels_for_chi = atoi(value.c_str());
+    }
+    
+    //============================================================
+    // Parameters for segment fitting
+    //============================================================
+    else if (lower == "n_iterations")
+    {
+      n_iterations = atoi(value.c_str());
+    }
+    else if (lower == "minimum_segment_length")
+    {
+      minimum_segment_length = atoi(value.c_str());
+    }
+    else if (lower == "skip")
+    {
+      skip = atoi(value.c_str());
+    }
+    else if (lower == "sigma")
+    {
+      sigma = atof(value.c_str());
+    }
+
+    //============================================================
+    // Parameters for selecting basins
+    //============================================================
+    else if (lower == "threshold_contributing_pixels")
+    {
+      threshold_contributing_pixels = atoi(value.c_str());
+    }
+    else if (lower == "minimum_basin_size_pixels")
+    {
+      minimum_basin_size_pixels = atoi(value.c_str());
+    }
+    else if (lower == "test_drainage_boundaries")
+    {
+      test_drainage_boundaries = atobool(value.c_str());
+    }
+    else if (lower == "only_take_largest_basin")
+    {
+      only_take_largest_basin = atobool(value.c_str());
+    }
+
+    //============================================================
+    // Parameters for deciding what you want to print
+    //============================================================
+    else if (lower == "only_check_")
+    {
+      only_check_parameters = atobool(value.c_str());
+    }
+    else if (lower == "print_stream_order_raster")
+    {
+      print_stream_order_raster = atobool(value.c_str());
+    }
+    else if (lower == "print_junction_index_raster")
+    {
+      print_junction_index_raster = atobool(value.c_str());
+    }
+    else if (lower == "print_fill_raster")
+    {
+      print_fill_raster = atobool(value.c_str());
+    }
+    else if (lower == "print_DrainageArea_raster")
+    {
+      print_DrainageArea_raster = atobool(value.c_str());
+    }
+    else if (lower == "print_chi_coordinate_raster")
+    {
+      print_chi_coordinate_raster = atobool(value.c_str());
+    }
+    else if (lower == "print_simple_chi_map_to_csv")
+    {
+      print_simple_chi_map_to_csv = atobool(value.c_str());
+    }
+      
+  }
 
 
   file_info_in.close();
 
-  // make sure the threshold contributing pixel data is not nonsense
-  if(threshold_contributing_pixels<=0)
-  {
-    cout << "You gave me a nonsense threshold contributing pixel value: " << threshold_contributing_pixels << endl;
-    cout << "Defaulting to 50" << endl;
-    threshold_contributing_pixels = 50;
-  }
-
-
-  cout << "PARAMETERS FOR Chi mapping\n\t DEM_ID = " << DEM_ID
-               << "\n\t DATA_DIR " << DATA_DIR
-               << "\n\t OUTPUT_DIR " << OUTPUT_DIR
-               << "\n\t CHeads_file " << CHeads_file
-               << "\n\t raster_ext " << raster_ext
-               << "\n\t Basin Stream Order " << minimum_stream_order
-               << "\n\t Minimum Slope (for fill function) " << Minimum_Slope
-               << "\n\t A_0 " <<  A_0
-               << "\n\t m/n: " <<  movern
-               << "\n\t number of MC iterations " << n_iterations
-               << "\n\t min segment length: " <<  minimum_segment_length
-               << "\n\t target nodes: " <<  target_nodes
-               << "\n\t sigma: " <<  sigma
-               << "\n\t Skip: " <<  skip 
-               << "\n\t threshold_pixels_for_chi: " << threshold_pixels_for_chi 
-               << "\n\t test_drainage_boundaries: " << test_drainage_boundaries 
-               << "\n\t minimum_basin_size_pixels: " << minimum_basin_size_pixels
-               << "\n\t threshold_contributing_pixels: " << threshold_contributing_pixels
-               << endl << endl;
-
-  // Additional parameters for chi analysis
-  //int organization_switch = 1;
-  //int pruning_switch = 3;
-  //float pruning_threshold;// = target_stream_order - 1;
   
-  cout << "Setting boundary conditions" << endl;
-
   // set no flux boundary conditions
+  cout << "Setting boundary conditions" << endl;
   vector<string> boundary_conditions(4);
   boundary_conditions[0] = "No";
   boundary_conditions[1] = "no flux";
   boundary_conditions[2] = "no flux";
   boundary_conditions[3] = "No flux";
-  
-  // check the DEM
-  cout << "I am checking to make sure the DEM exists." << endl;
 
   // load the  DEM
   LSDRaster topography_raster((DATA_DIR+DEM_ID), raster_ext);
   cout << "Got the dem: " <<  DATA_DIR+DEM_ID << endl;
   
-  //int NRows = topography_raster.get_NRows();
-  //int NCols = topography_raster.get_NCols();
-  //float NoData = topography_raster.get_NoDataValue();
-  //float XMin =topography_raster.get_XMinimum();
-  //float YMin = topography_raster.get_YMinimum();
   float Resolution = topography_raster.get_DataResolution();
   map<string,string> GRS = topography_raster.get_GeoReferencingStrings();
 
+  float thresh_area_for_chi = float(threshold_pixels_for_chi)*Resolution*Resolution;
+  float thresh_area_for_channel = float(threshold_contributing_pixels)*Resolution*Resolution;
+  float min_basin_area =  float(minimum_basin_size_pixels)*Resolution*Resolution;
+
+  //============================================================================
+  // Print the parameters to an input file that you can read later
+  //============================================================================
+  string parameter_values_name = OUTPUT_DIR+DEM_ID+"_Input.param";
+  ofstream param_input;
+  param_input.open(parameter_values_name.c_str());
+  
+  param_input << "You have been using the ChiToolsDriver.exe program." << endl
+              << "This was developed by the Land Surface Dyanmics Group" << endl
+              << " at the University of Edinburgh. " << endl
+              << "Algorithms used to create this data can be found in" << endl
+              << "Mudd et al., 2014, JGR-ES: http://onlinelibrary.wiley.com/doi/10.1002/2013JF002981/full" << endl
+              << "================================================" << endl
+              << "The file information is: "
+              << "\n\t DATA_DIR " << DATA_DIR
+              << "\n\t OUTPUT_DIR " << OUTPUT_DIR
+              << "\n\t CHeads_file " << CHeads_file
+              << "\n\t raster_ext " << raster_ext
+              << "\n\t Note that if the CHeads file is Null then a pixel threshold will be used to determine channel sources."
+              << "\n================================================" << endl
+              << "The parameters for the analysis are: " << endl
+              << "\n\t Minimum Slope (for fill function) " << Minimum_Slope
+              << "\n\t A_0 in m: " <<  A_0
+              << "\n\t m/n: " <<  movern
+              << "\n\t And these are parameters for segmentation. Only used if you have selected the segmentation algorithm. "
+              << "\n\t number of MC iterations " << n_iterations
+              << "\n\t min segment length: " <<  minimum_segment_length
+              << "\n\t target nodes: " <<  target_nodes
+              << "\n\t sigma: " <<  sigma
+              << "\n\t Skip: " <<  skip
+              << "\n================================================" << endl
+              << "These are parameters for controlling thresholds for chi and basins:" 
+              << "\n\t threshold_pixels_for_chi: " << threshold_pixels_for_chi
+              << "\n\t threshold_area_for_chi (m^2): " << thresh_area_for_chi
+              << "\n\t threshold_contributing_pixels for a channel: " << threshold_contributing_pixels
+              << "\n\t threshold area for a channel (m^2) " << thresh_area_for_channel
+              << "\n\t Do you remove basins where pixels are draining from edge: " << test_drainage_boundaries 
+              << "\n\t The minimum basin size (pixels) for M_chi calculations: " << minimum_basin_size_pixels
+              << "\n\t The minimum basin size (m^2) for M_chi calculations: " << min_basin_area
+              << "\n================================================" << endl
+              << "These are all the things that the program will print: "
+              << "\n\tNote: " << endl
+              << "\n\t\t1 == true"
+              << "\n\t\t0 == false"
+              << "\n\t I am only going to check parameters and not actually print anything: " << threshold_pixels_for_chi
+              << "\n\t Printing fill raster: " << print_fill_raster
+              << "\n\t Printing fill raster: " << print_DrainageArea_raster
+              << "\n\t Printing stream order raster: " << print_stream_order_raster
+              << "\n\t Printing junction index raster: " << print_junction_index_raster
+              << "\n\t Printing chi coordinate raster: " << print_chi_coordinate_raster
+              << "\n\t Printing chi coordinate to csv: " << print_simple_chi_map_to_csv
+              << endl << endl;
+  param_input.close();
+
+  if(only_check_parameters)
+  {
+    cout << "You set the only_check_parameters flag to true; I have only printed" << endl;
+    cout << "the parameters to file and am now exiting." << endl;
+    exit(0);
+  }
+
+  //============================================================================
+  // Start gathering necessary rasters
+  //============================================================================
   cout << "Filling topography." << endl;
   LSDRaster filled_topography = topography_raster.fill(Minimum_Slope);
   
-  //string filled_raster_name = OUTPUT_DIR+DEM_ID+"_Fill";
-  //filled_topography.write_raster(filled_raster_name,raster_ext);
+  if (print_fill_raster)
+  {
+    string filled_raster_name = OUTPUT_DIR+DEM_ID+"_Fill";
+    filled_topography.write_raster(filled_raster_name,raster_ext);
+  }
   
-  //filled_topography.write_raster(filled_raster_name,raster_ext);
   
   cout << "\t Flow routing..." << endl;
   // get a flow info object
@@ -181,12 +341,16 @@ int main (int nNumberofArgs,char *argv[])
   cout << "\t Converting to flow area..." << endl;
   LSDRaster DrainageArea = FlowInfo.write_DrainageArea_to_LSDRaster();
 
+  if (print_DrainageArea_raster)
+  {
+    string DA_raster_name = OUTPUT_DIR+DEM_ID+"_DArea";
+    DrainageArea.write_raster(DA_raster_name,raster_ext);
+  }
+
   // calcualte the distance from outlet
   cout << "\t Calculating flow distance..." << endl;
   LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
 
-
-  
   cout << "\t Loading Sources..." << endl;
   // load the sources
   vector<int> sources;
@@ -209,17 +373,21 @@ int main (int nNumberofArgs,char *argv[])
 
   // now get the junction network
   LSDJunctionNetwork JunctionNetwork(sources, FlowInfo);
-
-  string SO_ext = "_SO";
-  string JI_ext = "_JI";
-  LSDIndexRaster SOArray = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
-  LSDIndexRaster JIArray = JunctionNetwork.JunctionIndexArray_to_LSDIndexRaster();
-  SOArray.write_raster((OUTPUT_DIR+DEM_ID+SO_ext),raster_ext);
-  JIArray.write_raster((OUTPUT_DIR+DEM_ID+JI_ext),raster_ext);
-  int max_stream_order = JunctionNetwork.get_maximum_stream_order();
-  //Array2D<float> ChiGradientArray(NRows,NCols,NoData);
   
-  cout << "The maximum stream order is: " << max_stream_order << endl;
+  if (print_stream_order_raster)
+  { 
+    LSDIndexRaster SOArray = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
+    string SO_raster_name = OUTPUT_DIR+DEM_ID+"_SO";
+    SOArray.write_raster(SO_raster_name,raster_ext);
+  }
+  if (print_junction_index_raster)
+  { 
+    LSDIndexRaster JIArray = JunctionNetwork.JunctionIndexArray_to_LSDIndexRaster();
+    string JI_raster_name = OUTPUT_DIR+DEM_ID+"_JI";
+    JIArray.write_raster(JI_raster_name,raster_ext);
+  }
+
+  //Array2D<float> ChiGradientArray(NRows,NCols,NoData);
 
   // need to get base-level nodes , otherwise these catchments will be missed!
   vector< int > BaseLevelJunctions_Initial = JunctionNetwork.get_BaseLevelJunctions();
@@ -247,51 +415,45 @@ int main (int nNumberofArgs,char *argv[])
   BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Area(BaseLevelJunctions, 
                                               FlowInfo, FlowAcc, minimum_basin_size_pixels);
 
+  if (only_take_largest_basin)
+  {
+    cout << "I am only going to take the largest basin." << endl;
+    BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Largest(BaseLevelJunctions, FlowInfo, FlowAcc);
+  }
+
   // Correct number of base level junctions
   N_BaseLevelJuncs = BaseLevelJunctions.size();
 
   // calculate chi for the entire DEM
-  float threshold_area_for_chi = Resolution*Resolution*float(threshold_pixels_for_chi);
-  LSDRaster chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,A_0,threshold_area_for_chi);
+  LSDRaster chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,A_0,thresh_area_for_chi);
   
-  string chi_coord_string = OUTPUT_DIR+DEM_ID+"_chi_coord";
-  chi_coordinate.write_raster(chi_coord_string,raster_ext);
+  if(print_chi_coordinate_raster)
+  {
+    string chi_coord_string = OUTPUT_DIR+DEM_ID+"_chi_coord";
+    chi_coordinate.write_raster(chi_coord_string,raster_ext);
+  }
 
-  
   // now use a ChiTool object to print the chi tree to csv
   LSDChiTools ChiTool(FlowInfo);
-  //ChiTool.chi_map_to_csv(FlowInfo, chi_csv_fname, A_0, movern, threshold_area_for_chi);
   
-  // the precision needs to be high for the lat long and UTM coordinates to acutally
-  // give a reasonable number of significant digits. 
-  //chitree_out.precision(12);
-  //chitree_out.open(csv_fname.c_str());
-  //chitree_out << "id,x,y,lat,long,chi,mean_chi_gradient" << endl;
-  
-    // initilise the converter
-  LSDCoordinateConverterLLandUTM Converter;
-  
+  if (print_simple_chi_map_to_csv)
+  {
+    string chi_csv_fname = OUTPUT_DIR+DEM_ID+"_chi_coord.csv";
+    ChiTool.chi_map_to_csv(FlowInfo, chi_csv_fname, chi_coordinate);
+  }
+
   // now get the overlapping channels from the junction network file
   vector<int> source_nodes;
   vector<int> outlet_nodes;
   int n_nodes_to_visit = 10;
   JunctionNetwork.get_overlapping_channels(FlowInfo, BaseLevelJunctions, DistanceFromOutlet, 
                                     source_nodes,outlet_nodes,n_nodes_to_visit);
-
-
-  //string sources_fname = OUTPUT_DIR+DEM_ID+"_SourcesList.csv";
-  //FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(source_nodes, sources_fname);
-
-  //string outlet_fname = OUTPUT_DIR+DEM_ID+"_OutletList.csv";
-  //FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(outlet_nodes, outlet_fname);
   
+  ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes,
+                            filled_topography, DistanceFromOutlet, 
+                            DrainageArea, chi_coordinate, target_nodes, 
+                            n_iterations, skip, minimum_segment_length, sigma);
   
-  //ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes,
-  //                          topography_raster, DistanceFromOutlet, 
-  //                          DrainageArea, chi_coordinate, target_nodes, 
-  //                          n_iterations, skip, minimum_segment_length, sigma);
-  
-
   //string csv_fname = OUTPUT_DIR+DEM_ID+"_ChiSegmented_tree.csv";
   string csv_full_fname = OUTPUT_DIR+DEM_ID+"_ChiFullSegmented_tree.csv";
   //string chi_csv_fname =  OUTPUT_DIR+DEM_ID+"_Chi.csv";

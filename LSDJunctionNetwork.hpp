@@ -268,6 +268,20 @@ class LSDJunctionNetwork
   vector<int> Prune_Junctions_Area(vector<int>& BaseLevelJunctions_Initial,LSDFlowInfo& FlowInfo,
                               LSDIndexRaster& FlowAcc, int Threshold);
 
+  /// @brief This function takes a list of junctions retains ONLY the larges bains
+  ///  The junction is returned as an int vector so that it can be passed to other functions
+  ///  requiring junction lists. 
+  /// @param BaseLevelJunctions_Initial a vector of integers containg an inital
+  ///  list of base level nodes
+  /// @param FlowInfo The LSDFlowInfo object
+  /// @param FlowAcc an LSDIndexRaster with the number of pixels for flow accumulation
+  /// @return a pruned list of base level nodes
+  /// @author SMM
+  /// @date 03/06/16
+  vector<int> Prune_Junctions_Largest(vector<int>& BaseLevelJunctions_Initial,LSDFlowInfo& FlowInfo,
+                              LSDIndexRaster& FlowAcc);
+
+
   /// @brief Get Junction number at a location.
   /// @param row Integer row index.
   /// @param col Integer column index.
