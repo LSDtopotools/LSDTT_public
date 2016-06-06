@@ -202,7 +202,7 @@ int main (int nNumberofArgs,char *argv[])
     //============================================================
     // Parameters for deciding what you want to print
     //============================================================
-    else if (lower == "only_check_")
+    else if (lower == "only_check_parameters")
     {
       only_check_parameters = atobool(value.c_str());
     }
