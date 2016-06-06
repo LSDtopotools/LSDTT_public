@@ -60,9 +60,11 @@ int main (int nNumberofArgs,char *argv[])
   if (nNumberofArgs!=3)
   {
     cout << "=========================================================" << endl;
-    cout << "|| Welcome to the Chi mapping tool!                    ||" << endl;
+    cout << "|| Welcome to the chi mapping tool!                    ||" << endl;
     cout << "|| This program has a number of options to make chi    ||" << endl;
     cout << "|| plots and to map out slopes in chi space.           ||" << endl;
+    cout << "|| This program was developed by Simon M. Mudd         ||" << endl;
+    cout << "||  at the University of Edinburgh                     ||" << endl;
     cout << "=========================================================" << endl;
     cout << "This program requires two inputs: " << endl;
     cout << "* First the path to the parameter file." << endl;
@@ -72,18 +74,13 @@ int main (int nNumberofArgs,char *argv[])
     cout << "---------------------------------------------------------" << endl;
     cout << "Then the command line argument will be: " << endl;
     cout << "In linux:" << endl;
-    cout << "./SimpleSnowShield .exe home/fieldwork/Chile/CRN/ My_data" << endl;
+    cout << "./chi_mapping_tool.exe home/fieldwork/Chile/CRN/ My_analysis.param" << endl;
     cout << "In windows (the slash directions will change and there is no leading ./)" << endl;
-    cout << "SimpleSnowShield.exe c:\\fieldwork\\Chile\\CRN\\ My_data" << endl;
+    cout << "chi_mapping_tool.exe c:\\fieldwork\\Chile\\CRN\\ My_analysis.param" << endl;
     cout << "=========================================================" << endl;
-    cout << "For more documentation on cosmo data file format, " << endl;
+    cout << "For more documentation on the parameter file, " << endl;
     cout << " see readme and online documentation." << endl;
-    cout << "=========================================================" << endl;
-    cout << " You WILL NEED a snow parameter file. " << endl;
-    cout << "This file will have the same prefix as the DEM to be printed but the extension .sparam" << endl;
-    cout << "It contains a method on the first line:" << endl;
-    cout << "Richards OR Bilinear are the options" << endl;
-    cout << "and the parameters for these two snow shielding functions" << endl;
+    cout << " http://lsdtopotools.github.io/LSDTT_book/#_chi_analysis_part_3_getting_chi_gradients_for_the_entire_landscape" << endl;
     cout << "=========================================================" << endl;
     exit(EXIT_SUCCESS);
   }
@@ -278,7 +275,7 @@ int main (int nNumberofArgs,char *argv[])
     {
       print_fill_raster = atobool(value.c_str());
     }
-    else if (lower == "print_DrainageArea_raster")
+    else if (lower == "print_drainagearea_raster")
     {
       print_DrainageArea_raster = atobool(value.c_str());
     }
@@ -290,11 +287,11 @@ int main (int nNumberofArgs,char *argv[])
     {
       print_simple_chi_map_to_csv = atobool(value.c_str());
     }
-    else if (lower == "print_segmented_M_chi_map_to_csv")
+    else if (lower == "print_segmented_m_chi_map_to_csv")
     {
       print_segmented_M_chi_map_to_csv = atobool(value.c_str());
     }
-    else if (lower == "print_basic_M_chi_map_to_csv")
+    else if (lower == "print_basic_m_chi_map_to_csv")
     {
       print_basic_M_chi_map_to_csv = atobool(value.c_str());
     }
@@ -340,6 +337,7 @@ int main (int nNumberofArgs,char *argv[])
               << "# The file information is: "<< endl
               << "read path: " << DATA_DIR<< endl
               << "write path: " << OUTPUT_DIR<< endl
+              << "read fname: " << DEM_ID << endl 
               << "channel heads fname: " << CHeads_file<< endl
               << "raster_ext: " << raster_ext<< endl
               << "#Note that if the CHeads file is Null then a pixel threshold will be used to determine channel sources." << endl
