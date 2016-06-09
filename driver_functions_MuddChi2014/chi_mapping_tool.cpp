@@ -46,6 +46,7 @@
 #include "../LSDStatsTools.hpp"
 #include "../LSDChiNetwork.hpp"
 #include "../LSDRaster.hpp"
+#include "../LSDRasterInfo.hpp"
 #include "../LSDIndexRaster.hpp"
 #include "../LSDFlowInfo.hpp"
 #include "../LSDJunctionNetwork.hpp"
@@ -91,7 +92,7 @@ int main (int nNumberofArgs,char *argv[])
   cout << "The path is: " << path_name << " and the filename is: " << f_name << endl;
 
   string full_name = path_name+f_name;
-
+    
   ifstream file_info_in;
   file_info_in.open(full_name.c_str());
   if( file_info_in.fail() )
@@ -309,6 +310,9 @@ int main (int nNumberofArgs,char *argv[])
   boundary_conditions[2] = "no flux";
   boundary_conditions[3] = "No flux";
 
+  // check to see if the raster exists
+  LSDRasterInfo RI(DATA_DIR+DEM_ID), raster_ext);  
+        
   // load the  DEM
   LSDRaster topography_raster((DATA_DIR+DEM_ID), raster_ext);
   cout << "Got the dem: " <<  DATA_DIR+DEM_ID << endl;
