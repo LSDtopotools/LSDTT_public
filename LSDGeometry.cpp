@@ -200,4 +200,55 @@ void LSDGeometry::create(vector<double> x, vector<double> y, string coord_sys)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Creates an LSDGeometry from an LSDRaster 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDGeometry::convert_points_to_UTM()
+{
+
+  
+  if( WGS84Points_latitude.size() == 0)
+  {
+    cout << "Trying to convert from Latitude and Longitude but you don't have any data." << endl;
+  }
+  else
+  {
+    LSDCoordinateConverterLLandUTM Converter;
+  
+    // set the default ellipsoid to WGS84
+    int eId = 22;
+  
+    double Northing,Easting;
+    double Lat,Long;
+  
+    int thisZone;
+  
+    vector<double> new_UTM_Northing;
+    vector<double> new_UTM_Easting;
+    // get UTMZone of the first coordinate and set that as the object zone
+    Converter.LLtoUTM_ForceZone(eId, WGS84Points_latitude[0], WGS84Points_longitude[0],  Northing, Easting, thisZone);
+    UTMZone = thisZone;
+
+    int n_nodes = int(WGS84Points_longitude.size());
+  
+    for(int i = 0; i<n_nodes; i++)
+    {
+      Lat =WGS84Points_latitude[i]; 
+      Long =WGS84Points_longitude[i];
+     
+      Converter.LLtoUTM_ForceZone(eId, Lat, Long,  Northing, Easting, UTMZone);
+    
+      new_UTM_Northing.push_back(Northing);
+      new_UTM_Easting.push_back(Easting);
+    }
+    UTMPoints_Easting = new_UTM_Easting;
+    UTMPoints_Northing = new_UTM_Northing;
+  }
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
 #endif

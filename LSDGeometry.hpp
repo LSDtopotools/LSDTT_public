@@ -121,8 +121,19 @@ class LSDGeometry
     /// @date 10/06/2016
     LSDGeometry(vector<double> x, vector<double> y, string CoordSys)  { create(x,y,CoordSys); }
     
+    
+    /// @brief This function converts points from Lat/Long to UTM.
+    ///  The UTM zone is set as the zone of the first data point
+    ///  If there is no data in the Lat/Long data vectors no action is taken
+    /// @author
+    /// @SMM
+    void convert_points_to_UTM();
+
 
   protected:
+
+    int UTMZone;
+    bool isNorth;
 
     vector<double> UTMPoints_Easting;
     vector<double> UTMPoints_Northing;
