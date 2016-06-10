@@ -21,7 +21,7 @@
 #include "../LSDStatsTools.hpp"
 #include "../LSDRaster.hpp"
 #include "../LSDShapeTools.hpp"
-#include "../LSDJunctionNetwork.hpp"
+#include "../LSDJunctionNetwork.hpp"  
 
 int main (int nNumberofArgs,char *argv[])
 {
