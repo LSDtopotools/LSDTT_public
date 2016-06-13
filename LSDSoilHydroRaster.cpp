@@ -20,7 +20,7 @@
 //
 // Developer can be contacted by simon.m.mudd _at_ ed.ac.uk
 //
-//    Simon Mudd                                                    
+//    Simon Mudd
 //    University of Edinburgh
 //    School of GeoSciences
 //    Drummond Street
@@ -116,12 +116,13 @@ void LSDSoilHydroRaster::create(LSDRaster& OtherRaster)
   NoDataValue = OtherRaster.get_NoDataValue();
   GeoReferencingStrings = OtherRaster.get_GeoReferencingStrings();
   RasterData = OtherRaster.get_RasterData();
+
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Create function that takes the dimensions and georeferencing of a raster
-// but then sets all data to value, setting the NoDataValues to 
+// but then sets all data to value, setting the NoDataValues to
 // the NoData of the raster
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDSoilHydroRaster::create(LSDRaster& OtherRaster, float value)
@@ -135,19 +136,21 @@ void LSDSoilHydroRaster::create(LSDRaster& OtherRaster, float value)
   GeoReferencingStrings = OtherRaster.get_GeoReferencingStrings();
 
   // set the raster data to be a certain value
-  Array2D<float> data(NRows,NCols,NoDataValue); 
-  
+  Array2D<float> data(NRows,NCols,NoDataValue);
+
   for (int row = 0; row <NRows; row++)
   {
     for (int col = 0; col<NCols; col++)
     {
+
       if (OtherRaster.get_data_element(row,col) != NoDataValue)
       {
         data[row][col] = value;
+        //cout << value << endl;
       }
     }
   }
-  
+
   RasterData = data.copy();
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -216,8 +219,8 @@ void LSDSoilHydroRaster::create(int ncols, int nrows, float xmin, float ymin,
 void LSDSoilHydroRaster::SetHomogenousValues(float value)
 {
   // set the raster data to be a certain value
-  Array2D<float> data(NRows,NCols,NoDataValue); 
-  
+  Array2D<float> data(NRows,NCols,NoDataValue);
+
   for (int row = 0; row <NRows; row++)
   {
     for (int col = 0; col<NCols; col++)
@@ -232,20 +235,20 @@ void LSDSoilHydroRaster::SetHomogenousValues(float value)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// This function calculates a snow thickenss (effective, in g cm^-2 for cosmogenic 
+// This function calculates a snow thickenss (effective, in g cm^-2 for cosmogenic
 // applications)  based on a bilinear model such as that of P Kirchner: http://escholarship.org/uc/item/9zn1c1mk#page-8
 // The paper is here: http://www.hydrol-earth-syst-sci.net/18/4261/2014/hess-18-4261-2014.html
 // This paper also agrees withy this general trend:
 // http://www.the-cryosphere.net/8/2381/2014/tc-8-2381-2014.pdf
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDSoilHydroRaster::SetSnowEffDepthBilinear(float SlopeAscend, float SlopeDescend, 
+void LSDSoilHydroRaster::SetSnowEffDepthBilinear(float SlopeAscend, float SlopeDescend,
                           float PeakElevation, float PeakSnowpack, LSDRaster& Elevation)
 {
   float LocalElevation;
   float ascendEffDepth;
   float descendEffDepth;
   float thisEffDepth = 0;
-  
+
   for (int row = 0; row <NRows; row++)
   {
     for (int col = 0; col<NCols; col++)
@@ -253,13 +256,13 @@ void LSDSoilHydroRaster::SetSnowEffDepthBilinear(float SlopeAscend, float SlopeD
       if (RasterData[row][col] != NoDataValue)
       {
         LocalElevation = Elevation.get_data_element(row,col);
-        
+
         if (LocalElevation != NoDataValue)
         {
           // get the effective depth on both the ascending and descending limb
           ascendEffDepth = SlopeAscend*(LocalElevation-PeakElevation)+PeakSnowpack;
           descendEffDepth = SlopeDescend*(LocalElevation-PeakElevation)+PeakSnowpack;
-          
+
           // the correct depth is the lesser of the two
           if (ascendEffDepth < descendEffDepth)
           {
@@ -269,13 +272,13 @@ void LSDSoilHydroRaster::SetSnowEffDepthBilinear(float SlopeAscend, float SlopeD
           {
             thisEffDepth = descendEffDepth;
           }
-          
+
           // if the depth is less than zero, then set to zero
           if(thisEffDepth <0)
           {
             thisEffDepth = 0;
           }
-          
+
           RasterData[row][col] =  thisEffDepth;
 
         }
@@ -290,13 +293,13 @@ void LSDSoilHydroRaster::SetSnowEffDepthBilinear(float SlopeAscend, float SlopeD
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// This function calculates a snow thickenss (effective, in g cm^-2 for cosmogenic 
+// This function calculates a snow thickenss (effective, in g cm^-2 for cosmogenic
 // applications)  based on a richard's equsion sigmoidal growth model
 // It was propoesd to represent peak SWE so we cruedly apply it to average annual SWE
-// see 
+// see
 // http://onlinelibrary.wiley.com/doi/10.1002/2015GL063413/epdf
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDSoilHydroRaster::SetSnowEffDepthRichards(float MaximumEffDepth, float MaximumSlope, float v, 
+void LSDSoilHydroRaster::SetSnowEffDepthRichards(float MaximumEffDepth, float MaximumSlope, float v,
                           float lambda, LSDRaster& Elevation)
 {
   // Don't let V be less than or equal to zero
@@ -310,7 +313,7 @@ void LSDSoilHydroRaster::SetSnowEffDepthRichards(float MaximumEffDepth, float Ma
   float thisEffDepth = 0;
   float elev_mulitplier = (MaximumSlope/MaximumEffDepth)*pow((1+v),1+(1/v));
   float LocalElevation;
-  
+
   for (int row = 0; row <NRows; row++)
   {
     for (int col = 0; col<NCols; col++)
@@ -318,19 +321,19 @@ void LSDSoilHydroRaster::SetSnowEffDepthRichards(float MaximumEffDepth, float Ma
       if (RasterData[row][col] != NoDataValue)
       {
         LocalElevation = Elevation.get_data_element(row,col);
-        
+
         if (LocalElevation != NoDataValue)
         {
           // get the effective depth using the richards sigmoidal gorth function
           exp_term = 1+v*exp(elev_mulitplier*(lambda-LocalElevation));
           thisEffDepth = MaximumEffDepth*pow(exp_term,-(1/v));
-          
+
           // if the depth is less than zero, then set to zero
           if(thisEffDepth <0)
           {
             thisEffDepth = 0;
           }
-          
+
           // update the data
           RasterData[row][col] =  thisEffDepth;
 
@@ -347,7 +350,7 @@ void LSDSoilHydroRaster::SetSnowEffDepthRichards(float MaximumEffDepth, float Ma
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This is an incredibly rudimentary function used to modify landslide raster
-// It takes a few rasters from the 
+// It takes a few rasters from the
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDSoilHydroRaster::NaiveLandslide(LSDRaster& FilledElevation, int initiationPixels,
                                       int MinPixels, float landslide_thickness)
@@ -359,31 +362,31 @@ void LSDSoilHydroRaster::NaiveLandslide(LSDRaster& FilledElevation, int initiati
   boundary_conditions[1] = "no flux";
   boundary_conditions[2] = "no flux";
   boundary_conditions[3] = "No flux";
-  
-  
+
+
   // some values from the rasters
   float local_elev;
   float local_mask;
-  
+
   // get a flow info object
-  LSDFlowInfo FlowInfo(boundary_conditions,FilledElevation);  
-  
+  LSDFlowInfo FlowInfo(boundary_conditions,FilledElevation);
+
   // get the contributing pixels
   LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
   vector<int> sources = FlowInfo.get_sources_index_threshold(ContributingPixels, initiationPixels);
-  
+
   // get a value vector for the landslides
   vector<float> landslide_thicknesses;
   for (int i = 0; i< int(sources.size()); i++)
   {
     landslide_thicknesses.push_back(landslide_thickness);
   }
-  
-  
+
+
   // get the mask
   LSDRaster Mask = FlowInfo.get_upslope_node_mask(sources,landslide_thicknesses);
-  
-  // now set all points that have elevation data but not landslide data to 
+
+  // now set all points that have elevation data but not landslide data to
   // the value of the landslide thickness, removing data that is below the minium
   // pixel area
   for (int row = 0; row<NRows; row++)
@@ -392,15 +395,15 @@ void LSDSoilHydroRaster::NaiveLandslide(LSDRaster& FilledElevation, int initiati
     {
       local_elev =  FilledElevation.get_data_element(row,col);
       local_mask =  Mask.get_data_element(row,col);
-      
+
       RasterData[row][col] = local_mask;
-      
+
       // Turn nodata points into 0s
       if( local_mask == NoDataValue)
       {
         RasterData[row][col] = 0.0;
       }
-      
+
       // remove data where there is no topographic information
       if( local_elev == NoDataValue)
       {
@@ -409,6 +412,135 @@ void LSDSoilHydroRaster::NaiveLandslide(LSDRaster& FilledElevation, int initiati
     }
   }
 }
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Calculate h, the soil depth normal to the slope, used in the factor of safety equation.
+// Call with the soil thickness raster.
+// SWDG 13/6/16
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+LSDSoilHydroRaster LSDSoilHydroRaster::Calculate_h(LSDRaster& Slope){
+
+  Array2D<float> h(NRows, NCols, NoDataValue);
+
+  for (int i = 1; i < NRows - 1; ++i){
+    for (int j = 1; j < NCols - 1; ++j){
+
+      if (RasterData[i][j] != NoDataValue){
+        h[i][j] = RasterData[i][j] * cos(Slope.get_data_element(i,j));
+
+      }
+    }
+  }
+
+  LSDSoilHydroRaster output(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,h,GeoReferencingStrings);
+  return output;
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Calculate w, a hyrdological index, used in the factor of safety equation.
+// Call with the ratio of recharge to transmissivity.
+// SWDG 13/6/16
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+LSDSoilHydroRaster LSDSoilHydroRaster::Calculate_w(LSDRaster& Slope, LSDRaster& DrainageArea){
+
+  Array2D<float> w(NRows, NCols, NoDataValue);
+
+  for (int i = 1; i < NRows - 1; ++i){
+    for (int j = 1; j < NCols - 1; ++j){
+
+      if (RasterData[i][j] != NoDataValue){
+
+        float value = RasterData[i][j] * (DrainageArea.get_data_element(i,j)/sin(Slope.get_data_element(i,j)));
+        if (value < 1.0){
+          w[i][j] = value;
+        }
+        else{
+          w[i][j] = 1.0;
+        }
+
+      }
+    }
+  }
+
+  LSDSoilHydroRaster output(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,w,GeoReferencingStrings);
+  return output;
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Calculate r, the soil to water density ratio, used in the factor of safety equation.
+// Call with the soil density raster.
+// SWDG 13/6/16
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+LSDSoilHydroRaster LSDSoilHydroRaster::Calculate_r(float& rhoW){
+
+  Array2D<float> r(NRows, NCols, NoDataValue);
+
+  for (int i = 1; i < NRows - 1; ++i){
+    for (int j = 1; j < NCols - 1; ++j){
+
+      if (RasterData[i][j] != NoDataValue){
+        r[i][j] = rhoW / RasterData[i][j];
+
+      }
+    }
+  }
+
+  LSDSoilHydroRaster output(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,r,GeoReferencingStrings);
+  return output;
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// @brief Calculate C, a cohesion index, used in the factor of safety equation.
+// Call with the root cohesion raster.
+// SWDG 13/6/16
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+LSDSoilHydroRaster LSDSoilHydroRaster::Calculate_C(LSDSoilHydroRaster& Cs, LSDSoilHydroRaster& h, LSDSoilHydroRaster& rhoS, float& g){
+
+  Array2D<float> C(NRows, NCols, NoDataValue);
+
+  for (int i = 1; i < NRows - 1; ++i){
+    for (int j = 1; j < NCols - 1; ++j){
+
+      if (RasterData[i][j] != NoDataValue){
+        C[i][j] = (RasterData[i][j] + Cs.get_data_element(i,j)) / (h.get_data_element(i,j)*rhoS.get_data_element(i,j)*g);
+
+      }
+    }
+  }
+
+  LSDSoilHydroRaster output(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,C,GeoReferencingStrings);
+  return output;
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Calculate the factor of safety using the sinmap definition.
+// Call with the dimensionless cohesion (C) raster.
+// SWDG 13/6/16
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+LSDSoilHydroRaster LSDSoilHydroRaster::Calculate_sinmap_Fs(LSDRaster& Slope, LSDSoilHydroRaster& w, LSDSoilHydroRaster& r, LSDSoilHydroRaster& phi){
+
+  Array2D<float> Fs(NRows, NCols, NoDataValue);
+
+  for (int i = 1; i < NRows - 1; ++i){
+    for (int j = 1; j < NCols - 1; ++j){
+
+      if (RasterData[i][j] != NoDataValue){
+        Fs[i][j] = ( RasterData[i][j] + cos(Slope.get_data_element(i,j)) * (1.0-w.get_data_element(i,j)*r.get_data_element(i,j)) * tan(phi.get_data_element(i,j)) ) / sin(Slope.get_data_element(i,j));
+      }
+    }
+  }
+
+  LSDSoilHydroRaster output(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,Fs,GeoReferencingStrings);
+  return output;
+
+}
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
