@@ -23,6 +23,7 @@
 #include "../LSDShapeTools.hpp"
 #include "../LSDJunctionNetwork.hpp"
 #include "../LSDGeometry.hpp"
+#include "../LSDFileTools.hpp"
 
 int main (int nNumberofArgs,char *argv[])
 {
@@ -57,13 +58,7 @@ int main (int nNumberofArgs,char *argv[])
   //load dem
   LSDRaster DEM((path+filename), extension);
 
-  // remove seas
-  DEM.remove_seas();
-  
-  // now get a flow info object
-  LSDFlowInfo FlowInfo(DEM);
-  cout << "Got flow info" << endl;
-  
+
   // get the min and max x and y locations
   vector<float> XYMinMax = DEM.get_XY_MinMax();
   cout << "Got the Min and Max values" << endl;
@@ -83,8 +78,8 @@ int main (int nNumberofArgs,char *argv[])
   
   float xl,yl;
   
-  // get some random points to print to a csv file 
-  for (int i = 0; i< 50; i++)
+  // get some random points to generate a geometry object
+  for (int i = 0; i< 11; i++)
   {
     // get random x,y locations
     //cout << "Ran:" << ran3(&seed) << endl;
@@ -97,5 +92,24 @@ int main (int nNumberofArgs,char *argv[])
     y_locs.push_back(yl);
   }
   
+  // get the UTM info from the raster
+  int UTM_zone;
+  bool is_North;
+  DEM.get_UTM_information(UTM_zone, is_North);
+  
+  
+  // now make a geometry object
+  LSDGeometry SomePoints(x_locs,y_locs, UTM_zone, is_North);
+  
+  // get the latlong
+  SomePoints.convert_points_to_LatLong();
+  
+  bool isNorth = SomePoints.get_isNorth();
+  int UTMZone = SomePoints.get_UTMZone();
+  cout << "Is north? " << isNorth << " and UTMZone: " << UTMZone << endl;
+
+  // now print to csv
+  string fname_prefix = "Points_Test";
+  SomePoints.print_points_to_csv(path,fname_prefix);
 
 }

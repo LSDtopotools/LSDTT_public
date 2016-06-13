@@ -8,6 +8,7 @@ SOURCES=test_LSDGeometry.cpp \
     ../LSDGeometry.cpp \
     ../LSDIndexRaster.cpp \
     ../LSDRaster.cpp \
+    ../LSDFileTools.cpp \
     ../LSDRasterInfo.cpp \
     ../LSDFlowInfo.cpp \
     ../LSDStatsTools.cpp \

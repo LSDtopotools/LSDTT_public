@@ -96,7 +96,8 @@ void LSDGeometry::create()
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Creates an LSDGeometry from an LSDRaster 
+// Creates an LSDGeometry object. This needs to be lat-long data (since it)
+// doesn't come with UTM information
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDGeometry::create(vector<double> x, vector<double> y)
 {
@@ -139,8 +140,7 @@ void LSDGeometry::create(vector<double> x, vector<double> y)
   
   if(is_UTM)
   {
-    UTMPoints_Easting = x;
-    UTMPoints_Northing = y;
+    cout << "This appears to be UTM data but you have not provided a zone!" << endl;
   }
   else
   {
@@ -151,7 +151,8 @@ void LSDGeometry::create(vector<double> x, vector<double> y)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Creates an LSDGeometry from an LSDRaster 
+// Creates an LSDGeometry object. This needs to be lat-long data (since it)
+// doesn't come with UTM information
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDGeometry::create(vector<float> x, vector<float> y)
 {
@@ -175,39 +176,117 @@ void LSDGeometry::create(vector<float> x, vector<float> y)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Creates an LSDGeometry from an LSDRaster 
+// Creates an LSDGeometry object. This is in UTM format and so has UTM information 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDGeometry::create(vector<double> x, vector<double> y, string coord_sys)
+void LSDGeometry::create(vector<double> x, vector<double> y, int thisUTMzone)
 {
-  string WGS = "WGS84";
-  string UTM = "UTM";
+  // This reads in x and y vectors. 
+  // It judges whether or not these are UTM coordinates by checking if
+  // any of the data elements are over the maximum or minimum of latitude
+  // or longitude
+  int n_x_points = int(x.size());
+  int n_y_points = int(y.size());
   
-  if(coord_sys == WGS)
+  if (n_x_points != n_y_points)
   {
-    WGS84Points_longitude = x; 
-    WGS84Points_latitude = y; 
+    cout << "X and Y vectors not the same size! No data loaded. " << endl;
   }
-  else if (coord_sys == UTM)
+  else if (n_x_points == 0)
   {
-    UTMPoints_Easting = x;
-    UTMPoints_Northing = y;
+    cout << "Your data vectors are empty! " << endl;
   }
   else
   {
-    create(x, y);
+    UTMPoints_Easting = x; 
+    UTMPoints_Northing = y;
+    UTMZone = thisUTMzone;
+    isNorth = true; 
   }
-  
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Creates an LSDGeometry object. This is in UTM format and so has UTM information 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDGeometry::create(vector<float> x, vector<float> y, int thisUTMzone)
+{
+  int n_x_points = int(x.size());
+  int n_y_points = int(y.size());
+  vector<double> x_double;
+  vector<double> y_double;
+  if (n_x_points != n_y_points)
+  {
+    cout << "X and Y vectors not the same size! No data loaded. " << endl;
+  }
+  for(int i = 0; i<n_x_points; i++)
+  {
+    x_double.push_back( double(x[i]));
+    y_double.push_back( double(y[i]));
+  }
+  
+  create(x_double, y_double, thisUTMzone);
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Creates an LSDGeometry from an LSDRaster 
+// Creates an LSDGeometry object. This is in UTM format and so has UTM information
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDGeometry::create(vector<double> x, vector<double> y, int thisUTMzone, bool ThisisNorth)
+{
+  // This reads in x and y vectors. 
+  // It judges whether or not these are UTM coordinates by checking if
+  // any of the data elements are over the maximum or minimum of latitude
+  // or longitude
+  int n_x_points = int(x.size());
+  int n_y_points = int(y.size());
+  
+  if (n_x_points != n_y_points)
+  {
+    cout << "X and Y vectors not the same size! No data loaded. " << endl;
+  }
+  else if (n_x_points == 0)
+  {
+    cout << "Your data vectors are empty! " << endl;
+  }
+  else
+  {
+    UTMPoints_Easting = x; 
+    UTMPoints_Northing = y;
+    UTMZone = thisUTMzone;
+    isNorth = ThisisNorth; 
+  }
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Creates an LSDGeometry object. This is in UTM format and so has UTM information 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDGeometry::create(vector<float> x, vector<float> y, int thisUTMzone, bool ThisisNorth)
+{
+  int n_x_points = int(x.size());
+  int n_y_points = int(y.size());
+  vector<double> x_double;
+  vector<double> y_double;
+  if (n_x_points != n_y_points)
+  {
+    cout << "X and Y vectors not the same size! No data loaded. " << endl;
+  }
+  for(int i = 0; i<n_x_points; i++)
+  {
+    x_double.push_back( double(x[i]));
+    y_double.push_back( double(y[i]));
+  }
+  
+  create(x_double, y_double, thisUTMzone,ThisisNorth);
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This converts points from Lat/Long to UTM
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDGeometry::convert_points_to_UTM()
 {
 
-  
   if( WGS84Points_latitude.size() == 0)
   {
     cout << "Trying to convert from Latitude and Longitude but you don't have any data." << endl;
@@ -222,13 +301,23 @@ void LSDGeometry::convert_points_to_UTM()
     double Northing,Easting;
     double Lat,Long;
   
-    int thisZone;
+    int thisZone = 1;     // This gets replaced in the LLtoUTM operation
   
     vector<double> new_UTM_Northing;
     vector<double> new_UTM_Easting;
     // get UTMZone of the first coordinate and set that as the object zone
-    Converter.LLtoUTM_ForceZone(eId, WGS84Points_latitude[0], WGS84Points_longitude[0],  Northing, Easting, thisZone);
+    Converter.LLtoUTM(eId, WGS84Points_latitude[0], WGS84Points_longitude[0],  Northing, Easting, thisZone);
+    
+    // get the zone and the isNorth parameters
     UTMZone = thisZone;
+    if(WGS84Points_latitude[0] > 0)
+    {
+      isNorth = true;
+    }
+    else
+    {
+      isNorth = false;
+    }
 
     int n_nodes = int(WGS84Points_longitude.size());
   
@@ -237,6 +326,8 @@ void LSDGeometry::convert_points_to_UTM()
       Lat =WGS84Points_latitude[i]; 
       Long =WGS84Points_longitude[i];
      
+     // We use force zone here since all points will be forced into the UTM zone 
+     // of the first data element. 
       Converter.LLtoUTM_ForceZone(eId, Lat, Long,  Northing, Easting, UTMZone);
     
       new_UTM_Northing.push_back(Northing);
@@ -249,6 +340,103 @@ void LSDGeometry::convert_points_to_UTM()
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Creates an LSDGeometry from UTM to Lat/Long
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDGeometry::convert_points_to_LatLong()
+{
+
+  
+  if( UTMPoints_Northing.size() == 0)
+  {
+    cout << "Trying to convert from UTM but you don't have any data." << endl;
+  }
+  else
+  {
+    LSDCoordinateConverterLLandUTM Converter;
+  
+    // set the default ellipsoid to WGS84
+    int eId = 22;
+  
+    double Northing,Easting;
+    double Lat,Long;
+  
+    vector<double> new_WGS84Points_latitude;
+    vector<double> new_WGS84Points_longitude;
+
+    int n_nodes = int(UTMPoints_Easting.size());
+  
+    for(int i = 0; i<n_nodes; i++)
+    {
+      Northing =UTMPoints_Northing[i]; 
+      Easting =UTMPoints_Easting[i];
+     
+      Converter.UTMtoLL(eId, Northing, Easting, UTMZone, isNorth, Lat,Long);
+    
+      new_WGS84Points_latitude.push_back(Lat);
+      new_WGS84Points_longitude.push_back(Long);
+    }
+    WGS84Points_latitude = new_WGS84Points_latitude;
+    WGS84Points_longitude = new_WGS84Points_longitude;
+  }
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prints the underlying point data to csv
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDGeometry::print_points_to_csv(string path, string file_prefix)
+{
+
+  string fname = path+file_prefix+".csv";
+
+  int n_UTM_nodes = int(UTMPoints_Northing.size());
+  int n_WGS_nodes = int(WGS84Points_latitude.size());
+  
+  bool have_UTM = false;
+  bool have_WGS = false;
+  
+  if (n_UTM_nodes > 0)
+  {
+    have_UTM = true;
+  }
+  if (n_WGS_nodes > 0)
+  {
+    have_WGS = true;
+  }
+  
+  if (not have_UTM && not have_WGS)
+  {
+    cout << "Trying to print points but there is no data!" << endl;
+  }
+  else
+  {
+    if (have_UTM && not have_WGS)
+    {
+      convert_points_to_LatLong();
+      n_WGS_nodes = int(WGS84Points_latitude.size());
+    }
+    if (not have_UTM && have_WGS)
+    {
+      convert_points_to_UTM();
+      n_UTM_nodes = int(UTMPoints_Northing.size());
+    }
+    
+    ofstream csv_out;
+    csv_out.open(fname.c_str());
+    csv_out << "latitude,longitude,Northing,Easting" << endl;
+    for (int i = 0; i< n_UTM_nodes; i++)
+    {
+      csv_out.precision(7);
+      csv_out << WGS84Points_latitude[i] << "," << WGS84Points_longitude[i] << ",";
+      csv_out.precision(9);
+      csv_out << UTMPoints_Northing[i] << "," << UTMPoints_Easting[i] << endl;
+    }
+    csv_out.close();
+  }
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 #endif

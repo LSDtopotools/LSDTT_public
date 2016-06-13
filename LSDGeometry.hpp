@@ -97,41 +97,97 @@ class LSDGeometry
     /// @date 10/06/2016
     LSDGeometry()  { create(); }
 
-    /// @brief Create with two vectors
-    /// @detail The X should be either Easting or Longitude
-    ///  the Y vector should be either Northing or latitude
-    ///  The function checks which one it is. 
+    /// @brief Create with two vectors: no UTM provided so assumed lat/long
+    /// @detail The X should be Longitude
+    ///  the Y vector should be latitude
+    /// @param x The longitdue data in a vector
+    /// @param y the latitude data in a vector
     /// @author SMM
     /// @date 10/06/2016
     LSDGeometry(vector<double> x, vector<double> y)  { create(x,y); }
  
-    /// @brief Create with two vectors
-    /// @detail The X should be either Easting or Longitude
-    ///  the Y vector should be either Northing or latitude
-    ///  The function checks which one it is. 
+    /// @brief Create with two vectors: no UTM provided so assumed lat/long
+    /// @detail The X should be Longitude
+    ///  the Y vector should be latitude
+    /// @param x The longitdue data in a vector
+    /// @param y the latitude data in a vector
     /// @author SMM
     /// @date 10/06/2016
     LSDGeometry(vector<float> x, vector<float> y)  { create(x,y); }
  
-    /// @brief Create with two vectors
-    /// @detail The X should be either Easting or Longitude
-    ///  the Y vector should be either Northing or latitude
-    ///  The function checks which one it is. 
+    /// @brief Create with two vectors. UTM info provided
+    /// @detail The X should be Easting or Longitude
+    ///  the Y vector should be Northing
+    ///  This version assumes northern hemisphere 
+    /// @param x The Easting data in a vector
+    /// @param y the Northing data in a vector
     /// @author SMM
-    /// @date 10/06/2016
-    LSDGeometry(vector<double> x, vector<double> y, string CoordSys)  { create(x,y,CoordSys); }
-    
-    
+    /// @date 13/06/2016
+    LSDGeometry(vector<double> x, vector<double> y, int UTMZone)  { create(x,y,UTMZone); }
+
+    /// @brief Create with two vectors. UTM info provided
+    /// @detail The X should be Easting or Longitude
+    ///  the Y vector should be Northing 
+    ///  This version assumes northern hemisphere 
+    /// @param x The Easting data in a vector
+    /// @param y the Northing data in a vector
+    /// @author SMM
+    /// @date 13/06/2016
+    LSDGeometry(vector<float> x, vector<float> y, int UTMZone)  { create(x,y,UTMZone); }
+
+    /// @brief Create with two vectors. UTM info provided
+    /// @detail The X should be Easting or Longitude
+    ///  the Y vector should be Northing 
+    /// @param x The Easting data in a vector
+    /// @param y the Northing data in a vector
+    /// @author SMM
+    /// @date 13/06/2016
+    LSDGeometry(vector<double> x, vector<double> y, int UTMZone, bool isNorth)  { create(x,y,UTMZone, isNorth); }
+
+    /// @brief Create with two vectors. UTM info provided
+    /// @detail The X should be Easting or Longitude
+    ///  the Y vector should be Northing 
+    /// @param x The Easting data in a vector
+    /// @param y the Northing data in a vector
+    /// @author SMM
+    /// @date 13/06/2016
+    LSDGeometry(vector<float> x, vector<float> y, int UTMZone, bool isNorth)  { create(x,y,UTMZone, isNorth); }
+
     /// @brief This function converts points from Lat/Long to UTM.
     ///  The UTM zone is set as the zone of the first data point
     ///  If there is no data in the Lat/Long data vectors no action is taken
-    /// @author
-    /// @SMM
+    /// @author SMM
+    /// @date 10/06/2016
     void convert_points_to_UTM();
+
+    /// @brief This function converts points from UTM to Lat/Long.
+    ///  The UTM zone is set as the zone of the first data point
+    ///  If there is no data in the Lat/Long data vectors no action is taken
+    /// @author SMM
+    /// @date 13/06/2016
+    void convert_points_to_LatLong();
+
+    /// @brief This prints the points to a csv file. It will contain both UTM and
+    ///  lat-long coordinates. The UTM zone is the zone of the first point, 
+    ///  The lat long coordinates are in WGS84
+    /// @param  path The path to the outfile. Needs the trailing slash
+    /// @param file_prefix The prefix of the file **before extension**. That is, 
+    ///  this function will add the .csv to the end of the filename
+    /// @author SMM
+    /// @date 13/06/2016
+    void print_points_to_csv(string path, string file_prefix);
+
+    // the getter functions
+    int get_UTMZone() { return UTMZone; }
+    bool get_isNorth() { return isNorth; }
+    vector<double> get_UTMPoints_Easting() { return UTMPoints_Easting; }
+    vector<double> get_UTMPoints_Northing() { return UTMPoints_Northing; }
+    vector<double> get_WGS84Points_latitude() { return WGS84Points_latitude; }
+    vector<double> get_WGS84Points_longitude() { return WGS84Points_longitude; }
 
 
   protected:
-
+    
     int UTMZone;
     bool isNorth;
 
@@ -140,12 +196,18 @@ class LSDGeometry
     
     vector<double> WGS84Points_latitude;
     vector<double> WGS84Points_longitude;
+    
+
+    
 
   private:
     void create();
     void create(vector<double> x, vector<double> y);
     void create(vector<float> x, vector<float> y);
-    void create(vector<double> x, vector<double> y,string coord_sys);
+    void create(vector<double> x, vector<double> y, int UTMZone);
+    void create(vector<float> x, vector<float> y, int UTMZone);
+    void create(vector<double> x, vector<double> y, int UTMZone, bool isNorth);
+    void create(vector<float> x, vector<float> y, int UTMZone, bool isNorth);
 
 };
 
