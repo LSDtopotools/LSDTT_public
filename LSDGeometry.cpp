@@ -509,4 +509,147 @@ void LSDGeometry::find_row_and_col_of_points(LSDRasterInfo& RI, vector<int>& Row
   ColOfNodes = col_vec;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This checks if there is UTM data and if not updates it
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDGeometry::check_and_update_UTM()
+{
+  int n_nodes = int(UTMPoints_Northing.size());
+  if (n_nodes == 0)
+  {
+    convert_points_to_UTM();
+  }
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// These functions get the maximum and minimum values for Northing and easting
+// In general these are for scaling svg output. 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+double LSDGeometry::get_max_UTM_Northing()
+{
+  check_and_update_UTM();
+  int n_nodes = int(UTMPoints_Northing.size());
+  double max_Northing = UTMPoints_Northing[0];
+  
+  for(int n = 0; n<n_nodes; n++)
+  {
+    if(UTMPoints_Northing[n] > max_Northing)
+    {
+      max_Northing = UTMPoints_Northing[n]; 
+    }
+  }
+  return max_Northing;
+
+}
+double LSDGeometry::get_min_UTM_Northing()
+{
+  check_and_update_UTM();
+  int n_nodes = int(UTMPoints_Northing.size());
+  double min_Northing = UTMPoints_Northing[0];
+  
+  for(int n = 0; n<n_nodes; n++)
+  {
+    if(UTMPoints_Northing[n] < min_Northing)
+    {
+      min_Northing = UTMPoints_Northing[n]; 
+    }
+  }
+  return min_Northing;
+}
+double LSDGeometry::get_max_UTM_Easting()
+{
+  check_and_update_UTM();
+  int n_nodes = int(UTMPoints_Easting.size());
+  double max_Easting = UTMPoints_Easting[0];
+  
+  for(int n = 0; n<n_nodes; n++)
+  {
+    if(UTMPoints_Easting[n] > max_Easting)
+    {
+      max_Easting = UTMPoints_Easting[n]; 
+    }
+  }
+  return max_Easting;
+
+}
+double LSDGeometry::get_min_UTM_Easting()
+{
+  check_and_update_UTM();
+  int n_nodes = int(UTMPoints_Easting.size());
+  double min_Easting = UTMPoints_Easting[0];
+  
+  for(int n = 0; n<n_nodes; n++)
+  {
+    if(UTMPoints_Easting[n] < min_Easting)
+    {
+      min_Easting = UTMPoints_Easting[n]; 
+    }
+  }
+  return min_Easting;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This checks to see if the NodeOrder exists and if not simply links the poitns in order
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDPolyline::make_simple_polyline()
+{
+  vector<int> new_node_order;
+  
+  int n_order = (node_order.size());
+  if(n_order == 0)
+  {
+    int n_nodes;
+    n_nodes = int(UTMPoints_Easting.size());
+    if( n_nodes == 0)
+    {
+      n_nodes = int(WGS84Points_latitude.size());
+    }
+    
+    for(int i = 0; i<n_nodes; i++)
+    {
+      new_node_order.push_back(i);
+    }
+    node_order =  new_node_order;
+    
+  }
+  else
+  {
+    cout << "This polyline already has a node order: I won't do anything" << endl;
+  }
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This checks to see if the NodeOrder exists and if not simply links the poitns in order
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDPolyline::force_simple_polyline()
+{
+  vector<int> new_node_order;
+  
+  int n_nodes;
+  n_nodes = int(UTMPoints_Easting.size());
+  if( n_nodes == 0)
+  {
+    n_nodes = int(WGS84Points_latitude.size());
+  }
+    
+  for(int i = 0; i<n_nodes; i++)
+  {
+    new_node_order.push_back(i);
+  }
+  node_order = new_node_order;
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 #endif

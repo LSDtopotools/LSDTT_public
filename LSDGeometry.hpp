@@ -186,6 +186,37 @@ class LSDGeometry
     /// @date 14/06/2106
     void find_row_and_col_of_points(LSDRasterInfo& RI, vector<int>& RowOfNodes, vector<int>& ColOfNodes);
 
+    /// @brief This function checks to see if the data has been converted to UTM
+    ///  and if not updates it. 
+    /// @author SMM
+    /// @date 14/06/2016
+    void check_and_update_UTM();
+
+    /// @brief This gets the maximum northing value
+    /// @return maximum UTM northing
+    /// @author SMM
+    /// @date 14/06/2016
+    double get_max_UTM_Northing();
+
+    /// @brief This gets the minimum northing value
+    /// @return minimum UTM northing
+    /// @author SMM
+    /// @date 14/06/2016
+    double get_min_UTM_Northing();
+    
+    /// @brief This gets the maximum Easting value
+    /// @return maximum UTM Easting
+    /// @author SMM
+    /// @date 14/06/2016
+    double get_max_UTM_Easting();
+    
+    /// @brief This gets the minimum Easting value
+    /// @return minimum UTM Easting
+    /// @author SMM
+    /// @date 14/06/2016
+    double get_min_UTM_Easting();
+
+
     // the getter functions
     int get_UTMZone() { return UTMZone; }
     bool get_isNorth() { return isNorth; }
@@ -219,5 +250,34 @@ class LSDGeometry
     void create(vector<float> x, vector<float> y, int UTMZone, bool isNorth);
 
 };
+
+
+/// @brief This object packages a number of tools for chi analysis
+class LSDPolyline: public LSDGeometry
+{
+  public:
+
+    /// @brief This sets the polyline node_order to simply be the order of 
+    ///  the points. This only makes the simple polyline if the node_order vector is empty
+    /// @author SMM
+    /// @date 14/06/2016
+    void make_simple_polyline();
+    
+    /// @brief This sets the polyline node_order to simply be the order of 
+    ///  the points. This overwrites any existing node_order data
+    /// @author SMM
+    /// @date 14/06/2016
+    void force_simple_polyline();
+    
+
+  protected:
+    
+    /// A vector containing the order in which poins are connected
+    vector<int> node_order;
+    
+  private:
+
+};
+
 
 #endif
