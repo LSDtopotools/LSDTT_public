@@ -269,7 +269,17 @@ class LSDPolyline: public LSDGeometry
     /// @date 14/06/2016
     void force_simple_polyline();
     
-
+    /// @brief this  Gets the pixels of all the nodes along the path of a line
+    /// @param RI an LSDRasterInfo object
+    /// @param affected_rows A vector containing the row numbers of the affected pixels
+    /// @param affected_cols: A vector containing the col numbers of the affected pixels
+    /// @param start_index The index into the UTM coordinate vector of the starting node
+    /// @param end_index the index into the UTM coodinate index of the ending node
+    /// @author SMM
+    /// @date 14/06/2016
+    void get_affected_pixels_in_line_segment(LSDRasterInfo& RI,
+                                             vector<int>& affected_rows, vector<int>& affected_cols, 
+                                             int start_index, int end_index);
   protected:
     
     /// A vector containing the order in which poins are connected

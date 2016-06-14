@@ -439,7 +439,7 @@ void LSDGeometry::print_points_to_csv(string path, string file_prefix)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// This prints the underlying point data to csv
+// Gets the row and column of all points in the raster
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDGeometry::find_row_and_col_of_points(LSDRasterInfo& RI, vector<int>& RowOfNodes, vector<int>& ColOfNodes)
 {
@@ -626,10 +626,8 @@ void LSDPolyline::make_simple_polyline()
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-
-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// This checks to see if the NodeOrder exists and if not simply links the poitns in order
+// This checks to see if the NodeOrder exists and if not simply links the points in order
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDPolyline::force_simple_polyline()
 {
@@ -650,6 +648,66 @@ void LSDPolyline::force_simple_polyline()
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+void LSDPolyline::get_affected_pixels_in_line_segment(LSDRasterInfo& RI,
+                                                      vector<int>& affected_rows, vector<int>& affected_cols, 
+                                                      int start_node, int end_node)
+{
+  // make empty vectors that will contain the nodes
+  vector<int> node_row;
+  vector<int> node_col;
+  
+  // check to make sure there are UTM coords
+  check_and_update_UTM();
+  
+  int n_nodes = int(UTMPoints_Easting.size());
+  
+  bool valid_nodes = true;
+  
+  // get the starting node location in UTM
+  if (start_node < 0 || start_node >= n_nodes)
+  {
+    cout << "Start node does not have a valid index" << endl;
+    valid_nodes = false;
+  }
+  if (end_node < 0 || end_node >= n_nodes)
+  {
+    cout << "End node does not have a valid index" << endl;
+    valid_nodes = false;
+  }
+  
+  // The start and end nodes are valid, enter the analysis
+  if (valid_nodes)
+  {
+    double UTM_East_start = UTMPoints_Easting[start_node];
+    double UTM_North_start = UTMPoints_Northing[start_node]; 
+
+    double UTM_East_end = UTMPoints_Easting[end_node];
+    double UTM_North_end = UTMPoints_Northing[end_node]; 
+    
+    // get the row and column of both the start end end node
+    
+    
+    
+    double denominator = UTM_East_end-UTM_East_start;
+    double numerator = UTM_North_end-UTM_North_start;
+    if (denominator == 0)
+    {
+      // logif for if this is a staight line
+    }
+    else if (numerator == 0)
+    {
+      // logic
+    }
+    else
+    {
+      double slope = numerator/denominator;
+    }
+
+  }
+
+}
+
 
 
 #endif
