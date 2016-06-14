@@ -177,6 +177,15 @@ class LSDGeometry
     /// @date 13/06/2016
     void print_points_to_csv(string path, string file_prefix);
 
+    /// @brief This gets vectors continaing the row and columns of 
+    ///  the points from an LSDRasterInfo object
+    /// @param RI and LSDRasterInfo object
+    /// @param row_vec a vector containing the rows of the points (this is replaced by the function)
+    /// @param col_vec a vector containing the cols of the points (this is replaced by the function)
+    /// @author SMM
+    /// @date 14/06/2106
+    void find_row_and_col_of_points(LSDRasterInfo& RI, vector<int>& RowOfNodes, vector<int>& ColOfNodes);
+
     // the getter functions
     int get_UTMZone() { return UTMZone; }
     bool get_isNorth() { return isNorth; }

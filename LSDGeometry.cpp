@@ -438,5 +438,75 @@ void LSDGeometry::print_points_to_csv(string path, string file_prefix)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prints the underlying point data to csv
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDGeometry::find_row_and_col_of_points(LSDRasterInfo& RI, vector<int>& RowOfNodes, vector<int>& ColOfNodes)
+{
+  // empty vectors for adding the rows and columns
+  vector<int> row_vec;
+  vector<int> col_vec;
 
+  // first check to see if there is any UTM data
+  if (UTMPoints_Northing.size() == 0)
+  {
+    // If you don't have UTM points, convert WGS to UTM
+    convert_points_to_UTM();
+  }
+  
+  // Get the X and Y minimums
+  float XMinimum = RI.get_XMinimum();
+  float YMinimum = RI.get_YMinimum();
+  int NoDataValue = int(RI.get_NoDataValue());
+  float DataResolution = RI.get_DataResolution();
+  int NRows = RI.get_NRows();
+  int NCols = RI.get_NCols();
+
+  int this_row;
+  int this_col;
+  
+  // Shift origin to that of dataset
+  float X_coordinate_shifted_origin;
+  float Y_coordinate_shifted_origin;
+  
+  // the actual coordinates
+  float X_coordinate;
+  float Y_coordinate;
+  
+  // now loop through nodes
+  int N_nodes =  int(UTMPoints_Northing.size());
+  for(int i = 0; i<N_nodes; i++)
+  {
+    this_row = NoDataValue;
+    this_col = NoDataValue;
+
+    X_coordinate = UTMPoints_Easting[i];
+    Y_coordinate = UTMPoints_Northing[i];
+  
+    // Shift origin to that of dataset
+    X_coordinate_shifted_origin = X_coordinate - XMinimum;
+    Y_coordinate_shifted_origin = Y_coordinate - YMinimum;
+
+    // Get row and column of point
+    int col_point = int(X_coordinate_shifted_origin/DataResolution);
+    int row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/DataResolution));
+
+    //cout << "Getting row and col, " << row_point << " " << col_point << endl;
+    if(col_point > 0 && col_point < NCols-1)
+    {
+      this_col = col_point;
+    }
+    if(row_point > 0 && row_point < NRows -1)
+    {
+      this_row = row_point;
+    }
+    
+    row_vec.push_back(this_row);
+    col_vec.push_back(this_col);
+  }
+
+  RowOfNodes = row_vec;
+  ColOfNodes = col_vec;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #endif
