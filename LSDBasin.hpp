@@ -492,7 +492,7 @@ class LSDBasin
   /// @param basin_raster LSDIndexRaster containing the basin codes. It should
   ///  be initialsed using write_integer_data_to_LSDIndexRaster
   /// @param FlowInfo the flowinfo data member
-  /// @drainage_of_other_basins This is a map where the key is an int, which
+  /// @param drainage_of_other_basins This is a map where the key is an int, which
   ///  has the basin number, and the value is an int, the number of pixels in
   ///  the basin. It is somewhat dangerous because it does not make sure that
   ///  the user is inputting unique basin numbers so some basin numbers could be
@@ -864,7 +864,7 @@ class LSDCosmoBasin: public LSDBasin
     /// @param Elevation_Data the DEM, an LSDRaster object. IMPORTANT!! This needs
     ///  to contain georeferencing information for this to work!!!
     /// @param Topo_Shield an LSDRaster with the topographic shielding
-    /// @param Snow_Shield  an LSDRaster containing the snow shielding.
+    /// @param Snow_shield an LSDRaster containing the snow shielding.
     /// @param path_to_atmospheric_data THis is a path to binary NCEP data.
     /// @author SMM
     /// @date 22/12/2014
@@ -968,7 +968,7 @@ class LSDCosmoBasin: public LSDBasin
     /// @param Nuclide a string denoting the name of the nuclide (at the moment
     ///  options are 10Be and 26Al)
     /// @param Nuclide_conc_err The instrument error in the nuclide concentration
-    /// @param prod_uncert_fracton This is a fraction of the total uncertainty
+    /// @param prod_uncert_factor This is a fraction of the total uncertainty
     ///  for the production rates. It is a lumped parameter that can be used
     ///  for just production, or for snow, topo and porduction uncertainty
     /// @param Muon_scaling string that gives the muon scaling scheme
@@ -983,12 +983,12 @@ class LSDCosmoBasin: public LSDBasin
     /// @brief This function wraps the erosion rate calculator, and returns
     ///  both the erosion rate as well as the uncertainties  ^
     /// @param known_eff_erosion a raster containing known effective erosion rates (g/cm2/yr)
-    /// @param flow_info the LSDFlowInfo object
+    /// @param FlowInfo the LSDFlowInfo object
     /// @param Nuclide_conc Concetration of the nuclide
     /// @param Nuclide a string denoting the name of the nuclide (at the moment
     ///  options are 10Be and 26Al)
     /// @param Nuclide_conc_err The instrument error in the nuclide concentration
-    /// @param prod_uncert_fracton This is a fraction of the total uncertainty
+    /// @param prod_uncert_factor This is a fraction of the total uncertainty
     ///  for the production rates. It is a lumped parameter that can be used
     ///  for just production, or for snow, topo and porduction uncertainty
     /// @param Muon_scaling string that gives the muon scaling scheme
@@ -1277,7 +1277,7 @@ class LSDCosmoBasin: public LSDBasin
     ///  produce that production rate. It also returns a number of valriables
     ///  that can be plugged into existing calculators to compare results
     ///  from the LSDCosmo calulcator against other methods
-    /// @param Elevation_Data the DEM, an LSDRaster object. IMPORTANT!! This needs
+    /// @param Elevation the DEM, an LSDRaster object. IMPORTANT!! This needs
     ///  to contain georeferencing information for this to work!!!
     /// @param FlowInfo the LSDFlowInfo object
     /// @param path_to_atmospheric_data THis is a path to binary NCEP data.
@@ -1305,11 +1305,11 @@ class LSDCosmoBasin: public LSDBasin
     ///  from the LSDCosmo calulcator against other methods
     ///  This version allows you to input a know erosion rate raster. Production and other
     ///  scalings are masked anywhere the erosion rates are known.
-    /// @param Elevation_Data the DEM, an LSDRaster object. IMPORTANT!! This needs
+    /// @param Elevation the DEM, an LSDRaster object. IMPORTANT!! This needs
     ///  to contain georeferencing information for this to work!!!
     /// @param FlowInfo the LSDFlowInfo object
     /// @param path_to_atmospheric_data THis is a path to binary NCEP data.
-    /// @param known_eros_erate An LSDRaster containing the known effective erosion rates
+    /// @param known_eff_erosion An LSDRaster containing the known effective erosion rates
     /// @return a vector of values used in open-source calculators
     ///  vector[0] = AverageProd;
     ///  vector[1] = AverageTopo;
