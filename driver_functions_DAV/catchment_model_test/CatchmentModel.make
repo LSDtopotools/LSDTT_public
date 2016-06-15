@@ -7,7 +7,8 @@ SOURCES = ../catchmentmodel_driver.cpp \
 			../../LSDRaster.cpp \
 			../../LSDIndexRaster.cpp \
 			../../LSDStatsTools.cpp \
-			../../LSDShapeTools.cpp
+			../../LSDShapeTools.cpp \
+			../../LSDGrainMatrix.cpp
 SCRIPTS = 
 OBJ = $(SOURCES:.cpp=.o)
 #LIBS = -lfftw3 -lpython2.7 -g -O0 -D_GLIBCXX_DEBUG
