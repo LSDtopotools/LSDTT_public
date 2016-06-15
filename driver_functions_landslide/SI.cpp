@@ -48,10 +48,11 @@ int main (int nNumberofArgs,char *argv[])
   float hi_phiValue;
   float low_RoverTValue;
   float hi_RoverTValue;
-  float rhosValue;
-  int WindowSize;
-  float g;
+  float low_rhosValue;
+  float hi_rhosValue;
   float rhow;
+  float g;
+  int WindowSize;
   string OutPath;
   string temp;
 
@@ -62,9 +63,9 @@ int main (int nNumberofArgs,char *argv[])
 	             >> temp >> low_DValue >> hi_DValue
 	             >> temp >> low_phiValue >> hi_phiValue
 	             >> temp >> low_RoverTValue >> hi_RoverTValue
-               >> temp >> rhosValue
-               >> temp >> g
+               >> temp >> low_rhosValue >> hi_rhosValue
                >> temp >> rhow
+               >> temp >> g
                >> temp >> WindowSize
 	             >> temp >> OutPath;
   file_info_in.close();
@@ -99,6 +100,7 @@ int main (int nNumberofArgs,char *argv[])
   LSDSoilHydroRaster low_Cr(FilledDEM, low_CrValue);
   LSDSoilHydroRaster low_phi(FilledDEM, low_phiValue);
   LSDSoilHydroRaster low_D(FilledDEM, low_DValue);
+  LSDSoilHydroRaster low_rhos(FilledDEM, low_rhosValue);
 
   //populate SoilHydroRasters with upper bounds parameter values
   LSDSoilHydroRaster hi_RoverT(FilledDEM, hi_RoverTValue);
@@ -106,26 +108,24 @@ int main (int nNumberofArgs,char *argv[])
   LSDSoilHydroRaster hi_Cr(FilledDEM, hi_CrValue);
   LSDSoilHydroRaster hi_phi(FilledDEM, hi_phiValue);
   LSDSoilHydroRaster hi_D(FilledDEM, hi_DValue);
-
-  // Soil density is treated as a constant - this will change in future
-  LSDSoilHydroRaster rhos(FilledDEM, rhosValue);
-  LSDSoilHydroRaster r = rhos.Calculate_r(rhow);
+  LSDSoilHydroRaster hi_rhos(FilledDEM, hi_rhosValue);
 
   //Calculate dimensionless parameters used in final Fs calculations
   LSDSoilHydroRaster hi_h = hi_D.Calculate_h(SlopeDeg);
   LSDSoilHydroRaster hi_w = hi_RoverT.Calculate_w(SlopeDeg, DrainageArea);
-  LSDSoilHydroRaster hi_C = hi_Cr.Calculate_C(hi_Cs, hi_h, rhos, g);
+  LSDSoilHydroRaster hi_C = hi_Cr.Calculate_C(hi_Cs, hi_h, low_rhos, g);
+  LSDSoilHydroRaster hi_r = hi_rhos.Calculate_r(rhow);
 
   LSDSoilHydroRaster low_h = low_D.Calculate_h(SlopeDeg);
   LSDSoilHydroRaster low_w = low_RoverT.Calculate_w(SlopeDeg, DrainageArea);
-  LSDSoilHydroRaster low_C = low_Cr.Calculate_C(low_Cs, low_h, rhos, g);
+  LSDSoilHydroRaster low_C = low_Cr.Calculate_C(low_Cs, low_h, hi_rhos, g);
+  LSDSoilHydroRaster low_r = low_rhos.Calculate_r(rhow);
 
   //Calculate factor of safety
-  LSDSoilHydroRaster Fs_min = hi_C.Calculate_sinmap_Fs(SlopeDeg, low_w, r, hi_phi);
-  LSDSoilHydroRaster Fs_max = low_C.Calculate_sinmap_Fs(SlopeDeg, hi_w, r, low_phi);
+  LSDSoilHydroRaster Fs_min = hi_C.Calculate_sinmap_Fs(SlopeDeg, low_w, low_r, hi_phi);
+  LSDSoilHydroRaster Fs_max = low_C.Calculate_sinmap_Fs(SlopeDeg, hi_w, hi_r, low_phi);
 
-
-  LSDSoilHydroRaster SI = r.Calculate_sinmap_SI(Slope, DrainageArea, low_C, hi_C, low_phi, hi_phi, low_RoverT, hi_RoverT, r, Fs_min,  Fs_max);
+  LSDSoilHydroRaster SI = low_r.Calculate_sinmap_SI(Slope, DrainageArea, low_C, hi_C, low_phi, hi_phi, low_RoverT, hi_RoverT, low_r, hi_r, Fs_min,  Fs_max);
 
   //Write factor of safety to file
   Fs_min.write_raster((OutPath+"Fs_min"), RasterFormat);
