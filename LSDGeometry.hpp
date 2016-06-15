@@ -188,7 +188,7 @@ class LSDGeometry
 
     /// @brief This gets the row and column of a point based on an LSDRasterInfo
     ///  It will return negative and out of bounds indices: used to work
-    ///  with finctions for determining affected pixels. 
+    ///  with functions for determining affected pixels. 
     /// @param RI and LSDRasterInfo object
     /// @param point_index an index into the UTM data vectors
     /// @param RowOfNode the row of the point (this is replaced by the function)
@@ -198,6 +198,20 @@ class LSDGeometry
     /// @date 15/06/2106
     void find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI, 
                       int point_index, int& RowOfNode, int& ColOfNode, bool IsOutOfBounds);
+
+    /// @brief This gets the row and column of a point based on an LSDRasterInfo
+    ///  It will return negative and out of bounds indices: used to work
+    ///  with finctions for determining affected pixels. 
+    /// @param RI and LSDRasterInfo object
+    /// @param UTM_Easting an easting location
+    /// @param UTM_Northing a northing location
+    /// @param RowOfNode the row of the point (this is replaced by the function)
+    /// @param ColOfNode the col of the point (this is replaced by the function)
+    /// @param IsOutOfBounds a boolean that is true if the point is out of the bounds of the raster
+    /// @author SMM
+    /// @date 15/06/2106
+    void find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI, 
+                      double UTM_Easting, double UTM_northing, int& RowOfNode, int& ColOfNode, bool IsOutOfBounds);
 
     /// @brief This function checks to see if the data has been converted to UTM
     ///  and if not updates it. 
@@ -293,6 +307,28 @@ class LSDPolyline: public LSDGeometry
     void get_affected_pixels_in_line_segment(LSDRasterInfo& RI,
                                              vector<int>& affected_rows, vector<int>& affected_cols, 
                                              int start_index, int end_index);
+
+    /// @brief this  Gets the pixels of all the nodes along the path of a line
+    ///  The strategy here is just to increment along a line so this has the possiblity
+    ///  of missing nodes if the incrementing is too coarse.
+    /// @param RI an LSDRasterInfo object
+    /// @param affected_rows A vector containing the row numbers of the affected pixels
+    /// @param affected_cols: A vector containing the col numbers of the affected pixels
+    /// @param start_index The index into the UTM coordinate vector of the starting node
+    /// @param end_index the index into the UTM coodinate index of the ending node
+    /// @author SMM
+    /// @date 15/06/2016
+    void get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo& RI,
+                                             vector<int>& affected_rows, vector<int>& affected_cols, 
+                                             int start_index, int end_index);
+
+/*
+    /// @detail THis traces to the next pixel ensureing no nodes are missed
+    void trace_to_next_pixel(LSDRasterInfo& RI, double StartEasting,double StartNorthing, int start_row, int start_col,
+                         int end_row, int end_col, int current_row, int current_col, 
+                         double slope, 
+                         double& PixelEasting, double& PixelNorthing);
+*/
   protected:
     
     /// A vector containing the order in which poins are connected

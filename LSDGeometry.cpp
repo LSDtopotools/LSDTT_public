@@ -510,6 +510,9 @@ void LSDGeometry::find_row_and_col_of_points(LSDRasterInfo& RI, vector<int>& Row
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Gets the row and column of a single point. 
 // It includes out of bounds points (i.e., with rows and columsn either less than zero
@@ -588,6 +591,77 @@ void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI,
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Gets the row and column of a single point. 
+// It includes out of bounds points (i.e., with rows and columsn either less than zero
+//  or greater than NRows or NCols)
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI, 
+                      double UTM_Easting, double UTM_northing, int& RowOfNode, int& ColOfNode, bool IsOutOfBounds)
+{
+
+  // Get the X and Y minimums
+  float XMinimum = RI.get_XMinimum();
+  float YMinimum = RI.get_YMinimum();
+  int NoDataValue = int(RI.get_NoDataValue());
+  float DataResolution = RI.get_DataResolution();
+  int NRows = RI.get_NRows();
+  int NCols = RI.get_NCols();
+
+  int this_row = NoDataValue;
+  int this_col = NoDataValue;
+  bool OutOfBounds = true;
+
+  // Shift origin to that of dataset
+  float X_coordinate_shifted_origin;
+  float Y_coordinate_shifted_origin;
+  
+  // the actual coordinates
+  float X_coordinate;
+  float Y_coordinate;
+
+  // first check to see if there is any UTM data
+  if (UTMPoints_Northing.size() == 0)
+  {
+    // If you don't have UTM points, convert WGS to UTM
+    convert_points_to_UTM();
+  }
+  
+
+  X_coordinate = UTM_Easting;
+  Y_coordinate = UTM_northing;
+  
+  // Shift origin to that of dataset
+  X_coordinate_shifted_origin = X_coordinate - XMinimum;
+  Y_coordinate_shifted_origin = Y_coordinate - YMinimum;
+  
+  // Get row and column of point
+  int col_point = int(X_coordinate_shifted_origin/DataResolution);
+  int row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/DataResolution));
+
+  //cout << "Getting row and col, " << row_point << " " << col_point << endl;
+  if(col_point > 0 && col_point < NCols-1)
+  {
+    OutOfBounds = false;
+  }
+  if(row_point > 0 && row_point < NRows -1)
+  {
+    OutOfBounds = false;
+  }
+  
+  this_row = row_point;
+  this_col = col_point;
+
+
+  RowOfNode = this_row;
+  ColOfNode = this_col;
+  IsOutOfBounds = OutOfBounds;
+  
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This checks if there is UTM data and if not updates it
@@ -821,6 +895,270 @@ void LSDPolyline::get_affected_pixels_in_line_segment(LSDRasterInfo& RI,
   }
 
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This is a brute force way to get all the affected pixels. It just slides along the path
+// in jumps of fixed distance and collects pixels. 
+// There is some probablity of missing out pixels with this method if the
+// line intersects a very small corner.
+// collecting pixels
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo& RI,
+                                    vector<int>& affected_rows, vector<int>& affected_cols, 
+                                    int start_node, int end_node)
+{
+  // steps are in 1/1000th of the grid resolution
+  double step = 0.001;
+  double Slope;
+  
+  // get some info from the RasterInfo object
+  double DataResolution = double(RI.get_DataResolution());
+
+  // make empty vectors that will contain the nodes
+  vector<int> node_row;
+  vector<int> node_col;
+  
+  // check to make sure there are UTM coords
+  check_and_update_UTM();
+  
+  int n_nodes = int(UTMPoints_Easting.size());
+  
+  bool valid_nodes = true;
+  
+  // get the starting node location in UTM
+  if (start_node < 0 || start_node >= n_nodes)
+  {
+    cout << "Start node does not have a valid index" << endl;
+    valid_nodes = false;
+  }
+  if (end_node < 0 || end_node >= n_nodes)
+  {
+    cout << "End node does not have a valid index" << endl;
+    valid_nodes = false;
+  }
+  
+  // The start and end nodes are valid, enter the analysis
+  if (valid_nodes)
+  {
+    double UTM_East_start = UTMPoints_Easting[start_node];
+    double UTM_North_start = UTMPoints_Northing[start_node]; 
+
+    double UTM_East_end = UTMPoints_Easting[end_node];
+    double UTM_North_end = UTMPoints_Northing[end_node]; 
+    
+    // get the row and column of both the start and end node
+    int start_row,start_col;
+    int end_row,end_col;
+    bool OOB_start = true;
+    bool OOB_end = true;
+    find_row_and_col_of_point_inc_out_of_bounds(RI, start_node, start_row, start_col, OOB_start);
+    find_row_and_col_of_point_inc_out_of_bounds(RI, end_node, end_row, end_col, OOB_end);
+    
+    
+    int current_col = start_col;
+    int current_row = start_row;
+    
+    double CurrentEasting = UTM_East_start;
+    double CurrentNorthing = UTM_North_start;
+    
+    double denominator = UTM_East_end-UTM_East_start;
+    double numerator = UTM_North_end-UTM_North_start;
+    
+    // Set up the increments along the line
+    double NorthingIncrement;
+    double EastingIncrement;
+    if(denominator == 0)
+    {
+      EastingIncrement = 0;
+      NorthingIncrement = DataResolution*step;
+    }
+    else
+    {
+      if (numerator == 0)
+      {
+        EastingIncrement = DataResolution*step;
+        NorthingIncrement = 0;
+      }
+      else
+      {
+        Slope = numerator/denominator;
+      
+        if (numerator*numerator > denominator*denominator)
+        {
+          NorthingIncrement = DataResolution*step;
+          EastingIncrement = Slope*NorthingIncrement;
+        }
+        else
+        {
+          EastingIncrement = DataResolution*step;
+          NorthingIncrement = EastingIncrement/Slope;
+        }
+      }
+    }
+    
+    // This is for debugging!
+    ofstream points_out;
+    points_out.open("/home/smudd/SMMDataStore/analysis_for_papers/Test_map_chi_gradient/test_force_points.csv");
+    points_out.precision(9);
+    points_out << "X,Y,row,col" << endl;
+    
+    
+    // Now I've got the increments.
+    int last_row = current_row;
+    int last_col = current_col;
+    if(not OOB_start)
+    {
+      node_row.push_back(current_row);
+      node_col.push_back(current_col);
+    }
+    bool IsOutOfBounds = true;
+    while (current_col != end_col && current_row != end_row)
+    {
+      CurrentEasting = CurrentEasting+EastingIncrement;
+      CurrentNorthing = CurrentNorthing+NorthingIncrement;
+      
+
+      find_row_and_col_of_point_inc_out_of_bounds(RI, CurrentEasting, CurrentNorthing, 
+                                  current_row, current_col, IsOutOfBounds);
+
+      points_out << CurrentEasting << "," << CurrentNorthing << "," << current_row << "," << current_col << endl;
+
+      if (not IsOutOfBounds)
+      {
+        if(current_row != last_row || current_col != last_col)
+        {
+          node_row.push_back(current_row);
+          node_col.push_back(current_col);
+        }
+      }
+      last_row = current_row;
+      last_col = current_col;
+    }
+    
+  }
+  
+  affected_rows = node_row;
+  affected_cols = node_col;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This is some logic to the next pixel along a line segment
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void trace_to_next_pixel(LSDRasterInfo& RI, double StartEasting,double StartNorthing, int start_row, int start_col,
+                         int end_row, int end_col, int current_row, int current_col, 
+                         double slope, 
+                         double& PixelEasting, double& PixelNorthing)
+{
+  bool OnLastPixel;
+  
+  double ShiftedEasting = StartEasting-XMinimum;
+  double ShiftedNorthing = StartNorthing-YMinimum;
+  
+  int current_row;
+  int current_col;
+
+  // get some info from the RasterInfo object
+  double XMinimum = double(RI.get_XMinimum());
+  double YMinimum = double(RI.get_YMinimum());
+  int NoDataValue = int(RI.get_NoDataValue());
+  float DataResolution = RI.get_DataResolution();
+  int NRows = RI.get_NRows();
+  int NCols = RI.get_NCols();
+
+  // First test for ending and starting pixels
+  
+  // This first logic is if the pixels are all on the same row
+  if ( (end_row-start_row) == 0)
+  {
+    // 
+    if(start_col < 0)
+    {
+      if (end_col < 0)
+      {
+        current_col =NoDataValue;
+        current_row = NoDataValue; 
+      }
+      else
+      {
+        current_col = 0;
+        cuurent_row = start_row;
+        CurrentEasting = XMinimum;
+        CurrentNorthing = StartNorthing;
+      }
+    }    // end if statement for cols that start below zero
+    else if (start_col >= NCols)    // this is for cols that begin past the end col
+    {
+      if (end_col >= NCols)
+      {
+        current_col =NoDataValue;
+        current_row = NoDataValue; 
+      }
+      else
+      {
+        current_col = 0;
+        cuurent_row = start_row;
+        CurrentEasting = XMinimum+(double(NCols)*DataResolution);
+        CurrentNorthing = StartNorthing;
+      }
+    }             // End statement for cols that begin past the end col
+    else          // This is the logic for any point that starts inside the raster domain
+    {
+      if(start_col > end_col)
+      {
+        current_col = current_col-1;
+        cuurent_row = start_row;
+        CurrentEasting = XMinimum+((double(current_col)+1)*DataResolution);
+        CurrentNorthing = StartNorthing;
+      }
+      else if (start_col < end_col)
+      {
+        current_col = current_col+1;
+        cuurent_row = start_row;
+        CurrentEasting = XMinimum+((double(current_col))*DataResolution);
+        CurrentNorthing = StartNorthing;
+      }
+      else
+      {
+        OnLastPixel = True;
+      }
+    }       // End logic for nodes where starting pixel is within raster domain
+  }         // End logic for nodes where the start and end rows are the same
+    
+  // Now we do pixels where the start col and end col are the same
+  // The logic here is a little bit more difficult because the rows start at 0 indexing at the top
+  // of the raster
+  
+  
+    
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+*/
+
+
 
 
 
