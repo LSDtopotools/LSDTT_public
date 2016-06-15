@@ -301,7 +301,7 @@ class LSDSoilHydroRaster: public LSDRaster
     /// @return An LSDSoilHydroRaster coded with stability index values.
     /// @author SWDG
     /// @date 15/6/16
-    LSDSoilHydroRaster Calculate_sinmap_SI(LSDRaster Slope, LSDRaster DrainageArea, LSDSoilHydroRaster lo_C, LSDSoilHydroRaster hi_C, LSDSoilHydroRaster lo_phi, LSDSoilHydroRaster hi_phi, LSDSoilHydroRaster lo_RoverT, LSDSoilHydroRaster hi_RoverT, LSDSoilHydroRaster r, LSDSoilHydroRaster lo_FS, LSDSoilHydroRaster hi_FS);
+    LSDSoilHydroRaster Calculate_sinmap_SI(LSDRaster Slope, LSDRaster DrainageArea, LSDSoilHydroRaster lo_C, LSDSoilHydroRaster hi_C, LSDSoilHydroRaster lo_phi, LSDSoilHydroRaster hi_phi, LSDSoilHydroRaster lo_RoverT, LSDSoilHydroRaster hi_RoverT, LSDSoilHydroRaster lo_r, LSDSoilHydroRaster hi_r, LSDSoilHydroRaster lo_FS, LSDSoilHydroRaster hi_FS);
 
   protected:
 
