@@ -123,14 +123,14 @@ class LSDSoilHydroRaster: public LSDRaster
     LSDSoilHydroRaster()     { create(); }
 
     /// @brief Create a SoilHydroRaster by copying an LSDRaster
-    /// @param THisRaster The LSDRaster to be copied
+    /// @param ThisRaster The LSDRaster to be copied
     /// @author SMM
     /// @date 11/11/2015
     LSDSoilHydroRaster(LSDRaster& ThisRaster)
       { create(ThisRaster); }
 
     /// @brief Create a SoilHydroRaster by copying an LSDRaster
-    /// @param THisRaster The LSDRaster to be copied
+    /// @param ThisRaster The LSDRaster to be copied
     /// @param value the value which all the data elements take
     /// @author SMM
     /// @date 11/11/2015
@@ -217,7 +217,7 @@ class LSDSoilHydroRaster: public LSDRaster
     ///  used to generate self shielding rasters to test the CRN basinwide code
     ///  IT SHOULD NOT IN ANY WAY BE USED TO PREDICT SLOPE STABILITY
     /// @param FilledElevation an elevation raster: needs to be filled or the code will crash!
-    /// @param intiationPixels and interger giving the number of pixels
+    /// @param initiationPixels and interger giving the number of pixels
     ///  that "initiates" a landslide. Lnadlides then form upslope of pixels meeting
     ///  this threshold
     /// @param MinPixels pixels upslope of the initiation point will not
