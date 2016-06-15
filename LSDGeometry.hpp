@@ -186,6 +186,19 @@ class LSDGeometry
     /// @date 14/06/2106
     void find_row_and_col_of_points(LSDRasterInfo& RI, vector<int>& RowOfNodes, vector<int>& ColOfNodes);
 
+    /// @brief This gets the row and column of a point based on an LSDRasterInfo
+    ///  It will return negative and out of bounds indices: used to work
+    ///  with finctions for determining affected pixels. 
+    /// @param RI and LSDRasterInfo object
+    /// @param point_index an index into the UTM data vectors
+    /// @param RowOfNode the row of the point (this is replaced by the function)
+    /// @param ColOfNode the col of the point (this is replaced by the function)
+    /// @param IsOutOfBounds a boolean that is true if the point is out of the bounds of the raster
+    /// @author SMM
+    /// @date 15/06/2106
+    void find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI, 
+                      int point_index, int& RowOfNode, int& ColOfNode, bool IsOutOfBounds);
+
     /// @brief This function checks to see if the data has been converted to UTM
     ///  and if not updates it. 
     /// @author SMM

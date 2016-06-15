@@ -511,6 +511,85 @@ void LSDGeometry::find_row_and_col_of_points(LSDRasterInfo& RI, vector<int>& Row
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Gets the row and column of a single point. 
+// It includes out of bounds points (i.e., with rows and columsn either less than zero
+//  or greater than NRows or NCols)
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI, 
+                      int point_index, int& RowOfNode, int& ColOfNode, bool IsOutOfBounds)
+{
+
+  // Get the X and Y minimums
+  float XMinimum = RI.get_XMinimum();
+  float YMinimum = RI.get_YMinimum();
+  int NoDataValue = int(RI.get_NoDataValue());
+  float DataResolution = RI.get_DataResolution();
+  int NRows = RI.get_NRows();
+  int NCols = RI.get_NCols();
+
+  int this_row = NoDataValue;
+  int this_col = NoDataValue;
+  bool OutOfBounds = true;
+
+  // Shift origin to that of dataset
+  float X_coordinate_shifted_origin;
+  float Y_coordinate_shifted_origin;
+  
+  // the actual coordinates
+  float X_coordinate;
+  float Y_coordinate;
+
+  // first check to see if there is any UTM data
+  if (UTMPoints_Northing.size() == 0)
+  {
+    // If you don't have UTM points, convert WGS to UTM
+    convert_points_to_UTM();
+  }
+  
+  // Test to see if node index is in range
+  int N_nodes =  int(UTMPoints_Northing.size());
+  if (point_index < 0 || point_index >= N_nodes)
+  {
+    cout << "Your node index is out of the bounds of the point data." << endl;
+  
+  }
+  else
+  {
+  
+    X_coordinate = UTMPoints_Easting[point_index];
+    Y_coordinate = UTMPoints_Northing[point_index];
+  
+    // Shift origin to that of dataset
+    X_coordinate_shifted_origin = X_coordinate - XMinimum;
+    Y_coordinate_shifted_origin = Y_coordinate - YMinimum;
+
+    // Get row and column of point
+    int col_point = int(X_coordinate_shifted_origin/DataResolution);
+    int row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/DataResolution));
+
+    //cout << "Getting row and col, " << row_point << " " << col_point << endl;
+    if(col_point > 0 && col_point < NCols-1)
+    {
+      OutOfBounds = false;
+    }
+    if(row_point > 0 && row_point < NRows -1)
+    {
+      OutOfBounds = false;
+    }
+    
+    this_row = row_point;
+    this_col = col_point;
+  }
+
+  RowOfNode = this_row;
+  ColOfNode = this_col;
+  IsOutOfBounds = OutOfBounds;
+  
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This checks if there is UTM data and if not updates it
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDGeometry::check_and_update_UTM()
@@ -653,6 +732,15 @@ void LSDPolyline::get_affected_pixels_in_line_segment(LSDRasterInfo& RI,
                                                       vector<int>& affected_rows, vector<int>& affected_cols, 
                                                       int start_node, int end_node)
 {
+  // get some info from the RasterInfo object
+  float XMinimum = RI.get_XMinimum();
+  float YMinimum = RI.get_YMinimum();
+  int NoDataValue = int(RI.get_NoDataValue());
+  float DataResolution = RI.get_DataResolution();
+  int NRows = RI.get_NRows();
+  int NCols = RI.get_NCols();
+
+
   // make empty vectors that will contain the nodes
   vector<int> node_row;
   vector<int> node_col;
@@ -685,19 +773,45 @@ void LSDPolyline::get_affected_pixels_in_line_segment(LSDRasterInfo& RI,
     double UTM_East_end = UTMPoints_Easting[end_node];
     double UTM_North_end = UTMPoints_Northing[end_node]; 
     
-    // get the row and column of both the start end end node
+    // get the row and column of both the start and end node
+    int start_row,start_col;
+    int end_row,end_col;
+    bool OOB_start, OOB_end;
+    find_row_and_col_of_point_inc_out_of_bounds(RI, start_node, start_row, start_col, OOB_start);
+    find_row_and_col_of_point_inc_out_of_bounds(RI, end_node, end_row, end_col, OOB_end);
     
+    
+    int current_col;
+    int current_row;
+    
+    bool IsIncreasingCol;
+    bool IsIncreasingRow;
     
     
     double denominator = UTM_East_end-UTM_East_start;
     double numerator = UTM_North_end-UTM_North_start;
-    if (denominator == 0)
+    if ( (end_row-start_row) == 0)
     {
-      // logif for if this is a staight line
+      // loop through all the nodes between the start and end
+      if(start_col < 0)
+      {
+        if (end_col < 0)
+        {
+          current_col =NoDataValue;
+        }
+        else
+        {
+          current_col = 0;
+        }
+        
+        
+        
+        
+      }
     }
     else if (numerator == 0)
     {
-      // logic
+      // This means the row always stays the same
     }
     else
     {
