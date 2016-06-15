@@ -540,6 +540,30 @@ LSDSoilHydroRaster LSDSoilHydroRaster::Calculate_sinmap_Fs(LSDRaster& Slope, LSD
 
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Calculate the the sinmap Stability Index (SI).
+// This is a wrapper around a lightly modified port of the original sinmap 2.0 implementation.
+// call with any SoilHydroRaster, it's values are used for identification of NoDataValues.
+//
+// SWDG 15/6/16
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+LSDSoilHydroRaster LSDSoilHydroRaster::Calculate_sinmap_SI(LSDRaster Slope, LSDRaster DrainageArea, LSDSoilHydroRaster lo_C, LSDSoilHydroRaster hi_C, LSDSoilHydroRaster lo_phi, LSDSoilHydroRaster hi_phi, LSDSoilHydroRaster lo_RoverT, LSDSoilHydroRaster hi_RoverT, LSDSoilHydroRaster r, LSDSoilHydroRaster lo_FS, LSDSoilHydroRaster hi_FS){
+
+  Array2D<float> SI(NRows, NCols, NoDataValue);
+
+  for (int i = 1; i < NRows - 1; ++i){
+    for (int j = 1; j < NCols - 1; ++j){
+
+      if (RasterData[i][j] != NoDataValue){
+        SI[i][j] = StabilityIndex(Slope.get_data_element(i, j), DrainageArea.get_data_element(i, j), lo_C.get_data_element(i, j), hi_C.get_data_element(i, j), lo_phi.get_data_element(i, j), hi_phi.get_data_element(i, j), lo_RoverT.get_data_element(i, j), hi_RoverT.get_data_element(i, j), r.get_data_element(i, j), lo_FS.get_data_element(i, j), hi_FS.get_data_element(i, j));
+      }
+    }
+  }
+
+  LSDSoilHydroRaster output(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,SI,GeoReferencingStrings);
+  return output;
+
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

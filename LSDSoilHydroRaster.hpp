@@ -283,6 +283,25 @@ class LSDSoilHydroRaster: public LSDRaster
     /// @date 13/6/16
     LSDSoilHydroRaster Calculate_sinmap_Fs(LSDRaster& Slope, LSDSoilHydroRaster& w, LSDSoilHydroRaster& r, LSDSoilHydroRaster& phi);
 
+    /// @brief Calculate the the sinmap Stability Index (SI).
+    ///
+    /// @details This is a wrapper around a lightly modified port of the original sinmap 2.0 implementation.
+    /// call with any SoilHydroRaster, it's values are used for identification of NoDataValues.
+    /// @param Slope LSDRaster of slope.
+    /// @param DrainageArea LSDRaster of drainage area from D-infinity
+    /// @param lo_C LSDSoilHydroRaster of lower bound dimensionless cohesion.
+    /// @param hi_C LSDSoilHydroRaster of upper bound dimensionless cohesion.
+    /// @param lo_phi LSDSoilHydroRaster of lower bound friction angle.
+    /// @param hi_phi LSDSoilHydroRaster of upper bound friction angle.
+    /// @param lo_RoverT LSDSoilHydroRaster of lower bound ratio of reharge to transmissivity.
+    /// @param hi_RoverT LSDSoilHydroRaster of upper bound ratio of reharge to transmissivity.
+    /// @param r LSDSoilHydroRaster of water to soil density ratio.
+    /// @param lo_FS LSDSoilHydroRaster of minimum factor of safety values.
+    /// @param hi_FS LSDSoilHydroRaster of maximum factor of safety values.
+    /// @return An LSDSoilHydroRaster coded with stability index values.
+    /// @author SWDG
+    /// @date 15/6/16
+    LSDSoilHydroRaster Calculate_sinmap_SI(LSDRaster Slope, LSDRaster DrainageArea, LSDSoilHydroRaster lo_C, LSDSoilHydroRaster hi_C, LSDSoilHydroRaster lo_phi, LSDSoilHydroRaster hi_phi, LSDSoilHydroRaster lo_RoverT, LSDSoilHydroRaster hi_RoverT, LSDSoilHydroRaster r, LSDSoilHydroRaster lo_FS, LSDSoilHydroRaster hi_FS);
 
   protected:
 
