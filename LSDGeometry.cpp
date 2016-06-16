@@ -83,6 +83,7 @@
 #include "LSDStatsTools.hpp"
 #include "LSDShapeTools.hpp"
 #include "LSDGeometry.hpp"
+#include "LSDRasterInfo.hpp"
 using namespace std;
 using namespace TNT;
 
@@ -519,7 +520,7 @@ void LSDGeometry::find_row_and_col_of_points(LSDRasterInfo& RI, vector<int>& Row
 //  or greater than NRows or NCols)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI, 
-                      int point_index, int& RowOfNode, int& ColOfNode, bool IsOutOfBounds)
+                      int point_index, int& RowOfNode, int& ColOfNode, bool& IsOutOfBounds)
 {
 
   // Get the X and Y minimums
@@ -573,11 +574,12 @@ void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI,
     //cout << "Getting row and col, " << row_point << " " << col_point << endl;
     if(col_point > 0 && col_point < NCols-1)
     {
-      OutOfBounds = false;
-    }
-    if(row_point > 0 && row_point < NRows -1)
-    {
-      OutOfBounds = false;
+      //cout << "I'm in the cols!";
+      if(row_point > 0 && row_point < NRows -1)
+      {
+        //cout << " and in the rows, I'm not out of bounds!" << endl;
+        OutOfBounds = false;
+      }
     }
     
     this_row = row_point;
@@ -600,7 +602,8 @@ void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI,
 //  or greater than NRows or NCols)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI, 
-                      double UTM_Easting, double UTM_northing, int& RowOfNode, int& ColOfNode, bool IsOutOfBounds)
+                      double UTM_Easting, double UTM_northing, int& RowOfNode, int& ColOfNode, 
+                      bool& IsOutOfBounds)
 {
 
   // Get the X and Y minimums
@@ -642,15 +645,17 @@ void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI,
   int col_point = int(X_coordinate_shifted_origin/DataResolution);
   int row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/DataResolution));
 
-  //cout << "Getting row and col, " << row_point << " " << col_point << endl;
+  //cout << "POINTY!! Getting row and col, " << row_point << " " << col_point << endl;
   if(col_point > 0 && col_point < NCols-1)
   {
-    OutOfBounds = false;
+    //cout << "I'm in the cols!";
+    if(row_point > 0 && row_point < NRows -1)
+    {
+      //cout << " and in the rows, I'm not out of bounds!" << endl;
+      OutOfBounds = false;
+    }
   }
-  if(row_point > 0 && row_point < NRows -1)
-  {
-    OutOfBounds = false;
-  }
+
   
   this_row = row_point;
   this_col = col_point;
@@ -802,100 +807,52 @@ void LSDPolyline::force_simple_polyline()
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-void LSDPolyline::get_affected_pixels_in_line_segment(LSDRasterInfo& RI,
-                                                      vector<int>& affected_rows, vector<int>& affected_cols, 
-                                                      int start_node, int end_node)
-{
-  // get some info from the RasterInfo object
-  float XMinimum = RI.get_XMinimum();
-  float YMinimum = RI.get_YMinimum();
-  int NoDataValue = int(RI.get_NoDataValue());
-  float DataResolution = RI.get_DataResolution();
-  int NRows = RI.get_NRows();
-  int NCols = RI.get_NCols();
-
-
-  // make empty vectors that will contain the nodes
-  vector<int> node_row;
-  vector<int> node_col;
-  
-  // check to make sure there are UTM coords
-  check_and_update_UTM();
-  
-  int n_nodes = int(UTMPoints_Easting.size());
-  
-  bool valid_nodes = true;
-  
-  // get the starting node location in UTM
-  if (start_node < 0 || start_node >= n_nodes)
-  {
-    cout << "Start node does not have a valid index" << endl;
-    valid_nodes = false;
-  }
-  if (end_node < 0 || end_node >= n_nodes)
-  {
-    cout << "End node does not have a valid index" << endl;
-    valid_nodes = false;
-  }
-  
-  // The start and end nodes are valid, enter the analysis
-  if (valid_nodes)
-  {
-    double UTM_East_start = UTMPoints_Easting[start_node];
-    double UTM_North_start = UTMPoints_Northing[start_node]; 
-
-    double UTM_East_end = UTMPoints_Easting[end_node];
-    double UTM_North_end = UTMPoints_Northing[end_node]; 
-    
-    // get the row and column of both the start and end node
-    int start_row,start_col;
-    int end_row,end_col;
-    bool OOB_start, OOB_end;
-    find_row_and_col_of_point_inc_out_of_bounds(RI, start_node, start_row, start_col, OOB_start);
-    find_row_and_col_of_point_inc_out_of_bounds(RI, end_node, end_row, end_col, OOB_end);
-    
-    
-    int current_col;
-    int current_row;
-    
-    bool IsIncreasingCol;
-    bool IsIncreasingRow;
-    
-    
-    double denominator = UTM_East_end-UTM_East_start;
-    double numerator = UTM_North_end-UTM_North_start;
-    if ( (end_row-start_row) == 0)
-    {
-      // loop through all the nodes between the start and end
-      if(start_col < 0)
-      {
-        if (end_col < 0)
-        {
-          current_col =NoDataValue;
-        }
-        else
-        {
-          current_col = 0;
-        }
-        
-        
-        
-        
-      }
-    }
-    else if (numerator == 0)
-    {
-      // This means the row always stays the same
-    }
-    else
-    {
-      double slope = numerator/denominator;
-    }
-
-  }
-
-}
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This gets affected pixels along line
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDPolyline::get_affected_pixels_in_line(LSDRasterInfo& RI,
+                                    vector<int>& affected_rows, vector<int>& affected_cols)
+{
+  // get the number of segments in the node order
+  int n_points = (node_order.size());
+  if (n_points == 0)
+  {
+    cout << "This polyline doesn't have segments: I am making segments in the node order" << endl;
+    make_simple_polyline();
+    n_points = (node_order.size());
+  }
+  
+  int start_node;
+  int end_node;
+  
+  vector<int> all_pixel_rows;
+  vector<int> all_pixel_cols;
+  
+  // now loop through the segments collecting the nodes
+  for (int seg = 0; seg< n_points-1; seg++)
+  {
+    start_node = node_order[seg];
+    end_node = node_order[seg+1];
+    
+    vector<int> these_rows;
+    vector<int> these_cols;
+    
+    get_affected_pixels_in_line_segment_brute_force(RI,these_rows, these_cols, 
+                                                    start_node, end_node);
+    int n_affected_nodes = int(these_rows.size());
+    for (int n = 0; n<n_affected_nodes; n++)
+    {
+      all_pixel_rows.push_back(these_rows[n]);
+      all_pixel_cols.push_back(these_cols[n]);
+    }
+  } 
+  
+  affected_rows = all_pixel_rows;
+  affected_cols = all_pixel_cols;
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This is a brute force way to get all the affected pixels. It just slides along the path
@@ -909,6 +866,7 @@ void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo&
                                     int start_node, int end_node)
 {
   // steps are in 1/1000th of the grid resolution
+  //double step = 0.001;
   double step = 0.001;
   double Slope;
   
@@ -947,6 +905,9 @@ void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo&
     double UTM_East_end = UTMPoints_Easting[end_node];
     double UTM_North_end = UTMPoints_Northing[end_node]; 
     
+    //cout << "Start E: " <<  UTM_East_start << " N: " << UTM_North_start << endl;
+    //cout << "end E: " <<  UTM_East_end << " N: " << UTM_North_end << endl; 
+    
     // get the row and column of both the start and end node
     int start_row,start_col;
     int end_row,end_col;
@@ -955,6 +916,9 @@ void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo&
     find_row_and_col_of_point_inc_out_of_bounds(RI, start_node, start_row, start_col, OOB_start);
     find_row_and_col_of_point_inc_out_of_bounds(RI, end_node, end_row, end_col, OOB_end);
     
+    //cout << "Now looking at the start and end points"<< endl;
+    //cout << "SR: " << start_row << " SC: " << start_col << " OOB: " << OOB_start << endl;
+    //cout << "ER: " << end_row << " EC: " << end_col << " OOB: " << OOB_end << endl;
     
     int current_col = start_col;
     int current_row = start_row;
@@ -964,6 +928,9 @@ void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo&
     
     double denominator = UTM_East_end-UTM_East_start;
     double numerator = UTM_North_end-UTM_North_start;
+    
+    //cout << "numerator: " << numerator << endl;
+    //cout << "denominator: " << denominator << endl;
     
     // Set up the increments along the line
     double NorthingIncrement;
@@ -983,32 +950,54 @@ void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo&
       else
       {
         Slope = numerator/denominator;
+        cout << "Slope is: " << Slope << endl;
       
         if (numerator*numerator > denominator*denominator)
         {
-          NorthingIncrement = DataResolution*step;
-          EastingIncrement = Slope*NorthingIncrement;
+          if(numerator > 0)
+          {
+            NorthingIncrement = DataResolution*step;
+          }
+          else
+          {
+            NorthingIncrement = -DataResolution*step;
+          }
+          EastingIncrement = NorthingIncrement/Slope;
         }
         else
         {
-          EastingIncrement = DataResolution*step;
-          NorthingIncrement = EastingIncrement/Slope;
+          if(denominator > 0)
+          {
+            EastingIncrement = DataResolution*step;
+          }
+          else
+          {
+            EastingIncrement = -DataResolution*step;
+          }
+          NorthingIncrement = EastingIncrement*Slope;
         }
       }
     }
     
+    //cout << "DataResolution: " << DataResolution << " DeltaE: " << EastingIncrement << endl
+    //     << "DeltaN: " << NorthingIncrement << endl;
+    
+    
     // This is for debugging!
-    ofstream points_out;
-    points_out.open("/home/smudd/SMMDataStore/analysis_for_papers/Test_map_chi_gradient/test_force_points.csv");
-    points_out.precision(9);
-    points_out << "X,Y,row,col" << endl;
+    //ofstream points_out;
+    //points_out.open("/home/smudd/SMMDataStore/analysis_for_papers/Test_map_chi_gradient/test_force_points.csv");
+    //points_out.open("/LSDTopoTools/Topographic_projects/Mandakini/mandakini_line_test.csv");
+    //points_out.precision(9);
+    //points_out << "X,Y,row,col" << endl;
     
     
     // Now I've got the increments.
     int last_row = current_row;
     int last_col = current_col;
+    //cout << "OOB_start is: " << OOB_start << endl;
     if(not OOB_start)
     {
+      //cout << "Pushing first points" << endl;
       node_row.push_back(current_row);
       node_col.push_back(current_col);
     }
@@ -1018,16 +1007,59 @@ void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo&
       CurrentEasting = CurrentEasting+EastingIncrement;
       CurrentNorthing = CurrentNorthing+NorthingIncrement;
       
-
       find_row_and_col_of_point_inc_out_of_bounds(RI, CurrentEasting, CurrentNorthing, 
                                   current_row, current_col, IsOutOfBounds);
 
-      points_out << CurrentEasting << "," << CurrentNorthing << "," << current_row << "," << current_col << endl;
+      //cout << CurrentEasting << "," << CurrentNorthing << "," << current_row << "," << current_col << endl;
+
+      // test to see if you have overshot
+      if(end_row > start_row)
+      {
+        if (current_row > end_row)
+        {
+          cout << "I've overshot!" << endl;
+          current_row = end_row;
+          current_col = end_col;
+        }
+      }
+      else if (start_row > end_row)
+      {
+        if (current_row < end_row)
+        {
+          cout << "I've overshot!" << endl;
+          current_row = end_row;
+          current_col = end_col;
+        }
+      }
+      else
+      {
+        if(end_col > start_col)
+        {
+          if (current_col > end_col)
+          {
+            cout << "I've overshot!" << endl;
+            current_row = end_row;
+            current_col = end_col;
+          }
+        }
+        else if (start_col > end_col)
+        {
+          if (current_col < end_col)
+          {
+            cout << "I've overshot!" << endl;
+            current_row = end_row;
+            current_col = end_col;
+          }
+        }
+      }
 
       if (not IsOutOfBounds)
       {
+        //cout << "CR:" << current_row << " LR:" << last_row << "   and CC: " << current_col << " LC: " << last_col << endl;
+      
         if(current_row != last_row || current_col != last_col)
         {
+          //cout << "I'm pushing data into the vectors again, buddy!" << endl;
           node_row.push_back(current_row);
           node_col.push_back(current_col);
         }
@@ -1035,18 +1067,27 @@ void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo&
       last_row = current_row;
       last_col = current_col;
     }
+    // now push back the final row and column since this is not captured in the 
+    // while loop #
+    //cout << "Pushing last node" << endl;
+    node_row.push_back(end_row);
+    node_col.push_back(end_col);
     
   }
+  
+  // For debugging:
+  //int nr = int(node_row.size());
+  //cout << "The affected pixels are: " << endl;
+  //for(int n = 0; n<nr; n++)
+  //{
+  //  cout << node_row[n] << "," << node_col[n] << endl;
+  //}
+  
   
   affected_rows = node_row;
   affected_cols = node_col;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-
-
-
-
 
 
 
@@ -1129,7 +1170,7 @@ void trace_to_next_pixel(LSDRasterInfo& RI, double StartEasting,double StartNort
       if(start_col > end_col)
       {
         current_col = current_col-1;
-        cuurent_row = start_row;
+        current_row = start_row;
         CurrentEasting = XMinimum+((double(current_col)+1)*DataResolution);
         CurrentNorthing = StartNorthing;
       }

@@ -57,6 +57,8 @@ int main (int nNumberofArgs,char *argv[])
 
   //load dem
   LSDRaster DEM((path+filename), extension);
+  
+  LSDRasterInfo RI((path+filename), extension);
 
 
   // get the min and max x and y locations
@@ -79,7 +81,7 @@ int main (int nNumberofArgs,char *argv[])
   float xl,yl;
   
   // get some random points to generate a geometry object
-  for (int i = 0; i< 11; i++)
+  for (int i = 0; i< 2; i++)
   {
     // get random x,y locations
     //cout << "Ran:" << ran3(&seed) << endl;
@@ -111,5 +113,25 @@ int main (int nNumberofArgs,char *argv[])
   // now print to csv
   string fname_prefix = "Points_Test";
   SomePoints.print_points_to_csv(path,fname_prefix);
+  
+  LSDPolyline ALine(x_locs,y_locs, UTM_zone, is_North);
+  ALine.make_simple_polyline();
+  
+  vector<int> RowOfNodes;
+  vector<int> ColOfNodes;
+  ALine.find_row_and_col_of_points(RI, RowOfNodes, ColOfNodes);
+  
+  int n_nodes = int(RowOfNodes.size());
+  for(int i = 0; i<n_nodes; i++)
+  {
+    cout << "i:" << i << " row: " << RowOfNodes[i]<< " col: " << ColOfNodes[i] << endl;
+  } 
+
+  vector<int> affected_rows;
+  vector<int> affected_cols;
+  int start_node = 0;
+  int end_node = 1;
+  ALine.get_affected_pixels_in_line_segment_brute_force(RI,affected_rows, affected_cols, 
+                                    start_node, end_node); 
 
 }

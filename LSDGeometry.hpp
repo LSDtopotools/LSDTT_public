@@ -83,6 +83,7 @@
 #include "LSDIndexChannel.hpp"
 #include "LSDStatsTools.hpp"
 #include "LSDShapeTools.hpp"
+#include "LSDRasterInfo.hpp"
 using namespace std;
 using namespace TNT;
 
@@ -197,7 +198,8 @@ class LSDGeometry
     /// @author SMM
     /// @date 15/06/2106
     void find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI, 
-                      int point_index, int& RowOfNode, int& ColOfNode, bool IsOutOfBounds);
+                      int point_index, int& RowOfNode, int& ColOfNode, 
+                      bool& IsOutOfBounds);
 
     /// @brief This gets the row and column of a point based on an LSDRasterInfo
     ///  It will return negative and out of bounds indices: used to work
@@ -211,7 +213,8 @@ class LSDGeometry
     /// @author SMM
     /// @date 15/06/2106
     void find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI, 
-                      double UTM_Easting, double UTM_northing, int& RowOfNode, int& ColOfNode, bool IsOutOfBounds);
+                      double UTM_Easting, double UTM_northing, int& RowOfNode, 
+                      int& ColOfNode, bool& IsOutOfBounds);
 
     /// @brief This function checks to see if the data has been converted to UTM
     ///  and if not updates it. 
@@ -264,17 +267,16 @@ class LSDGeometry
     vector<double> WGS84Points_latitude;
     vector<double> WGS84Points_longitude;
     
-
-    
-
-  private:
-    void create();
     void create(vector<double> x, vector<double> y);
     void create(vector<float> x, vector<float> y);
     void create(vector<double> x, vector<double> y, int UTMZone);
     void create(vector<float> x, vector<float> y, int UTMZone);
     void create(vector<double> x, vector<double> y, int UTMZone, bool isNorth);
     void create(vector<float> x, vector<float> y, int UTMZone, bool isNorth);
+    
+
+  private:
+    void create();
 
 };
 
@@ -283,6 +285,63 @@ class LSDGeometry
 class LSDPolyline: public LSDGeometry
 {
   public:
+
+    /// @brief Create with two vectors: no UTM provided so assumed lat/long
+    /// @detail The X should be Longitude
+    ///  the Y vector should be latitude
+    /// @param x The longitdue data in a vector
+    /// @param y the latitude data in a vector
+    /// @author SMM
+    /// @date 10/06/2016
+    LSDPolyline(vector<double> x, vector<double> y)  { create(x,y); }
+ 
+    /// @brief Create with two vectors: no UTM provided so assumed lat/long
+    /// @detail The X should be Longitude
+    ///  the Y vector should be latitude
+    /// @param x The longitdue data in a vector
+    /// @param y the latitude data in a vector
+    /// @author SMM
+    /// @date 10/06/2016
+    LSDPolyline(vector<float> x, vector<float> y)  { create(x,y); }
+ 
+    /// @brief Create with two vectors. UTM info provided
+    /// @detail The X should be Easting or Longitude
+    ///  the Y vector should be Northing
+    ///  This version assumes northern hemisphere 
+    /// @param x The Easting data in a vector
+    /// @param y the Northing data in a vector
+    /// @author SMM
+    /// @date 13/06/2016
+    LSDPolyline(vector<double> x, vector<double> y, int UTMZone)  { create(x,y,UTMZone); }
+
+    /// @brief Create with two vectors. UTM info provided
+    /// @detail The X should be Easting or Longitude
+    ///  the Y vector should be Northing 
+    ///  This version assumes northern hemisphere 
+    /// @param x The Easting data in a vector
+    /// @param y the Northing data in a vector
+    /// @author SMM
+    /// @date 13/06/2016
+    LSDPolyline(vector<float> x, vector<float> y, int UTMZone)  { create(x,y,UTMZone); }
+
+    /// @brief Create with two vectors. UTM info provided
+    /// @detail The X should be Easting or Longitude
+    ///  the Y vector should be Northing 
+    /// @param x The Easting data in a vector
+    /// @param y the Northing data in a vector
+    /// @author SMM
+    /// @date 13/06/2016
+    LSDPolyline(vector<double> x, vector<double> y, int UTMZone, bool isNorth)  { create(x,y,UTMZone, isNorth); }
+
+    /// @brief Create with two vectors. UTM info provided
+    /// @detail The X should be Easting or Longitude
+    ///  the Y vector should be Northing 
+    /// @param x The Easting data in a vector
+    /// @param y the Northing data in a vector
+    /// @author SMM
+    /// @date 13/06/2016
+    LSDPolyline(vector<float> x, vector<float> y, int UTMZone, bool isNorth)  { create(x,y,UTMZone, isNorth); }
+
 
     /// @brief This sets the polyline node_order to simply be the order of 
     ///  the points. This only makes the simple polyline if the node_order vector is empty
@@ -308,7 +367,7 @@ class LSDPolyline: public LSDGeometry
                                              vector<int>& affected_rows, vector<int>& affected_cols, 
                                              int start_index, int end_index);
 
-    /// @brief this  Gets the pixels of all the nodes along the path of a line
+    /// @brief this  Gets the pixels of all the nodes along a segment of a line
     ///  The strategy here is just to increment along a line so this has the possiblity
     ///  of missing nodes if the incrementing is too coarse.
     /// @param RI an LSDRasterInfo object
@@ -321,6 +380,14 @@ class LSDPolyline: public LSDGeometry
     void get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo& RI,
                                              vector<int>& affected_rows, vector<int>& affected_cols, 
                                              int start_index, int end_index);
+
+    /// @brief this  Gets the pixels of all the nodes along the path of a line
+    /// @param RI an LSDRasterInfo object
+    /// @param affected_rows A vector containing the row numbers of the affected pixels
+    /// @param affected_cols: A vector containing the col numbers of the affected pixels
+    /// @author SMM
+    /// @date 16/06/2016
+    void get_affected_pixels_in_line(LSDRasterInfo& RI,vector<int>& affected_rows, vector<int>& affected_cols);
 
 /*
     /// @detail THis traces to the next pixel ensureing no nodes are missed
