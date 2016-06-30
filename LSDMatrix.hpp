@@ -1,23 +1,139 @@
-///LSDMatrix.hpp
+/// LSDMatrix
 ///
-/// This Matrix class is a simple, fast [Citation needed], implementation
-/// of a dynamically sized matrix object with rows and columns [i][j], where the
-/// dimensions can be set at run time. It is an experiment for comparison
-/// with the TNT::Arrayxx class we often use in the LSD package.
+/// LSDMatrix is a basic, simple matrix class designed to store elements
+/// contiguously in memory. No fancy tools (matrix algebra etc).
 ///
-/// It is put together from recipe 11.14 in the "C++ Cookbook" and Stroustrup's
-/// "The C++ Programming Langauge", and some other stuff I read on internet forums,
-/// so I take no real credit for it!
+/// Experimental use!
 ///
-/// Please note it is entirely experimental at this stage..
-
+/// @author DAV, 2016
 
 #ifndef LSDMATRIX_HPP
 #define LSDMATRIX_HPP
 
 
-// Require recipe 11.12!
+// http://www.graphics.cornell.edu/~martin/docs/c++-faq/freestore-mgmt.html#[16.15]
+// Class Template version from the C++FAQ
+// I think this is my favourite
+/// @brief Simple, barebones, matrix class with dimensions that can be set at run time,
+/// array is allocated contiguously in memory.
+template<class T>
+class LSDMatrix2D
+{
+public:
+  LSDMatrix2D(unsigned rows, unsigned ncols);
 
+  // For size being zero, we should throw error
+  class BadSize { };
+
+  // Law of big 3
+  ~LSDMatrix2D();
+  LSDMatrix2D(const LSDMatrix2D<T>& m);
+  LSDMatrix2D& operator= (const LSDMatrix2D<T>& m);
+
+  // Array access methods to get element with (i,j) notation
+  T& operator() (unsigned i, unsigned j);
+  const T& operator() (unsigned i, unsigned j) const;
+
+  // Throw bounds violation if i, j too big
+  class BoundsViolation { };
+
+private:
+  T* data_;
+  unsigned nrows_, ncols_;
+};
+
+// Access matrix elements with m(i,j) notation
+template<class T>
+inline T& LSDMatrix2D<T>::operator() (unsigned row, unsigned col)
+{
+  if (row >= nrows_ || col >= ncols_) throw BoundsViolation();
+  return data_[row*ncols_ + col];
+}
+
+// Access matrix elements with m(i,j) notation (constatnt)
+template<class T>
+inline const T& LSDMatrix2D<T>::operator() (unsigned row, unsigned col) const
+{
+  if (row >= nrows_ || col >= ncols_) throw BoundsViolation();
+  return data_[row*ncols_ + col];
+}
+
+// Declare matrix
+template<class T>
+inline LSDMatrix2D<T>::LSDMatrix2D(unsigned rows, unsigned ncols)
+  : data_ (new T[nrows * ncols]),
+    nrows_ (nrows),
+    ncols_ (ncols)
+{
+  if (nrows == 0 || ncols == 0)
+    throw BadSize();
+}
+
+// Clean up after we're done with our matrix!
+template<class T>
+inline LSDMatrix2D<T>::~LSDMatrix2D()
+{
+  delete[] data_;
+}
+
+
+// OTHER EXAMPLES
+// http://stackoverflow.com/a/28841507/1953517
+class LSDArray2D
+{
+  int* array;
+  int m_width;
+public:
+  LSDArray2D( int w, int h )
+    :m_width( w ), array( new int[ w * h ] ) {}
+
+  ~LSDArray2D() { delete[] array; }
+
+  int at( int x, int y )
+  const { return array[ index( x, y ) ]; }
+
+protected:
+  int index( int x, int y )
+  const { return x + m_width * y; }
+
+};
+
+
+// http://stackoverflow.com/a/32279494/1953517
+#include <memory>
+
+class LSDGrid2D
+{
+    size_t _rows;
+    size_t _columns;
+    std::unique_ptr<int[]> data;
+
+public:
+
+    LSDGrid2D(size_t rows, size_t columns)
+        : _rows{rows}, _columns{columns}, data{std::make_unique<int[]>(rows * columns)} {
+    }
+
+
+    size_t rows() const {
+        return _rows;
+    }
+
+    size_t columns() const {
+        return _columns;
+    }
+
+    int * operator[](size_t row) {
+        return row * _columns + data.get();
+    }
+
+};
+
+
+
+
+// Example from the C++ cookbook
+// Require recipe 11.12!
 #include <valarray>
 #include <numeric>
 #include <algorithm>
