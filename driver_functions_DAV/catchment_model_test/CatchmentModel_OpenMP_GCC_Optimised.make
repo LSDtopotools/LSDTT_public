@@ -1,6 +1,6 @@
 CC = g++
-CFLAGS= -c -Wreturn-type -Og -pg -ggdb -std=gnu++11 -fopenmp
-OFLAGS = -Wreturn-type -Og -pg -ggdb -std=gnu++11 -fopenmp
+CFLAGS= -c -Wreturn-type -O2 -std=gnu++11 -fopenmp
+OFLAGS = -Wreturn-type -O2 -std=gnu++11 -fopenmp
 LDFLAGS= -Wreturn-type
 SOURCES = ../catchmentmodel_driver.cpp \
 			../../LSDCatchmentModel.cpp \
@@ -14,7 +14,7 @@ OBJ = $(SOURCES:.cpp=.o)
 #LIBS = -lfftw3 -lpython2.7 -g -O0 -D_GLIBCXX_DEBUG
 #LIBS = -lfftw3 -lpython2.7 -Wwrite-strings
 LIBS = 
-EXEC = CatchmentModelOpenMP.out
+EXEC = CatchmentModel_OpenMP_GCC_Optimised.out
 
 all: $(SOURCES) $(SCRIPTS) $(EXEC)
 
@@ -26,4 +26,4 @@ $(EXEC): $(OBJ)
 
 
 clean:
-	rm -f ../../$(OBJ) ../catchmentmodel_driver.o CatchmentModelOpenMP.out
+	rm -f ../../$(OBJ) ../catchmentmodel_driver.o CatchmentModel_OpenMP_GCC_Optimised.out

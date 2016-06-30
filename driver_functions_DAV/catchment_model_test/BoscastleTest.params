@@ -5,8 +5,8 @@
 dem_name:	bos_spunup_elev5m
 dem_read_extension:	.asc
 dem_write_extension:    .asc
-read_path:	./
-write_path:	./
+read_path:	./Tests/
+write_path:	./Tests/
 read_fname:	bos_spunup_elev5m
 write_fname:	boscastle_output
 timeseries_save_interval: 5
@@ -14,14 +14,14 @@ timeseries_save_interval: 5
 # Supplementary Files
 hydroindex_file: #bos5m_hydroindex.asc
 rainfall_data_file: boscastle_rain_uniform.txt
-grain_data_file:
+grain_data_file: bos5m_spunup_grain.txt
 bedrock_data_file:
 
 # Numerical
 min_time_step:    0
-max_time_step:		3600
+max_time_step:		300
 run_time_start:		0
-max_run_duration:	47
+max_run_duration:	71
 memory_limit:    	1
 
 # Sediment
@@ -35,6 +35,12 @@ edge_filter_passes:   100
 cells_shift_lat:      1
 max_diff_cross_chan:  0.001
 erode_limit:          0.02
+suspended_sediment_on: yes
+# This turns on the suspended sediment
+# for the first fraction only, at present.
+# In a future release, you will be able to define 
+# multiple suspended sediment fractions.
+read_in_graindata_from_file: yes
 
 # Hydrology
 hydro_model_only:    no
@@ -53,6 +59,7 @@ froude_num_limit:     0.8
 mannings_n:           0.04
 hflow_threshold:      0.00001
 num_unique_rain_cells: 1
+raingrid_fname_out: raindata_grid
 
 # Vegetation
 vegetation_on:	       no
@@ -68,11 +75,13 @@ soil_j_mean_depends:	yes	#no
 call_muddpile_model:	yes	#no
 
 # Write Output Rasters
-raster_output_interval: 50
+raster_output_interval: 100
 write_waterdepth_file:  yes
 waterdepth_outfile_name: WaterDepths
 write_elev_file:        yes
 write_elevation_file:   Elevations
+write_grainsize_file: yes
+grainsize_file: Grainz
 
-
-
+write_elevdiff_file: yes
+elevdiff_outfile_name: ElevationDiff

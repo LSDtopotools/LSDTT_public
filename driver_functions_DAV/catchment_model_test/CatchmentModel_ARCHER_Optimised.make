@@ -1,20 +1,21 @@
-CC = g++
-CFLAGS= -c -Wreturn-type -Og -pg -ggdb -std=gnu++11 -fopenmp
-OFLAGS = -Wreturn-type -Og -pg -ggdb -std=gnu++11 -fopenmp
-LDFLAGS= -Wreturn-type
+CC = CC 
+# Note: OpenMP and MPI are enabled by default on the ARCHER system
+# The compiler is set by loading the PrgEnv-cray or PrgEnv-gcc environments
+CFLAGS= -c -O2 -hstd=c++11
+OFLAGS = -o -O2 -hstd=c++11 
+LDFLAGS= 
 SOURCES = ../catchmentmodel_driver.cpp \
 			../../LSDCatchmentModel.cpp \
 			../../LSDRaster.cpp \
 			../../LSDIndexRaster.cpp \
 			../../LSDStatsTools.cpp \
-			../../LSDShapeTools.cpp \
-			../../LSDGrainMatrix.cpp
+			../../LSDShapeTools.cpp
 SCRIPTS = 
 OBJ = $(SOURCES:.cpp=.o)
 #LIBS = -lfftw3 -lpython2.7 -g -O0 -D_GLIBCXX_DEBUG
 #LIBS = -lfftw3 -lpython2.7 -Wwrite-strings
 LIBS = 
-EXEC = CatchmentModelOpenMP.out
+EXEC = CatchmentModel_ARCHER_Optimised.out
 
 all: $(SOURCES) $(SCRIPTS) $(EXEC)
 
@@ -26,4 +27,4 @@ $(EXEC): $(OBJ)
 
 
 clean:
-	rm -f ../../$(OBJ) ../catchmentmodel_driver.o CatchmentModelOpenMP.out
+	rm -f ../../$(OBJ) ../catchmentmodel_driver.o CatchmentModel_ARCHER_Optimised.out
