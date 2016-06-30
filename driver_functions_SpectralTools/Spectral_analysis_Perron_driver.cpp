@@ -114,11 +114,11 @@ int main (int nNumberofArgs,char *argv[])
 
   // Load in data
   string DEM_f_name = data_path+raster_name;
+  cout << "You are attempting to load the file: " <<  DEM_f_name<<"."<<ENVI_ext<< endl;
   LSDRaster raw_raster(DEM_f_name, raster_ext);
+  cout << "I've loaded the raster" << endl;
   
-  
-  // print the raw raster for bug checking
-  raw_raster.write_raster(data_path+"raw",raster_ext);
+
 
   // convert to float by using the polyfit function
   //float window_radius = 61.0;
@@ -131,7 +131,16 @@ int main (int nNumberofArgs,char *argv[])
   float sea_threshold = 1.0;
   raw_raster.mask_to_nodata_below_threshold(sea_threshold);
 
+  // print the raw raster for bug checking
+  raw_raster.write_raster(data_path+"raw",raster_ext);
+
+  // Now try to get rid of internal nodata
+  //cout << "I am trying to get rid of internal nodata values. " << endl;
+  //int window_width = 5;
+  //raw_raster.alternating_direction_nodata_fill(window_width);
+
   // now trim the raster
+  cout << "Now I am trimming the raster." << endl;
   LSDRaster trimmed = raw_raster.RasterTrimmerSpiral();
 
   cout << "Trimmed raster, printing" << endl;
@@ -143,6 +152,8 @@ int main (int nNumberofArgs,char *argv[])
 
   // Perform full spectral analysis
   LSDRasterSpectral SpectralRaster(trimmed);
+  cout << "Loaded the SpectralRaster" << endl;
+  
   SpectralRaster.full_spectral_analysis(log_bin_width,N_iterations,window_option);
   SpectralRaster.print_radial_spectrum(output_id);
   SpectralRaster.print_binned_spectrum(output_id, log_bin_width);

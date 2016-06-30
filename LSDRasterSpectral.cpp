@@ -261,6 +261,19 @@ void LSDRasterSpectral::create(LSDRaster& An_LSDRaster)
   NyquistFreq = 1/(2*DataResolution);
   WSS=float(NRows*NCols);
   RasterData = An_LSDRaster.get_RasterData();
+  
+  cout << "Loaded a spectralreaster from another raster. Here are the vitalstatistix." << endl;
+  cout << "NRows = " << NRows << endl;
+  cout << "NCols = " << NCols  << endl;
+  cout << "XMinimum = " << XMinimum  << endl;
+  cout << "YMinimum = " << YMinimum  << endl;
+  cout << "DataResolution =" << DataResolution  << endl;
+  cout << "NoDataValue = " <<  NoDataValue << endl;
+  cout << "Ly = " << Ly  << endl;
+  cout << "Lx = " << Lx  << endl;
+  cout << "dfx = " << dfx   << endl;
+  cout << "dfy = " << dfy   << endl;
+  cout << "WSS= " << WSS  << endl;
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2317,7 +2330,9 @@ void LSDRasterSpectral::full_spectral_analysis(float log_bin_width, int N_iterat
   // LOCAL SLOPE ax + by + c = z
   Array2D<float> zeta_detrend(NRows,NCols,0.0);
   Array2D<float> trend_plane(NRows,NCols,0.0);
+  cout << "Detrending the data...";
   detrend2D(RasterData, zeta_detrend, trend_plane);
+  cout << "finished!" << endl;
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // USE ELLIPTICAL 2D HANN (raised cosine) WINDOW ON ZETA MATRIX.
@@ -2325,7 +2340,9 @@ void LSDRasterSpectral::full_spectral_analysis(float log_bin_width, int N_iterat
   // COEFFICIENTS.
   Array2D<float> window(NRows,NCols,0.0);
   Array2D<float> zeta_window(NRows,NCols,0.0);
+  cout << "Windowing the data...";
   window_data(zeta_detrend, zeta_window, window,window_option);
+  cout << "finished!"<< endl;
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // 2D DISCRETE FAST FOURIER TRANSFORM
