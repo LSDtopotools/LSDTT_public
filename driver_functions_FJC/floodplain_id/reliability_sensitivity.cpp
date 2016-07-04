@@ -81,9 +81,19 @@ int main (int nNumberofArgs,char *argv[])
 	LSDRaster ActualRaster((input_path+actual_raster), DEM_extension);
 	cout << "Got the actual raster" << endl;
 	
+	//Get the number of pixels in the DEM
+	int NRows = PredictedRaster.get_NRows();
+	int NCols = PredictedRaster.get_NCols();
+	int NPixels = NRows*NCols;
+	cout << "N pixels: " << NPixels << endl;
+	
 	// calculate the TPs, FPs, TNs, and FNs
-	float reliability = PredictedRaster.CalculateReliability(ActualRaster);
-	float sensitivity = PredictedRaster.CalculateSensitivity(ActualRaster);
-	cout << "Reliability: " << reliability << " Sensitivity: " << sensitivity << endl;
-   
+	vector<float> quality_results = PredictedRaster.AnalysisOfQuality(ActualRaster);
+	
+	// print
+	for (int i = 0; i < int(quality_results.size()); i++)
+	{
+		cout << quality_results[i] << endl;		
+	}
+	
 }

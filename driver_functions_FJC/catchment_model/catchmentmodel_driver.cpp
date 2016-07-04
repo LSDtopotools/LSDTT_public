@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <sys/stat.h>
 #include <python2.7/Python.h>
-#include "../LSDCatchmentModel.hpp"
+#include "../../LSDCatchmentModel.hpp"
 
 bool file_check(string name)
 {

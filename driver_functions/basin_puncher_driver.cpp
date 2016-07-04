@@ -51,14 +51,10 @@
 #include <iomanip>
 #include <math.h>
 #include <string.h>
-#include "../LSDStatsTools.hpp"
 #include "../LSDRaster.hpp"
 #include "../LSDIndexRaster.hpp"
 #include "../LSDFlowInfo.hpp"
-#include "../LSDRasterSpectral.hpp"
 #include "../LSDJunctionNetwork.hpp"
-#include "../LSDIndexChannelTree.hpp"
-#include "../LSDChiNetwork.hpp"
 #include "../LSDBasin.hpp"
 
 int main (int nNumberofArgs,char *argv[])
@@ -87,21 +83,25 @@ int main (int nNumberofArgs,char *argv[])
 	}   
 
 	string DEM_name; 
-  string sources_name; 
+  string CH_name; 
 	string fill_ext = "_fill";
-	file_info_in >> DEM_name >> sources_name;
+	string filt_ext = "_filtered";
+	file_info_in >> DEM_name >> CH_name;
 	float Minimum_Slope;
-	file_info_in >> Minimum_Slope;
+	int junction_number;
+	file_info_in >> Minimum_Slope >> junction_number;
 
 	// get some file names
 	string DEM_f_name = path_name+DEM_name+fill_ext;
-	string DEM_flt_extension = "flt";
+	string DEM_flt_extension = "bil";
+	string DEM_asc_extension = "asc";
+	string csv_extension = "csv";
 
 	// load the DEM
-	LSDRaster topo_test((path_name+DEM_name), DEM_flt_extension);
+	//LSDRaster topo_test((path_name+DEM_name), DEM_flt_extension);
 	
 	// load the sources
-	LSDRaster sources_raster((path_name+sources_name), DEM_flt_extension);
+	//LSDRaster sources_raster((path_name+sources_name), DEM_flt_extension);
 
 	// Set the no flux boundary conditions
   vector<string> boundary_conditions(4);
@@ -112,9 +112,13 @@ int main (int nNumberofArgs,char *argv[])
 	
 		// get the filled file
 	//cout << "Filling the DEM" << endl;
-	LSDRaster filled_topo_test = topo_test.fill(Minimum_Slope);
+  //LSDRaster filled_topo_test = topo_test.fill(Minimum_Slope);
 		// load the filled DEM
-	//LSDRaster filled_topo_test((path_name+DEM_name+fill_ext), DEM_flt_extension);
+	LSDRaster filled_topo_test;
+	LSDRaster load_DEM((path_name+DEM_name+fill_ext), DEM_flt_extension);
+  filled_topo_test = load_DEM;
+	//int NRows = filled_topo_test.get_NRows();
+	//cout << "NRows: " << NRows << endl;
 	//filled_topo_test.write_raster((DEM_f_name),DEM_flt_extension);
   
   //get a FlowInfo object
@@ -122,19 +126,10 @@ int main (int nNumberofArgs,char *argv[])
 	LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
 	LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
 	
-	//string NI_name = "_NI";
-  //LSDIndexRaster NodeIndex = FlowInfo.write_NodeIndex_to_LSDIndexRaster();
-	//NodeIndex.write_raster((path_name+DEM_name+NI_name), DEM_flt_extension);
-	
-	int NRows = topo_test.get_NRows();
-  int NCols = topo_test.get_NCols();
-  //float XMinimum = topo_test.get_XMinimum();
-  //float YMinimum = topo_test.get_YMinimum();
-  //float DataResolution = topo_test.get_DataResolution();
-  float NoDataValue = topo_test.get_NoDataValue();
-  
-	//get the sources from raster to vector
-  vector<int> sources = FlowInfo.Ingest_Channel_Heads((path_name+sources_name),DEM_flt_extension);
+	cout << "\t Loading Sources..." << endl;
+	// load the sources
+  vector<int> sources = FlowInfo.Ingest_Channel_Heads((path_name+DEM_name+CH_name), csv_extension, 1);
+	cout << "Got the sources" << endl;
   
   //----------------------------------------------------------------------------------------------------//
   // GET JUNCTION FOR BASIN EXTRACTION
@@ -143,9 +138,11 @@ int main (int nNumberofArgs,char *argv[])
 	// now get the junction network
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 	LSDIndexRaster JIArray = ChanNetwork.JunctionIndexArray_to_LSDIndexRaster();
-	string JI_name = "_JI";
-	JIArray.write_raster((path_name+DEM_name+JI_name),DEM_flt_extension);
+	string JI_name = "_JI";	JIArray.write_raster((path_name+DEM_name+JI_name),DEM_flt_extension);
 	LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();	
+	string SO_name = "_SO_wiener";
+	SOArray.write_raster((path_name+DEM_name+SO_name),DEM_flt_extension);
+	cout << "Got the junction network" << endl;
 	
 	//----------------------------------------------------------------------------------------------------//
 	
@@ -153,9 +150,15 @@ int main (int nNumberofArgs,char *argv[])
   // EXTRACT BASIN FROM JUNCTION TO GET BASIN RASTER
   //----------------------------------------------------------------------------------------------------//
   
-  int junction_number = 129;
-  LSDBasin Basin(junction_number, FlowInfo, ChanNetwork);
-  LSDRaster BasinRaster = Basin.write_raster_data_to_LSDRaster(topo_test, FlowInfo);
+  cout << "Basin junction: " << junction_number << endl;
+	LSDBasin Basin(junction_number, FlowInfo, ChanNetwork);
+	cout << "Generating the basin object" << endl;
+  LSDRaster BasinRaster = Basin.write_raster_data_to_LSDRaster(filled_topo_test, FlowInfo);
+	cout << "Got the basin raster" << endl;
+		
+	// Trim raster to get rid of nodata values around the edge
+	//LSDRaster TrimmedRaster = BasinRaster.RasterTrimmerPadded(2);
+	//cout << "Got the trimmed raster" << endl;
   
   //write basin to LSDRaster
   string basin_name = "_basin";

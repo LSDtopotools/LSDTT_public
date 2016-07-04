@@ -113,6 +113,7 @@ int main (int nNumberofArgs,char *argv[])
                >> temp >> area_threshold
 	       >> temp >> connected_components_threshold;
   file_info_in.close();
+    
   // Now create the raster selection vector based on user's selection
   // Elevation
   LSDRasterSpectral raster(Raster_name, DEM_extension);
@@ -144,6 +145,11 @@ int main (int nNumberofArgs,char *argv[])
   vector<string> BoundaryConditions(4, "No Flux");
   LSDFlowInfo FlowInfo(BoundaryConditions,FilledDEM);
   
+  // make the hillshade (this is faster than doing it in arc)
+	string HS_name = "_HS";
+	LSDRaster HS = FilledDEM.hillshade(45, 315, 1);
+	HS.write_raster((Output_name+HS_name),DEM_extension);
+  
   //this processes the end points to only keep the upper extent of the channel network
   cout << "getting channel heads" << endl;
   vector<int> tmpsources = FlowInfo.ProcessEndPointsToChannelHeads(Ends);
@@ -158,6 +164,9 @@ int main (int nNumberofArgs,char *argv[])
   //Now we have the final channel heads, so we can generate a channel network from them
   LSDJunctionNetwork JunctionNetwork(FinalSources, FlowInfo);
   LSDIndexRaster StreamNetwork = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
+	LSDIndexRaster JIArray = JunctionNetwork.JunctionIndexArray_to_LSDIndexRaster();
+	string JN_name = "_JI";
+	JIArray.write_raster(Output_name+JN_name, DEM_extension);
   
   //Finally we write the channel network and channel heads to files so they can be used in other drivers. 
   LSDIndexRaster Heads = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(FinalSources);

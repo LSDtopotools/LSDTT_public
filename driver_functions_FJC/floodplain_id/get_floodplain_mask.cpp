@@ -58,14 +58,13 @@ int main (int nNumberofArgs,char *argv[])
 
 	string DEM_ID;
 	string RASTER_NAME;
+	string CH_name;
 	string input_path;
   string dem_ext = "_dem";
-  string sources_ext = "_CH";
+  //string sources_ext = "_CH_wiener";
   string flt_extension = "bil";
   string csv_extension = "csv";
   string txt_extension = ".txt";
-  string Swath_ext = "_swath_trans";
-  string Long_Swath_ext = "_swath_long";
   
   // initialise variables to be assigned from .driver file
   int threshold_SO, FilterTopo, window_radius, lower_percentile, upper_percentile;
@@ -75,6 +74,7 @@ int main (int nNumberofArgs,char *argv[])
   // read in the parameters                                                          
 	file_info_in >> temp >> DEM_ID
                >> temp >> RASTER_NAME
+							 >> temp >> CH_name
                >> temp >> input_path
                >> temp >> Minimum_Slope
                >> temp >> threshold_SO
@@ -99,6 +99,7 @@ int main (int nNumberofArgs,char *argv[])
   if(FilterTopo == 1)
   {
      // load the DEM
+		 cout << "Loading the DEM..." << endl;
      LSDRaster topo_test((input_path+DEM_ID), flt_extension);   
      
      // filter using Perona Malik
@@ -109,13 +110,13 @@ int main (int nNumberofArgs,char *argv[])
      
      // fill
      filled_topo_test = topo_test.fill(Minimum_Slope);
-     string fill_name = "_filled";
+     string fill_name = "_filtered";
      filled_topo_test.write_raster((path_name+DEM_ID+fill_name), flt_extension);   
   }
   else
   {
     //previously done the filtering and filling, just load the filled DEM
-    LSDRaster load_DEM((input_path+DEM_ID+"_filled"), flt_extension);
+    LSDRaster load_DEM((input_path+DEM_ID+"_filtered"), flt_extension);
     filled_topo_test = load_DEM;
   }
   
@@ -129,7 +130,6 @@ int main (int nNumberofArgs,char *argv[])
 
 	cout << "\t Loading Sources..." << endl;
 	// load the sources
-	string CH_name = "_CH_DrEICH";
   vector<int> sources = FlowInfo.Ingest_Channel_Heads((path_name+DEM_ID+CH_name), flt_extension, 1);
   cout << "\t Got sources!" << endl;
   
@@ -175,6 +175,8 @@ int main (int nNumberofArgs,char *argv[])
   cout << "Getting slope threshold from QQ plots" << endl;
   string qq_slope = path_name+DEM_ID+"_qq_slope.txt";
   float slope_threshold_from_qq = Slope.get_threshold_for_floodplain_QQ(qq_slope, threshold_condition, lower_percentile, upper_percentile);
+	
+	cout << "Relief threshold: " << relief_threshold_from_qq << " Slope threshold: " << slope_threshold_from_qq << endl;
 
   //get the potential floodplain mask
   cout << "\t Getting the floodplain mask" << endl;
