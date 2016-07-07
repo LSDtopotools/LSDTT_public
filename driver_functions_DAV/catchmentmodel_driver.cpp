@@ -14,7 +14,9 @@ bool file_check(string name)
 int main(int argc, char *argv[])
 {
   // For the timing routine
+  #ifdef OMP_COMPILE_FOR_PARALLEL
   double start_time = omp_get_wtime();
+  #endif
 
   std::cerr << "argc = " << argc << '\n';
     if ((argc > 0) && (argv[1] == NULL)) std::cerr << "Urk! 1\n";
@@ -87,12 +89,14 @@ int main(int argc, char *argv[])
   std::cout << "The model ran successfully!" << std::endl;
   std::cout << "SCIENCE IS DONE" << std::endl;
 
-  // Timing routine
+  // Timing routine for parallel
+  #ifdef OMP_COMPILE_FOR_PARALLEL
   double end_time = omp_get_wtime();
   double simulation_run_time = (end_time - start_time)/60;
   std::cout << "The simulation ran in " << simulation_run_time << \
                " minutes. This includes everything executed within the main() function." \
             << std::endl;
+  #endif
 
   return 0;
 }

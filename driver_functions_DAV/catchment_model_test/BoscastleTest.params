@@ -5,8 +5,8 @@
 dem_name:	bos_spunup_elev5m
 dem_read_extension:	.asc
 dem_write_extension:    .asc
-read_path:	./Tests/
-write_path:	./Tests/
+read_path:	./
+write_path:	./
 read_fname:	bos_spunup_elev5m
 write_fname:	boscastle_output
 timeseries_save_interval: 5
@@ -40,7 +40,7 @@ suspended_sediment_on: yes
 # for the first fraction only, at present.
 # In a future release, you will be able to define 
 # multiple suspended sediment fractions.
-read_in_graindata_from_file: yes
+read_in_graindata_from_file: #yes
 
 # Hydrology
 hydro_model_only:    no
