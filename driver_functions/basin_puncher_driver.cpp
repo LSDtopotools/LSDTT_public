@@ -137,12 +137,12 @@ int main (int nNumberofArgs,char *argv[])
   
 	// now get the junction network
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
-	LSDIndexRaster JIArray = ChanNetwork.JunctionIndexArray_to_LSDIndexRaster();
-	string JI_name = "_JI";	JIArray.write_raster((path_name+DEM_name+JI_name),DEM_flt_extension);
-	LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();	
-	string SO_name = "_SO_wiener";
-	SOArray.write_raster((path_name+DEM_name+SO_name),DEM_flt_extension);
-	cout << "Got the junction network" << endl;
+//	LSDIndexRaster JIArray = ChanNetwork.JunctionIndexArray_to_LSDIndexRaster();
+//	string JI_name = "_JI";	JIArray.write_raster((path_name+DEM_name+JI_name),DEM_flt_extension);
+//	LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();	
+//	string SO_name = "_SO_wiener";
+//	SOArray.write_raster((path_name+DEM_name+SO_name),DEM_flt_extension);
+//	cout << "Got the junction network" << endl;
 	
 	//----------------------------------------------------------------------------------------------------//
 	

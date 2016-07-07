@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <ctime>
 #include "../../LSDStatsTools.hpp"
 #include "../../LSDChiNetwork.hpp"
 #include "../../LSDRaster.hpp"
@@ -33,6 +34,9 @@
 
 int main (int nNumberofArgs,char *argv[])
 {
+	//start the clock
+	clock_t begin = clock();
+	
 	//Test for correct input arguments
 	if (nNumberofArgs!=3)
 	{
@@ -204,4 +208,8 @@ int main (int nNumberofArgs,char *argv[])
   LSDIndexRaster FloodplainMask = ConnectedComponents_final.ConvertToBinary(value, ndv);
   string mask_name = "_FP";
   FloodplainMask.write_raster((input_path+DEM_ID+mask_name), flt_extension); 
+	
+	clock_t end = clock();
+	float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+	cout << "DONE, Time taken (secs): " << elapsed_secs << endl;
 }
