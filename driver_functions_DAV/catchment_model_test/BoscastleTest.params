@@ -61,6 +61,11 @@ hflow_threshold:      0.00001
 num_unique_rain_cells: 1
 raingrid_fname_out: raindata_grid
 
+# Bedrock erosion options
+bedrock_erosion_threshold: 50
+stream_power_pb: 1.5
+stream_power_ke: 0.002
+
 # Vegetation
 vegetation_on:	       no
 grass_grow_rate:       0.0
