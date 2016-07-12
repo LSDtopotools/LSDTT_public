@@ -1,7 +1,7 @@
 CC = CC 
 # Note: OpenMP and MPI are enabled by default on the ARCHER system
 # The compiler is set by loading the PrgEnv-cray or PrgEnv-gcc environments
-CFLAGS= -c -O2 -hstd=c++11 -D_OMP_COMPILE_FOR_PARALLEL
+CFLAGS= -c -O2 -hstd=c++11 -DOMP_COMPILE_FOR_PARALLEL
 OFLAGS = -o -O2 -hstd=c++11 
 LDFLAGS= 
 SOURCES = ../catchmentmodel_driver.cpp \
