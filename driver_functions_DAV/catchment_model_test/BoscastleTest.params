@@ -41,6 +41,7 @@ suspended_sediment_on: yes
 # In a future release, you will be able to define 
 # multiple suspended sediment fractions.
 read_in_graindata_from_file: #yes
+num_of_grainsizes: 9
 
 # Hydrology
 hydro_model_only:    no
