@@ -177,7 +177,7 @@ void LSDSoilHydroRaster::create(int ncols, int nrows, float xmin, float ymin,
   }
   if (RasterData.dim2() != NCols)
   {
-    cout << "LSDSoilHydroRaster dimension of data is not the same as stated in NRows!" << endl;
+    cout << "LSDSoilHydroRaster dimension of data is not the same as stated in NCols!" << endl;
     exit(EXIT_FAILURE);
   }
 }
@@ -206,7 +206,7 @@ void LSDSoilHydroRaster::create(int ncols, int nrows, float xmin, float ymin,
   }
   if (RasterData.dim2() != NCols)
   {
-    cout << "LSDSoilHydroRaster dimension of data is not the same as stated in NRows!" << endl;
+    cout << "LSDSoilHydroRaster dimension of data is not the same as stated in NCols!" << endl;
     exit(EXIT_FAILURE);
   }
 }
