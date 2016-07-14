@@ -158,7 +158,7 @@ void LSDSoilHydroRaster::create(LSDRaster& OtherRaster, float value)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Creates a raster from raw data
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDSoilHydroRaster::create(int ncols, int nrows, float xmin, float ymin,
+void LSDSoilHydroRaster::create(int nrows, int ncols, float xmin, float ymin,
                 float cellsize, float ndv, Array2D<float> data)
 {
   NRows = nrows;
@@ -186,7 +186,7 @@ void LSDSoilHydroRaster::create(int ncols, int nrows, float xmin, float ymin,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Creates a raster from raw data, this time with the georeferencing strings
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDSoilHydroRaster::create(int ncols, int nrows, float xmin, float ymin,
+void LSDSoilHydroRaster::create(int nrows, int ncols, float xmin, float ymin,
             float cellsize, float ndv, Array2D<float> data, map<string,string> GRS)
 {
   NRows = nrows;
@@ -201,6 +201,7 @@ void LSDSoilHydroRaster::create(int ncols, int nrows, float xmin, float ymin,
 
   if (RasterData.dim1() != NRows)
   {
+    cout << RasterData.dim1() << " " << NRows << endl;
     cout << "LSDSoilHydroRaster dimension of data is not the same as stated in NRows!" << endl;
     exit(EXIT_FAILURE);
   }
