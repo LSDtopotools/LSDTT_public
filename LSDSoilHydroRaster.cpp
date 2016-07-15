@@ -565,6 +565,25 @@ LSDSoilHydroRaster LSDSoilHydroRaster::Calculate_sinmap_SI(LSDRaster Slope, LSDR
 
 }
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Get the maximum value in the SoilHydroRaster, used for getting parameter ranges.
+//
+// SWDG 15/7/16
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+float LSDSoilHydroRaster::get_maximum_value(){
+  return Get_Maximum(RasterData, NoDataValue);
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Get the minimum value in the SoilHydroRaster, used for getting parameter ranges.
+//
+// SWDG 15/7/16
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+float LSDSoilHydroRaster::get_minimum_value(){
+  return Get_Minimum(RasterData, NoDataValue);
+}
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 

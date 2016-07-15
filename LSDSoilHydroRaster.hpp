@@ -303,6 +303,18 @@ class LSDSoilHydroRaster: public LSDRaster
     /// @date 15/6/16
     LSDSoilHydroRaster Calculate_sinmap_SI(LSDRaster Slope, LSDRaster DrainageArea, LSDSoilHydroRaster lo_C, LSDSoilHydroRaster hi_C, LSDSoilHydroRaster lo_phi, LSDSoilHydroRaster hi_phi, LSDSoilHydroRaster lo_RoverT, LSDSoilHydroRaster hi_RoverT, LSDSoilHydroRaster lo_r, LSDSoilHydroRaster hi_r, LSDSoilHydroRaster lo_FS, LSDSoilHydroRaster hi_FS);
 
+    /// @brief Get the maximum value in the SoilHydroRaster, ignoring nodata.
+    /// @return The maximum value.
+    /// @author SWDG
+    /// @date 15/7/16
+    float get_maximum_value();
+
+    /// @brief Get the minimum value in the SoilHydroRaster, ignoring nodata.
+    /// @return The maximum value.
+    /// @author SWDG
+    /// @date 15/7/16
+    float get_minimum_value();
+
   protected:
 
   private:
