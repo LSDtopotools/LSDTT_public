@@ -315,6 +315,9 @@ class LSDSoilHydroRaster: public LSDRaster
     /// @date 15/7/16
     float get_minimum_value();
 
+    LSDSoilHydroRaster build_minimum_parameters(LSDRaster& Template);
+    LSDSoilHydroRaster build_maximum_parameters(LSDRaster& Template);
+
   protected:
 
   private:

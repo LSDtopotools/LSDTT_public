@@ -584,6 +584,56 @@ float LSDSoilHydroRaster::get_minimum_value(){
   return Get_Minimum(RasterData, NoDataValue);
 }
 
+
+LSDSoilHydroRaster LSDSoilHydroRaster::build_minimum_parameters(LSDRaster& Template){
+
+  Array2D<float> Output(NRows, NCols, NoDataValue);
+  float minimum = get_minimum_value();
+
+
+  // for each cell, if there is no paramter data but there is topo, fill in the data with the minimum value
+  // otherwise, just keep the minimum value.
+  for (int i = 0; i < NRows; ++i){
+    for (int j = 0; j < NCols; ++j){
+      if (Template.get_data_element(i, j) != Template.get_NoDataValue() && RasterData[i][j] == NoDataValue){
+        Output[i][j] = minimum;
+      }
+      else if (Template.get_data_element(i, j) != Template.get_NoDataValue()){
+        Output[i][j] = RasterData[i][j];
+      }
+    }
+  }
+
+  LSDSoilHydroRaster output(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,Output,GeoReferencingStrings);
+  return output;
+
+}
+
+
+LSDSoilHydroRaster LSDSoilHydroRaster::build_maximum_parameters(LSDRaster& Template){
+
+  Array2D<float> Output(NRows, NCols, NoDataValue);
+  float maximum = get_maximum_value();
+
+
+  // for each cell, if there is no paramter data but there is topo, fill in the data with the maximum value
+  // otherwise, just keep the maximum value.
+  for (int i = 0; i < NRows; ++i){
+    for (int j = 0; j < NCols; ++j){
+      if (Template.get_data_element(i, j) != Template.get_NoDataValue() && RasterData[i][j] == NoDataValue){
+        Output[i][j] = maximum;
+      }
+      else if (Template.get_data_element(i, j) != Template.get_NoDataValue()){
+        Output[i][j] = RasterData[i][j];
+      }
+    }
+  }
+
+  LSDSoilHydroRaster output(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,Output,GeoReferencingStrings);
+  return output;
+
+}
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
