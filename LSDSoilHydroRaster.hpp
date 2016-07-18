@@ -137,6 +137,18 @@ class LSDSoilHydroRaster: public LSDRaster
     LSDSoilHydroRaster(LSDRaster& ThisRaster, float value)
       { create(ThisRaster, value); }
 
+    /// @brief Creates an LSDSoilHydroRaster object populated with parameter
+    /// values stored in OtherRaster.
+    ///
+    /// @details Fills nodata patches in OtherRaster which are non-nodata in DEM with either a min
+    /// or max value taken from OtherRaster, depending on the if min_max is 0 (min) or 1 (max).
+    /// @param DEM LSDRaster containing a DEM, used to ensure that every point on the landscape has a parameter value.
+    /// @param OtherRaster LSDRaster containing spatial parameter values.
+    /// @param min_max Integer flag set to either 0 (min) or 1 (max) to set how the data gaps are filled.
+    /// @author SWDG
+    /// @date 18/7/16
+    LSDSoilHydroRaster(LSDRaster& DEM, LSDRaster& OtherRaster, int min_max)
+      { create(DEM, OtherRaster, min_max); }
 
     /// @brief Create an LSDSoilHydroRaster from memory.
     /// @return LSDRaster
@@ -199,7 +211,7 @@ class LSDSoilHydroRaster: public LSDRaster
     ///  MaximumSlope =
     ///  v =
     ///  lambda =
-    /// @detail: the latex code for the equation \text{SWE}=A \left(v \exp \left(\frac{M (v+1)^{\frac{1}{v}+1} (\lambda -\zeta )}{A}+v+1\right)+1\right)^{-1/v}
+    /// @details The latex code for the equation \text{SWE}=A \left(v \exp \left(\frac{M (v+1)^{\frac{1}{v}+1} (\lambda -\zeta )}{A}+v+1\right)+1\right)^{-1/v}
     /// @param MaximumEffDepth The maximum effective depth (g cm^-2 m^-1)
     /// @param MaximumSlope the maximum slope of the curve. Should probably be less than 0.1
     /// @param v a "shape" parameter that controls how sharp the transitions from no snow
@@ -315,29 +327,13 @@ class LSDSoilHydroRaster: public LSDRaster
     /// @date 15/7/16
     float get_minimum_value();
 
-
-    /// @brief Using the parameter range provided in Template, fill in areas of
-    /// missing data with the minimum parameter bound.
-    /// @param Template LSDRaster of parameter values.
-    /// @return An LSDSoilHydroRaster coded with parameter values which correspond to the minimum parameter bound.
-    /// @author SWDG
-    /// @date 18/7/16
-    LSDSoilHydroRaster build_minimum_parameters(LSDRaster& Template);
-
-    /// @brief Using the parameter range provided in Template, fill in areas of
-    /// missing data with the maximum parameter bound.
-    /// @param Template LSDRaster of parameter values.
-    /// @return An LSDSoilHydroRaster coded with parameter values which correspond to the maximum parameter bound.
-    /// @author SWDG
-    /// @date 18/7/16
-    LSDSoilHydroRaster build_maximum_parameters(LSDRaster& Template);
-
   protected:
 
   private:
     void create();
     void create(LSDRaster& OtherRaster);
     void create(LSDRaster& OtherRaster, float value);
+    void create(LSDRaster& DEM, LSDRaster& OtherRaster, int min_max);
     void create(int ncols, int nrows, float xmin, float ymin,
                 float cellsize, float ndv, Array2D<float> data);
     void create(int ncols, int nrows, float xmin, float ymin,

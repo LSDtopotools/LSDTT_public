@@ -155,6 +155,49 @@ void LSDSoilHydroRaster::create(LSDRaster& OtherRaster, float value)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+void LSDSoilHydroRaster::create(LSDRaster& DEM, LSDRaster& OtherRaster, int min_max)
+{
+  NRows = OtherRaster.get_NRows();
+  NCols = OtherRaster.get_NCols();
+  XMinimum = OtherRaster.get_XMinimum();
+  YMinimum = OtherRaster.get_YMinimum();
+  DataResolution = OtherRaster.get_DataResolution();
+  NoDataValue = OtherRaster.get_NoDataValue();
+  GeoReferencingStrings = OtherRaster.get_GeoReferencingStrings();
+
+  // set the raster data to be a certain value
+  Array2D<float> data(NRows,NCols,NoDataValue);
+
+  float min_max_val = NoDataValue;
+
+  if (min_max == 0){
+    // get the minimum value of OtherRaster
+    Array2D<float> tmp = OtherRaster.get_RasterData();
+    min_max_val = Get_Minimum(tmp, NoDataValue);
+  }
+  else if (min_max == 1){
+    // get the maximum value of OtherRaster
+    Array2D<float> tmp = OtherRaster.get_RasterData();
+    min_max_val = Get_Maximum(tmp, NoDataValue);
+  }
+
+  // for each cell, if there is no paramter data but there is topo, fill in the data with the minimum/maximum value
+  // otherwise, just keep the minimum value.
+  for (int i = 0; i < NRows; ++i){
+    for (int j = 0; j < NCols; ++j){
+      if (DEM.get_data_element(i, j) != NoDataValue && OtherRaster.get_data_element(i,j) == NoDataValue){
+        data[i][j] = min_max_val;
+      }
+      else if (DEM.get_data_element(i, j) != NoDataValue && OtherRaster.get_data_element(i, j) != NoDataValue){
+        data[i][j] = OtherRaster.get_data_element(i,j);
+      }
+    }
+  }
+
+  RasterData = data.copy();
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Creates a raster from raw data
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -561,81 +604,6 @@ LSDSoilHydroRaster LSDSoilHydroRaster::Calculate_sinmap_SI(LSDRaster Slope, LSDR
   }
 
   LSDSoilHydroRaster output(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,SI,GeoReferencingStrings);
-  return output;
-
-}
-
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// Get the maximum value in the SoilHydroRaster, used for getting parameter ranges.
-//
-// SWDG 15/7/16
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-float LSDSoilHydroRaster::get_maximum_value(){
-  return Get_Maximum(RasterData, NoDataValue);
-}
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// Get the minimum value in the SoilHydroRaster, used for getting parameter ranges.
-//
-// SWDG 15/7/16
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-float LSDSoilHydroRaster::get_minimum_value(){
-  return Get_Minimum(RasterData, NoDataValue);
-}
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// Using the parameter range provided in Template, fill in areas of missing data with the minimum parameter bound.
-// SWDG 18/7/16
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-LSDSoilHydroRaster LSDSoilHydroRaster::build_minimum_parameters(LSDRaster& Template){
-
-  Array2D<float> Output(NRows, NCols, NoDataValue);
-  float minimum = get_minimum_value();
-
-
-  // for each cell, if there is no paramter data but there is topo, fill in the data with the minimum value
-  // otherwise, just keep the minimum value.
-  for (int i = 0; i < NRows; ++i){
-    for (int j = 0; j < NCols; ++j){
-      if (Template.get_data_element(i, j) != Template.get_NoDataValue() && RasterData[i][j] == NoDataValue){
-        Output[i][j] = minimum;
-      }
-      else if (Template.get_data_element(i, j) != Template.get_NoDataValue()){
-        Output[i][j] = RasterData[i][j];
-      }
-    }
-  }
-
-  LSDSoilHydroRaster output(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,Output,GeoReferencingStrings);
-  return output;
-
-}
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// Using the parameter range provided in Template, fill in areas of missing data with the maximum parameter bound.
-// SWDG 18/7/16
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-LSDSoilHydroRaster LSDSoilHydroRaster::build_maximum_parameters(LSDRaster& Template){
-
-  Array2D<float> Output(NRows, NCols, NoDataValue);
-  float maximum = get_maximum_value();
-
-
-  // for each cell, if there is no paramter data but there is topo, fill in the data with the maximum value
-  // otherwise, just keep the maximum value.
-  for (int i = 0; i < NRows; ++i){
-    for (int j = 0; j < NCols; ++j){
-      if (Template.get_data_element(i, j) != Template.get_NoDataValue() && RasterData[i][j] == NoDataValue){
-        Output[i][j] = maximum;
-      }
-      else if (Template.get_data_element(i, j) != Template.get_NoDataValue()){
-        Output[i][j] = RasterData[i][j];
-      }
-    }
-  }
-
-  LSDSoilHydroRaster output(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,Output,GeoReferencingStrings);
   return output;
 
 }
