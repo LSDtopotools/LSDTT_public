@@ -584,7 +584,10 @@ float LSDSoilHydroRaster::get_minimum_value(){
   return Get_Minimum(RasterData, NoDataValue);
 }
 
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Using the parameter range provided in Template, fill in areas of missing data with the minimum parameter bound.
+// SWDG 18/7/16
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDSoilHydroRaster LSDSoilHydroRaster::build_minimum_parameters(LSDRaster& Template){
 
   Array2D<float> Output(NRows, NCols, NoDataValue);
@@ -609,7 +612,10 @@ LSDSoilHydroRaster LSDSoilHydroRaster::build_minimum_parameters(LSDRaster& Templ
 
 }
 
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Using the parameter range provided in Template, fill in areas of missing data with the maximum parameter bound.
+// SWDG 18/7/16
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 LSDSoilHydroRaster LSDSoilHydroRaster::build_maximum_parameters(LSDRaster& Template){
 
   Array2D<float> Output(NRows, NCols, NoDataValue);

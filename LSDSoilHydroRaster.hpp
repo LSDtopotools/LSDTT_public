@@ -315,7 +315,21 @@ class LSDSoilHydroRaster: public LSDRaster
     /// @date 15/7/16
     float get_minimum_value();
 
+
+    /// @brief Using the parameter range provided in Template, fill in areas of
+    /// missing data with the minimum parameter bound.
+    /// @param Template LSDRaster of parameter values.
+    /// @return An LSDSoilHydroRaster coded with parameter values which correspond to the minimum parameter bound.
+    /// @author SWDG
+    /// @date 18/7/16
     LSDSoilHydroRaster build_minimum_parameters(LSDRaster& Template);
+
+    /// @brief Using the parameter range provided in Template, fill in areas of
+    /// missing data with the maximum parameter bound.
+    /// @param Template LSDRaster of parameter values.
+    /// @return An LSDSoilHydroRaster coded with parameter values which correspond to the maximum parameter bound.
+    /// @author SWDG
+    /// @date 18/7/16
     LSDSoilHydroRaster build_maximum_parameters(LSDRaster& Template);
 
   protected:
