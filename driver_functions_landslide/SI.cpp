@@ -38,32 +38,33 @@ int main (int nNumberofArgs,char *argv[])
   //Load parameter values
   string RasterFormat;
   string DEMName;
-  float low_CrValue;
-  float hi_CrValue;
-  float low_CsValue;
-  float hi_CsValue;
-  float low_DValue;
-  float hi_DValue;
-  float low_phiValue;
-  float hi_phiValue;
-  float low_RoverTValue;
-  float hi_RoverTValue;
-  float low_rhosValue;
-  float hi_rhosValue;
+  string low_CrInput;
+  string hi_CrInput;
+  string low_CsInput;
+  string hi_CsInput;
+  string low_DInput;
+  string hi_DInput;
+  string low_phiInput;
+  string hi_phiInput;
+  string low_RoverTInput;
+  string hi_RoverTInput;
+  string low_rhosInput;
+  string hi_rhosInput;
   float rhow;
   float g;
   int WindowSize;
   string OutPath;
   string temp;
+  int is_float;
 
   file_info_in >> temp >> RasterFormat
                >> temp >> DEMName
-               >> temp >> low_CrValue >> hi_CrValue
-               >> temp >> low_CsValue >> hi_CsValue
-	             >> temp >> low_DValue >> hi_DValue
-	             >> temp >> low_phiValue >> hi_phiValue
-	             >> temp >> low_RoverTValue >> hi_RoverTValue
-               >> temp >> low_rhosValue >> hi_rhosValue
+               >> temp >> low_CrInput >> hi_CrInput
+               >> temp >> low_CsInput >> hi_CsInput
+	             >> temp >> low_DInput >> hi_DInput
+	             >> temp >> low_phiInput >> hi_phiInput
+	             >> temp >> low_RoverTInput >> hi_RoverTInput
+               >> temp >> low_rhosInput >> hi_rhosInput
                >> temp >> rhow
                >> temp >> g
                >> temp >> WindowSize
@@ -94,21 +95,56 @@ int main (int nNumberofArgs,char *argv[])
   //Get the D-infinity drainage area
   LSDRaster DrainageArea = FilledDEM.D_inf_units();
 
-  //populate SoilHydroRasters with lower bounds parameter values
-  LSDSoilHydroRaster low_RoverT(FilledDEM, low_RoverTValue);
-  LSDSoilHydroRaster low_Cs(FilledDEM, low_CsValue);
-  LSDSoilHydroRaster low_Cr(FilledDEM, low_CrValue);
-  LSDSoilHydroRaster low_phi(FilledDEM, low_phiValue);
-  LSDSoilHydroRaster low_D(FilledDEM, low_DValue);
-  LSDSoilHydroRaster low_rhos(FilledDEM, low_rhosValue);
+  // Crunch through all the input parameters and load them into SoilHydroRasters
 
-  //populate SoilHydroRasters with upper bounds parameter values
-  LSDSoilHydroRaster hi_RoverT(FilledDEM, hi_RoverTValue);
-  LSDSoilHydroRaster hi_Cs(FilledDEM, hi_CsValue);
-  LSDSoilHydroRaster hi_Cr(FilledDEM, hi_CrValue);
-  LSDSoilHydroRaster hi_phi(FilledDEM, hi_phiValue);
-  LSDSoilHydroRaster hi_D(FilledDEM, hi_DValue);
-  LSDSoilHydroRaster hi_rhos(FilledDEM, hi_rhosValue);
+  //root_cohesion
+  is_float = isFloat(low_CrInput);
+  //Constructs a placeholder LSDRaster in cases where we have no need of one as the parameter has been passed as a float
+  LSDRaster low_CrRaster = (is_float == 1) ? LSDRaster() : LSDRaster((Path + low_CrInput), RasterFormat);
+  LSDSoilHydroRaster low_Cr = (is_float == 1) ? LSDSoilHydroRaster(FilledDEM, atof(low_CrInput.c_str())) : LSDSoilHydroRaster(FilledDEM, low_CrRaster, 0);
+  is_float = isFloat(hi_CrInput);
+  LSDRaster hi_CrRaster = (is_float == 1) ? LSDRaster() : LSDRaster((Path + hi_CrInput), RasterFormat);
+  LSDSoilHydroRaster hi_Cr = (is_float == 1) ? LSDSoilHydroRaster(FilledDEM, atof(hi_CrInput.c_str())) : LSDSoilHydroRaster(FilledDEM, hi_CrRaster, 0);
+
+  //soil_cohesion
+  is_float = isFloat(low_CsInput);
+  LSDRaster low_CsRaster = (is_float == 1) ? LSDRaster() : LSDRaster((Path + low_CsInput), RasterFormat);
+  LSDSoilHydroRaster low_Cs = (is_float == 1) ? LSDSoilHydroRaster(FilledDEM, atof(low_CsInput.c_str())) : LSDSoilHydroRaster(FilledDEM, low_CsRaster, 0);
+  is_float = isFloat(hi_CsInput);
+  LSDRaster hi_CsRaster = (is_float == 1) ? LSDRaster() : LSDRaster((Path + hi_CsInput), RasterFormat);
+  LSDSoilHydroRaster hi_Cs = (is_float == 1) ? LSDSoilHydroRaster(FilledDEM, atof(hi_CsInput.c_str())) : LSDSoilHydroRaster(FilledDEM, hi_CsRaster, 0);
+
+  //soil_depth
+  is_float = isFloat(low_DInput);
+  LSDRaster low_DRaster = (is_float == 1) ? LSDRaster() : LSDRaster((Path + low_DInput), RasterFormat);
+  LSDSoilHydroRaster low_D = (is_float == 1) ? LSDSoilHydroRaster(FilledDEM, atof(low_DInput.c_str())) : LSDSoilHydroRaster(FilledDEM, low_DRaster, 0);
+  is_float = isFloat(hi_DInput);
+  LSDRaster hi_DRaster = (is_float == 1) ? LSDRaster() : LSDRaster((Path + hi_DInput), RasterFormat);
+  LSDSoilHydroRaster hi_D = (is_float == 1) ? LSDSoilHydroRaster(FilledDEM, atof(hi_DInput.c_str())) : LSDSoilHydroRaster(FilledDEM, hi_DRaster, 0);
+
+  //soil_friction_angle
+  is_float = isFloat(low_phiInput);
+  LSDRaster low_phiRaster = (is_float == 1) ? LSDRaster() : LSDRaster((Path + low_phiInput), RasterFormat);
+  LSDSoilHydroRaster low_phi = (is_float == 1) ? LSDSoilHydroRaster(FilledDEM, atof(low_phiInput.c_str())) : LSDSoilHydroRaster(FilledDEM, low_phiRaster, 0);
+  is_float = isFloat(hi_phiInput);
+  LSDRaster hi_phiRaster = (is_float == 1) ? LSDRaster() : LSDRaster((Path + hi_phiInput), RasterFormat);
+  LSDSoilHydroRaster hi_phi = (is_float == 1) ? LSDSoilHydroRaster(FilledDEM, atof(hi_phiInput.c_str())) : LSDSoilHydroRaster(FilledDEM, hi_phiRaster, 0);
+
+  //recharge_over_transmissivity
+  is_float = isFloat(low_RoverTInput);
+  LSDRaster low_RoverTRaster = (is_float == 1) ? LSDRaster() : LSDRaster((Path + low_RoverTInput), RasterFormat);
+  LSDSoilHydroRaster low_RoverT = (is_float == 1) ? LSDSoilHydroRaster(FilledDEM, atof(low_RoverTInput.c_str())) : LSDSoilHydroRaster(FilledDEM, low_RoverTRaster, 0);
+  is_float = isFloat(hi_RoverTInput);
+  LSDRaster hi_RoverTRaster = (is_float == 1) ? LSDRaster() : LSDRaster((Path + hi_RoverTInput), RasterFormat);
+  LSDSoilHydroRaster hi_RoverT = (is_float == 1) ? LSDSoilHydroRaster(FilledDEM, atof(hi_RoverTInput.c_str())) : LSDSoilHydroRaster(FilledDEM, hi_RoverTRaster, 0);
+
+  //soil_density
+  is_float = isFloat(low_rhosInput);
+  LSDRaster low_rhosRaster = (is_float == 1) ? LSDRaster() : LSDRaster((Path + low_rhosInput), RasterFormat);
+  LSDSoilHydroRaster low_rhos = (is_float == 1) ? LSDSoilHydroRaster(FilledDEM, atof(low_rhosInput.c_str())) : LSDSoilHydroRaster(FilledDEM, low_rhosRaster, 0);
+  is_float = isFloat(hi_rhosInput);
+  LSDRaster hi_rhosRaster = (is_float == 1) ? LSDRaster() : LSDRaster((Path + hi_rhosInput), RasterFormat);
+  LSDSoilHydroRaster hi_rhos = (is_float == 1) ? LSDSoilHydroRaster(FilledDEM, atof(hi_rhosInput.c_str())) : LSDSoilHydroRaster(FilledDEM, hi_rhosRaster, 0);
 
   //Calculate dimensionless parameters used in final Fs calculations
   LSDSoilHydroRaster hi_h = hi_D.Calculate_h(SlopeDeg);
@@ -128,10 +164,10 @@ int main (int nNumberofArgs,char *argv[])
   LSDSoilHydroRaster SI = low_r.Calculate_sinmap_SI(Slope, DrainageArea, low_C, hi_C, low_phi, hi_phi, low_RoverT, hi_RoverT, low_r, hi_r, Fs_min,  Fs_max);
 
   //Write factor of safety to file
-  Fs_min.write_raster((OutPath+"Fs_min"), RasterFormat);
-  Fs_max.write_raster((OutPath+"Fs_max"), RasterFormat);
+  Fs_min.write_raster((OutPath+"Fs_min_NC"), RasterFormat);
+  Fs_max.write_raster((OutPath+"Fs_max_NC"), RasterFormat);
 
   //write Stability index to a file
-  SI.write_raster((OutPath+"SI"), RasterFormat);
+  SI.write_raster((OutPath+"SI_NC"), RasterFormat);
 
 }
