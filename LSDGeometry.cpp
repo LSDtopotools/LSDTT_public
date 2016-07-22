@@ -881,7 +881,7 @@ void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo&
   check_and_update_UTM();
 
   int n_nodes = int(UTMPoints_Easting.size());
-
+cout << n_nodes << endl;
   bool valid_nodes = true;
 
   // get the starting node location in UTM
@@ -1090,18 +1090,31 @@ void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo&
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Method to return a vector of node indexes of every cell intersected by the polyline.
+// Calls get_affected_pixels_in_line()
+// SWDG 22/7/16
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDPolyline::get_flowinfo_nodes_of_line(LSDRasterInfo& RI, LSDFlowInfo& FlowInfo){
 
+  vector<int> affected_rows;
+  vector<int> affected_cols;
+  vector<int> affected_nodes;
 
+  get_affected_pixels_in_line(RI, affected_rows, affected_cols);
 
+  for (int i = 0; i < int(affected_rows.size());++i){
 
+    affected_nodes.push_back(FlowInfo.retrieve_node_from_row_and_column (affected_rows[i], affected_cols[i]));
 
+  }
 
+  //this list has lots of duplicates, so only return unique nodes.
+  vector<int> affected_nodes_unique = Unique(affected_nodes);
 
+  return affected_nodes_unique;
 
-
-
-
-
+}
 
 
 /*
