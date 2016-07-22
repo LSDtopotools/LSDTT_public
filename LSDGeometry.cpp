@@ -88,7 +88,7 @@ using namespace std;
 using namespace TNT;
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Creates an LSDGeometry from an LSDRaster 
+// Creates an LSDGeometry from an LSDRaster
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDGeometry::create()
 {
@@ -102,15 +102,15 @@ void LSDGeometry::create()
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDGeometry::create(vector<double> x, vector<double> y)
 {
-  // This reads in x and y vectors. 
+  // This reads in x and y vectors.
   // It judges whether or not these are UTM coordinates by checking if
   // any of the data elements are over the maximum or minimum of latitude
   // or longitude
   int n_x_points = int(x.size());
   int n_y_points = int(y.size());
-  
+
   bool is_UTM = false;
-  
+
   if (n_x_points != n_y_points)
   {
     cout << "X and Y vectors not the same size! No data loaded. " << endl;
@@ -129,7 +129,7 @@ void LSDGeometry::create(vector<double> x, vector<double> y)
       {
         is_UTM = true;
       }
-      
+
       // Check if longitude/easting outside of 180: if it is this is UTM
       if((x[i] > 180 || x[i] <-180))
       {
@@ -138,15 +138,15 @@ void LSDGeometry::create(vector<double> x, vector<double> y)
       i++;
     } while (not is_UTM || i < n_x_points);
   }
-  
+
   if(is_UTM)
   {
     cout << "This appears to be UTM data but you have not provided a zone!" << endl;
   }
   else
   {
-    WGS84Points_longitude = x; 
-    WGS84Points_latitude = y; 
+    WGS84Points_longitude = x;
+    WGS84Points_latitude = y;
   }
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -170,24 +170,24 @@ void LSDGeometry::create(vector<float> x, vector<float> y)
     x_double.push_back( double(x[i]));
     y_double.push_back( double(y[i]));
   }
-  
+
   create(x_double, y_double);
-  
+
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Creates an LSDGeometry object. This is in UTM format and so has UTM information 
+// Creates an LSDGeometry object. This is in UTM format and so has UTM information
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDGeometry::create(vector<double> x, vector<double> y, int thisUTMzone)
 {
-  // This reads in x and y vectors. 
+  // This reads in x and y vectors.
   // It judges whether or not these are UTM coordinates by checking if
   // any of the data elements are over the maximum or minimum of latitude
   // or longitude
   int n_x_points = int(x.size());
   int n_y_points = int(y.size());
-  
+
   if (n_x_points != n_y_points)
   {
     cout << "X and Y vectors not the same size! No data loaded. " << endl;
@@ -198,16 +198,16 @@ void LSDGeometry::create(vector<double> x, vector<double> y, int thisUTMzone)
   }
   else
   {
-    UTMPoints_Easting = x; 
+    UTMPoints_Easting = x;
     UTMPoints_Northing = y;
     UTMZone = thisUTMzone;
-    isNorth = true; 
+    isNorth = true;
   }
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Creates an LSDGeometry object. This is in UTM format and so has UTM information 
+// Creates an LSDGeometry object. This is in UTM format and so has UTM information
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDGeometry::create(vector<float> x, vector<float> y, int thisUTMzone)
 {
@@ -224,7 +224,7 @@ void LSDGeometry::create(vector<float> x, vector<float> y, int thisUTMzone)
     x_double.push_back( double(x[i]));
     y_double.push_back( double(y[i]));
   }
-  
+
   create(x_double, y_double, thisUTMzone);
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -234,13 +234,13 @@ void LSDGeometry::create(vector<float> x, vector<float> y, int thisUTMzone)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDGeometry::create(vector<double> x, vector<double> y, int thisUTMzone, bool ThisisNorth)
 {
-  // This reads in x and y vectors. 
+  // This reads in x and y vectors.
   // It judges whether or not these are UTM coordinates by checking if
   // any of the data elements are over the maximum or minimum of latitude
   // or longitude
   int n_x_points = int(x.size());
   int n_y_points = int(y.size());
-  
+
   if (n_x_points != n_y_points)
   {
     cout << "X and Y vectors not the same size! No data loaded. " << endl;
@@ -251,16 +251,16 @@ void LSDGeometry::create(vector<double> x, vector<double> y, int thisUTMzone, bo
   }
   else
   {
-    UTMPoints_Easting = x; 
+    UTMPoints_Easting = x;
     UTMPoints_Northing = y;
     UTMZone = thisUTMzone;
-    isNorth = ThisisNorth; 
+    isNorth = ThisisNorth;
   }
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Creates an LSDGeometry object. This is in UTM format and so has UTM information 
+// Creates an LSDGeometry object. This is in UTM format and so has UTM information
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDGeometry::create(vector<float> x, vector<float> y, int thisUTMzone, bool ThisisNorth)
 {
@@ -277,7 +277,7 @@ void LSDGeometry::create(vector<float> x, vector<float> y, int thisUTMzone, bool
     x_double.push_back( double(x[i]));
     y_double.push_back( double(y[i]));
   }
-  
+
   create(x_double, y_double, thisUTMzone,ThisisNorth);
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -295,20 +295,20 @@ void LSDGeometry::convert_points_to_UTM()
   else
   {
     LSDCoordinateConverterLLandUTM Converter;
-  
+
     // set the default ellipsoid to WGS84
     int eId = 22;
-  
+
     double Northing,Easting;
     double Lat,Long;
-  
+
     int thisZone = 1;     // This gets replaced in the LLtoUTM operation
-  
+
     vector<double> new_UTM_Northing;
     vector<double> new_UTM_Easting;
     // get UTMZone of the first coordinate and set that as the object zone
     Converter.LLtoUTM(eId, WGS84Points_latitude[0], WGS84Points_longitude[0],  Northing, Easting, thisZone);
-    
+
     // get the zone and the isNorth parameters
     UTMZone = thisZone;
     if(WGS84Points_latitude[0] > 0)
@@ -321,16 +321,16 @@ void LSDGeometry::convert_points_to_UTM()
     }
 
     int n_nodes = int(WGS84Points_longitude.size());
-  
+
     for(int i = 0; i<n_nodes; i++)
     {
-      Lat =WGS84Points_latitude[i]; 
+      Lat =WGS84Points_latitude[i];
       Long =WGS84Points_longitude[i];
-     
-     // We use force zone here since all points will be forced into the UTM zone 
-     // of the first data element. 
+
+     // We use force zone here since all points will be forced into the UTM zone
+     // of the first data element.
       Converter.LLtoUTM_ForceZone(eId, Lat, Long,  Northing, Easting, UTMZone);
-    
+
       new_UTM_Northing.push_back(Northing);
       new_UTM_Easting.push_back(Easting);
     }
@@ -347,7 +347,7 @@ void LSDGeometry::convert_points_to_UTM()
 void LSDGeometry::convert_points_to_LatLong()
 {
 
-  
+
   if( UTMPoints_Northing.size() == 0)
   {
     cout << "Trying to convert from UTM but you don't have any data." << endl;
@@ -355,25 +355,25 @@ void LSDGeometry::convert_points_to_LatLong()
   else
   {
     LSDCoordinateConverterLLandUTM Converter;
-  
+
     // set the default ellipsoid to WGS84
     int eId = 22;
-  
+
     double Northing,Easting;
     double Lat,Long;
-  
+
     vector<double> new_WGS84Points_latitude;
     vector<double> new_WGS84Points_longitude;
 
     int n_nodes = int(UTMPoints_Easting.size());
-  
+
     for(int i = 0; i<n_nodes; i++)
     {
-      Northing =UTMPoints_Northing[i]; 
+      Northing =UTMPoints_Northing[i];
       Easting =UTMPoints_Easting[i];
-     
+
       Converter.UTMtoLL(eId, Northing, Easting, UTMZone, isNorth, Lat,Long);
-    
+
       new_WGS84Points_latitude.push_back(Lat);
       new_WGS84Points_longitude.push_back(Long);
     }
@@ -390,14 +390,14 @@ void LSDGeometry::convert_points_to_LatLong()
 void LSDGeometry::print_points_to_csv(string path, string file_prefix)
 {
 
-  string fname = path+file_prefix+".csv";
+  string fname = path+"."+file_prefix;
 
   int n_UTM_nodes = int(UTMPoints_Northing.size());
   int n_WGS_nodes = int(WGS84Points_latitude.size());
-  
+
   bool have_UTM = false;
   bool have_WGS = false;
-  
+
   if (n_UTM_nodes > 0)
   {
     have_UTM = true;
@@ -406,7 +406,7 @@ void LSDGeometry::print_points_to_csv(string path, string file_prefix)
   {
     have_WGS = true;
   }
-  
+
   if (not have_UTM && not have_WGS)
   {
     cout << "Trying to print points but there is no data!" << endl;
@@ -423,7 +423,7 @@ void LSDGeometry::print_points_to_csv(string path, string file_prefix)
       convert_points_to_UTM();
       n_UTM_nodes = int(UTMPoints_Northing.size());
     }
-    
+
     ofstream csv_out;
     csv_out.open(fname.c_str());
     csv_out << "latitude,longitude,Northing,Easting" << endl;
@@ -454,7 +454,7 @@ void LSDGeometry::find_row_and_col_of_points(LSDRasterInfo& RI, vector<int>& Row
     // If you don't have UTM points, convert WGS to UTM
     convert_points_to_UTM();
   }
-  
+
   // Get the X and Y minimums
   float XMinimum = RI.get_XMinimum();
   float YMinimum = RI.get_YMinimum();
@@ -465,15 +465,15 @@ void LSDGeometry::find_row_and_col_of_points(LSDRasterInfo& RI, vector<int>& Row
 
   int this_row;
   int this_col;
-  
+
   // Shift origin to that of dataset
   float X_coordinate_shifted_origin;
   float Y_coordinate_shifted_origin;
-  
+
   // the actual coordinates
   float X_coordinate;
   float Y_coordinate;
-  
+
   // now loop through nodes
   int N_nodes =  int(UTMPoints_Northing.size());
   for(int i = 0; i<N_nodes; i++)
@@ -483,7 +483,7 @@ void LSDGeometry::find_row_and_col_of_points(LSDRasterInfo& RI, vector<int>& Row
 
     X_coordinate = UTMPoints_Easting[i];
     Y_coordinate = UTMPoints_Northing[i];
-  
+
     // Shift origin to that of dataset
     X_coordinate_shifted_origin = X_coordinate - XMinimum;
     Y_coordinate_shifted_origin = Y_coordinate - YMinimum;
@@ -501,7 +501,7 @@ void LSDGeometry::find_row_and_col_of_points(LSDRasterInfo& RI, vector<int>& Row
     {
       this_row = row_point;
     }
-    
+
     row_vec.push_back(this_row);
     col_vec.push_back(this_col);
   }
@@ -515,11 +515,11 @@ void LSDGeometry::find_row_and_col_of_points(LSDRasterInfo& RI, vector<int>& Row
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Gets the row and column of a single point. 
+// Gets the row and column of a single point.
 // It includes out of bounds points (i.e., with rows and columsn either less than zero
 //  or greater than NRows or NCols)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI, 
+void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI,
                       int point_index, int& RowOfNode, int& ColOfNode, bool& IsOutOfBounds)
 {
 
@@ -538,7 +538,7 @@ void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI,
   // Shift origin to that of dataset
   float X_coordinate_shifted_origin;
   float Y_coordinate_shifted_origin;
-  
+
   // the actual coordinates
   float X_coordinate;
   float Y_coordinate;
@@ -549,20 +549,20 @@ void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI,
     // If you don't have UTM points, convert WGS to UTM
     convert_points_to_UTM();
   }
-  
+
   // Test to see if node index is in range
   int N_nodes =  int(UTMPoints_Northing.size());
   if (point_index < 0 || point_index >= N_nodes)
   {
     cout << "Your node index is out of the bounds of the point data." << endl;
-  
+
   }
   else
   {
-  
+
     X_coordinate = UTMPoints_Easting[point_index];
     Y_coordinate = UTMPoints_Northing[point_index];
-  
+
     // Shift origin to that of dataset
     X_coordinate_shifted_origin = X_coordinate - XMinimum;
     Y_coordinate_shifted_origin = Y_coordinate - YMinimum;
@@ -581,7 +581,7 @@ void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI,
         OutOfBounds = false;
       }
     }
-    
+
     this_row = row_point;
     this_col = col_point;
   }
@@ -589,7 +589,7 @@ void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI,
   RowOfNode = this_row;
   ColOfNode = this_col;
   IsOutOfBounds = OutOfBounds;
-  
+
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -597,12 +597,12 @@ void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI,
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Gets the row and column of a single point. 
+// Gets the row and column of a single point.
 // It includes out of bounds points (i.e., with rows and columsn either less than zero
 //  or greater than NRows or NCols)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI, 
-                      double UTM_Easting, double UTM_northing, int& RowOfNode, int& ColOfNode, 
+void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI,
+                      double UTM_Easting, double UTM_northing, int& RowOfNode, int& ColOfNode,
                       bool& IsOutOfBounds)
 {
 
@@ -621,7 +621,7 @@ void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI,
   // Shift origin to that of dataset
   float X_coordinate_shifted_origin;
   float Y_coordinate_shifted_origin;
-  
+
   // the actual coordinates
   float X_coordinate;
   float Y_coordinate;
@@ -632,15 +632,15 @@ void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI,
     // If you don't have UTM points, convert WGS to UTM
     convert_points_to_UTM();
   }
-  
+
 
   X_coordinate = UTM_Easting;
   Y_coordinate = UTM_northing;
-  
+
   // Shift origin to that of dataset
   X_coordinate_shifted_origin = X_coordinate - XMinimum;
   Y_coordinate_shifted_origin = Y_coordinate - YMinimum;
-  
+
   // Get row and column of point
   int col_point = int(X_coordinate_shifted_origin/DataResolution);
   int row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/DataResolution));
@@ -656,7 +656,7 @@ void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI,
     }
   }
 
-  
+
   this_row = row_point;
   this_col = col_point;
 
@@ -664,7 +664,7 @@ void LSDGeometry::find_row_and_col_of_point_inc_out_of_bounds(LSDRasterInfo& RI,
   RowOfNode = this_row;
   ColOfNode = this_col;
   IsOutOfBounds = OutOfBounds;
-  
+
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -686,19 +686,19 @@ void LSDGeometry::check_and_update_UTM()
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // These functions get the maximum and minimum values for Northing and easting
-// In general these are for scaling svg output. 
+// In general these are for scaling svg output.
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 double LSDGeometry::get_max_UTM_Northing()
 {
   check_and_update_UTM();
   int n_nodes = int(UTMPoints_Northing.size());
   double max_Northing = UTMPoints_Northing[0];
-  
+
   for(int n = 0; n<n_nodes; n++)
   {
     if(UTMPoints_Northing[n] > max_Northing)
     {
-      max_Northing = UTMPoints_Northing[n]; 
+      max_Northing = UTMPoints_Northing[n];
     }
   }
   return max_Northing;
@@ -709,12 +709,12 @@ double LSDGeometry::get_min_UTM_Northing()
   check_and_update_UTM();
   int n_nodes = int(UTMPoints_Northing.size());
   double min_Northing = UTMPoints_Northing[0];
-  
+
   for(int n = 0; n<n_nodes; n++)
   {
     if(UTMPoints_Northing[n] < min_Northing)
     {
-      min_Northing = UTMPoints_Northing[n]; 
+      min_Northing = UTMPoints_Northing[n];
     }
   }
   return min_Northing;
@@ -724,12 +724,12 @@ double LSDGeometry::get_max_UTM_Easting()
   check_and_update_UTM();
   int n_nodes = int(UTMPoints_Easting.size());
   double max_Easting = UTMPoints_Easting[0];
-  
+
   for(int n = 0; n<n_nodes; n++)
   {
     if(UTMPoints_Easting[n] > max_Easting)
     {
-      max_Easting = UTMPoints_Easting[n]; 
+      max_Easting = UTMPoints_Easting[n];
     }
   }
   return max_Easting;
@@ -740,12 +740,12 @@ double LSDGeometry::get_min_UTM_Easting()
   check_and_update_UTM();
   int n_nodes = int(UTMPoints_Easting.size());
   double min_Easting = UTMPoints_Easting[0];
-  
+
   for(int n = 0; n<n_nodes; n++)
   {
     if(UTMPoints_Easting[n] < min_Easting)
     {
-      min_Easting = UTMPoints_Easting[n]; 
+      min_Easting = UTMPoints_Easting[n];
     }
   }
   return min_Easting;
@@ -758,7 +758,7 @@ double LSDGeometry::get_min_UTM_Easting()
 void LSDPolyline::make_simple_polyline()
 {
   vector<int> new_node_order;
-  
+
   int n_order = (node_order.size());
   if(n_order == 0)
   {
@@ -768,13 +768,13 @@ void LSDPolyline::make_simple_polyline()
     {
       n_nodes = int(WGS84Points_latitude.size());
     }
-    
+
     for(int i = 0; i<n_nodes; i++)
     {
       new_node_order.push_back(i);
     }
     node_order =  new_node_order;
-    
+
   }
   else
   {
@@ -790,14 +790,14 @@ void LSDPolyline::make_simple_polyline()
 void LSDPolyline::force_simple_polyline()
 {
   vector<int> new_node_order;
-  
+
   int n_nodes;
   n_nodes = int(UTMPoints_Easting.size());
   if( n_nodes == 0)
   {
     n_nodes = int(WGS84Points_latitude.size());
   }
-    
+
   for(int i = 0; i<n_nodes; i++)
   {
     new_node_order.push_back(i);
@@ -823,23 +823,23 @@ void LSDPolyline::get_affected_pixels_in_line(LSDRasterInfo& RI,
     make_simple_polyline();
     n_points = (node_order.size());
   }
-  
+
   int start_node;
   int end_node;
-  
+
   vector<int> all_pixel_rows;
   vector<int> all_pixel_cols;
-  
+
   // now loop through the segments collecting the nodes
   for (int seg = 0; seg< n_points-1; seg++)
   {
     start_node = node_order[seg];
     end_node = node_order[seg+1];
-    
+
     vector<int> these_rows;
     vector<int> these_cols;
-    
-    get_affected_pixels_in_line_segment_brute_force(RI,these_rows, these_cols, 
+
+    get_affected_pixels_in_line_segment_brute_force(RI,these_rows, these_cols,
                                                     start_node, end_node);
     int n_affected_nodes = int(these_rows.size());
     for (int n = 0; n<n_affected_nodes; n++)
@@ -847,8 +847,8 @@ void LSDPolyline::get_affected_pixels_in_line(LSDRasterInfo& RI,
       all_pixel_rows.push_back(these_rows[n]);
       all_pixel_cols.push_back(these_cols[n]);
     }
-  } 
-  
+  }
+
   affected_rows = all_pixel_rows;
   affected_cols = all_pixel_cols;
 }
@@ -856,34 +856,34 @@ void LSDPolyline::get_affected_pixels_in_line(LSDRasterInfo& RI,
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This is a brute force way to get all the affected pixels. It just slides along the path
-// in jumps of fixed distance and collects pixels. 
+// in jumps of fixed distance and collects pixels.
 // There is some probablity of missing out pixels with this method if the
 // line intersects a very small corner.
 // collecting pixels
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo& RI,
-                                    vector<int>& affected_rows, vector<int>& affected_cols, 
+                                    vector<int>& affected_rows, vector<int>& affected_cols,
                                     int start_node, int end_node)
 {
   // steps are in 1/1000th of the grid resolution
   //double step = 0.001;
   double step = 0.001;
   double Slope;
-  
+
   // get some info from the RasterInfo object
   double DataResolution = double(RI.get_DataResolution());
 
   // make empty vectors that will contain the nodes
   vector<int> node_row;
   vector<int> node_col;
-  
+
   // check to make sure there are UTM coords
   check_and_update_UTM();
-  
+
   int n_nodes = int(UTMPoints_Easting.size());
-  
+
   bool valid_nodes = true;
-  
+
   // get the starting node location in UTM
   if (start_node < 0 || start_node >= n_nodes)
   {
@@ -895,19 +895,19 @@ void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo&
     cout << "End node does not have a valid index" << endl;
     valid_nodes = false;
   }
-  
+
   // The start and end nodes are valid, enter the analysis
   if (valid_nodes)
   {
     double UTM_East_start = UTMPoints_Easting[start_node];
-    double UTM_North_start = UTMPoints_Northing[start_node]; 
+    double UTM_North_start = UTMPoints_Northing[start_node];
 
     double UTM_East_end = UTMPoints_Easting[end_node];
-    double UTM_North_end = UTMPoints_Northing[end_node]; 
-    
+    double UTM_North_end = UTMPoints_Northing[end_node];
+
     //cout << "Start E: " <<  UTM_East_start << " N: " << UTM_North_start << endl;
-    //cout << "end E: " <<  UTM_East_end << " N: " << UTM_North_end << endl; 
-    
+    //cout << "end E: " <<  UTM_East_end << " N: " << UTM_North_end << endl;
+
     // get the row and column of both the start and end node
     int start_row,start_col;
     int end_row,end_col;
@@ -915,23 +915,23 @@ void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo&
     bool OOB_end = true;
     find_row_and_col_of_point_inc_out_of_bounds(RI, start_node, start_row, start_col, OOB_start);
     find_row_and_col_of_point_inc_out_of_bounds(RI, end_node, end_row, end_col, OOB_end);
-    
+
     //cout << "Now looking at the start and end points"<< endl;
     //cout << "SR: " << start_row << " SC: " << start_col << " OOB: " << OOB_start << endl;
     //cout << "ER: " << end_row << " EC: " << end_col << " OOB: " << OOB_end << endl;
-    
+
     int current_col = start_col;
     int current_row = start_row;
-    
+
     double CurrentEasting = UTM_East_start;
     double CurrentNorthing = UTM_North_start;
-    
+
     double denominator = UTM_East_end-UTM_East_start;
     double numerator = UTM_North_end-UTM_North_start;
-    
+
     //cout << "numerator: " << numerator << endl;
     //cout << "denominator: " << denominator << endl;
-    
+
     // Set up the increments along the line
     double NorthingIncrement;
     double EastingIncrement;
@@ -951,7 +951,7 @@ void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo&
       {
         Slope = numerator/denominator;
         cout << "Slope is: " << Slope << endl;
-      
+
         if (numerator*numerator > denominator*denominator)
         {
           if(numerator > 0)
@@ -978,19 +978,19 @@ void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo&
         }
       }
     }
-    
+
     //cout << "DataResolution: " << DataResolution << " DeltaE: " << EastingIncrement << endl
     //     << "DeltaN: " << NorthingIncrement << endl;
-    
-    
+
+
     // This is for debugging!
     //ofstream points_out;
     //points_out.open("/home/smudd/SMMDataStore/analysis_for_papers/Test_map_chi_gradient/test_force_points.csv");
     //points_out.open("/LSDTopoTools/Topographic_projects/Mandakini/mandakini_line_test.csv");
     //points_out.precision(9);
     //points_out << "X,Y,row,col" << endl;
-    
-    
+
+
     // Now I've got the increments.
     int last_row = current_row;
     int last_col = current_col;
@@ -1006,8 +1006,8 @@ void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo&
     {
       CurrentEasting = CurrentEasting+EastingIncrement;
       CurrentNorthing = CurrentNorthing+NorthingIncrement;
-      
-      find_row_and_col_of_point_inc_out_of_bounds(RI, CurrentEasting, CurrentNorthing, 
+
+      find_row_and_col_of_point_inc_out_of_bounds(RI, CurrentEasting, CurrentNorthing,
                                   current_row, current_col, IsOutOfBounds);
 
       //cout << CurrentEasting << "," << CurrentNorthing << "," << current_row << "," << current_col << endl;
@@ -1056,7 +1056,7 @@ void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo&
       if (not IsOutOfBounds)
       {
         //cout << "CR:" << current_row << " LR:" << last_row << "   and CC: " << current_col << " LC: " << last_col << endl;
-      
+
         if(current_row != last_row || current_col != last_col)
         {
           //cout << "I'm pushing data into the vectors again, buddy!" << endl;
@@ -1067,14 +1067,14 @@ void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo&
       last_row = current_row;
       last_col = current_col;
     }
-    // now push back the final row and column since this is not captured in the 
+    // now push back the final row and column since this is not captured in the
     // while loop #
     //cout << "Pushing last node" << endl;
     node_row.push_back(end_row);
     node_col.push_back(end_col);
-    
+
   }
-  
+
   // For debugging:
   //int nr = int(node_row.size());
   //cout << "The affected pixels are: " << endl;
@@ -1082,8 +1082,8 @@ void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo&
   //{
   //  cout << node_row[n] << "," << node_col[n] << endl;
   //}
-  
-  
+
+
   affected_rows = node_row;
   affected_cols = node_col;
 }
@@ -1109,15 +1109,15 @@ void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo&
 // This is some logic to the next pixel along a line segment
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void trace_to_next_pixel(LSDRasterInfo& RI, double StartEasting,double StartNorthing, int start_row, int start_col,
-                         int end_row, int end_col, int current_row, int current_col, 
-                         double slope, 
+                         int end_row, int end_col, int current_row, int current_col,
+                         double slope,
                          double& PixelEasting, double& PixelNorthing)
 {
   bool OnLastPixel;
-  
+
   double ShiftedEasting = StartEasting-XMinimum;
   double ShiftedNorthing = StartNorthing-YMinimum;
-  
+
   int current_row;
   int current_col;
 
@@ -1130,17 +1130,17 @@ void trace_to_next_pixel(LSDRasterInfo& RI, double StartEasting,double StartNort
   int NCols = RI.get_NCols();
 
   // First test for ending and starting pixels
-  
+
   // This first logic is if the pixels are all on the same row
   if ( (end_row-start_row) == 0)
   {
-    // 
+    //
     if(start_col < 0)
     {
       if (end_col < 0)
       {
         current_col =NoDataValue;
-        current_row = NoDataValue; 
+        current_row = NoDataValue;
       }
       else
       {
@@ -1155,7 +1155,7 @@ void trace_to_next_pixel(LSDRasterInfo& RI, double StartEasting,double StartNort
       if (end_col >= NCols)
       {
         current_col =NoDataValue;
-        current_row = NoDataValue; 
+        current_row = NoDataValue;
       }
       else
       {
@@ -1187,13 +1187,13 @@ void trace_to_next_pixel(LSDRasterInfo& RI, double StartEasting,double StartNort
       }
     }       // End logic for nodes where starting pixel is within raster domain
   }         // End logic for nodes where the start and end rows are the same
-    
+
   // Now we do pixels where the start col and end col are the same
   // The logic here is a little bit more difficult because the rows start at 0 indexing at the top
   // of the raster
-  
-  
-    
+
+
+
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
