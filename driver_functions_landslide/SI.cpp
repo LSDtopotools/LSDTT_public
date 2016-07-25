@@ -11,6 +11,9 @@
 #include "../LSDFlowInfo.hpp"
 #include "../LSDJunctionNetwork.hpp"
 #include "../LSDSoilHydroRaster.hpp"
+#include "../LSDShapeTools.hpp"
+#include "../LSDGeometry.hpp"
+#include "../LSDRasterInfo.hpp"
 int main (int nNumberofArgs,char *argv[])
 {
 
@@ -72,9 +75,38 @@ int main (int nNumberofArgs,char *argv[])
   file_info_in.close();
 
   // Load the DEM and fill it
-  LSDRaster DEM((Path + DEMName), RasterFormat);
+  LSDRaster DEM((Path+DEMName), RasterFormat);
   float MinSlope = 0.0001;
   LSDRaster FilledDEM = DEM.fill(MinSlope);
+
+  LSDRasterInfo DEMInfo(DEM);
+
+  vector<string> BoundaryConditions(4, "No Flux");
+  LSDFlowInfo FlowInfo(BoundaryConditions,FilledDEM);
+
+  vector<PointData> TestPoly = LoadPolyline("/home/sgrieve/LSData/fakeroad_segments.shp");
+
+  vector< vector<int> > UpslopeNodes;
+
+  for (int q = 0; q < int(TestPoly.size()); ++q){
+
+    LSDPolyline test(TestPoly[q].X, TestPoly[q].Y, 17);
+
+    vector<int> nodes = test.get_flowinfo_nodes_of_line(DEMInfo, FlowInfo);
+    vector<int> tmp1;
+    vector<int> tmp2;
+
+    for (int w = 0; w < int(nodes.size()); ++w){
+      tmp2 = FlowInfo.get_upslope_nodes(nodes[w]);
+      tmp1.insert(tmp1.end(), tmp2.begin(), tmp2.end());
+
+    }
+
+    UpslopeNodes.push_back(tmp1); //may want to run each tmp1 through the unique method to remove dupes?
+    tmp1.clear();
+    tmp2.clear();
+
+  }
 
   //Get the slope using the surface fitting routines
   vector<int> raster_selection;
@@ -163,11 +195,16 @@ int main (int nNumberofArgs,char *argv[])
 
   LSDSoilHydroRaster SI = low_r.Calculate_sinmap_SI(Slope, DrainageArea, low_C, hi_C, low_phi, hi_phi, low_RoverT, hi_RoverT, low_r, hi_r, Fs_min,  Fs_max);
 
+  //Link Stability index to polyline data
+  vector<float> avg_si = SI.AverageSIs(UpslopeNodes, FlowInfo);
+  LSDSoilHydroRaster AVGs =  SI.WriteAvgSIs(avg_si, UpslopeNodes, FlowInfo);
+
   //Write factor of safety to file
   Fs_min.write_raster((OutPath+"Fs_min_NC"), RasterFormat);
   Fs_max.write_raster((OutPath+"Fs_max_NC"), RasterFormat);
 
   //write Stability index to a file
   SI.write_raster((OutPath+"SI_NC"), RasterFormat);
+  AVGs.write_raster((OutPath+"SI_AVG"), RasterFormat);
 
 }
