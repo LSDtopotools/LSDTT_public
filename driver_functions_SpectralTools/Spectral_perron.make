@@ -7,6 +7,7 @@ LDFLAGS= -Wall
 SOURCES=Spectral_analysis_Perron_driver.cpp \
         ../LSDIndexRaster.cpp \
         ../LSDRaster.cpp \
+        ../LSDRasterInfo.cpp \
         ../LSDFlowInfo.cpp \
         ../LSDIndexChannel.cpp \
         ../LSDStatsTools.cpp \

@@ -1,9 +1,9 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // CRONUS_emulator.cpp
-// This program takes data from the
-//
-// There are no arguments to main
+// This program takes data from the CRN calculator and converts them to 
+// denudation rates as calculated by the CRONUS2.2 calculator. 
+// The code is a port of the CRONUS2.2 matlab scripts
 //
 // Developed by:
 //  Simon M. Mudd, University of Edinburgh, School of GeoSciences

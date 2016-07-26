@@ -13,6 +13,7 @@
 #include <math.h>
 #include "../LSDStatsTools.hpp"
 #include "../LSDRaster.hpp"
+#include "../LSDRasterInfo.hpp"
 #include "../LSDRasterSpectral.hpp"
 #include "../LSDIndexRaster.hpp"
 #include "../LSDFlowInfo.hpp"
@@ -112,8 +113,14 @@ int main (int nNumberofArgs,char *argv[])
     raster_ext = ENVI_ext;
   }
 
-  // Load in data
+  // Here is the filename
   string DEM_f_name = data_path+raster_name;
+  
+  // check to see if the data exists
+  LSDRasterInfo RInfo(DEM_f_name, raster_ext);
+
+  // Load in data
+  
   cout << "You are attempting to load the file: " <<  DEM_f_name<<"."<<ENVI_ext<< endl;
   LSDRaster raw_raster(DEM_f_name, raster_ext);
   cout << "I've loaded the raster" << endl;
