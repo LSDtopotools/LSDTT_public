@@ -199,8 +199,8 @@ int main (int nNumberofArgs,char *argv[])
   //remove holes in the connected components raster
   cout << "\t Removing holes" << endl;
   LSDIndexRaster ConnectedComponents_final = ChannelPatches.remove_holes_in_patches_connected_components(window_radius);
-  string CC_new_name = "_CC_no_holes";
-  ConnectedComponents_final.write_raster((input_path+DEM_ID+CC_new_name), flt_extension); 
+  //string CC_new_name = "_CC_no_holes";
+  //ConnectedComponents_final.write_raster((input_path+DEM_ID+CC_new_name), flt_extension); 
   
   //get a binary raster of floodplain pixels
   int value = 1;
