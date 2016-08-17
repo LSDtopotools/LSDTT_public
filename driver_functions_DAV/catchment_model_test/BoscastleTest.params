@@ -45,17 +45,17 @@ num_of_grainsizes: 9
 
 # Hydrology
 hydro_model_only:    no
-TOPMODEL_m_value:     0.01
+topmodel_m_value:     0.01
 rainfall_data_on:			yes
 rain_data_time_step:  60
 spatial_var_rain:		  no
 in_out_difference:		0
-min_Q_for_depth_calc:	0.05
-max_Q_for_depth_calc: 1000.0
+min_q_for_depth_calc:	0.05
+max_q_for_depth_calc: 1000.0
 water_depth_erosion_threshold: 0.01
-slope_on_edge_cell:   0.0005
+slope_on_edge_cell:   0.005
 evaporation_rate:     0.0
-courant_number:       0.25
+courant_number:       0.3 #Should not be lower than 0.3
 froude_num_limit:     0.8
 mannings_n:           0.04
 hflow_threshold:      0.00001
