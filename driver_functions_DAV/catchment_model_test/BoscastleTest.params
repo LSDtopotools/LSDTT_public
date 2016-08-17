@@ -91,3 +91,7 @@ grainsize_file: Grainz
 
 write_elevdiff_file: yes
 elevdiff_outfile_name: ElevationDiff
+
+# Prints the current cycle to screen (counter of current iteration)
+# Turn off if writing output to logfile. 
+DEBUG_print_cycle_on: yes 
