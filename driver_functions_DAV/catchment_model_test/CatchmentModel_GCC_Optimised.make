@@ -1,8 +1,8 @@
 CC = g++
-CFLAGS= -c -Wreturn-type -O2 -std=gnu++11 -fopenmp \
+CFLAGS= -c -Wreturn-type -O2 -std=gnu++11 -fopenmp -pg \
 		-DOMP_COMPILE_FOR_PARALLEL
-OFLAGS = -Wreturn-type -O2 -std=gnu++11 -fopenmp
-LDFLAGS= -Wreturn-type
+OFLAGS = -Wall -O2 -std=gnu++11 -fopenmp -pg
+LDFLAGS= -Wall
 SOURCES = ../catchmentmodel_driver.cpp \
 			../../LSDCatchmentModel.cpp \
 			../../LSDRaster.cpp \
