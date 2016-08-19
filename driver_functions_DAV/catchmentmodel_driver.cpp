@@ -1,8 +1,29 @@
+/// catchmentmodel_driver.cpp
+/// 
+/// This is the main function for running the CatchmentModel
+/// 
+/// By convention, in the LSDTopoTools package, we write these 'driver
+/// function' files to contain the main function, create an instance of 
+/// the object we are interested in using (here, an LSDCatchmentModel object)
+/// and then perform the various analyses or model components by calling
+/// the relvant methods in the class.
+/// 
+/// As it currently stands, all you can meaningfully call for LSDCatchmentModel
+/// is the 'run_components()' method, which is basically a big wrapper method
+/// that calls the other functions like water routing and sediment erosion. 
+/// Ideally, I would split this up so that you can call the individual components
+/// here, making the model much more modular in its operation, similar to 
+/// something like the Landlab model functionality. If you want to change which
+/// components are currently called, you need to edit the run_components() method
+/// in the LSDCatchmentModel.cpp file. 
+/// 
+/// - DAV August 2016.
+/// 
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
 #include <sys/stat.h>
-//#include <python2.7/Python.h>
+
 #include "../LSDCatchmentModel.hpp"
 
 bool file_check(string name)
@@ -40,6 +61,7 @@ int main(int argc, char *argv[])
 
   if (argc == 3)
   // Bingo!
+    
   // DAV - Copied this out of "main_loop()" in origial CAESAR (after initialising
   {
 
@@ -63,14 +85,7 @@ int main(int argc, char *argv[])
     modelrun.load_data(); // Loads data from external files (DEM, hydroindex etc.)
     std::cout << "The terrain array and supplementary input data has been loaded." << std::endl;
 
-    //modelrun.check_DEM_edge_condition();
-    //std::cout << "Checking edge cells for suitable catchment outlet point..." << std::endl;
-    // This function checks that there is at least one pixel on the edge of the
-    // model domain for water/sediment to flow out of. (i.e. DEM cannot
-    // be surrounded entrely by NoData values.
-
-    //modelrun.print_rainfall_data(); // Prints the rainfall data for checking
-
+    // Begin the simulation
     modelrun.run_components();
   }
 
