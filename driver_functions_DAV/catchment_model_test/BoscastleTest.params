@@ -38,15 +38,18 @@ memory_limit:                  1           # IGNORE
 transport_law:                 wilcock     # CHOICES ARE wilcock OR einstein
 max_tau_velocity:              5           # METRES/SECOND
 active_layer_thickness:        0.1         # METRES
-recirculate_proportion:        1
-lateral_erosion_on:            no          # UNTESTED - LATERAL EROSION NOT FULLY IMPLEMENTED YET
-lateral_ero_rate:              20          # UNTESTED
-edge_filter_passes:            100         # UNTESTED
-cells_shift_lat:               1           # UNTESTED
-max_diff_cross_chan:           0.001       # UNTESTED
+chann_lateral_erosion:         20          # IN CHANNEL LATERAL EROSION RATE, PREVENTS OVERDEEPENING FEEDBACK
 erode_limit:                   0.02        #
 suspended_sediment_on:         yes         # 1ST FRACTION ONLY, AT PRESENT
 read_in_graindata_from_file:   no          # MUST SPECIFY GRAINDATA FILE ABOVE IF YES
+
+# LATERAL EROSION
+#=================
+lateral_erosion_on:            no          # UNTESTED! - LATERAL EROSION NOT FULLY IMPLEMENTED YET
+lateral_erosion_const:         0.001       # LATERAL EROSION CONSTANT
+edge_smoothing_passes:         100         # NUMBER OF PASSES FOR EDGE SMOOTHING FILTER
+downstream_cell_shift:         1           # CELLS TO SHIFT LATERAL EROSION DOWNSTREAM
+lateral_cross_chan_smoothing:  0.001       # MAX DIFFERENCE IN CROSS CHANNEL SMOOTHING OF EDGE VALUES
 
 # HYDROLOGY
 #===========
