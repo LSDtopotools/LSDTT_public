@@ -1,7 +1,7 @@
 CC = g++
-CFLAGS= -c -Wreturn-type -O2 -std=gnu++11 -fopenmp -pg \
+CFLAGS= -c -Wreturn-type -O3 -std=gnu++11 -fopenmp -pg \
 		-DOMP_COMPILE_FOR_PARALLEL
-OFLAGS = -Wall -O2 -std=gnu++11 -fopenmp -pg
+OFLAGS = -Wall -O3 -std=gnu++11 -fopenmp -pg
 LDFLAGS= -Wall
 SOURCES = ../catchmentmodel_driver.cpp \
 			../../LSDCatchmentModel.cpp \
