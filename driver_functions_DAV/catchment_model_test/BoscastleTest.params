@@ -98,9 +98,9 @@ call_muddpile_model:           yes          # NOT YET IMPLEMENTED
 raster_output_interval:        120          # IN MODEL MINUTES
 write_waterdepth_file:         yes
 waterdepth_outfile_name:       WaterDepths
-write_elev_file:               no
+write_elev_file:               yes
 write_elevation_file:          Elevations
-write_grainsize_file:          no
+write_grainsize_file:          yes
 grainsize_file:                Grainz
 
 write_elevdiff_file:           no
@@ -111,6 +111,6 @@ raingrid_fname_out:            raindata_grid    # MAINLY FOR DEBUG PURPOSES,
 
 # DEBUG OPTIONS
 #================
-debug_print_cycle              yes          # PRINTS THE CURRENT CYCLE ITERATION TO CONSOLE
+debug_print_cycle              no          # PRINTS THE CURRENT CYCLE ITERATION TO CONSOLE
 debug_write_raingrid           no           # WRITES RAINGRID RASTER EVERY CALC_J() CALLED (WARNING: LOTS OF DATA!)
 
