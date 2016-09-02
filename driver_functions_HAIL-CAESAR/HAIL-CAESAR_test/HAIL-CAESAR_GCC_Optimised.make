@@ -3,7 +3,7 @@ CFLAGS= -c -Wreturn-type -O3 -std=gnu++11 -fopenmp -pg \
 		-DOMP_COMPILE_FOR_PARALLEL
 OFLAGS = -Wall -O3 -std=gnu++11 -fopenmp -pg
 LDFLAGS= -Wall
-SOURCES = ../catchmentmodel_driver.cpp \
+SOURCES = ../HAIL-CAESAR_driver.cpp \
 			../../LSDCatchmentModel.cpp \
 			../../LSDRaster.cpp \
 			../../LSDIndexRaster.cpp \
@@ -16,7 +16,7 @@ OBJ = $(SOURCES:.cpp=.o)
 #LIBS = -lfftw3 -lpython2.7 -g -O0 -D_GLIBCXX_DEBUG
 #LIBS = -lfftw3 -lpython2.7 -Wwrite-strings
 LIBS = 
-EXEC = CatchmentModel_OpenMP_GCC_Optimised.out
+EXEC = HAIL-CAESAR_OpenMP_GCC_Optimised.out
 
 all: $(SOURCES) $(SCRIPTS) $(EXEC)
 
@@ -28,4 +28,4 @@ $(EXEC): $(OBJ)
 
 
 clean:
-	rm -f ../../$(OBJ) ../catchmentmodel_driver.o CatchmentModel_OpenMP_GCC_Optimised.out
+	rm -f ../../$(OBJ) ../HAIL-CAESAR_driver.o HAIL-CAESAR_OpenMP_GCC_Optimised.out

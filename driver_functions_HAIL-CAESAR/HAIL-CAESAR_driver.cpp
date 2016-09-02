@@ -1,6 +1,6 @@
-/// catchmentmodel_driver.cpp
+/// HAIL-CAESAR_main.cpp
 /// 
-/// This is the main function for running the CatchmentModel
+/// This is the main function for running the HAIL-CAESAR (HAIL-CAESAR)
 /// 
 /// By convention, in the LSDTopoTools package, we write these 'driver
 /// function' files to contain the main function, create an instance of 
