@@ -1166,7 +1166,7 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @return node index of nearest FIP
   /// @author FJC
   /// @date 09/09/16
-	int find_node_index_of_nearest_floodplain_pixel(int point_node, int search_distance, LSDRaster& FloodplainRaster, LSDFlowInfo& FlowInfo);
+	float find_distance_to_nearest_floodplain_pixel(int point_node, int search_distance, LSDRaster& FloodplainRaster, LSDFlowInfo& FlowInfo);
 
   /// @detail This overwrites two vecotrs that give all of the starting and 
   ///  finishing nodes of channels in a basin

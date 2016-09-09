@@ -116,15 +116,25 @@ int main (int nNumberofArgs,char *argv[])
   int threshold_SO = 3;
   int search_radius = 20;
 	int search_distance_FIP = 200;
+	
+	// output file
+	ofstream output_file;
+	string output_ext = "_error_distances.txt";
+	string filename = path_name+DEM_name+output_ext;
+	cout << "Filename is: " << filename << endl;
+	output_file.open(filename.c_str());
+	
   for (int i = 0; i < int(X_coords.size()); i++)
   {
-    cout << flush << "Snapped = " << i+1 << " of " << X_coords.size() << "\r";
+    //cout << flush << "Snapped = " << i+1 << " of " << X_coords.size() << "\r";
     int NI = ChanNetwork.get_nodeindex_of_nearest_channel_for_specified_coordinates(X_coords[i], Y_coords[i], search_radius, threshold_SO, FlowInfo);
-    cout << "Starting node index: " << NI << endl;
 		NodeIndices.push_back(NI);
-		int FIP_NI = ChanNetwork.find_node_index_of_nearest_floodplain_pixel(NI, search_distance_FIP, ConnectedComponents, FlowInfo);
-		cout << "FIP node index: " << FIP_NI << endl;
-  }       
+		//get the distance to the predicted floodplain initiation point
+		float distance = ChanNetwork.find_distance_to_nearest_floodplain_pixel(NI, search_distance_FIP, ConnectedComponents, FlowInfo);
+		//write to file
+		output_file << FIP_IDs[i] << " " << distance << endl;
+  }     
+	output_file.close();
 	
 	clock_t end = clock();
 	float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
