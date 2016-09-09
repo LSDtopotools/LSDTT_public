@@ -354,6 +354,22 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
            <<  float_parameters["nodata_hole_filling_window_width"] <<  " pixels" << endl;
     }
     
+    //=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+    // parameters for masking
+    //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+    else if (lower == "curvature_mask_threshold")
+    {
+      float_parameters["curvature_mask_threshold"] = atof(value.c_str());
+      cout << "Your curvature_mask_threshold is: "  
+           <<  float_parameters["curvature_mask_threshold"] <<  " 1/m" << endl;
+    }
+    else if (lower == "curvature_mask_nodataisbelowthreshold")
+    {
+      int_parameters["curvature_mask_nodataisbelowthreshold"] = atoi(value.c_str());
+      cout << "Your curvature_mask_nodataisbelowthreshold is: "  
+           <<  int_parameters["curvature_mask_nodataisbelowthreshold"] <<  "; anything other than 0 means true." << endl;
+    }
+    
     //=-=-=-=-=-=--=-=-=-=-
     // what to write
     //-=-=-=-=-=-=-=-=-=-=-=-
@@ -392,6 +408,14 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
       analyses_switches["write_curvature"] = temp_bool;
       raster_switches["need_base_raster"] = temp_bool;
       raster_switches["need_curvature"] = temp_bool;
+    }
+    else if (lower == "write curvature mask threshold")
+    {
+      bool temp_bool = (value == "true") ? true : false;
+      analyses_switches["write_curvature_mask_threshold"] = temp_bool;
+      raster_switches["need_base_raster"] = temp_bool;
+      raster_switches["need_curvature"] = temp_bool;
+      raster_switches["need_curvature_mask_threshold"] = temp_bool;
     }
     else if (lower == "write planform curvature")
     {
@@ -613,6 +637,25 @@ void LSDAnalysisDriver::compute_rasters_from_raster_switches()
       calculate_polyfit();
     }
   }
+
+  // get the curvature  threshold map
+  if(raster_switches.find("need_curvature_mask_threshold") != raster_switches.end())
+  {
+    // check to see if curvature has already been calculated
+    if(map_of_LSDRasters.find("curvature") == map_of_LSDRasters.end())
+    {
+      // it hasn't been calculated. Calculate it now.
+      calculate_polyfit();
+    }
+
+    // check to see if curvature maskhas already been calculated
+    if(map_of_LSDIndexRasters.find("curvature_mask_threshold") == map_of_LSDIndexRasters.end())
+    {
+      // it hasn't been calculated. Calculate it now.
+      calculate_curvature_mask_threshold();
+    }
+  }
+
 
   // get the planform curvature
   if(raster_switches.find("need_planform_curvature") != raster_switches.end())
@@ -887,6 +930,21 @@ void LSDAnalysisDriver::write_rasters_from_analysis_switches()
     string curvature_seperator = "_curvature";
     string curvature_fname = write_path+write_fname+curvature_seperator;
     map_of_LSDRasters["curvature"].write_raster(curvature_fname,dem_write_extension);
+  }
+
+  // write curvature
+  if(analyses_switches.find("write_curvature_mask_threshold") != analyses_switches.end())
+  {
+    // check to see if the slope map exists
+    if(map_of_LSDIndexRasters.find("curvature_mask_threshold") == map_of_LSDIndexRasters.end())
+    {
+      //cout << "You've not run the get raster routine. Running now. " << endl;
+      calculate_curvature_mask_threshold();
+    }
+
+    string curvature_seperator = "_curvature_mask";
+    string curvature_fname = write_path+write_fname+curvature_seperator;
+    map_of_LSDIndexRasters["curvature_mask_threshold"].write_raster(curvature_fname,dem_write_extension);
   }
 
   // write profile curvature
@@ -1360,6 +1418,42 @@ void LSDAnalysisDriver::calculate_polyfit()
     got_polyfit = true;
   }
 }
+
+
+
+void LSDAnalysisDriver::calculate_curvature_mask_threshold()
+{
+  bool nodataisbelowthreshold = true;
+  float threshold;
+  
+  if(float_parameters.find("curvature_mask_threshold") == float_parameters.end())
+  {
+    float_parameters["curvature_mask_threshold"] = 0;
+  }
+  threshold = float_parameters["curvature_mask_threshold"];
+  
+  if(int_parameters.find("curvature_mask_nodataisbelowthreshold") == int_parameters.end())
+  {
+    int_parameters["curvature_mask_nodataisbelowthreshold"] = 1;
+    
+    // this just sets the flag to 1 is it is not 0
+    if(int_parameters["curvature_mask_nodataisbelowthreshold"] != 0)
+    {
+      int_parameters["curvature_mask_nodataisbelowthreshold"] = 1;
+      nodataisbelowthreshold = true;
+    }
+    else
+    {
+      nodataisbelowthreshold = false;
+    }
+  }
+  
+  LSDIndexRaster curv_thresh = map_of_LSDRasters["curvature"].mask_to_indexraster_using_threshold(threshold,nodataisbelowthreshold);
+  
+  map_of_LSDIndexRasters["curvature_mask_threshold"] = curv_thresh;
+
+}
+
 
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

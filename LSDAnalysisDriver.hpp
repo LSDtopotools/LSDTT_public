@@ -174,6 +174,11 @@ class LSDAnalysisDriver
     /// @date 21/09/2014
     void calculate_polyfit();
 
+    /// @brief This calculates a curvature threhsold maks
+    /// @author SMM
+    /// @date 09/09/2016
+    void calculate_curvature_mask_threshold();
+
     /// @brief This calculates the LSDFlowInfo object
     /// @author SMM
     /// @date 29/07/2014
