@@ -38,7 +38,7 @@ int main(int nNumberofArgs, char *argv[])
 	
 	// fill in the holes
 	int window_size = 10;
-	LSDRaster FilledDEM = DEM.alternating_direction_nodata_fill_with_trimmer(window_size);
+	LSDRaster FilledDEM = DEM.alternating_direction_nodata_fill(window_size);
 	
 	string Filled_name = "_noholes";
 	FilledDEM.write_raster((path+DEM_Name+Filled_name), DEM_Format);

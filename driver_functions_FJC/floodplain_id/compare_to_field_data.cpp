@@ -105,21 +105,27 @@ int main (int nNumberofArgs,char *argv[])
 	// now get the junction network
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 	
+	// Load in the floodplain raster
+	string CC_name = "_FP";
+	LSDRaster ConnectedComponents((path_name+DEM_name+CC_name), DEM_extension);
+	
 	// Snap each point to the nearest channel
 	cout << "Snapping points to the nearest channel" << endl;
 														 
 	vector<float> NodeIndices;													 
-  int threshold_SO = 2;
+  int threshold_SO = 3;
   int search_radius = 20;
+	int search_distance_FIP = 200;
   for (int i = 0; i < int(X_coords.size()); i++)
   {
     cout << flush << "Snapped = " << i+1 << " of " << X_coords.size() << "\r";
     int NI = ChanNetwork.get_nodeindex_of_nearest_channel_for_specified_coordinates(X_coords[i], Y_coords[i], search_radius, threshold_SO, FlowInfo);
-    cout << "Node index: " << NI << endl;
+    cout << "Starting node index: " << NI << endl;
 		NodeIndices.push_back(NI);
-  }                                                     
-    
-   	
+		int FIP_NI = ChanNetwork.find_node_index_of_nearest_floodplain_pixel(NI, search_distance_FIP, ConnectedComponents, FlowInfo);
+		cout << "FIP node index: " << FIP_NI << endl;
+  }       
+	
 	clock_t end = clock();
 	float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
 	cout << "DONE, Time taken (secs): " << elapsed_secs << endl;

@@ -1156,6 +1156,17 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @author FJC
   /// @date 17/11/15
   LSDRaster calculate_relief_from_channel(LSDRaster& ElevationRaster, LSDFlowInfo& FlowInfo, int threshold_SO);
+	
+	/// @details This function returns the node index of the nearest FIP to a
+	/// specified node.
+  /// @param point_node Node to start with
+  /// @param search_distance Distance to search upstream and downstream for a FIP
+  /// @param FloodplainRaster Raster with binary floodplain
+	/// @param FlowInfo LSDFlowInfo object
+  /// @return node index of nearest FIP
+  /// @author FJC
+  /// @date 09/09/16
+	int find_node_index_of_nearest_floodplain_pixel(int point_node, int search_distance, LSDRaster& FloodplainRaster, LSDFlowInfo& FlowInfo);
 
   /// @detail This overwrites two vecotrs that give all of the starting and 
   ///  finishing nodes of channels in a basin

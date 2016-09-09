@@ -5200,6 +5200,15 @@ void LSDJunctionNetwork::couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elev
 // }
 
 //----------------------------------------------------------------------------------------
+//                                                    
+//  .----..-.    .----.  .----. .----. .----. .-.     .--.  .-..-. .-. .----.
+//  | {_  | |   /  {}  \/  {}  \| {}  \| {}  }| |    / {} \ | ||  `| |{ {__  
+//  | |   | `--.\      /\      /|     /| .--' | `--./  /\  \| || |\  |.-._} }
+//  `-'   `----' `----'  `----' `----' `-'    `----'`-'  `-'`-'`-' `-'`----' 
+//
+//----------------------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------------------
 // This function removes patches of floodplain that are not connected to the channel network.
 // It must be passed an LSDIndexRaster with the floodplain patches labelled with a specific ID
 // number (done using Dave's connected components algorithm). Return is a connected components index
@@ -5322,6 +5331,132 @@ LSDRaster LSDJunctionNetwork::calculate_relief_from_channel(LSDRaster& Elevation
   return Relief;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function takes a point on the channel network and finds the nearest
+// predicted floodplain initiation point from the FIRTH method.  It requires the
+// node index of the point on the channel network, and the connected components
+// raster from the FIRTH method. It also requires the search distance (number of pixels // to search upstream and downstream).
+//
+// FJC 08/09/16
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+int LSDJunctionNetwork::find_node_index_of_nearest_floodplain_pixel(int point_node, int search_distance, LSDRaster& FloodplainRaster, LSDFlowInfo& FlowInfo)
+{
+	// find out if you are already in the floodplain
+	int NI_of_FIP, row, col, upstream_FIP, downstream_FIP, this_node;
+	bool reached_FIP = false;
+	int upstream_dist = 0;
+	int downstream_dist = 0;
+	this_node = point_node;
+
+	//check the upstream direction
+	while (reached_FIP == false && upstream_dist <= search_distance)
+	{
+		FlowInfo.retrieve_current_row_and_col(this_node, row, col);
+		int this_SO = StreamOrderArray[row][col];
+		int this_FP = FloodplainRaster.get_data_element(row, col);
+		vector<int> donor_nodes = FlowInfo.get_donor_nodes(this_node);
+		for (int i = 0; i < int(donor_nodes.size()); i++)
+		{
+			int donor_row, donor_col;
+			FlowInfo.retrieve_current_row_and_col(donor_nodes[i], donor_row, donor_col);
+			int DonorSO = StreamOrderArray[donor_row][donor_col];
+			if (DonorSO == this_SO)
+			{
+				//at the FIP you are in the FIP but the donor is not
+				int DonorFP = FloodplainRaster.get_data_element(donor_row, donor_col);
+				if (DonorFP == NoDataValue && this_FP != NoDataValue)
+				{
+					// you've reached the FIP!
+					upstream_FIP = this_node;
+					reached_FIP = true;
+					cout << "reached the FIP" << endl;
+				}
+				else
+				{
+					this_node = donor_nodes[i];
+					upstream_dist++;
+				}
+			}
+		}			
+	}
+	
+	if (reached_FIP == false)
+	{
+		cout << "Sorry, I didn't find a FIP upstream." << endl;
+	}
+	else
+	{
+		cout << "Found a FIP upstream, " << upstream_dist << " nodes from starting node" << endl;
+	}
+	
+	//check the downstream direction
+	reached_FIP = false;
+	this_node = point_node;
+	while (reached_FIP == false && downstream_dist <= search_distance)
+	{
+		FlowInfo.retrieve_current_row_and_col(this_node, row, col);
+		int this_FP = FloodplainRaster.get_data_element(row,col);
+		if (this_FP == NoDataValue)
+		{
+			int receiver_node, receiver_row, receiver_col;
+			FlowInfo.retrieve_receiver_information(this_node, receiver_node, receiver_row, receiver_col);
+			int receiver_FP = FloodplainRaster.get_data_element(receiver_row, receiver_col);
+			if (receiver_FP != NoDataValue)
+			{
+				downstream_FIP = this_node;
+				reached_FIP = true;
+			}
+			else
+			{
+				this_node = receiver_node;
+				downstream_dist++;
+			}
+		}
+		else
+		{
+			cout << "You're already in a floodplain so I'm not looking downstream" << endl;
+			downstream_dist = 1000000; 
+		}
+	}
+		
+	if (reached_FIP == false)
+	{
+		cout << "Sorry, I didn't find a FIP downstream." << endl;
+	}
+	else
+	{
+		cout << "Found a FIP downstream, " << downstream_dist << " nodes from starting node" << endl;
+	}
+	
+	//find the nearest node
+	if (upstream_dist < downstream_dist)
+	{
+		cout << "Returning node of upstream FIP" << endl;
+		NI_of_FIP = upstream_FIP;
+	}
+	else if (downstream_dist < upstream_dist)
+	{
+		cout << "Returning node of downstream FIP" << endl;
+		NI_of_FIP = downstream_FIP;
+	}
+	else if (upstream_dist == downstream_dist && upstream_dist < search_distance)
+	{
+		cout << "Same distance to both upstream and downstream, returning upstream FIP" << endl;
+		NI_of_FIP = upstream_FIP;
+	}
+	else
+	{
+		cout << "I couldn't find a FIP within the search radius, returning NDV" << endl;
+		NI_of_FIP = NoDataValue;
+	}
+	
+	return NI_of_FIP;	
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // This function takes a list of junctions and prints them to a csv file
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

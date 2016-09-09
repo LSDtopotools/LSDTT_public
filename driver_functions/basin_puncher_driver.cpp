@@ -112,11 +112,11 @@ int main (int nNumberofArgs,char *argv[])
 	
 		// get the filled file
 	//cout << "Filling the DEM" << endl;
-  LSDRaster filled_topo_test = topo_test.fill(Minimum_Slope);
+  //LSDRaster filled_topo_test = topo_test.fill(Minimum_Slope);
 		// load the filled DEM
-	//LSDRaster filled_topo_test;
-	//LSDRaster load_DEM((path_name+DEM_name+fill_ext), DEM_flt_extension);
-  //filled_topo_test = load_DEM;
+	LSDRaster filled_topo_test;
+	LSDRaster load_DEM((path_name+DEM_name+fill_ext), DEM_flt_extension);
+  filled_topo_test = load_DEM;
 	//int NRows = filled_topo_test.get_NRows();
 	//cout << "NRows: " << NRows << endl;
 	//filled_topo_test.write_raster((DEM_f_name),DEM_flt_extension);
@@ -128,7 +128,7 @@ int main (int nNumberofArgs,char *argv[])
 	
 	cout << "\t Loading Sources..." << endl;
 	// load the sources
-  vector<int> sources = FlowInfo.Ingest_Channel_Heads((path_name+DEM_name+CH_name), DEM_flt_extension, 1);
+  vector<int> sources = FlowInfo.Ingest_Channel_Heads((path_name+CH_name), DEM_flt_extension, 1);
 	cout << "Got the sources" << endl;
   
   //----------------------------------------------------------------------------------------------------//
@@ -157,14 +157,14 @@ int main (int nNumberofArgs,char *argv[])
 	cout << "Got the basin raster" << endl;
 		
 	// Trim raster to get rid of nodata values around the edge
-	//LSDRaster TrimmedRaster = BasinRaster.RasterTrimmerSpiral();
-	//cout << "Got the trimmed raster" << endl;
+	LSDRaster TrimmedRaster = BasinRaster.RasterTrimmer();
+	cout << "Got the trimmed raster" << endl;
   
   //write basin to LSDRaster
   string basin_name = "_basin";
   string jn_name = itoa(junction_number);
 	string uscore = "_";
 	jn_name = uscore+jn_name;
-	BasinRaster.write_raster((path_name+DEM_name+basin_name+jn_name), DEM_flt_extension);      
+	TrimmedRaster.write_raster((path_name+DEM_name+basin_name+jn_name), DEM_flt_extension);      
 	  	
 }
