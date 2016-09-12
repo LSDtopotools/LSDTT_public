@@ -5356,6 +5356,7 @@ float LSDJunctionNetwork::find_distance_to_nearest_floodplain_pixel(int point_no
 	//check the upstream direction
 	while (reached_FIP == false && upstream_dist <= search_distance)
 	{
+		int SO_test = 0;
 		FlowInfo.retrieve_current_row_and_col(this_node, row, col);
 		int this_SO = StreamOrderArray[row][col];
 		int this_FP = FloodplainRaster.get_data_element(row, col);
@@ -5367,11 +5368,13 @@ float LSDJunctionNetwork::find_distance_to_nearest_floodplain_pixel(int point_no
 			int DonorSO = StreamOrderArray[donor_row][donor_col];
 			if (DonorSO == this_SO)
 			{
+				SO_test = 1;
 				//at the FIP you are in the FIP but the donor is not
 				int DonorFP = FloodplainRaster.get_data_element(donor_row, donor_col);
 				if (DonorFP == NoDataValue && this_FP != NoDataValue)
 				{
 					// you've reached the FIP!
+					cout << "Reached FIP" << endl;
 					reached_FIP = true;
 				}
 				else
@@ -5380,10 +5383,17 @@ float LSDJunctionNetwork::find_distance_to_nearest_floodplain_pixel(int point_no
 					//update length
 					if (FlowInfo.retrieve_flow_length_code_of_node(donor_nodes[i]) == 1){ upstream_dist += DataResolution; }
       		else if (FlowInfo.retrieve_flow_length_code_of_node(donor_nodes[i]) == 2){ upstream_dist += (DataResolution * root_2); }
+					else if (FlowInfo.retrieve_flow_length_code_of_node(donor_nodes[i]) == 0){ break; }
 				}
 			}
-		}			
+		}	
+		if (SO_test == 0)
+		{
+			cout << "You have reached a tributary junction, I won't check any further upstream" << endl;
+			break;
+		}
 	}
+	cout << "Now checking the downstream direction" << endl;
 	
 	//check the downstream direction
 	reached_FIP = false;
@@ -5411,7 +5421,6 @@ float LSDJunctionNetwork::find_distance_to_nearest_floodplain_pixel(int point_no
 		}
 		else
 		{
-			//cout << "You're already in a floodplain so I'm not looking downstream" << endl;
 			downstream_dist = 1000000; 
 		}
 	}
@@ -5419,17 +5428,14 @@ float LSDJunctionNetwork::find_distance_to_nearest_floodplain_pixel(int point_no
 	//find the nearest node
 	if (upstream_dist < downstream_dist)
 	{
-		//cout << "Returning node of upstream FIP" << endl;
 		distance = upstream_dist;
 	}
 	else if (downstream_dist < upstream_dist)
 	{
-		//cout << "Returning node of downstream FIP" << endl;
 		distance = downstream_dist;
 	}
 	else if (upstream_dist == downstream_dist && upstream_dist < search_distance)
 	{
-		//cout << "Same distance to both upstream and downstream, returning upstream FIP" << endl;
 		distance = upstream_dist;
 	}
 	else
@@ -5439,6 +5445,7 @@ float LSDJunctionNetwork::find_distance_to_nearest_floodplain_pixel(int point_no
 	}
 	
 	return distance;	
+	cout << "Got the distance for this FIP" << endl;
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

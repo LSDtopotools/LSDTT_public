@@ -113,7 +113,7 @@ int main (int nNumberofArgs,char *argv[])
 	cout << "Snapping points to the nearest channel" << endl;
 														 
 	vector<float> NodeIndices;													 
-  int threshold_SO = 3;
+  int threshold_SO = 2;
   int search_radius = 20;
 	int search_distance_FIP = 200;
 	
@@ -129,8 +129,10 @@ int main (int nNumberofArgs,char *argv[])
     //cout << flush << "Snapped = " << i+1 << " of " << X_coords.size() << "\r";
     int NI = ChanNetwork.get_nodeindex_of_nearest_channel_for_specified_coordinates(X_coords[i], Y_coords[i], search_radius, threshold_SO, FlowInfo);
 		NodeIndices.push_back(NI);
+		cout << "ID: " << FIP_IDs[i] << endl;
 		//get the distance to the predicted floodplain initiation point
 		float distance = ChanNetwork.find_distance_to_nearest_floodplain_pixel(NI, search_distance_FIP, ConnectedComponents, FlowInfo);
+		cout << "Distance: " << distance << endl;
 		//write to file
 		output_file << FIP_IDs[i] << " " << distance << endl;
   }     
