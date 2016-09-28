@@ -552,7 +552,7 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
        << "I am now moving on to writing the data. \n\n";
   write_rasters_from_analysis_switches();
 
-  cout << "All done buddy. Have a nice day." << endl;
+  cout << "Well I guess I am all finished now. I sure hope you got what you wanted! Have a nice day." << endl;
 
 
 }

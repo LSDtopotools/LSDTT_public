@@ -106,10 +106,10 @@ using namespace TNT;
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDFlowInfo::create()
 {
-  cout << endl << "-------------------------------" << endl;
-  cout << "I am an empty flow info object. " << endl;
-  cout << "Did you forget to give me a DEM?" << endl;
-  cout << endl << "-------------------------------" << endl;
+  //cout << endl << "-------------------------------" << endl;
+  //cout << "I am an empty flow info object. " << endl;
+  //cout << "Did you forget to give me a DEM?" << endl;
+  //cout << endl << "-------------------------------" << endl;
   //exit(EXIT_FAILURE);
 }
 
