@@ -1404,6 +1404,21 @@ int LSDJunctionNetwork::find_base_level_node_of_junction(int StartingJunction)
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+// This function gets the stream order of a node.
+// FJC 29/09/16
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+int LSDJunctionNetwork::get_StreamOrder_of_Node(LSDFlowInfo& FlowInfo, int node)
+{
+  int StreamOrder;
+  int row,col;
+
+  FlowInfo.retrieve_current_row_and_col(node,row,col);
+  StreamOrder = StreamOrderArray[row][col];
+  
+  return StreamOrder;  
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 // This function gets the stream order of a junction. 
 // FJC 01/03/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
@@ -4919,6 +4934,59 @@ int LSDJunctionNetwork::get_nodeindex_of_nearest_channel_for_specified_coordinat
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function returns information on the nearest channel pixel to a node
+//
+// FJC 08/09/16
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+int LSDJunctionNetwork::get_nodeindex_nearest_channel_to_node(int StartingNode, int threshold_SO, LSDFlowInfo& FlowInfo)
+{
+	int NearestChannel, row, col;
+	int CurrentNode = StartingNode;
+	int BaseLevel = FlowInfo.is_node_base_level(CurrentNode);
+	FlowInfo.retrieve_current_row_and_col(StartingNode, row, col);
+	//check if you are already at a channel
+	if (StreamOrderArray[row][col] != NoDataValue && StreamOrderArray[row][col] >= threshold_SO
+	&& BaseLevel == 0) 
+	{
+		NearestChannel = FlowInfo.NodeIndex[row][col];
+		//cout << "You are already at a channel" << endl;
+	}
+	//if not at a channel, move downstream
+	else
+	{
+		bool ReachedChannel = false;
+		while (ReachedChannel == false)
+		{
+			//get receiver information
+			int ReceiverNode, ReceiverRow, ReceiverCol;
+			FlowInfo.retrieve_receiver_information(CurrentNode, ReceiverNode, ReceiverRow, ReceiverCol); 
+			//if node is at baselevel then exit
+			if (CurrentNode == ReceiverNode)
+			{
+				ReachedChannel = true;
+				cout << "You reached a baselevel node, returning baselevel" << endl;
+			}          
+			//if receiver is a channel > threshold then get the stream order
+			if (StreamOrderArray[ReceiverRow][ReceiverCol] != NoDataValue &&
+			StreamOrderArray[ReceiverRow][ReceiverCol] >= threshold_SO)
+			{
+				ReachedChannel = true;
+				NearestChannel = FlowInfo.NodeIndex[ReceiverRow][ReceiverCol];
+			} 
+			else
+			{
+				//move downstream
+				CurrentNode = ReceiverNode;
+			}
+		}         
+	}
+	
+	return NearestChannel;
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -5329,6 +5397,126 @@ LSDRaster LSDJunctionNetwork::calculate_relief_from_channel(LSDRaster& Elevation
   
   LSDRaster Relief(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ReliefArray, GeoReferencingStrings);
   return Relief;
+}
+
+////=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+////=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+////
+//// Calculate relief relative to channel from connected components
+//// This calculates relief of each pixel compared to the nearest channel pixel 
+//// Uses a threshold stream order for each connected components patch so that the
+//// whole patch is connected to the same channel.
+////
+//// FJC 29/09/16
+////
+////=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//LSDRaster LSDJunctionNetwork::calculate_relief_from_channel_connected_components(LSDRaster& ElevationRaster, LSDIndexRaster& ConnectedComponents, LSDFlowInfo& FlowInfo)
+//{
+//  Array2D<float> ReliefArray(NRows, NCols, NoDataValue);
+//  Array2D<int> NearestChannels = Get_NodeIndex_of_Nearest_Channel_for_Connected_Components(ConnectedComponents, FlowInfo, threshold_SO);
+//	
+//  //
+//  
+//  LSDRaster Relief(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ReliefArray, GeoReferencingStrings);
+//  return Relief;
+//}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function takes in a raster of connected component patches. It finds
+// the stream order of the nearest channel for the patch.  Returns an array
+// with the node index of the nearest channel for the patch.
+//
+// FJC 29/09/16
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+Array2D<int> LSDJunctionNetwork::Get_NodeIndex_of_Nearest_Channel_for_Connected_Components(LSDIndexRaster& ConnectedComponents, LSDFlowInfo& FlowInfo, int threshold_SO)
+{
+	Array2D<int> NearestChannels(NRows,NCols,NoDataValue);
+	Array2D<float> FlowLengths(NRows,NCols,NoDataValue);
+	Array2D<int> ChannelNodes(NRows,NCols,NoDataValue);
+	Array2D<int> PatchIDs = ConnectedComponents.get_RasterData();
+	  
+  // Get an array with the nearest channels for each pixel in the patch
+	for (int row = 0; row < NRows; row++)
+  {
+    for (int col = 0; col < NCols; col++)
+    {
+			// find the patch ID of this node
+			int patch_id = PatchIDs[row][col];
+			if (patch_id != NoDataValue)
+			{
+				// get the flow length of the nearest channel
+				int CurrentNode = FlowInfo.retrieve_node_from_row_and_column(row,col);
+				int ChannelNode = get_nodeindex_nearest_channel_to_node(CurrentNode, threshold_SO, FlowInfo);
+				float length = FlowInfo.get_flow_length_between_nodes(CurrentNode, ChannelNode);
+				FlowLengths[row][col] = length;
+				ChannelNodes[row][col] = ChannelNode;
+			}
+		}
+	}
+	
+	// Find the nearest channel node for each patch ID
+	
+	vector<int> PatchIDs_vector = Flatten_Without_Nodata(PatchIDs, NoDataValue);
+	vector<float> FlowLengths_vector = Flatten_Without_Nodata(FlowLengths, NoDataValue);
+	vector<int> ChannelNodes_vector = Flatten_Without_Nodata(ChannelNodes, NoDataValue);
+	 //get unique patch IDs
+  vector<int> Unique_Patches = Unique(PatchIDs_vector);
+	vector<int> NearestChannels_vector;
+	
+	float ShortestLength = *max_element(FlowLengths_vector.begin(), FlowLengths_vector.end());
+	int NearestChannel = 0;	
+	for (int i =0; i < int(Unique_Patches.size()); i++)
+	{
+		for (int j = 0; j < int (PatchIDs_vector.size()); j++)
+		{
+			// find the nearest channel node
+			if (PatchIDs_vector[j] == Unique_Patches[i])
+			{
+				if (FlowLengths_vector[j] < ShortestLength)
+				{
+					//update the flow length and node
+					ShortestLength = FlowLengths_vector[j];
+					NearestChannel = ChannelNodes_vector[j];
+				}
+			}		
+		}
+		
+		// Get the average elevation of the reach for this patch ID
+		NearestChannels_vector.push_back(NearestChannel);
+	}
+
+	// Update the array with the nearest channel node for each pixel
+	cout << "Updating array with nearest channels" << endl;
+	
+	vector<int>::iterator it;
+	for (int row = 0; row < NRows; row++)
+	{
+		for (int col = 0; col < NCols; col++)
+		{
+			// find the patch ID of this node
+			int patch_id = PatchIDs[row][col];
+			if (patch_id != NoDataValue)
+			{
+				// find the maxSO for this patch ID
+				it = find(Unique_Patches.begin(), Unique_Patches.end(), patch_id);
+				int index = it - Unique_Patches.begin();
+				//scout << "Index: " << index << endl;
+				// update the vector with the max SO for this patch ID
+				NearestChannels[row][col] = NearestChannels_vector[index];
+				if (patch_id == 351)
+				{
+					cout << "Patch ID: " << patch_id << "Max SO: " << NearestChannels_vector[index] << endl;
+				}
+			}			
+		}
+	}
+	cout << "Got the nearest channel nodes" << endl;
+	
+	return NearestChannels;
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

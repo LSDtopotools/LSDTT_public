@@ -982,6 +982,17 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   int get_nodeindex_of_nearest_channel_for_specified_coordinates(float X_coordinate,
                             float Y_coordinate, int threshold_stream_order, int search_radius_nodes, 
                             LSDFlowInfo& FlowInfo);
+	
+	
+	/// @brief Function to get the flow length to the nearest channel node of a given node.
+  /// @param StartingNode index of node of interest
+  /// @param threshold_SO threshold stream order for finding the nearest channel
+  /// @param FlowInfo LSDFlowInfo object
+  /// @return Returns the flow length of the nearest channel node.
+  /// @author FJC
+  /// @date 29/09/16
+	int get_nodeindex_nearest_channel_to_node(int StartingNode, int threshold_SO, LSDFlowInfo& FlowInfo);
+	
 
   /// @brief This function takes a node index, checks to see if it is on a channel,
   /// and then works its way up the channel to find the upstream junction
@@ -1092,6 +1103,14 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @author FJC
   /// @date 08/10/15
   int get_downstream_junction(int starting_junction, LSDFlowInfo& FlowInfo);
+	
+  /// @details Gets the stream order of a node
+  /// @param FlowInfo LSDFlowInfo object
+  /// @param node node of interest
+  /// @return integer with stream order of junction
+  /// @author FJC
+  /// @date 29/09/16
+	int get_StreamOrder_of_Node(LSDFlowInfo& FlowInfo, int node);
   
   /// @details Gets the stream order of a junction
   /// @param FlowInfo LSDFlowInfo object
@@ -1156,6 +1175,29 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @author FJC
   /// @date 17/11/15
   LSDRaster calculate_relief_from_channel(LSDRaster& ElevationRaster, LSDFlowInfo& FlowInfo, int threshold_SO);
+	
+	/// @details This function calculates the relief of each pixel compared to the nearest 
+	/// downstream channel pixel equal or greater to the threshold stream order for that
+	/// connected components patch
+  /// @param ElevationRaster LSDRaster with elevations
+	/// @param ConnectedComponents
+  /// @param FlowInfo LSDFlowInfo object
+  /// @param threshold_SO original threshold stream order to calculate relief from
+  /// @return LSDRaster with channel relief
+  /// @author FJC
+  /// @date 29/09/16
+//	LSDRaster calculate_relief_from_channel_connected_components(LSDRaster& ElevationRaster, LSDIndexRaster& ConnectedComponents, LSDFlowInfo& FlowInfo, int threshold_SO);
+	
+	/// @details This function takes in a raster of connected component patches. It finds
+	/// the node index of the nearest channel for the patch.
+  /// @param ConnectedComponents connected components raster
+  /// @param FlowInfo LSDFlowInfo object
+  /// @param threshold_SO threshold stream order to calculate relief from
+  /// @return 2D array with nearest channel node index for each patch
+  /// @author FJC
+  /// @date 29/09/16
+Array2D<int> Get_NodeIndex_of_Nearest_Channel_for_Connected_Components(LSDIndexRaster& ConnectedComponents, LSDFlowInfo& FlowInfo, int threshold_SO);
+	
 	
 	/// @details This function returns the node index of the nearest FIP to a
 	/// specified node.

@@ -195,8 +195,7 @@ int main (int nNumberofArgs,char *argv[])
   
   cout << "\t Connected components" << endl;
   LSDIndexRaster ConnectedComponents = FloodplainRaster_temp.ConnectedComponents();
-  string CC_name = "_CC_filt";
-  ConnectedComponents.write_raster((input_path+DEM_ID+CC_name), flt_extension); 
+
   
   //remove patches of identified floodplain that are not connected to the channel network
 //  cout << "\t Removing hillslope patches" << endl;
@@ -211,6 +210,8 @@ int main (int nNumberofArgs,char *argv[])
 	
 	// remove patches smaller than a certain number of pixels
 	LSDIndexRaster ConnectedComponents_final = ConnectedComponents.RemoveSmallPatches(minimum_patch_size);
+	string CC_name = "_CC_filt";
+  ConnectedComponents_final.write_raster((input_path+DEM_ID+CC_name), flt_extension); 
 	
   
   //get a binary raster of floodplain pixels
@@ -220,10 +221,13 @@ int main (int nNumberofArgs,char *argv[])
   string mask_name = "_FP";
   FloodplainMask.write_raster((input_path+DEM_ID+mask_name), flt_extension); 
 	
+	// get the channel relief for the patches - this is to stop one terrace mapping to 2 different channels.
+	
 	//get the raster of channel relief masked by the floodplain mask
-	LSDRaster ReliefMasked = ChannelRelief.ExtractByMask(FloodplainMask);
-	string relief_masked_ext = "_channel_relief_masked";
-	ReliefMasked.write_raster((input_path+DEM_ID+relief_masked_ext), flt_extension); 
+//	cout << "\t Getting channel relief for connected components patches" << endl;
+//	LSDRaster ReliefMasked = ChanNetwork.calculate_relief_from_channel_connected_components(filled_topo_test, ConnectedComponents_final, FlowInfo, threshold_SO);
+//	string relief_masked_ext = "_channel_relief_masked";
+//	ReliefMasked.write_raster((input_path+DEM_ID+relief_masked_ext), flt_extension); 
 	
 	clock_t end = clock();
 	float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
