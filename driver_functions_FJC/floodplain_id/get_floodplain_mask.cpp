@@ -71,7 +71,7 @@ int main (int nNumberofArgs,char *argv[])
   string txt_extension = ".txt";
   
   // initialise variables to be assigned from .driver file
-  int threshold_SO, FilterTopo, window_radius, lower_percentile, upper_percentile;
+  int threshold_SO, FilterTopo, window_radius, lower_percentile, upper_percentile, minimum_patch_size;
 	float Minimum_Slope, surface_fitting_window_radius, threshold_condition;
   string temp;
   
@@ -87,7 +87,8 @@ int main (int nNumberofArgs,char *argv[])
                >> temp >> window_radius
 							 >> temp >> threshold_condition
 							 >> temp >> lower_percentile
-		           >> temp >> upper_percentile;
+		           >> temp >> upper_percentile
+							 >> temp >> minimum_patch_size;
                    
 	file_info_in.close();
 
@@ -134,8 +135,14 @@ int main (int nNumberofArgs,char *argv[])
 
 	cout << "\t Loading Sources..." << endl;
 	// load the sources
-  vector<int> sources = FlowInfo.Ingest_Channel_Heads((path_name+DEM_ID+CH_name), flt_extension, 1);
+  vector<int> sources = FlowInfo.Ingest_Channel_Heads((path_name+DEM_ID+CH_name), csv_extension, 2);
   cout << "\t Got sources!" << endl;
+	
+//	cout << "N sources: " << sources.size() << endl;
+//	for (i =0; i < int(sources.size(); i++)
+//	{
+//		cout << sources[i] << endl;
+//  }
   
 	// now get the junction network
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
@@ -192,15 +199,19 @@ int main (int nNumberofArgs,char *argv[])
   ConnectedComponents.write_raster((input_path+DEM_ID+CC_name), flt_extension); 
   
   //remove patches of identified floodplain that are not connected to the channel network
-  cout << "\t Removing hillslope patches" << endl;
-	float threshold = threshold_SO -1;
-  LSDIndexRaster ChannelPatches = ChanNetwork.remove_hillslope_patches_from_floodplain_mask(ConnectedComponents, threshold);
-  
-  //remove holes in the connected components raster
-  cout << "\t Removing holes" << endl;
-  LSDIndexRaster ConnectedComponents_final = ChannelPatches.remove_holes_in_patches_connected_components(window_radius);
+//  cout << "\t Removing hillslope patches" << endl;
+//	float threshold = threshold_SO -1;
+//  LSDIndexRaster ChannelPatches = ChanNetwork.remove_hillslope_patches_from_floodplain_mask(ConnectedComponents, threshold);
+//  
+//  //remove holes in the connected components raster
+//  cout << "\t Removing holes" << endl;
+//  LSDIndexRaster ConnectedComponents_final = ChannelPatches.remove_holes_in_patches_connected_components(window_radius);
   //string CC_new_name = "_CC_no_holes";
   //ConnectedComponents_final.write_raster((input_path+DEM_ID+CC_new_name), flt_extension); 
+	
+	// remove patches smaller than a certain number of pixels
+	LSDIndexRaster ConnectedComponents_final = ConnectedComponents.RemoveSmallPatches(minimum_patch_size);
+	
   
   //get a binary raster of floodplain pixels
   int value = 1;
@@ -208,6 +219,11 @@ int main (int nNumberofArgs,char *argv[])
   LSDIndexRaster FloodplainMask = ConnectedComponents_final.ConvertToBinary(value, ndv);
   string mask_name = "_FP";
   FloodplainMask.write_raster((input_path+DEM_ID+mask_name), flt_extension); 
+	
+	//get the raster of channel relief masked by the floodplain mask
+	LSDRaster ReliefMasked = ChannelRelief.ExtractByMask(FloodplainMask);
+	string relief_masked_ext = "_channel_relief_masked";
+	ReliefMasked.write_raster((input_path+DEM_ID+relief_masked_ext), flt_extension); 
 	
 	clock_t end = clock();
 	float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;

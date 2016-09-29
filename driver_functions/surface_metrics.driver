@@ -1,9 +1,9 @@
-DEMFile data/cr
+DEMFile DEM/name/plus/path
 SurfaceFittingWindowRadius 7
-Elevation 0
-Slope 1
+Elevation 1
+Slope 0
 Aspect 0
-Curvature 1
+Curvature 0
 PlanformCurvature 0
 ProfileCurvature 0
 TangentialCurvature 0

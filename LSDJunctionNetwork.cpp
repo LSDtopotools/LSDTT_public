@@ -5428,7 +5428,7 @@ float LSDJunctionNetwork::find_distance_to_nearest_floodplain_pixel(int point_no
 	//find the nearest node
 	if (upstream_dist < downstream_dist)
 	{
-		distance = upstream_dist;
+		distance = upstream_dist*-1;
 	}
 	else if (downstream_dist < upstream_dist)
 	{
@@ -5436,7 +5436,7 @@ float LSDJunctionNetwork::find_distance_to_nearest_floodplain_pixel(int point_no
 	}
 	else if (upstream_dist == downstream_dist && upstream_dist < search_distance)
 	{
-		distance = upstream_dist;
+		distance = upstream_dist*-1;
 	}
 	else
 	{

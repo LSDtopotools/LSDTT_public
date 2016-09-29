@@ -84,7 +84,7 @@ int main (int nNumberofArgs,char *argv[])
 
 	string DEM_name; 
   string CH_name; 
-	string fill_ext = "_fill";
+	string fill_ext = "_Fill";
 	string filt_ext = "_filtered";
 	file_info_in >> DEM_name >> CH_name;
 	float Minimum_Slope;
@@ -99,6 +99,7 @@ int main (int nNumberofArgs,char *argv[])
 
 	// load the DEM
 	LSDRaster topo_test((path_name+DEM_name), DEM_flt_extension);
+	cout << "Got the DEM" << endl;
 	
 	// load the sources
 	//LSDRaster sources_raster((path_name+sources_name), DEM_flt_extension);
@@ -117,6 +118,7 @@ int main (int nNumberofArgs,char *argv[])
 	LSDRaster filled_topo_test;
 	LSDRaster load_DEM((path_name+DEM_name+fill_ext), DEM_flt_extension);
   filled_topo_test = load_DEM;
+	cout << "Got the filled DEM" << endl;
 	//int NRows = filled_topo_test.get_NRows();
 	//cout << "NRows: " << NRows << endl;
 	//filled_topo_test.write_raster((DEM_f_name),DEM_flt_extension);
