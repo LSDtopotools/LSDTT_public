@@ -7135,7 +7135,7 @@ float LSDFlowInfo::get_flow_length_between_nodes(int UpstreamNode, int Downstrea
 		if (CurrentNode == ReceiverNode)
 		{
 			ReachedChannel = true;
-			cout << "You reached a baselevel node, returning baselevel" << endl;
+			//cout << "You reached a baselevel node, returning baselevel" << endl;
 		}          
 		//if receiver is a channel > threshold then get the stream order
 		if (ReceiverNode == DownstreamNode)

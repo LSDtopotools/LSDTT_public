@@ -71,7 +71,7 @@ int main (int nNumberofArgs,char *argv[])
   string txt_extension = ".txt";
   
   // initialise variables to be assigned from .driver file
-  int threshold_SO, FilterTopo, window_radius, lower_percentile, upper_percentile, minimum_patch_size;
+  int threshold_SO, FilterTopo, window_radius, lower_percentile, upper_percentile, minimum_patch_size, search_distance;
 	float Minimum_Slope, surface_fitting_window_radius, threshold_condition;
   string temp;
   
@@ -88,7 +88,8 @@ int main (int nNumberofArgs,char *argv[])
 							 >> temp >> threshold_condition
 							 >> temp >> lower_percentile
 		           >> temp >> upper_percentile
-							 >> temp >> minimum_patch_size;
+							 >> temp >> minimum_patch_size
+							 >> temp >> search_distance;
                    
 	file_info_in.close();
 
@@ -196,11 +197,6 @@ int main (int nNumberofArgs,char *argv[])
   cout << "\t Connected components" << endl;
   LSDIndexRaster ConnectedComponents = FloodplainRaster_temp.ConnectedComponents();
 
-  
-  //remove patches of identified floodplain that are not connected to the channel network
-//  cout << "\t Removing hillslope patches" << endl;
-//	float threshold = threshold_SO -1;
-//  LSDIndexRaster ChannelPatches = ChanNetwork.remove_hillslope_patches_from_floodplain_mask(ConnectedComponents, threshold);
 //  
 //  //remove holes in the connected components raster
 //  cout << "\t Removing holes" << endl;
@@ -213,21 +209,33 @@ int main (int nNumberofArgs,char *argv[])
 	string CC_name = "_CC_filt";
   ConnectedComponents_final.write_raster((input_path+DEM_ID+CC_name), flt_extension); 
 	
-  
+	//remove patches of identified floodplain that are not connected to the channel network
+  cout << "\t Separating into floodplain and terraces" << endl;
+  LSDIndexRaster ChannelPatches, TerracePatches;
+	ChanNetwork.separate_floodplain_and_terrace_patches(ConnectedComponents_final, ChannelPatches, TerracePatches, threshold_SO);
+	
   //get a binary raster of floodplain pixels
   int value = 1;
   int ndv = -9999;
-  LSDIndexRaster FloodplainMask = ConnectedComponents_final.ConvertToBinary(value, ndv);
+  LSDIndexRaster FloodplainMask = ChannelPatches.ConvertToBinary(value, ndv);
   string mask_name = "_FP";
   FloodplainMask.write_raster((input_path+DEM_ID+mask_name), flt_extension); 
 	
-	// get the channel relief for the patches - this is to stop one terrace mapping to 2 different channels.
+	cout << "\t Getting channel relief for the floodplain" << endl;
+	LSDRaster FP_Relief_Masked = ChannelRelief.ExtractByMask(FloodplainMask);
+	string FP_relief_masked = "_FP_relief_masked";
+	FP_Relief_Masked.write_raster((input_path+DEM_ID+FP_relief_masked), flt_extension); 
 	
-	//get the raster of channel relief masked by the floodplain mask
-//	cout << "\t Getting channel relief for connected components patches" << endl;
-//	LSDRaster ReliefMasked = ChanNetwork.calculate_relief_from_channel_connected_components(filled_topo_test, ConnectedComponents_final, FlowInfo, threshold_SO);
-//	string relief_masked_ext = "_channel_relief_masked";
-//	ReliefMasked.write_raster((input_path+DEM_ID+relief_masked_ext), flt_extension); 
+
+	
+	// get the channel relief for the patches - this is to stop one terrace mapping to 2 different channels.  DO THIS SEPARATELY FOR FLOODPLAIN AND TERRACES OR IT ALL GOES TO SHIT
+	
+	
+	// get the raster of channel relief masked by the terrace mask
+	cout << "\t Getting channel relief for the terraces" << endl;
+	LSDRaster TerraceReliefMasked = ChanNetwork.calculate_relief_from_channel_connected_components(filled_topo_test, TerracePatches, FlowInfo, threshold_SO, search_distance);
+	string Terrace_relief_masked = "_terrace_relief_masked";
+	TerraceReliefMasked.write_raster((input_path+DEM_ID+Terrace_relief_masked), flt_extension); 
 	
 	clock_t end = clock();
 	float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
