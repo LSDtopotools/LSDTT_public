@@ -237,6 +237,16 @@ int main (int nNumberofArgs,char *argv[])
 	string Terrace_relief_masked = "_terrace_relief_masked";
 	TerraceReliefMasked.write_raster((input_path+DEM_ID+Terrace_relief_masked), flt_extension); 
 	
+	// get the channel relief data to a text file for plotting
+	
+	//merge the rasters together
+	LSDRaster MergedRaster = FP_Relief_Masked.MergeRasters(TerraceReliefMasked);
+	string merged_ext = "_relief_merged";
+	MergedRaster.write_raster((input_path+DEM_ID+merged_ext), flt_extension); 
+	
+	string out_file_ext = "_channel_relief";
+	MergedRaster.write_RasterData_to_text_file(input_path+DEM_ID+out_file_ext);
+	
 	clock_t end = clock();
 	float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
 	cout << "DONE, Time taken (secs): " << elapsed_secs << endl;
