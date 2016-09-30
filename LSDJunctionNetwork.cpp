@@ -5338,9 +5338,13 @@ void LSDJunctionNetwork::separate_floodplain_and_terrace_patches(LSDIndexRaster&
   }
   
   //get the LSDIndexRaster from floodplain patches array
-  LSDIndexRaster FloodplainPatches_final(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, FloodplainPatches_array, GeoReferencingStrings);
+  LSDIndexRaster FloodplainPatches_temp(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, FloodplainPatches_array, GeoReferencingStrings);
 	
-	LSDIndexRaster TerracePatches_final(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, TerracePatches_array, GeoReferencingStrings);
+	LSDIndexRaster TerracePatches_temp(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, TerracePatches_array, GeoReferencingStrings);
+	
+	//copy to rasters
+	FloodplainPatches = FloodplainPatches_temp;
+	TerracePatches = TerracePatches_temp;
    
 }
 
@@ -5442,6 +5446,7 @@ LSDRaster LSDJunctionNetwork::calculate_relief_from_channel_connected_components
 				// get the elevation of the channel reach
 				float channel_elev = Elevations[row][col];
 				float relief = this_elev - channel_elev;
+				if (relief < 0) { relief = 0; }
 				ReliefArray[row][col] = relief;
 			}
 		}
@@ -5500,10 +5505,10 @@ Array2D<int> LSDJunctionNetwork::Get_Elevation_of_Nearest_Channel_for_Connected_
   vector<int> Unique_Patches = Unique(PatchIDs_vector);
 	vector<int> Elevation_vector;
 	
-	float ShortestLength = *max_element(FlowLengths_vector.begin(), FlowLengths_vector.end());
-	int NearestChannel = 0;	
 	for (int i =0; i < int(Unique_Patches.size()); i++)
 	{
+		float ShortestLength = 100000000000;
+		int NearestChannel = 0;	
 		for (int j = 0; j < int (PatchIDs_vector.size()); j++)
 		{
 			// find the nearest channel node
@@ -5517,10 +5522,12 @@ Array2D<int> LSDJunctionNetwork::Get_Elevation_of_Nearest_Channel_for_Connected_
 				}
 			}		
 		}
+		//cout << "Length: " << ShortestLength << " Channel node: " << NearestChannel << endl;
 		
 		// Get the average elevation of the reach for this patch ID
 		float MeanElev = find_mean_elevation_of_channel_reach(NearestChannel,search_distance,ElevationRaster,FlowInfo);
 		Elevation_vector.push_back(MeanElev);
+		//cout << "Patch ID: " << Unique_Patches[i] << " Elevation of channel: " << MeanElev << endl;
 	}
 
 	// Update the array with the nearest channel node for each pixel
@@ -5575,9 +5582,6 @@ float LSDJunctionNetwork::find_mean_elevation_of_channel_reach(int StartingNode,
 		FlowInfo.retrieve_current_row_and_col(this_node, row, col);
 		int this_SO = StreamOrderArray[row][col];
 		
-		//push back the current elevation to the vector
-		elevations.push_back(ElevationRaster.get_data_element(row,col));
-		
 		//look through the donor nodes for the same stream order
 		vector<int> donor_nodes = FlowInfo.get_donor_nodes(this_node);
 		for (int i = 0; i < int(donor_nodes.size()); i++)
@@ -5588,6 +5592,8 @@ float LSDJunctionNetwork::find_mean_elevation_of_channel_reach(int StartingNode,
 			if (DonorSO == this_SO)
 			{
 				SO_test = 1;
+				//push back the current elevation to the vector
+				elevations.push_back(ElevationRaster.get_data_element(row,col));
 				//move upstream
 				this_node = donor_nodes[i];
 				upstream_dist++;
