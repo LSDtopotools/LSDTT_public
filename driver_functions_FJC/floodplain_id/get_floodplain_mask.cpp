@@ -140,12 +140,6 @@ int main (int nNumberofArgs,char *argv[])
   vector<int> sources = FlowInfo.Ingest_Channel_Heads((path_name+DEM_ID+CH_name), csv_extension, 2);
   cout << "\t Got sources!" << endl;
 	
-//	cout << "N sources: " << sources.size() << endl;
-//	for (i =0; i < int(sources.size(); i++)
-//	{
-//		cout << sources[i] << endl;
-//  }
-  
 	// now get the junction network
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
   cout << "\t Got the channel network" << endl;
@@ -179,16 +173,6 @@ int main (int nNumberofArgs,char *argv[])
   cout << "\t Done!" << endl;
   string slope_name = "_slope";
   Slope.write_raster((input_path+DEM_ID+slope_name), flt_extension);
-    
-  //get the drainage area using Dinf
-  //Array2D<float> dinf = filled_topo_test.D_inf_FlowDir();
-  //LSDRaster dinf_rast = filled_topo_test.LSDRasterTemplate(dinf);
-  //LSDRaster DinfArea = filled_topo_test.D_inf_units();
-  
-  //get the topographic index raster
-  //LSDRaster TopoIndex = filled_topo_test.calculate_topographic_index(DinfArea, Slope);
-  //string TopoIndex_name = "_TI_Dinf";
-  //TopoIndex.write_raster((input_path+DEM_ID+TopoIndex_name), flt_extension);
 
   // get the channel relief and slope threshold using quantile-quantile plots
   cout << "Getting channel relief threshold from QQ plots" << endl;
@@ -207,60 +191,15 @@ int main (int nNumberofArgs,char *argv[])
   
   cout << "\t Connected components" << endl;
   LSDIndexRaster ConnectedComponents = FloodplainRaster_temp.ConnectedComponents();
-
-//  
-//  //remove holes in the connected components raster
-//  cout << "\t Removing holes" << endl;
-//  LSDIndexRaster ConnectedComponents_final = ChannelPatches.remove_holes_in_patches_connected_components(window_radius);
-  //string CC_new_name = "_CC_no_holes";
-  //ConnectedComponents_final.write_raster((input_path+DEM_ID+CC_new_name), flt_extension); 
 	
 	// remove patches smaller than a certain number of pixels
 	LSDIndexRaster ConnectedComponents_final = ConnectedComponents.RemoveSmallPatches(minimum_patch_size);
 	string CC_name = "_CC_filt";
   ConnectedComponents_final.write_raster((input_path+DEM_ID+CC_name), flt_extension); 
 	
-	//remove patches of identified floodplain that are not connected to the channel network
-//  cout << "\t Separating into floodplain and terraces" << endl;
-//  LSDIndexRaster ChannelPatches, TerracePatches;
-//	ChanNetwork.separate_floodplain_and_terrace_patches(ConnectedComponents_final, ChannelPatches, TerracePatches, threshold_SO);
-//	
-//  //get a binary raster of floodplain pixels
-//  int value = 1;
-//  int ndv = -9999;
-//  LSDIndexRaster FloodplainMask = ChannelPatches.ConvertToBinary(value, ndv);
-//  string mask_name = "_FP";
-//  FloodplainMask.write_raster((input_path+DEM_ID+mask_name), flt_extension); 
-//	
-//	cout << "\t Getting channel relief for the floodplain" << endl;
-//	LSDRaster FP_Relief_Masked = ChannelRelief.ExtractByMask(FloodplainMask);
-//	string FP_relief_masked = "_FP_relief_masked";
-//	FP_Relief_Masked.write_raster((input_path+DEM_ID+FP_relief_masked), flt_extension); 
-//	
-
-	
-	// get the channel relief for the patches - this is to stop one terrace mapping to 2 different channels.  DO THIS SEPARATELY FOR FLOODPLAIN AND TERRACES OR IT ALL GOES TO SHIT
-	
 	// get the distance from outlet
 	LSDRaster DistFromOutlet = FlowInfo.distance_from_outlet();
-	
-	
-	// get the raster of channel relief masked by the terrace mask
-//	cout << "\t Getting channel relief for the terraces" << endl;
-//	LSDRaster TerraceReliefMasked = ChanNetwork.calculate_relief_from_channel_connected_components(filled_topo_test, TerracePatches, DistFromOutlet, FlowInfo, threshold_SO, search_distance);
-//	string Terrace_relief_masked = "_terrace_relief_masked";
-//	TerraceReliefMasked.write_raster((input_path+DEM_ID+Terrace_relief_masked), flt_extension); 
-//	
-//	// get the channel relief data to a text file for plotting
-//	
-//	//merge the rasters together
-//	LSDRaster MergedRaster = FP_Relief_Masked.MergeRasters(TerraceReliefMasked);
-//	string merged_ext = "_relief_merged";
-//	MergedRaster.write_raster((input_path+DEM_ID+merged_ext), flt_extension); 
-//	
-//	string out_file_ext = "_channel_relief";
-//	MergedRaster.write_RasterData_to_text_file(input_path+DEM_ID+out_file_ext);
-	
+		
 	//test the new relief and distance code
 	LSDRaster MainStemRelief, UpstreamDistance;
 	cout << "The junction number is: " << junction_number << endl;
