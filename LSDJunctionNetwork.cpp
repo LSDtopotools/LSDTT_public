@@ -4942,7 +4942,7 @@ int LSDJunctionNetwork::get_nodeindex_of_nearest_channel_for_specified_coordinat
 // FJC 08/09/16
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDJunctionNetwork::get_info_nearest_channel_to_node(int& StartingNode, int& threshold_SO, LSDFlowInfo& FlowInfo, int& ChannelNode, float& FlowLength)
+void LSDJunctionNetwork::get_info_nearest_channel_to_node(int& StartingNode, int& threshold_SO, LSDFlowInfo& FlowInfo, LSDRaster& DistFromOutlet, int& ChannelNode, float& FlowLength, float& DistanceUpstream)
 {
 	int row, col;
 	FlowLength = 0;
@@ -4956,6 +4956,8 @@ void LSDJunctionNetwork::get_info_nearest_channel_to_node(int& StartingNode, int
 	{
 		ChannelNode = FlowInfo.NodeIndex[row][col];
 		//cout << "You are already at a channel" << endl;
+		// get the upstream distance
+		DistanceUpstream = DistFromOutlet.get_data_element(row,col);
 	}
 	//if not at a channel, move downstream
 	else
@@ -4978,6 +4980,82 @@ void LSDJunctionNetwork::get_info_nearest_channel_to_node(int& StartingNode, int
 			StreamOrderArray[ReceiverRow][ReceiverCol] >= threshold_SO)
 			{
 				ChannelNode = FlowInfo.NodeIndex[ReceiverRow][ReceiverCol];
+				// get the upstream distance of the nearest channel node
+				DistanceUpstream = DistFromOutlet.get_data_element(ReceiverRow,ReceiverCol);
+				//cout << "You've reached a channel!" << endl;
+				ReachedChannel = true;
+			} 
+			else
+			{
+				//move downstream
+				CurrentNode = ReceiverNode;
+				// update length
+				if (FlowInfo.retrieve_flow_length_code_of_node(ReceiverNode) == 1){ FlowLength += DataResolution; }
+				else if (FlowInfo.retrieve_flow_length_code_of_node(ReceiverNode) == 2){ FlowLength += (DataResolution * root_2); }
+			}
+		}         
+	}
+	
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function returns information on the nearest channel pixel to a node. It
+// checks to see if the channel pixel is in the main stem channel - if not, it
+// keeps moving downstream.
+//
+// FJC 08/09/16
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDJunctionNetwork::get_info_nearest_channel_to_node_main_stem(int& StartingNode, LSDFlowInfo& FlowInfo, LSDRaster& ElevationRaster, LSDRaster& DistFromOutlet, LSDIndexChannel& MainStem, int& ChannelNode, float& FlowLength, float& DistanceUpstream, float& Relief)
+{
+	int row, col;
+	FlowLength = 0;
+	float root_2 = 1.4142135623;
+	int CurrentNode = StartingNode;
+	FlowInfo.retrieve_current_row_and_col(StartingNode, row, col);
+	
+  // get the nodes in the main stem
+	vector<int> main_stem_nodes = MainStem.get_NodeSequence();
+	vector<int>::iterator find_it;
+	find_it = find(main_stem_nodes.begin(), main_stem_nodes.end(), StartingNode); 
+	//check if you are already at a channel
+	if (find_it != main_stem_nodes.end())
+	{
+		ChannelNode = StartingNode;
+		//cout << "You are already at a channel" << endl;
+		// get the upstream distance
+		DistanceUpstream = DistFromOutlet.get_data_element(row,col);
+		FlowLength=0;
+		Relief=0;
+	}
+	//if not at a channel, move downstream
+	else
+	{
+		bool ReachedChannel = false;
+		while (ReachedChannel == false)
+		{
+			//get receiver information
+			int ReceiverNode, ReceiverRow, ReceiverCol;
+			FlowInfo.retrieve_receiver_information(CurrentNode, ReceiverNode, ReceiverRow, ReceiverCol); 
+			//if node is at baselevel then exit
+			if (CurrentNode == ReceiverNode)
+			{
+				ChannelNode = FlowInfo.NodeIndex[ReceiverRow][ReceiverCol];
+				Relief = ElevationRaster.get_data_element(row,col) - ElevationRaster.get_data_element(ReceiverRow,ReceiverCol);
+				ReachedChannel = true;
+				//cout << "You reached a baselevel node, returning baselevel" << endl;
+			}          
+			//if receiver is a channel node in the main stem
+			vector<int>::iterator find_main_stem;
+			find_main_stem = find(main_stem_nodes.begin(), main_stem_nodes.end(), ReceiverNode); 
+			if (find_main_stem != main_stem_nodes.end())
+			{
+				ChannelNode = ReceiverNode;
+				// get the upstream distance of the nearest channel node
+				DistanceUpstream = DistFromOutlet.get_data_element(ReceiverRow,ReceiverCol);
+				Relief = ElevationRaster.get_data_element(row,col) - ElevationRaster.get_data_element(ReceiverRow,ReceiverCol);
 				//cout << "You've reached a channel!" << endl;
 				ReachedChannel = true;
 			} 
@@ -5427,10 +5505,10 @@ LSDRaster LSDJunctionNetwork::calculate_relief_from_channel(LSDRaster& Elevation
 // FJC 29/09/16
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-LSDRaster LSDJunctionNetwork::calculate_relief_from_channel_connected_components(LSDRaster& ElevationRaster, LSDIndexRaster& ConnectedComponents, LSDFlowInfo& FlowInfo, int threshold_SO, int search_distance)
+LSDRaster LSDJunctionNetwork::calculate_relief_from_channel_connected_components(LSDRaster& ElevationRaster, LSDIndexRaster& ConnectedComponents, LSDRaster& DistFromOutlet, LSDFlowInfo& FlowInfo, int threshold_SO, int search_distance)
 {
   Array2D<float> ReliefArray(NRows, NCols, NoDataValue);
-  Array2D<int> Elevations = Get_Elevation_of_Nearest_Channel_for_Connected_Components(ConnectedComponents, ElevationRaster, FlowInfo, threshold_SO, search_distance);
+  Array2D<int> Elevations = Get_Elevation_of_Nearest_Channel_for_Connected_Components(ConnectedComponents, ElevationRaster, DistFromOutlet, FlowInfo, threshold_SO, search_distance);
 	cout << "Got the elevations of channel reaches" << endl;
 	
   //calculate the relief (elevation of node - elevation of channel reach)
@@ -5466,7 +5544,7 @@ LSDRaster LSDJunctionNetwork::calculate_relief_from_channel_connected_components
 // FJC 29/09/16
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-Array2D<int> LSDJunctionNetwork::Get_Elevation_of_Nearest_Channel_for_Connected_Components(LSDIndexRaster& ConnectedComponents, LSDRaster& ElevationRaster, LSDFlowInfo& FlowInfo, int threshold_SO, int search_distance)
+Array2D<int> LSDJunctionNetwork::Get_Elevation_of_Nearest_Channel_for_Connected_Components(LSDIndexRaster& ConnectedComponents, LSDRaster& ElevationRaster, LSDRaster& DistFromOutlet, LSDFlowInfo& FlowInfo, int threshold_SO, int search_distance)
 {
 	Array2D<int> Elevations(NRows,NCols,NoDataValue);
 	Array2D<float> FlowLengths(NRows,NCols,NoDataValue);
@@ -5485,8 +5563,8 @@ Array2D<int> LSDJunctionNetwork::Get_Elevation_of_Nearest_Channel_for_Connected_
 				// get the flow length of the nearest channel
 				int CurrentNode = FlowInfo.retrieve_node_from_row_and_column(row,col);
 				int ChannelNode;
-				float FlowLength;
-				get_info_nearest_channel_to_node(CurrentNode, threshold_SO, FlowInfo, ChannelNode, FlowLength);
+				float FlowLength, DistanceUpstream;
+				get_info_nearest_channel_to_node(CurrentNode, threshold_SO, FlowInfo, DistFromOutlet, ChannelNode, FlowLength, DistanceUpstream);
 				//cout << "Channel node: " << ChannelNode << " Flow length: " << FlowLength << endl;
 				FlowLengths[row][col] = FlowLength;
 				ChannelNodes[row][col] = ChannelNode;
@@ -5542,11 +5620,11 @@ Array2D<int> LSDJunctionNetwork::Get_Elevation_of_Nearest_Channel_for_Connected_
 			int patch_id = PatchIDs[row][col];
 			if (patch_id != NoDataValue)
 			{
-				// find the maxSO for this patch ID
+				// find the elevation for this patch ID
 				it = find(Unique_Patches.begin(), Unique_Patches.end(), patch_id);
 				int index = it - Unique_Patches.begin();
 				//scout << "Index: " << index << endl;
-				// update the vector with the max SO for this patch ID
+				// update the vector with the elevation for this patch ID
 				Elevations[row][col] = Elevation_vector[index];
 			}			
 		}
@@ -5640,6 +5718,61 @@ float LSDJunctionNetwork::find_mean_elevation_of_channel_reach(int StartingNode,
 	return mean_elev;
 	
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function generates a main stem LSDIndexChannel from a specified junction
+// number for use with mask genereated by the FIRTH method.  For each connected
+// components patch it finds the nearest point on the main stem and calculates
+// the elevation difference and the upstream distance.
+//
+// FJC 05/10/16
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDJunctionNetwork::get_information_about_nearest_main_stem_channel_connected_components(LSDIndexRaster& ConnectedComponents, LSDRaster& ElevationRaster, LSDRaster& DistFromOutlet, LSDFlowInfo& FlowInfo, LSDIndexChannel& MainStem, int junction_number, LSDRaster& ChannelRelief, LSDRaster& UpstreamDistance)
+{
+	// Arrays for channel relief and upstream distance
+	Array2D<float> ChannelRelief_array(NRows,NCols,NoDataValue);
+	Array2D<float> UpstreamDistance_array(NRows,NCols,NoDataValue);
+		
+	// get array of patch IDs
+	Array2D<int> PatchIDs = ConnectedComponents.get_RasterData();
+	cout << "Got the patch IDs" << endl;
+	
+	// get the upslope nodes of the junction
+	int downstream_node = get_Node_of_Junction(junction_number);
+	vector<int> upslope_nodes = FlowInfo.get_upslope_nodes(downstream_node);
+	cout << "There are " << upslope_nodes.size() << " upslope nodes" << endl;
+	
+	// loop through all the upslope nodes and find ones that are in the connected components raster
+	for (int i = 0; i < int(upslope_nodes.size()); i++)
+	{
+		int row, col;
+		FlowInfo.retrieve_current_row_and_col(upslope_nodes[i], row, col);
+		if (PatchIDs[row][col] != NoDataValue)
+		{
+			int ChannelNode;
+			float FlowLength, DistanceUpstream, Relief;
+			get_info_nearest_channel_to_node_main_stem(upslope_nodes[i], FlowInfo, ElevationRaster, DistFromOutlet, MainStem, ChannelNode, FlowLength, DistanceUpstream, Relief);
+			// populate arrays with relief and distance
+			ChannelRelief_array[row][col] = Relief;
+			UpstreamDistance_array[row][col] = DistanceUpstream;
+			//cout << "Relief: " << Relief << " Upstream dist: " << DistanceUpstream << endl;
+		}
+	}
+	
+	//write to rasters
+	LSDRaster ChannelRelief_temp(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ChannelRelief_array, GeoReferencingStrings);
+	
+	LSDRaster UpstreamDistance_temp(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, UpstreamDistance_array, GeoReferencingStrings);
+	
+	//copy to input rasters
+	ChannelRelief = ChannelRelief_temp;
+	UpstreamDistance = UpstreamDistance_temp;
+}
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //

@@ -71,7 +71,7 @@ int main (int nNumberofArgs,char *argv[])
   string txt_extension = ".txt";
   
   // initialise variables to be assigned from .driver file
-  int threshold_SO, FilterTopo, window_radius, lower_percentile, upper_percentile, minimum_patch_size, search_distance;
+  int threshold_SO, FilterTopo, window_radius, lower_percentile, upper_percentile, minimum_patch_size, search_distance, junction_number;
 	float Minimum_Slope, surface_fitting_window_radius, threshold_condition;
   string temp;
   
@@ -89,7 +89,8 @@ int main (int nNumberofArgs,char *argv[])
 							 >> temp >> lower_percentile
 		           >> temp >> upper_percentile
 							 >> temp >> minimum_patch_size
-							 >> temp >> search_distance;
+							 >> temp >> search_distance
+							 >> temp >> junction_number;
                    
 	file_info_in.close();
 
@@ -148,6 +149,16 @@ int main (int nNumberofArgs,char *argv[])
 	// now get the junction network
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
   cout << "\t Got the channel network" << endl;
+	
+	//print out the junction network
+	string JI_name = "_JI";
+  LSDIndexRaster JIArray = ChanNetwork.JunctionIndexArray_to_LSDIndexRaster();
+  JIArray.write_raster((path_name+DEM_ID+JI_name), flt_extension);
+	
+	LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
+	string SO_name = "_SO";
+	SOArray.write_raster((path_name+DEM_ID+SO_name), flt_extension);
+    
    
   //calculate the channel relief
   cout << "\t Getting relief relative to channel" << endl;
@@ -210,42 +221,62 @@ int main (int nNumberofArgs,char *argv[])
   ConnectedComponents_final.write_raster((input_path+DEM_ID+CC_name), flt_extension); 
 	
 	//remove patches of identified floodplain that are not connected to the channel network
-  cout << "\t Separating into floodplain and terraces" << endl;
-  LSDIndexRaster ChannelPatches, TerracePatches;
-	ChanNetwork.separate_floodplain_and_terrace_patches(ConnectedComponents_final, ChannelPatches, TerracePatches, threshold_SO);
-	
-  //get a binary raster of floodplain pixels
-  int value = 1;
-  int ndv = -9999;
-  LSDIndexRaster FloodplainMask = ChannelPatches.ConvertToBinary(value, ndv);
-  string mask_name = "_FP";
-  FloodplainMask.write_raster((input_path+DEM_ID+mask_name), flt_extension); 
-	
-	cout << "\t Getting channel relief for the floodplain" << endl;
-	LSDRaster FP_Relief_Masked = ChannelRelief.ExtractByMask(FloodplainMask);
-	string FP_relief_masked = "_FP_relief_masked";
-	FP_Relief_Masked.write_raster((input_path+DEM_ID+FP_relief_masked), flt_extension); 
-	
+//  cout << "\t Separating into floodplain and terraces" << endl;
+//  LSDIndexRaster ChannelPatches, TerracePatches;
+//	ChanNetwork.separate_floodplain_and_terrace_patches(ConnectedComponents_final, ChannelPatches, TerracePatches, threshold_SO);
+//	
+//  //get a binary raster of floodplain pixels
+//  int value = 1;
+//  int ndv = -9999;
+//  LSDIndexRaster FloodplainMask = ChannelPatches.ConvertToBinary(value, ndv);
+//  string mask_name = "_FP";
+//  FloodplainMask.write_raster((input_path+DEM_ID+mask_name), flt_extension); 
+//	
+//	cout << "\t Getting channel relief for the floodplain" << endl;
+//	LSDRaster FP_Relief_Masked = ChannelRelief.ExtractByMask(FloodplainMask);
+//	string FP_relief_masked = "_FP_relief_masked";
+//	FP_Relief_Masked.write_raster((input_path+DEM_ID+FP_relief_masked), flt_extension); 
+//	
 
 	
 	// get the channel relief for the patches - this is to stop one terrace mapping to 2 different channels.  DO THIS SEPARATELY FOR FLOODPLAIN AND TERRACES OR IT ALL GOES TO SHIT
 	
+	// get the distance from outlet
+	LSDRaster DistFromOutlet = FlowInfo.distance_from_outlet();
+	
 	
 	// get the raster of channel relief masked by the terrace mask
-	cout << "\t Getting channel relief for the terraces" << endl;
-	LSDRaster TerraceReliefMasked = ChanNetwork.calculate_relief_from_channel_connected_components(filled_topo_test, TerracePatches, FlowInfo, threshold_SO, search_distance);
-	string Terrace_relief_masked = "_terrace_relief_masked";
-	TerraceReliefMasked.write_raster((input_path+DEM_ID+Terrace_relief_masked), flt_extension); 
+//	cout << "\t Getting channel relief for the terraces" << endl;
+//	LSDRaster TerraceReliefMasked = ChanNetwork.calculate_relief_from_channel_connected_components(filled_topo_test, TerracePatches, DistFromOutlet, FlowInfo, threshold_SO, search_distance);
+//	string Terrace_relief_masked = "_terrace_relief_masked";
+//	TerraceReliefMasked.write_raster((input_path+DEM_ID+Terrace_relief_masked), flt_extension); 
+//	
+//	// get the channel relief data to a text file for plotting
+//	
+//	//merge the rasters together
+//	LSDRaster MergedRaster = FP_Relief_Masked.MergeRasters(TerraceReliefMasked);
+//	string merged_ext = "_relief_merged";
+//	MergedRaster.write_raster((input_path+DEM_ID+merged_ext), flt_extension); 
+//	
+//	string out_file_ext = "_channel_relief";
+//	MergedRaster.write_RasterData_to_text_file(input_path+DEM_ID+out_file_ext);
 	
-	// get the channel relief data to a text file for plotting
+	//test the new relief and distance code
+	LSDRaster MainStemRelief, UpstreamDistance;
+	cout << "The junction number is: " << junction_number << endl;
 	
-	//merge the rasters together
-	LSDRaster MergedRaster = FP_Relief_Masked.MergeRasters(TerraceReliefMasked);
-	string merged_ext = "_relief_merged";
-	MergedRaster.write_raster((input_path+DEM_ID+merged_ext), flt_extension); 
+	// get the main stem channel from the junction number
+	LSDIndexChannel MainStem = ChanNetwork.generate_longest_index_channel_from_junction(junction_number, FlowInfo, DistFromOutlet);
+	LSDIndexRaster ChannelRaster = MainStem.print_index_channel_to_index_raster();
+	string csv_fname = "_main_stem";
+	ChannelRaster.FlattenToCSV(path_name+DEM_ID+csv_fname);
+	ChanNetwork.get_information_about_nearest_main_stem_channel_connected_components(ConnectedComponents_final, filled_topo_test, DistFromOutlet, FlowInfo, MainStem, junction_number, MainStemRelief, UpstreamDistance);
 	
-	string out_file_ext = "_channel_relief";
-	MergedRaster.write_RasterData_to_text_file(input_path+DEM_ID+out_file_ext);
+	string relief_ext = "_relief_MS";
+	string dist_ext = "_dist_MS";
+	
+	MainStemRelief.write_raster((input_path+DEM_ID+relief_ext), flt_extension); 
+	UpstreamDistance.write_raster((input_path+DEM_ID+dist_ext), flt_extension); 
 	
 	clock_t end = clock();
 	float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
