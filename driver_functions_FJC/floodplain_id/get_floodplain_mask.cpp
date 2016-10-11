@@ -71,7 +71,7 @@ int main (int nNumberofArgs,char *argv[])
   string txt_extension = ".txt";
   
   // initialise variables to be assigned from .driver file
-  int threshold_SO, FilterTopo, window_radius, lower_percentile, upper_percentile, minimum_patch_size, search_distance, junction_number;
+  int threshold_SO, FilterTopo, window_radius, lower_percentile, upper_percentile, minimum_patch_size, junction_number;
 	float Minimum_Slope, surface_fitting_window_radius, threshold_condition;
   string temp;
   
@@ -89,7 +89,6 @@ int main (int nNumberofArgs,char *argv[])
 							 >> temp >> lower_percentile
 		           >> temp >> upper_percentile
 							 >> temp >> minimum_patch_size
-							 >> temp >> search_distance
 							 >> temp >> junction_number;
                    
 	file_info_in.close();
