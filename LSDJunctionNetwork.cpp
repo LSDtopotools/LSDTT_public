@@ -5360,72 +5360,6 @@ void LSDJunctionNetwork::couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elev
 //
 //----------------------------------------------------------------------------------------
 
-//----------------------------------------------------------------------------------------
-// This function removes patches of floodplain that are not connected to the channel network.
-// It must be passed an LSDIndexRaster with the floodplain patches labelled with a specific ID
-// number (done using Dave's connected components algorithm). Return is a connected components index
-// raster with the hillslope patches removed.
-// FJC 21/10/15
-//---------------------------------------------------------------------------------------- 
-void LSDJunctionNetwork::separate_floodplain_and_terrace_patches(LSDIndexRaster& ConnectedComponents, LSDIndexRaster&FloodplainPatches, LSDIndexRaster& TerracePatches, float threshold_SO)
-{
-  Array2D<int> FloodplainPatches_array(NRows,NCols,NoDataValue);
-	Array2D<int> TerracePatches_array(NRows,NCols,NoDataValue);
-  vector<int> patch_ids_channel;
-  
-  //loop through the DEM and get the ID of all patches connected to the channel network
-  for (int row = 0; row < NRows; row++)
-  {
-    for (int col = 0; col < NCols; col++)
-    {
-      //if (StreamOrderArray[row][col] > 0)
-      //{
-      //  FloodplainPatches_array[row][col] = 2;  
-      //}
-      if (ConnectedComponents.get_data_element(row, col) != NoDataValue)
-      {
-      //check if the pixel is part of the channel network
-        if (StreamOrderArray[row][col] >= threshold_SO)
-        {
-          patch_ids_channel.push_back(ConnectedComponents.get_data_element(row,col));
-        }
-      }
-    }
-  }
-  
-  //for each pixel, find if it is in a patch with an ID in patch_ids_channel vector
-  vector<int>::iterator find_it;
-  for (int row = 0; row < NRows; row++)
-  {
-    for (int col = 0; col < NCols; col++)
-    {
-      if (ConnectedComponents.get_data_element(row, col) != NoDataValue)
-      {
-        int patch_id = ConnectedComponents.get_data_element(row, col);
-        find_it = find(patch_ids_channel.begin(), patch_ids_channel.end(), patch_id);   //search ID vector for patch ID of pixel
-        if (find_it != patch_ids_channel.end())
-        {
-          FloodplainPatches_array[row][col] = patch_id;                
-        }
-				else
-				{
-					TerracePatches_array[row][col] = patch_id;
-				}
-      }      
-    }
-  }
-  
-  //get the LSDIndexRaster from floodplain patches array
-  LSDIndexRaster FloodplainPatches_temp(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, FloodplainPatches_array, GeoReferencingStrings);
-	
-	LSDIndexRaster TerracePatches_temp(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, TerracePatches_array, GeoReferencingStrings);
-	
-	//copy to rasters
-	FloodplainPatches = FloodplainPatches_temp;
-	TerracePatches = TerracePatches_temp;
-   
-}
-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
@@ -5718,60 +5652,6 @@ float LSDJunctionNetwork::find_mean_elevation_of_channel_reach(int StartingNode,
 	return mean_elev;
 	
 }
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-//
-// This function generates a main stem LSDIndexChannel from a specified junction
-// number for use with mask genereated by the FIRTH method.  For each connected
-// components patch it finds the nearest point on the main stem and calculates
-// the elevation difference and the upstream distance.
-//
-// FJC 05/10/16
-//
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDJunctionNetwork::get_information_about_nearest_main_stem_channel_connected_components(LSDIndexRaster& ConnectedComponents, LSDRaster& ElevationRaster, LSDRaster& DistFromOutlet, LSDFlowInfo& FlowInfo, LSDIndexChannel& MainStem, int junction_number, LSDRaster& ChannelRelief, LSDRaster& UpstreamDistance)
-{
-	// Arrays for channel relief and upstream distance
-	Array2D<float> ChannelRelief_array(NRows,NCols,NoDataValue);
-	Array2D<float> UpstreamDistance_array(NRows,NCols,NoDataValue);
-		
-	// get array of patch IDs
-	Array2D<int> PatchIDs = ConnectedComponents.get_RasterData();
-	cout << "Got the patch IDs" << endl;
-	
-	// get the upslope nodes of the junction
-	int downstream_node = get_Node_of_Junction(junction_number);
-	vector<int> upslope_nodes = FlowInfo.get_upslope_nodes(downstream_node);
-	cout << "There are " << upslope_nodes.size() << " upslope nodes" << endl;
-	
-	// loop through all the upslope nodes and find ones that are in the connected components raster
-	for (int i = 0; i < int(upslope_nodes.size()); i++)
-	{
-		int row, col;
-		FlowInfo.retrieve_current_row_and_col(upslope_nodes[i], row, col);
-		if (PatchIDs[row][col] != NoDataValue)
-		{
-			int ChannelNode;
-			float FlowLength, DistanceUpstream, Relief;
-			get_info_nearest_channel_to_node_main_stem(upslope_nodes[i], FlowInfo, ElevationRaster, DistFromOutlet, MainStem, ChannelNode, FlowLength, DistanceUpstream, Relief);
-			// populate arrays with relief and distance
-			ChannelRelief_array[row][col] = Relief;
-			UpstreamDistance_array[row][col] = DistanceUpstream;
-			//cout << "Relief: " << Relief << " Upstream dist: " << DistanceUpstream << endl;
-		}
-	}
-	
-	//write to rasters
-	LSDRaster ChannelRelief_temp(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ChannelRelief_array, GeoReferencingStrings);
-	
-	LSDRaster UpstreamDistance_temp(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, UpstreamDistance_array, GeoReferencingStrings);
-	
-	//copy to input rasters
-	ChannelRelief = ChannelRelief_temp;
-	UpstreamDistance = UpstreamDistance_temp;
-}
-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

@@ -30,6 +30,7 @@
 #include "../../LSDJunctionNetwork.hpp"
 #include "../../LSDIndexChannelTree.hpp"
 #include "../../LSDShapeTools.hpp"
+#include "../../LSDFloodplain.hpp"
 
 
 int main (int nNumberofArgs,char *argv[])
@@ -196,27 +197,27 @@ int main (int nNumberofArgs,char *argv[])
 	string CC_name = "_CC_filt";
   ConnectedComponents_final.write_raster((input_path+DEM_ID+CC_name), flt_extension); 
 	
-	// get the distance from outlet
-	LSDRaster DistFromOutlet = FlowInfo.distance_from_outlet();
-		
-	//test the new relief and distance code
-	LSDRaster MainStemRelief, UpstreamDistance;
-	cout << "The junction number is: " << junction_number << endl;
-	
-	// get the main stem channel from the junction number
-	LSDIndexChannel MainStem = ChanNetwork.generate_longest_index_channel_from_junction(junction_number, FlowInfo, DistFromOutlet);
-	LSDIndexRaster ChannelRaster = MainStem.print_index_channel_to_index_raster();
-	string csv_fname = "_main_stem";
-	ChannelRaster.FlattenToCSV(path_name+DEM_ID+csv_fname);
-	ChanNetwork.get_information_about_nearest_main_stem_channel_connected_components(ConnectedComponents_final, filled_topo_test, DistFromOutlet, FlowInfo, MainStem, junction_number, MainStemRelief, UpstreamDistance);
-	
-	string relief_ext = "_relief_MS";
-	string dist_ext = "_dist_MS";
-	
-	MainStemRelief.write_raster((input_path+DEM_ID+relief_ext), flt_extension); 
-	UpstreamDistance.write_raster((input_path+DEM_ID+dist_ext), flt_extension); 
-	
-	clock_t end = clock();
-	float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
-	cout << "DONE, Time taken (secs): " << elapsed_secs << endl;
+//	// get the distance from outlet
+//	LSDRaster DistFromOutlet = FlowInfo.distance_from_outlet();
+//		
+//	//test the new relief and distance code
+//	LSDRaster MainStemRelief, UpstreamDistance;
+//	cout << "The junction number is: " << junction_number << endl;
+//	
+//	// get the main stem channel from the junction number
+//	LSDIndexChannel MainStem = ChanNetwork.generate_longest_index_channel_from_junction(junction_number, FlowInfo, DistFromOutlet);
+//	LSDIndexRaster ChannelRaster = MainStem.print_index_channel_to_index_raster();
+//	string csv_fname = "_main_stem";
+//	ChannelRaster.FlattenToCSV(path_name+DEM_ID+csv_fname);
+//	ChanNetwork.get_information_about_nearest_main_stem_channel_connected_components(ConnectedComponents_final, filled_topo_test, DistFromOutlet, FlowInfo, MainStem, junction_number, MainStemRelief, UpstreamDistance);
+//	
+//	string relief_ext = "_relief_MS";
+//	string dist_ext = "_dist_MS";
+//	
+//	MainStemRelief.write_raster((input_path+DEM_ID+relief_ext), flt_extension); 
+//	UpstreamDistance.write_raster((input_path+DEM_ID+dist_ext), flt_extension); 
+//	
+//	clock_t end = clock();
+//	float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+//	cout << "DONE, Time taken (secs): " << elapsed_secs << endl;
 }

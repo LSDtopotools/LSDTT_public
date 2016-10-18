@@ -1173,17 +1173,7 @@ void get_info_nearest_channel_to_node_main_stem(int& StartingNode, LSDFlowInfo& 
   vector<int> get_SourcesVector() const { return SourcesVector; }
   
   void couple_hillslope_nodes_to_channel_nodes(LSDRaster& Elevation, LSDFlowInfo& FlowInfo, LSDRaster& D_inf_Flowdir, LSDIndexRaster& ChannelNodeNetwork, int OutletJunction, vector<int>& hillslope_nodes, vector<int>& baselevel_channel_nodes);
-  
-  /// @details This function removes patches of floodplain that are not connected to the channel network.
-  /// It must be passed an LSDIndexRaster with the floodplain patches labelled with a specific ID
-  /// number (done using Dave's connected components algorithm)
-  /// @param FloodplainPatches LSDIndexRaster with patches labelled with ID number
-	/// @param threshold_SO threshold stream order
-  /// @return LSDIndexRaster with CC values of floodplain patches
-  /// @author FJC
-  /// @date 22/10/15
-  void separate_floodplain_and_terrace_patches(LSDIndexRaster& ConnectedComponents, LSDIndexRaster&FloodplainPatches, LSDIndexRaster& TerracePatches, float threshold_SO);
-	
+  	
   /// @details This function calculates the relief of each pixel compared to the nearest downstream
   /// channel pixel equal or greater to the threshold stream order
   /// @param ElevationRaster LSDRaster with elevations
@@ -1230,23 +1220,7 @@ void get_info_nearest_channel_to_node_main_stem(int& StartingNode, LSDFlowInfo& 
   /// @date 29/09/16	
 	float find_mean_elevation_of_channel_reach(int StartingNode, int search_distance, LSDRaster& ElevationRaster, LSDFlowInfo& FlowInfo);
 	
-	/// @details This function generates a main stem LSDIndexChannel from a specified
-	///junction number for use with mask genereated by the FIRTH method.  For each
-	/// connected components patch it finds the nearest point on the main stem and
-	/// calculates the elevation difference and the upstream distance.
-  /// @param ConnectedComponents connected components index raster
-	/// @param ElevationRaster LSDRaster of elevations
-	/// @param DistFromOutlet LSDRaster of flow lengths
-	/// @param FlowInfo LSDFlowInfo object
-	/// @param MainStem LSDIndexChannel of the main stem
-	/// @param junction_number junction number to generate the main stem from
-	/// @param ChannelRelief raster which will return the relief values
-	/// @param UpstreamDistance raster which will return the upstream distance values
-  /// @author FJC
-  /// @date 05/10/16	
-	void get_information_about_nearest_main_stem_channel_connected_components(LSDIndexRaster& ConnectedComponents, LSDRaster& ElevationRaster, LSDRaster& DistFromOutlet, LSDFlowInfo& FlowInfo, LSDIndexChannel& MainStem, int junction_number, LSDRaster& ChannelRelief, LSDRaster& UpstreamDistance);
-	
-	/// @details This function returns the node index of the nearest FIP to a
+		/// @details This function returns the node index of the nearest FIP to a
 	/// specified node.
   /// @param point_node Node to start with
   /// @param search_distance Distance to search upstream and downstream for a FIP
