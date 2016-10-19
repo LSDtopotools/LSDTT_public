@@ -85,6 +85,14 @@ class LSDFloodplain
 	/// @author FJC
 	/// @date 19/10/16
 	LSDRaster print_FlowLengths_to_Raster();
+	
+	/// FUNCTIONS TO PRINT TEXT FILES
+	
+	/// @brief This function prints the upstream distance and channel relief of the floodplain pixels
+	/// to a text file
+	/// @author FJC
+	/// @date 19/10/16
+	void print_ChannelRelief_to_File(string filename);
 
   protected:
 	

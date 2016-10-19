@@ -10,7 +10,7 @@
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// 26/10/15
+// 19/10/16
 // Fiona J. Clubb
 // University of Edinburgh
 //
@@ -188,16 +188,25 @@ int main (int nNumberofArgs,char *argv[])
 	// get the distance from outlet
 	LSDRaster DistFromOutlet = FlowInfo.distance_from_outlet();
 	
+	// get the floodplain object
 	LSDFloodplain Floodplain(ChannelRelief, Slope, relief_threshold_from_qq, slope_threshold_from_qq, minimum_patch_size);
 	Floodplain.get_main_stem_information(junction_number, ChanNetwork, FlowInfo, DistFromOutlet, filled_topo_test);
+	
+	// print rasters from the floodplain object
 	LSDRaster MainStemRelief = Floodplain.print_ChannelRelief_to_Raster();
+	LSDRaster UpstreamDistance = Floodplain.print_UpstreamDistance_to_Raster();
 		
 	string relief_ext = "_relief_MS";
-	//string dist_ext = "_dist_MS";
+	string dist_ext = "_dist_MS";
 	
 	MainStemRelief.write_raster((input_path+DEM_ID+relief_ext), flt_extension); 
-	//UpstreamDistance.write_raster((input_path+DEM_ID+dist_ext), flt_extension); 
+	UpstreamDistance.write_raster((input_path+DEM_ID+dist_ext), flt_extension); 
 	
+	//write text file of distances and relief
+	string filename = DEM_ID+"_floodplain_data.txt";
+	Floodplain.print_ChannelRelief_to_File(filename);
+	
+	// Done, check how long it took
 	clock_t end = clock();
 	float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
 	cout << "DONE, Time taken (secs): " << elapsed_secs << endl;

@@ -277,6 +277,34 @@ LSDRaster LSDFloodplain::print_FlowLengths_to_Raster()
 	return FlowLengths;
 }
 
+//----------------------------------------------------------------------------------------
+// FUNCTIONS TO PRINT TEXT FILES
+//----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
+// Write a text file with the distance along main stem and channel relief for each 
+// floodplain pixel.  The format is:
+// distance_upstream channel_relief
+// FJC 19/10/16
+//---------------------------------------------------------------------------------------- 
+
+void LSDFloodplain::print_ChannelRelief_to_File(string filename)
+{
+	ofstream output_file;
+	output_file.open(filename.c_str());
+	
+	for (int row = 0; row < NRows; row++)
+	{
+		for (int col = 0; col < NCols; col++)
+		{
+			if (ChannelRelief_array[row][col] != NoDataValue)
+			{
+				output_file << UpstreamDistance_array[row][col] << " " << ChannelRelief_array[row][col] << endl;
+			}
+		}
+	}
+	
+	output_file.close();
+}
 
 
 #endif
