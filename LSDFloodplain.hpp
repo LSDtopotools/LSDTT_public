@@ -65,6 +65,26 @@ class LSDFloodplain
 	/// @author FJC
 	/// @date 18/10/16
 	void separate_floodplain_and_terrace_patches(LSDJunctionNetwork& ChanNetwork, float threshold_SO, LSDIndexRaster& FloodplainPatches, LSDIndexRaster& TerracePatches);
+	
+	/// FUNCTIONS TO GENERATE RASTERS
+	
+	/// @brief This function prints the channel relief compared to the main stem to a raster
+	/// @return ChannelRelief LSDRaster of channel relief
+	/// @author FJC
+	/// @date 18/10/16
+	LSDRaster print_ChannelRelief_to_Raster();
+	
+	/// @brief This function prints the upstream distance compared of the nearest main stem to a raster
+	/// @return UpstreamDist LSDRaster of upstream distance
+	/// @author FJC
+	/// @date 19/10/16
+	LSDRaster print_UpstreamDistance_to_Raster();
+	
+	/// @brief This function prints the flow lengths to the nearest main stem to a raster
+	/// @return Flow Lengths LSDRaster of flow length
+	/// @author FJC
+	/// @date 19/10/16
+	LSDRaster print_FlowLengths_to_Raster();
 
   protected:
 	
@@ -95,6 +115,9 @@ class LSDFloodplain
 	
 	/// Junction number - used to calculate information about the patches compared to the main stem channel
 	int JunctionNumber;
+	
+	/// These members are set by the get_mainstem_information function for a specific junction
+	
 	/// vector of nodes upslope of the junction
 	vector<int> UpslopeNodes;
 	/// array of the nearest NI on the main stem to each pixel
@@ -103,6 +126,8 @@ class LSDFloodplain
 	Array2D<float> ChannelRelief_array;
 	/// array of distance upstream along main stem
 	Array2D<float> UpstreamDistance_array;
+	/// array of flow lengths from the main stem
+	Array2D<float> FlowLength_array;
 	
   private:
 	void create(LSDRaster& ChannelRelief, LSDRaster& Slope, float relief_threshold, float slope_threshold, int min_patch_size);

@@ -184,38 +184,19 @@ int main (int nNumberofArgs,char *argv[])
   float slope_threshold_from_qq = Slope.get_threshold_for_floodplain_QQ(qq_slope, threshold_condition, lower_percentile, upper_percentile);
 	
 	cout << "Relief threshold: " << relief_threshold_from_qq << " Slope threshold: " << slope_threshold_from_qq << endl;
-
-  //get the potential floodplain mask
-  cout << "\t Getting the floodplain mask" << endl;
-  LSDIndexRaster FloodplainRaster_temp = filled_topo_test.get_potential_floodplain_patches(ChannelRelief, Slope, relief_threshold_from_qq, slope_threshold_from_qq);
-  
-  cout << "\t Connected components" << endl;
-  LSDIndexRaster ConnectedComponents = FloodplainRaster_temp.ConnectedComponents();
-	
-	// remove patches smaller than a certain number of pixels
-	LSDIndexRaster ConnectedComponents_final = ConnectedComponents.RemoveSmallPatches(minimum_patch_size);
-	string CC_name = "_CC_filt";
-  ConnectedComponents_final.write_raster((input_path+DEM_ID+CC_name), flt_extension); 
 	
 	// get the distance from outlet
 	LSDRaster DistFromOutlet = FlowInfo.distance_from_outlet();
+	
+	LSDFloodplain Floodplain(ChannelRelief, Slope, relief_threshold_from_qq, slope_threshold_from_qq, minimum_patch_size);
+	Floodplain.get_main_stem_information(junction_number, ChanNetwork, FlowInfo, DistFromOutlet, filled_topo_test);
+	LSDRaster MainStemRelief = Floodplain.print_ChannelRelief_to_Raster();
 		
-	//test the new relief and distance code
-	LSDRaster MainStemRelief, UpstreamDistance;
-	cout << "The junction number is: " << junction_number << endl;
-	
-	// get the main stem channel from the junction number
-	LSDIndexChannel MainStem = ChanNetwork.generate_longest_index_channel_from_junction(junction_number, FlowInfo, DistFromOutlet);
-	LSDIndexRaster ChannelRaster = MainStem.print_index_channel_to_index_raster();
-	string csv_fname = "_main_stem";
-	ChannelRaster.FlattenToCSV(path_name+DEM_ID+csv_fname);
-	ChanNetwork.get_information_about_nearest_main_stem_channel_connected_components(ConnectedComponents_final, filled_topo_test, DistFromOutlet, FlowInfo, MainStem, junction_number, MainStemRelief, UpstreamDistance);
-	
 	string relief_ext = "_relief_MS";
-	string dist_ext = "_dist_MS";
+	//string dist_ext = "_dist_MS";
 	
 	MainStemRelief.write_raster((input_path+DEM_ID+relief_ext), flt_extension); 
-	UpstreamDistance.write_raster((input_path+DEM_ID+dist_ext), flt_extension); 
+	//UpstreamDistance.write_raster((input_path+DEM_ID+dist_ext), flt_extension); 
 	
 	clock_t end = clock();
 	float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;

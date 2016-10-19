@@ -132,7 +132,7 @@ void LSDFloodplain::create(LSDRaster& ChannelRelief, LSDRaster& Slope, float rel
 	{		
 		ConnectedComponents_Array = ConnectedComponents.get_RasterData();	
 	}
-
+	
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -148,17 +148,26 @@ void LSDFloodplain::get_main_stem_information(int junction_number, LSDJunctionNe
 	// set protected variables
 	JunctionNumber = junction_number;
 	
+	//set up the emtpy arrays
+	Array2D<int> TempIntArray(NRows,NCols,NoDataValue);
+	Array2D<float> TempFloatArray(NRows,NCols,NoDataValue);
+	MainStemNIs = TempIntArray.copy();
+	ChannelRelief_array = TempFloatArray.copy();
+	UpstreamDistance_array = TempFloatArray.copy();
+	FlowLength_array = TempFloatArray.copy();
+		
 	// get the main stem channel from this junction
 	LSDIndexChannel MainStem = ChanNetwork.generate_longest_index_channel_from_junction(JunctionNumber, FlowInfo, DistFromOutlet);
 	int downstream_node = ChanNetwork.get_Node_of_Junction(JunctionNumber);
 	UpslopeNodes = FlowInfo.get_upslope_nodes(downstream_node);
-	cout << "There are: " << UpslopeNodes.size() << " nodes from this junction." << endl;
+	cout << "There are: " << UpslopeNodes.size() << " nodes upslope of this junction." << endl;
 	
 	// loop through all the upslope nodes and find ones that are in the connected components raster
 	for (int i = 0; i < int(UpslopeNodes.size()); i++)
 	{
-		int row, col;
+		int row, col;		
 		FlowInfo.retrieve_current_row_and_col(UpslopeNodes[i], row, col);
+		//cout << ConnectedComponents_Array[row][col] << endl;
 		if (ConnectedComponents_Array[row][col] != NoDataValue)
 		{
 			int ChannelNode;
@@ -168,6 +177,7 @@ void LSDFloodplain::get_main_stem_information(int junction_number, LSDJunctionNe
 			MainStemNIs[row][col] = ChannelNode;
 			ChannelRelief_array[row][col] = Relief;
 			UpstreamDistance_array[row][col] = DistanceUpstream;
+			FlowLength_array[row][col] = FlowLength;
 			//cout << "Relief: " << Relief << " Upstream dist: " << DistanceUpstream << endl;
 		}
 	}		
@@ -231,7 +241,40 @@ void LSDFloodplain::separate_floodplain_and_terrace_patches(LSDJunctionNetwork& 
 	//copy to rasters
 	FloodplainPatches = FloodplainPatches_temp;
 	TerracePatches = TerracePatches_temp;
-   
+}
+
+//----------------------------------------------------------------------------------------
+// FUNCTIONS TO GENERATE RASTERS
+//---------------------------------------------------------------------------------------- 
+
+//----------------------------------------------------------------------------------------
+// Get the raster of channel relief relative to main stem
+// FJC 18/10/16
+//---------------------------------------------------------------------------------------- 
+LSDRaster LSDFloodplain::print_ChannelRelief_to_Raster()
+{
+	LSDRaster ChannelRelief(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ChannelRelief_array, GeoReferencingStrings);
+	return ChannelRelief;
+}
+
+//----------------------------------------------------------------------------------------
+// Get the raster of upstream distance relative to main stem
+// FJC 18/10/16
+//---------------------------------------------------------------------------------------- 
+LSDRaster LSDFloodplain::print_UpstreamDistance_to_Raster()
+{
+	LSDRaster UpstreamDist(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, UpstreamDistance_array, GeoReferencingStrings);
+	return UpstreamDist;
+}
+
+//----------------------------------------------------------------------------------------
+// Get the raster of flow lengths relative to main stem
+// FJC 18/10/16
+//---------------------------------------------------------------------------------------- 
+LSDRaster LSDFloodplain::print_FlowLengths_to_Raster()
+{
+	LSDRaster FlowLengths(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, FlowLength_array, GeoReferencingStrings);
+	return FlowLengths;
 }
 
 
