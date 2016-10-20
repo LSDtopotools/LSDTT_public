@@ -202,9 +202,25 @@ int main (int nNumberofArgs,char *argv[])
 	MainStemRelief.write_raster((input_path+DEM_ID+relief_ext), flt_extension); 
 	UpstreamDistance.write_raster((input_path+DEM_ID+dist_ext), flt_extension); 
 	
+	//separate floodplain and terrace pixels - only plot the XY plots for terraces!
+	LSDIndexRaster FloodplainPatches, TerracePatches;
+	Floodplain.separate_floodplain_and_terrace_patches(ChanNetwork, FlowInfo, threshold_SO, FloodplainPatches, TerracePatches);
+	
+	string terrace_ext = "_Terraces";
+	TerracePatches.write_raster((input_path+DEM_ID+terrace_ext), flt_extension);
+	
 	//write text file of distances and relief
-	string filename = DEM_ID+"_floodplain_data.txt";
-	Floodplain.print_ChannelRelief_to_File(filename);
+	string filename = input_path+DEM_ID+"_terrace_data.txt";
+	Floodplain.print_Terrace_ChannelRelief_to_File(filename);
+	
+	cout << "Got the text file, now binning the data..." << endl;
+	
+	//write binned file	
+	string binned_file = input_path+DEM_ID+"_terrace_data_binned.txt";
+	float bin_width = 50;
+	float bin_lower_limit = 0;
+	float bin_threshold = 0.01;
+	Floodplain.print_Binned_ChannelRelief_to_File(binned_file, bin_width, bin_lower_limit, bin_threshold);
 	
 	// Done, check how long it took
 	clock_t end = clock();

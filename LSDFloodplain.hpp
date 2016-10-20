@@ -64,7 +64,7 @@ class LSDFloodplain
 	/// @param TerracePatches Empty LSDIndexRaster to store terrace patches
 	/// @author FJC
 	/// @date 18/10/16
-	void separate_floodplain_and_terrace_patches(LSDJunctionNetwork& ChanNetwork, float threshold_SO, LSDIndexRaster& FloodplainPatches, LSDIndexRaster& TerracePatches);
+	void separate_floodplain_and_terrace_patches(LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, float threshold_SO, LSDIndexRaster& FloodplainPatches, LSDIndexRaster& TerracePatches);
 	
 	/// FUNCTIONS TO GENERATE RASTERS
 	
@@ -93,6 +93,26 @@ class LSDFloodplain
 	/// @author FJC
 	/// @date 19/10/16
 	void print_ChannelRelief_to_File(string filename);
+	
+	/// @brief This function prints the upstream distance and channel relief of ONLY THE TERRACE pixels
+	/// to a text file. The function separate_floodplain_and_terrace_patches must be run first.
+	/// @author FJC
+	/// @date 20/10/16
+	void print_Terrace_ChannelRelief_to_File(string filename);
+	
+	/// @brief This function prints the binned upstream distance and channel relief of all the CC 
+	/// pixels to a text file.
+	/// @details The format is: mean_distance st_dev_distance st_err_distance mean_relief st_dev_relief st_err_relief
+	/// @author FJC
+	/// @date 20/10/16
+	void print_Binned_ChannelRelief_to_File(string filename, float& bin_width, float& bin_lower_limit, float& bin_threshold);
+	
+	/// @brief This function prints the binned upstream distance and channel relief of the terrace 
+	/// pixels to a text file.
+	/// @details The format is: mean_distance st_dev_distance st_err_distance mean_relief st_dev_relief st_err_relief
+	/// @author FJC
+	/// @date 20/10/16
+	void print_Binned_Terrace_ChannelRelief_to_File(string filename, float& bin_width, float& bin_lower_limit, float& bin_threshold);
 
   protected:
 	
@@ -128,15 +148,27 @@ class LSDFloodplain
 	
 	/// vector of nodes upslope of the junction
 	vector<int> UpslopeNodes;
-	/// array of the nearest NI on the main stem to each pixel
+	/// vector of CC nodes - index of this can be used to access the other vectors
+	vector<int> CCNodes;
+	/// vector of main stem nodes
+	vector<int> MainStemNodes;
+	/// vector of upstream distances
+	vector<float> UpstreamDistances;
+	/// vector of flow lengths
+	vector<float> FlowLengths;
+	/// vector of channel relief
+	vector<float> ChannelReliefs;
+	
+	/// arrays for the data
 	Array2D<int> MainStemNIs;
-	/// array of relief relative to main stem
 	Array2D<float> ChannelRelief_array;
-	/// array of distance upstream along main stem
 	Array2D<float> UpstreamDistance_array;
-	/// array of flow lengths from the main stem
 	Array2D<float> FlowLength_array;
 	
+	/// vectors for separating floodplain and terrace nodes
+	vector<int> FloodplainNodes;
+	vector<int> TerraceNodes;
+		
   private:
 	void create(LSDRaster& ChannelRelief, LSDRaster& Slope, float relief_threshold, float slope_threshold, int min_patch_size);
 

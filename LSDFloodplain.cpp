@@ -165,6 +165,7 @@ void LSDFloodplain::get_main_stem_information(int junction_number, LSDJunctionNe
 	// loop through all the upslope nodes and find ones that are in the connected components raster
 	for (int i = 0; i < int(UpslopeNodes.size()); i++)
 	{
+		cout << flush << "Node = " << i+1 << " of " << UpslopeNodes.size() << "\r";
 		int row, col;		
 		FlowInfo.retrieve_current_row_and_col(UpslopeNodes[i], row, col);
 		//cout << ConnectedComponents_Array[row][col] << endl;
@@ -178,7 +179,12 @@ void LSDFloodplain::get_main_stem_information(int junction_number, LSDJunctionNe
 			ChannelRelief_array[row][col] = Relief;
 			UpstreamDistance_array[row][col] = DistanceUpstream;
 			FlowLength_array[row][col] = FlowLength;
-			//cout << "Relief: " << Relief << " Upstream dist: " << DistanceUpstream << endl;
+			//cout << "Relief: " << Relief << " Upstream dist: " << DistanceUpstream << endl;			
+			CCNodes.push_back(UpslopeNodes[i]);
+			UpstreamDistances.push_back(DistanceUpstream);
+			FlowLengths.push_back(FlowLength);
+			ChannelReliefs.push_back(Relief);
+			MainStemNodes.push_back(ChannelNode);
 		}
 	}		
 }
@@ -188,7 +194,7 @@ void LSDFloodplain::get_main_stem_information(int junction_number, LSDJunctionNe
 // on whether they are connected to the channel network.
 // FJC 18/10/16
 //---------------------------------------------------------------------------------------- 
-void LSDFloodplain::separate_floodplain_and_terrace_patches(LSDJunctionNetwork& ChanNetwork, float threshold_SO, LSDIndexRaster& FloodplainPatches, LSDIndexRaster& TerracePatches)
+void LSDFloodplain::separate_floodplain_and_terrace_patches(LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, float threshold_SO, LSDIndexRaster& FloodplainPatches, LSDIndexRaster& TerracePatches)
 {
   Array2D<int> FloodplainPatches_array(NRows,NCols,NoDataValue);
 	Array2D<int> TerracePatches_array(NRows,NCols,NoDataValue);
@@ -219,15 +225,18 @@ void LSDFloodplain::separate_floodplain_and_terrace_patches(LSDJunctionNetwork& 
     {
       if (ConnectedComponents_Array[row][col] != NoDataValue)
       {
+				int ThisNode = FlowInfo.retrieve_node_from_row_and_column(row, col);
         int patch_id = ConnectedComponents_Array[row][col];
         find_it = find(patch_ids_channel.begin(), patch_ids_channel.end(), patch_id);   //search ID vector for patch ID of pixel
         if (find_it != patch_ids_channel.end())
         {
-          FloodplainPatches_array[row][col] = patch_id;                
+          FloodplainPatches_array[row][col] = patch_id;   
+					FloodplainNodes.push_back(ThisNode);
         }
 				else
 				{
 					TerracePatches_array[row][col] = patch_id;
+					TerraceNodes.push_back(ThisNode);
 				}
       }      
     }
@@ -282,29 +291,137 @@ LSDRaster LSDFloodplain::print_FlowLengths_to_Raster()
 //----------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------
 // Write a text file with the distance along main stem and channel relief for each 
-// floodplain pixel.  The format is:
+// CC pixel.  The format is:
 // distance_upstream channel_relief
 // FJC 19/10/16
 //---------------------------------------------------------------------------------------- 
-
 void LSDFloodplain::print_ChannelRelief_to_File(string filename)
 {
 	ofstream output_file;
 	output_file.open(filename.c_str());
 	
-	for (int row = 0; row < NRows; row++)
+	for (int i = 0; i < int(CCNodes.size()); i++)
 	{
-		for (int col = 0; col < NCols; col++)
-		{
-			if (ChannelRelief_array[row][col] != NoDataValue)
-			{
-				output_file << UpstreamDistance_array[row][col] << " " << ChannelRelief_array[row][col] << endl;
-			}
-		}
+		output_file << UpstreamDistances[i] << " " << ChannelReliefs[i] << endl;
 	}
 	
 	output_file.close();
 }
 
+//----------------------------------------------------------------------------------------
+// Write a text file with the distance along main stem and channel relief for each 
+// terrace pixel. The pixels must first be separated into floodplain and terrace nodes using
+// the function separate_floodplain_and_terrace_patches
+// The format is:
+// distance_upstream channel_relief
+// FJC 20/10/16
+//---------------------------------------------------------------------------------------- 
+void LSDFloodplain::print_Terrace_ChannelRelief_to_File(string filename)
+{
+	ofstream output_file;
+	output_file.open(filename.c_str());
+	vector<int>::iterator find_it;
+	
+	for (int i = 0; i < int(TerraceNodes.size()); i++)
+	{
+		// find the corresponding distance and channel relief in the vectors
+		find_it = find(CCNodes.begin(), CCNodes.end(), TerraceNodes[i]);
+		if (find_it != CCNodes.end())
+		{
+			int index = find_it - CCNodes.begin();
+			output_file << UpstreamDistances[index] << " " << ChannelReliefs[index] << endl;
+		}		
+	}
+	
+	output_file.close();
+}
+
+//----------------------------------------------------------------------------------------
+// Write a text file with the distance along main stem and channel relief for each 
+// CC pixel, binned by distance along main stem.  The user specifies the 
+// bin width. The format is:
+// distance_upstream channel_relief
+// FJC 20/10/16
+//---------------------------------------------------------------------------------------- 
+void LSDFloodplain::print_Binned_ChannelRelief_to_File(string filename, float& bin_width, float& bin_lower_limit, float& bin_threshold)
+{
+	// declare vectors for binning
+	vector<float> MeanDistances, MeanReliefs, Midpoints_distance, MedianReliefs, StDev_distance, StDev_relief, StErr_distance, StErr_relief;
+	vector<int> n_observations;
+	
+	cout << "\t Binning, there are " << UpstreamDistances.size() << " observations" << endl;
+	
+	// bin the data
+	bin_data(UpstreamDistances, ChannelReliefs, bin_width, MeanDistances, MeanReliefs, Midpoints_distance, MedianReliefs, StDev_distance, StDev_relief, StErr_distance, StErr_relief, n_observations, bin_lower_limit, NoDataValue);
+	
+	cout << "\t Binned the data" << endl;
+	
+	RemoveSmallBins(MeanDistances, MeanReliefs, Midpoints_distance, StDev_distance, StDev_relief, StErr_distance, StErr_relief, n_observations, bin_threshold);
+	
+	cout << "\t Removed small bins" << endl;
+	
+	// write to file
+	ofstream output_file;
+	output_file.open(filename.c_str());
+	
+	for (int i = 0; i < int(MeanDistances.size()); i++)
+	{
+		output_file << MeanDistances[i] << " " << StDev_distance[i] << " " << StErr_distance[i] << " " << MeanReliefs[i] << " " << StDev_relief[i] << " " << StErr_relief[i] << endl;
+	}
+	
+	output_file.close();
+}
+
+//----------------------------------------------------------------------------------------
+// Write a text file with the distance along main stem and channel relief for each 
+// terrace pixel, binned by distance along main stem.  The user specifies the 
+// bin width. The format is:
+// distance_upstream channel_relief
+// FJC 20/10/16
+//---------------------------------------------------------------------------------------- 
+void LSDFloodplain::print_Binned_Terrace_ChannelRelief_to_File(string filename, float& bin_width, float& bin_lower_limit, float& bin_threshold)
+{
+	// get the upstream distances and channel relief of the terrace pixels
+	vector<int>::iterator find_it;	
+	vector<float> TerraceDistances, TerraceRelief;
+	
+	for (int i = 0; i < int(TerraceNodes.size()); i++)
+	{
+		// find the corresponding distance and channel relief in the vectors
+		find_it = find(CCNodes.begin(), CCNodes.end(), TerraceNodes[i]);
+		if (find_it != CCNodes.end())
+		{
+			int index = find_it - CCNodes.begin();
+			TerraceDistances.push_back(UpstreamDistances[index]);
+			TerraceRelief.push_back(ChannelReliefs[index]);
+		}		
+	}
+	
+	// declare vectors for binning
+	vector<float> MeanDistances, MeanReliefs, Midpoints_distance, MedianReliefs, StDev_distance, StDev_relief, StErr_distance, StErr_relief;
+	vector<int> n_observations;
+	
+	cout << "\t Binning, there are " << UpstreamDistances.size() << " observations" << endl;
+	
+	// bin the data
+	bin_data(TerraceDistances, TerraceRelief, bin_width, MeanDistances, MeanReliefs, Midpoints_distance, MedianReliefs, StDev_distance, StDev_relief, StErr_distance, StErr_relief, n_observations, bin_lower_limit, NoDataValue);
+	
+	cout << "\t Binned the data" << endl;
+	
+	RemoveSmallBins(MeanDistances, MeanReliefs, Midpoints_distance, StDev_distance, StDev_relief, StErr_distance, StErr_relief, n_observations, bin_threshold);
+	
+	cout << "\t Removed small bins" << endl;
+	
+	// write to file
+	ofstream output_file;
+	output_file.open(filename.c_str());
+	
+	for (int i = 0; i < int(MeanDistances.size()); i++)
+	{
+		output_file << MeanDistances[i] << " " << StDev_distance[i] << " " << StErr_distance[i] << " " << MeanReliefs[i] << " " << StDev_relief[i] << " " << StErr_relief[i] << endl;
+	}
+	
+	output_file.close();
+}
 
 #endif
