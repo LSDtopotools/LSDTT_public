@@ -67,12 +67,12 @@ int main (int nNumberofArgs,char *argv[])
 	string input_path;
   string dem_ext = "_dem";
   //string sources_ext = "_CH_wiener";
-  string flt_extension = "bil";
+  string DEM_extension = "bil";
   string csv_extension = "csv";
   string txt_extension = ".txt";
   
   // initialise variables to be assigned from .driver file
-  int threshold_SO, FilterTopo, window_radius, lower_percentile, upper_percentile, minimum_patch_size, junction_number;
+  int threshold_SO, FilterTopo, window_radius, lower_percentile, upper_percentile, minimum_patch_size, junction_number, search_distance;
 	float Minimum_Slope, surface_fitting_window_radius, threshold_condition;
   string temp;
   
@@ -90,6 +90,7 @@ int main (int nNumberofArgs,char *argv[])
 							 >> temp >> lower_percentile
 		           >> temp >> upper_percentile
 							 >> temp >> minimum_patch_size
+							 >> temp >> search_distance
 							 >> temp >> junction_number;
                    
 	file_info_in.close();
@@ -107,7 +108,7 @@ int main (int nNumberofArgs,char *argv[])
   {
      // load the DEM
 		 cout << "Loading the DEM..." << endl;
-     LSDRaster topo_test((input_path+DEM_ID), flt_extension);   
+     LSDRaster topo_test((input_path+DEM_ID), DEM_extension);   
      
      // filter using Perona Malik
      int timesteps = 50;
@@ -118,12 +119,12 @@ int main (int nNumberofArgs,char *argv[])
      // fill
      filled_topo_test = topo_test.fill(Minimum_Slope);
      string fill_name = "_filtered";
-     filled_topo_test.write_raster((path_name+DEM_ID+fill_name), flt_extension);   
+     filled_topo_test.write_raster((path_name+DEM_ID+fill_name), DEM_extension);   
   }
   else
   {
     //previously done the filtering and filling, just load the filled DEM
-    LSDRaster load_DEM((input_path+DEM_ID+"_filtered"), flt_extension);
+    LSDRaster load_DEM((input_path+DEM_ID+"_filtered"), DEM_extension);
     filled_topo_test = load_DEM;
   }
   
@@ -147,11 +148,11 @@ int main (int nNumberofArgs,char *argv[])
 	//print out the junction network
 	string JI_name = "_JI";
   LSDIndexRaster JIArray = ChanNetwork.JunctionIndexArray_to_LSDIndexRaster();
-  JIArray.write_raster((path_name+DEM_ID+JI_name), flt_extension);
+  JIArray.write_raster((path_name+DEM_ID+JI_name), DEM_extension);
 	
 	LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
 	string SO_name = "_SO";
-	SOArray.write_raster((path_name+DEM_ID+SO_name), flt_extension);
+	SOArray.write_raster((path_name+DEM_ID+SO_name), DEM_extension);
     
    
   //calculate the channel relief
@@ -159,7 +160,7 @@ int main (int nNumberofArgs,char *argv[])
   cout << "\t Threshold stream order = " << threshold_SO << endl;
   LSDRaster ChannelRelief = ChanNetwork.calculate_relief_from_channel(filled_topo_test, FlowInfo, threshold_SO);
   string relief_name = "_channel_relief";
-  ChannelRelief.write_raster((input_path+DEM_ID+relief_name), flt_extension);
+  ChannelRelief.write_raster((input_path+DEM_ID+relief_name), DEM_extension);
   cout << "\t Got the relief!" << endl;
      
   //get the slope
@@ -172,7 +173,7 @@ int main (int nNumberofArgs,char *argv[])
   Slope = surface_fitting[1];
   cout << "\t Done!" << endl;
   string slope_name = "_slope";
-  Slope.write_raster((input_path+DEM_ID+slope_name), flt_extension);
+  Slope.write_raster((input_path+DEM_ID+slope_name), DEM_extension);
 
   // get the channel relief and slope threshold using quantile-quantile plots
   cout << "Getting channel relief threshold from QQ plots" << endl;
@@ -188,40 +189,17 @@ int main (int nNumberofArgs,char *argv[])
 	// get the distance from outlet
 	LSDRaster DistFromOutlet = FlowInfo.distance_from_outlet();
 	
+	// TESTING FLOODPLAIN OBJECT
+	
 	// get the floodplain object
-	LSDFloodplain Floodplain(ChannelRelief, Slope, relief_threshold_from_qq, slope_threshold_from_qq, minimum_patch_size);
-	Floodplain.get_main_stem_information(junction_number, ChanNetwork, FlowInfo, DistFromOutlet, filled_topo_test);
+	LSDFloodplain Floodplain(ChannelRelief, Slope, ChanNetwork, FlowInfo, relief_threshold_from_qq, slope_threshold_from_qq, minimum_patch_size, threshold_SO);
 	
-	// print rasters from the floodplain object
-	LSDRaster MainStemRelief = Floodplain.print_ChannelRelief_to_Raster();
-	LSDRaster UpstreamDistance = Floodplain.print_UpstreamDistance_to_Raster();
+	// get the relief relative to nearest channel
+	Floodplain.Get_Relief_of_Nearest_Channel(ChanNetwork, FlowInfo, filled_topo_test, DistFromOutlet, threshold_SO, search_distance);
+	LSDRaster relief_final = Floodplain.print_ChannelRelief_to_Raster();
+	string relief_ext = "_relief_final";
+	relief_final.write_raster((input_path+DEM_ID+relief_ext), DEM_extension);
 		
-	string relief_ext = "_relief_MS";
-	string dist_ext = "_dist_MS";
-	
-	MainStemRelief.write_raster((input_path+DEM_ID+relief_ext), flt_extension); 
-	UpstreamDistance.write_raster((input_path+DEM_ID+dist_ext), flt_extension); 
-	
-	//separate floodplain and terrace pixels - only plot the XY plots for terraces!
-	LSDIndexRaster FloodplainPatches, TerracePatches;
-	Floodplain.separate_floodplain_and_terrace_patches(ChanNetwork, FlowInfo, threshold_SO, FloodplainPatches, TerracePatches);
-	
-	string terrace_ext = "_Terraces";
-	TerracePatches.write_raster((input_path+DEM_ID+terrace_ext), flt_extension);
-	
-	//write text file of distances and relief
-	string filename = input_path+DEM_ID+"_terrace_data.txt";
-	Floodplain.print_Terrace_ChannelRelief_to_File(filename);
-	
-	cout << "Got the text file, now binning the data..." << endl;
-	
-	//write binned file	
-	string binned_file = input_path+DEM_ID+"_terrace_data_binned.txt";
-	float bin_width = 50;
-	float bin_lower_limit = 0;
-	float bin_threshold = 0.01;
-	Floodplain.print_Binned_ChannelRelief_to_File(binned_file, bin_width, bin_lower_limit, bin_threshold);
-	
 	// Done, check how long it took
 	clock_t end = clock();
 	float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
