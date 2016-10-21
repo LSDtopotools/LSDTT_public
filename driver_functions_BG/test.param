@@ -1,5 +1,6 @@
-DataTest
-/home/s1675537/PhD/DataStoreBoris/GIS/Test_for_Driver/Change_raster_value/
-383931
-5174284
-5000
+DEM_name
+/home/.../DEM_path
+383931 5174284 5000
+381746 5173890 5000
+386383 5172041 5000
+end
