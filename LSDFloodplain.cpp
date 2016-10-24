@@ -246,7 +246,12 @@ void LSDFloodplain::Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwor
 		//cout << "Length: " << ShortestLength << " Channel node: " << NearestChannel << endl;
 		
 		// Get the average elevation of the reach for this patchID
-		Elevation_vector.push_back(ChanNetwork.find_mean_elevation_of_channel_reach(NearestChannel,search_distance,ElevationRaster,FlowInfo));
+		float mean_elev = ChanNetwork.find_mean_elevation_of_channel_reach(NearestChannel,search_distance,ElevationRaster,FlowInfo);
+		if (mean_elev >= 0)
+		{
+			Elevation_vector.push_back(mean_elev);
+		}
+		else { Elevation_vector.push_back(0.0); }
 		//cout << "Patch ID: " << Unique_Patches[i] << " Elevation of channel: " << MeanElev << endl;
 	}
 
