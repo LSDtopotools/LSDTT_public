@@ -69,8 +69,8 @@ void Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwork, LSDFlowInfo&
 	/// @param DistFromOutlet LSDRaster of distances from the outlet
 	/// @param ElevationRaster LSDRaster of elevations
 	/// @author FJC
-	/// @date 18/10/16
-	void get_main_stem_information(int junction_number, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, LSDRaster& DistFromOutlet, LSDRaster& ElevationRaster);
+	/// @date 24/10/16
+	void get_distance_upstream_along_main_stem(int junction_number, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, LSDRaster& DistFromOutlet, LSDRaster& ElevationRaster);
 	
 	/// FUNCTIONS TO GENERATE RASTERS
 	
@@ -106,25 +106,12 @@ void Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwork, LSDFlowInfo&
 	/// @date 19/10/16
 	void print_ChannelRelief_to_File(string filename);
 	
-	/// @brief This function prints the upstream distance and channel relief of ONLY THE TERRACE pixels
-	/// to a text file. The function separate_floodplain_and_terrace_patches must be run first.
-	/// @author FJC
-	/// @date 20/10/16
-	void print_Terrace_ChannelRelief_to_File(string filename);
-	
 	/// @brief This function prints the binned upstream distance and channel relief of all the CC 
 	/// pixels to a text file.
 	/// @details The format is: mean_distance st_dev_distance st_err_distance mean_relief st_dev_relief st_err_relief
 	/// @author FJC
 	/// @date 20/10/16
 	void print_Binned_ChannelRelief_to_File(string filename, float& bin_width, float& bin_lower_limit, float& bin_threshold);
-	
-	/// @brief This function prints the binned upstream distance and channel relief of the terrace 
-	/// pixels to a text file.
-	/// @details The format is: mean_distance st_dev_distance st_err_distance mean_relief st_dev_relief st_err_relief
-	/// @author FJC
-	/// @date 20/10/16
-	void print_Binned_Terrace_ChannelRelief_to_File(string filename, float& bin_width, float& bin_lower_limit, float& bin_threshold);
 
   protected:
 	
@@ -156,6 +143,10 @@ void Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwork, LSDFlowInfo&
 	Array2D<float> ChannelRelief_array;
 	// The array of elevations of the nearest channel reach to each pixel
 	Array2D<float> NearestChannelElev_array;
+	
+	/// Arrays for comparing to main stem - must be set first
+	Array2D<float> UpstreamDistance_array;
+	Array2D<int> MainStemNIs;
 	
 	/// vectors for separating floodplain and terrace nodes
 	vector<int> FloodplainNodes;

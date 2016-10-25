@@ -199,6 +199,21 @@ int main (int nNumberofArgs,char *argv[])
 	LSDRaster relief_final = Floodplain.print_ChannelRelief_to_Raster();
 	string relief_ext = "_relief_final";
 	relief_final.write_raster((input_path+DEM_ID+relief_ext), DEM_extension);
+	
+	Floodplain.get_distance_upstream_along_main_stem(junction_number, ChanNetwork, FlowInfo, DistFromOutlet, filled_topo_test);
+	LSDRaster UpstreamDistance = Floodplain.print_UpstreamDistance_to_Raster();
+	string dist_ext = "_upstream_dist";
+	UpstreamDistance.write_raster((input_path+DEM_ID+dist_ext), DEM_extension);
+	
+	// write to text file
+	string filename = "_floodplain_data";
+	Floodplain.print_ChannelRelief_to_File(input_path+DEM_ID+filename);
+	
+	string filename_binned = "_floodplain_data_binned";
+	float bin_width = 50;
+	float bin_lower_limit = 0;
+	float bin_threshold = 0;
+	Floodplain.print_Binned_ChannelRelief_to_File(input_path+DEM_ID+filename_binned, bin_width, bin_lower_limit, bin_threshold);
 		
 	// Done, check how long it took
 	clock_t end = clock();
