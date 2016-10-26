@@ -200,16 +200,16 @@ int main (int nNumberofArgs,char *argv[])
 	string relief_ext = "_relief_final";
 	relief_final.write_raster((input_path+DEM_ID+relief_ext), DEM_extension);
 	
-	Floodplain.get_distance_upstream_along_main_stem(junction_number, ChanNetwork, FlowInfo, DistFromOutlet, filled_topo_test);
+	Floodplain.get_distance_upstream_along_main_stem(junction_number, ChanNetwork, FlowInfo, DistFromOutlet);
 	LSDRaster UpstreamDistance = Floodplain.print_UpstreamDistance_to_Raster();
 	string dist_ext = "_upstream_dist";
 	UpstreamDistance.write_raster((input_path+DEM_ID+dist_ext), DEM_extension);
 	
 	// write to text file
-	string filename = "_floodplain_data";
+	string filename = "_floodplain_data.txt";
 	Floodplain.print_ChannelRelief_to_File(input_path+DEM_ID+filename);
 	
-	string filename_binned = "_floodplain_data_binned";
+	string filename_binned = "_floodplain_data_binned.txt";
 	float bin_width = 50;
 	float bin_lower_limit = 0;
 	float bin_threshold = 0;

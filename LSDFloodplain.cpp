@@ -1,4 +1,3 @@
-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // LSDFloodplain.cpp
 //
@@ -11,12 +10,12 @@
 //  of Edinburgh Land Surface Dynamics group topographic toolbox
 //
 // Developed by:
+//  Fiona J. Clubb
 //  Simon M. Mudd
 //  Martin D. Hurst
 //  David T. Milodowski
 //  Stuart W.D. Grieve
 //  Declan A. Valters
-//  Fiona Clubb
 //
 // Copyright (C) 2013 Simon M. Mudd 2013
 //
@@ -81,7 +80,6 @@ using namespace TNT;
 // FJC 18/10/16
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 void LSDFloodplain::create(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, float relief_thresh, float slope_thresh, int min_patch_size, int threshold_SO)
 {	
 	
@@ -195,15 +193,20 @@ void LSDFloodplain::create(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJuncti
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDFloodplain::Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, LSDRaster& ElevationRaster, LSDRaster& DistFromOutlet, int threshold_SO, int search_distance)
 {
-	//set up the vectors
-	vector<int> PatchIDs_vector, ChannelNodes, Elevation_vector;
-	vector<float> FlowLengths;
-	
-	//initialise the empty arrays
+	//set up the arrays
+	Array2D<int> TempIntArray(NRows,NCols,NoDataValue);
 	Array2D<float> TempFloatArray(NRows,NCols,NoDataValue);
 	NearestChannelElev_array = TempFloatArray.copy();
 	ChannelRelief_array = TempFloatArray.copy();
+	UpstreamDist_array = TempFloatArray.copy();
+	NearestChannelNode_array = TempIntArray.copy();
+
 	
+	//set up the vectors
+	vector<int> PatchIDs_vector, ChannelNodes_temp, ChannelNodes_final, Elevation_vector;
+	vector<float> FlowLengths, DistUpstream_temp, DistUpstream_final;
+	
+		
 	cout << "\t Getting elevations of nearest channels for the terraces" << endl;
 	  
   // START WITH THE TERRACES
@@ -217,7 +220,8 @@ void LSDFloodplain::Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwor
 		int patch_id = ConnectedComponents_Array[row][col];
 		PatchIDs_vector.push_back(patch_id);
 		FlowLengths.push_back(FlowLength);
-		ChannelNodes.push_back(ChannelNode);
+		ChannelNodes_temp.push_back(ChannelNode);
+		DistUpstream_temp.push_back(DistanceUpstream);
 	}
 	
 	cout << "\t Got the flow lengths and nodes for each patch, now finding nearest channel..." << endl;
@@ -230,6 +234,7 @@ void LSDFloodplain::Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwor
 	{
 		float ShortestLength = 100000000000;		//arbitrary large number
 		int NearestChannel = 0;	
+		float UpstreamDist = 0;
 		for (int j = 0; j < int (PatchIDs_vector.size()); j++)
 		{
 			// find the nearest channel node
@@ -239,11 +244,12 @@ void LSDFloodplain::Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwor
 				{
 					//update the flow length and node
 					ShortestLength = FlowLengths[j];
-					NearestChannel = ChannelNodes[j];
+					NearestChannel = ChannelNodes_temp[j];
+					UpstreamDist = DistUpstream_temp[j];
 				}
 			}		
 		}
-		//cout << "Length: " << ShortestLength << " Channel node: " << NearestChannel << endl;
+		//cout << "Length: " << ShortestLength << " Channel node: " << NearestChannel << " Distance upstream: " << UpstreamDist << endl;
 		
 		// Get the average elevation of the reach for this patchID
 		float mean_elev = ChanNetwork.find_mean_elevation_of_channel_reach(NearestChannel,search_distance,ElevationRaster,FlowInfo);
@@ -252,25 +258,28 @@ void LSDFloodplain::Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwor
 			Elevation_vector.push_back(mean_elev);
 		}
 		else { Elevation_vector.push_back(0.0); }
-		//cout << "Patch ID: " << Unique_Patches[i] << " Elevation of channel: " << MeanElev << endl;
+		//cout << "Patch ID: " << Unique_Patches[i] << " Elevation of channel: " << mean_elev << endl;
+		ChannelNodes_final.push_back(NearestChannel);
+		DistUpstream_final.push_back(UpstreamDist);
 	}
-
-	// Update the array with the nearest channel node for each pixel
-	cout << "\t Updating array with nearest channels" << endl;
+	
+	//cout << "Elev vector: " << Elevation_vector.size() << " Channel nodes vector: " << ChannelNodes_final.size() << " Dist upstream vector: " << DistUpstream_final.size() << endl;
 	
 	vector<int>::iterator it;
-	for (int i = 0 ; i < int(TerraceNodes.size()); i++)
-	{		
-		int row, col;
+	// Get the relief relative to channel for each terrace node	
+	for (int i = 0; i < int(TerraceNodes.size()); i++)
+	{
+		int row,col;
 		FlowInfo.retrieve_current_row_and_col(TerraceNodes[i], row, col);
-		// find the elevation for this patch ID
 		it = find(Unique_Patches.begin(), Unique_Patches.end(), PatchIDs_vector[i]);
 		int index = it - Unique_Patches.begin();
 		//cout << "Index: " << index << endl;
 		// update the vector with the elevation for this patch ID
-		NearestChannelElev_array[row][col] = Elevation_vector[index];			
+		NearestChannelElev_array[row][col] = Elevation_vector[index];
+		NearestChannelNode_array[row][col] = ChannelNodes_final[index];
+		UpstreamDist_array[row][col] = DistUpstream_final[index];
 	}
-	
+
 	// NOW MOVE ON TO FLOODPLAINS
 	cout << "\t Yay, I've got the nearest channel elevations for terraces. Now moving on to the floodplains..." << endl;
 	
@@ -281,8 +290,10 @@ void LSDFloodplain::Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwor
 		float FlowLength, DistanceUpstream;
 		ChanNetwork.get_info_nearest_channel_to_node(FloodplainNodes[i], threshold_SO, FlowInfo, DistFromOutlet, ChannelNode, FlowLength, DistanceUpstream);
 		FlowInfo.retrieve_current_row_and_col(ChannelNode, ChannelRow, ChannelCol);
-		NearestChannelElev_array[row][col] = ElevationRaster.get_data_element(ChannelRow, ChannelCol);
-	}	
+		NearestChannelElev_array[row][col] = ElevationRaster.get_data_element(ChannelRow,ChannelCol);
+		NearestChannelNode_array[row][col] = ChannelNode;
+		UpstreamDist_array[row][col] = DistanceUpstream;
+	}		
 	
 	cout << "\t Got all the channel elevations! Now calculating the relief..." << endl;
 	
@@ -290,55 +301,47 @@ void LSDFloodplain::Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwor
 	{
 		for (int col = 0; col < NCols; col++)
 		{
-			if (NearestChannelElev_array[row][col] != NoDataValue)
-			{
-				float this_elev = ElevationRaster.get_data_element(row,col);
-				ChannelRelief_array[row][col] = this_elev - NearestChannelElev_array[row][col];
-			}
+			float this_elev = ElevationRaster.get_data_element(row,col);
+			ChannelRelief_array[row][col] = this_elev - NearestChannelElev_array[row][col];
 		}
 	}
-	
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Takes in a junction number and generates the main stem channel from this point
-// The information about each floodplain or terrace pixel is then calculated relative
-// to the main channel.
-// FJC 24/10/16
+// Creates 2 vectors for upstream distance and channel relief only for pixels which are
+// connected to the main channel.
+// FJC 26/10/16
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDFloodplain::get_distance_upstream_along_main_stem(int junction_number, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, LSDRaster& DistFromOutlet, LSDRaster& ElevationRaster)
-{
-	//set up the emtpy arrays
-	Array2D<int> TempIntArray(NRows,NCols,NoDataValue);
-	Array2D<float> TempFloatArray(NRows,NCols,NoDataValue);
-	MainStemNIs = TempIntArray.copy();
-	UpstreamDistance_array = TempFloatArray.copy();
-		
+void LSDFloodplain::get_distance_upstream_along_main_stem(int junction_number, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, LSDRaster& DistFromOutlet)
+{		
 	// get the main stem channel from this junction
 	LSDIndexChannel MainStem = ChanNetwork.generate_longest_index_channel_in_basin(junction_number, FlowInfo, DistFromOutlet);
-	int downstream_node = ChanNetwork.get_Node_of_Junction(junction_number);
-	vector<int> UpslopeNodes = FlowInfo.get_upslope_nodes(downstream_node);
-	cout << "There are: " << UpslopeNodes.size() << " nodes upslope of this junction." << endl;
+	// get the main stem nodes
+	MainStemNodes = MainStem.get_NodeSequence();
 	
-	// loop through all the upslope nodes and find ones that are in the connected components raster
-	for (int i = 0; i < int(UpslopeNodes.size()); i++)
+	vector<int>::iterator find_it;
+	
+	// loop through all the nodes and find ones connected to the main stem
+	for (int row = 0; row < NRows; row++)
 	{
-		cout << flush << "Node = " << i+1 << " of " << UpslopeNodes.size() << "\r";
-		int row, col;		
-		FlowInfo.retrieve_current_row_and_col(UpslopeNodes[i], row, col);
-		//cout << ConnectedComponents_Array[row][col] << endl;
-		if (ChannelRelief_array[row][col] != NoDataValue)
+		for (int col = 0; col < NCols; col++)
 		{
-			int ChannelNode;
-			float FlowLength, DistanceUpstream, Relief;
-			ChanNetwork.get_info_nearest_channel_to_node_main_stem(UpslopeNodes[i], FlowInfo, ElevationRaster, DistFromOutlet, MainStem, ChannelNode, FlowLength, DistanceUpstream, Relief);
-			// populate arrays with relief and distance
-			MainStemNIs[row][col] = ChannelNode;
-			UpstreamDistance_array[row][col] = DistanceUpstream;	
+			if (NearestChannelNode_array[row][col] != NoDataValue)
+			{
+				int NearestChanNI = NearestChannelNode_array[row][col];
+				find_it = find(MainStemNodes.begin(), MainStemNodes.end(), NearestChanNI);
+				if (find_it != MainStemNodes.end())
+				{
+					//found a pixel connected to the main stem! Get the distance upstream for this pixel.
+					UpstreamDist.push_back(UpstreamDist_array[row][col]);
+					ChannelRelief.push_back(ChannelRelief_array[row][col]);
+				}
+			}
 		}
-	}		
+	}
 }
 
 //----------------------------------------------------------------------------------------
@@ -371,7 +374,7 @@ LSDRaster LSDFloodplain::print_ChannelRelief_to_Raster()
 ////----------------------------------------------------------------------------------------
 LSDRaster LSDFloodplain::print_UpstreamDistance_to_Raster()
 {
-	LSDRaster UpstreamDistance(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, UpstreamDistance_array, GeoReferencingStrings);
+	LSDRaster UpstreamDistance(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, UpstreamDist_array, GeoReferencingStrings);
 	return UpstreamDistance;
 }
 
@@ -390,12 +393,9 @@ void LSDFloodplain::print_ChannelRelief_to_File(string filename)
 	ofstream output_file;
 	output_file.open(filename.c_str());
 	
-	for (int row = 0; row < NRows; row++)
+	for (int i = 0; i < int(UpstreamDist.size()); i++)
 	{
-		for (int col = 0; col < NCols; col++)
-		{
-			output_file << UpstreamDistance_array[row][col] << " " << ChannelRelief_array[row][col] << endl;
-		}
+		output_file << UpstreamDist[i] << " " << ChannelRelief[i] << endl;
 	}
 	
 	output_file.close();
@@ -410,18 +410,14 @@ void LSDFloodplain::print_ChannelRelief_to_File(string filename)
 ////---------------------------------------------------------------------------------------- 
 void LSDFloodplain::print_Binned_ChannelRelief_to_File(string filename, float& bin_width, float& bin_lower_limit, float& bin_threshold)
 {
-	// flatten data to vector
-	vector<float> UpstreamDistances = Flatten_Without_Nodata(UpstreamDistance_array, NoDataValue);
-	vector<float> ChannelReliefs = Flatten_Without_Nodata(ChannelRelief_array, NoDataValue);
-	
 	// declare vectors for binning
 	vector<float> MeanDistances, MeanReliefs, Midpoints_distance, MedianReliefs, StDev_distance, StDev_relief, StErr_distance, StErr_relief;
 	vector<int> n_observations;
 	
-	cout << "\t Binning, there are " << UpstreamDistances.size() << " observations" << endl;
+	cout << "\t Binning, there are " << UpstreamDist.size() << " observations" << endl;
 	
 	// bin the data
-	bin_data(UpstreamDistances, ChannelReliefs, bin_width, MeanDistances, MeanReliefs, Midpoints_distance, MedianReliefs, StDev_distance, StDev_relief, StErr_distance, StErr_relief, n_observations, bin_lower_limit, NoDataValue);
+	bin_data(UpstreamDist, ChannelRelief, bin_width, MeanDistances, MeanReliefs, Midpoints_distance, MedianReliefs, StDev_distance, StDev_relief, StErr_distance, StErr_relief, n_observations, bin_lower_limit, NoDataValue);
 	
 	cout << "\t Binned the data" << endl;
 	

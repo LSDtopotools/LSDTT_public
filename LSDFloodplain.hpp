@@ -69,8 +69,8 @@ void Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwork, LSDFlowInfo&
 	/// @param DistFromOutlet LSDRaster of distances from the outlet
 	/// @param ElevationRaster LSDRaster of elevations
 	/// @author FJC
-	/// @date 24/10/16
-	void get_distance_upstream_along_main_stem(int junction_number, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, LSDRaster& DistFromOutlet, LSDRaster& ElevationRaster);
+	/// @date 26/10/16
+	void get_distance_upstream_along_main_stem(int junction_number, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, LSDRaster& DistFromOutlet);
 	
 	/// FUNCTIONS TO GENERATE RASTERS
 	
@@ -135,23 +135,33 @@ void Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwork, LSDFlowInfo&
 	/// Slope threshold
 	float slope_threshold;
 	
-  /// The binary array of floodplain data
+	/// The binary array of floodplain data
 	Array2D<int> BinaryArray;
 	/// The array of connected components
 	Array2D<int> ConnectedComponents_Array;
-	// The array of relief relative to nearest channel
-	Array2D<float> ChannelRelief_array;
-	// The array of elevations of the nearest channel reach to each pixel
+	/// Array of nearest channel elevations
 	Array2D<float> NearestChannelElev_array;
+	/// Array of nearest channel node indices
+	Array2D<int> NearestChannelNode_array;
+	/// Array of relief to the nearest channel
+	Array2D<float> ChannelRelief_array;
+	/// Array of distance upstream of nearest channel
+	Array2D<float> UpstreamDist_array;
 	
-	/// Arrays for comparing to main stem - must be set first
-	Array2D<float> UpstreamDistance_array;
-	Array2D<int> MainStemNIs;
-	
-	/// vectors for separating floodplain and terrace nodes
+	/// vectors to separate floodplain and terrace nodes
+	/// vector of floodplain nodes
 	vector<int> FloodplainNodes;
+	/// vector of terrace nodes
 	vector<int> TerraceNodes;
-		
+	
+	/// Store information for a specified main stem junction
+	/// vector of nodes on the main stem
+	vector<int> MainStemNodes;
+	/// vector of distance upstream for every pixel connected to the main stem
+	vector<float> UpstreamDist;
+	/// vector of channel relief for every pixel connected to the main stem
+	vector<float> ChannelRelief;
+
   private:
 	void create(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, float relief_threshold, float slope_threshold, int min_patch_size, int threshold_SO);
 
