@@ -74,7 +74,7 @@ int main (int nNumberofArgs,char *argv[])
   
   // initialise variables to be assigned from .driver file
   int threshold_SO, FilterTopo, window_radius, lower_percentile, upper_percentile, minimum_patch_size, junction_number, search_distance;
-	float Minimum_Slope, surface_fitting_window_radius, threshold_condition;
+	float Minimum_Slope, surface_fitting_window_radius, threshold_condition, bin_width;
   string temp;
   
   // read in the parameters                                                          
@@ -92,7 +92,8 @@ int main (int nNumberofArgs,char *argv[])
 		           >> temp >> upper_percentile
 							 >> temp >> minimum_patch_size
 							 >> temp >> search_distance
-							 >> temp >> junction_number;
+							 >> temp >> junction_number
+							 >> temp >> bin_width;
                    
 	file_info_in.close();
 
@@ -222,7 +223,6 @@ int main (int nNumberofArgs,char *argv[])
 	Terraces.print_ChannelRelief_to_File(input_path+DEM_ID+filename);
 	
 	string filename_binned = "_terraces_data_binned.txt";
-	float bin_width = 100;
 	float bin_lower_limit = 0;
 	float bin_threshold = 0;
 	Terraces.print_Binned_ChannelRelief_to_File(input_path+DEM_ID+filename_binned, bin_width, bin_lower_limit, bin_threshold);
