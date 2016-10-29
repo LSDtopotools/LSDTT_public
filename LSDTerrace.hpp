@@ -1,7 +1,7 @@
-//beginning of the LSDFloodplain class
+//beginning of the LSDTerrace class
 
-#ifndef LSDFloodplain_H
-#define LSDFloodplain_H
+#ifndef LSDTerrace_H
+#define LSDTerrace_H
 
 #include <vector>
 #include <string>
@@ -16,18 +16,18 @@ using namespace std;
 using namespace TNT;
 
 ///@brief Class to store information about floodplains and terraces...
-class LSDFloodplain
+class LSDTerrace
 {
   public:
 
   /// @brief create function
   ///
-  /// @details This populates the binary array and connected components array for the floodplain
+  /// @details This populates the binary array and connected components array for the terraces
 	/// given rasters of channel relief and slope and thresholds for both. Each pixel
-  /// must be below the slope and channel relief threshold to be classified as floodplain.
+  /// must be below the slope and channel relief threshold to be classified as a terrace pixel.
   /// @author FJC
 	/// 18/10/16
-  LSDFloodplain(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, float relief_threshold, float slope_threshold, int min_patch_size, int threshold_SO)
+  LSDTerrace(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, float relief_threshold, float slope_threshold, int min_patch_size, int threshold_SO)
 					{ create(ChannelRelief, Slope, ChanNetwork, FlowInfo, relief_threshold, slope_threshold, min_patch_size, threshold_SO); }
 	
 	/// @return Number of rows as an integer.
@@ -70,7 +70,7 @@ void Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwork, LSDFlowInfo&
 	/// @param ElevationRaster LSDRaster of elevations
 	/// @author FJC
 	/// @date 26/10/16
-	void get_distance_upstream_along_main_stem(int junction_number, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, LSDRaster& DistFromOutlet);
+	void get_terraces_along_main_stem(int junction_number, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, LSDRaster& DistFromOutlet);
 	
 	/// FUNCTIONS TO GENERATE RASTERS
 	
@@ -80,17 +80,30 @@ void Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwork, LSDFlowInfo&
 	/// @date 20/10/16
 	LSDIndexRaster print_ConnectedComponents_to_Raster();
 	
-	/// @brief This function prints the channel relief compared to the main stem to a raster
+	/// @brief This function prints the channel relief to a raster
 	/// @return ChannelRelief LSDRaster of channel relief
 	/// @author FJC
 	/// @date 18/10/16
 	LSDRaster print_ChannelRelief_to_Raster();
+	
+	/// @brief This function prints the channel relief compared to the main stem to a raster
+	/// @return MainStemRelief raster of main stem relief
+	/// @author FJC
+	/// @date 28/10/16
+	LSDRaster print_ChannelRelief_to_Raster_MainStem();
 	
 	/// @brief This function prints the upstream distance compared of the nearest main stem to a raster
 	/// @return UpstreamDist LSDRaster of upstream distance
 	/// @author FJC
 	/// @date 19/10/16
 	LSDRaster print_UpstreamDistance_to_Raster();
+	
+	/// @brief This function prints the upstream distance compared of the nearest main stem to a raster
+	/// @return UpstreamDist LSDRaster of upstream distance
+	/// @author FJC
+	/// @date 28/10/16
+	LSDRaster print_UpstreamDistance_to_Raster_MainStem();
+	
 	
 	/// @brief This function prints the flow lengths to the nearest main stem to a raster
 	/// @return Flow Lengths LSDRaster of flow length
@@ -135,7 +148,7 @@ void Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwork, LSDFlowInfo&
 	/// Slope threshold
 	float slope_threshold;
 	
-	/// The binary array of floodplain data
+	/// The binary array of terrace data
 	Array2D<int> BinaryArray;
 	/// The array of connected components
 	Array2D<int> ConnectedComponents_Array;
@@ -148,12 +161,9 @@ void Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwork, LSDFlowInfo&
 	/// Array of distance upstream of nearest channel
 	Array2D<float> UpstreamDist_array;
 	
-	/// vectors to separate floodplain and terrace nodes
-	/// vector of floodplain nodes
-	vector<int> FloodplainNodes;
 	/// vector of terrace nodes
 	vector<int> TerraceNodes;
-	Array2D<int> FloodplainNodes_array;
+	/// array of terrace nodes
 	Array2D<int> TerraceNodes_array;
 	
 	/// Store information for a specified main stem junction
@@ -163,6 +173,10 @@ void Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwork, LSDFlowInfo&
 	vector<float> UpstreamDist;
 	/// vector of channel relief for every pixel connected to the main stem
 	vector<float> ChannelRelief;
+	/// array of main stem relief
+	Array2D<float> MainStemRelief_array;
+	/// array of main stem distance
+	Array2D<float> MainStemDist_array;
 
   private:
 	void create(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, float relief_threshold, float slope_threshold, int min_patch_size, int threshold_SO);

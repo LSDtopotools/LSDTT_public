@@ -1,9 +1,9 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// LSDFloodplain.cpp
+// LSDTerrace.cpp
 //
-// Land Surface Dynamics Floodplain Object
+// Land Surface Dynamics Terrace Object
 //
-// This object creates and stores information about floodplain and terraces
+// This object creates and stores information about extracted terraces
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // An object within the University
@@ -49,8 +49,8 @@
 // USA
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-#ifndef LSDFloodplain_CPP
-#define LSDFloodplain_CPP
+#ifndef LSDTerrace_CPP
+#define LSDTerrace_CPP
 
 #include <vector>
 #include <string>
@@ -65,22 +65,22 @@
 #include "LSDIndexChannel.hpp"
 #include "LSDJunctionNetwork.hpp"
 #include "LSDStatsTools.hpp"
-#include "LSDFloodplain.hpp"
+#include "LSDTerrace.hpp"
 using namespace std;
 using namespace TNT;
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // create
-// this populates the binary array and connected components array for the floodplain
+// this populates the binary array and connected components array for the terraces
 // given rasters of channel relief and slope and thresholds for both. Each pixel
-// must be below the slope and channel relief threshold to be classified as floodplain.
-// User must set a minimum floodplain patch size (in pixels, set to 0 if all patches are kept).
+// must be below the slope and channel relief threshold to be classified as a terrace.
+// User must set a minimum patch size (in pixels, set to 0 if all patches are kept).
 //
 // FJC 18/10/16
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDFloodplain::create(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, float relief_thresh, float slope_thresh, int min_patch_size, int threshold_SO)
+void LSDTerrace::create(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, float relief_thresh, float slope_thresh, int min_patch_size, int threshold_SO)
 {	
 	
   /// set the protected variables
@@ -101,11 +101,10 @@ void LSDFloodplain::create(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJuncti
 	BinaryArray = TempBinArray.copy();
 	ConnectedComponents_Array = TempLinkArray.copy();
 	Array2D<int> StreamOrderArray = ChanNetwork.get_StreamOrderArray();
-	FloodplainNodes_array = TempLinkArray.copy();
 	TerraceNodes_array = TempLinkArray.copy();
 	
 	//declare the vectors
-	vector<int> FloodplainNodes_temp, TerraceNodes_temp, patch_ids_channel;
+	vector<int> TerraceNodes_temp, patch_ids_channel;
 		
 	//loop through every row and col and get the slope and relief values
   for (int i =0; i < NRows; i++)
@@ -166,12 +165,7 @@ void LSDFloodplain::create(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJuncti
 				int ThisNode = FlowInfo.retrieve_node_from_row_and_column(row, col);
         int patch_id = ConnectedComponents_Array[row][col];
         find_it = find(patch_ids_channel.begin(), patch_ids_channel.end(), patch_id);   //search ID vector for patch ID of pixel
-        if (find_it != patch_ids_channel.end())
-        {
-					FloodplainNodes_temp.push_back(ThisNode);
-					FloodplainNodes_array[row][col] = ThisNode;
-        }
-				else
+        if (find_it == patch_ids_channel.end())
 				{
 					TerraceNodes_temp.push_back(ThisNode);
 					TerraceNodes_array[row][col] = ThisNode;
@@ -180,8 +174,7 @@ void LSDFloodplain::create(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJuncti
     }
   }	
 	
-	//copy to vectors
-	FloodplainNodes = FloodplainNodes_temp;
+	//copy to vector
 	TerraceNodes = TerraceNodes_temp;
 }
 
@@ -195,7 +188,7 @@ void LSDFloodplain::create(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJuncti
 // Floodplains - just finds elevation of the nearest channel > threshold SO 
 // FJC 21/10/16
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDFloodplain::Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, LSDRaster& ElevationRaster, LSDRaster& DistFromOutlet, int threshold_SO, int search_distance)
+void LSDTerrace::Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, LSDRaster& ElevationRaster, LSDRaster& DistFromOutlet, int threshold_SO, int search_distance)
 {
 	//set up the arrays
 	Array2D<int> TempIntArray(NRows,NCols,NoDataValue);
@@ -282,30 +275,16 @@ void LSDFloodplain::Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwor
 		NearestChannelElev_array[row][col] = Elevation_vector[index];
 		NearestChannelNode_array[row][col] = ChannelNodes_final[index];
 	}
-
-	// NOW MOVE ON TO FLOODPLAINS
-	cout << "\t Yay, I've got the nearest channel elevations for terraces. Now moving on to the floodplains..." << endl;
-	
-	for (int i = 0; i < int(FloodplainNodes.size()); i++)
-	{
-		int row, col, ChannelRow, ChannelCol, ChannelNode;
-		FlowInfo.retrieve_current_row_and_col(FloodplainNodes[i], row, col);
-		float FlowLength, DistanceUpstream;
-		ChanNetwork.get_info_nearest_channel_to_node(FloodplainNodes[i], threshold_SO, FlowInfo, DistFromOutlet, ChannelNode, FlowLength, DistanceUpstream);
-		FlowInfo.retrieve_current_row_and_col(ChannelNode, ChannelRow, ChannelCol);
-		NearestChannelElev_array[row][col] = ElevationRaster.get_data_element(ChannelRow,ChannelCol);
-		NearestChannelNode_array[row][col] = ChannelNode;
-		UpstreamDist_array[row][col] = DistanceUpstream;
-	}		
-	
-	cout << "\t Got all the channel elevations! Now calculating the relief..." << endl;
 	
 	for (int row = 0; row < NRows; row++)
 	{
 		for (int col = 0; col < NCols; col++)
 		{
-			float this_elev = ElevationRaster.get_data_element(row,col);
-			ChannelRelief_array[row][col] = this_elev - NearestChannelElev_array[row][col];
+			if (TerraceNodes_array[row][col] != NoDataValue)
+			{
+				float this_elev = ElevationRaster.get_data_element(row,col);
+				ChannelRelief_array[row][col] = this_elev - NearestChannelElev_array[row][col];
+			}
 		}
 	}
 }
@@ -318,8 +297,12 @@ void LSDFloodplain::Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwor
 // FJC 26/10/16
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDFloodplain::get_distance_upstream_along_main_stem(int junction_number, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, LSDRaster& DistFromOutlet)
+void LSDTerrace::get_terraces_along_main_stem(int junction_number, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, LSDRaster& DistFromOutlet)
 {		
+	Array2D<float> TempFloatArray(NRows,NCols,NoDataValue);
+	MainStemRelief_array = TempFloatArray.copy();
+	MainStemDist_array = TempFloatArray.copy();
+	
 	// get the main stem channel from this junction
 	LSDIndexChannel MainStem = ChanNetwork.generate_longest_index_channel_in_basin(junction_number, FlowInfo, DistFromOutlet);
 	// get the main stem nodes
@@ -342,6 +325,8 @@ void LSDFloodplain::get_distance_upstream_along_main_stem(int junction_number, L
 					//found a pixel connected to the main stem! Get the distance upstream for this pixel.
 					UpstreamDist.push_back(UpstreamDist_array[row][col]);
 					ChannelRelief.push_back(ChannelRelief_array[row][col]);
+					MainStemRelief_array[row][col] = ChannelRelief_array[row][col];
+					MainStemDist_array[row][col] = UpstreamDist_array[row][col];
 				}
 			}
 		}
@@ -356,7 +341,7 @@ void LSDFloodplain::get_distance_upstream_along_main_stem(int junction_number, L
 // Get the connected components array to a raster
 // FJC 20/10/16
 //---------------------------------------------------------------------------------------- 
-LSDIndexRaster LSDFloodplain::print_ConnectedComponents_to_Raster()
+LSDIndexRaster LSDTerrace::print_ConnectedComponents_to_Raster()
 {
 	LSDIndexRaster ConnectedComponents(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ConnectedComponents_Array, GeoReferencingStrings);
 	return ConnectedComponents;
@@ -366,22 +351,42 @@ LSDIndexRaster LSDFloodplain::print_ConnectedComponents_to_Raster()
 //// Get the raster of channel relief relative to the nearest channel reach
 //// FJC 18/10/16
 ////---------------------------------------------------------------------------------------- 
-LSDRaster LSDFloodplain::print_ChannelRelief_to_Raster()
+LSDRaster LSDTerrace::print_ChannelRelief_to_Raster()
 {
 	LSDRaster ChannelRelief(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ChannelRelief_array, GeoReferencingStrings);
 	return ChannelRelief;
 }
 
 ////----------------------------------------------------------------------------------------
+//// Get the raster of channel relief for main stem terraces only
+//// FJC 28/10/16
+////---------------------------------------------------------------------------------------- 
+LSDRaster LSDTerrace::print_ChannelRelief_to_Raster_MainStem()
+{
+	LSDRaster MainStemRelief(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, MainStemRelief_array, GeoReferencingStrings);
+	return MainStemRelief;
+}
+
+////----------------------------------------------------------------------------------------
 //// Get the raster of upstream distance along main stem channel
 //// FJC 24/10/16
 ////----------------------------------------------------------------------------------------
-LSDRaster LSDFloodplain::print_UpstreamDistance_to_Raster()
+LSDRaster LSDTerrace::print_UpstreamDistance_to_Raster()
 {
 	LSDRaster UpstreamDistance(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, UpstreamDist_array, GeoReferencingStrings);
 	return UpstreamDistance;
 }
 
+
+////----------------------------------------------------------------------------------------
+//// Get the raster of upstream distance for only main stem terraces
+//// FJC 28/10/16
+////----------------------------------------------------------------------------------------
+LSDRaster LSDTerrace::print_UpstreamDistance_to_Raster_MainStem()
+{
+	LSDRaster UpstreamDistance(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, MainStemDist_array, GeoReferencingStrings);
+	return UpstreamDistance;
+}
 
 ////----------------------------------------------------------------------------------------
 //// FUNCTIONS TO PRINT TEXT FILES
@@ -392,7 +397,7 @@ LSDRaster LSDFloodplain::print_UpstreamDistance_to_Raster()
 //// distance_upstream channel_relief
 //// FJC 19/10/16
 ////---------------------------------------------------------------------------------------- 
-void LSDFloodplain::print_ChannelRelief_to_File(string filename)
+void LSDTerrace::print_ChannelRelief_to_File(string filename)
 {
 	ofstream output_file;
 	output_file.open(filename.c_str());
@@ -412,7 +417,7 @@ void LSDFloodplain::print_ChannelRelief_to_File(string filename)
 //// distance_upstream channel_relief
 //// FJC 20/10/16
 ////---------------------------------------------------------------------------------------- 
-void LSDFloodplain::print_Binned_ChannelRelief_to_File(string filename, float& bin_width, float& bin_lower_limit, float& bin_threshold)
+void LSDTerrace::print_Binned_ChannelRelief_to_File(string filename, float& bin_width, float& bin_lower_limit, float& bin_threshold)
 {
 	// declare vectors for binning
 	vector<float> MeanDistances, MeanReliefs, Midpoints_distance, MedianReliefs, StDev_distance, StDev_relief, StErr_distance, StErr_relief;

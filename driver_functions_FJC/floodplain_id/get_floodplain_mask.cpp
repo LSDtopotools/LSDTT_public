@@ -200,6 +200,7 @@ int main (int nNumberofArgs,char *argv[])
 	string relief_ext = "_relief_final";
 	relief_final.write_raster((input_path+DEM_ID+relief_ext), DEM_extension);
 	
+	cout << "This junction number is: " << junction_number << endl;
 	Floodplain.get_distance_upstream_along_main_stem(junction_number, ChanNetwork, FlowInfo, DistFromOutlet);
 	LSDRaster UpstreamDistance = Floodplain.print_UpstreamDistance_to_Raster();
 	string dist_ext = "_upstream_dist";
