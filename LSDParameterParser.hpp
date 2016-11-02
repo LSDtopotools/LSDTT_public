@@ -112,6 +112,8 @@ class LSDParameterParser
     string get_read_fname() const      { return read_fname; }
     /// @return CHeads_file
     string get_CHeads_file() const      { return CHeads_file; }
+    /// @return the boundary conditions
+    vector<string> get_boundary_conditions() const     { return boundary_conditions; }
 
     /// @brief This is the main function for parsing the parameter file
     /// @param FullName The full name, including path, of the parameter file

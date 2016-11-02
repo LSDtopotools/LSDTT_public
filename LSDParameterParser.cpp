@@ -553,7 +553,11 @@ void LSDParameterParser::ingest_data(string FullName)
       bool temp_bool = (value == "true" || value== "True" || value== "T" || value== "t") ? true : false;
       raster_switches["raster_is_filled"] = temp_bool;
     }
-
+    else if (lower == "write_fill")
+    {
+      bool temp_bool = (value == "true" || value== "True" || value== "T" || value== "t") ? true : false;
+      raster_switches["write_fill"] = temp_bool;
+    }
 
     //=-=-=-=-=-=--=-=-=-=-
     // what to write
