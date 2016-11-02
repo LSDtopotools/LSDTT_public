@@ -75,19 +75,17 @@ void LSDParameterParser::create()
   cout << "Surely you want to give it a filename?" << endl;
 }
 
-// THis just creates using a path and a filenmate
+// This creates using a path and a filename
 void LSDParameterParser::create(string PathName, string FileName)
 {
 
   // Make sure the path has an extension
   PathName = FixPath(PathName);
   string FullName = PathName+FileName;
-  create(FullName);
-}
-
-
-void LSDParameterParser::create(string FullName)
-{
+  
+  param_file_path = PathName;
+  param_fname = FileName;
+  
   ifstream file_info_in;
   file_info_in.open(FullName.c_str());
   
@@ -101,6 +99,10 @@ void LSDParameterParser::create(string FullName)
   
   // now ingest the parameters
   ingest_data(FullName);
+  
+  // make sure the files are okay
+  check_boundary_conditions();
+  check_file_extensions_and_paths();
 }
 
 
@@ -186,7 +188,8 @@ void LSDParameterParser::ingest_data(string FullName)
   string parameter, value, lower, lower_val;
   string bc;
 
-  cout << "Parameter filename is: " << FullName << endl;
+  cout << "Hello, I am going to parse your LSDTopoTools parameter file for you. " << endl;
+  cout << "The parameter filename is: " << FullName << endl;
 
 
   // now ingest parameters
@@ -354,6 +357,39 @@ void LSDParameterParser::ingest_data(string FullName)
     }
 
     //=-=-=-=-=-=--=-=-=-=-
+    // parameters for selecting basins
+    //-=-=-=-=-=-=-=-=-=-=-=-
+    else if (lower == "threshold_contributing_pixels")
+    {
+      int_parameters["threshold_contributing_pixels"] = atoi(value.c_str());
+    }
+    else if (lower == "minimum_basin_size_pixels")
+    {
+      int_parameters["minimum_basin_size_pixels"] = atoi(value.c_str());
+    }
+    else if (lower == "threshold_stream_order")
+    {
+      int_parameters["threshold_stream_order"] = atoi(value.c_str());
+    }
+    else if (lower == "basin_order")
+    {
+      int_parameters["basin_order"] = atoi(value.c_str());
+    }
+    else if (lower == "test_drainage_boundaries")
+    {
+      bool temp_bool = (value == "true" || value== "True" || value== "T" || value== "t") ? true : false;
+      analyses_switches["test_drainage_boundaries"] = temp_bool;
+    }
+
+    //=-=-=-=-=-=--=-=-=-=-
+    // parameters for snapping and points to raster
+    //-=-=-=-=-=-=-=-=-=-=-=-
+    else if (lower == "search_radius_nodes")
+    {
+      int_parameters["search_radius_nodes"] = atoi(value.c_str());
+    }
+
+    //=-=-=-=-=-=--=-=-=-=-
     // parameters for chi segment fitting
     //-=-=-=-=-=-=-=-=-=-=-=-
     else if (lower == "n_iterations")
@@ -407,7 +443,7 @@ void LSDParameterParser::ingest_data(string FullName)
     }
 
     //=-=-=-=-=-=-=-=-=-=-=-=-
-    // parameters for single thread channel extraction
+    // parameters for channel extraction
     //=-=-=-=-=-=-=-=-=-=-=-=-
     else if (lower == "single_thread_channel_method")
     {
@@ -416,15 +452,17 @@ void LSDParameterParser::ingest_data(string FullName)
       method_map["single_thread_channel_method"] =
       RemoveControlCharactersFromEndOfString(method_map["single_thread_channel_method"]);
     }
-
-    //=-=-=-=-=-=--=-=-=-=-
-    // parameters for area threshold channel network
-    //-=-=-=-=-=-=-=-=-=-=-=-
     else if (lower == "pixel_threshold_for_channel_net")
     {
       float_parameters["pixel_threshold_for_channel_net"] = atof(value.c_str());
     }
-
+    else if (lower == "connected_components_threshold")
+    {
+      int_parameters["connected_components_threshold"] = atoi(value.c_str());
+    }
+    
+    
+    
     //=-=-=-=-=-=--=-=-=-=-
     // parameters for landscape properties
     //-=-=-=-=-=-=-=-=-=-=-=-
@@ -652,6 +690,122 @@ void LSDParameterParser::ingest_data(string FullName)
   }
   infile.close();
 
+}
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This checks boundary conditions  for flow info
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDParameterParser::check_boundary_conditions()
+{
+  if( int(boundary_conditions.size()) != 4)
+  {
+    cout << "Boundary conditions not assigned! Defaulting to no flux."  << endl;
+    vector<string> temp_bc(4);
+    for (int i = 0; i< 4; i++)
+    {
+      temp_bc[i] = "n";
+    }
+    boundary_conditions = temp_bc;
+  }
+
+  for (int i =0; i< 4; i++)
+  {
+    cout << "Boundary["<<i<<"]: "<<boundary_conditions[i]<< endl;
+  }
+}
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This function checks the file extensions for reading and writing DEMs
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDParameterParser::check_file_extensions_and_paths()
+{
+
+  // first check the extensions
+  if (dem_read_extension != "asc"  && dem_read_extension != "flt" && dem_read_extension != "bil" &&
+      dem_write_extension != "asc"  && dem_write_extension != "flt" && dem_write_extension != "bil")
+  {
+    cout << "LSDParameterParser Raster file extension not assigned! Defaulting to bil format." << endl;
+    cout << "You entered: " << dem_read_extension << "!" <<endl;
+    dem_read_extension = "bil";
+    dem_write_extension = "bil";
+  }
+  else
+  {
+    if (dem_read_extension != "asc"  && dem_read_extension != "flt" && dem_read_extension != "bil")
+    {
+      cout << "DEM read extension not assigned, defaulting to write extension." << endl;
+      dem_read_extension = dem_write_extension;
+    }
+    else
+    {
+      //cout << "DEM write extension not assigned, defaulting to read extension." << endl;
+      dem_write_extension = dem_read_extension;
+    }
+  }
+
+  // now check the paths
+  //cout << "Write path length is: " << write_path.length() << endl;
+  if (write_path.length() == 0)
+  {
+    write_path = param_file_path;
+    if (read_path.length() != 0)
+    {
+      write_path = read_path;
+    }
+  }
+
+  //cout << "CHECKING NAMES, Write fname is: " << write_fname << endl;
+  //cout << "The write fname length is " << write_fname.length() << endl;
+  if (write_fname.length() == 0)
+  {
+    if (read_fname.length() != 0)
+    {
+      write_fname = read_fname;
+    }
+    write_fname = get_string_before_dot(param_fname);
+    //cout << "Write fname not assigned, defaulting to name of parameter file." << endl;
+    //cout << "The write fname is: " << write_fname << endl;
+  }
+
+  // now check the path
+  //cout << "Read path length is: " << read_path.length() << endl;
+  if (read_path.length() == 0)
+  {
+    read_path = write_path;
+  }
+  if (read_fname.length() == 0)
+  {
+    read_fname = get_string_before_dot(param_fname);
+    //cout << "Read fname not assigned, defaulting to name of parameter file." << endl;
+    //cout << "The read fname is: " << read_fname << endl;
+  }
+
+  // make sure the read and write paths have the slash at the end
+  write_path = FixPath(write_path);
+  read_path = FixPath(read_path);
+
+  cout << "The full read fname is:\n " << read_path+read_fname << endl;
+  cout << "The full write fname is:\n " << write_path+write_fname << endl;
+  cout << "The read and write extensions are: " << dem_read_extension
+       << " " << dem_write_extension << endl;
+
+}
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This function strips the text after the final dot in a string
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+string LSDParameterParser::get_string_before_dot(string this_string)
+{
+  string cut_string;
+  unsigned found = this_string.find_last_of(".");
+  cut_string = this_string.substr(0,found);
+  return cut_string;
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 

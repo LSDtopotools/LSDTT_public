@@ -73,12 +73,6 @@ class LSDParameterParser
     /// @date 11/02/16
     LSDParameterParser()        { create(); }
 
-    /// @brief Creates a LSDParamParser object with a filename. Must include path
-    /// @param fname String of the binary flowinfo data file to be read.
-    /// @author SMM
-    /// @date 11/02/16
-    LSDParameterParser(string FullName)    { create(FullName); }
-
     /// @brief Creates a LSDParamParser object using a path and filename
     /// @param PathName the name of the path
     /// @param FileName the name of the parameter file
@@ -105,6 +99,26 @@ class LSDParameterParser
     /// @date 02/11/2016
     void ingest_data(string FullName);
 
+    /// @brief This checks to see if boundary condtions have been assigned and 
+    /// if not defaults to no flux boundaries
+    /// @author SMM
+    /// @date 02/11/2016
+    void check_boundary_conditions();
+
+    /// @brief This check to see if the filenames, paths and extensions have
+    /// been assigned. If not it changes these to defaults
+    /// @author SMM
+    /// @date 02/11/2016
+    void check_file_extensions_and_paths();
+
+    /// @brief this returns the string before the last dot in a string. 
+    /// so for example if you gave it paramfile.param it would return paramfile
+    /// @param this_string the string you want truncated
+    /// @return the truncated string
+    /// @author SMM
+    /// @date 29/07/2014
+    string get_string_before_dot(string this_string);
+    
     /// @brief This takes a map of default float parameters and updates them
     ///  with any parameters that have been fed to the parser
     /// @param float_default_map A map containing the defualt parameters
@@ -122,6 +136,12 @@ class LSDParameterParser
     map<string,int> set_int_parameters(map<string,int> int_default_map);
     
   protected:
+
+    /// The path to the parameter file (used if no read or wirte path is supplied)
+    string param_file_path;
+    
+    /// The path to the parameter file (used if no read or wirte path is supplied)
+    string param_fname;
 
     /// The exteniosn of the rasters; either bil, asc or flt
     string dem_read_extension;
@@ -190,7 +210,6 @@ class LSDParameterParser
 
   private:
     void create();
-    void create(string FullName);
     void create(string PathName, string FileName);
 };
 
