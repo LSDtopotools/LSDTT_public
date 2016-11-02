@@ -1077,10 +1077,10 @@ class LSDFlowInfo
   vector<string> BoundaryConditions;
 
   private:
-  void create();
-  void create(string fname);
-  void create(LSDRaster& TopoRaster);
-  void create(vector<string>& temp_BoundaryConditions, LSDRaster& TopoRaster);
+    void create();
+    void create(string fname);
+    void create(LSDRaster& TopoRaster);
+    void create(vector<string>& temp_BoundaryConditions, LSDRaster& TopoRaster);
 };
 
 #endif
