@@ -107,6 +107,20 @@ void LSDParameterParser::create(string PathName, string FileName)
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Forces the raster extensions to be bil 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDParameterParser::force_bil_extension()
+{ 
+  cout << "===============================" << endl;
+  cout << "WARNING!!! This program requires georeferencing so only bil format" << endl;
+  cout << "Topographic data will be allowed!!" << endl;
+  cout << "===============================" << endl;
+  dem_read_extension = "bil"; 
+  dem_write_extension = "bil";
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Gets a line of the parameter file. Has a long buffer so you can add long path 
 // names. 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -532,11 +546,21 @@ void LSDParameterParser::ingest_data(string FullName)
 
 
     //=-=-=-=-=-=--=-=-=-=-
+    // Some method switches
+    //=-=-=-=-=-=--=-=-=-=-
+    else if (lower == "raster_is_filled")
+    {
+      bool temp_bool = (value == "true" || value== "True" || value== "T" || value== "t") ? true : false;
+      raster_switches["raster_is_filled"] = temp_bool;
+    }
+
+
+    //=-=-=-=-=-=--=-=-=-=-
     // what to write
     //-=-=-=-=-=-=-=-=-=-=-=-
     else if (lower == "write fill")
     {
-      bool temp_bool = (value == "true") ? true : false;
+      bool temp_bool = (value == "true" || value== "True" || value== "T" || value== "t") ? true : false;
       analyses_switches["write_fill"] = temp_bool;
       raster_switches["need_base_raster"] = temp_bool;
       raster_switches["need_fill"] = temp_bool;
@@ -821,17 +845,27 @@ map<string,float> LSDParameterParser::set_float_parameters(map<string,float> flo
   // looking for the keys in the parameter maps
   vector<string> these_keys = extract_keys(float_default_map);
   
+  // this is the new map
+  map<string,float> this_map;
+  
+  // loop through the keys
   int n_keys = int(these_keys.size());
   for(int i = 0; i<n_keys; i++)
   {
     cout << "Key is: " << these_keys[i] << endl;
+    
+    // If the key is contained in the parsed parameters, use the parsed parameter
+    if(float_parameters.find(these_keys[i]) != float_default_map.end())
+    {
+      this_map[these_keys[i]] = float_parameters[these_keys[i]];
+    }
+    else  // the key is not in the parsed parameters. Use the default. 
+    {
+      this_map[these_keys[i]] = float_default_map[these_keys[i]];
+    }
   }
   
-  
-  map<string,float> these_float_parameters;
-  
-  return these_float_parameters;
-  
+  return this_map;
 
 }
 
@@ -841,15 +875,58 @@ map<string,int> LSDParameterParser::set_int_parameters(map<string,int> int_defau
   // looking for the keys in the parameter maps
   vector<string> these_keys = extract_keys(int_default_map);
   
+  // this is the new map
+  map<string,int> this_map;
+  
+  // loop through the keys
   int n_keys = int(these_keys.size());
   for(int i = 0; i<n_keys; i++)
   {
     cout << "Key is: " << these_keys[i] << endl;
+    
+    // If the key is contained in the parsed parameters, use the parsed parameter
+    if(int_parameters.find(these_keys[i]) != int_default_map.end())
+    {
+      this_map[these_keys[i]] = int_parameters[these_keys[i]];
+    }
+    else  // the key is not in the parsed parameters. Use the default. 
+    {
+      this_map[these_keys[i]] = int_default_map[these_keys[i]];
+    }
   }
-
-  map<string,int> these_int_parameters;
   
-  return these_int_parameters;
+  return this_map;
+
+}
+
+
+map<string,bool> LSDParameterParser::set_bool_parameters(map<string,bool> bool_default_map)
+{
+  // the idea is to look through the default map, getting the keys, and then
+  // looking for the keys in the parameter maps
+  vector<string> these_keys = extract_keys(bool_default_map);
+  
+  // this is the new map
+  map<string,bool> this_map;
+  
+  // loop through the keys
+  int n_keys = int(these_keys.size());
+  for(int i = 0; i<n_keys; i++)
+  {
+    cout << "Key is: " << these_keys[i] << endl;
+    
+    // If the key is contained in the parsed parameters, use the parsed parameter
+    if(raster_switches.find(these_keys[i]) != bool_default_map.end())
+    {
+      this_map[these_keys[i]] = raster_switches[these_keys[i]];
+    }
+    else  // the key is not in the parsed parameters. Use the default. 
+    {
+      this_map[these_keys[i]] = bool_default_map[these_keys[i]];
+    }
+  }
+  
+  return this_map;
 
 }
 

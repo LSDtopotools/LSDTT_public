@@ -92,7 +92,27 @@ class LSDParameterParser
     /// @author SMM
     /// @date 11/02/16
     void LSDPP_parse_line(ifstream &infile, string &parameter, string &value);
+
+    /// @brief This forces the read and wirte extensions to bil
+    /// @author SMM
+    /// @date 11/02/16
+    void force_bil_extension(); 
     
+    /// @return read_extension
+    string get_dem_read_extension() const        { return dem_read_extension; }
+    /// @return write_extension
+    string get_dem_write_extension() const        { return dem_write_extension; }
+    /// @return write_path
+    string get_write_path() const      { return write_path; }
+    /// @return read_path
+    string get_read_path() const      { return read_path; }
+    /// @return write_fname
+    string get_write_fname() const  { return write_fname; }
+    /// @return read_fname
+    string get_read_fname() const      { return read_fname; }
+    /// @return CHeads_file
+    string get_CHeads_file() const      { return CHeads_file; }
+
     /// @brief This is the main function for parsing the parameter file
     /// @param FullName The full name, including path, of the parameter file
     /// @author SMM
@@ -134,6 +154,15 @@ class LSDParameterParser
     /// @author SMM
     /// @date 02/11/2016
     map<string,int> set_int_parameters(map<string,int> int_default_map);
+    
+    /// @brief This takes a map of default bool parameters and updates them
+    ///  with any parameters that have been fed to the parser
+    /// @param bool_default_map A map containing the defualt parameters
+    /// @return a map containing the parameters for this run
+    /// @author SMM
+    /// @date 02/11/2016
+    map<string,bool> set_bool_parameters(map<string,bool> bool_default_map);
+
     
   protected:
 

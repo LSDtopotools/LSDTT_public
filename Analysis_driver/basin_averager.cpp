@@ -84,18 +84,56 @@ int main (int nNumberofArgs,char *argv[])
   string path_name = argv[1];
   string f_name = argv[2];
 
+  // load parameter parser object
   LSDParameterParser LSDPP(path_name,f_name);
+  
+  // for the basin tools we need georeferencing so make sure we are using bil format
+  LSDPP.force_bil_extension();
 
   // maps for setting default parameters
   map<string,int> int_default_map;
   map<string,float> float_default_map;
+  map<string,bool> raster_switch_default_map;
   
+  // set default float parameters
   int_default_map["basin_order"] = 2;
+  
+  // set default in parameter
   float_default_map["min_slope_for_fill"] = 0.0001;
+  
+  // set default methods
+  raster_switch_default_map["raster_is_filled"] = false;
   
   // Use the parameter parser to get the maps of the parameters required for the 
   // analysis
   map<string,float> these_float_parameters = LSDPP.set_float_parameters(float_default_map);
   map<string,int> these_int_parameters = LSDPP.set_int_parameters(int_default_map);
+  map<string,bool> these_raster_switches = LSDPP.set_bool_parameters(raster_switch_default_map);
+
+  // location of the files
+  string DATA_DIR =  LSDPP.get_read_path();
+  string DEM_ID =  LSDPP.get_read_fname();
+  string raster_ext =  LSDPP.get_dem_read_extension();
+  
+    // check to see if the raster exists
+  LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);  
+        
+  // load the  DEM
+  LSDRaster topography_raster((DATA_DIR+DEM_ID), raster_ext);
+  cout << "Got the dem: " <<  DATA_DIR+DEM_ID << endl;
+
+  LSDRaster FillRaster;
+  // now get the flow info object
+  if ( raster_switch_default_map["raster_is_filled"] )
+  {
+    FillRaster = topography_raster;
+  }
+  else
+  {
+    FillRaster = topography_raster.fill(these_float_parameters["min_slope_for_fill"]);
+  }
+  
+  
+  
 
 }
