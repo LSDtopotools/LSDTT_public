@@ -120,6 +120,8 @@ void LSDParameterParser::force_bil_extension()
 }
 
 
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Gets a line of the parameter file. Has a long buffer so you can add long path 
 // names. 
@@ -191,8 +193,165 @@ void LSDParameterParser::LSDPP_parse_line(ifstream &infile, string &parameter, s
   }
 }
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This reads the parameter file, placing all parameters into a map
+// with string values and string key. As you give the parameter parser
+// default maps, it will scan these sting and convert them into the correct data type
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDParameterParser::LSDPP_parse_file_into_parameter_map(string FullName)
+{
+  ifstream infile;
+  infile.open(FullName.c_str());
+  string parameter, value, lower, lower_val;
+  string bc;
+
+  cout << "Hello, I am going to parse your LSDTopoTools parameter file for you. " << endl;
+  cout << "The parameter filename is: " << FullName << endl;
+
+  // this will hold all the parameter values. 
+  map<string,string> temp_parameters;
+
+  // now ingest parameters
+  while (infile.good())
+  {
+    cout << "parameter is: " << lower << " and value is: " << value << endl;
+
+    // get rid of control characters
+    value = RemoveControlCharactersFromEndOfString(value);
+    
+    temp_parameters[lower] = value;
+  }
+  
+  parameter_map = temp_parameters;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+ 
+
+
+
+
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// These two functions takes a map of defualt parameters and returns the parameters for the
+// current implementation
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDParameterParser::parse_float_parameters(map<string,float> default_map)
+{
+  // the idea is to look through the default map, getting the keys, and then
+  // looking for the keys in the parameter maps
+  vector<string> these_keys = extract_keys(default_map);
+  
+  // loop through the keys
+  int n_keys = int(these_keys.size());
+  for(int i = 0; i<n_keys; i++)
+  {
+    cout << "Key is: " << these_keys[i] << endl;
+    
+    // If the key is contained in the parsed parameters, use the parsed parameter
+    if(parameter_map.find(these_keys[i]) != parameter_map.end())
+    {
+      // convert the value to float
+      float_parameters[these_keys[i]] = atof(parameter_map[these_keys[i]].c_str());
+    }
+    else  // the key is not in the parsed parameters. Use the default. 
+    {
+      float_parameters[these_keys[i]] = default_map[these_keys[i]];
+    }
+  }
+}
+
+void LSDParameterParser::parse_int_parameters(map<string,int> default_map)
+{
+  // the idea is to look through the default map, getting the keys, and then
+  // looking for the keys in the parameter maps
+  vector<string> these_keys = extract_keys(default_map);
+  
+  // loop through the keys
+  int n_keys = int(these_keys.size());
+  for(int i = 0; i<n_keys; i++)
+  {
+    cout << "Key is: " << these_keys[i] << endl;
+    
+    // If the key is contained in the parsed parameters, use the parsed parameter
+    if(parameter_map.find(these_keys[i]) != parameter_map.end())
+    {
+      // convert the value to float
+      int_parameters[these_keys[i]] = atoi(parameter_map[these_keys[i]].c_str());
+    }
+    else  // the key is not in the parsed parameters. Use the default. 
+    {
+      int_parameters[these_keys[i]] = default_map[these_keys[i]];
+    }
+  }
+}
+
+
+void LSDParameterParser::parse_bool_parameters(map<string,bool> default_map)
+{
+  // the idea is to look through the default map, getting the keys, and then
+  // looking for the keys in the parameter maps
+  vector<string> these_keys = extract_keys(default_map);
+  
+  // loop through the keys
+  int n_keys = int(these_keys.size());
+  for(int i = 0; i<n_keys; i++)
+  {
+    cout << "Key is: " << these_keys[i] << endl;
+    
+    // If the key is contained in the parsed parameters, use the parsed parameter
+    if(parameter_map.find(these_keys[i]) != parameter_map.end())
+    {
+      // convert the value to bool
+      string value = parameter_map[these_keys[i]];
+      bool temp_bool = (value == "true" || value== "True" || value == "TRUE" || value== "T" || value== "t") ? true : false;
+      bool_parameters[these_keys[i]] = temp_bool;
+    }
+    else  // the key is not in the parsed parameters. Use the default. 
+    {
+      bool_parameters[these_keys[i]] = default_map[these_keys[i]];
+    }
+  }
+}
+
+void LSDParameterParser::parse_string_parameters(map<string,string> default_map)
+{
+  // the idea is to look through the default map, getting the keys, and then
+  // looking for the keys in the parameter maps
+  vector<string> these_keys = extract_keys(default_map);
+  
+  // loop through the keys
+  int n_keys = int(these_keys.size());
+  for(int i = 0; i<n_keys; i++)
+  {
+    cout << "Key is: " << these_keys[i] << endl;
+    
+    // If the key is contained in the parsed parameters, use the parsed parameter
+    if(parameter_map.find(these_keys[i]) != parameter_map.end())
+    {
+      string_parameters[these_keys[i]] = parameter_map[these_keys[i]];
+    }
+    else  // the key is not in the parsed parameters. Use the default. 
+    {
+      string_parameters[these_keys[i]] = default_map[these_keys[i]];
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // This function gets all the data from a parameter file
+// THIS IS BEING RETIRED (but not complete as of 03/11/2016)
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDParameterParser::ingest_data(string FullName)
 {

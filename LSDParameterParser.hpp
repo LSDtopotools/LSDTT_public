@@ -90,12 +90,49 @@ class LSDParameterParser
     /// @param value A string holding a value. It will need to be further parsed
     ///   depending on the name of the parameter (i.e., to a float, int, string, etc)
     /// @author SMM
-    /// @date 11/02/16
+    /// @date 02/11/16
     void LSDPP_parse_line(ifstream &infile, string &parameter, string &value);
+
+    /// @brief This takes a parameter file and parses all the parameters into
+    ///  a map with string keys and values. Further functions are used to convert these
+    ///  into the appropriate data types
+    /// @author SMM
+    /// @date 03/11/2016
+    void LSDPP_parse_file_into_parameter_map(string FullName);
+    
+    /// @brief This function takes a default map and converts it into the parameters
+    ///  by comparing the keys to the parsed parameter file
+    /// @param default_param a map of the default parameters, keys are string, values are floats
+    /// @author SMM
+    /// @date 03/11/2016
+    void parse_float_parameters(map<string,float> default_map);
+
+    /// @brief This function takes a default map and converts it into the parameters
+    ///  by comparing the keys to the parsed parameter file
+    /// @param default_param a map of the default parameters, keys are string, values are int
+    /// @author SMM
+    /// @date 03/11/2016
+    void parse_int_parameters(map<string,int> default_map);
+    
+    /// @brief This function takes a default map and converts it into the parameters
+    ///  by comparing the keys to the parsed parameter file
+    /// @param default_param a map of the default parameters, keys are string, values are bool
+    /// @author SMM
+    /// @date 03/11/2016
+    void parse_bool_parameters(map<string,bool> default_map);
+    
+    /// @brief This function takes a default map and converts it into the parameters
+    ///  by comparing the keys to the parsed parameter file
+    /// @param default_param a map of the default parameters, keys are string, values are strings
+    /// @author SMM
+    /// @date 03/11/2016
+    void parse_string_parameters(map<string,string> default_map);        
+
+
 
     /// @brief This forces the read and wirte extensions to bil
     /// @author SMM
-    /// @date 11/02/16
+    /// @date 02/11/16
     void force_bil_extension(); 
     
     /// @return read_extension
@@ -199,6 +236,29 @@ class LSDParameterParser
     /// the four boundary conditions on the raster for the flow info object 
     vector<string> boundary_conditions;
 
+    /// This is the map of all the paramters read from file, in string format
+    /// you use the default parameter maps to convert the strings to the
+    /// parameter values you want. 
+    map<string,string> parameter_map;
+    
+    /// This is used for bug checking: all defaults used are then passed to this
+    /// map, which can be printed and used to check the spelling of the default
+    /// parameters
+    map<string,string> defaults_used_map;
+
+    /// This holds float parameters
+    map<string,float> float_parameters;
+    
+    /// This holds integer parameters
+    map<string,int> int_parameters;
+
+    /// This holds string parameters
+    map<string,string> string_parameters;
+    
+    /// This holds bool parameters
+    map<string,bool> bool_parameters;
+    
+    
     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     //
     // Switches for running different analyses
@@ -222,11 +282,7 @@ class LSDParameterParser
     /// This is a map that tell where the indices into the raster vecs are    
     map<string,int> raster_indices;
     
-    /// This holds float parameters
-    map<string,float> float_parameters;
-    
-    /// This holds integer parameters
-    map<string,int> int_parameters;
+
     
     /// This holds integer vectors. Can be used to get sources
     map<string, vector<int> > integer_vector_map;
