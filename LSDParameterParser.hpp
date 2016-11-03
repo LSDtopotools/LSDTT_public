@@ -99,7 +99,13 @@ class LSDParameterParser
     /// @author SMM
     /// @date 03/11/2016
     void LSDPP_parse_file_into_parameter_map(string FullName);
-    
+
+    /// @brief This parses all the required information for File I/O
+    /// @detail You need to get the parameter map first
+    /// @author SMM
+    /// @date 03/11/2016
+    void parse_file_IO();
+
     /// @brief This function takes a default map and converts it into the parameters
     ///  by comparing the keys to the parsed parameter file
     /// @param default_param a map of the default parameters, keys are string, values are floats

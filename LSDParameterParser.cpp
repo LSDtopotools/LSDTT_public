@@ -227,8 +227,60 @@ void LSDParameterParser::LSDPP_parse_file_into_parameter_map(string FullName)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
- 
 
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This uses the parameter map to get file input and output
+void LSDParameterParser::parse_file_IO()
+{
+
+  if(parameter_map.find("dem read extension") != parameter_map.end())
+  {
+    dem_read_extension = parameter_map["dem read extension"];
+    // get rid of any control characters from the end (if param file was made in DOS)
+    dem_read_extension = RemoveControlCharactersFromEndOfString(dem_read_extension);
+  }
+  if(parameter_map.find("dem write extension") != parameter_map.end())
+  {
+    dem_write_extension = parameter_map["dem write extension"];
+    // get rid of any control characters from the end (if param file was made in DOS)
+    dem_write_extension = RemoveControlCharactersFromEndOfString(dem_write_extension);
+  }
+  if(parameter_map.find("write path") != parameter_map.end())
+  {
+    write_path = parameter_map["write path"];
+    // get rid of any control characters from the end (if param file was made in DOS)
+    write_path = RemoveControlCharactersFromEndOfString(write_path);
+  }
+  if(parameter_map.find("write fname") != parameter_map.end())
+  {
+    write_fname = parameter_map["write fname"];
+    // get rid of any control characters from the end (if param file was made in DOS)
+    write_fname = RemoveControlCharactersFromEndOfString(write_fname);
+    //cout << "Got the write name, it is: "  << write_fname << endl;
+  }
+  if(parameter_map.find("read path") != parameter_map.end())
+  {
+    read_path = parameter_map["read path"];
+    // get rid of any control characters from the end (if param file was made in DOS)
+    read_path = RemoveControlCharactersFromEndOfString(read_path);
+    //cout << "Got the write name, it is: "  << write_fname << endl;
+  }
+  if(parameter_map.find("read fname") != parameter_map.end())
+  {
+    read_fname = parameter_map["read fname"];
+    // get rid of any control characters from the end (if param file was made in DOS)
+    read_fname = RemoveControlCharactersFromEndOfString(read_fname);
+    //cout << "Got the write name, it is: "  << write_fname << endl;
+  }
+  if(parameter_map.find("channel heads fname") != parameter_map.end())
+  {
+    CHeads_file = parameter_map["channel heads fname"];
+    // get rid of any control characters from the end (if param file was made in DOS)
+    CHeads_file = RemoveControlCharactersFromEndOfString(CHeads_file);
+    //cout << "Got the channel heads name, it is: " << CHeads_file << endl;
+  }
+} 
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 
 
