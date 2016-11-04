@@ -21,9 +21,9 @@
 int main (int nNumberofArgs,char *argv[])
 {
 	//Test for correct input arguments
-  if (nNumberofArgs!=2)
+  if (nNumberofArgs!=3)
   {
-      cout << "FATAL ERROR: wrong number inputs. The program needs the path name." << endl;
+      cout << "FATAL ERROR: wrong number inputs. The program needs the path name and the DEM name without extension." << endl;
       exit(EXIT_SUCCESS);
   }
 
