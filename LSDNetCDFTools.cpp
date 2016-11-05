@@ -29,9 +29,9 @@ using namespace netCDF::exceptions;
 static const int NC_ERR = 2;
 
 // Originally had it as a class but not much point at this stage
-//class LSDNetCDFTools
-//{
-//public:
+// just make it a namespace instead
+namespace LSDNetCDFTools
+{
 
 /// @brief Reads in a netCDF field and writes it into
 /// a TNT array 2D.
@@ -44,8 +44,6 @@ int read_tnt_array2d(TNT::Array2D<T>*const tnt_array);
 // i.e. we can change the array thtough the pointer, but ensure the pointer
 // remains constant and cannot be changed to point to something else, which would be 
 // a bad idea...
-
-//};
 
 template<typename T>
 int read_tnt_array2d(TNT::Array2D<T>*const tnt_array)
@@ -111,13 +109,17 @@ int read_tnt_array2d(TNT::Array2D<T>*const tnt_array)
      return NC_ERR;
    }
 }
+}
 
 // Test.
+
+//using namespace LSDNetCDFTools;
+
 int main()
 {
   TNT::Array2D<int> myArray2D(6,12, 0);
 
-  read_tnt_array2d(&myArray2D);
+  LSDNetCDFTools::read_tnt_array2d(&myArray2D);
 
   for (int i = 0; i<6; i++)
   {
