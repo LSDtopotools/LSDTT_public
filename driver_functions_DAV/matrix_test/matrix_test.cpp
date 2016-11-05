@@ -4,6 +4,8 @@
 #include <chrono>
 #include "../../TNT/tnt.h"
 
+#include <eigen3/Eigen/Core>
+
 
 class LSDGrid2D
 {
@@ -150,23 +152,42 @@ int main()
 //  long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
 //  std::cout << "Time: " << microseconds << std::endl;
 
-//  std::cout << "C++FAQ Version: " << std::endl;
-//  auto start1 = std::chrono::high_resolution_clock::now();
-//  LSDMatrix2D<double> raster1(imax, jmax);
+  std::cout << "C++FAQ Version: " << std::endl;
+  auto start = std::chrono::high_resolution_clock::now();
+  LSDMatrix2D<double> raster1(imax, jmax);
 
-//  for (int i=0; i<imax; ++i)
-//  {
-//    for (int j=0; j<jmax; ++j)
-//    {
-//      raster1(i, j) = 4;
-//      raster1(i, j) /= 7;
-//       //std::cout << raster[i][j] << ' ';
-//    }
-//    //std::cout << std::endl;
-//  }
-//  auto elapsed1 = std::chrono::high_resolution_clock::now() - start1;
-//  long long microseconds1 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed1).count();
-//  std::cout << "Time: " << microseconds1 << std::endl;
+  for (int i=0; i<imax; ++i)
+  {
+    for (int j=0; j<jmax; ++j)
+    {
+      raster1(i, j) = 4;
+      raster1(i, j) /= 7;
+       //std::cout << raster[i][j] << ' ';
+    }
+    //std::cout << std::endl;
+  }
+  auto elapsed = std::chrono::high_resolution_clock::now() - start;
+  long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+  std::cout << "Time: " << microseconds << std::endl;
+
+  std::cout << "Eigen Version: " << std::endl;
+  auto start1 = std::chrono::high_resolution_clock::now();
+  Eigen::MatrixXd rasterEigen(imax,jmax);
+
+  for (int j=0; j<jmax; ++j)
+  {
+    for (int i=0; i<jmax; ++i)
+    {
+      rasterEigen(i,j) = 4;
+      rasterEigen(i,j) /= 7;
+       //std::cout << rasterTNT[i][j] << ' ';
+    }
+    //std::cout << std::endl;
+  }
+  auto elapsed1 = std::chrono::high_resolution_clock::now() - start1;
+  long long microseconds1 = std::chrono::duration_cast<std::chrono::microseconds>(elapsed1).count();
+  std::cout << "Time: " << microseconds1 << std::endl;
+
 
   std::cout << "TNT Version: " << std::endl;
   auto start2 = std::chrono::high_resolution_clock::now();

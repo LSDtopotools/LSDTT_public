@@ -12,10 +12,6 @@
 /// any type of gridded data. You could use it to store states of topography through
 /// time, for example.)
 
-/// This is part of the netCDF package.
-/// Copyright 2006 University Corporation for Atmospheric Research/Unidata.
-/// See COPYRIGHT file for conditions of use.
-
 /// Full documentation of the netCDF C++ API can be found at:
 /// http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-cxx
 ///
@@ -32,6 +28,7 @@ using namespace netCDF::exceptions;
 // Return this in event of a problem.
 static const int NC_ERR = 2;
 
+// Originally had it as a class but not much point at this stage
 //class LSDNetCDFTools
 //{
 //public:
@@ -42,12 +39,16 @@ static const int NC_ERR = 2;
 /// @details Template allows to specify different TNT array data types
 /// e.g. double, float, int etc.
 template<typename T>
-int read_tnt_array2d(TNT::Array2D<T> *tnt_array);
+int read_tnt_array2d(TNT::Array2D<T>*const tnt_array);  
+// The pointer to the tnt array is constant, but not the actual array itself
+// i.e. we can change the array thtough the pointer, but ensure the pointer
+// remains constant and cannot be changed to point to something else, which would be 
+// a bad idea...
 
 //};
 
 template<typename T>
-int read_tnt_array2d(TNT::Array2D<T> *tnt_array)
+int read_tnt_array2d(TNT::Array2D<T>*const tnt_array)
 {
    int NX = tnt_array->dim1();
    int NY = tnt_array->dim2();
