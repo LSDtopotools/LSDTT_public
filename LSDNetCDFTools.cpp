@@ -39,19 +39,81 @@ namespace LSDNetCDFTools
 /// @details Template allows to specify different TNT array data types
 /// e.g. double, float, int etc.
 template<typename T>
-int read_tnt_array2d(TNT::Array2D<T>*const tnt_array);  
+int read_tnt_array2d(TNT::Array2D<T>*const tnt_array, std::string nc_file);
 // The pointer to the tnt array is constant, but not the actual array itself
 // i.e. we can change the array thtough the pointer, but ensure the pointer
 // remains constant and cannot be changed to point to something else, which would be 
 // a bad idea...
 
 template<typename T>
-int read_tnt_array3d(TNT::Array3D<T>*const tnt_array);
+int read_tnt_array3d(TNT::Array3D<T>*const tnt_array, std::string nc_file);
 
 template<typename T>
-int read_tnt_array3d(TNT::Array3D<T>*const tnt_array)
+int read_tnt_array3d(TNT::Array3D<T>*const tnt_array, std::string nc_file)
 {
+  int n_timesteps = tnt_array->dim1();
+  int rows = tnt_array->dim2();
+  int cols = tnt_array->dim3();
 
+  std::cout << "Timesteps: " << n_timesteps << ", " << "Rows: " << rows <<
+               ", " << "Cols: " << cols << std::endl;
+
+  try
+  {
+  // Open the file.
+  NcFile dataFile(nc_file, NcFile::read);
+
+  // Get the latitude and longitude variables and read data.
+  NcVar latVar, lonVar;
+
+//  latVar = dataFile.getVar("latitude");
+//  if(latVar.isNull()) return NC_ERR;
+//  lonVar = dataFile.getVar("longitude");
+//  if(lonVar.isNull()) return NC_ERR;
+//  lonVar.getVar(lons);
+//  latVar.getVar(lats);
+
+  NcVar presVar;
+  presVar = dataFile.getVar("pressure");
+  if(presVar.isNull()) return NC_ERR;
+
+  // Read in data to array
+  // Works because the elements are contiguous
+  // in memory.
+  presVar.getVar(tnt_array[0][0][0]);
+
+  for (size_t timestep = 0; timestep < n_timesteps; timestep++)
+  {
+  //for (int timestep = 0; timestep < NREC; timestep++)
+    std::cout << "TIMESTEP: " << timestep<< std::endl;
+    for (int row = 0; row < rows; row++)
+    {
+      for (int col = 0; col < cols; col++)
+      {
+        // derefernce our pointer to array with the (*ptr)[][] notation...
+        std::cout << (*tnt_array)[timestep][row][col] << " ";
+        //if((*tnt_array)[rec][lat][lon] != (float) (SAMPLE_PRESSURE + i)) return NC_ERR;
+      }
+      std::cout << std::endl;
+    }
+    std::cout << std::endl;
+
+  } // next record
+
+  // The file is automatically closed by the destructor. This frees
+  // up any internal netCDF resources associated with the file, and
+  // flushes any buffers.
+
+  std::cout << "*** SUCCESS reading example file " << nc_file << std::endl;
+  return 0;
+
+  }
+  catch(NcException& e)
+  {
+     e.what();
+     std::cout<<"FAILURE**************************"<<std::endl;
+     return NC_ERR;
+  }
 }
 
 template<typename T>
@@ -64,7 +126,7 @@ int read_tnt_array1d(TNT::Array1D<T>*const tnt_array)
 }
 
 template<typename T>
-int read_tnt_array2d(TNT::Array2D<T>*const tnt_array)
+int read_tnt_array2d(TNT::Array2D<T>*const tnt_array, std::string nc_file)
 {
    int NX = tnt_array->dim1();
    int NY = tnt_array->dim2();
@@ -83,7 +145,7 @@ int read_tnt_array2d(TNT::Array2D<T>*const tnt_array)
    //tnt_array(NX,NY,0);
 
    // Open the file for read access
-   NcFile dataFile("simple_xy.nc", NcFile::read);
+   NcFile dataFile(nc_file, NcFile::read);
 
    // Retrieve the variable named "data"
    NcVar data = dataFile.getVar("data");
@@ -98,25 +160,23 @@ int read_tnt_array2d(TNT::Array2D<T>*const tnt_array)
    // data.getVar(dataIn)
    // Since C arrays are already pointers to memory.
 
-   // Check the values.  // DV - this does not work
-   // Something strange to do with pointers...
-//   for (int i = 0; i < NX; i++)
-//   {
-//      for (int j = 0; j < NY; j++)
-//      {
-//         // Check that we haven't gone out of bounds...
-//         if (*tnt_array[i][j] != i * NY + j) return NC_ERR;
-////         else
-////         {
-////           std::cout << *tnt_array[i][j] << " ";
-////         }
-
-//      }
-//      //std::cout << std::endl;
-//   }
+   // Check the values
+   for (int i = 0; i < NX; i++)
+   {
+      for (int j = 0; j < NY; j++)
+      {
+         // Check that we haven't gone out of bounds...
+         //if (*tnt_array[i][j] != i * NY + j) return NC_ERR;
+         //else
+         {
+           std::cout << (*tnt_array)[i][j] << " ";
+         }
+      }
+      std::cout << std::endl;
+   }
    
    // The netCDF file is automatically closed by the NcFile destructor
-   std::cout << "*** SUCCESS reading example file simple_xy.nc!" << std::endl;
+   std::cout << "*** SUCCESS reading example file " << nc_file << std::endl;
 
    return 0;
    }
@@ -135,17 +195,13 @@ int read_tnt_array2d(TNT::Array2D<T>*const tnt_array)
 
 int main()
 {
+  // Test reading in a 2D netcdf file
   TNT::Array2D<int> myArray2D(6,12, 0);
 
-  LSDNetCDFTools::read_tnt_array2d(&myArray2D);
+  LSDNetCDFTools::read_tnt_array2d(&myArray2D, "simple_xy.nc");
 
-  for (int i = 0; i<6; i++)
-  {
-    for (int j = 0; j<12; j++)
-    {
-      //myArray2D[i][j] += 7;
-      std::cout << myArray2D[i][j] << " ";
-    }
-    std::cout << std::endl;
-  }
+  // Test reading in a 3D (i.e. one var + timestep)
+  TNT::Array3D<float> myArray3D(2, 6,12, 0.0);
+
+  LSDNetCDFTools::read_tnt_array3d(&myArray3D, "pres_temp_3D.nc");
 }
