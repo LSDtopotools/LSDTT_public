@@ -46,6 +46,24 @@ int read_tnt_array2d(TNT::Array2D<T>*const tnt_array);
 // a bad idea...
 
 template<typename T>
+int read_tnt_array3d(TNT::Array3D<T>*const tnt_array);
+
+template<typename T>
+int read_tnt_array3d(TNT::Array3D<T>*const tnt_array)
+{
+
+}
+
+template<typename T>
+int read_tnt_array1d(TNT::Array1D<T>*const tnt_array);
+
+template<typename T>
+int read_tnt_array1d(TNT::Array1D<T>*const tnt_array)
+{
+  //1d should be easy
+}
+
+template<typename T>
 int read_tnt_array2d(TNT::Array2D<T>*const tnt_array)
 {
    int NX = tnt_array->dim1();
