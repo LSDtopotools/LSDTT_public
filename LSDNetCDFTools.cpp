@@ -34,10 +34,21 @@ namespace LSDNetCDFTools
 {
 
 /// @brief Reads in a netCDF field and writes it into
+/// a TNT array 1D.
+/// @return An error code, (0 for success, NC_ERR for failure)
+/// @details Template allows to specify different TNT array data types
+/// e.g. double, float, int etc.
+/// @param reference to a tnt::array1d, the name of a netcdf file to read
+/// @note 1d not yet implemented...see 2d.
+template<typename T>
+int read_tnt_array1d(TNT::Array1D<T>*const tnt_array);
+
+/// @brief Reads in a netCDF field and writes it into
 /// a TNT array 2D.
 /// @return An error code, (0 for success, NC_ERR for failure)
 /// @details Template allows to specify different TNT array data types
 /// e.g. double, float, int etc.
+/// @param reference to a tnt::array2d, the name of a netcdf file to read
 template<typename T>
 int read_tnt_array2d(TNT::Array2D<T>*const tnt_array, std::string nc_file);
 // The pointer to the tnt array is constant, but not the actual array itself
@@ -45,8 +56,18 @@ int read_tnt_array2d(TNT::Array2D<T>*const tnt_array, std::string nc_file);
 // remains constant and cannot be changed to point to something else, which would be 
 // a bad idea...
 
+/// @brief Reads in a netCDF field and writes it into
+/// a TNT array 3D.
+/// @return An error code, (0 for success, NC_ERR for failure)
+/// @details Template allows to specify different TNT array data types
+/// e.g. double, float, int etc.
+/// @param reference to a tnt::array3d, the name of a netcdf file to read
 template<typename T>
 int read_tnt_array3d(TNT::Array3D<T>*const tnt_array, std::string nc_file);
+
+//=-=-=-=-=-=-=-=-=
+// IMPLEMENTATIONS
+//=-=-=-=-=-=-=-=-=
 
 template<typename T>
 int read_tnt_array3d(TNT::Array3D<T>*const tnt_array, std::string nc_file)
@@ -58,6 +79,8 @@ int read_tnt_array3d(TNT::Array3D<T>*const tnt_array, std::string nc_file)
   std::cout << "Timesteps: " << n_timesteps << ", " << "Rows: " << rows <<
                ", " << "Cols: " << cols << std::endl;
 
+  // Should introduce some error checking here to make sure sure
+  // the dims in the netcdf file match the referenced array passed...
   try
   {
   // Open the file.
@@ -115,9 +138,6 @@ int read_tnt_array3d(TNT::Array3D<T>*const tnt_array, std::string nc_file)
      return NC_ERR;
   }
 }
-
-template<typename T>
-int read_tnt_array1d(TNT::Array1D<T>*const tnt_array);
 
 template<typename T>
 int read_tnt_array1d(TNT::Array1D<T>*const tnt_array)
