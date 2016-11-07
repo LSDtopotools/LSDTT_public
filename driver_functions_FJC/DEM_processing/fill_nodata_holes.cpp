@@ -38,7 +38,9 @@ int main (int nNumberofArgs,char *argv[])
 	cout << "\t Filling no data holes" << endl;
 	// no data filling
 	int window_radius = 50;
-	LSDRaster FilledDEM = DEM.alternating_direction_nodata_fill_with_trimmer(window_radius);
+	//LSDRaster FilledDEM = DEM.nodata_fill_irregular_raster(window_radius);
+
+	LSDRaster FilledDEM = DEM.alternating_direction_nodata_fill_irregular_raster(window_radius);
 	
 	string fill_ext = "_NoHoles";
 	FilledDEM.write_raster((path_name+DEM_ID+fill_ext), DEM_extension);
