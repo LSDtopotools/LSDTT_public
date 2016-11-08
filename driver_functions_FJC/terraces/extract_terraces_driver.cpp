@@ -73,7 +73,7 @@ int main (int nNumberofArgs,char *argv[])
   string txt_extension = ".txt";
   
   // initialise variables to be assigned from .driver file
-  int threshold_SO, FilterTopo, window_radius, lower_percentile, upper_percentile, minimum_patch_size, junction_number, search_distance;
+  int threshold_SO, FilterTopo, window_radius, lower_percentile_relief, upper_percentile_relief, lower_percentile_slope, upper_percentile_slope, minimum_patch_size, junction_number, search_distance;
 	float Minimum_Slope, surface_fitting_window_radius, threshold_condition, bin_width;
   string temp;
   
@@ -88,8 +88,10 @@ int main (int nNumberofArgs,char *argv[])
                >> temp >> surface_fitting_window_radius
                >> temp >> window_radius
 							 >> temp >> threshold_condition
-							 >> temp >> lower_percentile
-		           >> temp >> upper_percentile
+							 >> temp >> lower_percentile_relief
+		           >> temp >> upper_percentile_relief
+							 >> temp >> lower_percentile_slope
+							 >> temp >> upper_percentile_slope
 							 >> temp >> minimum_patch_size
 							 >> temp >> search_distance
 							 >> temp >> junction_number
@@ -180,11 +182,11 @@ int main (int nNumberofArgs,char *argv[])
   // get the channel relief and slope threshold using quantile-quantile plots
   cout << "Getting channel relief threshold from QQ plots" << endl;
   string qq_fname = path_name+DEM_ID+"_qq_relief.txt";
-  float relief_threshold_from_qq = ChannelRelief.get_threshold_for_floodplain_QQ(qq_fname, threshold_condition, lower_percentile, upper_percentile);
+  float relief_threshold_from_qq = ChannelRelief.get_threshold_for_floodplain_QQ(qq_fname, threshold_condition, lower_percentile_relief, upper_percentile_relief);
   
   cout << "Getting slope threshold from QQ plots" << endl;
   string qq_slope = path_name+DEM_ID+"_qq_slope.txt";
-  float slope_threshold_from_qq = Slope.get_threshold_for_floodplain_QQ(qq_slope, threshold_condition, lower_percentile, upper_percentile);
+  float slope_threshold_from_qq = Slope.get_threshold_for_floodplain_QQ(qq_slope, threshold_condition, lower_percentile_slope, upper_percentile_slope);
 	
 	cout << "Relief threshold: " << relief_threshold_from_qq << " Slope threshold: " << slope_threshold_from_qq << endl;
 	
@@ -193,8 +195,14 @@ int main (int nNumberofArgs,char *argv[])
 	
 	// TESTING TERRACE OBJECT
 	
+	float relief_thresh = 100;
+	float slope_thresh = 0.1;
 	// get the terrace object
-	LSDTerrace Terraces(ChannelRelief, Slope, ChanNetwork, FlowInfo, relief_threshold_from_qq, slope_threshold_from_qq, minimum_patch_size, threshold_SO);
+	LSDTerrace Terraces(ChannelRelief, Slope, ChanNetwork, FlowInfo, relief_thresh, slope_thresh, minimum_patch_size, threshold_SO);
+	
+	LSDIndexRaster TerraceLocations = Terraces.print_ConnectedComponents_to_Raster();
+	string CC_ext = "_CC";
+	TerraceLocations.write_raster((input_path+DEM_ID+CC_ext), DEM_extension);
 	
 	// get the relief relative to nearest channel
 	Terraces.Get_Relief_of_Nearest_Channel(ChanNetwork, FlowInfo, filled_topo_test, DistFromOutlet, threshold_SO, search_distance);
@@ -202,30 +210,30 @@ int main (int nNumberofArgs,char *argv[])
 	string relief_ext = "_terrace_relief_final";
 	relief_final.write_raster((input_path+DEM_ID+relief_ext), DEM_extension);
 	
-	cout << "This junction number is: " << junction_number << endl;
-	Terraces.get_terraces_along_main_stem(junction_number, ChanNetwork, FlowInfo, DistFromOutlet);
-	LSDRaster UpstreamDistance = Terraces.print_UpstreamDistance_to_Raster();
-	string dist_ext = "_upstream_dist";
-	UpstreamDistance.write_raster((input_path+DEM_ID+dist_ext), DEM_extension);
-	
-	// print main stem relief and distance
-	
-	LSDRaster MainStemRelief = Terraces.print_ChannelRelief_to_Raster_MainStem();
-	string ms_relief_ext = "_relief_MS";
-	MainStemRelief.write_raster((input_path+DEM_ID+ms_relief_ext), DEM_extension);
-	
-  LSDRaster MainStemDist = Terraces.print_UpstreamDistance_to_Raster_MainStem();
-	string ms_dist_ext = "_dist_MS";
-	MainStemDist.write_raster((input_path+DEM_ID+ms_dist_ext), DEM_extension);
-	
-	// write to text file
-	string filename = "_terraces_data.txt";
-	Terraces.print_ChannelRelief_to_File(input_path+DEM_ID+filename);
-	
-	string filename_binned = "_terraces_data_binned.txt";
-	float bin_lower_limit = 0;
-	float bin_threshold = 0;
-	Terraces.print_Binned_ChannelRelief_to_File(input_path+DEM_ID+filename_binned, bin_width, bin_lower_limit, bin_threshold);
+//	cout << "This junction number is: " << junction_number << endl;
+//	Terraces.get_terraces_along_main_stem(junction_number, ChanNetwork, FlowInfo, DistFromOutlet);
+//	LSDRaster UpstreamDistance = Terraces.print_UpstreamDistance_to_Raster();
+//	string dist_ext = "_upstream_dist";
+//	UpstreamDistance.write_raster((input_path+DEM_ID+dist_ext), DEM_extension);
+//	
+//	// print main stem relief and distance
+//	
+//	LSDRaster MainStemRelief = Terraces.print_ChannelRelief_to_Raster_MainStem();
+//	string ms_relief_ext = "_relief_MS";
+//	MainStemRelief.write_raster((input_path+DEM_ID+ms_relief_ext), DEM_extension);
+//	
+//  LSDRaster MainStemDist = Terraces.print_UpstreamDistance_to_Raster_MainStem();
+//	string ms_dist_ext = "_dist_MS";
+//	MainStemDist.write_raster((input_path+DEM_ID+ms_dist_ext), DEM_extension);
+//	
+//	// write to text file
+//	string filename = "_terraces_data.txt";
+//	Terraces.print_ChannelRelief_to_File(input_path+DEM_ID+filename);
+//	
+//	string filename_binned = "_terraces_data_binned.txt";
+//	float bin_lower_limit = 0;
+//	float bin_threshold = 0;
+//	Terraces.print_Binned_ChannelRelief_to_File(input_path+DEM_ID+filename_binned, bin_width, bin_lower_limit, bin_threshold);
 		
 	// Done, check how long it took
 	clock_t end = clock();
