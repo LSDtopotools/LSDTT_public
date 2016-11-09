@@ -106,6 +106,18 @@ class LSDParameterParser
     /// @date 03/11/2016
     void parse_file_IO();
 
+    /// @brief This parses all of the defalt parameter maps
+    /// @param default_param_f a map of the default parameters, keys are string, values are floats
+    /// @param default_param_i a map of the default parameters, keys are string, values are int
+    /// @param default_param_b a map of the default parameters, keys are string, values are bool
+    /// @param default_param_s a map of the default parameters, keys are string, values are string
+    /// @author SMM
+    /// @date 09/11/2016
+    void parse_all_parameters(map<string,float> default_map_f, 
+                      map<string,int> default_map_i, map<string,bool> default_map_b,
+                      map<string,string> default_map_s);
+
+
     /// @brief This function takes a default map and converts it into the parameters
     ///  by comparing the keys to the parsed parameter file
     /// @param default_param a map of the default parameters, keys are string, values are floats
@@ -134,7 +146,21 @@ class LSDParameterParser
     /// @date 03/11/2016
     void parse_string_parameters(map<string,string> default_map);        
 
+    /// @brief This function takes a parameter from the string map and parses it 
+    ///  into a vector of strings
+    /// @param key the string that is the key into the string map
+    /// @return A vector of strings
+    /// @author SMM
+    /// @date 09/11/2016
+    vector<string> parse_string_vector(string key);
 
+    /// @brief This function takes a parameter from the string map and parses it 
+    ///  into a vector of ints
+    /// @param key the string that is the key into the string map
+    /// @return A vector of ints
+    /// @author SMM
+    /// @date 09/11/2016
+    vector<int> parse_int_vector(string key);
 
     /// @brief This forces the read and wirte extensions to bil
     /// @author SMM
@@ -157,12 +183,14 @@ class LSDParameterParser
     string get_CHeads_file() const      { return CHeads_file; }
     /// @return the boundary conditions
     vector<string> get_boundary_conditions() const     { return boundary_conditions; }
-
-    /// @brief This is the main function for parsing the parameter file
-    /// @param FullName The full name, including path, of the parameter file
-    /// @author SMM
-    /// @date 02/11/2016
-    void ingest_data(string FullName);
+    /// @return the float parameters
+    map<string,float> get_float_parameters() const     { return float_parameters; }
+    /// @return the float parameters
+    map<string,int> get_int_parameters() const     { return int_parameters; }
+    /// @return the float parameters
+    map<string,bool> get_bool_parameters() const     { return bool_parameters; }
+    /// @return the float parameters
+    map<string,string> get_string_parameters() const     { return string_parameters; }
 
     /// @brief This checks to see if boundary condtions have been assigned and 
     /// if not defaults to no flux boundaries
@@ -183,30 +211,12 @@ class LSDParameterParser
     /// @author SMM
     /// @date 29/07/2014
     string get_string_before_dot(string this_string);
-    
-    /// @brief This takes a map of default float parameters and updates them
-    ///  with any parameters that have been fed to the parser
-    /// @param float_default_map A map containing the defualt parameters
-    /// @return a map containing the parameters for this run
+
+    /// @brief This prints your parameters to file so you can check if the
+    ///  parameters have been ingested properly
     /// @author SMM
-    /// @date 02/11/2016
-    map<string,float> set_float_parameters(map<string,float> float_default_map);
-    
-    /// @brief This takes a map of default int parameters and updates them
-    ///  with any parameters that have been fed to the parser
-    /// @param int_default_map A map containing the defualt parameters
-    /// @return a map containing the parameters for this run
-    /// @author SMM
-    /// @date 02/11/2016
-    map<string,int> set_int_parameters(map<string,int> int_default_map);
-    
-    /// @brief This takes a map of default bool parameters and updates them
-    ///  with any parameters that have been fed to the parser
-    /// @param bool_default_map A map containing the defualt parameters
-    /// @return a map containing the parameters for this run
-    /// @author SMM
-    /// @date 02/11/2016
-    map<string,bool> set_bool_parameters(map<string,bool> bool_default_map);
+    /// @date 0/11/2016
+    void print_parameters();
 
     
   protected:
@@ -251,6 +261,10 @@ class LSDParameterParser
     /// map, which can be printed and used to check the spelling of the default
     /// parameters
     map<string,string> defaults_used_map;
+    
+    /// Also for bug checking: contains the parameters where parameters have been
+    /// read from the file
+    map<string,string> parameters_read_map;
 
     /// This holds float parameters
     map<string,float> float_parameters;
@@ -263,43 +277,6 @@ class LSDParameterParser
     
     /// This holds bool parameters
     map<string,bool> bool_parameters;
-    
-    
-    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    //
-    // Switches for running different analyses
-    //
-    //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    
-    /// This map holds all the possible analyses
-    map<string,bool> analyses_switches; 
-
-    /// This vector holds various rasters computed during the run
-    map<string,string> map_of_LSDRasters;
-    
-    /// as above, but these are index rasters
-    map<string,LSDIndexRaster> map_of_LSDIndexRasters;
-  
-    /// This is a map  container that determines if various rasters are needed for the
-    /// analysis. This ensures things like the fill raster are only calculated
-    /// once
-    map<string,bool> raster_switches;
-
-    /// This is a map that tell where the indices into the raster vecs are    
-    map<string,int> raster_indices;
-    
-
-    
-    /// This holds integer vectors. Can be used to get sources
-    map<string, vector<int> > integer_vector_map;
-    
-    /// This holds names of supporting files, for example files that contain
-    /// node of junction indices to be loaded. 
-    map<string,string> support_file_names;
-
-    /// This holds names of methods. For example, if the key is drainage_area_method, the string is
-    /// the method which is used to calculate drainage area
-    map<string,string> method_map;
 
   private:
     void create();

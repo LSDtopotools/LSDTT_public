@@ -93,7 +93,8 @@ int main (int nNumberofArgs,char *argv[])
   // maps for setting default parameters
   map<string,int> int_default_map;
   map<string,float> float_default_map;
-  map<string,bool> raster_switch_default_map;
+  map<string,bool> bool_default_map;
+  map<string,string> string_default_map;
   
   // set default float parameters
   int_default_map["basin_order"] = 2;
@@ -103,18 +104,42 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["min_slope_for_fill"] = 0.0001;
   
   // set default methods
-  raster_switch_default_map["raster_is_filled"] = false;
-  raster_switch_default_map["write_filled_raster"] = false;
+  bool_default_map["raster_is_filled"] = false;
+  bool_default_map["print_filled_raster"] = false;
+  bool_default_map["print_basin_raster"] = false;
+  bool_default_map["print_stream_order_raster"] = false;
+  
+  // set default string method
+  string_default_map["slope method"] = "polynomial";
+  string_default_map["averaging_raster_vector"] = "NULL";
   
   // Use the parameter parser to get the maps of the parameters required for the 
   // analysis
-  map<string,float> these_float_parameters = LSDPP.set_float_parameters(float_default_map);
-  map<string,int> these_int_parameters = LSDPP.set_int_parameters(int_default_map);
-  map<string,bool> these_raster_switches = LSDPP.set_bool_parameters(raster_switch_default_map);
+
+  LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
+  map<string,float> this_float_map = LSDPP.get_float_parameters();
+  map<string,int> this_int_map = LSDPP.get_int_parameters();
+  map<string,bool> this_bool_map = LSDPP.get_bool_parameters();
+  map<string,string> this_string_map = LSDPP.get_string_parameters();
+  
+  string avg_raster_names = "averaging_raster_vector";
+  vector<string> vec_of_rasters = LSDPP.parse_string_vector(avg_raster_names);
+  
+  cout << endl <<endl << "List of rasters to be averaged" << endl;
+  for (int i = 0; i<int(vec_of_rasters.size()); i++)
+  {
+    cout << "Raster is: " << vec_of_rasters[i] << endl;
+  }
+  cout << endl;
+  
+  // Now print the parameters for bug checking
+  LSDPP.print_parameters();
 
   // location of the files
   string DATA_DIR =  LSDPP.get_read_path();
   string DEM_ID =  LSDPP.get_read_fname();
+  string OUT_DIR = LSDPP.get_write_path();
+  string OUT_ID = LSDPP.get_write_fname();
   string raster_ext =  LSDPP.get_dem_read_extension();
   vector<string> boundary_conditions = LSDPP.get_boundary_conditions();
   string CHeads_file = LSDPP.get_CHeads_file();
@@ -130,7 +155,7 @@ int main (int nNumberofArgs,char *argv[])
 
   LSDRaster FillRaster;
   // now get the flow info object
-  if ( these_raster_switches["raster_is_filled"] )
+  if ( this_bool_map["raster_is_filled"] )
   {
     cout << "You have chosen to use a filled raster." << endl;
     FillRaster = topography_raster;
@@ -138,15 +163,15 @@ int main (int nNumberofArgs,char *argv[])
   else
   {
     cout << "Let me fill that raster for you, the min slope is: "
-         << these_float_parameters["min_slope_for_fill"] << endl;
-    FillRaster = topography_raster.fill(these_float_parameters["min_slope_for_fill"]);
+         << this_float_map["min_slope_for_fill"] << endl;
+    FillRaster = topography_raster.fill(this_float_map["min_slope_for_fill"]);
   }
   
   // write the fill raster if necessary
-  if ( these_raster_switches["write_fill"] )
+  if ( this_bool_map["write_filled_raster"] )
   {
     string fill_ext = "_FILL";
-    FillRaster.write_raster((DATA_DIR+DEM_ID+fill_ext), raster_ext);
+    FillRaster.write_raster((OUT_DIR+OUT_ID+fill_ext), raster_ext);
   }
   
   
@@ -168,8 +193,8 @@ int main (int nNumberofArgs,char *argv[])
     // Now get the sources from flow accumulation
     cout << endl << endl << endl << "==================================" << endl;
     cout << "The channel head file is null. " << endl;
-    cout << "Getting sources from a threshold of "<< these_int_parameters["threshold_contributing_pixels"] << " pixels." <<endl;
-    sources = FlowInfo.get_sources_index_threshold(FlowAcc, these_int_parameters["threshold_contributing_pixels"]);
+    cout << "Getting sources from a threshold of "<< this_int_map["threshold_contributing_pixels"] << " pixels." <<endl;
+    sources = FlowInfo.get_sources_index_threshold(FlowAcc, this_int_map["threshold_contributing_pixels"]);
     
     cout << "The number of sources is: " << sources.size() << endl;
     
@@ -183,10 +208,32 @@ int main (int nNumberofArgs,char *argv[])
   
   // Now create the network
   LSDJunctionNetwork JunctionNetwork(sources, FlowInfo);
-  
+
+
   // and get the basins
-  cout << "I am getting the basins with basin order: " << these_int_parameters["basin_order"] << endl;
-  vector< int > basin_junctions = JunctionNetwork.ExtractBasinJunctionOrder(these_int_parameters["basin_order"], FlowInfo);
+  cout << "I am getting the basins with basin order: " << this_int_map["basin_order"] << endl;
+  vector< int > basin_junctions = JunctionNetwork.ExtractBasinJunctionOrder(this_int_map["basin_order"], FlowInfo);
   LSDIndexRaster Basin_Raster = JunctionNetwork.extract_basins_from_junction_vector(basin_junctions, FlowInfo);
+
+  cout << "I extracted " << basin_junctions.size() << " basins!" << endl;
+
+  LSDBasin A_basin(basin_junctions[0],FlowInfo,JunctionNetwork);
+  
+
+  // print stream order to file if wanted
+  if(this_bool_map["print_stream_order_raster"])
+  {
+    LSDIndexRaster SO_array = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
+    string SOExt = "_SO";
+    SO_array.write_raster(OUT_DIR+OUT_ID+SOExt, raster_ext);
+  }
+
+  // print basins to file if wanted
+  if(this_bool_map["print_basin_raster"])
+  {
+    //LSDIndexRaster Basin_Raster = A_basin.write_integer_data_to_LSDIndexRaster(basin_junctions[0], FlowInfo);
+    string BRExt = "_BR";
+    Basin_Raster.write_raster(OUT_DIR+OUT_ID+BRExt, raster_ext);
+  }
 
 }
