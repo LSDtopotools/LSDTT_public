@@ -94,6 +94,7 @@
 #include "LSDJunctionNetwork.hpp"
 #include "LSDIndexChannel.hpp"
 #include "LSDStatsTools.hpp"
+#include "LSDShapeTools.hpp"
 using namespace std;
 using namespace TNT;
 
@@ -694,6 +695,140 @@ void LSDJunctionNetwork::create(vector<int> Sources, LSDFlowInfo& FlowInfo)
   NContributingJunctions = vectorized_contributing_pixels;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function gets the UTM zone
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDJunctionNetwork::get_UTM_information(int& UTM_zone, bool& is_North)
+{
+
+  // set up strings and iterators
+  map<string,string>::iterator iter;
+
+  //check to see if there is already a map info string
+  string mi_key = "ENVI_map_info";
+  iter = GeoReferencingStrings.find(mi_key);
+  if (iter != GeoReferencingStrings.end() )
+  {
+    string info_str = GeoReferencingStrings[mi_key] ;
+
+    // now parse the string
+    vector<string> mapinfo_strings;
+    istringstream iss(info_str);
+    while( iss.good() )
+    {
+      string substr;
+      getline( iss, substr, ',' );
+      mapinfo_strings.push_back( substr );
+    }
+    UTM_zone = atoi(mapinfo_strings[7].c_str());
+    //cout << "Line 1041, UTM zone: " << UTM_zone << endl;
+    //cout << "LINE 1042 LSDRaster, N or S: " << mapinfo_strings[7] << endl;
+
+    // find if the zone is in the north
+    string n_str = "n";
+    string N_str = "N";
+    is_North = false;
+    size_t found = mapinfo_strings[8].find(N_str);
+    if (found!=std::string::npos)
+    {
+      is_North = true;
+    }
+    found = mapinfo_strings[8].find(n_str);
+    if (found!=std::string::npos)
+    {
+      is_North = true;
+    }
+    //cout << "is_North is: " << is_North << endl;
+
+  }
+  else
+  {
+    UTM_zone = NoDataValue;
+    is_North = false;
+  }
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function returns the x and y location of a row and column
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDJunctionNetwork::get_x_and_y_locations(int row, int col, double& x_loc, double& y_loc)
+{
+
+  x_loc = XMinimum + float(col)*DataResolution + 0.5*DataResolution;
+
+  // Slightly different logic for y because the DEM starts from the top corner
+  y_loc = YMinimum + float(NRows-row)*DataResolution - 0.5*DataResolution;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function returns the x and y location of a row and column
+// Same as above but with floats
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDJunctionNetwork::get_x_and_y_locations(int row, int col, float& x_loc, float& y_loc)
+{
+
+  x_loc = XMinimum + float(col)*DataResolution + 0.5*DataResolution;
+
+  // Slightly different logic for y because the DEM starts from the top corner
+  y_loc = YMinimum + float(NRows-row)*DataResolution - 0.5*DataResolution;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// Function to convert a node position with a row and column to a lat
+// and long coordinate
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDJunctionNetwork::get_lat_and_long_locations(int row, int col, double& lat,
+                   double& longitude, LSDCoordinateConverterLLandUTM Converter)
+{
+  // get the x and y locations of the node
+  double x_loc,y_loc;
+  get_x_and_y_locations(row, col, x_loc, y_loc);
+
+  // get the UTM zone of the node
+  int UTM_zone;
+  bool is_North;
+  get_UTM_information(UTM_zone, is_North);
+  //cout << endl << endl << "Line 1034, UTM zone is: " << UTM_zone << endl;
+
+
+  if(UTM_zone == NoDataValue)
+  {
+    lat = NoDataValue;
+    longitude = NoDataValue;
+  }
+  else
+  {
+    // set the default ellipsoid to WGS84
+    int eId = 22;
+
+    double xld = double(x_loc);
+    double yld = double(y_loc);
+
+    // use the converter to convert to lat and long
+    double Lat,Long;
+    Converter.UTMtoLL(eId, yld, xld, UTM_zone, is_North, Lat, Long);
+
+
+    lat = Lat;
+    longitude = Long;
+  }
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // recursive add_to_stack routine, from Braun and Willett eq. 12 and 13
@@ -4314,6 +4449,51 @@ LSDIndexRaster LSDJunctionNetwork::StreamOrderArray_to_LSDIndexRaster()
   return IR;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// this sends the StreamOrderArray to a WGS84 csv
+//
+// SMM 12/11/2016
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDJunctionNetwork::StreamOrderArray_to_WGS84CSV(string FileName_prefix)
+{
+  // append csv to the filename
+  string FileName = FileName_prefix+".csv";
+
+  //open a file to write
+  ofstream WriteData;
+  WriteData.open(FileName.c_str());
+
+  WriteData.precision(8);
+  WriteData << "latitude,longitude,Stream Order" << endl;
+
+  // the x and y locations
+  double latitude,longitude;
+
+  // this is for latitude and longitude
+  LSDCoordinateConverterLLandUTM Converter;
+
+  //loop over each cell and if there is a value, write it to the file
+  for(int i = 0; i < NRows; ++i)
+  {
+    for(int j = 0; j < NCols; ++j)
+    {
+      if (StreamOrderArray[i][j] != NoDataValue)
+      {
+        get_lat_and_long_locations(i, j, latitude, longitude, Converter);
+
+        WriteData << latitude << "," << longitude << "," << StreamOrderArray[i][j] << endl;
+      }
+    }
+  }
+
+  WriteData.close();
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
 
 
 

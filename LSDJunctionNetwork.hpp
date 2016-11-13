@@ -84,6 +84,7 @@ contains a number of analysis tools built around drainage networks.
 #include "LSDIndexChannel.hpp"
 #include "LSDChannel.hpp"
 #include "LSDStatsTools.hpp"
+#include "LSDShapeTools.hpp"
 using namespace std;
 using namespace TNT;
 
@@ -107,6 +108,51 @@ class LSDJunctionNetwork
 
   /// @brief Assignment operator.
   LSDJunctionNetwork& operator=(const LSDJunctionNetwork& LSDR);
+
+  /// @brief this function gets the UTM_zone and a boolean that is true if
+  /// the map is in the northern hemisphere
+  /// @param UTM_zone the UTM zone. Replaced in function.
+  /// @param is_North a boolean that is true if the DEM is in the northern hemisphere.
+  ///  replaced in function
+  /// @author SMM
+  /// @date 22/12/2014
+  void get_UTM_information(int& UTM_zone, bool& is_North);
+
+  /// @brief this gets the x and y location of a node at row and column
+  /// @param row the row of the node
+  /// @param col the column of the node
+  /// @param x_loc the x location (Northing) of the node
+  /// @param y_loc the y location (Easting) of the node
+  /// @author SMM
+  /// @date 22/12/2014
+  void get_x_and_y_locations(int row, int col, double& x_loc, double& y_loc);
+
+  /// @brief this gets the x and y location of a node at row and column
+  /// @param row the row of the node
+  /// @param col the column of the node
+  /// @param x_loc the x location (Northing) of the node
+  /// @param y_loc the y location (Easting) of the node
+  /// @author SMM
+  /// @date 22/12/2014
+  void get_x_and_y_locations(int row, int col, float& x_loc, float& y_loc);
+
+
+  /// @brief a function to get the lat and long of a node in the raster
+  /// @detail Assumes WGS84 ellipsiod
+  /// @param row the row of the node
+  /// @param col the col of the node
+  /// @param lat the latitude of the node (in decimal degrees, replaced by function)
+  ///  Note: this is a double, because a float does not have sufficient precision
+  ///  relative to a UTM location (which is in metres)
+  /// @param long the longitude of the node (in decimal degrees, replaced by function)
+  ///  Note: this is a double, because a float does not have sufficient precision
+  ///  relative to a UTM location (which is in metres)
+  /// @param Converter a converter object (from LSDShapeTools)
+  /// @author SMM
+  /// @date 22/12/2014
+  void get_lat_and_long_locations(int row, int col, double& lat,
+                  double& longitude, LSDCoordinateConverterLLandUTM Converter);
+
 
   ///@brief Recursive add_to_stack routine to build the junction tree, from Braun and Willett (2012)
   ///equations 12 and 13.
@@ -205,7 +251,17 @@ class LSDJunctionNetwork
   /// @author SMM
   /// @date 01/09/12
   LSDIndexRaster StreamOrderArray_to_LSDIndexRaster();
-  
+
+  /// @brief Method to flatten an te stream order array and place the non NDV values in a csv file.
+  /// @detail Each value is placed on its own line, so that it can be read more quickly in python etc.
+  ///   It includes the lat long coordinates in CSV, in WGS84 coordinate system EPSG:4326
+  /// @param FileName_prefix The prefix of the file to write, if no path is included it will write to the current directory.
+  ///  The csv extension is added automatically.
+  /// @author SMM
+  /// @date 12/11/16
+  void StreamOrderArray_to_WGS84CSV(string FileName);
+
+
   /// @brief This sends the JunctionArray to a LSDIndexRaster.
   /// @return LSDIndexRaster of JunctionArray.
   /// @author SMM
