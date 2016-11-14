@@ -530,7 +530,7 @@ void LSDAnalysisDriver::ingest_data(string pname, string p_fname)
       raster_switches["need_slope"] = temp_bool;
       raster_switches["need_slope_angle"] = temp_bool;
       raster_switches["need_FS_sat"] = temp_bool;
-    }
+    }  
     else
     {
       cout << "Line " << __LINE__ << ": No parameter '"
@@ -1134,7 +1134,7 @@ void LSDAnalysisDriver::write_shapes_from_switches()
 
     // write the channel
     this_channel.write_channel_to_csv(write_path,write_fname,map_of_LSDRasters["flow_distance"]);
-  }
+  } 
 }
 
 

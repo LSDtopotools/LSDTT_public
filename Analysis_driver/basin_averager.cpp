@@ -108,6 +108,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_filled_raster"] = false;
   bool_default_map["print_basin_raster"] = false;
   bool_default_map["print_stream_order_raster"] = false;
+  bool_default_map["print_stream_order_csv"] = false;
   
   // set default string method
   string_default_map["slope method"] = "polynomial";
@@ -208,6 +209,9 @@ int main (int nNumberofArgs,char *argv[])
   
   // Now create the network
   LSDJunctionNetwork JunctionNetwork(sources, FlowInfo);
+  
+  
+  
 
 
   // and get the basins
@@ -234,6 +238,13 @@ int main (int nNumberofArgs,char *argv[])
     //LSDIndexRaster Basin_Raster = A_basin.write_integer_data_to_LSDIndexRaster(basin_junctions[0], FlowInfo);
     string BRExt = "_BR";
     Basin_Raster.write_raster(OUT_DIR+OUT_ID+BRExt, raster_ext);
+  }
+  
+  // print stream order CSV to file if wanted
+  if(this_bool_map["print_stream_order_csv"])
+  {
+    string CN_fname = OUT_DIR+OUT_ID+"_ChanNet";
+    JunctionNetwork.PrintChannelNetworkToCSV(FlowInfo, CN_fname);
   }
 
 }

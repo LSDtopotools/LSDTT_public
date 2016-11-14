@@ -262,6 +262,17 @@ class LSDJunctionNetwork
   void StreamOrderArray_to_WGS84CSV(string FileName);
 
 
+  /// @brief This prints a stream network to a csv in WGS84
+  /// @detail This function prints a network that is ordered by sources, channels
+  ///  have stream orders and junction numbers attached
+  /// param FlowInfo the flow info object which translates node indices to actual points
+  /// @param FileName_prefix The prefix of the file to write, if no path is included it will write to the current directory.
+  ///  The csv extension is added automatically.
+  /// @author SMM
+  /// @date 14/11/16
+  void PrintChannelNetworkToCSV(LSDFlowInfo& flowinfo, string fname_prefix);
+  
+  
   /// @brief This sends the JunctionArray to a LSDIndexRaster.
   /// @return LSDIndexRaster of JunctionArray.
   /// @author SMM
@@ -926,6 +937,14 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @author SWDG
   /// @date 04/04/13
   LSDIndexRaster ChannelIndexer(LSDFlowInfo& flowinfo);
+
+  /// @brief This extracts vectors containing node incidex, junction indices
+  ///  and stream orders of pixels in the channel network. 
+  /// @detail The vectors are replaced by the method
+  /// @author SMM
+  /// @date 14/11/2016
+  void GetChannelNodesAndJunctions(LSDFlowInfo& flowinfo, vector<int>& NIvec, vector<int>& JIvec, vector<int>& SOvec);
+
 
   /// SplitChannel
   /// @brief This function splits the channel into a series of segments, providing a

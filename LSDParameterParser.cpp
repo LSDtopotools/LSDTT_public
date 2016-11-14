@@ -104,6 +104,7 @@ void LSDParameterParser::create(string PathName, string FileName)
   parse_file_IO();
   
   // make sure the files are okay
+  parse_file_IO();
   check_boundary_conditions();
   check_file_extensions_and_paths();
 }

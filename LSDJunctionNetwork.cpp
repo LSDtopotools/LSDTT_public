@@ -3850,16 +3850,26 @@ LSDIndexRaster LSDJunctionNetwork::ChannelIndexer(LSDFlowInfo& flowinfo)
 
     bool Flag = false; //Flag used to indicate if end of stream segemnt has been reached
     int CurrentNodeIndex = 0;
-
-    while(Flag == false){
+    int next_receiver;
+    while(Flag == false)
+    {
 
       CurrentNodeIndex = flowinfo.NodeIndex[g][h]; //update node index to move 1 px downstream
-      flowinfo.retrieve_receiver_information(CurrentNodeIndex, recievernodeindex, g, h);
+      flowinfo.retrieve_receiver_information(CurrentNodeIndex, next_receiver, g, h);
 
-      if (CurrentNodeIndex == recievernodeindex){  //need to stop 1 px before node
-          Flag = true;
+      if (CurrentNodeIndex == next_receiver)
+      {  
+        //need to stop 1 px before node
+        //cout << "I found the base level" << endl;
+        Flag = true;
       }
-      else{
+      else if(recievernodeindex== next_receiver)
+      {
+        //cout << "I found the receiver" << endl;
+        Flag = true;
+      }
+      else
+      {
           StreamOutput[g][h] = q;
       }
     }
@@ -3870,6 +3880,103 @@ LSDIndexRaster LSDJunctionNetwork::ChannelIndexer(LSDFlowInfo& flowinfo)
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+// This function writes three vector: a vector of node indices, 
+// a vector of junction indices and a vector of stream orders
+// It is used to create an ordered channel vector that can be combined
+// with other methods to produce a channel network
+// csv file. 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+void LSDJunctionNetwork::GetChannelNodesAndJunctions(LSDFlowInfo& flowinfo, vector<int>& NIvec, vector<int>& JIvec, vector<int>& SOvec)
+{
+  vector<int> NI_vector;
+  vector<int> JI_vector;
+  vector<int> SO_vector;
+  
+  int row = 0;  //ints to store the row and col of the current px
+  int col = 0;
+
+  cout << "I am going to go through " << NJunctions << " Junctions for you." << endl;
+
+  for (int q = 0; q < NJunctions; ++q)
+  {
+
+    if (q % 100 == 0)
+    {
+      cout << "\tJunction = " << q << " / " << NJunctions << "    \r";
+    }
+    cout << "Junction is: " << q << " ";
+
+    int sourcenodeindex = JunctionVector[q]; //first cell of segment
+    int recieverjunction = ReceiverVector[q];
+    int recievernodeindex = JunctionVector[recieverjunction]; //last cell of segment
+    
+    cout << "Source NI : " << sourcenodeindex << " and receiver NI: " << recievernodeindex << endl;
+    
+    cout << "reciever is:"  <<  recieverjunction << " ";
+    //get row and col of last px in junction. This location should not be written,
+    //as it is the start of a new junction.
+    int lp_row = 0;
+    int lp_col = 0;
+    flowinfo.retrieve_current_row_and_col(recievernodeindex,lp_row,lp_col);
+
+    //write first pixel
+    flowinfo.retrieve_current_row_and_col(sourcenodeindex,row,col);
+    NI_vector.push_back(sourcenodeindex);
+    JI_vector.push_back(q);
+    SO_vector.push_back(StreamOrderArray[row][col]);
+
+    bool Flag = false; //Flag used to indicate if end of stream segemnt has been reached
+    int CurrentNodeIndex = 0;
+
+    if(recieverjunction == q)
+    {
+      cout << "You are on a baselevel junction" << endl;
+      Flag = true;
+    }
+
+    int next_receiver;
+    while(Flag == false)
+    {
+
+      CurrentNodeIndex = flowinfo.NodeIndex[row][col]; //update node index to move 1 px downstream
+      flowinfo.retrieve_receiver_information(CurrentNodeIndex, next_receiver, row, col);
+
+      //cout << "CNI: " <<  CurrentNodeIndex << " and RNI: " << recievernodeindex << endl;
+
+      if (CurrentNodeIndex == next_receiver)
+      {  
+        //need to stop 1 px before node
+        cout << "I found the base level" << endl;
+        Flag = true;
+      }
+      else if(recievernodeindex== next_receiver)
+      {
+        cout << "I found the receiver" << endl;
+        Flag = true;
+      }
+      else
+      {
+        NI_vector.push_back(next_receiver);
+        JI_vector.push_back(q);
+        SO_vector.push_back(StreamOrderArray[row][col]);
+      }
+    }
+  }
+  cout << "Okay, I've got the nodes" << endl;
+  
+  
+  NIvec = NI_vector;
+  JIvec = JI_vector;
+  SOvec = SO_vector;
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 // SplitChannel
@@ -4093,7 +4200,6 @@ LSDIndexRaster LSDJunctionNetwork::SplitHillslopes(LSDFlowInfo& FlowInfo, LSDInd
           && (MultiThreadChannelArray[i][j] == 0) && (VisitedBeforeTest == false))
       {
         bool finish_trace = false;
-        bool reached_channel_but_trace_to_single_thread_channel = false;
         CurrentNode = FlowInfo.NodeIndex[i][j];
         rows_visited.push_back(i);
         cols_visited.push_back(j);
@@ -4149,8 +4255,7 @@ LSDIndexRaster LSDJunctionNetwork::SplitHillslopes(LSDFlowInfo& FlowInfo, LSDInd
           // and move downstream.
           else
           {
-            if(MultiThreadChannelArray[ReceiverRow][ReceiverCol] == 1) reached_channel_but_trace_to_single_thread_channel = true;
-            else
+            if(MultiThreadChannelArray[ReceiverRow][ReceiverCol] != 1)
             {
               rows_visited.push_back(ReceiverRow);
               cols_visited.push_back(ReceiverCol);
@@ -4493,6 +4598,59 @@ void LSDJunctionNetwork::StreamOrderArray_to_WGS84CSV(string FileName_prefix)
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+// This prints a channel network to csv in WGS84
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+void LSDJunctionNetwork::PrintChannelNetworkToCSV(LSDFlowInfo& flowinfo, string fname_prefix)
+{
+
+  // first get the vectors
+  vector<int> NIvec;
+  vector<int> SOvec;
+  vector<int> JIvec;
+  GetChannelNodesAndJunctions(flowinfo, NIvec, JIvec, SOvec);
+
+  // Deal with setting up the file
+  // append csv to the filename
+  string FileName = fname_prefix+".csv";
+
+  //open a file to write
+  ofstream WriteData;
+  WriteData.open(FileName.c_str());
+
+  WriteData.precision(8);
+  WriteData << "latitude,longitude,Junction Index,Stream Order,NI" << endl;
+
+  // the x and y locations
+  double latitude,longitude;
+
+  // this is for latitude and longitude
+  LSDCoordinateConverterLLandUTM Converter;
+
+
+  // now get the number of channel nodes
+  int this_NI;
+  int row,col;
+  int NNodes = int(NIvec.size());
+  cout << "The number of nodes is: " << NNodes << endl;
+  for(int node = 0; node<NNodes; node++)
+  {
+    this_NI = NIvec[node];
+    flowinfo.retrieve_current_row_and_col(this_NI,row,col);
+    get_lat_and_long_locations(row, col, latitude, longitude, Converter);
+    
+    WriteData << latitude << "," << longitude << "," << JIvec[node] << "," << SOvec[node] << "," << NIvec[node] << endl;
+  
+  }
+  
+  WriteData.close();
+
+}
+
+
 
 
 
