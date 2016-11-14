@@ -76,11 +76,13 @@ using namespace TNT;
 // given rasters of channel relief and slope and thresholds for both. Each pixel
 // must be below the slope and channel relief threshold to be classified as a terrace.
 // User must set a minimum patch size (in pixels, set to 0 if all patches are kept).
+// User must specify a switch for removing patches connected to the channel network:
+// 1 = will remove channel pixels
 //
 // FJC 18/10/16
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDTerrace::create(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, float relief_thresh, float slope_thresh, int min_patch_size, int threshold_SO)
+void LSDTerrace::create(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, float relief_thresh, float slope_thresh, int min_patch_size, int threshold_SO, int remove_channel_patches)
 {	
 	
   /// set the protected variables
@@ -136,43 +138,60 @@ void LSDTerrace::create(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJunctionN
 		ConnectedComponents_Array = ConnectedComponents.get_RasterData();	
 	}
 	
-	// separate into floodplain and terrace patches
-	 
-  //loop through the DEM and get the ID of all patches connected to the channel network
-  for (int row = 0; row < NRows; row++)
-  {
-    for (int col = 0; col < NCols; col++)
-    {
-      if (ConnectedComponents_Array[row][col] != NoDataValue)
-      {
-      //check if the pixel is part of the channel network
-        if (StreamOrderArray[row][col] >= threshold_SO)
-        {
-          patch_ids_channel.push_back(ConnectedComponents_Array[row][col]);
-        }
-      }
-    }
-  }
-  
-  //for each pixel, find if it is in a patch with an ID in patch_ids_channel vector
-  vector<int>::iterator find_it;
-  for (int row = 0; row < NRows; row++)
-  {
-    for (int col = 0; col < NCols; col++)
-    {
-      if (ConnectedComponents_Array[row][col] != NoDataValue)
-      {
-				int ThisNode = FlowInfo.retrieve_node_from_row_and_column(row, col);
-        int patch_id = ConnectedComponents_Array[row][col];
-        find_it = find(patch_ids_channel.begin(), patch_ids_channel.end(), patch_id);   //search ID vector for patch ID of pixel
-        if (find_it == patch_ids_channel.end())
+	if (remove_channel_patches == 1)
+	{
+		// separate into floodplain and terrace patches
+		//loop through the DEM and get the ID of all patches connected to the channel network
+		for (int row = 0; row < NRows; row++)
+		{
+			for (int col = 0; col < NCols; col++)
+			{
+				if (ConnectedComponents_Array[row][col] != NoDataValue)
 				{
+				//check if the pixel is part of the channel network
+					if (StreamOrderArray[row][col] >= threshold_SO)
+					{
+						patch_ids_channel.push_back(ConnectedComponents_Array[row][col]);
+					}
+				}
+			}
+		}
+
+		//for each pixel, find if it is in a patch with an ID in patch_ids_channel vector
+		vector<int>::iterator find_it;
+		for (int row = 0; row < NRows; row++)
+		{
+			for (int col = 0; col < NCols; col++)
+			{
+				if (ConnectedComponents_Array[row][col] != NoDataValue)
+				{
+					int ThisNode = FlowInfo.retrieve_node_from_row_and_column(row, col);
+					int patch_id = ConnectedComponents_Array[row][col];
+					find_it = find(patch_ids_channel.begin(), patch_ids_channel.end(), patch_id);   //search ID vector for patch ID of pixel
+					if (find_it == patch_ids_channel.end())
+					{
+						TerraceNodes_temp.push_back(ThisNode);
+						TerraceNodes_array[row][col] = ThisNode;
+					}
+				}      
+			}
+		}	
+	}
+	else
+	{
+		for (int row = 0; row < NRows; row++)
+		{
+			for (int col = 0; col < NCols; col++)
+			{
+				if (ConnectedComponents_Array[row][col] != NoDataValue)
+				{
+					int ThisNode = FlowInfo.retrieve_node_from_row_and_column(row, col);
 					TerraceNodes_temp.push_back(ThisNode);
 					TerraceNodes_array[row][col] = ThisNode;
 				}
-      }      
-    }
-  }	
+			}
+		}
+	}
 	
 	//copy to vector
 	TerraceNodes = TerraceNodes_temp;

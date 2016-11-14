@@ -73,7 +73,7 @@ int main (int nNumberofArgs,char *argv[])
   string txt_extension = ".txt";
   
   // initialise variables to be assigned from .driver file
-  int threshold_SO, FilterTopo, window_radius, lower_percentile_relief, upper_percentile_relief, lower_percentile_slope, upper_percentile_slope, minimum_patch_size, junction_number, search_distance;
+  int threshold_SO, FilterTopo, window_radius, lower_percentile_relief, upper_percentile_relief, lower_percentile_slope, upper_percentile_slope, minimum_patch_size, junction_number, search_distance, remove_channel_patches;
 	float Minimum_Slope, surface_fitting_window_radius, threshold_condition, bin_width;
   string temp;
   
@@ -95,7 +95,8 @@ int main (int nNumberofArgs,char *argv[])
 							 >> temp >> minimum_patch_size
 							 >> temp >> search_distance
 							 >> temp >> junction_number
-							 >> temp >> bin_width;
+							 >> temp >> bin_width
+							 >> temp >> remove_channel_patches;
                    
 	file_info_in.close();
 
@@ -198,7 +199,7 @@ int main (int nNumberofArgs,char *argv[])
 	//float relief_thresh = 100;
 	//float slope_thresh = 0.1;
 	// get the terrace object
-	LSDTerrace Terraces(ChannelRelief, Slope, ChanNetwork, FlowInfo, relief_threshold_from_qq, slope_threshold_from_qq, minimum_patch_size, threshold_SO);
+	LSDTerrace Terraces(ChannelRelief, Slope, ChanNetwork, FlowInfo, relief_threshold_from_qq, slope_threshold_from_qq, minimum_patch_size, threshold_SO, remove_channel_patches);
 	
 	LSDIndexRaster TerraceLocations = Terraces.print_ConnectedComponents_to_Raster();
 	string CC_ext = "_CC";
@@ -210,30 +211,30 @@ int main (int nNumberofArgs,char *argv[])
 	string relief_ext = "_terrace_relief_final";
 	relief_final.write_raster((input_path+DEM_ID+relief_ext), DEM_extension);
 	
-//	cout << "This junction number is: " << junction_number << endl;
-//	Terraces.get_terraces_along_main_stem(junction_number, ChanNetwork, FlowInfo, DistFromOutlet);
-//	LSDRaster UpstreamDistance = Terraces.print_UpstreamDistance_to_Raster();
-//	string dist_ext = "_upstream_dist";
-//	UpstreamDistance.write_raster((input_path+DEM_ID+dist_ext), DEM_extension);
-//	
-//	// print main stem relief and distance
-//	
-//	LSDRaster MainStemRelief = Terraces.print_ChannelRelief_to_Raster_MainStem();
-//	string ms_relief_ext = "_relief_MS";
-//	MainStemRelief.write_raster((input_path+DEM_ID+ms_relief_ext), DEM_extension);
-//	
-//  LSDRaster MainStemDist = Terraces.print_UpstreamDistance_to_Raster_MainStem();
-//	string ms_dist_ext = "_dist_MS";
-//	MainStemDist.write_raster((input_path+DEM_ID+ms_dist_ext), DEM_extension);
-//	
-//	// write to text file
-//	string filename = "_terraces_data.txt";
-//	Terraces.print_ChannelRelief_to_File(input_path+DEM_ID+filename);
-//	
-//	string filename_binned = "_terraces_data_binned.txt";
-//	float bin_lower_limit = 0;
-//	float bin_threshold = 0;
-//	Terraces.print_Binned_ChannelRelief_to_File(input_path+DEM_ID+filename_binned, bin_width, bin_lower_limit, bin_threshold);
+	cout << "This junction number is: " << junction_number << endl;
+	Terraces.get_terraces_along_main_stem(junction_number, ChanNetwork, FlowInfo, DistFromOutlet);
+	LSDRaster UpstreamDistance = Terraces.print_UpstreamDistance_to_Raster();
+	string dist_ext = "_upstream_dist";
+	UpstreamDistance.write_raster((input_path+DEM_ID+dist_ext), DEM_extension);
+	
+	// print main stem relief and distance
+	
+	LSDRaster MainStemRelief = Terraces.print_ChannelRelief_to_Raster_MainStem();
+	string ms_relief_ext = "_relief_MS";
+	MainStemRelief.write_raster((input_path+DEM_ID+ms_relief_ext), DEM_extension);
+	
+  LSDRaster MainStemDist = Terraces.print_UpstreamDistance_to_Raster_MainStem();
+	string ms_dist_ext = "_dist_MS";
+	MainStemDist.write_raster((input_path+DEM_ID+ms_dist_ext), DEM_extension);
+	
+	// write to text file
+	string filename = "_terraces_data.txt";
+	Terraces.print_ChannelRelief_to_File(input_path+DEM_ID+filename);
+	
+	string filename_binned = "_terraces_data_binned.txt";
+	float bin_lower_limit = 0;
+	float bin_threshold = 0;
+	Terraces.print_Binned_ChannelRelief_to_File(input_path+DEM_ID+filename_binned, bin_width, bin_lower_limit, bin_threshold);
 		
 	// Done, check how long it took
 	clock_t end = clock();

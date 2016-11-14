@@ -113,7 +113,12 @@ int main (int nNumberofArgs,char *argv[])
                >> temp >> area_threshold
 	       >> temp >> connected_components_threshold;
   file_info_in.close();
-    
+  
+  cout << "The parameters are: " << endl
+       << "\tRaster name: " << Raster_name << endl
+       << "\tWindow radius: " << window_radius << endl
+       << "\tArea threshold: " << area_threshold << endl
+       << "\tCC threshold: " << connected_components_threshold << endl;
   // Now create the raster selection vector based on user's selection
   // Elevation
   LSDRasterSpectral raster(Raster_name, DEM_extension);
