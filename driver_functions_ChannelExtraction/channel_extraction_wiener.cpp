@@ -150,6 +150,10 @@ int main (int nNumberofArgs,char *argv[])
   vector<string> BoundaryConditions(4, "No Flux");
   LSDFlowInfo FlowInfo(BoundaryConditions,FilledDEM);
   
+  // write the filled DEM to a file
+  string fill_name = "_fill";
+  FilledDEM.write_raster((Output_name+fill_name), DEM_extension);
+  
   // make the hillshade (this is faster than doing it in arc)
 	string HS_name = "_HS";
 	LSDRaster HS = FilledDEM.hillshade(45, 315, 1);
