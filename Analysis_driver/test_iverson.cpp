@@ -50,6 +50,9 @@ using namespace std;
 
 int main (int nNumberofArgs,char *argv[])
 {
+
+  string path_name;
+  
   // load porewater parameter object
   LSDPorewaterParams LSDPP;
   
@@ -61,7 +64,7 @@ int main (int nNumberofArgs,char *argv[])
   }
   else if (nNumberofArgs == 3 )
   {
-    string path_name = argv[1];
+    path_name = argv[1];
     string f_name = argv[2];
 
     LSDPorewaterParams TempPP(path_name,f_name);
@@ -91,5 +94,10 @@ int main (int nNumberofArgs,char *argv[])
 
   // get a steady state column
   LSDPorewaterColumn LSD_PC(LSDPP);
+  
+  string rainfall_fname = "rain.csv";
+  vector<float> intensities;
+  LSDPP.parse_rainfall_file(path_name, rainfall_fname,intensities);
+  
 
 }

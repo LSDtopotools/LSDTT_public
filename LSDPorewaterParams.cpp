@@ -195,6 +195,88 @@ vector<float> LSDPorewaterParams::calculate_steady_psi()
 
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This parses a rainfall file
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDPorewaterParams::parse_rainfall_file(string path, string filename, vector<float>& intensities)
+{
+  
+  string fname = FixPath(path)+ filename;
+  
+
+  
+  // initiate the string to hold the file
+  string line_from_file;
+  vector<string> empty_string_vec;
+  vector<string> this_string_vec;
+  string temp_string;
+  float this_rain; 
+  vector<float> rain_vec;
+  
+  vector<string> HeaderInfo = ReadCSVHeader(path, filename);
+  
+  // now find the rainfall column
+  string rain_string = "rainfall_rate";
+  string this_string;
+  int rain_column = 0; 
+  for(int i = 0; i< int(HeaderInfo.size()); i++)
+  {
+    cout << "Header["<<i<<"]: " << HeaderInfo[i] << endl;
+    this_string = HeaderInfo[i];
+    if (this_string.compare(rain_string) == 0)
+    {
+      cout << "I found the rain rate, it is column " << i << endl;
+      rain_column = i;
+    }
+  }
+  
+  // now we work through the file. 
+  // make sure the filename works
+  ifstream ifs(fname.c_str());
+  if( ifs.fail() )
+  {
+    cout << "\nFATAL ERROR: Trying to load csv cosmo data file, but the file" << filename
+         << "doesn't exist; LINE 245 LSDCosmoData" << endl;
+    exit(EXIT_FAILURE);
+  }
+  
+  // get the first line  and discard
+  getline(ifs, line_from_file);
+
+  // now loop through the rest of the lines, getting the data. 
+  while( getline(ifs, line_from_file))
+  {
+    // reset the string vec
+    this_string_vec = empty_string_vec;
+    
+    // create a stringstream
+    stringstream ss(line_from_file);
+    
+    while( ss.good() )
+    {
+      string substr;
+      getline( ss, substr, ',' );
+      
+      // remove the spaces
+      substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
+      
+      // remove control characters
+      substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
+      
+      // add the string to the string vec
+      this_string_vec.push_back( substr );
+    }
+    
+    // Now extract the rain rate
+    this_rain =  atof(this_string_vec[rain_column].c_str());
+    rain_vec.push_back(this_rain);
+    
+  }
+  intensities = rain_vec;
+}
+
+
+
 
 
 #endif
