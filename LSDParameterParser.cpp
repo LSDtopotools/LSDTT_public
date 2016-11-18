@@ -500,7 +500,38 @@ vector<int> LSDParameterParser::parse_int_vector(string key)
 
 }
 
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This parses a vector of ints
+//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+vector<float> LSDParameterParser::parse_float_vector(string key)
+{
+  string this_string = string_parameters[key];
 
+  // reset the string vec
+  vector<float> this_float_vec;
+    
+  // create a stringstream
+  stringstream ss(this_string);
+  
+  // import the data, using a comma to separate  
+  while( ss.good() )
+  {
+    string substr;
+    getline( ss, substr, ',' );
+      
+    // remove the spaces
+    substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
+      
+    // remove control characters
+    substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
+      
+    // add the string to the string vec
+    this_float_vec.push_back( atoi(substr.c_str()) );
+  }
+  
+  return this_float_vec;
+
+}
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // This checks boundary conditions  for flow info

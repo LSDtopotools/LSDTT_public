@@ -57,6 +57,7 @@
 #include "TNT/tnt.h"
 #include "LSDRaster.hpp"
 #include "LSDIndexRaster.hpp"
+#include "LSDStatsTools.hpp"
 using namespace std;
 using namespace TNT;
 
@@ -161,6 +162,14 @@ class LSDParameterParser
     /// @author SMM
     /// @date 09/11/2016
     vector<int> parse_int_vector(string key);
+
+    /// @brief This function takes a parameter from the string map and parses it 
+    ///  into a vector of floats
+    /// @param key the string that is the key into the string map
+    /// @return A vector of floats
+    /// @author SMM
+    /// @date 09/17/2016
+    vector<float> parse_float_vector(string key);
 
     /// @brief This forces the read and wirte extensions to bil
     /// @author SMM
