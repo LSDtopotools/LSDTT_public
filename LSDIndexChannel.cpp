@@ -325,8 +325,8 @@ int LSDIndexChannel::get_contributing_pixels_at_node(int n_node, LSDFlowInfo& Fl
 int LSDIndexChannel::get_node_in_channel(int n_node)
 {
 	int n_nodes_in_channel = int(NodeSequence.size());
-	cout << "N nodes in channel: " << n_nodes_in_channel << endl;
-	cout << "Node: " << n_node << endl;
+	//cout << "N nodes in channel: " << n_nodes_in_channel << endl;
+	//cout << "Node: " << n_node << endl;
 	if (n_node < 0)
 	{
 		cout << "LINE 330 LSDIndexChannel Not in channel!" << endl;

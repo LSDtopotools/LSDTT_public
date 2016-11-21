@@ -89,8 +89,8 @@ int main (int nNumberofArgs,char *argv[])
 	string fill_ext = "_fill";
 	file_info_in >> DEM_name >> CH_name;
 	float Minimum_Slope;
-	int BasinOrder;
-	file_info_in >> Minimum_Slope >> BasinOrder;
+	int DrainageArea;
+	file_info_in >> Minimum_Slope >> DrainageArea;
 
 	// get some file names
 	string DEM_f_name = path_name+DEM_name+fill_ext;
@@ -137,10 +137,12 @@ int main (int nNumberofArgs,char *argv[])
   //cout << "Now getting all basins with a drainage area of: " << threshold_area << " m^2" << endl;
 	
 	//get the vector of basin junctions
-	//vector<int> BasinNodes = ChanNetwork.extract_basin_nodes_by_drainage_area(threshold_area, FlowInfo);
-	//vector<int> BasinJunctions = ChanNetwork.extract_basin_junctions_from_nodes(BasinNodes, FlowInfo);
+	vector<int> BasinNodes = ChanNetwork.extract_basin_nodes_by_drainage_area(DrainageArea, FlowInfo);
+	cout << "Got the basin nodes" << endl;
+	vector<int> basin_junctions = ChanNetwork.extract_basin_junctions_from_nodes(BasinNodes, FlowInfo);
+	cout << "Got the basin junctions" << endl;
 	
-	vector<int> basin_junctions = ChanNetwork.extract_basins_order_outlet_junctions(BasinOrder, FlowInfo);
+	//vector<int> basin_junctions = ChanNetwork.extract_basins_order_outlet_junctions(BasinOrder, FlowInfo);
 	
 	// get raster of basins from the junctin vector
 	LSDIndexRaster BasinRaster = ChanNetwork.extract_basins_from_junction_vector(basin_junctions, FlowInfo);
