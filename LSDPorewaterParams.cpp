@@ -80,6 +80,7 @@ void LSDPorewaterParams::create()
   D_0 = 0.00001;
   d = 2;
   alpha = 0.1;
+  Iz_over_K_steady = 0.2;
   
   vector<float> this_z;
   for(int i = 0; i<31; i++)
@@ -87,6 +88,9 @@ void LSDPorewaterParams::create()
     this_z.push_back(float(i)*0.1);
   }
   Depths = this_z;
+
+  calculate_beta();
+  calculate_D_hat();
 
 }
 
@@ -158,6 +162,7 @@ void LSDPorewaterParams::create(string paramfile_path, string paramfile_name)
   }
   
   calculate_beta();
+  calculate_D_hat();
   
 }
 
@@ -379,5 +384,26 @@ void LSDPorewaterParams::parse_MIDAS_rainfall_file(string path, string filename,
   intensities = rain_vec;
 }
 
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// THis prints the parameters to screen
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void  LSDPorewaterParams::print_parameters_to_screen()
+{
+  cout << "Your parameters are: " << endl;
+  cout << "D_0: " << D_0 << endl;   
+  cout << "D_hat: " << D_hat << endl;
+  cout << "alpha: " << alpha << endl;
+  cout << "d: " << d << endl;
+  cout << "beta: " << beta << endl;
+  cout << "Iz_over_K_steady: " << Iz_over_K_steady << endl;
+  cout << "And the depths are: " << endl;
+  for (int i = 0; i< int(Depths.size()); i++)
+  {
+    cout << Depths[i] << ",";
+  }
+  cout << endl;
+}
 
 #endif

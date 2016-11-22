@@ -133,6 +133,12 @@ class LSDPorewaterParams
     /// @date 22/11/2016
     void parse_MIDAS_rainfall_file(string path, string filename, vector<float>& intensities);
 
+    /// @brief Thes function prints the parameters to screen
+    /// @author SMM
+    /// @date 22/11/2016
+    void print_parameters_to_screen();
+
+
   protected:
     /// This holds the depths
     vector<float> Depths;
