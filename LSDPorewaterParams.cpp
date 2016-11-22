@@ -276,7 +276,108 @@ void LSDPorewaterParams::parse_rainfall_file(string path, string filename, vecto
 }
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This parses a rainfall file
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDPorewaterParams::parse_MIDAS_rainfall_file(string path, string filename, vector<float>& intensities)
+{
+  
+  string fname = FixPath(path)+ filename;
+  
+  // These are 
+  vector<int> source_id;
+  vector<string> observation_date;
 
+  
+  // initiate the string to hold the file
+  string line_from_file;
+  vector<string> empty_string_vec;
+  vector<string> this_string_vec;
+  string temp_string;
+  float this_rain; 
+  string this_date;
+  int this_src;
+  vector<float> rain_vec;
+  
+  vector<string> HeaderInfo = ReadCSVHeader(path, filename);
+  
+  // now find the data columns column
+  string rain_string = "prcp_amt";
+  string this_string;
+  int rain_column = 0; 
+  string date_string = "ob_date";
+  int date_column = 0; 
+  string src_string = "src_id";
+  int src_column = 0; 
+  for(int i = 0; i< int(HeaderInfo.size()); i++)
+  {
+    cout << "Header["<<i<<"]: " << HeaderInfo[i] << endl;
+    this_string = HeaderInfo[i];
+    if (this_string.compare(rain_string) == 0)
+    {
+      cout << "I found the rain rate, it is column " << i << endl;
+      rain_column = i;
+    }
+    if (this_string.compare(date_string) == 0)
+    {
+      cout << "I found the date, it is column " << i << endl;
+      date_column = i;
+    }
+    if (this_string.compare(src_string) == 0)
+    {
+      cout << "I found the src_id, it is column " << i << endl;
+      src_column = i;
+    }
+  }
+
+
+  // now we work through the file. 
+  // make sure the filename works
+  ifstream ifs(fname.c_str());
+  if( ifs.fail() )
+  {
+    cout << "\nFATAL ERROR: Trying to load csv cosmo data file, but the file" << filename
+         << "doesn't exist; LINE 245 LSDCosmoData" << endl;
+    exit(EXIT_FAILURE);
+  }
+  
+  // get the first line  and discard
+  getline(ifs, line_from_file);
+
+  // now loop through the rest of the lines, getting the data. 
+  while( getline(ifs, line_from_file))
+  {
+    // reset the string vec
+    this_string_vec = empty_string_vec;
+    
+    // create a stringstream
+    stringstream ss(line_from_file);
+    
+    while( ss.good() )
+    {
+      string substr;
+      getline( ss, substr, ',' );
+      
+      // remove the spaces
+      substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
+      
+      // remove control characters
+      substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
+      
+      // add the string to the string vec
+      this_string_vec.push_back( substr );
+    }
+    
+    // Now extract the rain rate
+    this_rain =  atof(this_string_vec[rain_column].c_str());
+    this_date = this_string_vec[date_column];
+    this_src =  atoi(this_string_vec[src_column].c_str());
+    rain_vec.push_back(this_rain);
+    observation_date.push_back(this_date);
+    source_id.push_back(this_src);
+  }
+  intensities = rain_vec;
+}
 
 
 #endif

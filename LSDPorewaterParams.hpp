@@ -114,7 +114,7 @@ class LSDPorewaterParams
     /// @date 17/11/2016
     vector<float> calculate_steady_psi();
 
-    /// @brief This function parses a rainfal file. It only captures the
+    /// @brief This function parses a rainfall file. It only captures the
     ///  rainfall rates, which must have the csv header "rainfall_rate"
     /// @param path the path to the rainfall file
     /// @param filename the name of the file including extension (but this needs to be
@@ -123,6 +123,15 @@ class LSDPorewaterParams
     /// @author SMM
     /// @date 17/11/2016
     void parse_rainfall_file(string path, string filename, vector<float>& intensities);
+
+    /// @brief This function parses a rainfall file derived from MIDAS. 
+    /// @param path the path to the rainfall file
+    /// @param filename the name of the file including extension (but this needs to be
+    ///  a csv file)
+    /// @param intensities a float vector holding rainfall intensities. 
+    /// @author SMM
+    /// @date 22/11/2016
+    void parse_MIDAS_rainfall_file(string path, string filename, vector<float>& intensities);
 
   protected:
     /// This holds the depths
