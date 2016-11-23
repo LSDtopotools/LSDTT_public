@@ -128,10 +128,21 @@ class LSDPorewaterParams
     /// @param path the path to the rainfall file
     /// @param filename the name of the file including extension (but this needs to be
     ///  a csv file)
+    /// @param days the days since 1900. 
     /// @param intensities a float vector holding rainfall intensities. 
     /// @author SMM
     /// @date 22/11/2016
-    void parse_MIDAS_rainfall_file(string path, string filename, vector<float>& intensities);
+    void parse_MIDAS_rainfall_file(string path, string filename, vector<int>& days, vector<float>& intensities);
+
+    /// @brief This function takes data vectors extracted from a parsed MIDAS
+    ///  file (using the parse_MIDAS.py script) and returns an intensity duration
+    ///  record
+    /// @param days a vector of the days in int format of the rainfall measurements 
+    /// @param intensities the intensity measurements: for MIDAS this is mm/day
+    /// @param durations this is replaced with the durations in days of the records
+    /// @author SMM
+    /// @date 23/11/2016
+    void parse_MIDAS_duration_intensities(vector<int>& days, vector<float>& intensities, vector<float>& durations);
 
     /// @brief Thes function prints the parameters to screen
     /// @author SMM

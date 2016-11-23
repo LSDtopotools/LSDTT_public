@@ -284,14 +284,13 @@ void LSDPorewaterParams::parse_rainfall_file(string path, string filename, vecto
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This parses a rainfall file
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDPorewaterParams::parse_MIDAS_rainfall_file(string path, string filename, vector<float>& intensities)
+void LSDPorewaterParams::parse_MIDAS_rainfall_file(string path, string filename,vector<int>& days, vector<float>& intensities )
 {
   
   string fname = FixPath(path)+ filename;
   
   // These are 
-  vector<int> source_id;
-  vector<string> observation_date;
+  vector<int> day_since_1900;
 
   
   // initiate the string to hold the file
@@ -300,8 +299,7 @@ void LSDPorewaterParams::parse_MIDAS_rainfall_file(string path, string filename,
   vector<string> this_string_vec;
   string temp_string;
   float this_rain; 
-  string this_date;
-  int this_src;
+  int this_date;
   vector<float> rain_vec;
   
   vector<string> HeaderInfo = ReadCSVHeader(path, filename);
@@ -310,10 +308,8 @@ void LSDPorewaterParams::parse_MIDAS_rainfall_file(string path, string filename,
   string rain_string = "prcp_amt";
   string this_string;
   int rain_column = 0; 
-  string date_string = "ob_date";
+  string date_string = "days_since_1900";
   int date_column = 0; 
-  string src_string = "src_id";
-  int src_column = 0; 
   for(int i = 0; i< int(HeaderInfo.size()); i++)
   {
     cout << "Header["<<i<<"]: " << HeaderInfo[i] << endl;
@@ -327,11 +323,6 @@ void LSDPorewaterParams::parse_MIDAS_rainfall_file(string path, string filename,
     {
       cout << "I found the date, it is column " << i << endl;
       date_column = i;
-    }
-    if (this_string.compare(src_string) == 0)
-    {
-      cout << "I found the src_id, it is column " << i << endl;
-      src_column = i;
     }
   }
 
@@ -375,16 +366,112 @@ void LSDPorewaterParams::parse_MIDAS_rainfall_file(string path, string filename,
     
     // Now extract the rain rate
     this_rain =  atof(this_string_vec[rain_column].c_str());
-    this_date = this_string_vec[date_column];
-    this_src =  atoi(this_string_vec[src_column].c_str());
+    this_date = atoi(this_string_vec[date_column].c_str());
     rain_vec.push_back(this_rain);
-    observation_date.push_back(this_date);
-    source_id.push_back(this_src);
+    day_since_1900.push_back(this_date);
   }
   intensities = rain_vec;
+  days = day_since_1900;
+  
+  vector<float> new_intensities;
+  vector<float> durations;
+  parse_MIDAS_duration_intensities(days, intensities, durations);
+  
+  // bug checking
+  for(int i = 0; i<int(durations.size()); i++)
+  {
+    cout << "duration["<<i<<"]: " << durations[i] << " intensity: "  << intensities[i] << endl;
+  }
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This parses MIDAS intensity and day data to give multiday durations if
+// there are empty data slots or repeated rainfall amounts
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDPorewaterParams::parse_MIDAS_duration_intensities(vector<int>& days, vector<float>& intensities, vector<float>& durations)
+{
+  vector<float> new_intensities;
+  vector<float> new_durations;
+  
+  float last_intensity = intensities[0];
+  int last_day = days[0];
+  float zero = 0.0;
+  
+  // starting bug checking
+  cout << "Starting. Last day is: " <<  last_day << " last_intensity is: " << last_intensity << endl;
+  
+  int n_records = int(intensities.size());
+  for(int i = 1; i<n_records; i++)
+  {
 
+    cout << "Day: " <<  days[i] << " i: " << intensities[i] << " ld: " << last_day << " li: " << last_intensity << endl;
+
+    // first check if this day is the same as last day
+    if(days[i] != days[i-1]+1)
+    {
+      cout << "Setting some zeros!" << endl;
+      
+      
+      // set the duration and intensities for the previous section
+      int data_day_dif = days[i-1]-last_day;
+      if(data_day_dif!=0)
+      {
+        new_durations.push_back(data_day_dif);
+        new_intensities.push_back(intensities[i-1]);
+      }
+      
+      // now get the 0 data
+      if(intensities[i] == 0)
+      {
+        cout << "My zeros have yet another zero!" << endl;
+        
+        // in this case we don't push back data since the data will be pushed
+        // back by the next step
+        //last_day = days[i];
+        //last_intensity = zero;
+      }
+      else
+      { 
+        cout << "I'm adding these zeros to the pile!" << endl;
+        int day_diff =  days[i]-days[i-1];
+        new_durations.push_back(day_diff);
+        new_intensities.push_back(zero);
+      
+        last_day = days[i];
+        last_intensity = intensities[i];
+      }
+    }
+    else
+    {
+
+      // check if intensity is different from last intensity
+      if(intensities[i] != last_intensity)
+      {
+        cout << "Found a new intensity! " << endl;
+        
+        cout << "ld: " << last_day << " td: " << days[i] << endl; 
+        
+        // figure out how many days of this intensity we have had
+        int day_diff =  days[i]-last_day;
+        new_durations.push_back(day_diff);
+        new_intensities.push_back(last_intensity);
+        
+        last_day = days[i];
+        last_intensity = intensities[i];
+      }
+    }
+  }
+  // now we need to deal with final data member
+  cout << "Day: " <<  days[n_records-1]+1 << " i: " << intensities[n_records-1] << " ld: " << last_day << " li: " << last_intensity << endl;
+  int day_diff =  days[n_records-1]+1-last_day;
+  new_durations.push_back(day_diff);
+  new_intensities.push_back(last_intensity);
+  
+  // now reset the vectors
+  intensities = new_intensities;
+  durations = new_durations; 
+
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // THis prints the parameters to screen

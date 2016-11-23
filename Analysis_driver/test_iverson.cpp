@@ -67,6 +67,9 @@ int main (int nNumberofArgs,char *argv[])
     path_name = argv[1];
     string f_name = argv[2];
 
+    // Make sure the path has an extension
+    path_name = FixPath(path_name);
+
     LSDPorewaterParams TempPP(path_name,f_name);
     LSDPP = TempPP;
   }
@@ -94,10 +97,13 @@ int main (int nNumberofArgs,char *argv[])
 
   // get a steady state column
   LSDPorewaterColumn LSD_PC(LSDPP);
+  LSDPP.print_parameters_to_screen();
   
-  string rainfall_fname = "rain.csv";
+  string rainfall_fname = "MidasSMALL_13014.csv";
   vector<float> intensities;
-  LSDPP.parse_rainfall_file(path_name, rainfall_fname,intensities);
+  vector<int> days;
+  LSDPP.parse_MIDAS_rainfall_file(path_name, rainfall_fname,days,intensities);
+
   
 
 }
