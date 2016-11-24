@@ -362,6 +362,28 @@ LSDIndexRaster LSDFloodplain::print_ConnectedComponents_to_Raster()
 	return ConnectedComponents;
 }
 
+//----------------------------------------------------------------------------------------
+// Print binary raster of floodplain locations
+// FJC 24/11/16
+//---------------------------------------------------------------------------------------- 
+LSDIndexRaster LSDFloodplain::print_BinaryRaster()
+{
+	Array2D<int> BinaryArray (NRows,NCols,NoDataValue);
+	
+	for (int row = 0; row < NRows; row++)
+	{
+		for (int col = 0; col < NCols; col++)
+		{
+			if (ConnectedComponents_Array[row][col] != NoDataValue)
+			{
+				BinaryArray[row][col] = 1;
+			}
+		}
+	}
+	LSDIndexRaster BinaryRaster(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, BinaryArray, GeoReferencingStrings);
+	return BinaryRaster;
+}
+
 ////----------------------------------------------------------------------------------------
 //// Get the raster of channel relief relative to the nearest channel reach
 //// FJC 18/10/16

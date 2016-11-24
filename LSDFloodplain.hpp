@@ -80,6 +80,12 @@ void Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwork, LSDFlowInfo&
 	/// @date 20/10/16
 	LSDIndexRaster print_ConnectedComponents_to_Raster();
 	
+	/// @brief This function prints a binary raster of floodplain locations
+	/// @return BinaryRaster binary raster
+	/// @author FJC
+	/// @date 24/11/16
+	LSDIndexRaster print_BinaryRaster();
+	
 	/// @brief This function prints the channel relief compared to the main stem to a raster
 	/// @return ChannelRelief LSDRaster of channel relief
 	/// @author FJC
