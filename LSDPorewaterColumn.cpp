@@ -353,15 +353,26 @@ float LSDPorewaterColumn::F_f(LSDPorewaterParams& LSDPP)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This is from the cohesion
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-float LSDPorewaterColumn::F_c(LSDPorewaterParams& LSDPP)
+vector<float> LSDPorewaterColumn::F_c(LSDPorewaterParams& LSDPP)
 {
+  float cohesion = LSDPP.get_cohesion();
   float alpha =  LSDPP.get_alpha();
-  float friction_angle = LSDPP.get_friction_angle();
+  float weight_of_soil = LSDPP.get_weight_of_soil();
+  vector<float> Depths = LSDPP.get_Depths();
   
-  float tan_alpha = tan(alpha);
-  float tan_friction_angle = tan(friction_angle);
+  float denom;
+  float denom2 = sin(alpha)*cos(alpha);
   
-  return tan_friction_angle/tan_alpha;
+  vector<float> F_c_vec;
+  
+  for(int i = 0; i< int(Depths.size()); i++)
+  {
+    denom = Depths[i]*weight_of_soil;
+    
+    F_c_vec.push_back( cohesion/(denom*denom2) );
+  }
+  
+  return F_c_vec;
 
 }
 
@@ -369,15 +380,33 @@ float LSDPorewaterColumn::F_c(LSDPorewaterParams& LSDPP)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This is from the water
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-float LSDPorewaterColumn::F_w(LSDPorewaterParams& LSDPP)
+vector<float> LSDPorewaterColumn::F_w(LSDPorewaterParams& LSDPP)
 {
+  vector<float> Depths = LSDPP.get_Depths();
   float alpha =  LSDPP.get_alpha();
   float friction_angle = LSDPP.get_friction_angle();
+  float weight_of_soil = LSDPP.get_weight_of_soil();
+  float weight_of_water = LSDPP.get_weight_of_water();
+    
+  float denom, num1, num2;
+  float denom2 = sin(alpha)*cos(alpha);
+  float denom_tot;
   
-  float tan_alpha = tan(alpha);
-  float tan_friction_angle = tan(friction_angle);
+  vector<float> F_w_vec;
   
-  return tan_friction_angle/tan_alpha;
+  for(int i = 0; i< int(Depths.size()); i++)
+  {
+    
+    num1 = Psi[i]*weight_of_water;
+    num2 = -num1*tan(friction_angle);
+    
+    denom = Depths[i]*weight_of_soil;
+    denom_tot = denom*denom2;
+    
+    F_w_vec.push_back( num2/denom_tot );
+  }
+  
+  return F_w_vec;
 
 }
 

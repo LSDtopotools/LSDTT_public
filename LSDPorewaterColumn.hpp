@@ -144,17 +144,17 @@ class LSDPorewaterColumn
 
     /// @brief Calcualtes the friction factor from cohesion component of the factor of safety
     /// @param LSDPP is an PorewaterParams object
-    /// @return F_c 
+    /// @return F_c (a vector of floats)
     /// @author smudd
     /// @date 25/11/2016
-    float F_c(LSDPorewaterParams& LSDPP);
+    vector<float> F_c(LSDPorewaterParams& LSDPP);
 
     /// @brief Calcualtes the friction factor from pore pressure component of the factor of safety
     /// @param LSDPP is an PorewaterParams object
-    /// @return F_w 
+    /// @return F_w (a vector of floats)
     /// @author smudd
     /// @date 25/11/2016
-    float F_w(LSDPorewaterParams& LSDPP);
+    vector<float> F_w(LSDPorewaterParams& LSDPP);
 
     /// @return The vector of depths
     vector<float> get_Psi() const { return Psi; }
