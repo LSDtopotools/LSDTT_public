@@ -114,6 +114,10 @@ void LSDPorewaterParams::create(string paramfile_path, string paramfile_name)
   float_default_map["Iz_over_K_steady"] = 0.2;
   float_default_map["depth_spacing"] = 0.1;
   float_default_map["alpha"] = 0.1;
+  float_default_map["friction_angle"] = 0.4;
+  float_default_map["cohesion"] = 500;
+  float_default_map["weight_of_soil"] = 19000;
+  float_default_map["weight_of_water"] = 9800;
   
   // set default in parameter
   int_default_map["n_depths"] = 31;
@@ -137,6 +141,10 @@ void LSDPorewaterParams::create(string paramfile_path, string paramfile_name)
   alpha = this_float_map["alpha"];
   Iz_over_K_steady = this_float_map["Iz_over_K_steady"];
   K_sat = this_float_map["K_sat"];
+  friction_angle = this_float_map["friction_angle"];
+  cohesion = this_float_map["cohesion"];
+  weight_of_soil = this_float_map["weight_of_soil"];
+  weight_of_water = this_float_map["weight_of_water"];
   
   cout << "In the params, Iz_over_K_steady: " << Iz_over_K_steady << endl;
 

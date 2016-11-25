@@ -98,6 +98,18 @@ class LSDPorewaterParams
 
     /// @return depth to water table
     float get_d() const { return d; }
+
+    /// @return friction_angle
+    float get_friction_angle() const { return friction_angle; }
+
+    /// @return cohesion
+    float get_cohesion() const { return cohesion; }
+    
+    /// @return weight_of_water
+    float get_weight_of_water() const { return weight_of_water; }
+    
+    /// @return weight_of_soil
+    float get_weight_of_soil() const { return weight_of_soil; }
     
     /// @ brief Calculates the beta parameter and sets that data member
     /// @author SMM
@@ -232,6 +244,18 @@ class LSDPorewaterParams
     
     /// The infiltration rate at steady state
     float Iz_over_K_steady;
+    
+    /// The friction andgle
+    float friction_angle;
+    
+    /// The cohesion
+    float cohesion;
+    
+    /// The weigth of water (density time gravity)
+    float weight_of_water;
+    
+    /// The weight of soil (density times gravity)
+    float weight_of_soil;
   
   private:
   

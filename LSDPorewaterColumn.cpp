@@ -206,9 +206,13 @@ vector<float> LSDPorewaterColumn::CalculatePsiDimensionalTimeTransient(LSDPorewa
     }
     else
     {
-      R = CalculateResponseFunction(t_star-T_star);
+      R = CalculateResponseFunction(t_star)-CalculateResponseFunction(t_star-T_star);
     }
     transient_Psi[i] =Depths[i]*Iz_over_Kz*R;
+    
+    //cout << "depth: " << Depths[i] << " t_star: " << t_star << " T_star: " << T_star << endl;
+    
+    
   }
   return transient_Psi;
 }
@@ -217,6 +221,8 @@ vector<float> LSDPorewaterColumn::CalculatePsiDimensionalTimeTransient(LSDPorewa
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This caluclates the Psi value based on iverson's equation 27
 // It parses a time series
+// The durations and time are in seconds. 
+// The intensities are in Iz_over_Kz
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDPorewaterColumn::CalculatePsiFromTimeSeries(vector<float> durations, vector<float> intensities, 
                                 LSDPorewaterParams& LSDPP, float t)
@@ -224,6 +230,14 @@ void LSDPorewaterColumn::CalculatePsiFromTimeSeries(vector<float> durations, vec
   // Get the steady state time
   vector<float> steady_psi = LSDPP.calculate_steady_psi();
   vector<float> cumulative_psi = steady_psi;
+  
+  // see what the result is:
+  //cout << endl << "======================" << endl << "Steady psi: " << endl;
+  //for(int i = 0; i<int(cumulative_psi.size()); i++)
+  //{
+  //  cout << "Psi["<<i<<"]: " << cumulative_psi[i] << endl;
+  //}
+  //cout << "======================" << endl << endl << endl;
 
   // Now we try to construct the transient pressure. 
   // loop through the record getting cumulative times
@@ -232,11 +246,13 @@ void LSDPorewaterColumn::CalculatePsiFromTimeSeries(vector<float> durations, vec
   float cumulative_time = 0;
   int count = 0; 
   bool end_count_found = false;
-  int end_count;
+  int end_count = 0;
   
   for (int i = 0; i< int(durations.size()); i++)
   {
     cumulative_time += durations[i];
+    
+    //cout << "t: " << t << " cumulative time: " << cumulative_time << endl;
     
     // the cumulative time is the time at the end of this timestep. 
     // if the cumulative time  is less than the time of simulation, 
@@ -248,14 +264,15 @@ void LSDPorewaterColumn::CalculatePsiFromTimeSeries(vector<float> durations, vec
         end_count_found = true;
         end_count = count;
       }
-        
-      count++;
-      starting_times.push_back(cumulative_time);
     }
+    count++;
+    starting_times.push_back(cumulative_time);
   }
   
   // we don't need the last element
   starting_times.pop_back();
+  
+  //cout << "N starting times: " <<  starting_times.size() << endl;
 
   // If we didn't find the end count it means the rainfall records have ended and we need
   // all of the data        
@@ -264,6 +281,17 @@ void LSDPorewaterColumn::CalculatePsiFromTimeSeries(vector<float> durations, vec
     // The minus one is needed since we have counted past the end of the index
     end_count = count-1;
   }
+  
+  //cout << "end count is: " << end_count << endl;
+
+
+  // check starting times, etc
+  //for(int i = 0; i< int(starting_times.size()); i++)
+  //{
+  //  cout << "st: " << starting_times[i] << " i: " << intensities[i] << " d: " << durations[i] << endl;
+  //
+  //}
+
 
   // okay, now get the transients from superposition 
   // First we need to figure out how many of these we will need
@@ -277,8 +305,17 @@ void LSDPorewaterColumn::CalculatePsiFromTimeSeries(vector<float> durations, vec
       this_intensity = intensities[i];
       this_duration = durations[i];
       
+      //cout << "Eff t: " << eff_t << " and intensity: " << this_intensity << " dur: " << this_duration << endl;
+      
       // get this steps Psi value
       this_transient_Psi = CalculatePsiDimensionalTimeTransient(LSDPP, eff_t, this_duration, this_intensity);
+      
+      // check values
+      //cout << "Transient psi is:"<< endl;
+      //for(int i = 0; i<int(cumulative_psi.size()); i++)
+      //{
+      //  cout << this_transient_Psi[i] << endl;
+      //}
 
       // add this step's transient Psi values.
       for(int i = 0; i<int(cumulative_psi.size()); i++)
@@ -287,9 +324,62 @@ void LSDPorewaterColumn::CalculatePsiFromTimeSeries(vector<float> durations, vec
       }
     }
   }
+  
+  // see what the result is:
+  for(int i = 0; i<int(cumulative_psi.size()); i++)
+  {
+    cout << "Psi["<<i<<"]: " << cumulative_psi[i] << endl;
+  }
+  
 }
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Factor of safety calculations
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This is the friction
+float LSDPorewaterColumn::F_f(LSDPorewaterParams& LSDPP)
+{
+  float alpha =  LSDPP.get_alpha();
+  float friction_angle = LSDPP.get_friction_angle();
+  
+  float tan_alpha = tan(alpha);
+  float tan_friction_angle = tan(friction_angle);
+  
+  return tan_friction_angle/tan_alpha;
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This is from the cohesion
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDPorewaterColumn::F_c(LSDPorewaterParams& LSDPP)
+{
+  float alpha =  LSDPP.get_alpha();
+  float friction_angle = LSDPP.get_friction_angle();
+  
+  float tan_alpha = tan(alpha);
+  float tan_friction_angle = tan(friction_angle);
+  
+  return tan_friction_angle/tan_alpha;
+
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This is from the water
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDPorewaterColumn::F_w(LSDPorewaterParams& LSDPP)
+{
+  float alpha =  LSDPP.get_alpha();
+  float friction_angle = LSDPP.get_friction_angle();
+  
+  float tan_alpha = tan(alpha);
+  float tan_friction_angle = tan(friction_angle);
+  
+  return tan_friction_angle/tan_alpha;
+
+}
 
 
 #endif

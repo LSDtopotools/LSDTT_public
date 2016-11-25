@@ -134,6 +134,28 @@ class LSDPorewaterColumn
     void CalculatePsiFromTimeSeries(vector<float> durations, vector<float> intensities, 
                                 LSDPorewaterParams& LSDPP, float t);
 
+
+    /// @brief Calcualtes the friction factor component of the factor of safety
+    /// @param LSDPP is an PorewaterParams object
+    /// @return F_f 
+    /// @author smudd
+    /// @date 25/11/2016
+    float F_f(LSDPorewaterParams& LSDPP);
+
+    /// @brief Calcualtes the friction factor from cohesion component of the factor of safety
+    /// @param LSDPP is an PorewaterParams object
+    /// @return F_c 
+    /// @author smudd
+    /// @date 25/11/2016
+    float F_c(LSDPorewaterParams& LSDPP);
+
+    /// @brief Calcualtes the friction factor from pore pressure component of the factor of safety
+    /// @param LSDPP is an PorewaterParams object
+    /// @return F_w 
+    /// @author smudd
+    /// @date 25/11/2016
+    float F_w(LSDPorewaterParams& LSDPP);
+
     /// @return The vector of depths
     vector<float> get_Psi() const { return Psi; }
 
