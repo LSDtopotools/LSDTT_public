@@ -128,7 +128,7 @@ void LSDPorewaterParams::create(string paramfile_path, string paramfile_name)
   map<string,float> this_float_map = LSDPP.get_float_parameters();
   map<string,int> this_int_map = LSDPP.get_int_parameters();
   map<string,bool> this_bool_map = LSDPP.get_bool_parameters();
-  //map<string,string> this_string_map = LSDPP.get_string_parameters();
+  map<string,string> this_string_map = LSDPP.get_string_parameters();
   
   cout << "Yo! Iz_over_K_steady is: " << this_float_map["Iz_over_K_steady"] << endl;
     

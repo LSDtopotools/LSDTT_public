@@ -508,6 +508,8 @@ vector<int> LSDParameterParser::parse_int_vector(string key)
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 vector<float> LSDParameterParser::parse_float_vector(string key)
 {
+  cout << "I am going to parse a float vector for you!" << endl;
+  
   string this_string = string_parameters[key];
 
   // reset the string vec
@@ -529,7 +531,7 @@ vector<float> LSDParameterParser::parse_float_vector(string key)
     substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
       
     // add the string to the string vec
-    this_float_vec.push_back( atoi(substr.c_str()) );
+    this_float_vec.push_back( atof(substr.c_str()) );
   }
   
   return this_float_vec;
