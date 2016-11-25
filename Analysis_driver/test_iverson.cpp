@@ -120,6 +120,11 @@ int main (int nNumberofArgs,char *argv[])
   durations_weeks.push_back(4);
   
   vector<float> durations_seconds = LSDPP.weeks_to_seconds(durations_weeks);
+  
+  // now run the model
+  float week_of_pressure = 12;
+  float sec_of_pressure = LSDPP.weeks_to_seconds(week_of_pressure);
+  LSD_PC.CalculatePsiFromTimeSeries(durations_seconds, intensities_new,LSDPP, sec_of_pressure);
 
   
 
