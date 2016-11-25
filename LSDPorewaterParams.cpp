@@ -109,6 +109,7 @@ void LSDPorewaterParams::create(string paramfile_path, string paramfile_name)
   
   // set default float parameters
   float_default_map["D_0"] = 0.00001;
+  float_default_map["K_sat"] = 5e-8;
   float_default_map["d"] = 2;
   float_default_map["alpha"] = 0.1;
   float_default_map["depth_spacing"] = 0.1;
@@ -133,6 +134,7 @@ void LSDPorewaterParams::create(string paramfile_path, string paramfile_name)
   d = this_float_map["d"];
   alpha = this_float_map["alpha"];
   Iz_over_K_steady = this_float_map["Iz_over_K_steady"];
+  K_sat = this_float_map["K_sat"];
 
   // parameters for getting the depths
   float depth_spacing = this_float_map["depth_spacing"];
@@ -392,85 +394,87 @@ void LSDPorewaterParams::parse_MIDAS_duration_intensities(vector<int>& days, vec
 {
   vector<float> new_intensities;
   vector<float> new_durations;
-  
-  float last_intensity = intensities[0];
-  int last_day = days[0];
-  float zero = 0.0;
-  
-  // starting bug checking
-  cout << "Starting. Last day is: " <<  last_day << " last_intensity is: " << last_intensity << endl;
-  
+
+  // we first do a sweep getting intermediate days
+  vector<float> intermediate_intensities;
+  intermediate_intensities.push_back(intensities[0]);
   int n_records = int(intensities.size());
   for(int i = 1; i<n_records; i++)
   {
-
-    cout << "Day: " <<  days[i] << " i: " << intensities[i] << " ld: " << last_day << " li: " << last_intensity << endl;
-
-    // first check if this day is the same as last day
-    if(days[i] != days[i-1]+1)
+    // If we have incremented by a single day, just push back the data
+    if(days[i] == days[i-1]+1)
     {
-      cout << "Setting some zeros!" << endl;
-      
-      
-      // set the duration and intensities for the previous section
-      int data_day_dif = days[i-1]-last_day;
-      if(data_day_dif!=0)
-      {
-        new_durations.push_back(data_day_dif);
-        new_intensities.push_back(intensities[i-1]);
-      }
-      
-      // now get the 0 data
-      if(intensities[i] == 0)
-      {
-        cout << "My zeros have yet another zero!" << endl;
-        
-        // in this case we don't push back data since the data will be pushed
-        // back by the next step
-        //last_day = days[i];
-        //last_intensity = zero;
-      }
-      else
-      { 
-        cout << "I'm adding these zeros to the pile!" << endl;
-        int day_diff =  days[i]-days[i-1];
-        new_durations.push_back(day_diff);
-        new_intensities.push_back(zero);
-      
-        last_day = days[i];
-        last_intensity = intensities[i];
-      }
+      intermediate_intensities.push_back(intensities[i]);
     }
     else
     {
-
-      // check if intensity is different from last intensity
-      if(intensities[i] != last_intensity)
+      // here we need to push back zeros for the missing days
+      int day_dif = days[i]-days[i-1]-1;
+      for(int j = 0; j<day_dif; j++)
       {
-        cout << "Found a new intensity! " << endl;
-        
-        cout << "ld: " << last_day << " td: " << days[i] << endl; 
-        
-        // figure out how many days of this intensity we have had
-        int day_diff =  days[i]-last_day;
-        new_durations.push_back(day_diff);
-        new_intensities.push_back(last_intensity);
-        
-        last_day = days[i];
-        last_intensity = intensities[i];
+        intermediate_intensities.push_back(0.0);
       }
+      // now push back the next intensity
+      intermediate_intensities.push_back(intensities[i]);
     }
   }
-  // now we need to deal with final data member
-  cout << "Day: " <<  days[n_records-1]+1 << " i: " << intensities[n_records-1] << " ld: " << last_day << " li: " << last_intensity << endl;
-  int day_diff =  days[n_records-1]+1-last_day;
-  new_durations.push_back(day_diff);
-  new_intensities.push_back(last_intensity);
+  
+  // now print all these for bug checking
+  int n_int_intensities = int(intermediate_intensities.size());
+  int this_day = days[0];
+  //for(int i = 0; i<n_int_intensities; i++)
+  //{
+  //  cout << "Day: " << this_day << " i: " << intermediate_intensities[i] << endl;
+  //  this_day++;
+  //}
+  
+  // Now go back over the intensities and set the durations and intensities
+  int this_consecutive = 0;
+  float last_intensity = intermediate_intensities[0];
+  for(int i = 1; i<n_int_intensities; i++)
+  {
+    // add a consecutive day
+    this_consecutive++;
+    
+    // check to see if the intensity has changed
+    // if the intensity has not changed, you don't do anything.
+    if (intermediate_intensities[i] != last_intensity)
+    {
+      // the intensity has changed. Add the last one to the record and update 
+      // the last changed intensity
+      new_intensities.push_back(last_intensity);
+      new_durations.push_back(float(this_consecutive));
+      last_intensity = intermediate_intensities[i];
+      this_consecutive = 0;
+    }
+  }
+  // now you need to deal with the last point. There is always data there
+  if(this_consecutive == 0)
+  {
+    // This means that the last data point was a new intensity, so there is only
+    // one day left
+    new_intensities.push_back(last_intensity);
+    new_durations.push_back(1.0);
+  }
+  else
+  {
+    // this means that the last data point was repeated, so we need to use
+    // different logic
+    new_intensities.push_back(last_intensity);
+    new_durations.push_back(float(this_consecutive));
+  }
+  
+  
+  // check to see if it worked
+  //int n_intensities = int(new_intensities.size());
+  //for(int i = 0; i<n_intensities; i++)
+  //{
+  //  cout << "Duration: " << new_durations[i] << " i: " << new_intensities[i] << endl;
+  //}
   
   // now reset the vectors
   intensities = new_intensities;
   durations = new_durations; 
-
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

@@ -151,19 +151,22 @@ class LSDPorewaterParams
 
 
   protected:
-    /// This holds the depths
+    /// This holds the depths in metres
     vector<float> Depths;
     
     /// This holds the slope in radians
     float alpha;
     
-    /// The diffusivity
+    /// The  hydraulic diffusivity in m^2/s
     float D_0;
     
-    /// The dimensionless diffusivity
+    /// The saturated hydraulic conductivity in m/s
+    float K_sat;
+    
+    /// The dimensionless hydraulic diffusivity
     float D_hat;
     
-    /// The depth to saturated water table at steady infiltration
+    /// The depth to saturated water table at steady infiltration in metres
     float d;
     
     /// A parameter that describes the stead state pressure profile

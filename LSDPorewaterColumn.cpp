@@ -216,7 +216,7 @@ vector<float> LSDPorewaterColumn::CalculatePsiDimensionalTimeTransient(LSDPorewa
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This caluclates the Psi value based on iverson's equation 27
-// Has only the transient component of psi
+// It parses a time series
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDPorewaterColumn::CalculatePsiFromTimeSeries(vector<float> durations, vector<float> intensities, 
                                 LSDPorewaterParams& LSDPP, float t)
