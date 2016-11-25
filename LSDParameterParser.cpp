@@ -221,12 +221,12 @@ void LSDParameterParser::LSDPP_parse_file_into_parameter_map(string FullName)
   {
     LSDPP_parse_line(infile, parameter, value);
     lower = parameter;
-    if (parameter == "NULL")
-      continue;
-    for (unsigned int i=0; i<parameter.length(); ++i)
-    {
-      lower[i] = tolower(parameter[i]);
-    }
+    //if (parameter == "NULL")
+    //  continue;
+    //for (unsigned int i=0; i<parameter.length(); ++i)
+    //{
+    //  lower[i] = tolower(parameter[i]);
+    //}
 
     cout << "parameter is: " << lower << " and value is: " << value << endl;
 
@@ -327,9 +327,12 @@ void LSDParameterParser::parse_float_parameters(map<string,float> default_map)
     // If the key is contained in the parsed parameters, use the parsed parameter
     if(parameter_map.find(these_keys[i]) != parameter_map.end())
     {
+      cout << "Found key " << these_keys[i];
+    
       // convert the value to float
       float_parameters[these_keys[i]] = atof(parameter_map[these_keys[i]].c_str());
       parameters_read_map[these_keys[i]] = parameter_map[these_keys[i]];
+      cout << " it is: " << parameter_map[these_keys[i]] << " check: " << float_parameters[these_keys[i]] << endl;
       
     }
     else  // the key is not in the parsed parameters. Use the default. 

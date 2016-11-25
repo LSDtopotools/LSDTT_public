@@ -95,7 +95,10 @@ int main (int nNumberofArgs,char *argv[])
     exit(EXIT_SUCCESS);
   }
 
-  // get a steady state column
+  // get a steady state column    
+  //cout << "I just loaded my data!!!!"<< endl;
+  //LSDPP.print_parameters_to_screen();
+  
   LSDPorewaterColumn LSD_PC(LSDPP);
   LSDPP.print_parameters_to_screen();
   

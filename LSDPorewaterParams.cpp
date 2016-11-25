@@ -111,9 +111,9 @@ void LSDPorewaterParams::create(string paramfile_path, string paramfile_name)
   float_default_map["D_0"] = 0.00001;
   float_default_map["K_sat"] = 5e-8;
   float_default_map["d"] = 2;
-  float_default_map["alpha"] = 0.1;
-  float_default_map["depth_spacing"] = 0.1;
   float_default_map["Iz_over_K_steady"] = 0.2;
+  float_default_map["depth_spacing"] = 0.1;
+  float_default_map["alpha"] = 0.1;
   
   // set default in parameter
   int_default_map["n_depths"] = 31;
@@ -130,11 +130,15 @@ void LSDPorewaterParams::create(string paramfile_path, string paramfile_name)
   map<string,bool> this_bool_map = LSDPP.get_bool_parameters();
   //map<string,string> this_string_map = LSDPP.get_string_parameters();
   
+  cout << "Yo! Iz_over_K_steady is: " << this_float_map["Iz_over_K_steady"] << endl;
+    
   D_0 = this_float_map["D_0"];
   d = this_float_map["d"];
   alpha = this_float_map["alpha"];
   Iz_over_K_steady = this_float_map["Iz_over_K_steady"];
   K_sat = this_float_map["K_sat"];
+  
+  cout << "In the params, Iz_over_K_steady: " << Iz_over_K_steady << endl;
 
   // parameters for getting the depths
   float depth_spacing = this_float_map["depth_spacing"];
@@ -165,6 +169,8 @@ void LSDPorewaterParams::create(string paramfile_path, string paramfile_name)
   
   calculate_beta();
   calculate_D_hat();
+  
+  cout << "In the params v2, Iz_over_K_steady: " << Iz_over_K_steady << endl;
   
 }
 
@@ -201,6 +207,76 @@ vector<float> LSDPorewaterParams::calculate_steady_psi()
   return Psi;
 
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// These are a bunch of time manipulating fuctions
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<float> LSDPorewaterParams::weeks_to_seconds(vector<float> weeks)
+{
+  vector<float> seconds;
+  for (int i = 0; i< int(weeks.size()); i++)
+  {
+    seconds.push_back(weeks_to_seconds(weeks[i]));
+  }
+  return seconds;
+}
+
+vector<float> LSDPorewaterParams::days_to_seconds(vector<float> days)
+{
+  vector<float> seconds;
+  for (int i = 0; i< int(days.size()); i++)
+  {
+    seconds.push_back(days_to_seconds(days[i]));
+  }
+  return seconds;
+}
+
+float LSDPorewaterParams::weeks_to_seconds(float weeks)
+{
+  float seconds = weeks*7.0*24.0*3600.0;
+  return seconds;
+}
+
+float LSDPorewaterParams::days_to_seconds(float days)
+{
+  float seconds = days*24.0*3600.0;
+  return seconds;
+}
+
+
+vector<float> LSDPorewaterParams::seconds_to_weeks(vector<float> seconds)
+{
+  vector<float> weeks;
+  for (int i = 0; i< int(seconds.size()); i++)
+  {
+    weeks.push_back(seconds_to_weeks(seconds[i]));
+  }
+  return weeks;
+}
+
+vector<float> LSDPorewaterParams::seconds_to_days(vector<float> seconds)
+{
+  vector<float> days;
+  for (int i = 0; i< int(seconds.size()); i++)
+  {
+    days.push_back(seconds_to_days(seconds[i]));
+  }
+  return days;
+}
+
+float LSDPorewaterParams::seconds_to_weeks(float seconds)
+{
+  float weeks = seconds/(7.0*24.0*3600.0);
+  return weeks;
+}
+
+float LSDPorewaterParams::seconds_to_days(float seconds)
+{
+  float days = seconds/(24.0*3600.0);
+  return days;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This parses a rainfall file
@@ -384,6 +460,23 @@ void LSDPorewaterParams::parse_MIDAS_rainfall_file(string path, string filename,
   {
     cout << "duration["<<i<<"]: " << durations[i] << " intensity: "  << intensities[i] << endl;
   }
+  
+  // now change the units so they are in m/s
+  // MIDAS data is mm/day
+  // These are divided by K_sat to give the Iz/Kz numbers
+  for(int i = 0; i<int(durations.size()); i++)
+  {
+    durations[i] = durations[i]*3600.0*24.0;
+    intensities[i] = (intensities[i]*0.001)/(3600.0*24.0*K_sat);
+    cout << "duration["<<i<<"]: " << durations[i] << " intensity: "  << intensities[i] << endl;
+    
+    // the maximum intensity is 1
+    if(intensities[i] > 1)
+    {
+      intensities[i] = 1;
+    }
+  }
+  
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -419,16 +512,8 @@ void LSDPorewaterParams::parse_MIDAS_duration_intensities(vector<int>& days, vec
     }
   }
   
-  // now print all these for bug checking
-  int n_int_intensities = int(intermediate_intensities.size());
-  int this_day = days[0];
-  //for(int i = 0; i<n_int_intensities; i++)
-  //{
-  //  cout << "Day: " << this_day << " i: " << intermediate_intensities[i] << endl;
-  //  this_day++;
-  //}
-  
   // Now go back over the intensities and set the durations and intensities
+  int n_int_intensities = int(intermediate_intensities.size());
   int this_consecutive = 0;
   float last_intensity = intermediate_intensities[0];
   for(int i = 1; i<n_int_intensities; i++)
@@ -483,7 +568,8 @@ void LSDPorewaterParams::parse_MIDAS_duration_intensities(vector<int>& days, vec
 void  LSDPorewaterParams::print_parameters_to_screen()
 {
   cout << "Your parameters are: " << endl;
-  cout << "D_0: " << D_0 << endl;   
+  cout << "D_0: " << D_0 << endl;  
+  cout << "K_sat: " << K_sat << endl; 
   cout << "D_hat: " << D_hat << endl;
   cout << "alpha: " << alpha << endl;
   cout << "d: " << d << endl;

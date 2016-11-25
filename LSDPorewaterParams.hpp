@@ -109,6 +109,64 @@ class LSDPorewaterParams
     /// @date 17/11/2016
     void calculate_D_hat();
 
+    /// @brief converts weeks to seconds
+    /// @param weeks a vector of weeks
+    /// @return a vector of seconds
+    /// @author SMM
+    /// @date 25/11/2016
+    vector<float> weeks_to_seconds(vector<float> weeks);
+
+    /// @brief converts weeks to seconds
+    /// @param weeks weeks
+    /// @return seconds
+    /// @author SMM
+    /// @date 25/11/2016
+    float weeks_to_seconds(float weeks);
+
+    /// @brief converts days to seconds
+    /// @param weeks a vector of days
+    /// @return a vector of seconds
+    /// @author SMM
+    /// @date 25/11/2016
+    vector<float> days_to_seconds(vector<float> days);
+
+    /// @brief converts days to seconds
+    /// @param days
+    /// @return seconds
+    /// @author SMM
+    /// @date 25/11/2016
+    float days_to_seconds(float days);
+
+    /// @brief converts seconds to weeks
+    /// @param seconds a vector of seconds
+    /// @return a vector of weeks
+    /// @author SMM
+    /// @date 25/11/2016
+    vector<float> seconds_to_weeks(vector<float> seconds);
+
+    /// @brief converts seconds to weeks
+    /// @param seconds
+    /// @return weeks
+    /// @author SMM
+    /// @date 25/11/2016
+    float seconds_to_weeks(float seconds);
+
+    /// @brief converts seconds to days
+    /// @param weeks a vector of seconds
+    /// @return a vector of days
+    /// @author SMM
+    /// @date 25/11/2016
+    vector<float> seconds_to_days(vector<float> seconds);
+
+    /// @brief converts seconds to days
+    /// @param seconds
+    /// @return days
+    /// @author SMM
+    /// @date 25/11/2016
+    float seconds_to_days(float seconds);
+
+
+
     /// @brief This calculates a steady state pressure profile
     /// @author SMM
     /// @date 17/11/2016
