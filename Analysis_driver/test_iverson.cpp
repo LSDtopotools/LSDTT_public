@@ -106,6 +106,20 @@ int main (int nNumberofArgs,char *argv[])
   vector<float> intensities;
   vector<int> days;
   LSDPP.parse_MIDAS_rainfall_file(path_name, rainfall_fname,days,intensities);
+  
+  // lets make a duration intensity record to test the model
+  vector<float> intensities_new;
+  vector<float> durations_weeks;
+  
+  intensities_new.push_back(0.5);
+  intensities_new.push_back(1.0);
+  intensities_new.push_back(0.5);
+  
+  durations_weeks.push_back(5);
+  durations_weeks.push_back(6);
+  durations_weeks.push_back(4);
+  
+  vector<float> durations_seconds = LSDPP.weeks_to_seconds(durations_weeks);
 
   
 
