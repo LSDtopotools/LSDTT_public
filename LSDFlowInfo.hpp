@@ -404,6 +404,14 @@ class LSDFlowInfo
   /// @author SWDG updated SMM updated DTM
   /// @date 6/6/14 Happy 3rd birthday Skye!!
   vector<int> Ingest_Channel_Heads(string filename, string extension, int input_switch = 2);
+	
+	/// @brief Method to ingest sources from OS MasterMap Water Network Layer (csv) into a vector
+	/// of source nodes so that an LSDJunctionNetwork can be easily created from them. 
+	/// @param csv_filename CSV file name
+	/// @return vector of source nodes
+  /// @author FJC
+  /// @date 28/11/16
+  vector<int> Ingest_Channel_Heads_OS(string csv_filename);
 
   // functions for getting flow, discharge, sediment flux, etc
 

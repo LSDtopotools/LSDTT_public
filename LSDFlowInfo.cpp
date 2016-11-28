@@ -1563,8 +1563,75 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension,
   return Sources;
 }
 
-
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Method to ingest sources from OS MasterMap Water Network Layer (csv)
+// into a vector of source nodes so that an LSDJunctionNetwork can be created easily
+// from them. 
+//
+// Takes the filename and extension of the channel heads raster.
+//
+// FJC 28/11/2016
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+vector<int> LSDFlowInfo::Ingest_Channel_Heads_OS(string csv_filename)
+{
+	vector<int> CH_nodes;
+	// read in the CSV file
+	ifstream input_csv;
+	string dot = ".";
+	string extension = "csv";
+	string fname = csv_filename+dot+extension;
+	
+	cout << "The CSV filename is: " << fname << endl;
+	
+	input_csv.open(fname.c_str());
+	// check for correct input
+	if (not input_csv.good())
+	{
+		cout << "I can't read the CSV file! Check your filename." << endl;
+	}
+	
+	int object_ID, name, source_ID, PosAlong;
+	float X,Y;
+	vector<float> X_coords, Y_coords;
+	
+	// read in the file
+  while(!input_csv.eof())
+	{
+		string line;
+		getline(input_csv,line);
+		
+		// get the x and y coords to vectors
+		istringstream ss(line);
+		string param;
+		int i=0;
+		while(getline(ss, param, ','))
+		{
+			if (i == 4)
+			{
+				X_coords.push_back(atof(param.c_str()));
+			}
+			if (i == 5)
+			{
+				Y_coords.push_back(atof(param.c_str()));
+			}
+			i++;
+		}	
+	}
+	
+	int NCoords = X_coords.size();
+	
+	for (int i = 0; i < NCoords; i++)
+	{
+		int node = get_node_index_of_coordinate_point(X_coords[i], Y_coords[i]);
+		//cout << "NI: " << node << endl; 
+		if (node != NoDataValue)
+		{
+			CH_nodes.push_back(node);
+		}
+	}
+	
+	return CH_nodes;
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this prints the flownet information

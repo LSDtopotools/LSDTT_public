@@ -3,6 +3,8 @@
 // A driver function for use with the Land Surace Dynamics Topo Toolbox
 // This program gets all the basins of a specified drainage area and prints them
 // to a raster.
+// It reads in a list of sources from the OS MasterMap Water Network Layer which are
+// used to generate the channel network.
 //  
 // Developed by:
 //  Fiona J. Clubb
@@ -84,13 +86,23 @@ int main (int nNumberofArgs,char *argv[])
 		exit(EXIT_FAILURE);
 	}   
 
-	string DEM_name; 
-  string CH_name; 
-	string fill_ext = "_fill";
-	file_info_in >> DEM_name >> CH_name;
+	string DEM_name, csv_name;
 	float Minimum_Slope;
 	int DrainageArea;
-	file_info_in >> Minimum_Slope >> DrainageArea;
+	string fill_ext = "_fill";
+	string temp;
+	file_info_in >> temp >> DEM_name 
+							 >> temp >> csv_name 
+							 >> temp >> Minimum_Slope 
+							 >> temp >> DrainageArea;
+	
+	file_info_in.close();
+	
+	cout << "You are running the basin driver with the following settings:" << endl;
+	cout << "\t DEM name: " << DEM_name << endl;
+	cout << "\t Source CSV filename: " << csv_name << endl;
+	cout << "\t Minimum slope: " << Minimum_Slope << endl;
+	cout <<" \t Drainage area for basin extraction: " << DrainageArea << endl;
 
 	// get some file names
 	string DEM_f_name = path_name+DEM_name+fill_ext;
@@ -125,11 +137,15 @@ int main (int nNumberofArgs,char *argv[])
 	
 	cout << "\t Loading Sources..." << endl;
 	// load the sources
-  vector<int> sources = FlowInfo.Ingest_Channel_Heads((path_name+CH_name), DEM_extension, 1);
-	cout << "Got the sources" << endl;
-  
+  vector<int> sources = FlowInfo.Ingest_Channel_Heads_OS(path_name+csv_name);
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
-	cout << "Got the channel network" << endl;
+	cout << "\t Got channel network!" << endl;
+	
+	//write stream order array to a raster
+  LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
+  string SO_name = "_SO";
+	SOArray.write_raster((path_name+DEM_name+SO_name), DEM_extension);
+	
   //----------------------------------------------------------------------------------------------------//
   // GET ALL BASINS OF THE SPECIFIED STREAM ORDER
   //----------------------------------------------------------------------------------------------------//
@@ -137,17 +153,17 @@ int main (int nNumberofArgs,char *argv[])
   //cout << "Now getting all basins with a drainage area of: " << threshold_area << " m^2" << endl;
 	
 	//get the vector of basin junctions
-	vector<int> BasinNodes = ChanNetwork.extract_basin_nodes_by_drainage_area(DrainageArea, FlowInfo);
-	cout << "Got the basin nodes" << endl;
-	vector<int> basin_junctions = ChanNetwork.extract_basin_junctions_from_nodes(BasinNodes, FlowInfo);
-	cout << "Got the basin junctions" << endl;
-	
-	//vector<int> basin_junctions = ChanNetwork.extract_basins_order_outlet_junctions(BasinOrder, FlowInfo);
-	
-	// get raster of basins from the junctin vector
-	LSDIndexRaster BasinRaster = ChanNetwork.extract_basins_from_junction_vector(basin_junctions, FlowInfo);
-	string basin_ext = "_basins";
-	BasinRaster.write_raster((path_name+DEM_name+basin_ext), DEM_extension);
+//	vector<int> BasinNodes = ChanNetwork.extract_basin_nodes_by_drainage_area(DrainageArea, FlowInfo);
+//	cout << "Got the basin nodes" << endl;
+//	vector<int> basin_junctions = ChanNetwork.extract_basin_junctions_from_nodes(BasinNodes, FlowInfo);
+//	cout << "Got the basin junctions" << endl;
+//	
+//	//vector<int> basin_junctions = ChanNetwork.extract_basins_order_outlet_junctions(BasinOrder, FlowInfo);
+//	
+//	// get raster of basins from the junctin vector
+//	LSDIndexRaster BasinRaster = ChanNetwork.extract_basins_from_junction_vector(basin_junctions, FlowInfo);
+//	string basin_ext = "_basins";
+//	BasinRaster.write_raster((path_name+DEM_name+basin_ext), DEM_extension);
 	
 	// Done, check how long it took
 	clock_t end = clock();
