@@ -150,9 +150,9 @@ int main (int nNumberofArgs,char *argv[])
   // GET ALL BASINS OF THE SPECIFIED STREAM ORDER
   //----------------------------------------------------------------------------------------------------//
   
-  //cout << "Now getting all basins with a drainage area of: " << threshold_area << " m^2" << endl;
-	
-	//get the vector of basin junctions
+//  cout << "Now getting all basins with a drainage area of: " << DrainageArea << " m^2" << endl;
+//	
+//	//get the vector of basin junctions
 //	vector<int> BasinNodes = ChanNetwork.extract_basin_nodes_by_drainage_area(DrainageArea, FlowInfo);
 //	cout << "Got the basin nodes" << endl;
 //	vector<int> basin_junctions = ChanNetwork.extract_basin_junctions_from_nodes(BasinNodes, FlowInfo);
