@@ -92,6 +92,9 @@ class LSDPorewaterParams
 
     /// @return diffusivity
     float get_D_0() const { return D_0; }
+    
+    /// @return the saturated hydraulic conductivity
+    float get_K_sat() const {return K_sat; }
 
     /// @return dimensionless diffusivity
     float get_D_hat() const { return D_hat; }

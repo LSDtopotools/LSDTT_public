@@ -331,6 +331,8 @@ void LSDPorewaterColumn::CalculatePsiFromTimeSeries(vector<float> durations, vec
     cout << "Psi["<<i<<"]: " << cumulative_psi[i] << endl;
   }
   
+  Psi = cumulative_psi;
+  
 }
 
 
@@ -407,6 +409,30 @@ vector<float> LSDPorewaterColumn::F_w(LSDPorewaterParams& LSDPP)
   }
   
   return F_w_vec;
+
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This is the total factor of safety
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<float> LSDPorewaterColumn::FS(LSDPorewaterParams& LSDPP)
+{
+
+  // get the components of the factor of safety
+  float F_f_float = F_f(LSDPP);
+  vector<float> F_c_vec = F_c(LSDPP);
+  vector<float> F_w_vec = F_w(LSDPP);
+
+  // get the 
+  vector<float> FS = F_c_vec;
+  for(int i = 0; i< int(F_c_vec.size()); i++)
+  {
+    FS[i] = F_f_float+F_c_vec[i]+F_w_vec[i];
+    cout << "FS["<<i<<"]: " << FS[i] << endl;
+  }
+  
+  return FS;
 
 }
 

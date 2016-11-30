@@ -81,12 +81,21 @@ void LSDPorewaterParams::create()
   d = 2;
   alpha = 0.1;
   Iz_over_K_steady = 0.2;
-  
+  K_sat = 0.0000001;
+  friction_angle = 0.66322511;
+  cohesion = 500;
+  weight_of_soil = 19000;
+  weight_of_water = 9800;
+
   vector<float> this_z;
   for(int i = 0; i<31; i++)
   {
     this_z.push_back(float(i)*0.1);
   }
+  
+  // YOu get divide by zero if you have a zero at first depth, so give it finite depth
+  this_z[0]= 0.05;
+  
   Depths = this_z;
 
   calculate_beta();
@@ -109,12 +118,12 @@ void LSDPorewaterParams::create(string paramfile_path, string paramfile_name)
   
   // set default float parameters
   float_default_map["D_0"] = 0.00001;
-  float_default_map["K_sat"] = 5e-8;
+  float_default_map["K_sat"] = 0.0000001;
   float_default_map["d"] = 2;
   float_default_map["Iz_over_K_steady"] = 0.2;
   float_default_map["depth_spacing"] = 0.1;
   float_default_map["alpha"] = 0.1;
-  float_default_map["friction_angle"] = 0.4;
+  float_default_map["friction_angle"] = 0.66322511;
   float_default_map["cohesion"] = 500;
   float_default_map["weight_of_soil"] = 19000;
   float_default_map["weight_of_water"] = 9800;
@@ -173,6 +182,23 @@ void LSDPorewaterParams::create(string paramfile_path, string paramfile_name)
   else
   {
     Depths = these_calculated_depths;
+  }
+  
+  // Make sure the first depth is not 0
+  if(Depths.size() == 0)
+  {
+    Depths.push_back(0.1);
+  }
+  else if(Depths.size() == 1)
+  {
+    Depths[0] = 0.1;
+  }
+  else
+  {
+    if(Depths[0] == 0)
+    {
+      Depths[0] = 0.5*Depths[1];
+    }
   }
   
   calculate_beta();
@@ -373,118 +399,124 @@ void LSDPorewaterParams::parse_rainfall_file(string path, string filename, vecto
 void LSDPorewaterParams::parse_MIDAS_rainfall_file(string path, string filename,vector<int>& days, vector<float>& intensities )
 {
   
-  string fname = FixPath(path)+ filename;
   
-  // These are 
-  vector<int> day_since_1900;
+  cout << "Path: " << path << endl;
+  cout << "filename: " << filename << endl;
+  
+  string fname = FixPath(path)+filename;
+  cout << "Fname is:"<<fname << endl;
 
+  ifstream ifs;
+  ifs.open(fname.c_str());
   
-  // initiate the string to hold the file
-  string line_from_file;
-  vector<string> empty_string_vec;
-  vector<string> this_string_vec;
-  string temp_string;
-  float this_rain; 
-  int this_date;
-  vector<float> rain_vec;
-  
-  vector<string> HeaderInfo = ReadCSVHeader(path, filename);
-  
-  // now find the data columns column
-  string rain_string = "prcp_amt";
-  string this_string;
-  int rain_column = 0; 
-  string date_string = "days_since_1900";
-  int date_column = 0; 
-  for(int i = 0; i< int(HeaderInfo.size()); i++)
-  {
-    cout << "Header["<<i<<"]: " << HeaderInfo[i] << endl;
-    this_string = HeaderInfo[i];
-    if (this_string.compare(rain_string) == 0)
-    {
-      cout << "I found the rain rate, it is column " << i << endl;
-      rain_column = i;
-    }
-    if (this_string.compare(date_string) == 0)
-    {
-      cout << "I found the date, it is column " << i << endl;
-      date_column = i;
-    }
-  }
-
-
-  // now we work through the file. 
-  // make sure the filename works
-  ifstream ifs(fname.c_str());
   if( ifs.fail() )
   {
-    cout << "\nFATAL ERROR: Trying to load csv cosmo data file, but the file" << filename
-         << "doesn't exist; LINE 245 LSDCosmoData" << endl;
-    exit(EXIT_FAILURE);
+    cout << "\nERROR: The parameter \"" << fname
+         << "\" doesn't exist. I am not doing anything." << endl;
   }
+  else
+  {
+    // These are 
+    vector<int> day_since_1900;
   
-  // get the first line  and discard
-  getline(ifs, line_from_file);
+    // initiate the string to hold the file
+    string line_from_file;
+    vector<string> empty_string_vec;
+    vector<string> this_string_vec;
+    string temp_string;
+    float this_rain; 
+    int this_date;
+    vector<float> rain_vec;
+  
+    vector<string> HeaderInfo = ReadCSVHeader(path, filename);
+  
+    // now find the data columns column
+    string rain_string = "prcp_amt";
+    string this_string;
+    int rain_column = 0; 
+    string date_string = "days_since_1900";
+    int date_column = 0; 
+    for(int i = 0; i< int(HeaderInfo.size()); i++)
+    {
+      cout << "Header["<<i<<"]: " << HeaderInfo[i] << endl;
+      this_string = HeaderInfo[i];
+      if (this_string.compare(rain_string) == 0)
+      {
+        cout << "I found the rain rate, it is column " << i << endl;
+        rain_column = i;
+      }
+      if (this_string.compare(date_string) == 0)
+      {
+        cout << "I found the date, it is column " << i << endl;
+        date_column = i;
+      }
+    }
 
-  // now loop through the rest of the lines, getting the data. 
-  while( getline(ifs, line_from_file))
-  {
-    // reset the string vec
-    this_string_vec = empty_string_vec;
-    
-    // create a stringstream
-    stringstream ss(line_from_file);
-    
-    while( ss.good() )
+    // now we work through the file. 
+  
+    // get the first line  and discard
+    getline(ifs, line_from_file);
+
+    // now loop through the rest of the lines, getting the data. 
+    while( getline(ifs, line_from_file))
     {
-      string substr;
-      getline( ss, substr, ',' );
+      // reset the string vec
+      this_string_vec = empty_string_vec;
       
-      // remove the spaces
-      substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
+      // create a stringstream
+      stringstream ss(line_from_file);
       
-      // remove control characters
-      substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
+      while( ss.good() )
+      {
+        string substr;
+        getline( ss, substr, ',' );
+        
+        // remove the spaces
+        substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
+        
+        // remove control characters
+        substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
+        
+        // add the string to the string vec
+        this_string_vec.push_back( substr );
+      }
       
-      // add the string to the string vec
-      this_string_vec.push_back( substr );
+      // Now extract the rain rate
+      this_rain =  atof(this_string_vec[rain_column].c_str());
+      this_date = atoi(this_string_vec[date_column].c_str());
+      rain_vec.push_back(this_rain);
+      day_since_1900.push_back(this_date);
     }
+    intensities = rain_vec;
+    days = day_since_1900;
     
-    // Now extract the rain rate
-    this_rain =  atof(this_string_vec[rain_column].c_str());
-    this_date = atoi(this_string_vec[date_column].c_str());
-    rain_vec.push_back(this_rain);
-    day_since_1900.push_back(this_date);
-  }
-  intensities = rain_vec;
-  days = day_since_1900;
+    vector<float> new_intensities;
+    vector<float> durations;
+    parse_MIDAS_duration_intensities(days, intensities, durations);
   
-  vector<float> new_intensities;
-  vector<float> durations;
-  parse_MIDAS_duration_intensities(days, intensities, durations);
-  
-  // bug checking
-  for(int i = 0; i<int(durations.size()); i++)
-  {
-    cout << "duration["<<i<<"]: " << durations[i] << " intensity: "  << intensities[i] << endl;
-  }
-  
-  // now change the units so they are in m/s
-  // MIDAS data is mm/day
-  // These are divided by K_sat to give the Iz/Kz numbers
-  for(int i = 0; i<int(durations.size()); i++)
-  {
-    durations[i] = durations[i]*3600.0*24.0;
-    intensities[i] = (intensities[i]*0.001)/(3600.0*24.0*K_sat);
-    cout << "duration["<<i<<"]: " << durations[i] << " intensity: "  << intensities[i] << endl;
-    
-    // the maximum intensity is 1
-    if(intensities[i] > 1)
+    // bug checking
+    for(int i = 0; i<int(durations.size()); i++)
     {
-      intensities[i] = 1;
+      cout << "duration["<<i<<"]: " << durations[i] << " intensity: "  << intensities[i] << endl;
     }
-  }
   
+    // now change the units so they are in m/s
+    // MIDAS data is mm/day
+    // These are divided by K_sat to give the Iz/Kz numbers
+    for(int i = 0; i<int(durations.size()); i++)
+    {
+      durations[i] = durations[i]*3600.0*24.0;
+      intensities[i] = (intensities[i]*0.001)/(3600.0*24.0*K_sat);
+      cout << "duration["<<i<<"]: " << durations[i] << " intensity: "  << intensities[i] << endl;
+      
+      // the maximum intensity is 1
+      if(intensities[i] > 1)
+      {
+        intensities[i] = 1;
+      }
+    }
+  
+  }
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

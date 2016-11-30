@@ -156,6 +156,13 @@ class LSDPorewaterColumn
     /// @date 25/11/2016
     vector<float> F_w(LSDPorewaterParams& LSDPP);
 
+    /// @brief Calcualtes the factor of safety
+    /// @param LSDPP is an PorewaterParams object
+    /// @return FS (a vector of floats)
+    /// @author smudd
+    /// @date 26/11/2016
+    vector<float> FS(LSDPorewaterParams& LSDPP);
+
     /// @return The vector of depths
     vector<float> get_Psi() const { return Psi; }
 

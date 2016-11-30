@@ -61,6 +61,8 @@ int main (int nNumberofArgs,char *argv[])
   {
     LSDPorewaterParams TempPP;
     LSDPP = TempPP;
+    
+    path_name = "./";
   }
   else if (nNumberofArgs == 3 )
   {
@@ -102,7 +104,11 @@ int main (int nNumberofArgs,char *argv[])
   LSDPorewaterColumn LSD_PC(LSDPP);
   LSDPP.print_parameters_to_screen();
   
-  string rainfall_fname = "MidasSMALL_13014.csv";
+  cout << "THe K_sat is: " << LSDPP.get_K_sat() << endl;
+  
+  
+  cout << "Loading some rainfall data" << endl;
+  string rainfall_fname = "MidasDoverSmall.csv";
   vector<float> intensities;
   vector<int> days;
   LSDPP.parse_MIDAS_rainfall_file(path_name, rainfall_fname,days,intensities);
@@ -129,7 +135,8 @@ int main (int nNumberofArgs,char *argv[])
   cout << "Sec of pressure = " <<  sec_of_pressure << endl;
   
   LSD_PC.CalculatePsiFromTimeSeries(durations_seconds, intensities_new,LSDPP, sec_of_pressure);
-
   
+  vector<float> FS = LSD_PC.FS(LSDPP);
+
 
 }
