@@ -137,6 +137,20 @@ int main (int nNumberofArgs,char *argv[])
   LSD_PC.CalculatePsiFromTimeSeries(durations_seconds, intensities_new,LSDPP, sec_of_pressure);
   
   vector<float> FS = LSD_PC.FS(LSDPP);
+  
+  // now get a vector of weeks
+  vector<float> times;
+  float this_weeks;
+  for(int i = 0; i<15; i++)
+  {
+    this_weeks = float(i);
+    times.push_back(LSDPP.weeks_to_seconds(this_weeks));
+  }
+  
+  float minimum_depth = 0.2;
+  LSD_PC.ScanTimeseriesForFailure(durations_seconds, intensities_new,LSDPP, 
+                                    minimum_depth, times);
+  
 
 
 }

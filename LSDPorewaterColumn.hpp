@@ -129,7 +129,7 @@ class LSDPorewaterColumn
     /// @param intensities storm intensities, in dimensionless Iz_over_Kz
     /// @param LSDPP is an PorewaterParams object
     /// @param t is the dimensional time
-    /// @author smudd
+    /// @author SMM
     /// @date 17/11/2016
     void CalculatePsiFromTimeSeries(vector<float> durations, vector<float> intensities, 
                                 LSDPorewaterParams& LSDPP, float t);
@@ -138,31 +138,61 @@ class LSDPorewaterColumn
     /// @brief Calcualtes the friction factor component of the factor of safety
     /// @param LSDPP is an PorewaterParams object
     /// @return F_f 
-    /// @author smudd
+    /// @author SMM
     /// @date 25/11/2016
     float F_f(LSDPorewaterParams& LSDPP);
 
     /// @brief Calcualtes the friction factor from cohesion component of the factor of safety
     /// @param LSDPP is an PorewaterParams object
     /// @return F_c (a vector of floats)
-    /// @author smudd
+    /// @author SMM
     /// @date 25/11/2016
     vector<float> F_c(LSDPorewaterParams& LSDPP);
 
     /// @brief Calcualtes the friction factor from pore pressure component of the factor of safety
     /// @param LSDPP is an PorewaterParams object
     /// @return F_w (a vector of floats)
-    /// @author smudd
+    /// @author SMM
     /// @date 25/11/2016
     vector<float> F_w(LSDPorewaterParams& LSDPP);
 
     /// @brief Calcualtes the factor of safety
     /// @param LSDPP is an PorewaterParams object
     /// @return FS (a vector of floats)
-    /// @author smudd
+    /// @author SMM
     /// @date 26/11/2016
     vector<float> FS(LSDPorewaterParams& LSDPP);
+    
+    /// @brief This calcualtes the depth of failer of the column. 
+    /// @param LSDPP is a PorewaterParams object
+    /// @param minimum_depth the minimum depth at which falure can occur
+    /// @return depth_of_failure This is -9999 if there is no failure
+    /// @author SMM
+    /// @date 02/12/2016
+    float DepthOfFailure(LSDPorewaterParams& LSDPP, float minimum_depth);
 
+    /// @brief This finds the minimum facotr of safety in a column
+    /// @param LSDPP is a PorewaterParams object
+    /// @param minimum_depth the minimum depth at which falure can occur
+    /// @param depth_of_minFS The depth where the minimum FS occurs
+    /// @param minFS The minimum factor of safety value
+    /// @author SMM
+    /// @date 02/12/2016
+    void GetMinFS(LSDPorewaterParams& LSDPP, float minimum_depth, float& depth_of_minFS, float& minFS);
+    
+    /// @brief This goes through a time series trying to see when the first
+    ///  failure occurs and at what depth
+    /// @param durations storm durations in a vector of floats in seconds
+    /// @param intensities storm intensities, in dimensionless Iz_over_Kz
+    /// @param LSDPP is a PorewaterParams object
+    /// @param minimum_depth the minimum depth at which falure can occur
+    /// @author SMM
+    /// @date 02/12/2016
+    void ScanTimeseriesForFailure(vector<float> durations, vector<float> intensities,
+                                   LSDPorewaterParams& LSDPP, float minimum_depth, 
+                                   vector<float> times);
+    
+    
     /// @return The vector of depths
     vector<float> get_Psi() const { return Psi; }
 

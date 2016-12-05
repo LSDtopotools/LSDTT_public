@@ -63,6 +63,7 @@
 #include <iostream>
 #include "LSDPorewaterColumn.hpp"
 #include "LSDPorewaterParams.hpp"
+#include "LSDStatsTools.hpp"
 #include "TNT/tnt.h"
 using namespace std;
 using namespace TNT;
@@ -436,5 +437,94 @@ vector<float> LSDPorewaterColumn::FS(LSDPorewaterParams& LSDPP)
 
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This checks to see a failure depth
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDPorewaterColumn::DepthOfFailure(LSDPorewaterParams& LSDPP, float minimum_depth)
+{
+  float depth_of_failure = -9999;
+  
+  // get the factor of safety vector
+  vector<float> FoS = FS(LSDPP);
+  
+  // get the depth vector
+  vector<float> Depths = LSDPP.get_Depths();
+  
+  int N_depths = int(Depths.size());
+  for(int i = 0; i< N_depths; i++)
+  {
+    // only check FS if above minimum depth
+    if(Depths[i]>= minimum_depth)
+    {
+      if(FoS[i] < 1.0)
+      {
+        depth_of_failure = Depths[i];
+        i = N_depths;
+      }
+    }
+  }
+  return depth_of_failure;
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This checks to see a failure depth
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDPorewaterColumn::GetMinFS(LSDPorewaterParams& LSDPP, float minimum_depth, float& depth_of_minFS, float& minFS)
+{
+  depth_of_minFS = minimum_depth;
+  float min_FS = 9999;
+  
+  // get the factor of safety vector
+  vector<float> FoS = FS(LSDPP);
+  
+  // get the depth vector
+  vector<float> Depths = LSDPP.get_Depths();
+  
+  int N_depths = int(Depths.size());
+  for(int i = 0; i< N_depths; i++)
+  {
+    // only check FS if above minimum depth
+    if(Depths[i]>= minimum_depth)
+    {
+      if(FoS[i] < min_FS)
+      {
+        depth_of_minFS = Depths[i];
+        min_FS  = FoS[i];
+      }
+    }
+  }
+  
+  minFS = min_FS;
+  
+  
+}
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This scans a timeseries for a failure
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDPorewaterColumn::ScanTimeseriesForFailure(vector<float> durations, vector<float> intensities,
+                                   LSDPorewaterParams& LSDPP, float minimum_depth, 
+                                   vector<float> times)
+{
+  // loop through times
+  int n_times = int(times.size());
+  float depth_of_minFS;
+  float min_FS;
+  for(int i = 0; i< n_times; i++)
+  {
+    // get the pore pressure
+    CalculatePsiFromTimeSeries(durations, intensities, LSDPP, times[i]);
+    
+    // get the min
+    GetMinFS(LSDPP, minimum_depth, depth_of_minFS, min_FS);
+    
+    cout << "Time in weeks is: " << LSDPP.seconds_to_weeks(times[i]) << " d min FS: " 
+         << depth_of_minFS << " min FS: " << min_FS << endl;
+
+  }
+}
 
 #endif

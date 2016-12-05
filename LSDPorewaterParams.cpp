@@ -65,6 +65,7 @@
 #include <cmath>
 #include "LSDPorewaterParams.hpp"
 #include "LSDParameterParser.hpp"
+#include "LSDStatsTools.hpp"
 #include "TNT/tnt.h"
 using namespace std;
 using namespace TNT;
