@@ -192,6 +192,7 @@ int main (int nNumberofArgs,char *argv[])
 	// TESTING FLOODPLAIN OBJECT
 	
 	// get the floodplain object
+	cout << "Getting the floodplain object" << endl;
 	LSDFloodplain Floodplain(ChannelRelief, Slope, ChanNetwork, FlowInfo, relief_threshold_from_qq, slope_threshold_from_qq, minimum_patch_size, threshold_SO);
 	
 	// get the relief relative to nearest channel

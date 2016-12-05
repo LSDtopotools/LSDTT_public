@@ -304,8 +304,11 @@ void LSDFloodplain::Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwor
 	{
 		for (int col = 0; col < NCols; col++)
 		{
-			float this_elev = ElevationRaster.get_data_element(row,col);
-			ChannelRelief_array[row][col] = this_elev - NearestChannelElev_array[row][col];
+			if (NearestChannelElev_array[row][col] != NoDataValue)
+			{
+				float this_elev = ElevationRaster.get_data_element(row,col);
+				ChannelRelief_array[row][col] = this_elev - NearestChannelElev_array[row][col];
+			}
 		}
 	}
 }

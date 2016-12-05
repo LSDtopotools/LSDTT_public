@@ -94,7 +94,7 @@ int main (int nNumberofArgs,char *argv[])
 							 >> temp >> upper_percentile_slope
 							 >> temp >> minimum_patch_size
 							 >> temp >> search_distance
-							 >> temp >> MainStemAnalysis
+						   >> temp >> MainStemAnalysis
 							 >> temp >> junction_number
 							 >> temp >> bin_width
 							 >> temp >> remove_channel_patches;
@@ -200,6 +200,7 @@ int main (int nNumberofArgs,char *argv[])
 	//float relief_thresh = 100;
 	//float slope_thresh = 0.1;
 	// get the terrace object
+	cout << "Remove channels? " << remove_channel_patches << endl;
 	LSDTerrace Terraces(ChannelRelief, Slope, ChanNetwork, FlowInfo, relief_threshold_from_qq, slope_threshold_from_qq, minimum_patch_size, threshold_SO, remove_channel_patches);
 	
 	LSDIndexRaster TerraceLocations = Terraces.print_ConnectedComponents_to_Raster();
