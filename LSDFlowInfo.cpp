@@ -1437,6 +1437,7 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension,
       if(not ch_csv_in.good())
   {
     cout << "Hey DUDE, you are trying to ingest a sources file that doesn't exist!!" << endl;
+    cout << fname << endl;
     cout << "Check your filename" << endl;
     exit(EXIT_FAILURE);
   }
@@ -3861,7 +3862,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
     cout << "\nFATAL ERROR: unable to write to " << ss_filename.str() << endl;
     exit(EXIT_FAILURE);
   }
-  ofs << "X,Y,hilltop_id,S,R,Lh,BasinID,StreamID,HilltopSlope,DivergentCount\n";
+  ofs << "X,Y,i,j,hilltop_id,S,R,Lh,BasinID,a,b,StreamID,HilltopSlope,DivergentCount\n";
 
   //calculate northing and easting
   for (i=0;i<NRows;++i){
@@ -4226,7 +4227,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 
           
     if (relief > 0){
-      ofs << X << "," << Y << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "," << stnet[a][b] << "," << slope[i][j] << "," << DivergentCountFlag << "," << PlanarCountFlag << "," << E_Star << "," << R_Star << "," << EucDist << "\n";
+      ofs << X << "," << Y << "," << i << "," << j << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "," << a << "," << b << "," << stnet[a][b] << "," << slope[i][j] << "," << DivergentCountFlag << "," << PlanarCountFlag << "," << E_Star << "," << R_Star << "," << EucDist << "\n";
     }
     else {
       ++neg_count;
