@@ -82,6 +82,9 @@ void LSDCosmoData::create()
 
 void LSDCosmoData::create(string path_name, string param_name_prefix)
 {
+  // Fix the path if it doesn't have a trailing slash
+  path_name = FixPath(path_name);
+  
   cout << "I am loading an LSDCosmoData object" << endl;
   cout << "Your pathname is: " << path_name << endl;
   cout << "You parameter name prefix is: " << param_name_prefix << endl;
