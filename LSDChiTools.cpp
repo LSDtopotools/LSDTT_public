@@ -750,7 +750,7 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "latitude,longitude,chi,elevation,flow distance,drainage area,m_chi,b_chi" << endl;
+  chi_data_out << "latitude,longitude,source_index,chi,elevation,flow distance,drainage area,m_chi,b_chi" << endl;
   
   // find the number of nodes
   int n_nodes = (node_sequence.size());

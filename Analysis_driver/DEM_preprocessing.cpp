@@ -94,9 +94,13 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["minimum_elevation"] = 0.0;
   float_default_map["maximum_elevation"] = 30000;
   float_default_map["filling_window_radius"] = 50;
+  float_default_map["relief_radius"] = 100;
+  float_default_map["relief_threshold"] = 50;
   
   // set default methods
   bool_default_map["fill_nodata"] = false;
+  bool_default_map["remove_low_relief"] = false;
+  bool_default_map["write_relief_raster"] = false;
   
   // Use the parameter parser to get the maps of the parameters required for the 
   // analysis
@@ -141,6 +145,33 @@ int main (int nNumberofArgs,char *argv[])
     cout << "I am going to fill internal nodata in your raster. This might take a little while." << endl;
     LSDRaster FilledDEM = FinalRaster.alternating_direction_nodata_fill_irregular_raster(window_radius);
     FinalRaster = FilledDEM;
+  }
+  
+  // This will remove low relief areas and replace with NoData
+  if(this_bool_map["remove_low_relief"])
+  {
+    float relief_radius = this_float_map["relief_radius"];
+    float relief_threshold = this_float_map["relief_threshold"];
+    
+    cout << "Let me calcualte relief for you. Radius: " << relief_radius << " thresh: " <<  relief_threshold << endl;
+    
+    int relief_method = 0;    // THis means a square kernal is used. 
+                              // A curcyular kernal is more computationally intensive
+                              // and this is a rudimentary calculation so doesn't need
+                              // fancy circular windows. 
+    LSDRaster Relief =  FinalRaster.calculate_relief(relief_radius, relief_method);
+    
+    // Now change to nodata
+    bool belowthresholdisnodata = true;
+    LSDRaster Thresholded = FinalRaster.mask_to_nodata_using_threshold_using_other_raster(relief_threshold,belowthresholdisnodata, Relief);
+    FinalRaster = Thresholded; 
+    
+    if(this_bool_map["write_relief_raster"])
+    {
+      string relief_str = "_REL";
+      Relief.write_raster(DATA_DIR+DEM_ID+relief_str,raster_ext);
+    }
+  
   }
   
   // Now print the new file
