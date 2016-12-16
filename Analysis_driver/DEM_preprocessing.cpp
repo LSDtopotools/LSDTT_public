@@ -153,7 +153,7 @@ int main (int nNumberofArgs,char *argv[])
     float relief_radius = this_float_map["relief_radius"];
     float relief_threshold = this_float_map["relief_threshold"];
     
-    cout << "Let me calcualte relief for you. Radius: " << relief_radius << " thresh: " <<  relief_threshold << endl;
+    cout << "Let me calculate the relief for you. Radius: " << relief_radius << " thresh: " <<  relief_threshold << endl;
     
     int relief_method = 0;    // THis means a square kernal is used. 
                               // A curcyular kernal is more computationally intensive
@@ -165,7 +165,14 @@ int main (int nNumberofArgs,char *argv[])
     bool belowthresholdisnodata = true;
     LSDRaster Thresholded = FinalRaster.mask_to_nodata_using_threshold_using_other_raster(relief_threshold,belowthresholdisnodata, Relief);
     FinalRaster = Thresholded; 
-    
+
+    if(this_bool_map["fill_nodata"])
+    {
+      cout << "I am going to fill internal nodata once more, because you have removed flat areas." << endl;
+      LSDRaster FilledDEM = FinalRaster.alternating_direction_nodata_fill_irregular_raster(window_radius);
+      FinalRaster = FilledDEM;
+    }      
+      
     if(this_bool_map["write_relief_raster"])
     {
       string relief_str = "_REL";
