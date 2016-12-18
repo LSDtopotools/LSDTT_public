@@ -435,6 +435,13 @@ class LSDFlowInfo
   ///drainage area.
   ///@return Integer node index.
   int retrieve_largest_base_level();
+  
+  /// @brief This gets the base level node for any given node
+  /// @param node the starting node
+  /// @return the base level node
+  /// @author SMM
+  /// @date 18/12/2016
+  int retrieve_base_level_node(int node);
 
   ///@brief This function returns an integer vector containing all the node
   ///indexes upslope of of the node with number node_number_outlet.
