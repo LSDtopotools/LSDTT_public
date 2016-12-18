@@ -1020,10 +1020,15 @@ int LSDFlowInfo::retrieve_base_level_node(int node)
   int CurrentNode = node;
   int ReceiverNode, ReceiverRow, ReceiverCol;
   
-  do
+  // set initial ReceiverNode so that you can enter while loop
+  retrieve_receiver_information(CurrentNode, ReceiverNode, ReceiverRow, ReceiverCol);
+  
+  // now follow the nodes down to the receiver. 
+  while(ReceiverNode != CurrentNode)
   {
+    CurrentNode = ReceiverNode;
     retrieve_receiver_information(CurrentNode, ReceiverNode, ReceiverRow, ReceiverCol);
-  } while(ReceiverNode != CurrentNode);
+  } 
   
   return ReceiverNode;
 }

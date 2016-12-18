@@ -289,7 +289,21 @@ class LSDChiTools
     
     /// A vector to hold the order of the nodes. Starts from longest channel
     /// and then works through sources in descending order of channel lenght
-    vector<int> node_sequence; 
+    vector<int> node_sequence;
+    
+    /// vectors to hold the source nodes and the outlet nodes
+    /// The source keys are indecies into the source_to_key_map.
+    /// In big DEMs the node numbers become huge so for printing efficiency we
+    /// run a key that starts at 0
+    map<int,int> source_keys_map;
+    /// This holds the baselevel key of each node. Again used for visualisation
+    map<int,int> baselevel_keys_map;
+    /// This is a map where the sources are linked to the source nodes. 
+    /// The key element is actually the source node
+    map<int,int> source_to_key_map; 
+    /// This is a map where the baselevel keys are linked to the baselelvel nodes. 
+    /// The key element is actually the baselelvel node
+    map<int,int> baselevel_to_key_map; 
 
   private:
     void create(LSDRaster& Raster);

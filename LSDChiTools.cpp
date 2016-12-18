@@ -428,16 +428,44 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
   map<int,float> area_map;
   map<int,float> flow_distance_map;
   vector<int> node_sequence_vec;
+  
+  // these are vectors that will store information about the individual nodes
+  // that allow us to map the nodes to specific channels during data visualisation
+  map<int,int> these_source_keys;
+  map<int,int> these_baselevel_keys;
+  map<int,int> this_source_to_keys_map; 
+  map<int,int> this_baselevel_keys_map;
 
   // these are for working with the FlowInfo object
   int this_node,row,col;
+  int this_base_level, this_source_node;
 
   // get the number of channels
+  int source_node_tracker = -1;
+  int baselevel_tracker = -1;
   int n_channels = int(source_nodes.size());
-  
   for(int chan = 0; chan<n_channels; chan++)
   {
     cout << "Sampling channel " << chan+1 << " of " << n_channels << endl;
+    
+    // get the base level
+    this_base_level = FlowInfo.retrieve_base_level_node(source_nodes[chan]);
+    //cout << "Got the base level" << endl;
+    
+    // If a key to this base level does not exist, add one. 
+    if ( this_baselevel_keys_map.find(this_base_level) == this_baselevel_keys_map.end() ) 
+    {
+      baselevel_tracker++;
+      cout << "Found a new baselevel. The node is: " << this_base_level << " and key is: " << baselevel_tracker << endl;
+      this_baselevel_keys_map[this_base_level] = baselevel_tracker;
+    }
+    
+    // now add the source tracker
+    source_node_tracker++;
+    this_source_node = source_nodes[chan];
+    this_source_to_keys_map[this_source_node] = source_node_tracker;
+    
+    cout << "The source key is: " << source_node_tracker << " and basin key is: " << baselevel_tracker << endl;
     
     // get this particualr channel (it is a chi network with only one channel)
     LSDChiNetwork ThisChiChannel(FlowInfo, source_nodes[chan], outlet_nodes[chan], 
@@ -474,6 +502,7 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
     
     //cout << "I have " << these_chi_m_means.size() << " nodes." << endl;
     
+
     int n_nodes_in_channel = int(these_chi_m_means.size());
     for (int node = 0; node< n_nodes_in_channel; node++)
     {
@@ -494,6 +523,10 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
         area_map[this_node] = DrainageArea.get_data_element(row,col);
         flow_distance_map[this_node] = FlowDistance.get_data_element(row,col);
         node_sequence_vec.push_back(this_node);
+        
+        these_source_keys[this_node] = source_node_tracker;
+        these_baselevel_keys[this_node] = baselevel_tracker;
+
       }
       else
       {
@@ -510,6 +543,11 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
   flow_distance_data_map = flow_distance_map;
   drainage_area_data_map = area_map;
   node_sequence = node_sequence_vec;
+  
+  source_keys_map = these_source_keys;
+  baselevel_keys_map = these_baselevel_keys;
+  source_to_key_map = this_baselevel_keys_map;
+  baselevel_to_key_map = this_source_to_keys_map;
   
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -750,7 +788,7 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "latitude,longitude,source_index,chi,elevation,flow distance,drainage area,m_chi,b_chi" << endl;
+  chi_data_out << "latitude,longitude,chi,elevation,flow distance,drainage area,m_chi,b_chi,source_key,basin_key" << endl;
   
   // find the number of nodes
   int n_nodes = (node_sequence.size());
@@ -775,7 +813,9 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
                    << flow_distance_data_map[this_node] << ","
                    << drainage_area_data_map[this_node] << ","
                    << M_chi_data_map[this_node] << ","
-                   << b_chi_data_map[this_node] << endl;
+                   << b_chi_data_map[this_node] << ","
+                   << source_keys_map[this_node] << ","
+                   << baselevel_keys_map[this_node] << endl;
     }
   }
 
