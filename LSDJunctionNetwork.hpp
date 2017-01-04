@@ -624,6 +624,13 @@ class LSDJunctionNetwork
   int GetChannelHeadsChiMethodFromSourceNode(int NodeNumber,
                         int MinSegLength, float A_0, float m_over_n,
                         LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance, LSDRaster& ElevationRaster, int NJunctions);
+	
+  /// @brief This function generates LSDChannels that run from the hilltops above
+  /// all the sources from the valley network down to a specified number of downstream junctions below
+  /// the sources and writes the profile to csv
+  /// @author FJC
+  /// @date 23/12/16
+	void write_valley_hilltop_chi_profiles_to_csv(vector<int> sources, float A_0, float m_over_n, LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance, LSDRaster& ElevationRaster, int NJunctions, string output_path, string DEM_ID);
 
   /// @brief This function generates an LSDIndexRaster of the channel that runs from
   /// the hilltop above the furthest upslope source of the junction JunctionNumber

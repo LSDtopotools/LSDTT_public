@@ -2025,6 +2025,40 @@ int LSDJunctionNetwork::GetChannelHeadsChiMethodFromSourceNode(int NodeNumber,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-
+// This function writes a csv file of the chi and elevation values for each valley to
+// hilltop profile in the DEM
+// csv file has the suffix of the source junction
+// N junctions = number of junctions downstream of the source junction to get the profile for
+// FJC 23/12/16
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-
+void LSDJunctionNetwork::write_valley_hilltop_chi_profiles_to_csv(vector<int> sources, float A_0, float m_over_n, LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance, LSDRaster& ElevationRaster, int NJunctions, string output_path, string DEM_ID)
+{
+	float downslope_chi = 0;
+	
+	//loop through all the sources and get the channel profile from the valley to the hilltop
+	for (int i = 0; i < int(sources.size()); i++)
+	{
+		// get the farthest upslope hilltop node
+		int hilltop_node = FlowInfo.find_farthest_upslope_node(sources[i], FlowDistance);
+		// get the valley node
+		int source_junction = get_Junction_of_Node(sources[i], FlowInfo);
+		// move downstream the specified number of junctions
+		for (int j = 0; j < NJunctions; j++)
+		{
+			int downstream_junction = get_downstream_junction(source_junction, FlowInfo);
+			source_junction = downstream_junction;
+		}
+		int final_node = get_Node_of_Junction(source_junction);
+		// get the LSDChannel
+		LSDChannel new_channel(hilltop_node, final_node, downslope_chi, m_over_n, A_0, FlowInfo, ElevationRaster);
+		// write to csv
+		string jn_str = static_cast<ostringstream*>( &(ostringstream() << source_junction) )->str();
+		string output_csv_filename = DEM_ID+"_chan_profile_"+jn_str;
+		new_channel.write_channel_to_csv(output_path, output_csv_filename, FlowDistance);
+	}
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-
 // This function returns a vector of nodeindex values of potential channel heads
 // above a given junction
 //

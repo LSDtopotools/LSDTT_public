@@ -108,8 +108,19 @@ int main (int nNumberofArgs,char *argv[])
 	             >> temp >> NJunctions;
   file_info_in.close();
   // Now create the raster selection vector based on user's selection
+	
+	cout << "Running the DrEICH channel extraction, parameters are: \n"
+			 << "Raster name: " << Raster_name << "\n"
+			 << "Window radius: " << window_radius << "\n"
+			 << "Area threshold: " << area_threshold << "\n"
+			 << "Connected components threshold: " << connected_components_threshold << "\n"
+		   << "A_0: " << A_0 << "\n"
+		 	 << "m/n: " << m_over_n << "\n"
+			 << "Number of junctions: " << NJunctions << endl;
+	
   // Elevation
   LSDRasterSpectral raster(Raster_name, DEM_extension);
+	cout << "Loading the DEM" << endl;
   LSDIndexRaster connected_components = raster.IsolateChannelsWienerQQ(area_threshold, window_radius, Output_name+".txt");
   cout << "filter by connected components" << endl;
   //LSDIndexRaster output_raster(Output_name,DEM_extension);
@@ -133,7 +144,7 @@ int main (int nNumberofArgs,char *argv[])
   
   //First we need to load the elevation data, fill it and generate a FlowInfo object
   LSDRaster DEM(Raster_name, DEM_extension);
-  float MinSlope = 0.0001;
+  float MinSlope = 0.0005;
   LSDRaster FilledDEM = DEM.fill(MinSlope);
   string fill_name = "_fill";
   FilledDEM.write_raster((Output_name+fill_name), DEM_extension);
