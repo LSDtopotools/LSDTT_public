@@ -1603,7 +1603,7 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 vector<int> LSDFlowInfo::Ingest_Channel_Heads_OS(string csv_filename)
 {
-  vector<int> CH_nodes;
+  vector<int> Sources;
   // read in the CSV file
   ifstream input_csv;
   string dot = ".";
@@ -1647,19 +1647,42 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads_OS(string csv_filename)
     }
   }
 
-  int NCoords = X_coords.size();
-
-  for (int i = 0; i < NCoords; i++)
+  vector<int> Sources_temp;
+  int N_coords = X_coords.size();
+  int N_sources_1 = 0;
+  for(int i = 0; i < N_coords; ++i)
   {
-    int node = get_node_index_of_coordinate_point(X_coords[i], Y_coords[i]);
-    //cout << "NI: " << node << endl; 
-    if (node != NoDataValue)
+		int node = get_node_index_of_coordinate_point(X_coords[i], Y_coords[i]);
+    if (node != NoDataValue) 
     {
-      CH_nodes.push_back(node);
+      // Test 1 - Check for channel heads that fall in same pixel
+      int test1 = 0;
+      N_sources_1 = Sources_temp.size();
+      for(int i_test=0; i_test<N_sources_1;++i_test)
+      {
+        if(node==Sources_temp[i_test]) test1 = 1;
+      }
+      if(test1==0) Sources_temp.push_back(node);
+      else cout << "\t\t ! removed node from sources list - coincident with another source node" << endl; 
     }
   }
-
-  return CH_nodes;
+  // Test 2 - Need to do some extra checks to load sources correctly. 
+  int N_sources_2 = Sources_temp.size();
+  for(int i = 0; i<N_sources_2; ++i)
+  {
+    int test2 = 0;
+    for(int i_test = 0; i_test<int(Sources_temp.size()); ++i_test)
+    {
+			if(i!=i_test)
+      {
+      	if(is_node_upstream(Sources_temp[i],Sources_temp[i_test])==true) test2 = 1;
+      }
+    }
+    if(test2 ==0) Sources.push_back(Sources_temp[i]);
+    else cout << "\t\t ! removed node from sources list - other sources upstream" << endl; 
+  }
+  
+  return Sources;
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
