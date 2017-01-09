@@ -62,9 +62,7 @@ int main (int nNumberofArgs,char *argv[])
 	}
 
 	string DEM_ID;
-	string RASTER_NAME;
 	string CH_name;
-	string input_path;
   string dem_ext = "_dem";
   //string sources_ext = "_CH_wiener";
   string DEM_extension = "bil";
@@ -78,9 +76,7 @@ int main (int nNumberofArgs,char *argv[])
   
   // read in the parameters                                                          
 	file_info_in >> temp >> DEM_ID
-               >> temp >> RASTER_NAME
 							 >> temp >> CH_name
-               >> temp >> input_path
                >> temp >> Minimum_Slope
                >> temp >> threshold_SO
                >> temp >> FilterTopo
@@ -108,7 +104,7 @@ int main (int nNumberofArgs,char *argv[])
   {
      // load the DEM
 		 cout << "Loading the DEM..." << endl;
-     LSDRaster topo_test((input_path+DEM_ID), DEM_extension);   
+     LSDRaster topo_test((path_name+DEM_ID), DEM_extension);   
      
      // filter using Perona Malik
      int timesteps = 50;
@@ -124,7 +120,7 @@ int main (int nNumberofArgs,char *argv[])
   else
   {
     //previously done the filtering and filling, just load the filled DEM
-    LSDRaster load_DEM((input_path+DEM_ID+"_filtered"), DEM_extension);
+    LSDRaster load_DEM((path_name+DEM_ID+"_filtered"), DEM_extension);
     filled_topo_test = load_DEM;
   }
   
@@ -160,7 +156,7 @@ int main (int nNumberofArgs,char *argv[])
   cout << "\t Threshold stream order = " << threshold_SO << endl;
   LSDRaster ChannelRelief = ChanNetwork.calculate_relief_from_channel(filled_topo_test, FlowInfo, threshold_SO);
   string relief_name = "_channel_relief";
-  ChannelRelief.write_raster((input_path+DEM_ID+relief_name), DEM_extension);
+  ChannelRelief.write_raster((path_name+DEM_ID+relief_name), DEM_extension);
   cout << "\t Got the relief!" << endl;
      
   //get the slope
@@ -173,7 +169,7 @@ int main (int nNumberofArgs,char *argv[])
   Slope = surface_fitting[1];
   cout << "\t Done!" << endl;
   string slope_name = "_slope";
-  Slope.write_raster((input_path+DEM_ID+slope_name), DEM_extension);
+  Slope.write_raster((path_name+DEM_ID+slope_name), DEM_extension);
 
   // get the channel relief and slope threshold using quantile-quantile plots
   cout << "Getting channel relief threshold from QQ plots" << endl;
@@ -199,27 +195,27 @@ int main (int nNumberofArgs,char *argv[])
 	Floodplain.Get_Relief_of_Nearest_Channel(ChanNetwork, FlowInfo, filled_topo_test, DistFromOutlet, threshold_SO, search_distance);
 	LSDRaster relief_final = Floodplain.print_ChannelRelief_to_Raster();
 	string relief_ext = "_relief_final";
-	relief_final.write_raster((input_path+DEM_ID+relief_ext), DEM_extension);
+	relief_final.write_raster((path_name+DEM_ID+relief_ext), DEM_extension);
 	
 	LSDIndexRaster BinaryRaster = Floodplain.print_BinaryRaster();
 	string bin_ext = "_FP";
-	BinaryRaster.write_raster((input_path+DEM_ID+bin_ext), DEM_extension);
+	BinaryRaster.write_raster((path_name+DEM_ID+bin_ext), DEM_extension);
 	
 //	cout << "This junction number is: " << junction_number << endl;
 //	Floodplain.get_distance_upstream_along_main_stem(junction_number, ChanNetwork, FlowInfo, DistFromOutlet);
 //	LSDRaster UpstreamDistance = Floodplain.print_UpstreamDistance_to_Raster();
 //	string dist_ext = "_upstream_dist";
-//	UpstreamDistance.write_raster((input_path+DEM_ID+dist_ext), DEM_extension);
+//	UpstreamDistance.write_raster((path_name+DEM_ID+dist_ext), DEM_extension);
 //	
 //	// write to text file
 //	string filename = "_floodplain_data.txt";
-//	Floodplain.print_ChannelRelief_to_File(input_path+DEM_ID+filename);
+//	Floodplain.print_ChannelRelief_to_File(path_name+DEM_ID+filename);
 //	
 //	string filename_binned = "_floodplain_data_binned.txt";
 //	float bin_width = 50;
 //	float bin_lower_limit = 0;
 //	float bin_threshold = 0;
-//	Floodplain.print_Binned_ChannelRelief_to_File(input_path+DEM_ID+filename_binned, bin_width, bin_lower_limit, bin_threshold);
+//	Floodplain.print_Binned_ChannelRelief_to_File(path_name+DEM_ID+filename_binned, bin_width, bin_lower_limit, bin_threshold);
 		
 	// Done, check how long it took
 	clock_t end = clock();
