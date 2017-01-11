@@ -1492,6 +1492,85 @@ vector<int> LSDJunctionNetwork::extract_basin_nodes_by_drainage_area(float Drain
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+// This function gets all basin junctions where BOTH upstream catchments are greater
+// than a specified drainage area. It will continue to move dowmstream until a base
+// level junction is reached, meaning that nested catchments can be selected.
+// FJC 10/01/17
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+vector<int> LSDJunctionNetwork::extract_basin_nodes_above_drainage_area_threshold(LSDFlowInfo& FlowInfo, float DrainageAreaThreshold)
+{
+	vector<int> basin_nodes;
+	float PixelArea = DataResolution*DataResolution;
+	vector<int> visited_before;
+	
+	//for each source junction, go downstream until you reach a drainage area > threshold
+	//get the source junctions
+	vector<int> SourceJunctions = get_Junctions_of_Sources(FlowInfo);
+	int n_sources = SourceJunctions.size();
+	for (int i = 0; i < n_sources; i++)
+	{
+		int CurrentJunc = SourceJunctions[i];
+		int reached_baselevel = 0;
+		int been_to_junction = 0;
+		while (reached_baselevel == 0 && been_to_junction == 0)
+		{
+			//get receiver information
+			int ReceiverJunc = get_Receiver_of_Junction(CurrentJunc);
+			//logic to see if you've been here before
+			vector<int>::iterator find_it;
+			find_it = find(visited_before.begin(), visited_before.end(), ReceiverJunc);
+			if (find_it == visited_before.end())	// you've never been to this junction before
+			{
+				// put the junction in the visited before vector
+				visited_before.push_back(ReceiverJunc);
+				// logic for base level
+				if (CurrentJunc == ReceiverJunc)
+				{
+					reached_baselevel = 1;
+					break;
+				}
+				else
+				{
+					//get penultimate node
+					int OutletNode = get_penultimate_node_from_stream_link(CurrentJunc, FlowInfo);
+					float OutletDrainageArea = FlowInfo.NContributingNodes[OutletNode]*PixelArea;
+					if (OutletDrainageArea >= DrainageAreaThreshold)
+					{
+						//this basin has an area > threshold, check the other tributary basin
+						vector<int> us_juncs = get_donor_nodes(ReceiverJunc);
+						for (int j = 0; j < int(us_juncs.size()); j++)
+						{
+							//cout << "Donor juncs: " << us_juncs[j] << endl;
+							int base_level = is_Junction_BaseLevel(us_juncs[j]);
+							if (us_juncs[j] != CurrentJunc && base_level == 0)
+							{
+								// check the drainage area of the other basin
+								int ThisOutletNode = get_penultimate_node_from_stream_link(us_juncs[j], FlowInfo);
+								float ThisOutletDrainageArea = FlowInfo.NContributingNodes[ThisOutletNode]*PixelArea;
+								if (ThisOutletDrainageArea >= DrainageAreaThreshold)
+								{
+									//both basins have drainage area > threshold, push back the penultimate nodes of both basins
+									//cout << "Basin node: " << OutletNode << endl;
+									//cout << "Basin node: " << ThisOutletNode << endl;
+ 									basin_nodes.push_back(OutletNode);
+									basin_nodes.push_back(ThisOutletNode);
+								}
+							}
+						}
+					}
+					CurrentJunc = ReceiverJunc;
+					//cout << "Moving downstream" << endl;
+				}
+			}
+			else	//You've visited this junction before, so you can move to the next source
+			{
+				been_to_junction = 1;
+			}
+		}
+	}
+	return basin_nodes;
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 // This function extracts basin junctions from a vector of the basin outlet nodes.
@@ -1636,6 +1715,18 @@ int LSDJunctionNetwork::get_Next_StreamOrder_Junction(int junction)
   return next_junc;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+// This function checks whether a junction is at base level
+// FJC 11/01/2017
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+int LSDJunctionNetwork::is_Junction_BaseLevel(int junction)
+{
+	int base_level = 0;
+	int ReceiverJN = get_Receiver_of_Junction(junction);
+	if (junction == ReceiverJN) { base_level = 1; }
+	
+	return base_level;
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 // Two getter functions that require bounds checking
@@ -4535,6 +4626,81 @@ LSDIndexRaster LSDJunctionNetwork::extract_basins_from_junction_vector(vector<in
       node = BasinNodeVector[BasinIndex];
       FlowInfo.retrieve_current_row_and_col(node,row,col);
       Basin[row][col] = basin_junction;
+    }
+
+  }
+
+  LSDIndexRaster IR(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Basin,GeoReferencingStrings);
+  return IR;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+//This function gets the an LSDIndexRaster of basins draining from a vector of junctions.
+//
+// IMPORTANT: the junctions always point downstream since they can have one and only
+// one receiver. However, for a basin of given order, this starts just upstream of the
+// confluence to the next basin order. So the basin ##INCLUDES## the channel flowing
+// downstream to the penultamite node
+//
+// SMM 01/09/2012
+//
+// UPDATED so that later basins don't overwrite smaller basins. Input junction 
+// vector is first sorted by upslope drainage area - do the nested basins first,  
+// then larger basins won't overwrite these.  FJC 10/01/17
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LSDIndexRaster LSDJunctionNetwork::extract_basins_from_junction_vector_nested(vector<int> basin_junctions, LSDFlowInfo& FlowInfo)
+{
+  Array2D<int> Basin(NRows,NCols,NoDataValue);
+	
+	// sort basin junctions by contributing nodes
+	vector<size_t> index_map;
+	vector<int> basin_junctions_CP;
+	for (int i = 0; i < int(basin_junctions.size()); i++)
+	{
+		// get contributing pixels of each junction
+		int this_node = get_Node_of_Junction(basin_junctions[i]);
+		basin_junctions_CP.push_back(FlowInfo.NContributingNodes[this_node]);
+	}
+	matlab_int_sort(basin_junctions_CP, basin_junctions_CP, index_map);
+	matlab_int_reorder(basin_junctions, index_map, basin_junctions);
+
+  for (vector<int>::iterator it = basin_junctions.begin(); it !=  basin_junctions.end(); ++it)
+  {
+		cout << "Basin junction: " << *it << endl;
+
+    int basin_junction = *it;
+
+    if (basin_junction >= int(JunctionVector.size()))
+    {
+      cout << "LSDJunctionNetwork::extract_basin_from_junction junction not in list" << endl;
+      exit(EXIT_FAILURE);
+    }
+
+    int receiver_junc, n_nodes_in_channel, basin_outlet;
+
+    // get the reciever junction
+    receiver_junc = ReceiverVector[basin_junction];
+
+    LSDIndexChannel StreamLinkVector = LSDIndexChannel(basin_junction, JunctionVector[basin_junction],
+                                                             receiver_junc, JunctionVector[receiver_junc], FlowInfo);
+
+    // Find final nth order channel pixel, which is the penultimate pixel
+    // in channel.
+    n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
+    int node,row,col;
+
+    basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
+    vector<int> BasinNodeVector = FlowInfo.get_upslope_nodes(basin_outlet);
+    // Loop through basin to label basin pixels with basin ID
+    for (int BasinIndex = 0; BasinIndex < int(BasinNodeVector.size()); ++BasinIndex)
+    {
+      node = BasinNodeVector[BasinIndex];
+      FlowInfo.retrieve_current_row_and_col(node,row,col);
+			if (Basin[row][col] == NoDataValue)
+			{
+      	Basin[row][col] = basin_junction;
+			}
     }
 
   }

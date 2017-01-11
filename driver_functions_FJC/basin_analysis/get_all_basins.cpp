@@ -125,9 +125,9 @@ int main (int nNumberofArgs,char *argv[])
 	boundary_conditions[3] = "No flux";
 	
 	// load the filled DEM
-	LSDRaster filled_topo_test;
-	LSDRaster load_DEM((path_name+DEM_name+fill_ext), DEM_extension);
-  filled_topo_test = load_DEM;
+	LSDRaster filled_topo_test((path_name+DEM_name+fill_ext), DEM_extension);
+	//filled_topo_test = topo_test.fill(Minimum_Slope);
+	//filled_topo_test.write_raster((path_name+DEM_name+fill_ext), DEM_extension);
 	cout << "Got the filled DEM" << endl;
   
   //get a FlowInfo object
@@ -146,24 +146,29 @@ int main (int nNumberofArgs,char *argv[])
   string SO_name = "_SO";
 	SOArray.write_raster((path_name+DEM_name+SO_name), DEM_extension);
 	
+	//write junction network to raster
+	LSDIndexRaster JIArray = ChanNetwork.JunctionIndexArray_to_LSDIndexRaster();
+	string JI_name = "_JI";
+	JIArray.write_raster((path_name+DEM_name+JI_name), DEM_extension);
+	
   //----------------------------------------------------------------------------------------------------//
   // GET ALL BASINS OF THE SPECIFIED STREAM ORDER
   //----------------------------------------------------------------------------------------------------//
   
-//  cout << "Now getting all basins with a drainage area of: " << DrainageArea << " m^2" << endl;
-//	
-//	//get the vector of basin junctions
-//	vector<int> BasinNodes = ChanNetwork.extract_basin_nodes_by_drainage_area(DrainageArea, FlowInfo);
-//	cout << "Got the basin nodes" << endl;
-//	vector<int> basin_junctions = ChanNetwork.extract_basin_junctions_from_nodes(BasinNodes, FlowInfo);
-//	cout << "Got the basin junctions" << endl;
-//	
-//	//vector<int> basin_junctions = ChanNetwork.extract_basins_order_outlet_junctions(BasinOrder, FlowInfo);
-//	
-//	// get raster of basins from the junctin vector
-//	LSDIndexRaster BasinRaster = ChanNetwork.extract_basins_from_junction_vector(basin_junctions, FlowInfo);
-//	string basin_ext = "_basins";
-//	BasinRaster.write_raster((path_name+DEM_name+basin_ext), DEM_extension);
+  cout << "Now getting all basins with a drainage area of: " << DrainageArea << " m^2" << endl;
+
+	vector<int> basin_nodes = ChanNetwork.extract_basin_nodes_above_drainage_area_threshold(FlowInfo, DrainageArea);
+	cout << "Got the basin nodes!" << endl;
+	
+	cout << "Number of basins = " << basin_nodes.size() << endl;
+	
+	vector<int> basin_junctions = ChanNetwork.extract_basin_junctions_from_nodes(basin_nodes, FlowInfo);
+	cout << "Got the basin junctions" << endl;
+	
+	// get raster of basins from the junctin vector
+	LSDIndexRaster BasinRaster = ChanNetwork.extract_basins_from_junction_vector_nested(basin_junctions, FlowInfo);
+	string basin_ext = "_basins";
+	BasinRaster.write_raster((path_name+DEM_name+basin_ext), DEM_extension);
 	
 	// Done, check how long it took
 	clock_t end = clock();

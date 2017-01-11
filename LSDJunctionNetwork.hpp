@@ -171,7 +171,7 @@ class LSDJunctionNetwork
   /// @author SMM
   /// @date 01/09/12
   vector<int> get_upslope_junctions(int junction_number_outlet);
-
+	
   /// @brief This finds all the junctions that are source junctions upslope of a 
   ///  given junction
   /// @param junction_number_outlet The junction number of the outlet
@@ -501,6 +501,17 @@ class LSDJunctionNetwork
   /// @author DTM
   /// @date 07/05/2013
   vector<int> extract_basin_nodes_by_drainage_area(float DrainageAreaThreshold, LSDFlowInfo& FlowInfo);
+	
+	/// @brief This function extracts nodes where the basins of both tributaries are greater
+	/// than a certain drainage area threshold.  Moves downstream from sources to baselevel so that
+	/// nested catchments will be selected
+	/// @param FlowInfo LSDFlowInfo object.
+  /// @param DrainageAreaThreshold Threshold drainage area.
+  /// @return Vector of basin nodes. These are the nodes just upstream of the outlet junction at 
+	/// the confluence of the basins.
+  /// @author FJC
+  /// @date 10/01/17
+	vector<int> extract_basin_nodes_above_drainage_area_threshold(LSDFlowInfo& FlowInfo, float DrainageAreaThreshold);
 
   /// @brief This function extracts basin junctions from a list of basin outlet nodes.
   /// @param basin_nodes list of basin outlet nodes
@@ -567,6 +578,24 @@ class LSDJunctionNetwork
   /// @author SMM
   /// @date 01/09/12
   LSDIndexRaster extract_basins_from_junction_vector(vector<int> basin_junctions, LSDFlowInfo& FlowInfo);
+	
+	
+  /// @brief This function gets an LSDIndexRaster of basins draining from a vector of junctions.
+  ///
+  /// @details IMPORTANT: The junctions always point downstream since they can have one and only
+  /// one receiver. However, for a basin of given order, this starts just upstream of the
+  /// confluence to the next basin order. So the basin <b>INCLUDES</b> the channel flowing
+  /// downstream to the penultamite node.
+	/// UPDATED so that if basins are nested, they don't overwrite each other - basins are 
+	/// sorted by the number of contributing pixels, and the smaller basins are written 
+	/// first. 
+  ///
+  /// @param basin_junctions Vector of junction numbers of basins to be extracted.
+  /// @param FlowInfo LSDFlowInfo object.
+  /// @return LSDIndexRaster of extracted basin.
+  /// @author FJC
+  /// @date 10/01/17
+	LSDIndexRaster extract_basins_from_junction_vector_nested(vector<int> basin_junctions, LSDFlowInfo& FlowInfo);
 
   /// @brief This function gets the an LSDIndexRaster of basins draining from a vector of junctions.
   /// @details IThis is a highly rudimentary version, which just collects
@@ -1235,6 +1264,14 @@ void get_info_nearest_channel_to_node_main_stem(int& StartingNode, LSDFlowInfo& 
   /// @author SMM
   /// @date 26/10/2014
   int get_Next_StreamOrder_Junction(int junction);
+	
+	/// @details Returns an integer to check whether junction
+	/// is at base level.
+	/// @param junction the junction of interest
+	/// @ return int  1 = base level, 0 = not base level
+	/// @author FJC
+	/// @date 11/01/2017
+	int is_Junction_BaseLevel(int junction);
 
   /// @return The number of junctions
   int get_NJunctions() const { return int(JunctionVector.size()); }
