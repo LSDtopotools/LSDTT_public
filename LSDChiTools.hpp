@@ -234,6 +234,25 @@ class LSDChiTools
                                     LSDRaster& DrainageArea, LSDRaster& chi_coordinate, 
                                     int regression_nodes);
 
+    /// @brief This prints a csv file that has the locations of the sources and their keys
+    ///  latitude,longitude,source_node, source_key
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param filename The name of the filename to print to (should have full
+    ///   path and the extension .csv
+    /// @author SMM
+    /// @date 16/01/2017
+    void print_source_keys(LSDFlowInfo& FlowInfo, string filename);
+
+    /// @brief This prints a csv file that has the locations of the baselevels and their keys
+    ///  latitude,longitude,baselevel_junctione, baselevel_key
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param JN the junction network object
+    /// @param filename The name of the filename to print to (should have full
+    ///   path and the extension .csv
+    /// @author SMM
+    /// @date 16/01/2017
+    //void print_baselevel_keys(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JN, string filename);
+
     /// @brief This prints a csv file with all the data from the data maps
     ///  the columns are:
     ///  latitude,longitude,chi,elevation,flow distance,drainage area,m_chi,b_chi

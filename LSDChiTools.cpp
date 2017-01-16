@@ -826,6 +826,42 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Print data maps to file
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::print_source_keys(LSDFlowInfo& FlowInfo, string filename)
+{
+  
+  // these are for extracting element-wise data from the channel profiles. 
+  int this_node, row,col, key;
+  double latitude,longitude;
+  LSDCoordinateConverterLLandUTM Converter;
+  map<int, int>::iterator it;
+  
+  // open the data file
+  ofstream  source_baselevel_keys_out;
+  source_baselevel_keys_out.open(filename.c_str());
+  source_baselevel_keys_out << "latitude,longitude,source_node,source_key" << endl;
+
+  // loop through the source
+  for ( it = source_keys_map.begin(); it != source_keys_map.end(); it++ )
+  {
+    key = it->first;
+    this_node = it->second;
+    FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+    get_lat_and_long_locations(row, col, latitude, longitude, Converter); 
+    
+    source_baselevel_keys_out.precision(9);
+    source_baselevel_keys_out << latitude << ","
+                   << longitude << "," << this_node << ",";
+    source_baselevel_keys_out.precision(5);
+    source_baselevel_keys_out << key << endl;
+  }
+  
+  source_baselevel_keys_out.close();
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Print data maps to file

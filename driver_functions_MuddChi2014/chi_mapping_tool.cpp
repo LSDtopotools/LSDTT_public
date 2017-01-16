@@ -109,7 +109,7 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["target_nodes"] = 80;
   int_default_map["skip"] = 2;
   int_default_map["threshold_pixels_for_chi"] = 1000;
-  int_default_map["threshold_contributing_pixels"] = 1000;
+  int_default_map["minimum_basin_size_pixels"] = 1000;
   int_default_map["threshold_contributing_pixels"] = 1000;
   
   // set default in parameter
@@ -130,6 +130,9 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_basic_M_chi_map_to_csv"] = false;  
   bool_default_map["test_drainage_boundaries"] = false;  
   bool_default_map["only_take_largest_basin"] = false;  
+  bool_default_map["print_source_keys"] = false;
+  bool_default_map["print_baselevel_keys"] = false;
+  bool_default_map["print_basin_raster"] = false;
   
   // set default string method
   string_default_map["CHeads_file"] = "NULL";
@@ -161,7 +164,6 @@ int main (int nNumberofArgs,char *argv[])
     // check to see if the raster exists
   LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);  
 
-
   // initialise variables to be assigned from .driver file
   // These will all be assigned default values
   float A_0 = this_float_map["A_0"];
@@ -186,76 +188,6 @@ int main (int nNumberofArgs,char *argv[])
   map<string,string> GRS = topography_raster.get_GeoReferencingStrings();
 
   float thresh_area_for_chi = float(this_int_map["threshold_pixels_for_chi"])*Resolution*Resolution;
-
-  //============================================================================
-  // Print the parameters to an input file that you can read later
-  //============================================================================
-/*
-  string parameter_values_name = OUTPUT_DIR+DEM_ID+"_Input.param";
-  ofstream param_input;
-  param_input.open(parameter_values_name.c_str());
-  
-  param_input << "# You have been using the ChiToolsDriver.exe program." << endl
-              << "# This was developed by the Land Surface Dyanmics Group" << endl
-              << "#  at the University of Edinburgh. " << endl
-              << "# Algorithms used to create this data can be found in" << endl
-              << "# Mudd et al., 2014, JGR-ES: http://onlinelibrary.wiley.com/doi/10.1002/2013JF002981/full" << endl
-              << endl
-              << "# ================================================" << endl
-              << "# The file information is: "<< endl
-              << "read path: " << DATA_DIR<< endl
-              << "write path: " << OUT_DIR<< endl
-              << "read fname: " << DEM_ID << endl 
-              << "channel heads fname: " << CHeads_file<< endl
-              << "raster_ext: " << raster_ext<< endl
-              << "#Note that if the CHeads file is Null then a pixel threshold will be used to determine channel sources." << endl
-              << endl
-              << "# ================================================" << endl
-              << "# The parameters for the analysis are: " << endl
-              << "# Note: A_0 in m^2, sigma in m"
-              << "min_slope_for_fill: " << Minimum_Slope << endl
-              << "A_0: " <<  A_0 << endl
-              << "m_over_n: " <<  movern << endl
-              << "#And these are parameters for segmentation. Only used if you have selected the segmentation algorithm. " << endl
-              << "n_iterations: " << n_iterations << endl
-              << "minimum_segment_length: " <<  minimum_segment_length << endl
-              << "target nodes: " <<  target_nodes << endl
-              << "sigma: " <<  sigma << endl
-              << "skip: " <<  skip << endl
-              << "# This parameter is for the basic M_chi calculations that use a fixed window length." << endl
-              << "basic_Mchi_regression_nodes: " << basic_Mchi_regression_nodes << endl
-              << endl
-              << "# ================================================" << endl
-              << "# These are parameters for controlling thresholds for chi and basins:" << endl 
-              << "# Areas are in m^2"
-              << "threshold_pixels_for_chi: " << threshold_pixels_for_chi << endl
-              << "thresh_area_for_chi: " << thresh_area_for_chi << endl
-              << "threshold_contributing_pixels: " << threshold_contributing_pixels << endl
-              << "thresh_area_for_channel: " << thresh_area_for_channel << endl
-              << "test_drainage_boundaries: " << test_drainage_boundaries << endl 
-              << "minimum_basin_size_pixels: " << minimum_basin_size_pixels << endl
-              << "min_basin_area: " << min_basin_area << endl
-              << "n_nodes_to_visit: " << n_nodes_to_visit  << endl
-              << endl
-              << "# ================================================" << endl
-              << "#  These are all the things that the program will print: " << endl
-              << "#  Note: " << endl
-              << "#    1 == true" << endl
-              << "#    0 == false" << endl
-              << "#  I am only going to check parameters and not actually print anything: " << only_check_parameters << endl
-              << "print_fill_raster: " << print_fill_raster << endl
-              << "print_DrainageArea_raster: " << print_DrainageArea_raster  << endl
-              << "print_stream_order_raster: " << print_stream_order_raster  << endl
-              << "print_junction_index_raster: " << print_junction_index_raster << endl
-              << "print_chi_coordinate_raster: " << print_chi_coordinate_raster << endl
-              << "print_simple_chi_map_to_csv: " << print_simple_chi_map_to_csv << endl
-              << "print_segmented_M_chi_map_to_csv: " << print_segmented_M_chi_map_to_csv << endl
-              << "print_basic_M_chi_map_to_csv: " << print_basic_M_chi_map_to_csv << endl
-              << endl << endl;
-
-  param_input.close();
-*/
-
 
   if(this_bool_map["only_check_parameters"])
   {
@@ -359,6 +291,7 @@ int main (int nNumberofArgs,char *argv[])
   }
   
   // remove base level junctions for which catchment is too small
+  cout << "Removing basins with fewer than " << minimum_basin_size_pixels << " pixels" << endl;
   BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Area(BaseLevelJunctions, 
                                               FlowInfo, FlowAcc, minimum_basin_size_pixels);
 
@@ -371,6 +304,53 @@ int main (int nNumberofArgs,char *argv[])
   // Correct number of base level junctions
   N_BaseLevelJuncs = BaseLevelJunctions.size();
   cout << "The number of basins I will analyse is: " << N_BaseLevelJuncs << endl;
+  
+  // This is for debugging
+  //for (int BN = 0; BN< N_BaseLevelJuncs; BN++)
+  //{
+  //  cout << "BL junc is: " << BaseLevelJunctions[BN] << " node is: " << JunctionNetwork.get_Node_of_Junction(BaseLevelJunctions[BN]) << endl;
+  //  vector<int> UPSN = FlowInfo.get_upslope_nodes(JunctionNetwork.get_Node_of_Junction(BaseLevelJunctions[BN]));
+  //  cout << "Pixels for that node are: " << UPSN.size() << endl;
+  //}
+  
+  //============================================================================
+  // Print a basin raster if you want it.
+  if(this_bool_map["print_basin_raster"])
+  { 
+    vector<LSDBasin> AllTheBasins;
+    map<int,int> drainage_of_other_basins;
+    LSDIndexRaster BasinMasterRaster;
+    
+    string basin_raster_name = OUT_DIR+DEM_ID+"_AllBasins";
+    
+    //cout << "I am trying to print basins, found " << N_BaseLevelJuncs << " base levels." << endl;
+    for(int BN = 0; BN<N_BaseLevelJuncs; BN++)
+    {
+      //cout << "Getting basin " << BN << " and the junction is: "  << BaseLevelJunctions[BN] << endl;
+      LSDBasin thisBasin(BaseLevelJunctions[BN],FlowInfo, JunctionNetwork);
+      //cout << "...got it!" << endl;
+      AllTheBasins.push_back(thisBasin);
+      
+      drainage_of_other_basins[BaseLevelJunctions[BN]] = thisBasin.get_NumberOfCells();
+    }
+    
+    // now loop through everything again getting the raster
+    if (N_BaseLevelJuncs > 0)     // this gets the first raster
+    {
+      BasinMasterRaster = AllTheBasins[0].write_integer_data_to_LSDIndexRaster(BaseLevelJunctions[0], FlowInfo);
+    }
+    
+    // now add on the subsequent basins
+    for(int BN = 1; BN<N_BaseLevelJuncs; BN++)
+    {
+      AllTheBasins[BN].add_basin_to_LSDIndexRaster(BasinMasterRaster, FlowInfo,
+                              drainage_of_other_basins, BaseLevelJunctions[BN]);
+    }
+    
+    BasinMasterRaster.write_raster(basin_raster_name, raster_ext);
+    cout << "Finished with exporting basins!" << endl; 
+  }
+  //============================================================================
 
   // calculate chi for the entire DEM
   cout << "Calculating the chi coordinate for A_0: " << A_0 << " and m/n: " << movern << endl; 
@@ -421,6 +401,13 @@ int main (int nNumberofArgs,char *argv[])
     cout << "Let me print all the data for you into a csv file called " << csv_full_fname << endl;
     ChiTool.print_data_maps_to_file_full(FlowInfo, csv_full_fname);
     cout << "That is your file printed!" << endl;
+    
+    if (this_bool_map["print_source_keys"])
+    {
+      string sources_keys_name = OUT_DIR+DEM_ID+"_SourceKeys.csv";
+      ChiTool.print_data_maps_to_file_full(FlowInfo, sources_keys_name);
+    }
+    
   }
 
   if (this_bool_map["print_basic_M_chi_map_to_csv"])
