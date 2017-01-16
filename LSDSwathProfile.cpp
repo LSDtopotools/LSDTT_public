@@ -116,6 +116,8 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
   // with each iteration
   vector<float> DistanceAlongBaseline_temp(NPtsInProfile,NoDataValue);
   vector<float> BaselineValue_temp(NPtsInProfile,NoDataValue);
+	vector<int> BaselineRows(NPtsInProfile,NoDataValue);
+	vector<int> BaselineCols(NPtsInProfile,NoDataValue);
   float cumulative_distance = 0;
   DistanceAlongBaseline_temp[0]=cumulative_distance;
   // Retrieve baseline value at each point - sample closest pixel in template raster
@@ -125,7 +127,12 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
   int col_point = int(round(X_coordinate_shifted_origin/Resolution));
   int row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/Resolution));
   if(col_point < 0 || col_point > NCols-1 || row_point < 0 || row_point > NRows) BaselineValue_temp[0]=NoDataValue;
-  else BaselineValue_temp[0] = RasterTemplate.get_data_element(row_point,col_point);
+  else 
+	{
+		BaselineValue_temp[0] = RasterTemplate.get_data_element(row_point,col_point);
+		BaselineRows[0] = row_point;
+		BaselineCols[0] = col_point;
+	}
   
   
   for(int i = 1; i<NPtsInProfile; ++i)
@@ -143,7 +150,12 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
     col_point = int(round(X_coordinate_shifted_origin/Resolution));
     row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/Resolution));
     if(col_point < 0 || col_point > NCols-1 || row_point < 0 || row_point > NRows) BaselineValue_temp[i]=NoDataValue;
-    else BaselineValue_temp[i] = RasterTemplate.get_data_element(row_point,col_point);
+    else 
+		{
+			BaselineValue_temp[i] = RasterTemplate.get_data_element(row_point,col_point);
+			BaselineRows[i] = row_point;
+			BaselineCols[i] = col_point;
+		}
   }
   
   DistanceAlongBaseline = DistanceAlongBaseline_temp;
@@ -650,6 +662,78 @@ LSDRaster LSDSwath::get_raster_from_swath_profile(LSDRaster& Raster, int Normali
                    NoDataValue, RasterValues_temp);
   
   return SwathRaster;  
+}
+
+//------------------------------------------------------------------------------
+// This function uses the swath profile to "fill in" the baseline channel raster value
+// with the average value of the pixels along the transverse swath profile
+// FJC
+// 16/01/17
+//
+//------------------------------------------------------------------------------
+LSDRaster LSDSwath::fill_in_channels_swath(LSDRaster& Raster)
+{
+	Array2D<float> NewRasterValues(NRows,NCols,NoDataValue);
+	
+	float Resolution = Raster.get_DataResolution();
+  float XMinimum = Raster.get_XMinimum();
+  float YMinimum = Raster.get_YMinimum();
+	Array2D<float> RasterValues_temp = Raster.get_RasterData();
+	map<string,string> GeoReferencingStrings = Raster.get_GeoReferencingStrings();
+	
+  // Define bounding box of swath profile
+  int ColStart = int(floor((XMin)/Resolution));
+  int ColEnd = ColStart + int(ceil((XMax-XMin)/Resolution));
+  ColStart = ColStart - int(ceil(ProfileHalfWidth/Resolution));
+  ColEnd = ColEnd + int(ceil(ProfileHalfWidth/Resolution));
+  if (ColStart < 0) ColStart = 0;
+  if (ColEnd > NCols) ColEnd = NCols;
+  
+  int RowEnd = NRows - 1 - int(floor(YMin/Resolution));
+  int RowStart = RowEnd - int(ceil((YMax-YMin)/Resolution));
+  RowStart = RowStart - int(ceil(ProfileHalfWidth/Resolution));
+  RowEnd = RowEnd + int(ceil(ProfileHalfWidth/Resolution));  
+  if (RowEnd > NRows) RowEnd = NRows;
+  if (RowStart < 0) RowStart = 0;
+	
+	// Go down the baseline and collect values 
+	vector<float> MeanValues;
+	vector<float> ThisPixelValues;
+
+	for (int i = 0; i < int(DistanceAlongBaseline.size()); i++)
+	{
+		for (int row=RowStart; row<RowEnd; row++)
+		{
+			for (int col=ColStart; col<ColEnd; col++)
+			{
+				if (BaselineValueArray[row][col] == BaselineValue[i])
+				{
+					//this row and col corresponds to this point on the baseline, push back the raster value
+					ThisPixelValues.push_back(RasterValues_temp[row][col]);
+				}
+			}
+		}
+		// push the vector back to the vector of vectors
+		float mean_value = get_mean(ThisPixelValues);
+		MeanValues.push_back(mean_value);
+		ThisPixelValues.clear();
+	}
+	
+	// assign the new raster values for the baseline	
+	for (int i = 0; i < int(DistanceAlongBaseline.size()); i++)
+	{
+		// get the row and col of the baseline points
+		float NewRasterValue = MeanValues[i];
+		RasterValues_temp[BaselineRows[i]][BaselineCols[i]] = NewRasterValue;
+	}
+	
+	// create raster from the array
+	NewRasterValues = RasterValues_temp;
+	LSDRaster FilledRaster(NRows,NCols,XMinimum,YMinimum,Resolution,NoDataValue,
+												 NewRasterValues,GeoReferencingStrings);
+	
+	return FilledRaster;
+		
 }
 
 //------------------------------------------------------------------------------

@@ -71,6 +71,13 @@ class LSDSwath
   ///@author FJC
   ///@date 16/10/15
   LSDRaster get_raster_from_swath_profile(LSDRaster& Raster, int NormaliseToBaseline);
+	
+	///@brief fill in the baseline raster value with the average value of the pixels along the transverse swath profile
+	///@param Raster Raster template
+	///@return LSDRaster with filled in values along the baseline
+	///@author FJC
+	///@date 16/01/17
+	LSDRaster fill_in_channels_swath(LSDRaster& Raster);
        
   // write profiles to file
   void write_transverse_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix, int NormaliseToBaseline);
@@ -87,7 +94,9 @@ class LSDSwath
   // Swath template
   vector<float> DistanceAlongBaseline;
   vector<float> BaselineValue;
-  Array2D<float> DistanceToBaselineArray;
+	vector<int> BaselineRows;  // rows of the baseline points
+	vector<int> BaselineCols;  // cols of the baseline points
+	Array2D<float> DistanceToBaselineArray;
   Array2D<float> DistanceAlongBaselineArray;
   Array2D<float> BaselineValueArray;
 
