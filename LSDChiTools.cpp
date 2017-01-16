@@ -843,8 +843,8 @@ void LSDChiTools::print_source_keys(LSDFlowInfo& FlowInfo, string filename)
   source_keys_out.open(filename.c_str());
   source_keys_out << "latitude,longitude,source_node,source_key" << endl;
 
-  // loop through the source
-  for ( it = source_keys_map.begin(); it != source_keys_map.end(); it++ )
+  // loop through the source key map
+  for ( it = source_to_key_map.begin(); it != source_to_key_map.end(); it++ )
   {
     key = it->first;
     this_node = it->second;
@@ -880,7 +880,7 @@ void LSDChiTools::print_baselevel_keys(LSDFlowInfo& FlowInfo, LSDJunctionNetwork
   baselevel_keys_out << "latitude,longitude,baselevel_node,baselevel_junction,baselevel_key" << endl;
 
   // loop through the source
-  for ( it = source_keys_map.begin(); it != source_keys_map.end(); it++ )
+  for ( it = baselevel_to_key_map.begin(); it != baselevel_to_key_map.end(); it++ )
   {
     key = it->first;
     this_junc = it->second;

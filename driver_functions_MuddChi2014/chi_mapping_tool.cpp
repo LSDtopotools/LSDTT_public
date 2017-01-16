@@ -410,8 +410,8 @@ int main (int nNumberofArgs,char *argv[])
     }
     if (this_bool_map["print_baselevel_keys"])
     {
-      string sources_keys_name = OUT_DIR+DEM_ID+"_BaselevelKeys.csv";
-      ChiTool.print_baselevel_keys(FlowInfo, JunctionNetwork, sources_keys_name);
+      string baselevel_keys_name = OUT_DIR+DEM_ID+"_BaselevelKeys.csv";
+      ChiTool.print_baselevel_keys(FlowInfo, JunctionNetwork, baselevel_keys_name);
     }
     
   }
