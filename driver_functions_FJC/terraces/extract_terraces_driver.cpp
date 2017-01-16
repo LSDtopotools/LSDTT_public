@@ -63,9 +63,7 @@ int main (int nNumberofArgs,char *argv[])
 	}
 
 	string DEM_ID;
-	string RASTER_NAME;
 	string CH_name;
-	string input_path;
   string dem_ext = "_dem";
   //string sources_ext = "_CH_wiener";
   string DEM_extension = "bil";
@@ -73,15 +71,13 @@ int main (int nNumberofArgs,char *argv[])
   string txt_extension = ".txt";
   
   // initialise variables to be assigned from .driver file
-  int threshold_SO, FilterTopo, window_radius, lower_percentile_relief, upper_percentile_relief, lower_percentile_slope, upper_percentile_slope, minimum_patch_size, junction_number, search_distance, remove_channel_patches, MainStemAnalysis;
-	float Minimum_Slope, surface_fitting_window_radius, threshold_condition, bin_width;
+  int threshold_SO, FilterTopo, window_radius, lower_percentile_relief, upper_percentile_relief, lower_percentile_slope, upper_percentile_slope, minimum_patch_size, junction_number, search_distance, MainStemAnalysis;
+	float Minimum_Slope, surface_fitting_window_radius, threshold_condition, bin_width, RemoveChannelThreshold;
   string temp;
   
   // read in the parameters                                                          
 	file_info_in >> temp >> DEM_ID
-               >> temp >> RASTER_NAME
 							 >> temp >> CH_name
-               >> temp >> input_path
                >> temp >> Minimum_Slope
                >> temp >> threshold_SO
                >> temp >> FilterTopo
@@ -92,12 +88,13 @@ int main (int nNumberofArgs,char *argv[])
 		           >> temp >> upper_percentile_relief
 							 >> temp >> lower_percentile_slope
 							 >> temp >> upper_percentile_slope
+							 >> temp >> RemoveChannelThreshold
 							 >> temp >> minimum_patch_size
 							 >> temp >> search_distance
 						   >> temp >> MainStemAnalysis
 							 >> temp >> junction_number
-							 >> temp >> bin_width
-							 >> temp >> remove_channel_patches;
+							 >> temp >> bin_width;
+
                    
 	file_info_in.close();
 
@@ -114,7 +111,7 @@ int main (int nNumberofArgs,char *argv[])
   {
      // load the DEM
 		 cout << "Loading the DEM..." << endl;
-     LSDRaster topo_test((input_path+DEM_ID), DEM_extension);   
+     LSDRaster topo_test((path_name+DEM_ID), DEM_extension);   
      
      // filter using Perona Malik
      int timesteps = 50;
@@ -130,7 +127,7 @@ int main (int nNumberofArgs,char *argv[])
   else
   {
     //previously done the filtering and filling, just load the filled DEM
-    LSDRaster load_DEM((input_path+DEM_ID+"_filtered"), DEM_extension);
+    LSDRaster load_DEM((path_name+DEM_ID+"_filtered"), DEM_extension);
     filled_topo_test = load_DEM;
   }
   
@@ -166,7 +163,7 @@ int main (int nNumberofArgs,char *argv[])
   cout << "\t Threshold stream order = " << threshold_SO << endl;
   LSDRaster ChannelRelief = ChanNetwork.calculate_relief_from_channel(filled_topo_test, FlowInfo, threshold_SO);
   string relief_name = "_channel_relief";
-  ChannelRelief.write_raster((input_path+DEM_ID+relief_name), DEM_extension);
+  ChannelRelief.write_raster((path_name+DEM_ID+relief_name), DEM_extension);
   cout << "\t Got the relief!" << endl;
      
   //get the slope
@@ -179,7 +176,7 @@ int main (int nNumberofArgs,char *argv[])
   Slope = surface_fitting[1];
   cout << "\t Done!" << endl;
   string slope_name = "_slope";
-  Slope.write_raster((input_path+DEM_ID+slope_name), DEM_extension);
+  Slope.write_raster((path_name+DEM_ID+slope_name), DEM_extension);
 
   // get the channel relief and slope threshold using quantile-quantile plots
   cout << "Getting channel relief threshold from QQ plots" << endl;
@@ -200,18 +197,18 @@ int main (int nNumberofArgs,char *argv[])
 	//float relief_thresh = 100;
 	//float slope_thresh = 0.1;
 	// get the terrace object
-	cout << "Remove channels? " << remove_channel_patches << endl;
-	LSDTerrace Terraces(ChannelRelief, Slope, ChanNetwork, FlowInfo, relief_threshold_from_qq, slope_threshold_from_qq, minimum_patch_size, threshold_SO, remove_channel_patches);
+	cout << "Removing pixels within " << RemoveChannelThreshold << " m of the modern channel" << endl;
+	LSDTerrace Terraces(ChannelRelief, Slope, ChanNetwork, FlowInfo, relief_threshold_from_qq, slope_threshold_from_qq, minimum_patch_size, threshold_SO, RemoveChannelThreshold);
 	
 	LSDIndexRaster TerraceLocations = Terraces.print_ConnectedComponents_to_Raster();
 	string CC_ext = "_CC";
-	TerraceLocations.write_raster((input_path+DEM_ID+CC_ext), DEM_extension);
+	TerraceLocations.write_raster((path_name+DEM_ID+CC_ext), DEM_extension);
 	
 	// get the relief relative to nearest channel
 	Terraces.Get_Relief_of_Nearest_Channel(ChanNetwork, FlowInfo, filled_topo_test, DistFromOutlet, threshold_SO, search_distance);
 	LSDRaster relief_final = Terraces.print_ChannelRelief_to_Raster();
 	string relief_ext = "_terrace_relief_final";
-	relief_final.write_raster((input_path+DEM_ID+relief_ext), DEM_extension);
+	relief_final.write_raster((path_name+DEM_ID+relief_ext), DEM_extension);
 	
 	if (MainStemAnalysis == 1)
 	{
@@ -219,26 +216,26 @@ int main (int nNumberofArgs,char *argv[])
 		Terraces.get_terraces_along_main_stem(junction_number, ChanNetwork, FlowInfo, DistFromOutlet);
 		LSDRaster UpstreamDistance = Terraces.print_UpstreamDistance_to_Raster();
 		string dist_ext = "_upstream_dist";
-		UpstreamDistance.write_raster((input_path+DEM_ID+dist_ext), DEM_extension);
+		UpstreamDistance.write_raster((path_name+DEM_ID+dist_ext), DEM_extension);
 
 		// print main stem relief and distance
 
 		LSDRaster MainStemRelief = Terraces.print_ChannelRelief_to_Raster_MainStem();
 		string ms_relief_ext = "_relief_MS";
-		MainStemRelief.write_raster((input_path+DEM_ID+ms_relief_ext), DEM_extension);
+		MainStemRelief.write_raster((path_name+DEM_ID+ms_relief_ext), DEM_extension);
 
 		LSDRaster MainStemDist = Terraces.print_UpstreamDistance_to_Raster_MainStem();
 		string ms_dist_ext = "_dist_MS";
-		MainStemDist.write_raster((input_path+DEM_ID+ms_dist_ext), DEM_extension);
+		MainStemDist.write_raster((path_name+DEM_ID+ms_dist_ext), DEM_extension);
 
 		// write to text file
 		string filename = "_terraces_data.txt";
-		Terraces.print_ChannelRelief_to_File(input_path+DEM_ID+filename);
+		Terraces.print_ChannelRelief_to_File(path_name+DEM_ID+filename);
 
 		string filename_binned = "_terraces_data_binned.txt";
 		float bin_lower_limit = 0;
 		float bin_threshold = 0;
-		Terraces.print_Binned_ChannelRelief_to_File(input_path+DEM_ID+filename_binned, bin_width, bin_lower_limit, bin_threshold);
+		Terraces.print_Binned_ChannelRelief_to_File(path_name+DEM_ID+filename_binned, bin_width, bin_lower_limit, bin_threshold);
 	}
 		
 	// Done, check how long it took

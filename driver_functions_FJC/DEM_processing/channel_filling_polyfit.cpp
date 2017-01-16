@@ -38,6 +38,7 @@ int main (int nNumberofArgs,char *argv[])
 
 	cout << "The path is: " << path_name << "\n The DEM name is: " << DEM_name << "\n The window radius is: " << window_radius << endl;
 
+	string raster_output = "_test";
 	string elev_output = "_elev";
   string DEM_extension = "bil";
 	vector<int> raster_selection(8,0);  	
@@ -51,4 +52,5 @@ int main (int nNumberofArgs,char *argv[])
 	output_rasters = dem.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
 	
 	output_rasters[0].write_raster((path_name+DEM_name+elev_output), DEM_extension);
+	dem.write_raster((path_name+DEM_name+raster_output), DEM_extension);
 }

@@ -27,8 +27,8 @@ class LSDTerrace
   /// must be below the slope and channel relief threshold to be classified as a terrace pixel.
   /// @author FJC
 	/// 18/10/16
-  LSDTerrace(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, float relief_threshold, float slope_threshold, int min_patch_size, int threshold_SO, int remove_channel_patches)
-					{ create(ChannelRelief, Slope, ChanNetwork, FlowInfo, relief_threshold, slope_threshold, min_patch_size, threshold_SO, remove_channel_patches); }
+  LSDTerrace(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, float relief_threshold, float slope_threshold, int min_patch_size, int threshold_SO, float RemoveChannelThreshold)
+					{ create(ChannelRelief, Slope, ChanNetwork, FlowInfo, relief_threshold, slope_threshold, min_patch_size, threshold_SO, RemoveChannelThreshold); }
 	
 	/// @return Number of rows as an integer.
   int get_NRows() const        { return NRows; }
@@ -179,7 +179,7 @@ void Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwork, LSDFlowInfo&
 	Array2D<float> MainStemDist_array;
 
   private:
-	void create(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, float relief_threshold, float slope_threshold, int min_patch_size, int threshold_SO, int remove_channel_patches);
+	void create(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJunctionNetwork& ChanNetwork, LSDFlowInfo& FlowInfo, float relief_threshold, float slope_threshold, int min_patch_size, int threshold_SO, float RemoveChannelThreshold);
 
 };
 
