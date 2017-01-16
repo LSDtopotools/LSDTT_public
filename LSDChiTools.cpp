@@ -535,6 +535,8 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
     }
   }
   
+  cout << "I am all finished segmenting the channels!" << endl;
+  
   // set the opject data members
   M_chi_data_map =m_means_map; 
   b_chi_data_map = b_means_map;

@@ -677,7 +677,7 @@ void LSDParameterParser::print_parameters()
   
   params_out << "# ===================================="  << endl;
   params_out << "# Now for parameters read from file." << endl;
-  params_out << "# If an expected parameter is here check your spelling." << endl;
+  params_out << "# If an expected parameter is not here check your spelling." << endl;
   
   vector<string> empty_vec;
   vector<string> these_keys = extract_keys(parameters_read_map);
