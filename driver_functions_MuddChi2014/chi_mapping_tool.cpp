@@ -402,10 +402,16 @@ int main (int nNumberofArgs,char *argv[])
     ChiTool.print_data_maps_to_file_full(FlowInfo, csv_full_fname);
     cout << "That is your file printed!" << endl;
     
+    // These print the source and baselelvel keys if wanted
     if (this_bool_map["print_source_keys"])
     {
       string sources_keys_name = OUT_DIR+DEM_ID+"_SourceKeys.csv";
-      ChiTool.print_data_maps_to_file_full(FlowInfo, sources_keys_name);
+      ChiTool.print_source_keys(FlowInfo, sources_keys_name);
+    }
+    if (this_bool_map["print_baselevel_keys"])
+    {
+      string sources_keys_name = OUT_DIR+DEM_ID+"_BaselevelKeys.csv";
+      ChiTool.print_baselevel_keys(FlowInfo, JunctionNetwork, sources_keys_name);
     }
     
   }
