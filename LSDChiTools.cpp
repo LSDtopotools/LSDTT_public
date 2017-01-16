@@ -839,9 +839,9 @@ void LSDChiTools::print_source_keys(LSDFlowInfo& FlowInfo, string filename)
   map<int, int>::iterator it;
   
   // open the data file
-  ofstream  source_baselevel_keys_out;
-  source_baselevel_keys_out.open(filename.c_str());
-  source_baselevel_keys_out << "latitude,longitude,source_node,source_key" << endl;
+  ofstream  source_keys_out;
+  source_keys_out.open(filename.c_str());
+  source_keys_out << "latitude,longitude,source_node,source_key" << endl;
 
   // loop through the source
   for ( it = source_keys_map.begin(); it != source_keys_map.end(); it++ )
@@ -851,14 +851,51 @@ void LSDChiTools::print_source_keys(LSDFlowInfo& FlowInfo, string filename)
     FlowInfo.retrieve_current_row_and_col(this_node,row,col);
     get_lat_and_long_locations(row, col, latitude, longitude, Converter); 
     
-    source_baselevel_keys_out.precision(9);
-    source_baselevel_keys_out << latitude << ","
+    source_keys_out.precision(9);
+    source_keys_out << latitude << ","
                    << longitude << "," << this_node << ",";
-    source_baselevel_keys_out.precision(5);
-    source_baselevel_keys_out << key << endl;
+    source_keys_out.precision(5);
+    source_keys_out << key << endl;
   }
   
-  source_baselevel_keys_out.close();
+  source_keys_out.close();
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Print data maps to file
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::print_baselevel_keys(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork, string filename)
+{
+  
+  // these are for extracting element-wise data from the channel profiles. 
+  int this_node, this_junc,row,col, key;
+  double latitude,longitude;
+  LSDCoordinateConverterLLandUTM Converter;
+  map<int, int>::iterator it;
+  
+  // open the data file
+  ofstream  baselevel_keys_out;
+  baselevel_keys_out.open(filename.c_str());
+  baselevel_keys_out << "latitude,longitude,baselevel_node,baselevel_junction,baselevel_key" << endl;
+
+  // loop through the source
+  for ( it = source_keys_map.begin(); it != source_keys_map.end(); it++ )
+  {
+    key = it->first;
+    this_junc = it->second;
+    this_node = JunctionNetwork.get_Node_of_Junction(this_junc);
+    FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+    get_lat_and_long_locations(row, col, latitude, longitude, Converter); 
+    
+    baselevel_keys_out.precision(9);
+    baselevel_keys_out << latitude << ","
+                   << longitude << "," << this_node << ",";
+    baselevel_keys_out.precision(5);
+    baselevel_keys_out << this_junc <<"," << key << endl;
+  }
+  
+  baselevel_keys_out.close();
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
