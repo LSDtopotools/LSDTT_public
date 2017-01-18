@@ -75,10 +75,10 @@ int main (int nNumberofArgs,char *argv[])
 							 >> temp >> input_path;
 	
 	// load the predicted raster
-	LSDRaster PredictedRaster((input_path+predicted_raster), DEM_extension);
+	LSDIndexRaster PredictedRaster((input_path+predicted_raster), DEM_extension);
 	cout << "Got the predicted raster" << endl;
 	// load the actual raster
-	LSDRaster ActualRaster((input_path+actual_raster), DEM_extension);
+	LSDIndexRaster ActualRaster((input_path+actual_raster), DEM_extension);
 	cout << "Got the actual raster" << endl;
 	
 	//Get the number of pixels in the DEM
