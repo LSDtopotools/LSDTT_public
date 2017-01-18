@@ -174,9 +174,15 @@ int main (int nNumberofArgs,char *argv[])
   raster_selection[1] = 1;             // this means you want the slope
   surface_fitting = filled_topo_test.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
   Slope = surface_fitting[1];
+	
+	float mask_threshold = 1.0;
+	bool below = 0;
+	// remove any stupid slope values
+	LSDRaster Slope_new = Slope.mask_to_nodata_using_threshold(mask_threshold, below);
+	
   cout << "\t Done!" << endl;
   string slope_name = "_slope";
-  Slope.write_raster((path_name+DEM_ID+slope_name), DEM_extension);
+  Slope_new.write_raster((path_name+DEM_ID+slope_name), DEM_extension);
 
   // get the channel relief and slope threshold using quantile-quantile plots
   cout << "Getting channel relief threshold from QQ plots" << endl;
@@ -185,7 +191,7 @@ int main (int nNumberofArgs,char *argv[])
   
   cout << "Getting slope threshold from QQ plots" << endl;
   string qq_slope = path_name+DEM_ID+"_qq_slope.txt";
-  float slope_threshold_from_qq = Slope.get_threshold_for_floodplain_QQ(qq_slope, threshold_condition, lower_percentile_slope, upper_percentile_slope);
+  float slope_threshold_from_qq = Slope_new.get_threshold_for_floodplain_QQ(qq_slope, threshold_condition, lower_percentile_slope, upper_percentile_slope);
 	
 	cout << "Relief threshold: " << relief_threshold_from_qq << " Slope threshold: " << slope_threshold_from_qq << endl;
 	
