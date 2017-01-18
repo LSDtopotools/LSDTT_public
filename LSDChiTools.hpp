@@ -318,11 +318,9 @@ class LSDChiTools
     /// This holds the baselevel key of each node. Again used for visualisation
     map<int,int> baselevel_keys_map;
     /// This is a map where the sources are linked to the source nodes. 
-    /// The key element is actually the source node
-    map<int,int> source_to_key_map; 
+    map<int,int> key_to_source_map; 
     /// This is a map where the baselevel keys are linked to the baselelvel nodes. 
-    /// The key element is actually the baselelvel node
-    map<int,int> baselevel_to_key_map; 
+    map<int,int> key_to_baselevel_map; 
 
   private:
     void create(LSDRaster& Raster);

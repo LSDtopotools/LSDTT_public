@@ -431,10 +431,16 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
   
   // these are vectors that will store information about the individual nodes
   // that allow us to map the nodes to specific channels during data visualisation
+  
+  // These two maps have each node in the channel (the index) 
+  // linked to a key (either the baselevel key or source key)
   map<int,int> these_source_keys;
   map<int,int> these_baselevel_keys;
-  map<int,int> this_source_to_keys_map; 
-  map<int,int> this_baselevel_keys_map;
+  
+  // These two maps link a keys, which are incrmented by one, to the 
+  // junction or node of the baselevel or source
+  map<int,int> this_key_to_source_map; 
+  map<int,int> this_key_to_baselevel_map;
 
   // these are for working with the FlowInfo object
   int this_node,row,col;
@@ -453,17 +459,17 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
     //cout << "Got the base level" << endl;
     
     // If a key to this base level does not exist, add one. 
-    if ( this_baselevel_keys_map.find(this_base_level) == this_baselevel_keys_map.end() ) 
+    if ( this_key_to_baselevel_map.find(this_base_level) == this_key_to_baselevel_map.end() ) 
     {
       baselevel_tracker++;
       cout << "Found a new baselevel. The node is: " << this_base_level << " and key is: " << baselevel_tracker << endl;
-      this_baselevel_keys_map[this_base_level] = baselevel_tracker;
+      this_key_to_baselevel_map[this_base_level] = baselevel_tracker;
     }
     
     // now add the source tracker
     source_node_tracker++;
     this_source_node = source_nodes[chan];
-    this_source_to_keys_map[this_source_node] = source_node_tracker;
+    this_key_to_source_map[this_source_node] = source_node_tracker;
     
     cout << "The source key is: " << source_node_tracker << " and basin key is: " << baselevel_tracker << endl;
     
@@ -548,8 +554,8 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
   
   source_keys_map = these_source_keys;
   baselevel_keys_map = these_baselevel_keys;
-  source_to_key_map = this_baselevel_keys_map;
-  baselevel_to_key_map = this_source_to_keys_map;
+  key_to_source_map = this_key_to_source_map;
+  key_to_baselevel_map = this_key_to_baselevel_map;
   
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -844,10 +850,10 @@ void LSDChiTools::print_source_keys(LSDFlowInfo& FlowInfo, string filename)
   source_keys_out << "latitude,longitude,source_node,source_key" << endl;
 
   // loop through the source key map
-  for ( it = source_to_key_map.begin(); it != source_to_key_map.end(); it++ )
+  for ( it = key_to_source_map.begin(); it != key_to_source_map.end(); it++ )
   {
-    key = it->first;
-    this_node = it->second;
+    key = it->second;
+    this_node = it->first;
     FlowInfo.retrieve_current_row_and_col(this_node,row,col);
     get_lat_and_long_locations(row, col, latitude, longitude, Converter); 
     
@@ -880,11 +886,11 @@ void LSDChiTools::print_baselevel_keys(LSDFlowInfo& FlowInfo, LSDJunctionNetwork
   baselevel_keys_out << "latitude,longitude,baselevel_node,baselevel_junction,baselevel_key" << endl;
 
   // loop through the source
-  for ( it = baselevel_to_key_map.begin(); it != baselevel_to_key_map.end(); it++ )
+  for ( it = key_to_baselevel_map.begin(); it != key_to_baselevel_map.end(); it++ )
   {
-    key = it->first;
-    this_junc = it->second;
-    this_node = JunctionNetwork.get_Node_of_Junction(this_junc);
+    key = it->second;
+    this_node = it->first;
+    this_junc = JunctionNetwork.get_Junction_of_Node(this_node, FlowInfo);
     FlowInfo.retrieve_current_row_and_col(this_node,row,col);
     get_lat_and_long_locations(row, col, latitude, longitude, Converter); 
     
