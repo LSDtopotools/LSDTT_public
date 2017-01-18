@@ -1503,7 +1503,7 @@ vector<int> LSDJunctionNetwork::extract_basin_nodes_above_drainage_area_threshol
 	vector<int> basin_nodes;
 	float PixelArea = DataResolution*DataResolution;
 	vector<int> visited_before;
-	
+
 	//for each source junction, go downstream until you reach a drainage area > threshold
 	//get the source junctions
 	vector<int> SourceJunctions = get_Junctions_of_Sources(FlowInfo);
@@ -1724,7 +1724,7 @@ int LSDJunctionNetwork::is_Junction_BaseLevel(int junction)
 	int base_level = 0;
 	int ReceiverJN = get_Receiver_of_Junction(junction);
 	if (junction == ReceiverJN) { base_level = 1; }
-	
+
 	return base_level;
 }
 
@@ -2125,7 +2125,7 @@ int LSDJunctionNetwork::GetChannelHeadsChiMethodFromSourceNode(int NodeNumber,
 void LSDJunctionNetwork::write_valley_hilltop_chi_profiles_to_csv(vector<int> sources, float A_0, float m_over_n, LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance, LSDRaster& ElevationRaster, int NJunctions, string output_path, string DEM_ID)
 {
 	float downslope_chi = 0;
-	
+
 	//loop through all the sources and get the channel profile from the valley to the hilltop
 	for (int i = 0; i < int(sources.size()); i++)
 	{
@@ -3983,7 +3983,7 @@ LSDIndexRaster LSDJunctionNetwork::ChannelIndexer(LSDFlowInfo& flowinfo)
       flowinfo.retrieve_receiver_information(CurrentNodeIndex, next_receiver, g, h);
 
       if (CurrentNodeIndex == next_receiver)
-      {  
+      {
         //need to stop 1 px before node
         //cout << "I found the base level" << endl;
         Flag = true;
@@ -4009,18 +4009,18 @@ LSDIndexRaster LSDJunctionNetwork::ChannelIndexer(LSDFlowInfo& flowinfo)
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
-// This function writes three vector: a vector of node indices, 
+// This function writes three vector: a vector of node indices,
 // a vector of junction indices and a vector of stream orders
 // It is used to create an ordered channel vector that can be combined
 // with other methods to produce a channel network
-// csv file. 
+// csv file.
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 void LSDJunctionNetwork::GetChannelNodesAndJunctions(LSDFlowInfo& flowinfo, vector<int>& NIvec, vector<int>& JIvec, vector<int>& SOvec)
 {
   vector<int> NI_vector;
   vector<int> JI_vector;
   vector<int> SO_vector;
-  
+
   int row = 0;  //ints to store the row and col of the current px
   int col = 0;
 
@@ -4038,9 +4038,9 @@ void LSDJunctionNetwork::GetChannelNodesAndJunctions(LSDFlowInfo& flowinfo, vect
     int sourcenodeindex = JunctionVector[q]; //first cell of segment
     int recieverjunction = ReceiverVector[q];
     int recievernodeindex = JunctionVector[recieverjunction]; //last cell of segment
-    
+
     cout << "Source NI : " << sourcenodeindex << " and receiver NI: " << recievernodeindex << endl;
-    
+
     cout << "reciever is:"  <<  recieverjunction << " ";
     //get row and col of last px in junction. This location should not be written,
     //as it is the start of a new junction.
@@ -4073,7 +4073,7 @@ void LSDJunctionNetwork::GetChannelNodesAndJunctions(LSDFlowInfo& flowinfo, vect
       //cout << "CNI: " <<  CurrentNodeIndex << " and RNI: " << recievernodeindex << endl;
 
       if (CurrentNodeIndex == next_receiver)
-      {  
+      {
         //need to stop 1 px before node
         cout << "I found the base level" << endl;
         Flag = true;
@@ -4092,8 +4092,8 @@ void LSDJunctionNetwork::GetChannelNodesAndJunctions(LSDFlowInfo& flowinfo, vect
     }
   }
   cout << "Okay, I've got the nodes" << endl;
-  
-  
+
+
   NIvec = NI_vector;
   JIvec = JI_vector;
   SOvec = SO_vector;
@@ -4644,15 +4644,15 @@ LSDIndexRaster LSDJunctionNetwork::extract_basins_from_junction_vector(vector<in
 //
 // SMM 01/09/2012
 //
-// UPDATED so that later basins don't overwrite smaller basins. Input junction 
-// vector is first sorted by upslope drainage area - do the nested basins first,  
+// UPDATED so that later basins don't overwrite smaller basins. Input junction
+// vector is first sorted by upslope drainage area - do the nested basins first,
 // then larger basins won't overwrite these.  FJC 10/01/17
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 LSDIndexRaster LSDJunctionNetwork::extract_basins_from_junction_vector_nested(vector<int> basin_junctions, LSDFlowInfo& FlowInfo)
 {
   Array2D<int> Basin(NRows,NCols,NoDataValue);
-	
+
 	// sort basin junctions by contributing nodes
 	vector<size_t> index_map;
 	vector<int> basin_junctions_CP;
@@ -4841,11 +4841,11 @@ void LSDJunctionNetwork::PrintChannelNetworkToCSV(LSDFlowInfo& flowinfo, string 
     this_NI = NIvec[node];
     flowinfo.retrieve_current_row_and_col(this_NI,row,col);
     get_lat_and_long_locations(row, col, latitude, longitude, Converter);
-    
+
     WriteData << latitude << "," << longitude << "," << JIvec[node] << "," << SOvec[node] << "," << NIvec[node] << endl;
-  
+
   }
-  
+
   WriteData.close();
 
 }
@@ -5764,6 +5764,17 @@ void LSDJunctionNetwork::snap_point_locations_to_channels(vector<float> x_locs,
     // check to see if the node is in the raster
     bool is_in_raster = FlowInfo.check_if_point_is_in_raster(x_loc,y_loc);
 
+    // check that the point is not nodata and set is_in_raster to false if it is
+    int tmpNode = FlowInfo.get_node_index_of_coordinate_point(x_loc,y_loc);
+    int tmpRow;
+    int tmpCol;
+
+    FlowInfo.retrieve_current_row_and_col(tmpNode, tmpRow, tmpCol);
+
+    if (FlowInfo.get_LocalFlowDirection(tmpRow, tmpCol) == NoDataValue){
+      is_in_raster = false;
+    }
+
     if(is_in_raster)
     {
       //cout << "JN 4307 This point is in the raster!" << endl;
@@ -5793,7 +5804,7 @@ void LSDJunctionNetwork::snap_point_locations_to_channels(vector<float> x_locs,
     {
       cout << "WARNING LSDJunctionNetwork::snap_point_locations_to_channels." << endl;
       cout << "This point at location: " << x_loc << " " << y_loc << endl
-           << "does not seem to be in the raster!" << endl;
+           << "does not seem to be in the raster, or is in a NoData region." << endl;
     }
   }
 }
