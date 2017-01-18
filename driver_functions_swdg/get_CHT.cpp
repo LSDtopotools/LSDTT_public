@@ -138,8 +138,6 @@ int main (int nNumberofArgs,char *argv[])
                >> temp >> roughness_radius;
   file_info_in.close();
 
-  cout << roughness_threshold << " " << roughness_radius << endl;
-
   // Now get the lat long data
   ifstream ll_data;
   ll_data.open(ll_filename.c_str());
