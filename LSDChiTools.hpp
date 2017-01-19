@@ -253,6 +253,21 @@ class LSDChiTools
     /// @date 16/01/2017
     void print_baselevel_keys(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JN, string filename);
 
+    /// @brief This prints a basin LSDIndexRaster with basins numbered by outlet junction
+    ///  and a csv file that has the latitude and longitude of both the outlet and the centroid
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param JN the junction network object
+    /// @param Junctions The baselevel junctions to be printed
+    /// @param Converter an lat-long converter
+    /// @param base_filename The name of the filename to print to (should have full
+    ///   path but no extension. The "_AllBasins" will be added
+    /// @author SMM
+    /// @date 19/01/2017
+    void print_basins(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork, 
+                               vector<int> Juntions, LSDCoordinateConverterLLandUTM& Converter ,
+                               string base_filename);
+
+
     /// @brief This prints a csv file with all the data from the data maps
     ///  the columns are:
     ///  latitude,longitude,chi,elevation,flow distance,drainage area,m_chi,b_chi

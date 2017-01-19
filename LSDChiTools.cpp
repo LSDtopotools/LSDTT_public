@@ -78,12 +78,14 @@
 #include "TNT/tnt.h"
 #include "LSDFlowInfo.hpp"
 #include "LSDRaster.hpp"
+#include "LSDIndexRaster.hpp"
 #include "LSDChannel.hpp"
 #include "LSDJunctionNetwork.hpp"
 #include "LSDIndexChannel.hpp"
 #include "LSDStatsTools.hpp"
 #include "LSDShapeTools.hpp"
 #include "LSDChiTools.hpp"
+#include "LSDBasin.hpp"
 #include "LSDChiNetwork.hpp"
 using namespace std;
 using namespace TNT;
@@ -905,6 +907,88 @@ void LSDChiTools::print_baselevel_keys(LSDFlowInfo& FlowInfo, LSDJunctionNetwork
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function prints the basins and an additional file that has basin centroids
+// and labelling information for plotting
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::print_basins(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork, 
+                               vector<int> Junctions, LSDCoordinateConverterLLandUTM& Converter ,
+                               string base_filename)
+{
+  int N_Juncs = Junctions.size();
+  
+  // Get some data members for holding basins and the raster
+  vector<LSDBasin> AllTheBasins;
+  map<int,int> drainage_of_other_basins;
+  LSDIndexRaster BasinMasterRaster;
+    
+  string basin_raster_name = base_filename+"_AllBasins";
+  string basin_info_name = base_filename+"_AllBasinsInfo.csv";
+  
+  ofstream basin_info_out;
+  basin_info_out.open(basin_info_name.c_str());
+  basin_info_out << "latitude,longitude,outlet_latitude,outlet_longitude,outlet_junction" << endl;
+  
+  // Make sure the full lat-long information is printed 
+  basin_info_out.precision(9);
+  
+  // These store row and column information for converting the outlet and centroid to 
+  // latitude and longitude
+  int centroid_i, centroid_j, outlet_i, outlet_j;
+  double out_lat,out_long, cen_lat, cen_long;
+    
+  //cout << "I am trying to print basins, found " << N_BaseLevelJuncs << " base levels." << endl;
+  // Loop through the junctions
+  for(int BN = 0; BN<N_Juncs; BN++)
+  {
+    //cout << "Getting basin " << BN << " and the junction is: "  << BaseLevelJunctions[BN] << endl;
+    LSDBasin thisBasin(Junctions[BN],FlowInfo, JunctionNetwork);
+    //cout << "...got it!" << endl;
+    AllTheBasins.push_back(thisBasin);
+    
+    // This is required if the basins are nested--test the code which numbers
+    // to be overwritten by a smaller basin
+    drainage_of_other_basins[Junctions[BN]] = thisBasin.get_NumberOfCells();
+    
+    
+    // get the centroid and outlet locations 
+    centroid_i = thisBasin.get_Centroid_i();
+    centroid_j = thisBasin.get_Centroid_j();
+    
+    outlet_i = thisBasin.get_Outlet_i();
+    outlet_j = thisBasin.get_Outlet_j();
+    
+    // Find the latitude and longitude of the outlet and centroid 
+    get_lat_and_long_locations(centroid_i, centroid_j, cen_lat, cen_long, Converter);
+    get_lat_and_long_locations(outlet_i, outlet_j, out_lat, out_long, Converter);
+    
+    basin_info_out << cen_lat << "," << cen_long << "," << out_lat << "," << out_long << "," << Junctions[BN] << endl;
+  }
+  basin_info_out.close();
+    
+  // now loop through everything again getting the raster
+  if (N_Juncs > 0)     // this gets the first raster
+  {
+    BasinMasterRaster = AllTheBasins[0].write_integer_data_to_LSDIndexRaster(Junctions[0], FlowInfo);
+  }
+    
+  // now add on the subsequent basins
+  for(int BN = 1; BN<N_Juncs; BN++)
+  {
+    AllTheBasins[BN].add_basin_to_LSDIndexRaster(BasinMasterRaster, FlowInfo,
+                              drainage_of_other_basins, Junctions[BN]);
+  }
+    
+  
+  // We need to use bil format since there is georeferencing
+  string raster_ext = "bil";
+  // print the basin raster
+  BasinMasterRaster.write_raster(basin_raster_name, raster_ext);
+  cout << "Finished with exporting basins!" << endl; 
+
+
+
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Print data maps to file
