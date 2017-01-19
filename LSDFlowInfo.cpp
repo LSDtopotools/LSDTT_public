@@ -1670,6 +1670,7 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads_OS(string csv_filename)
   int N_sources_2 = Sources_temp.size();
   for(int i = 0; i<N_sources_2; ++i)
   {
+		cout << flush << "\t Source: " << i << " of " << N_sources_2 << "\r";
     int test2 = 0;
     for(int i_test = 0; i_test<int(Sources_temp.size()); ++i_test)
     {
@@ -1679,8 +1680,9 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads_OS(string csv_filename)
       }
     }
     if(test2 ==0) Sources.push_back(Sources_temp[i]);
-    else cout << "\t\t ! removed node from sources list - other sources upstream" << endl; 
+    //else cout << "\t\t ! removed node from sources list - other sources upstream" << endl; 
   }
+	cout << "Returning sources..." << endl;
   
   return Sources;
 }
