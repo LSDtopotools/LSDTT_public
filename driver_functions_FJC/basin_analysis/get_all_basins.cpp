@@ -133,7 +133,9 @@ int main (int nNumberofArgs,char *argv[])
   //get a FlowInfo object
 	LSDFlowInfo FlowInfo(boundary_conditions,filled_topo_test); 
 	LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
-	LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+	LSDRaster DrainageArea_raster = FlowInfo.write_DrainageArea_to_LSDRaster();
+	string da_ext = "_DA";
+	DrainageArea_raster.write_raster((path_name+DEM_name+da_ext), DEM_extension);
 	
 	cout << "\t Loading Sources..." << endl;
 	// load the sources
