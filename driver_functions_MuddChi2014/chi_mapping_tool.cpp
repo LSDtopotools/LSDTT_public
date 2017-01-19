@@ -312,45 +312,17 @@ int main (int nNumberofArgs,char *argv[])
   //  vector<int> UPSN = FlowInfo.get_upslope_nodes(JunctionNetwork.get_Node_of_Junction(BaseLevelJunctions[BN]));
   //  cout << "Pixels for that node are: " << UPSN.size() << endl;
   //}
-  
+
+  // now use a ChiTool object to print the chi tree to csv                  
+  LSDChiTools ChiTool(FlowInfo);
+
   //============================================================================
   // Print a basin raster if you want it.
   if(this_bool_map["print_basin_raster"])
-  { 
-    vector<LSDBasin> AllTheBasins;
-    map<int,int> drainage_of_other_basins;
-    LSDIndexRaster BasinMasterRaster;
-    
-    string basin_raster_name = OUT_DIR+DEM_ID+"_AllBasins";
-    
-    //cout << "I am trying to print basins, found " << N_BaseLevelJuncs << " base levels." << endl;
-    for(int BN = 0; BN<N_BaseLevelJuncs; BN++)
-    {
-      //cout << "Getting basin " << BN << " and the junction is: "  << BaseLevelJunctions[BN] << endl;
-      LSDBasin thisBasin(BaseLevelJunctions[BN],FlowInfo, JunctionNetwork);
-      //cout << "...got it!" << endl;
-      AllTheBasins.push_back(thisBasin);
-      
-      drainage_of_other_basins[BaseLevelJunctions[BN]] = thisBasin.get_NumberOfCells();
-    }
-    
-    // now loop through everything again getting the raster
-    if (N_BaseLevelJuncs > 0)     // this gets the first raster
-    {
-      BasinMasterRaster = AllTheBasins[0].write_integer_data_to_LSDIndexRaster(BaseLevelJunctions[0], FlowInfo);
-    }
-    
-    // now add on the subsequent basins
-    for(int BN = 1; BN<N_BaseLevelJuncs; BN++)
-    {
-      AllTheBasins[BN].add_basin_to_LSDIndexRaster(BasinMasterRaster, FlowInfo,
-                              drainage_of_other_basins, BaseLevelJunctions[BN]);
-    }
-    
-    BasinMasterRaster.write_raster(basin_raster_name, raster_ext);
-    cout << "Finished with exporting basins!" << endl; 
+  {
+    string basin_raster_prefix = OUT_DIR+DEM_ID;
+    ChiTool.print_basins(FlowInfo, JunctionNetwork, BaseLevelJunctions, basin_raster_prefix);
   }
-  //============================================================================
 
   // calculate chi for the entire DEM
   cout << "Calculating the chi coordinate for A_0: " << A_0 << " and m/n: " << movern << endl; 
@@ -361,9 +333,6 @@ int main (int nNumberofArgs,char *argv[])
     string chi_coord_string = OUT_DIR+DEM_ID+"_chi_coord"; 
     chi_coordinate.write_raster(chi_coord_string,raster_ext);
   }                                                                         
-                                                                            
-  // now use a ChiTool object to print the chi tree to csv                  
-  LSDChiTools ChiTool(FlowInfo);
   
   if (this_bool_map["print_simple_chi_map_to_csv"])
   {

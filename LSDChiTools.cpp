@@ -912,10 +912,11 @@ void LSDChiTools::print_baselevel_keys(LSDFlowInfo& FlowInfo, LSDJunctionNetwork
 // and labelling information for plotting
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::print_basins(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork, 
-                               vector<int> Junctions, LSDCoordinateConverterLLandUTM& Converter ,
-                               string base_filename)
+                               vector<int> Junctions, string base_filename)
 {
   int N_Juncs = Junctions.size();
+  LSDCoordinateConverterLLandUTM Converter;
+  
   
   // Get some data members for holding basins and the raster
   vector<LSDBasin> AllTheBasins;

@@ -258,15 +258,12 @@ class LSDChiTools
     /// @param FlowInfo an LSDFlowInfo object
     /// @param JN the junction network object
     /// @param Junctions The baselevel junctions to be printed
-    /// @param Converter an lat-long converter
     /// @param base_filename The name of the filename to print to (should have full
     ///   path but no extension. The "_AllBasins" will be added
     /// @author SMM
     /// @date 19/01/2017
     void print_basins(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork, 
-                               vector<int> Juntions, LSDCoordinateConverterLLandUTM& Converter ,
-                               string base_filename);
-
+                               vector<int> Juntions, string base_filename);
 
     /// @brief This prints a csv file with all the data from the data maps
     ///  the columns are:
