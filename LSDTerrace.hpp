@@ -111,6 +111,12 @@ void Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwork, LSDFlowInfo&
 	/// @date 19/10/16
 	LSDRaster print_FlowLengths_to_Raster();
 	
+	/// @brief This function prints a binary raster of terrace locations
+	/// @return BinaryRaster binary raster
+	/// @author FJC
+	/// @date 19/01/17
+	LSDIndexRaster print_BinaryRaster();
+	
 	/// FUNCTIONS TO PRINT TEXT FILES
 	
 	/// @brief This function prints the upstream distance and channel relief of the floodplain pixels

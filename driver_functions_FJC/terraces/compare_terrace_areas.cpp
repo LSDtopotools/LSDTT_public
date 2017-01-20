@@ -78,6 +78,6 @@ int main (int nNumberofArgs,char *argv[])
 	
 	// calculate the TPs, FPs, TNs, and FNs
 	float PercentageDiff = PredictedRaster.GetAreaDifference(ActualRaster);
-	cout << "Area difference: " << PercentageDiff << endl;
+	cout << "Area: " << PercentageDiff << endl;
 	
 }
