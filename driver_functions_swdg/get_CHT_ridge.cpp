@@ -251,21 +251,12 @@ int main (int nNumberofArgs,char *argv[])
     fUTM_northing[i] = float(this_Northing);
   }
 
+  // snap to hilltop function here
+  vector<int> SnappedNodes;
+  vector<int> Valid_node_IDs;
+  FlowInfo.snap_to_hilltops(fUTM_easting, fUTM_northing, search_radius_nodes, Hilltops, SnappedNodes, Valid_node_IDs);
 
-  //new snap to hilltop function here
-
-
-
-
-  vector<int> valid_cosmo_points;         // a vector to hold the valid nodes
-  vector<int> snapped_node_indices;       // a vector to hold the valid node indices
-  vector<int> snapped_junction_indices;   // a vector to hold the valid junction indices
-
-  JunctionNetwork.snap_point_locations_to_channels(fUTM_easting, fUTM_northing,
-            search_radius_nodes, threshold_stream_order, FlowInfo,
-            valid_cosmo_points, snapped_node_indices, snapped_junction_indices);
-
-  int n_valid_points = int(valid_cosmo_points.size());  //The number of points which were within the current DEM
+  int n_valid_points = int(SnappedNodes.size());  //The number of points which were within the current DEM
 
   if (n_valid_points != N_samples){
     cout << "Not every point was located within the DEM" << endl;
@@ -286,9 +277,7 @@ int main (int nNumberofArgs,char *argv[])
     //convert nodeindexes to i,j to feed into sampler
     vector<vector<float>> Samples = FilledDEM.Sample_Along_Ridge(LSDRaster& Hilltops, LSDRaster& Hilltops_Gradient, LSDRaster& Bedrock, int a, int b, int threshold);
 
-    //needs modded to sample 3 rasters and return the sample as a vector of vectors ^^
-
-    WriteData << IDs[valid_cosmo_points[samp]]; //need to figure this out still...
+    WriteData << IDs[Valid_node_IDs[samp]];
 
     for (int a=0; a < 2; ++a){
 
