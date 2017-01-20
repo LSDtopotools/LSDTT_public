@@ -206,8 +206,8 @@ int main (int nNumberofArgs,char *argv[])
 	cout << "Removing pixels within " << RemoveChannelThreshold << " m of the modern channel" << endl;
 	LSDTerrace Terraces(ChannelRelief, Slope, ChanNetwork, FlowInfo, relief_threshold_from_qq, slope_threshold_from_qq, minimum_patch_size, threshold_SO, RemoveChannelThreshold);
 	
-	LSDIndexRaster TerraceLocations = Terraces.print_ConnectedComponents_to_Raster();
-	string CC_ext = "_CC";
+	LSDIndexRaster TerraceLocations = Terraces.print_BinaryRaster();
+	string CC_ext = "_terraces";
 	TerraceLocations.write_raster((path_name+DEM_ID+CC_ext), DEM_extension);
 	
 	// get the relief relative to nearest channel

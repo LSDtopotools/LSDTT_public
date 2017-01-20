@@ -365,6 +365,28 @@ LSDRaster LSDTerrace::print_UpstreamDistance_to_Raster_MainStem()
 	return UpstreamDistance;
 }
 
+//----------------------------------------------------------------------------------------
+// Print binary raster of terrace locations
+// FJC 19/01/17
+//---------------------------------------------------------------------------------------- 
+LSDIndexRaster LSDTerrace::print_BinaryRaster()
+{
+	Array2D<int> BinaryArray (NRows,NCols,NoDataValue);
+	
+	for (int row = 0; row < NRows; row++)
+	{
+		for (int col = 0; col < NCols; col++)
+		{
+			if (ConnectedComponents_Array[row][col] != NoDataValue)
+			{
+				BinaryArray[row][col] = 1;
+			}
+		}
+	}
+	LSDIndexRaster BinaryRaster(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, BinaryArray, GeoReferencingStrings);
+	return BinaryRaster;
+}
+
 ////----------------------------------------------------------------------------------------
 //// FUNCTIONS TO PRINT TEXT FILES
 ////----------------------------------------------------------------------------------------
