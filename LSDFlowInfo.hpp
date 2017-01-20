@@ -404,9 +404,9 @@ class LSDFlowInfo
   /// @author SWDG updated SMM updated DTM
   /// @date 6/6/14 Happy 3rd birthday Skye!!
   vector<int> Ingest_Channel_Heads(string filename, string extension, int input_switch = 2);
-	
+
 	/// @brief Method to ingest sources from OS MasterMap Water Network Layer (csv) into a vector
-	/// of source nodes so that an LSDJunctionNetwork can be easily created from them. 
+	/// of source nodes so that an LSDJunctionNetwork can be easily created from them.
 	/// @param csv_filename CSV file name
 	/// @return vector of source nodes
   /// @author FJC
@@ -435,7 +435,7 @@ class LSDFlowInfo
   ///drainage area.
   ///@return Integer node index.
   int retrieve_largest_base_level();
-  
+
   /// @brief This gets the base level node for any given node
   /// @param node the starting node
   /// @return the base level node
@@ -983,7 +983,7 @@ class LSDFlowInfo
   /// @date 19/05/2016
   int get_downslope_node_after_fixed_visited_nodes(int source_node,
                  int outlet_node, int n_nodes_to_visit, LSDIndexRaster& VisitedRaster);
-	
+
 	/// @brief This function gets the flow distance between two nodes
   /// @param UpstreamNode the upstream node
   /// @param Downstreamnode the downstream node
@@ -992,6 +992,9 @@ class LSDFlowInfo
   /// @date 29/09/2016
 	float get_flow_length_between_nodes(int UpstreamNode, int DownstreamNode);
 
+
+  int snap_to_hilltop(int a, int b, int search_radius, LSDRaster& Hilltops);
+  void snap_to_hilltops(vector<float> x_locs, vector<float> y_locs, int search_radius, LSDRaster& Hilltops, vector<int>& SnappedNodes, vector<int>& Valid_node_IDs);
 
   protected:
 
