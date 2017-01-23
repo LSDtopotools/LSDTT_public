@@ -254,7 +254,7 @@ int main (int nNumberofArgs,char *argv[])
   // snap to hilltop function here
   vector<int> SnappedNodes;
   vector<int> Valid_node_IDs;
-  FlowInfo.snap_to_hilltops(fUTM_easting, fUTM_northing, search_radius_nodes, Hilltops, SnappedNodes, Valid_node_IDs);
+  FlowInfo.snap_to_hilltops(fUTM_easting, fUTM_northing, search_radius_nodes, CHT, SnappedNodes, Valid_node_IDs);
 
   int n_valid_points = int(SnappedNodes.size());  //The number of points which were within the current DEM
 
@@ -271,11 +271,19 @@ int main (int nNumberofArgs,char *argv[])
   //write headers
   WriteData << "_ID,min,max,median,mean,range,std_dev,std_err,min_gradient,max_gradient,median_gradient,mean_gradient,range_gradient,std_dev_gradient,std_err_gradient,bedrock_percentage" << endl;
 
+  int threshold = 10;
+
   for(int samp = 0; samp<n_valid_points; samp++)
   {
     //vector of nodeindexes from new snapping fn
     //convert nodeindexes to i,j to feed into sampler
-    vector<vector<float>> Samples = FilledDEM.Sample_Along_Ridge(LSDRaster& Hilltops, LSDRaster& Hilltops_Gradient, LSDRaster& Bedrock, int a, int b, int threshold);
+
+    int a;
+    int b;
+
+    FlowInfo.retrieve_current_row_and_col(SnappedNodes[samp], a, b);
+
+    vector< vector<float> > Samples = FilledDEM.Sample_Along_Ridge(CHT, CHT_gradient, Roughness[2], a, b, threshold);
 
     WriteData << IDs[Valid_node_IDs[samp]];
 
@@ -287,7 +295,7 @@ int main (int nNumberofArgs,char *argv[])
       float median = get_percentile(Samples[a], 50.0);
       float stdd = get_standard_deviation(Samples[a], mean);
       float stde = get_standard_error(Samples[a], stdd);
-      float range = get_range_from_vector(Samples[a], NoDataValue);
+      float range = get_range_from_vector(Samples[a], CHT.get_NoDataValue());
 
       WriteData << "," << min << "," << max << "," << median << "," << mean << "," << range << "," << stdd << "," << stde;
     }
@@ -300,7 +308,7 @@ int main (int nNumberofArgs,char *argv[])
       }
     }
 
-    bedrock_full = (bedrock_count / int(Samples[3].size())) * 100.0;
+    float bedrock_full = (bedrock_count / int(Samples[3].size())) * 100.0;
     WriteData << "," << bedrock_full << endl;
   }
 
