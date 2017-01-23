@@ -1,13 +1,13 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// get_CHT.cpp
+// get_CHT_ridge.cpp
 //
 // This program calculates channel heads using an Optimal wiener filter (used by Pelletier,
 // 2013) and a quantile-quantile curvature threshold similar to Geonet.  It then uses a
 // connected components threshold to create a channel network from the curvature mask.
 //
 // Following the channel extraction, the driver computes hilltop curvature,
-// extracts basins from a list of lat/long coordinates and calculates basin average
-// CHT statistics.
+// extracts basins from a list of lat/long coordinates and calculates ridge average
+// CHT statistics, by snapping to the nearest point on the ridgeline network.
 //
 // References: Pelletier, J.D. (2013) A robust, two-parameter method for the extraction of
 // drainage networks from high-resolution digital elevation models (DEMs): Evaluation using
@@ -271,19 +271,16 @@ int main (int nNumberofArgs,char *argv[])
   //write headers
   WriteData << "_ID,min,max,median,mean,range,std_dev,std_err,min_gradient,max_gradient,median_gradient,mean_gradient,range_gradient,std_dev_gradient,std_err_gradient,bedrock_percentage" << endl;
 
-  int threshold = 10;
-
   for(int samp = 0; samp<n_valid_points; samp++)
   {
     //vector of nodeindexes from new snapping fn
     //convert nodeindexes to i,j to feed into sampler
-
     int a;
     int b;
 
     FlowInfo.retrieve_current_row_and_col(SnappedNodes[samp], a, b);
 
-    vector< vector<float> > Samples = FilledDEM.Sample_Along_Ridge(CHT, CHT_gradient, Roughness[2], a, b, threshold);
+    vector< vector<float> > Samples = FilledDEM.Sample_Along_Ridge(CHT, CHT_gradient, Roughness[2], a, b, window_radius);
 
     WriteData << IDs[Valid_node_IDs[samp]];
 
@@ -302,8 +299,8 @@ int main (int nNumberofArgs,char *argv[])
 
     int bedrock_count = 0;
 
-    for (int w=0; w < int(Samples[3].size()); ++w){
-      if (Samples[3][w] > roughness_threshold){
+    for (int w=0; w < int(Samples[2].size()); ++w){
+      if (Samples[2][w] > roughness_threshold){
         bedrock_count++;
       }
     }
@@ -313,5 +310,6 @@ int main (int nNumberofArgs,char *argv[])
   }
 
   WriteData.close();
+  cout << "\nFinished sampling ridges!\n"
 
 }

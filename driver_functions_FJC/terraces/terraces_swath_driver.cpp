@@ -1,11 +1,11 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// CloudBaseTest.cpp
-// A test module for the LSDCloudBase module
+// terraces_swath_driver.cpp
+// Extract information about terraces using a shapefile of the main stem channel.
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// David T. Milodowski
+// Fiona Clubb
 // University of Edinburgh
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -20,30 +20,49 @@
 
 int main (int nNumberofArgs,char *argv[])
 {
-	if (nNumberofArgs != 5)
+	if (nNumberofArgs != 3)
   {
-    cout << "FATAL ERROR: You must provide 4 input arguements\n\t - an input file with the baseline coordinates\n\t - a template raster\n\t - the swath half width\n\t - the profile resolution\n\t" << endl;
+    cout << "FATAL ERROR: wrong number inputs. The program needs the path name and the driver file name" << endl;
     exit(EXIT_SUCCESS);
   }
-  string Baseline_file = argv[1];
-  string RasterTemplate_file = argv[2];
-  float HalfWidth = atof(argv[3]);
-  float BinWidth = atof(argv[4]);
-  
-  string flt_ext = "flt";  
+  string path_name = argv[1];
+  string f_name = argv[2];
+  cout << "The path name is: " << path_name << " and the filename is: " << f_name << endl;
+
+	string full_name = path_name+f_name;
+
+	ifstream file_info_in;
+	file_info_in.open(full_name.c_str());
+	if (file_info_in.fail())
+	{
+		cout << "\nFATAL ERROR: the header file\"" << full_name
+				 << "\" doesn't exist" << endl;
+	}
+
+	string DEM_ID, Baseline_file, temp;
+	string CC_ext = "_CC";
+	string DEM_extension = "bil";
+	float HalfWidth;
+
+	// read in the parameters
+	file_info_in >> temp >> DEM_ID
+						   >> temp >> Baseline_file
+							 >> temp >> HalfWidth;
+
+	file_info_in.close();
+
   string Swath_ext = "_swath_trans";
   string Long_Swath_ext = "_swath_long";
   string BV_ext = "_baseline_values";
-  string SE_ext = "_supraelevation";
   cout << "starting the test run... here we go!" << endl;
 	RasterTemplate_file = RasterTemplate_file;
-	
+
   cout << "\t loading template raster" << endl;
   LSDRaster RasterTemplate(RasterTemplate_file.c_str(),flt_ext);
-  
+
   cout << "\t loading baseline points" << endl;
   PointData BaselinePoints = LoadShapefile(Baseline_file.c_str());
-  
+
   cout << "\t creating swath template" << endl;
   LSDSwath TestSwath(BaselinePoints, RasterTemplate, HalfWidth);
   vector<float> percentiles;
@@ -60,34 +79,14 @@ int main (int nNumberofArgs,char *argv[])
   TestSwath.write_longitudinal_profile_to_file(RasterTemplate, percentiles, BinWidth, RasterTemplate_file.c_str(),NormaliseLongProfile);
   cout << "\t - profile templates" << endl;
   LSDRaster Swath(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_XMinimum(),RasterTemplate.get_YMinimum(),
-                  RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_DistanceToBaselineArray());  
+                  RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_DistanceToBaselineArray());
   LSDRaster Long_Swath(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_XMinimum(),RasterTemplate.get_YMinimum(),
                   RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_DistanceAlongBaselineArray());
   LSDRaster BaselineValues(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_XMinimum(),RasterTemplate.get_YMinimum(),
                   RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_BaselineValueArray());
-                  
-  Array2D<float> ChannelElevation = TestSwath.get_BaselineValueArray();
-  Array2D<float> SupraElevationArray(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_NoDataValue());
-  
-  for(int i = 0; i<RasterTemplate.get_NRows(); ++i)
-  {
-    for(int j = 0; j<RasterTemplate.get_NCols(); ++j)
-    {
-      if(ChannelElevation[i][j] != RasterTemplate.get_NoDataValue()) SupraElevationArray[i][j] = RasterTemplate.get_data_element(i,j) - ChannelElevation[i][j];
-    }
-  }
-  
-  LSDRaster SupraElevation(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_XMinimum(),RasterTemplate.get_YMinimum(),
-                  RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),SupraElevationArray);
-  
-                  
   string output_file = RasterTemplate_file+Swath_ext;
   Swath.write_raster(output_file.c_str(),flt_ext);
   string output_file2 = RasterTemplate_file+Long_Swath_ext;
   Long_Swath.write_raster(output_file2.c_str(),flt_ext);
-  string output_file3 = RasterTemplate_file+BV_ext;
-  BaselineValues.write_raster(output_file3.c_str(),flt_ext);
-	string output_file4 = RasterTemplate_file+SE_ext;
-  SupraElevation.write_raster(output_file4.c_str(),flt_ext);
 	cout << "S.I.G." << endl;
 }
