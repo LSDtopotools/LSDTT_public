@@ -280,7 +280,7 @@ int main (int nNumberofArgs,char *argv[])
 
     FlowInfo.retrieve_current_row_and_col(SnappedNodes[samp], a, b);
 
-    vector< vector<float> > Samples = FilledDEM.Sample_Along_Ridge(CHT, CHT_gradient, Roughness[2], a, b, window_radius);
+    vector< vector<float> > Samples = FilledDEM.Sample_Along_Ridge(CHT, CHT_gradient, Roughness[2], a, b, window_radius * 4);
 
     WriteData << IDs[Valid_node_IDs[samp]];
 
@@ -310,6 +310,6 @@ int main (int nNumberofArgs,char *argv[])
   }
 
   WriteData.close();
-  cout << "\nFinished sampling ridges!\n"
+  cout << "\nFinished sampling ridges!\n" << endl;
 
 }
