@@ -699,12 +699,10 @@ LSDSoilHydroRaster LSDSoilHydroRaster::TerrainShapeIndex(){
       //check 9 cells for any ndv
       if ((RasterData[i][j] != NoDataValue) && (RasterData[i-1][j-1] != NoDataValue) && (RasterData[i][j-1] != NoDataValue) && (RasterData[i+1][j-1] != NoDataValue) && (RasterData[i+1][j] != NoDataValue) && (RasterData[i+1][j+1] != NoDataValue) && (RasterData[i][j+1] != NoDataValue) && (RasterData[i-1][j+1] != NoDataValue) && (RasterData[i-1][j] != NoDataValue)){
 
-        elevationSum = 0; //RasterData[i][j];
+        elevationSum = 0;
 
-        //cout << RasterData[i][j] << endl;
         for (int c=0; c < 8; ++c){
-          //elevationSum += RasterData[i + dY[c]][j + dX[c]] * (7.0/8.0);
-          elevationSum += (RasterData[i + dY[c]][j + dX[c]] - RasterData[i][j]);
+          elevationSum += ((RasterData[i + dY[c]][j + dX[c]] * (7.0/8.0)) - RasterData[i][j]);
         }
 
         Output[i][j] = (elevationSum / 8.0) / intercellDist;
@@ -717,9 +715,6 @@ LSDSoilHydroRaster LSDSoilHydroRaster::TerrainShapeIndex(){
   return output;
 
 }
-
-
-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
