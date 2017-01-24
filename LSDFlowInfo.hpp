@@ -992,8 +992,30 @@ class LSDFlowInfo
   /// @date 29/09/2016
 	float get_flow_length_between_nodes(int UpstreamNode, int DownstreamNode);
 
-
+  /// @brief Method to snap a point, given as raster coordinates, to a cell in
+  /// a raster of hilltops.
+  /// @param a Integer row index.
+  /// @param b Integer row index.
+  /// @param search_radius The radius of the search window in pixels.
+  /// @param Hilltops LSDRaster of the hilltops to be snapped to.
+  ///@ return The nodeindex of the snapped point.
+  /// @author SWDG
+  /// @date 23/1/17
   int snap_to_hilltop(int a, int b, int search_radius, LSDRaster& Hilltops);
+
+  /// @brief Wrapper around snap_to_hilltop function to process a collection of utm points.
+  ///
+  /// @details Writes the the nodeindex of each snapped point to SnappedNodes and the
+  /// coordinate count (first coordinate pair is 0, second is 1 and so on) is written
+  /// to Valid_node_IDs.
+  /// @param x_locs UTM x coordinates.
+  /// @param y_locs UTM y coordinates.
+  /// @param search_radius The radius of the search window in pixels.
+  /// @param Hilltops LSDRaster of the hilltops to be snapped to.
+  /// @param SnappedNodes Empty vector where the snapped nodeindexes are written.
+  /// @param Valid_node_IDs Empty vector where the coordinate count is written.
+  /// @author SWDG
+  /// @date 23/1/17
   void snap_to_hilltops(vector<float> x_locs, vector<float> y_locs, int search_radius, LSDRaster& Hilltops, vector<int>& SnappedNodes, vector<int>& Valid_node_IDs);
 
   protected:

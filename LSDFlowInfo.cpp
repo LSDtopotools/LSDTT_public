@@ -7276,6 +7276,11 @@ float LSDFlowInfo::get_flow_length_between_nodes(int UpstreamNode, int Downstrea
 	return length;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Snap a given point to the nearest hilltop pixel, within a search radius.
+// Returns the nodeindex of the snapped point.
+// SWDG 23/1/17
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 int LSDFlowInfo::snap_to_hilltop(int a, int b, int search_radius, LSDRaster& Hilltops){
 
   int tmpNode;
@@ -7335,6 +7340,13 @@ int LSDFlowInfo::snap_to_hilltop(int a, int b, int search_radius, LSDRaster& Hil
 
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Wrapper around snap_to_hilltop function to process a collection of utm points.
+// Writes the the nodeindex of each snapped point to SnappedNodes and the
+// coordinate count (first coordinate pair is 0, second is 1 and so on) is written
+// to Valid_node_IDs.
+// SWDG 23/1/17
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDFlowInfo::snap_to_hilltops(vector<float> x_locs, vector<float> y_locs, int search_radius, LSDRaster& Hilltops, vector<int>& SnappedNodes, vector<int>& Valid_node_IDs){
 
   for (int q = 0; q < int(x_locs.size()); ++q){
