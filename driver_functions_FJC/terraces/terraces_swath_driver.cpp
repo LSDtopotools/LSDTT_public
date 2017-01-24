@@ -55,16 +55,18 @@ int main (int nNumberofArgs,char *argv[])
   string Long_Swath_ext = "_swath_long";
   string BV_ext = "_baseline_values";
   cout << "starting the test run... here we go!" << endl;
-	RasterTemplate_file = RasterTemplate_file;
 
-  cout << "\t loading template raster" << endl;
-  LSDRaster RasterTemplate(RasterTemplate_file.c_str(),flt_ext);
+  cout << "\t Loading the DEM" << endl;
+  LSDRaster Elevation((path_name+DEM_ID), DEM_extension);
+
+	cout << "\t Loading the terraces" << endl;
+	LSDRaster ConnectedComponents((path_name+DEM_ID+CC_ext), DEM_extension);
 
   cout << "\t loading baseline points" << endl;
-  PointData BaselinePoints = LoadShapefile(Baseline_file.c_str());
+  PointData BaselinePoints = LoadShapefile(path_name+Baseline_file.c_str());
 
   cout << "\t creating swath template" << endl;
-  LSDSwath TestSwath(BaselinePoints, RasterTemplate, HalfWidth);
+  LSDSwath TestSwath(BaselinePoints, ConnectedComponents, HalfWidth);
   vector<float> percentiles;
   percentiles.push_back(0);
   percentiles.push_back(25);
@@ -72,7 +74,7 @@ int main (int nNumberofArgs,char *argv[])
   percentiles.push_back(75);
   percentiles.push_back(100);
   int NormaliseTransProfile = 1;
-  int NormaliseLongProfile = 0;
+  int NormaliseLongProfile = 1;
   cout << "\n\t writing output \n\t\t - transverse profile" << endl;
   TestSwath.write_transverse_profile_to_file(RasterTemplate, percentiles, BinWidth, RasterTemplate_file.c_str(),NormaliseTransProfile);
   cout << "\t - longitudinal profile" << endl;
