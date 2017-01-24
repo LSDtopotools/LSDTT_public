@@ -14,9 +14,9 @@
 #include <string>
 #include <vector>
 #include <fstream>
-#include "../LSDRaster.hpp"
-#include "../LSDSwathProfile.hpp"
-#include "../LSDShapeTools.hpp"
+#include "../../LSDRaster.hpp"
+#include "../../LSDSwathProfile.hpp"
+#include "../../LSDShapeTools.hpp"
 
 int main (int nNumberofArgs,char *argv[])
 {
@@ -56,8 +56,8 @@ int main (int nNumberofArgs,char *argv[])
   string BV_ext = "_baseline_values";
   cout << "starting the test run... here we go!" << endl;
 
-  cout << "\t Loading the DEM" << endl;
-  LSDRaster Elevation((path_name+DEM_ID), DEM_extension);
+  cout << "\t Loading the raster" << endl;
+  LSDRaster RasterTemplate((path_name+DEM_ID), DEM_extension);
 
 	cout << "\t Loading the terraces" << endl;
 	LSDRaster ConnectedComponents((path_name+DEM_ID+CC_ext), DEM_extension);
@@ -66,7 +66,7 @@ int main (int nNumberofArgs,char *argv[])
   PointData BaselinePoints = LoadShapefile(path_name+Baseline_file.c_str());
 
   cout << "\t creating swath template" << endl;
-  LSDSwath TestSwath(BaselinePoints, ConnectedComponents, HalfWidth);
+  LSDSwath TestSwath(BaselinePoints, RasterTemplate, HalfWidth);
   vector<float> percentiles;
   percentiles.push_back(0);
   percentiles.push_back(25);
@@ -80,15 +80,29 @@ int main (int nNumberofArgs,char *argv[])
   cout << "\t - longitudinal profile" << endl;
   TestSwath.write_longitudinal_profile_to_file(RasterTemplate, percentiles, BinWidth, RasterTemplate_file.c_str(),NormaliseLongProfile);
   cout << "\t - profile templates" << endl;
-  LSDRaster Swath(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_XMinimum(),RasterTemplate.get_YMinimum(),
-                  RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_DistanceToBaselineArray());
-  LSDRaster Long_Swath(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_XMinimum(),RasterTemplate.get_YMinimum(),
-                  RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_DistanceAlongBaselineArray());
-  LSDRaster BaselineValues(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_XMinimum(),RasterTemplate.get_YMinimum(),
-                  RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_BaselineValueArray());
-  string output_file = RasterTemplate_file+Swath_ext;
-  Swath.write_raster(output_file.c_str(),flt_ext);
-  string output_file2 = RasterTemplate_file+Long_Swath_ext;
-  Long_Swath.write_raster(output_file2.c_str(),flt_ext);
-	cout << "S.I.G." << endl;
+
+	cout << "\t Testing connected components" << endl;
+	vector <vector <float> > CC_vector = TestSwath.get_connected_components_along_swath(ConnectedComponents, RasterTemplate, NormaliseLongProfile);
+
+	// push back results to file for plotting
+	ofstream output_file_CC;
+	string output_fname = "_terrace_swath_plots.txt";
+	output_file_CC.open((path_name+DEM_ID+output_fname).c_str());
+	for (int i = 0; i < int(CC_vector[0].size()); ++i)
+	{
+		output_file_CC << CC_vector[0][i] << " " << CC_vector[1][i] << " " << CC_vector[2][i] << endl;
+	}
+	output_file_CC.close();
+
+  // LSDRaster Swath(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_XMinimum(),RasterTemplate.get_YMinimum(),
+  //                 RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_DistanceToBaselineArray());
+  // LSDRaster Long_Swath(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_XMinimum(),RasterTemplate.get_YMinimum(),
+  //                 RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_DistanceAlongBaselineArray());
+  // LSDRaster BaselineValues(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_XMinimum(),RasterTemplate.get_YMinimum(),
+  //                 RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_BaselineValueArray());
+  // string output_file = path_name+DEM+ID+Swath_ext;
+  // Swath.write_raster(output_file.c_str(),flt_ext);
+  // string output_file2 = path_name+DEM_ID+Long_Swath_ext;
+  // Long_Swath.write_raster(output_file2.c_str(),flt_ext);
+	// cout << "S.I.G." << endl;
 }
