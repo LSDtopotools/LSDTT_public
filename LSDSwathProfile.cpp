@@ -788,14 +788,14 @@ vector <vector <float> > LSDSwath::get_connected_components_along_swath(LSDIndex
       for (int col=ColStart; col<ColEnd; col++)
       {
         // get the connected components value
-        this_CC = ConnectedComponents.get_data_element(row,col);
+        int this_CC = ConnectedComponents.get_data_element(row,col);
         if (this_CC == target_CC)
         {
           //push back value and number_observations
           if (NormaliseToBaseline == 1)
           {
             //normalise to the baseline
-            this_value = RasterValues_temp[row][col] - BaselineValueArray[row][col];
+            float this_value = RasterValues_temp[row][col] - BaselineValueArray[row][col];
             raster_values.push_back(this_value);
             DistAlongBaseline_temp.push_back(DistanceAlongBaselineArray[row][col]);
           }
@@ -814,8 +814,10 @@ vector <vector <float> > LSDSwath::get_connected_components_along_swath(LSDIndex
     DistAlongBaseline.push_back(mean_dist);
   }
 
+  vector<float> Unique_Patches_float(Unique_Patches.begin(), Unique_Patches.end());
+
   // store in the MasterVector
-  MasterVector.push_back(Unique_Patches);
+  MasterVector.push_back(Unique_Patches_float);
   MasterVector.push_back(RasterValues);
   MasterVector.push_back(DistAlongBaseline);
 

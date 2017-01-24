@@ -60,7 +60,7 @@ int main (int nNumberofArgs,char *argv[])
   LSDRaster RasterTemplate((path_name+DEM_ID), DEM_extension);
 
 	cout << "\t Loading the terraces" << endl;
-	LSDRaster ConnectedComponents((path_name+DEM_ID+CC_ext), DEM_extension);
+	LSDIndexRaster ConnectedComponents((path_name+DEM_ID+CC_ext), DEM_extension);
 
   cout << "\t loading baseline points" << endl;
   PointData BaselinePoints = LoadShapefile(path_name+Baseline_file.c_str());
@@ -75,11 +75,6 @@ int main (int nNumberofArgs,char *argv[])
   percentiles.push_back(100);
   int NormaliseTransProfile = 1;
   int NormaliseLongProfile = 1;
-  cout << "\n\t writing output \n\t\t - transverse profile" << endl;
-  TestSwath.write_transverse_profile_to_file(RasterTemplate, percentiles, BinWidth, RasterTemplate_file.c_str(),NormaliseTransProfile);
-  cout << "\t - longitudinal profile" << endl;
-  TestSwath.write_longitudinal_profile_to_file(RasterTemplate, percentiles, BinWidth, RasterTemplate_file.c_str(),NormaliseLongProfile);
-  cout << "\t - profile templates" << endl;
 
 	cout << "\t Testing connected components" << endl;
 	vector <vector <float> > CC_vector = TestSwath.get_connected_components_along_swath(ConnectedComponents, RasterTemplate, NormaliseLongProfile);
