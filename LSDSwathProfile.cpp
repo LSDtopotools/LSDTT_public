@@ -794,16 +794,22 @@ vector <vector <float> > LSDSwath::get_connected_components_along_swath(LSDIndex
           //push back value and number_observations
           if (NormaliseToBaseline == 1)
           {
+            if (RasterValues_temp[row][col] != NoDataValue && BaselineValueArray[row][col] != NoDataValue)
+            {
             //normalise to the baseline
-            float this_value = RasterValues_temp[row][col] - BaselineValueArray[row][col];
-            raster_values.push_back(this_value);
-            DistAlongBaseline_temp.push_back(DistanceAlongBaselineArray[row][col]);
+              float this_value = RasterValues_temp[row][col] - BaselineValueArray[row][col];
+              raster_values.push_back(this_value);
+              DistAlongBaseline_temp.push_back(DistanceAlongBaselineArray[row][col]);
+            }
           }
           else
           {
-            //just push back
-            raster_values.push_back(RasterValues_temp[row][col]);
-            DistAlongBaseline_temp.push_back(DistanceAlongBaselineArray[row][col]);
+            if (RasterValues_temp[row][col] != NoDataValue && BaselineValueArray[row][col] != NoDataValue)
+            {
+              //just push back
+              raster_values.push_back(RasterValues_temp[row][col]);
+              DistAlongBaseline_temp.push_back(DistanceAlongBaselineArray[row][col]);
+            }
           }
         }
       }
