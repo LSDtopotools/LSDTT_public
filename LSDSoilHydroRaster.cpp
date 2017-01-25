@@ -670,6 +670,53 @@ LSDSoilHydroRaster LSDSoilHydroRaster::WriteAvgSIs(vector<float> SIs, vector< ve
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Implementing the terrain shape index as used by Bolstad et al (1998)
+// Predicting Southern Appalachian overstory vegetation with digital terrain data
+// which is based on work by McNab (1989) Terrain Shape Index: Quantifying Effect of
+// Minor Landforms on Tree Height
+//
+// These papers use a lot of magic numbers, which turn out to be fudge factors for
+// working with DEMs with resolutions reported in YARDS. This code will cope with any
+// stupid spatial unit you choose.
+//
+//SWDG - 24/1/17
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LSDSoilHydroRaster LSDSoilHydroRaster::TerrainShapeIndex(){
+
+  float elevationSum;
+  int dX[] = {1, 1, 1, 0, -1, -1, -1, 0};
+  int dY[] = {-1, 0, 1, 1, 1, 0, -1, -1};
+
+  Array2D<float> Output(NRows, NCols, NoDataValue);
+
+  //compute the mean intercell distance - Assumes square cells!
+  float diagonal = sqrt((2 * (DataResolution * DataResolution)));
+  float intercellDist = ((12 * DataResolution) + (8 * diagonal)) / 20.0;
+
+  for (int i = 1; i < NRows - 1; ++i){
+    for (int j = 1; j < NCols - 1; ++j){
+
+      //check 9 cells for any ndv
+      if ((RasterData[i][j] != NoDataValue) && (RasterData[i-1][j-1] != NoDataValue) && (RasterData[i][j-1] != NoDataValue) && (RasterData[i+1][j-1] != NoDataValue) && (RasterData[i+1][j] != NoDataValue) && (RasterData[i+1][j+1] != NoDataValue) && (RasterData[i][j+1] != NoDataValue) && (RasterData[i-1][j+1] != NoDataValue) && (RasterData[i-1][j] != NoDataValue)){
+
+        elevationSum = 0;
+
+        for (int c=0; c < 8; ++c){
+          elevationSum += (RasterData[i + dY[c]][j + dX[c]] - RasterData[i][j]);
+        }
+
+        Output[i][j] = (elevationSum / 8.0) / intercellDist;
+
+      }
+    }
+  }
+
+  LSDSoilHydroRaster output(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,Output,GeoReferencingStrings);
+  return output;
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 #endif

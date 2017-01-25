@@ -353,6 +353,20 @@ class LSDSoilHydroRaster: public LSDRaster
     /// @date 25/7/16
     LSDSoilHydroRaster WriteAvgSIs(vector<float> SIs, vector< vector<int> >& Vector_of_Nodes, LSDFlowInfo& FlowInfo);
 
+    /// @brief Implementing the terrain shape index as used by Bolstad et al (1998).
+    ///
+    /// @details From Bolstad et al (1998) Predicting Southern Appalachian overstory
+    /// vegetation with digital terrain data which is based on work by McNab (1989)
+    /// Terrain Shape Index: Quantifying Effect of Minor Landforms on Tree Height
+    ///
+    /// These papers use a lot of magic numbers, which turn out to be fudge factors for
+    /// working with DEMs with resolutions reported in YARDS. This code will cope with any
+    /// stupid spatial unit you choose.
+    /// @return An LSDSoilHydroRaster of the TerrainShapeIndex.
+    /// @author SWDG
+    /// @date 24/1/17
+    LSDSoilHydroRaster TerrainShapeIndex();
+
   protected:
 
   private:
