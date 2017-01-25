@@ -710,8 +710,8 @@ LSDSoilHydroRaster LSDSoilHydroRaster::TerrainShapeIndex(){
       }
     }
   }
-
-  LSDSoilHydroRaster output(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,Output,GeoReferencingStrings);
+  Array2D<float> Normed = normalize(Output, 10000.0, NoDataValue);
+  LSDSoilHydroRaster output(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,Normed,GeoReferencingStrings);
   return output;
 
 }
