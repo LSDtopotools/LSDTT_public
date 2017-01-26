@@ -8,8 +8,23 @@
 # 2) Takes all the files that are used in the makefiles and copies them over
 #    to the directory in the github folder
 # 
-# To designate the name of the directory, go to the bottom of this file and
-#  change the 
+#
+# INSTRUCTIONS
+# 1) You need the development code and the release code to have the same root folder. 
+#    for example, I have development code in
+#    /smudd/Git_projects/LSDTT_Development
+#    and the release codes in
+#    /smudd/Git_projects/NameOfRelease
+# 2) Pick the code you want to release. This will be in a "driver_functions" folder.
+# 3) Figure out the directory you want to put the release. 
+# 4) In this code, search for HIBERNIANFC SCOTTISH CUP 2016 and jump there. 
+#    Below that line you will find the direcories you need. 
+# 5) Do not change ObjectsDirectory
+# 6) DriverDirectory input the driver directory IN THE DEVELPMENT BRANCH
+# 7) TargetDirectory input where the release repo is. It will be preceded by `../`
+# 8) Run the python code. 
+# 
+#
 #===============================================================================
 
 import numpy as np
@@ -424,9 +439,10 @@ if __name__ == "__main__":
     
     # This one is for running directly in linux
     # If you are in linux uncomment and comment out the windows version
+    # Search for HIBERNIANFC SCOTTISH CUP 2016 to get to the correct line 
     ObjectsDirectory = './'
     DriverDirectory = './driver_functions_MuddChi2014'
-    TargetDirectory = '../Automator_test/'   
+    TargetDirectory = '../LSDTopoTools_ChiMudd2014/'   
     
     
     CopyRequiredFilesToGitRepository(ObjectsDirectory,DriverDirectory,TargetDirectory)    
