@@ -133,6 +133,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_source_keys"] = false;
   bool_default_map["print_baselevel_keys"] = false;
   bool_default_map["print_basin_raster"] = false;
+  bool_default_map["write hillshade"] = false;
   
   // set default string method
   string_default_map["CHeads_file"] = "NULL";
@@ -394,6 +395,17 @@ int main (int nNumberofArgs,char *argv[])
                                     chi_coordinate, basic_Mchi_regression_nodes);
     string csv_full_fname = OUT_DIR+DEM_ID+"_MChiBasic.csv";
     ChiTool2.print_data_maps_to_file_full(FlowInfo, csv_full_fname);
+  }
+
+  if (this_bool_map["write hillshade"])
+  {
+    float hs_azimuth = 315;
+    float hs_altitude = 45;
+    float hs_z_factor = 1;
+    LSDRaster hs_raster = topography_raster.hillshade(hs_altitude,hs_azimuth,hs_z_factor);
+
+    string hs_fname = OUT_DIR+DEM_ID+"_hs";
+    hs_raster.write_raster(hs_fname,raster_ext);
   }
 
 }
