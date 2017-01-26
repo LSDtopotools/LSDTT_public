@@ -704,7 +704,6 @@ LSDSoilHydroRaster LSDSoilHydroRaster::TerrainShapeIndex(){
         for (int c=0; c < 8; ++c){
           elevationSum += (RasterData[i][j] - RasterData[i + dY[c]][j + dX[c]]);
         }
-        //cout << elevationSum << endl;
         Output[i][j] = (elevationSum / 8.0) / intercellDist;
 
       }
