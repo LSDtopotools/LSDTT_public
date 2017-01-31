@@ -1573,6 +1573,57 @@ vector<int> LSDJunctionNetwork::extract_basin_nodes_above_drainage_area_threshol
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+// This function checks all of the basin nodes to check if they fall within a
+// mask (input raster). If they fall within the mask raster then the first node
+// upstream not in the mask is selected.
+//
+// FJC 31/01/17
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+vector<int> LSDJunctionNetwork::modify_basin_nodes_from_mask(vector<int> basin_nodes, LSDFlowInfo& FlowInfo, LSDRaster& MaskRaster)
+{
+  vector<int> NewBasinNodes;
+
+  for (int i = 0; i < int(basin_nodes.size()); i++)
+  {
+    // check mask to see if nodes fall within the mask
+    int row, col;
+    int this_node = basin_nodes[i];
+    FlowInfo.retrieve_current_row_and_col(this_node, row, col);
+    float mask_value = MaskRaster.get_data_element(row,col);
+    if (mask_value == NoDataValue)
+    {
+      // this node is not masked, so just return as normal
+      NewBasinNodes.push_back(this_node);
+    }
+    else
+    {
+      // this node is masked, need to return upstream node
+      int reached_upstream = 0;
+      while (reached_upstream == 0)
+      {
+        int UpstreamNode = get_upstream_node_max_stream_order(this_node, FlowInfo);
+        // check the upstream node
+        int upstream_row, upstream_col;
+        FlowInfo.retrieve_current_row_and_col(UpstreamNode, upstream_row, upstream_col);
+        float UpstreamValue = MaskRaster.get_data_element(upstream_row, upstream_col);
+        if (UpstreamValue == NoDataValue)
+        {
+          // node not masked, return the upstream node
+          NewBasinNodes.push_back(UpstreamNode);
+          reached_upstream = 1;
+        }
+        else
+        {
+          // node masked, move upstream
+          this_node = UpstreamNode;
+        }
+      }
+    }
+  }
+  return NewBasinNodes;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 // This function extracts basin junctions from a vector of the basin outlet nodes.
 // Added by FJC 15/01/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
@@ -1591,9 +1642,6 @@ vector<int> LSDJunctionNetwork::extract_basin_junctions_from_nodes(vector<int> b
   return basin_junctions;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
-
-
-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 // This function extracts the base level junction to which a starting junction
@@ -5723,6 +5771,36 @@ int LSDJunctionNetwork::check_stream_order_of_upstream_nodes(int junction, LSDFl
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function returns the node index of the node upstream of a given node
+// with the highest stream order
+// FJC
+// 31/01/17
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+int LSDJunctionNetwork::get_upstream_node_max_stream_order(int current_node, LSDFlowInfo& FlowInfo)
+{
+  vector<int> DonorNodes = FlowInfo.get_donor_nodes(current_node);
+  int max_SO = 0;
+  int max_NI = NoDataValue;
+  for (int i = 0; i < int(DonorNodes.size()); i++)
+  {
+    int this_SO = get_StreamOrder_of_Node(FlowInfo, DonorNodes[i]);
+    if (this_SO > max_SO)
+    {
+      max_SO = this_SO;
+      max_NI = DonorNodes[i];
+    }
+  }
+  if (max_NI == NoDataValue)
+  {
+    cout << "Couldn't find a donor node with a valid stream order, returning NoDataValue" << endl;
+  }
+
+  return max_NI;
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
