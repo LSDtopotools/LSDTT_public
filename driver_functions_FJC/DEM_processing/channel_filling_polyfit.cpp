@@ -18,6 +18,7 @@
 #include <vector>
 #include <fstream>
 #include <math.h>
+#include <ctime>
 #include "../../LSDStatsTools.hpp"
 #include "../../LSDRaster.hpp"
 #include "../../LSDIndexRaster.hpp"
@@ -27,6 +28,9 @@
 
 int main (int nNumberofArgs,char *argv[])
 {
+	//start the clock
+	clock_t begin = clock();
+
 	//Test for correct input arguments
 	if (nNumberofArgs!=4)
 	{
@@ -47,6 +51,7 @@ int main (int nNumberofArgs,char *argv[])
   string DEM_extension = "bil";
 	vector<int> raster_selection(8,0);
 	raster_selection[0] = 1;  // get the smoothed elevation
+	raster_selection[1] = 1;  // get the slope
 	string temp;
 
 	// load the raster and remove values below 0
@@ -67,4 +72,9 @@ int main (int nNumberofArgs,char *argv[])
 	// write smoothed hillshade
 	LSDRaster HS = output_rasters[0].hillshade(45, 315, 1);
 	HS.write_raster((path_name+DEM_name+elev_output+HS_output), DEM_extension);
+
+	// Done, check how long it took
+	clock_t end = clock();
+	float elapsed_secs = float(end-begin) / CLOCKS_PER_SEC;
+	cout << "Done, time taken (secs): " << elapsed_secs << endl;
 }
