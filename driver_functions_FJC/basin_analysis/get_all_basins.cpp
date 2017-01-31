@@ -5,7 +5,7 @@
 // to a raster.
 // It reads in a list of sources from the OS MasterMap Water Network Layer which are
 // used to generate the channel network.
-//  
+//
 // Developed by:
 //  Fiona J. Clubb
 //  Simon M. Mudd
@@ -62,7 +62,7 @@ int main (int nNumberofArgs,char *argv[])
 {
 	//start the clock
 	clock_t begin = clock();
-	
+
 	//Test for correct input arguments
 	if (nNumberofArgs!=3)
 	{
@@ -75,7 +75,7 @@ int main (int nNumberofArgs,char *argv[])
 
 	cout << "The path is: " << path_name << " and the filename is: " << f_name << endl;
 
-	string full_name = path_name+f_name; 
+	string full_name = path_name+f_name;
 
 	ifstream file_info_in;
 	file_info_in.open(full_name.c_str());
@@ -84,23 +84,25 @@ int main (int nNumberofArgs,char *argv[])
 		cout << "\nFATAL ERROR: the header file \"" << full_name
 		     << "\" doesn't exist" << endl;
 		exit(EXIT_FAILURE);
-	}   
+	}
 
-	string DEM_name, csv_name;
+	string DEM_name, csv_name, mask_name;
 	float Minimum_Slope;
 	int DrainageArea;
 	string fill_ext = "_fill";
 	string temp;
-	file_info_in >> temp >> DEM_name 
-							 >> temp >> csv_name 
-							 >> temp >> Minimum_Slope 
+	file_info_in >> temp >> DEM_name
+							 >> temp >> csv_name
+							 >> temp >> mask_name
+							 >> temp >> Minimum_Slope
 							 >> temp >> DrainageArea;
-	
+
 	file_info_in.close();
-	
+
 	cout << "You are running the basin driver with the following settings:" << endl;
 	cout << "\t DEM name: " << DEM_name << endl;
 	cout << "\t Source CSV filename: " << csv_name << endl;
+	cout << "\t Lochs filename: " << mask_name << endl;
 	cout << "\t Minimum slope: " << Minimum_Slope << endl;
 	cout <<" \t Drainage area for basin extraction: " << DrainageArea << endl;
 
@@ -113,7 +115,7 @@ int main (int nNumberofArgs,char *argv[])
 	// load the DEM
 	LSDRaster topo_test((path_name+DEM_name), DEM_extension);
 	cout << "Got the DEM" << endl;
-	
+
 	// load the sources
 	//LSDRaster sources_raster((path_name+sources_name), DEM_extension);
 
@@ -123,55 +125,62 @@ int main (int nNumberofArgs,char *argv[])
 	boundary_conditions[1] = "no flux";
 	boundary_conditions[2] = "no flux";
 	boundary_conditions[3] = "No flux";
-	
+
 	// load the filled DEM
 	//LSDRaster filled_topo_test((path_name+DEM_name+fill_ext), DEM_extension);
 	LSDRaster filled_topo_test = topo_test.fill(Minimum_Slope);
 	filled_topo_test.write_raster((path_name+DEM_name+fill_ext), DEM_extension);
 	cout << "Got the filled DEM" << endl;
-  
+
   //get a FlowInfo object
-	LSDFlowInfo FlowInfo(boundary_conditions,filled_topo_test); 
+	LSDFlowInfo FlowInfo(boundary_conditions,filled_topo_test);
 	LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
 	LSDRaster DrainageArea_raster = FlowInfo.write_DrainageArea_to_LSDRaster();
 	string da_ext = "_DA";
 	DrainageArea_raster.write_raster((path_name+DEM_name+da_ext), DEM_extension);
-	
+
 	cout << "\t Loading Sources..." << endl;
 	// load the sources
   vector<int> sources = FlowInfo.Ingest_Channel_Heads_OS(path_name+csv_name);
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 	cout << "\t Got channel network!" << endl;
-	
+
 	//write stream order array to a raster
   LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
   string SO_name = "_SO";
 	SOArray.write_raster((path_name+DEM_name+SO_name), DEM_extension);
-	
+
 	//write junction network to raster
 	LSDIndexRaster JIArray = ChanNetwork.JunctionIndexArray_to_LSDIndexRaster();
 	string JI_name = "_JI";
 	JIArray.write_raster((path_name+DEM_name+JI_name), DEM_extension);
-	
+
+	//load the Lochs
+	LSDRaster MaskRaster((path_name+mask_name), DEM_extension);
+	cout << "\t Got the mask raster!" << endl;
+
   //----------------------------------------------------------------------------------------------------//
   // GET ALL BASINS OF THE SPECIFIED STREAM ORDER
   //----------------------------------------------------------------------------------------------------//
-  
+
   cout << "Now getting all basins with a drainage area of: " << DrainageArea << " m^2" << endl;
 
 	vector<int> basin_nodes = ChanNetwork.extract_basin_nodes_above_drainage_area_threshold(FlowInfo, DrainageArea);
 	cout << "Got the basin nodes!" << endl;
-	
+
+	cout << "Removing lochs..." << endl;
+	vector<int> new_basin_nodes = ChanNetwork.modify_basin_nodes_from_mask(basin_nodes, FlowInfo, MaskRaster);
+
 	cout << "Number of basins = " << basin_nodes.size() << endl;
-	
+
 	vector<int> basin_junctions = ChanNetwork.extract_basin_junctions_from_nodes(basin_nodes, FlowInfo);
 	cout << "Got the basin junctions" << endl;
-	
+
 	// get raster of basins from the junctin vector
 	LSDIndexRaster BasinRaster = ChanNetwork.extract_basins_from_junction_vector_nested(basin_junctions, FlowInfo);
 	string basin_ext = "_basins";
 	BasinRaster.write_raster((path_name+DEM_name+basin_ext), DEM_extension);
-	
+
 	// Done, check how long it took
 	clock_t end = clock();
 	float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
