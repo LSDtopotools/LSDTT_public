@@ -5,7 +5,7 @@
 // This program takes two arguments, the path name and the driver name
 // It extracts all the terraces from a DEM. User has the option to filter the DEM
 // using a Perona-Malik filter before selecting the terraces.
-// For each terrace it calculates the relief relative to the nearest channel.  User 
+// For each terrace it calculates the relief relative to the nearest channel.  User
 // must specify the junction number of the main stem channel - creates a text file for an XY
 // plot of terrace elevations vs distance upstream.
 //
@@ -38,7 +38,7 @@ int main (int nNumberofArgs,char *argv[])
 {
 	//start the clock
 	clock_t begin = clock();
-	
+
 	//Test for correct input arguments
 	if (nNumberofArgs!=3)
 	{
@@ -69,20 +69,19 @@ int main (int nNumberofArgs,char *argv[])
   string DEM_extension = "bil";
   string csv_extension = "csv";
   string txt_extension = ".txt";
-  
+
   // initialise variables to be assigned from .driver file
-  int threshold_SO, FilterTopo, window_radius, lower_percentile_relief, upper_percentile_relief, lower_percentile_slope, upper_percentile_slope, minimum_patch_size, junction_number, search_distance, MainStemAnalysis;
+  int threshold_SO, FilterTopo, lower_percentile_relief, upper_percentile_relief, lower_percentile_slope, upper_percentile_slope, minimum_patch_size, junction_number, search_distance, MainStemAnalysis;
 	float Minimum_Slope, surface_fitting_window_radius, threshold_condition, bin_width, RemoveChannelThreshold;
   string temp;
-  
-  // read in the parameters                                                          
+
+  // read in the parameters
 	file_info_in >> temp >> DEM_ID
 							 >> temp >> CH_name
                >> temp >> Minimum_Slope
                >> temp >> threshold_SO
                >> temp >> FilterTopo
                >> temp >> surface_fitting_window_radius
-               >> temp >> window_radius
 							 >> temp >> threshold_condition
 							 >> temp >> lower_percentile_relief
 		           >> temp >> upper_percentile_relief
@@ -95,7 +94,7 @@ int main (int nNumberofArgs,char *argv[])
 							 >> temp >> junction_number
 							 >> temp >> bin_width;
 
-                   
+
 	file_info_in.close();
 
 	// set no flux boundary conditions
@@ -104,25 +103,25 @@ int main (int nNumberofArgs,char *argv[])
 	boundary_conditions[1] = "no flux";
 	boundary_conditions[2] = "no flux";
 	boundary_conditions[3] = "No flux";
-	
+
 	LSDRaster filled_topo_test;
-   
+
   if(FilterTopo == 1)
   {
      // load the DEM
 		 cout << "Loading the DEM..." << endl;
-     LSDRaster topo_test((path_name+DEM_ID), DEM_extension);   
-     
+     LSDRaster topo_test((path_name+DEM_ID), DEM_extension);
+
      // filter using Perona Malik
      int timesteps = 50;
      float percentile_for_lambda = 90;
      float dt = 0.1;
-     topo_test = topo_test.PeronaMalikFilter(timesteps, percentile_for_lambda, dt); 
-     
+     topo_test = topo_test.PeronaMalikFilter(timesteps, percentile_for_lambda, dt);
+
      // fill
      filled_topo_test = topo_test.fill(Minimum_Slope);
      string fill_name = "_filtered";
-     filled_topo_test.write_raster((path_name+DEM_ID+fill_name), DEM_extension);   
+     filled_topo_test.write_raster((path_name+DEM_ID+fill_name), DEM_extension);
   }
   else
   {
@@ -130,12 +129,12 @@ int main (int nNumberofArgs,char *argv[])
     LSDRaster load_DEM((path_name+DEM_ID+"_filtered"), DEM_extension);
     filled_topo_test = load_DEM;
   }
-  
+
 
   cout << "\t Flow routing..." << endl;
 	// get a flow info object
  	LSDFlowInfo FlowInfo(boundary_conditions,filled_topo_test);
-	
+
   // calcualte the distance from outlet
 	LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
 
@@ -143,21 +142,21 @@ int main (int nNumberofArgs,char *argv[])
 	// load the sources
   vector<int> sources = FlowInfo.Ingest_Channel_Heads((path_name+DEM_ID+CH_name), csv_extension, 2);
   cout << "\t Got sources!" << endl;
-	
+
 	// now get the junction network
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
   cout << "\t Got the channel network" << endl;
-	
+
 	//print out the junction network
 	string JI_name = "_JI";
   LSDIndexRaster JIArray = ChanNetwork.JunctionIndexArray_to_LSDIndexRaster();
   JIArray.write_raster((path_name+DEM_ID+JI_name), DEM_extension);
-	
+
 	LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
 	string SO_name = "_SO";
 	SOArray.write_raster((path_name+DEM_ID+SO_name), DEM_extension);
-    
-   
+
+
   //calculate the channel relief
   cout << "\t Getting relief relative to channel" << endl;
   cout << "\t Threshold stream order = " << threshold_SO << endl;
@@ -165,7 +164,7 @@ int main (int nNumberofArgs,char *argv[])
   string relief_name = "_channel_relief";
   ChannelRelief.write_raster((path_name+DEM_ID+relief_name), DEM_extension);
   cout << "\t Got the relief!" << endl;
-     
+
   //get the slope
   cout << "\t Calculating slope..." << endl;
   vector<LSDRaster> surface_fitting;
@@ -174,12 +173,12 @@ int main (int nNumberofArgs,char *argv[])
   raster_selection[1] = 1;             // this means you want the slope
   surface_fitting = filled_topo_test.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
   Slope = surface_fitting[1];
-	
+
 	float mask_threshold = 1.0;
 	bool below = 0;
 	// remove any stupid slope values
 	LSDRaster Slope_new = Slope.mask_to_nodata_using_threshold(mask_threshold, below);
-	
+
   cout << "\t Done!" << endl;
   string slope_name = "_slope";
   Slope_new.write_raster((path_name+DEM_ID+slope_name), DEM_extension);
@@ -188,34 +187,34 @@ int main (int nNumberofArgs,char *argv[])
   cout << "Getting channel relief threshold from QQ plots" << endl;
   string qq_fname = path_name+DEM_ID+"_qq_relief.txt";
   float relief_threshold_from_qq = ChannelRelief.get_threshold_for_floodplain_QQ(qq_fname, threshold_condition, lower_percentile_relief, upper_percentile_relief);
-  
+
   cout << "Getting slope threshold from QQ plots" << endl;
   string qq_slope = path_name+DEM_ID+"_qq_slope.txt";
   float slope_threshold_from_qq = Slope_new.get_threshold_for_floodplain_QQ(qq_slope, threshold_condition, lower_percentile_slope, upper_percentile_slope);
-	
+
 	cout << "Relief threshold: " << relief_threshold_from_qq << " Slope threshold: " << slope_threshold_from_qq << endl;
-	
+
 	// get the distance from outlet
 	LSDRaster DistFromOutlet = FlowInfo.distance_from_outlet();
-	
+
 	// TESTING TERRACE OBJECT
-	
+
 	//float relief_thresh = 100;
 	//float slope_thresh = 0.1;
 	// get the terrace object
 	cout << "Removing pixels within " << RemoveChannelThreshold << " m of the modern channel" << endl;
 	LSDTerrace Terraces(ChannelRelief, Slope, ChanNetwork, FlowInfo, relief_threshold_from_qq, slope_threshold_from_qq, minimum_patch_size, threshold_SO, RemoveChannelThreshold);
-	
+
 	LSDIndexRaster TerraceLocations = Terraces.print_BinaryRaster();
 	string CC_ext = "_terraces";
 	TerraceLocations.write_raster((path_name+DEM_ID+CC_ext), DEM_extension);
-	
+
 	// get the relief relative to nearest channel
 	Terraces.Get_Relief_of_Nearest_Channel(ChanNetwork, FlowInfo, filled_topo_test, DistFromOutlet, threshold_SO, search_distance);
 	LSDRaster relief_final = Terraces.print_ChannelRelief_to_Raster();
 	string relief_ext = "_terrace_relief_final";
 	relief_final.write_raster((path_name+DEM_ID+relief_ext), DEM_extension);
-	
+
 	if (MainStemAnalysis == 1)
 	{
 		cout << "This junction number is: " << junction_number << endl;
@@ -243,7 +242,7 @@ int main (int nNumberofArgs,char *argv[])
 		float bin_threshold = 0;
 		Terraces.print_Binned_ChannelRelief_to_File(path_name+DEM_ID+filename_binned, bin_width, bin_lower_limit, bin_threshold);
 	}
-		
+
 	// Done, check how long it took
 	clock_t end = clock();
 	float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
