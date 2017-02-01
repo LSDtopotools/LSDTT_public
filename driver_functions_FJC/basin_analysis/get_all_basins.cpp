@@ -176,7 +176,7 @@ int main (int nNumberofArgs,char *argv[])
 	vector<int> basin_junctions = ChanNetwork.extract_basin_junctions_from_nodes(basin_nodes, FlowInfo);
 	cout << "Got the basin junctions" << endl;
 
-	// get raster of basins from the junctin vector
+	// get raster of basins from the junction vector
 	LSDIndexRaster BasinRaster = ChanNetwork.extract_basins_from_junction_vector_nested(basin_junctions, FlowInfo);
 	string basin_ext = "_basins";
 	BasinRaster.write_raster((path_name+DEM_name+basin_ext), DEM_extension);
