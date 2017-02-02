@@ -135,7 +135,7 @@ int main (int nNumberofArgs,char *argv[])
   int NormaliseTransProfile = 1;
   int NormaliseLongProfile = 1;
 
-	cout << "\t Getting raster from swath" << endl;
+	cout << "\n\t Getting raster from swath" << endl;
 	int NormaliseToBaseline = 1;
 	LSDRaster SwathRaster = TestSwath.get_raster_from_swath_profile(RasterTemplate, NormaliseToBaseline);
 

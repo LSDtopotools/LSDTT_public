@@ -629,6 +629,8 @@ LSDRaster LSDSwath::get_raster_from_swath_profile(LSDRaster& Raster, int Normali
   float Resolution = Raster.get_DataResolution();
   float XMinimum = Raster.get_XMinimum();
   float YMinimum = Raster.get_YMinimum();
+  map<string,string> GeoReferencingStrings = Raster.get_GeoReferencingStrings();
+  
   // Define bounding box of swath profile
   int ColStart = int(floor((XMin)/Resolution));
   int ColEnd = ColStart + int(ceil((XMax-XMin)/Resolution));
@@ -659,7 +661,7 @@ LSDRaster LSDSwath::get_raster_from_swath_profile(LSDRaster& Raster, int Normali
     }
   }
   LSDRaster SwathRaster(NRows, NCols, XMinimum, YMinimum, Resolution,
-                   NoDataValue, RasterValues_temp);
+                   NoDataValue, RasterValues_temp, GeoReferencingStrings);
 
   return SwathRaster;
 }
