@@ -74,7 +74,7 @@ int main (int nNumberofArgs,char *argv[])
   cout << "starting the test run... here we go!" << endl;
 
 	LSDRaster RasterTemplate;
-	
+
 	if(FilterTopo == 1)
 	{
 		 // load the DEM
@@ -145,7 +145,7 @@ int main (int nNumberofArgs,char *argv[])
   LSDRaster Slope;
   vector<int> raster_selection(8, 0);
   raster_selection[1] = 1;             // this means you want the slope
-  surface_fitting = SwathRaster.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
+  surface_fitting = RasterTemplate.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
   Slope = surface_fitting[1];
 
 	float mask_threshold = 1.0;
@@ -167,7 +167,7 @@ int main (int nNumberofArgs,char *argv[])
 	cout << "Removing pixels within " << RemoveChannelThreshold << " m of the modern channel" << endl;
 	// get the terrace pixels
 	LSDTerrace Terraces(SwathRaster, Slope_new, ChanNetwork, FlowInfo, relief_threshold_from_qq, slope_threshold_from_qq, minimum_patch_size, threshold_SO, RemoveChannelThreshold);
-	LSDIndexRaster ConnectedComponents = Terraces.print_BinaryRaster();
+	LSDIndexRaster ConnectedComponents = Terraces.print_ConnectedComponents_to_Raster();
 	ConnectedComponents.write_raster((path_name+DEM_ID+CC_ext), DEM_extension);
 
 	cout << "\t Testing connected components" << endl;
@@ -182,16 +182,4 @@ int main (int nNumberofArgs,char *argv[])
 		output_file_CC << CC_vector[0][i] << " " << CC_vector[1][i] << " " << CC_vector[2][i] << endl;
 	}
 	output_file_CC.close();
-
-  // LSDRaster Swath(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_XMinimum(),RasterTemplate.get_YMinimum(),
-  //                 RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_DistanceToBaselineArray());
-  // LSDRaster Long_Swath(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_XMinimum(),RasterTemplate.get_YMinimum(),
-  //                 RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_DistanceAlongBaselineArray());
-  // LSDRaster BaselineValues(RasterTemplate.get_NRows(),RasterTemplate.get_NCols(),RasterTemplate.get_XMinimum(),RasterTemplate.get_YMinimum(),
-  //                 RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_BaselineValueArray());
-  // string output_file = path_name+DEM+ID+Swath_ext;
-  // Swath.write_raster(output_file.c_str(),flt_ext);
-  // string output_file2 = path_name+DEM_ID+Long_Swath_ext;
-  // Long_Swath.write_raster(output_file2.c_str(),flt_ext);
-	// cout << "S.I.G." << endl;
 }
