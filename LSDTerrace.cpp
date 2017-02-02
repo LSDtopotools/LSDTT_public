@@ -85,13 +85,13 @@ void LSDTerrace::create(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJunctionN
 {
 
   /// set the protected variables
-	NRows = ChannelRelief.get_NRows();
-	NCols = ChannelRelief.get_NCols();
-	XMinimum = ChannelRelief.get_XMinimum();
-	YMinimum = ChannelRelief.get_YMinimum();
-	DataResolution = ChannelRelief.get_DataResolution();
-	NoDataValue = ChannelRelief.get_NoDataValue();
-	GeoReferencingStrings = ChannelRelief.get_GeoReferencingStrings();
+	NRows = FlowInfo.get_NRows();
+	NCols = FlowInfo.get_NCols();
+	XMinimum = FlowInfo.get_XMinimum();
+	YMinimum = FlowInfo.get_YMinimum();
+	DataResolution = FlowInfo.get_DataResolution();
+	NoDataValue = FlowInfo.get_NoDataValue();
+	GeoReferencingStrings = FlowInfo.get_GeoReferencingStrings();
 
 	relief_threshold = relief_thresh;
 	slope_threshold = slope_thresh;
@@ -330,7 +330,7 @@ LSDIndexRaster LSDTerrace::print_ConnectedComponents_to_Raster()
 ////----------------------------------------------------------------------------------------
 LSDRaster LSDTerrace::print_ChannelRelief_to_Raster()
 {
-	LSDRaster ChannelRelief(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ChannelRelief_array, GeoReferencingStrings);
+	LSDRaster ChannelRelief(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ChannelRelief_array, GeoReferencingStrings);
 	return ChannelRelief;
 }
 
@@ -385,6 +385,29 @@ LSDIndexRaster LSDTerrace::print_BinaryRaster()
 	}
 	LSDIndexRaster BinaryRaster(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, BinaryArray, GeoReferencingStrings);
 	return BinaryRaster;
+}
+
+//----------------------------------------------------------------------------------------
+// Print raster of terrace locations with values assigned by an input raster
+// FJC 02/02/17
+//----------------------------------------------------------------------------------------
+LSDRaster LSDTerrace::get_Terraces_RasterValues(LSDRaster& InputRaster)
+{
+	Array2D<float> Terrace_RasterValues(NRows,NCols,NoDataValue);
+	for (int row = 0; row < NRows; row++)
+	{
+		for (int col = 0; col < NCols; col++)
+		{
+			float RasterValue = InputRaster.get_data_element(row,col);
+			if (ConnectedComponents_Array[row][col] != NoDataValue & RasterValue != NoDataValue)
+			{
+				Terrace_RasterValues[row][col] = RasterValue;
+			}
+		}
+	}
+
+	LSDRaster TerraceRaster(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, Terrace_RasterValues, GeoReferencingStrings);
+	return TerraceRaster;
 }
 
 ////----------------------------------------------------------------------------------------

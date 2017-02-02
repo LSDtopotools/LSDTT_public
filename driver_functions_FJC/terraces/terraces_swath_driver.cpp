@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <ctime>
 #include "../../LSDRaster.hpp"
 #include "../../LSDSwathProfile.hpp"
 #include "../../LSDShapeTools.hpp"
@@ -22,6 +23,9 @@
 
 int main (int nNumberofArgs,char *argv[])
 {
+	//start the clock
+	clock_t begin = clock();
+
 	if (nNumberofArgs != 3)
   {
     cout << "FATAL ERROR: wrong number inputs. The program needs the path name and the driver file name" << endl;
@@ -182,4 +186,14 @@ int main (int nNumberofArgs,char *argv[])
 		output_file_CC << CC_vector[0][i] << " " << CC_vector[1][i] << " " << CC_vector[2][i] << endl;
 	}
 	output_file_CC.close();
+
+	// write raster of terrace elevations
+	LSDRaster ChannelRelief = Terraces.get_Terraces_RasterValues(SwathRaster);
+	string relief_ext = "_terrace_relief_final";
+	ChannelRelief.write_raster((path_name+DEM_ID+relief_ext), DEM_extension);
+
+	// Done, check how long it took
+	clock_t end = clock();
+	float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+	cout << "DONE, Time taken (secs): " << elapsed_secs << endl;
 }
