@@ -604,6 +604,9 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
   key_to_source_map = this_key_to_source_map;
   key_to_baselevel_map = this_key_to_baselevel_map;
   
+  // get the fitted elevations
+  calculate_segmented_elevation(FlowInfo);
+  
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -914,6 +917,7 @@ void LSDChiTools::segment_counter(LSDFlowInfo& FlowInfo)
       if (this_M_chi != last_M_chi)
       {
         segment_counter++;
+        last_M_chi = this_M_chi;
       }
       
       // Print the segment counter to the data map

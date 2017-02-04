@@ -135,6 +135,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_basin_raster"] = false;
   bool_default_map["write hillshade"] = false;
   bool_default_map["print_simple_chi_map_with_basins_to_csv"] = false;
+  bool_default_map["print_segments"] = false;
   
   // set default string method
   string_default_map["CHeads_file"] = "NULL";
@@ -372,11 +373,27 @@ int main (int nNumberofArgs,char *argv[])
     {
       cout << "I don't seem to have any source nodes!" << endl;
     }
-    ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes,
+    
+    // check to see if we want segments. If that is the case, the
+    // skip and iterations default to 0 and 1
+    if (this_bool_map["print_segments"])
+    {
+      n_iterations = 1;
+      skip = 0;
+      ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes,
                             filled_topography, DistanceFromOutlet, 
                             DrainageArea, chi_coordinate, target_nodes, 
                             n_iterations, skip, minimum_segment_length, sigma);
-  
+      ChiTool.segment_counter(FlowInfo);
+    }
+    else
+    {
+      ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes,
+                            filled_topography, DistanceFromOutlet, 
+                            DrainageArea, chi_coordinate, target_nodes, 
+                            n_iterations, skip, minimum_segment_length, sigma);
+    }
+    
     string csv_full_fname = OUT_DIR+OUT_ID+"_MChiSegmented.csv";
     cout << "Let me print all the data for you into a csv file called " << csv_full_fname << endl;
     ChiTool.print_data_maps_to_file_full(FlowInfo, csv_full_fname);
