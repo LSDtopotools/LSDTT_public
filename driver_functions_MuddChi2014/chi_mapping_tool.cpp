@@ -161,7 +161,8 @@ int main (int nNumberofArgs,char *argv[])
   vector<string> boundary_conditions = LSDPP.get_boundary_conditions();
   string CHeads_file = LSDPP.get_CHeads_file();
   
-  cout << "Read filename is:" <<  DATA_DIR+DEM_ID << endl;
+  cout << "Read filename is: " <<  DATA_DIR+DEM_ID << endl;
+  cout << "Write filenae is: " << OUT_DIR+OUT_ID << endl;
   
     // check to see if the raster exists
   LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);  
@@ -206,7 +207,7 @@ int main (int nNumberofArgs,char *argv[])
   
   if (this_bool_map["print_fill_raster"])
   {
-    string filled_raster_name = OUT_DIR+DEM_ID+"_Fill";
+    string filled_raster_name = OUT_DIR+OUT_ID+"_Fill";
     filled_topography.write_raster(filled_raster_name,raster_ext);
   }
   
@@ -224,7 +225,7 @@ int main (int nNumberofArgs,char *argv[])
 
   if (this_bool_map["print_DrainageArea_raster"])
   {
-    string DA_raster_name = OUT_DIR+DEM_ID+"_DArea";
+    string DA_raster_name = OUT_DIR+OUT_ID+"_DArea";
     DrainageArea.write_raster(DA_raster_name,raster_ext);
   }
 
@@ -258,13 +259,13 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["print_stream_order_raster"])
   { 
     LSDIndexRaster SOArray = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
-    string SO_raster_name = OUT_DIR+DEM_ID+"_SO";
+    string SO_raster_name = OUT_DIR+OUT_ID+"_SO";
     SOArray.write_raster(SO_raster_name,raster_ext);
   }
   if (this_bool_map["print_junction_index_raster"])
   { 
     LSDIndexRaster JIArray = JunctionNetwork.JunctionIndexArray_to_LSDIndexRaster();
-    string JI_raster_name = OUT_DIR+DEM_ID+"_JI";
+    string JI_raster_name = OUT_DIR+OUT_ID+"_JI";
     JIArray.write_raster(JI_raster_name,raster_ext);
   }
 
@@ -322,7 +323,7 @@ int main (int nNumberofArgs,char *argv[])
   // Print a basin raster if you want it.
   if(this_bool_map["print_basin_raster"])
   {
-    string basin_raster_prefix = OUT_DIR+DEM_ID;
+    string basin_raster_prefix = OUT_DIR+OUT_ID;
     ChiTool.print_basins(FlowInfo, JunctionNetwork, BaseLevelJunctions, basin_raster_prefix);
   }
 
@@ -332,14 +333,14 @@ int main (int nNumberofArgs,char *argv[])
 
   if(this_bool_map["print_chi_coordinate_raster"])
   {                                                                         
-    string chi_coord_string = OUT_DIR+DEM_ID+"_chi_coord"; 
+    string chi_coord_string = OUT_DIR+OUT_ID+"_chi_coord"; 
     chi_coordinate.write_raster(chi_coord_string,raster_ext);
   }                                                                         
   
   if (this_bool_map["print_simple_chi_map_to_csv"])
   {
     cout <<"I am printing a simple chi map for you to csv." << endl;
-    string chi_csv_fname = OUT_DIR+DEM_ID+"_chi_coord.csv";
+    string chi_csv_fname = OUT_DIR+OUT_ID+"_chi_coord.csv";
     ChiTool.chi_map_to_csv(FlowInfo, chi_csv_fname, chi_coordinate);
   }
 
@@ -376,7 +377,7 @@ int main (int nNumberofArgs,char *argv[])
                             DrainageArea, chi_coordinate, target_nodes, 
                             n_iterations, skip, minimum_segment_length, sigma);
   
-    string csv_full_fname = OUT_DIR+DEM_ID+"_MChiSegmented.csv";
+    string csv_full_fname = OUT_DIR+OUT_ID+"_MChiSegmented.csv";
     cout << "Let me print all the data for you into a csv file called " << csv_full_fname << endl;
     ChiTool.print_data_maps_to_file_full(FlowInfo, csv_full_fname);
     cout << "That is your file printed!" << endl;
@@ -384,12 +385,12 @@ int main (int nNumberofArgs,char *argv[])
     // These print the source and baselelvel keys if wanted
     if (this_bool_map["print_source_keys"])
     {
-      string sources_keys_name = OUT_DIR+DEM_ID+"_SourceKeys.csv";
+      string sources_keys_name = OUT_DIR+OUT_ID+"_SourceKeys.csv";
       ChiTool.print_source_keys(FlowInfo, sources_keys_name);
     }
     if (this_bool_map["print_baselevel_keys"])
     {
-      string baselevel_keys_name = OUT_DIR+DEM_ID+"_BaselevelKeys.csv";
+      string baselevel_keys_name = OUT_DIR+OUT_ID+"_BaselevelKeys.csv";
       ChiTool.print_baselevel_keys(FlowInfo, JunctionNetwork, baselevel_keys_name);
     }
     
@@ -402,7 +403,7 @@ int main (int nNumberofArgs,char *argv[])
     ChiTool2.chi_map_automator_rudimentary(FlowInfo, source_nodes,outlet_nodes,
                                     filled_topography, DistanceFromOutlet, DrainageArea, 
                                     chi_coordinate, basic_Mchi_regression_nodes);
-    string csv_full_fname = OUT_DIR+DEM_ID+"_MChiBasic.csv";
+    string csv_full_fname = OUT_DIR+OUT_ID+"_MChiBasic.csv";
     ChiTool2.print_data_maps_to_file_full(FlowInfo, csv_full_fname);
   }
 
@@ -413,7 +414,7 @@ int main (int nNumberofArgs,char *argv[])
     float hs_z_factor = 1;
     LSDRaster hs_raster = topography_raster.hillshade(hs_altitude,hs_azimuth,hs_z_factor);
 
-    string hs_fname = OUT_DIR+DEM_ID+"_hs";
+    string hs_fname = OUT_DIR+OUT_ID+"_hs";
     hs_raster.write_raster(hs_fname,raster_ext);
   }
 
