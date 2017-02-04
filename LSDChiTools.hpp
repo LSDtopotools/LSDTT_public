@@ -196,6 +196,26 @@ class LSDChiTools
     /// @date 31/01/2017 
     void chi_map_to_csv(LSDFlowInfo& FlowInfo, string chi_map_fname, LSDRaster& chi_coord, LSDIndexRaster& basin_raster);
 
+    /// @brief This function is used to tag channels with a segment number
+    ///  It decides on segments if the M_Chi value has changed so should only be used
+    ///  with chi networks that have used a skip of 0 and a monte carlo itertions of 1
+    ///  This data is used by other routines to look at the spatial distribution of
+    ///  hillslope-channel coupling.
+    /// @detail WARNING: ONLY use if you have segmented with skip 0 and iterations 1. Otherwise 
+    ///  you will get a new segment for every channel pixel
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @author SMM
+    /// @date 4/02/2017
+    void segment_counter(LSDFlowInfo& FlowInfo);
+
+    /// @brief This function calculates the fitted elevations: It uses m_chi and b_chi
+    ///  data to get the fitted elevation of the channel points. 
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @author SMM
+    /// @date 4/02/2017
+    void calculate_segmented_elevation(LSDFlowInfo& FlowInfo);
+    
+    
     /// @brief This function maps out the chi steepness and other channel
     ///  metrics in chi space from all the sources supplied in the 
     ///  source_nodes vector. The source and outlet nodes vector is 
@@ -337,7 +357,11 @@ class LSDChiTools
     map<int,float>  flow_distance_data_map;
     /// A map of the M_chi values. The indices are node numbers from FlowInfo
     map<int,float>  drainage_area_data_map;
-    
+    /// A map that holds elevations regressed from fitted sections. 
+    map<int,float> segmented_elevation_map;
+    /// A map that holds segment numbers: used with skip = 0. Can be used to map
+    /// distinct segments
+    map<int,int> segment_counter_map;
     
     /// A vector to hold the order of the nodes. Starts from longest channel
     /// and then works through sources in descending order of channel lenght

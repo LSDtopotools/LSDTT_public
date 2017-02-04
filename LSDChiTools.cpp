@@ -433,7 +433,6 @@ void LSDChiTools::chi_map_to_csv(LSDFlowInfo& FlowInfo, string chi_map_fname,
 
 
 
-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function is for calculating segments from all sources in a DEM
 // The sources and their outlets are supplied by the source and outlet nodes
@@ -521,7 +520,7 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
     
     cout << "The source key is: " << source_node_tracker << " and basin key is: " << baselevel_tracker << endl;
     
-    // get this particualr channel (it is a chi network with only one channel)
+    // get this particular channel (it is a chi network with only one channel)
     LSDChiNetwork ThisChiChannel(FlowInfo, source_nodes[chan], outlet_nodes[chan], 
                                 Elevation, FlowDistance, DrainageArea,chi_coordinate);
     
@@ -591,7 +590,7 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
   
   cout << "I am all finished segmenting the channels!" << endl;
   
-  // set the opject data members
+  // set the object data members
   M_chi_data_map =m_means_map; 
   b_chi_data_map = b_means_map;
   elev_data_map = elev_map;
@@ -876,6 +875,96 @@ LSDIndexRaster LSDChiTools::get_basin_raster(LSDFlowInfo& FlowInfo, LSDJunctionN
 
 }
 
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function is used to tag channels with a segment number
+// It decides on segments if the M_Chi value has changed so should only be used
+// with chi networks that have used a skip of 0 and a monte carlo itertions of 1
+// This data is used by other routines to look at the spatial distribution of
+// hillslope-channel coupling.
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::segment_counter(LSDFlowInfo& FlowInfo)
+{
+  // these are for extracting element-wise data from the channel profiles. 
+  int this_node;
+  int segment_counter = 0;
+  map<int,int> this_segment_counter_map;
+  float last_M_chi, this_M_chi;
+  
+  // find the number of nodes
+  int n_nodes = (node_sequence.size());
+  if (n_nodes <= 0)
+  {
+    cout << "Cannot calculate segments since you have not calculated channel properties yet." << endl;
+  }
+  else
+  {
+    this_node = node_sequence[0];
+    last_M_chi =  M_chi_data_map[this_node];
+
+    for (int n = 0; n< n_nodes; n++)
+    {
+      
+      // Get the M_chi from the current node
+      this_node = node_sequence[n];
+      this_M_chi = M_chi_data_map[this_node];
+      
+      // If the M_chi has changed, increment the segment counter
+      if (this_M_chi != last_M_chi)
+      {
+        segment_counter++;
+      }
+      
+      // Print the segment counter to the data map
+      this_segment_counter_map[this_node]  = segment_counter;
+    }
+  }
+  segment_counter_map = this_segment_counter_map;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function calculates the fitted elevations: It uses m_chi and b_chi
+// data to get the fitted elevation of the channel points. 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::calculate_segmented_elevation(LSDFlowInfo& FlowInfo)
+{
+  // these are for extracting element-wise data from the channel profiles. 
+  int this_node;
+  map<int,float> this_segmented_elevation_map;
+  float this_M_chi, this_b_chi, this_chi, this_segemented_elevation;
+  
+  // find the number of nodes
+  int n_nodes = (node_sequence.size());
+  if (n_nodes <= 0)
+  {
+    cout << "Cannot calculate segments since you have not calculated channel properties yet." << endl;
+  }
+  else
+  {
+    for (int n = 0; n< n_nodes; n++)
+    {
+      
+      // Get the M_chi and b_chi from the current node
+      this_node = node_sequence[n];
+      this_M_chi = M_chi_data_map[this_node];
+      this_b_chi = b_chi_data_map[this_node];
+      this_chi = chi_data_map[this_node];
+      
+      // calculate elevations simply based on the fact that we are fitting segments
+      // with the equation z = M_chi*chi+b_chi
+      this_segemented_elevation = this_M_chi*this_chi+this_b_chi;
+      
+      // Print the segment counter to the data map
+      this_segmented_elevation_map[this_node]  = this_segemented_elevation;
+    }
+  }
+  segmented_elevation_map = this_segmented_elevation_map;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Print data maps to file
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -886,14 +975,42 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
   int this_node, row,col;
   double latitude,longitude;
   LSDCoordinateConverterLLandUTM Converter;
+
+  // find the number of nodes
+  int n_nodes = (node_sequence.size());
   
+  // test to see if there is segment numbering
+  bool have_segments = false;
+  if( segment_counter_map.size() == node_sequence.size())
+  {
+    have_segments = true;
+  }
+  
+  // test to see if the fitted elevations have been calculated
+  bool have_segmented_elevation = false;
+  if( segmented_elevation_map.size() == node_sequence.size())
+  {
+    have_segmented_elevation = true;
+  }
+
+
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "latitude,longitude,chi,elevation,flow distance,drainage area,m_chi,b_chi,source_key,basin_key" << endl;
+  chi_data_out << "latitude,longitude,chi,elevation,flow distance,drainage area,m_chi,b_chi,source_key,basin_key";
+  if(have_segmented_elevation)
+  {
+    chi_data_out << ",segmented_elevation";
+  }
+  if (have_segments)
+  {
+    chi_data_out << ",segment_number";
+  }
+  chi_data_out << endl;
   
-  // find the number of nodes
-  int n_nodes = (node_sequence.size());
+  
+
+
   if (n_nodes <= 0)
   {
     cout << "Cannot print since you have not calculated channel properties yet." << endl;
@@ -917,7 +1034,17 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
                    << M_chi_data_map[this_node] << ","
                    << b_chi_data_map[this_node] << ","
                    << source_keys_map[this_node] << ","
-                   << baselevel_keys_map[this_node] << endl;
+                   << baselevel_keys_map[this_node];
+      
+      if(have_segmented_elevation)
+      {
+        chi_data_out << "," << segmented_elevation_map[this_node];
+      }
+      if (have_segments)
+      {
+        chi_data_out << "," << segment_counter_map[this_node];
+      }
+      chi_data_out << endl;
     }
   }
 
