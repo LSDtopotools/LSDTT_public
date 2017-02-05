@@ -300,7 +300,8 @@ float LSDBasin::CalculateBasinPercentile(LSDFlowInfo& FlowInfo, LSDRaster Data, 
 	vector<float> UnsortedData;
 	vector<float> SortedData;
 	vector<size_t> index_map;
-	
+	float P, PercentileValue, Residual;
+
 	for (int q = 0; q < int(BasinNodes.size()); ++q)
 	{
 		FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
@@ -318,11 +319,11 @@ float LSDBasin::CalculateBasinPercentile(LSDFlowInfo& FlowInfo, LSDRaster Data, 
 	matlab_float_sort(UnsortedData, SortedData, index_map);
   
 	//find index for percentile
-	float P = Percentile*(n/100.);
+	P = Percentile*(n/100.);
 	int Pint = round(P);
 
 	//Interpolate to get percentile value
-	float Residual = P-Pint;
+	Residual = P-Pint;
 	if (Residual > 0)
 	{
 		PercentileValue = SortedData[Pint] + Residual*(SortedData[Pint+1]-SortedData[Pint]);
