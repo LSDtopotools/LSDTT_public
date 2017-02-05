@@ -92,29 +92,13 @@ void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNetw
 //                                                     ReceiverJunction, ReceiverNode, FlowInfo);
 
   int n_nodes_in_channel = StreamLinkVector.get_n_nodes_in_channel();
-  
-  int basin_outlet;
-  
-  // added some logic in the event of a baselevel node. It gets the basin above the baselevel
-  if(n_nodes_in_channel == 1)
-  {
-    basin_outlet = ChanNet.get_Node_of_Junction(ReceiverVector[Junction]);
-    //cout << "Baselevel node, the basin outlet is: " << basin_outlet << endl;
-  }
-  else
-  {
-    basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
-  }
+  int basin_outlet = StreamLinkVector.get_node_in_channel(n_nodes_in_channel-2);
   BasinNodes = FlowInfo.get_upslope_nodes(basin_outlet);
-  
-  
                                                                                      
   NumberOfCells = int(BasinNodes.size());
   Area = NumberOfCells * (DataResolution*DataResolution);
   
   Beheaded = ChanNet.node_tester(FlowInfo, Junction);
-
-  //cout << "Basin junction is: " << Junction << " and n_nodes are: " << NumberOfCells << endl;
 
   FlowInfo.retrieve_current_row_and_col(ChanNet.get_Node_of_Junction(Junction), Outlet_i, Outlet_j);
     
@@ -302,6 +286,53 @@ float LSDBasin::CalculateBasinMedian(LSDFlowInfo& FlowInfo, LSDRaster Data){
   }
     
   return Median;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Calculate percentile basin value.
+// MDH 5/2/17
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDBasin::CalculateBasinPercentile(LSDFlowInfo& FlowInfo, LSDRaster Data, int Percentile) 
+{
+
+	int i;
+	int j;
+	vector<float> UnsortedData;
+	vector<float> SortedData;
+	vector<size_t> index_map;
+	
+	for (int q = 0; q < int(BasinNodes.size()); ++q)
+	{
+		FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
+		//exclude NDV
+		if (Data.get_data_element(i,j) != NoDataValue)
+		{
+			UnsortedData.push_back(Data.get_data_element(i,j));     
+		}
+	}
+  
+	//get size of dataset
+	size_t n = UnsortedData.size();
+  
+	//sort all non NDV values
+	matlab_float_sort(UnsortedData, SortedData, index_map);
+  
+	//find index for percentile
+	float P = Percentile*(n/100.);
+	int Pint = round(P);
+
+	//Interpolate to get percentile value
+	float Residual = P-Pint;
+	if (Residual > 0)
+	{
+		PercentileValue = SortedData[Pint] + Residual*(SortedData[Pint+1]-SortedData[Pint]);
+	}
+	else
+	{
+		PercentileValue = SortedData[Pint] + Residual*(SortedData[Pint]-SortedData[Pint-1]);
+	}
+
+	return PercentileValue;
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
