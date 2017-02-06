@@ -233,7 +233,7 @@ int main (int nNumberofArgs,char *argv[])
 		P95th = Basin.CalculateBasinPercentile(FlowInfo,CHT_Basin,Percentile);
 
 		//write to file
-		OutputStream << Mean << " " << Median << " " << SD << " " << SE << " " << P5th << " " << P16th << " " << P84th << P95th << " ";
+		OutputStream << Mean << " " << Median << " " << SD << " " << SE << " " << P5th << " " << P16th << " " << P84th << " " << P95th << " ";
 
 		//Generate histogram
 		DataVector = CHT_Basin.get_RasterData_vector_No_NDVs();
@@ -257,7 +257,7 @@ int main (int nNumberofArgs,char *argv[])
 		P95th = Basin.CalculateBasinPercentile(FlowInfo,LH_Basin,Percentile);
 
 		//write to file
-		OutputStream << Mean << " " << Median << " " << SD << " " << SE << " " << P5th << " " << P16th << " " << P84th << P95th << " ";
+		OutputStream << Mean << " " << Median << " " << SD << " " << SE << " " << P5th << " " << P16th << " " << P84th << " " << P95th << " ";
 
 		//Generate histogram
 		DataVector = LH_Basin.get_RasterData_vector_No_NDVs();
@@ -281,7 +281,7 @@ int main (int nNumberofArgs,char *argv[])
 		P95th = Basin.CalculateBasinPercentile(FlowInfo,SLP_Basin,Percentile);
 
 		//write to file
-		OutputStream << Mean << " " << Median << " " << SD << " " << SE << " " << P5th << " " << P16th << " " << P84th << P95th << " ";
+		OutputStream << Mean << " " << Median << " " << SD << " " << SE << " " << P5th << " " << P16th << " " << P84th << " " << P95th << " ";
 
 		//Generate histogram
 		DataVector = SLP_Basin.get_RasterData_vector_No_NDVs();
@@ -305,7 +305,7 @@ int main (int nNumberofArgs,char *argv[])
 		P95th = Basin.CalculateBasinPercentile(FlowInfo,MChi_Basin,Percentile);
 
 		//write to file
-		OutputStream << Mean << " " << Median << " " << SD << " " << SE << " " << P5th << " " << P16th << " " << P84th << P95th << endl;
+		OutputStream << Mean << " " << Median << " " << SD << " " << SE << " " << P5th << " " << P16th << " " << P84th << " " << P95th << endl;
 		
 		//Generate histogram
 		DataVector = MChi_Basin.get_RasterData_vector_No_NDVs();
