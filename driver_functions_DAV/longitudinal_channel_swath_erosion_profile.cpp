@@ -221,7 +221,7 @@ swath profile of the erosion in the mainstem channel from the erosion raster \n 
 	//RasterTemplate_file = RasterTemplate_file;   // Huh?
 	
   cout << "Loading template raster..." << endl;
-  LSDRaster RasterTemplate(RasterTemplate_file.c_str(),raster_extension);
+  LSDRaster RasterTemplate(path_name + RasterTemplate_file.c_str(),raster_extension);
   cout << "raster template loaded using: " << RasterTemplate_file << endl;
 
 	// Load the baseline point data (no need - created above)
