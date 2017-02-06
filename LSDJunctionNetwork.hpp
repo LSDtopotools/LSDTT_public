@@ -495,7 +495,7 @@ class LSDJunctionNetwork
                         int pruning_switch, float pruning_threshold);
 
   /// @brief This function extracts basin nodes according to their accumulated drainage area.
-  /// @param DrainageAreaThreshold Threshold drainage area.
+  /// @param Threshold Threshold drainage area.
   /// @param FlowInfo LSDFlowInfo object.
   /// @return Vector of basin nodes.
   /// @author DTM
@@ -1012,6 +1012,27 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @author DTM
   /// @date 23/10/2013
   LSDIndexRaster SplitChannel(LSDFlowInfo& FlowInfo, vector<int> Sources, int TargetSegmentLength);
+
+
+    /// SplitChannelAdaptive
+    /// @brief This function splits the channel into a series of segments,
+    /// providing a convenient unit with which to analyse landscapes.
+    /// Function modified from original SplitChannel function so that the
+    /// segment length varies with the drainage area of the cahtchment.
+    /// Length (m) is calculated based on:
+    /// L = Min_reach_length * sqrt(Drainage Area (km))
+    /// User must pass in the minimum reach length in metres
+    /// The algorithm starts a new segment either after the target length,
+    /// when the stream order increases, or when a channel pixel has already
+    /// been visited.
+    ///
+    /// @param FlowInfo LSDFlowInfo object
+    /// @param Sources a vector of sources
+    /// @param MinReachLength in metres
+    /// @return LSDIndexRaster with channel segments labelled by unique ID
+    /// @author FJC
+    /// @date 06/02/17
+    LSDIndexRaster SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int> Sources, int MinReachLength);
 
   /// SplitHillslopes
   /// @brief This function is intended to follow the SplitChannel function.  It traces

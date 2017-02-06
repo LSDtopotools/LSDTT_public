@@ -1590,7 +1590,7 @@ vector<int> LSDJunctionNetwork::modify_basin_nodes_from_mask(vector<int> basin_n
     int this_node = basin_nodes[i];
     FlowInfo.retrieve_current_row_and_col(this_node, row, col);
     float mask_value = MaskRaster.get_data_element(row,col);
-    if (mask_value == NoDataValue)
+    if (mask_value <= 0)
     {
       // this node is not masked, so just return as normal
       NewBasinNodes.push_back(this_node);
@@ -4229,6 +4229,101 @@ LSDIndexRaster LSDJunctionNetwork::SplitChannel(LSDFlowInfo& FlowInfo, vector<in
   LSDIndexRaster ChannelSegmentsRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ChannelSegments,GeoReferencingStrings);
   return ChannelSegmentsRaster;
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+// SplitChannelAdaptive
+// This function splits the channel into a series of segments, providing a
+// convenient unit with which to analyse landscapes.  Function modified from
+// original SplitChannel function so that the segment length varies with the
+// drainage area of the catchment.
+// Length (m) is calculated based on: L = Min_reach_length * sqrt(Drainage area (km))
+// User must pass in the minimum reach length in metres
+// The algorithm loops through the sources and traces downstream, stopping a
+// segment after the target segment length, when the stream order increases (to
+// preserve structure of drainage network), or when a channel pixel has already
+// been visited.
+//
+// Modified FJC 06/02/17
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+LSDIndexRaster LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int> Sources, int MinReachLength)
+{
+  //LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
+  Array2D<int> ChannelSegments(NRows,NCols,int(NoDataValue));
+  Array2D<int> NodesVisitedBefore(NRows,NCols,0);
+  //----------------------------------------------------------------------------
+  //
+  int SegmentID = 0;
+  int N_Sources = Sources.size();
+  // Loop through sources
+  for (int i_source = 0; i_source < N_Sources; ++i_source)
+  {
+    bool EndOfReach = false;
+    int NodeCount = 0;
+    vector<int> ChannelNodesInSegment;
+    int CurrentNode = Sources[i_source];
+    int CurrentRow,CurrentCol,ReceiverNode,ReceiverRow,ReceiverCol,CurrentStreamOrder,ReceiverStreamOrder;
+    // get the drainage area of the sources
+    float ThisArea = FlowInfo.get_DrainageArea_square_km(CurrentNode);
+    // calculate the segment length from the drainage area.
+    float SegmentLength = MinReachLength*sqrt(ThisArea);
+    int NSegmentNodes = ceil(SegmentLength/DataResolution);
+    // Trace downstream until you rach the end of this channel reach
+    while(EndOfReach == false)
+    {
+      FlowInfo.retrieve_current_row_and_col(CurrentNode,CurrentRow,CurrentCol);
+      FlowInfo.retrieve_receiver_information(CurrentNode, ReceiverNode, ReceiverRow, ReceiverCol);
+
+      ChannelSegments[CurrentRow][CurrentCol] = SegmentID;
+      NodesVisitedBefore[CurrentRow][CurrentCol] = 1;
+      ++NodeCount;
+
+      // Now check whether we have enough channel nodes
+      if(NodeCount >= NSegmentNodes)
+      {
+        ++SegmentID;
+        NodeCount = 0;
+
+        // recalculate the segment length
+        ThisArea = FlowInfo.get_DrainageArea_square_km(ReceiverNode);
+        SegmentLength = MinReachLength*sqrt(ThisArea);
+        NSegmentNodes = ceil(SegmentLength/DataResolution);
+      }
+      // Now check to see whether stream order increases (want to start a new
+      // segment if this is the case)
+      ReceiverStreamOrder = StreamOrderArray[ReceiverRow][ReceiverCol];
+      CurrentStreamOrder = StreamOrderArray[CurrentRow][CurrentCol];
+      if (ReceiverStreamOrder > CurrentStreamOrder)
+      {
+        NodeCount = 0;
+        ++SegmentID;
+
+        // recalculate the segment length
+        ThisArea = FlowInfo.get_DrainageArea_square_km(ReceiverNode);
+        SegmentLength = MinReachLength*sqrt(ThisArea);
+        NSegmentNodes = ceil(SegmentLength/DataResolution);
+      }
+
+      bool ReceiverVisitedBefore = false;
+      // test to see whether we have visited this node before
+      if(NodesVisitedBefore[ReceiverRow][ReceiverCol]==1) ReceiverVisitedBefore = true;
+
+      if(ReceiverVisitedBefore == true)
+      {
+        EndOfReach = true;
+        ++SegmentID;
+        ++i_source;
+      }
+      else
+      {
+        // Move downstream
+        CurrentNode = ReceiverNode;
+      }
+    }
+  }
+  LSDIndexRaster ChannelSegmentsRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ChannelSegments,GeoReferencingStrings);
+  return ChannelSegmentsRaster;
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 // SplitHillslopes
