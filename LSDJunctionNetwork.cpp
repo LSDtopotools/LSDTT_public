@@ -4267,7 +4267,7 @@ LSDIndexRaster LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, v
     // calculate the segment length from the drainage area.
     float SegmentLength = MinReachLength*sqrt(ThisArea);
     // check that seg length is at least the minimum
-    if (SegmentLength < MinReachLength) { SegmentLength = MinReachLength };
+    if (SegmentLength < MinReachLength) { SegmentLength = MinReachLength; }
     int NSegmentNodes = ceil(SegmentLength/DataResolution);
     // Trace downstream until you rach the end of this channel reach
     while(EndOfReach == false)
@@ -4288,7 +4288,7 @@ LSDIndexRaster LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, v
         // recalculate the segment length
         ThisArea = FlowInfo.get_DrainageArea_square_km(ReceiverNode);
         SegmentLength = MinReachLength*sqrt(ThisArea);
-        if (SegmentLength < MinReachLength) { SegmentLength = MinReachLength };
+        if (SegmentLength < MinReachLength) { SegmentLength = MinReachLength; }
         NSegmentNodes = ceil(SegmentLength/DataResolution);
       }
       // Now check to see whether stream order increases (want to start a new
@@ -4303,7 +4303,7 @@ LSDIndexRaster LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, v
         // recalculate the segment length
         ThisArea = FlowInfo.get_DrainageArea_square_km(ReceiverNode);
         SegmentLength = MinReachLength*sqrt(ThisArea);
-        if (SegmentLength < MinReachLength) { SegmentLength = MinReachLength };
+        if (SegmentLength < MinReachLength) { SegmentLength = MinReachLength; }
         NSegmentNodes = ceil(SegmentLength/DataResolution);
       }
 
