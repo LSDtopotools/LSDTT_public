@@ -221,7 +221,7 @@ swath profile of the erosion in the mainstem channel from the erosion raster \n 
 	//RasterTemplate_file = RasterTemplate_file;   // Huh?
 	
   cout << "Loading template raster..." << endl;
-  LSDRaster RasterTemplate(RasterTemplate_file.c_str(),raster_extension);
+  LSDRaster RasterTemplate(path_name + RasterTemplate_file.c_str(),raster_extension);
   cout << "raster template loaded using: " << RasterTemplate_file << endl;
 
 	// Load the baseline point data (no need - created above)
@@ -239,7 +239,7 @@ swath profile of the erosion in the mainstem channel from the erosion raster \n 
   int NormaliseLongProfile = 0;
   
   cout << "\nWriting longitudinal profile..." << endl;
-  TestSwath.write_longitudinal_profile_to_file(RasterTemplate, percentiles, SwathBinWidth, RasterTemplate_file.c_str(),NormaliseLongProfile);
+  TestSwath.write_longitudinal_profile_to_file(RasterTemplate, percentiles, SwathBinWidth, path_name + RasterTemplate_file.c_str(),NormaliseLongProfile);
   cout << "long profile swath written to text file." << endl;
   
   // Last bit creates and writes swath templates to raster so you can inspect them and check they sampled the data extent that you expected.
@@ -251,7 +251,7 @@ swath profile of the erosion in the mainstem channel from the erosion raster \n 
                   RasterTemplate.get_DataResolution(),RasterTemplate.get_NoDataValue(),TestSwath.get_BaselineValueArray());
   
   string output_file2 = RasterTemplate_file + Long_Swath_ext;
-  Long_Swath.write_raster(output_file2.c_str(),raster_extension);
+  Long_Swath.write_raster(path_name + output_file2.c_str(),raster_extension);
 	cout << "S.I.G." << endl;	
 	
 }
