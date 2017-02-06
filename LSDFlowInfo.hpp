@@ -273,6 +273,12 @@ class LSDFlowInfo
   /// @date 19/9/2014
   vector<int> retrieve_donors_to_node(int current_node);
 
+  /// @brief returns the draiange area of a node in square km
+  /// @param this_node node of interest
+  /// @return draiange area in square km
+  /// @author FJC
+  /// @date 06/02/17
+  float get_DrainageArea_square_km(int this_node);
 
   // get functions
 
