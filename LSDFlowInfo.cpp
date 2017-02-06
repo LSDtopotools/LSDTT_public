@@ -1067,7 +1067,18 @@ vector<int> LSDFlowInfo::retrieve_donors_to_node(int current_node)
   return donorvec;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// get the drainage area of a node in km^2
+// FJC 06/02/17
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDFlowInfo::get_DrainageArea_square_km(int this_node)
+{
+  int NContributingPixels = NContributingNodes[this_node];
+  float DrainageArea = NContributingPixels*DataResolution*DataResolution;
+  float DrainageAreaKm = DrainageArea/1000000;
 
+  return DrainageAreaKm;
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // recursive add_to_stack routine, from Braun and Willett eq. 12 and 13
