@@ -141,26 +141,29 @@ swath profile of the erosion in the mainstem channel from the erosion raster \n 
 	
 	// Get a flow info object for computing the channel network later on
 	cout << "\nGetting FlowInfo object... " << endl;
-	LSDFlowInfo FlowInfo(boundary_conditions, filled_topo_test);
+  
+  LSDFlowInfo* FlowInfo = new LSDFlowInfo(boundary_conditions, filled_topo_test);
+  
+	//LSDFlowInfo FlowInfo(boundary_conditions, filled_topo_test);
     cout << "\ngot FlowInfo object." << endl;
 	
 	// Find the number of contributing pixels within the flowinfo object
 	string CP_name =  path_name+DEM_name+"_CP";
-	LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+	LSDIndexRaster ContributingPixels = FlowInfo->write_NContributingNodes_to_LSDIndexRaster();
 	ContributingPixels.write_raster(CP_name,raster_extension);	
 	
 	// Calcualte the distance from outlet
-	LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
+	LSDRaster DistanceFromOutlet = FlowInfo->distance_from_outlet();
 
 	// Get the channel head sources
 	vector<int> sources;
-	sources = FlowInfo.get_sources_index_threshold(ContributingPixels, SourceThreshold);
+	sources = FlowInfo->get_sources_index_threshold(ContributingPixels, SourceThreshold);
 	cout << "\ngot the channel head sources using the SIMPLE THRESHOLD method" << endl;
 	cout << "The contributing pixel threshold for channel sources was: " << SourceThreshold << endl;
 
 	// Get the junction network
 	cout << "\nInitializing Channel network..." << endl;
-	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
+	LSDJunctionNetwork ChanNetwork(sources, *FlowInfo);
 	cout << "got channel_network." << endl;
   
   //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -183,7 +186,7 @@ swath profile of the erosion in the mainstem channel from the erosion raster \n 
   //int junction_number = 0;  
   // This value is now specified in the parameter file and no longer hard coded.
   cout << "\nCreating main stem channel..." << endl;
-  LSDIndexChannel main_stem = ChanNetwork.generate_longest_index_channel_in_basin(JunctionIndex, FlowInfo, DistanceFromOutlet);
+  LSDIndexChannel main_stem = ChanNetwork.generate_longest_index_channel_in_basin(JunctionIndex, *FlowInfo, DistanceFromOutlet);
   cout << "got main stem channel, with n_nodes " << main_stem.get_n_nodes_in_channel() <<  "starting at junction no.: " << JunctionIndex << endl;	
   // Hang on, what is main_stem actually used for??? DAV
 
@@ -191,7 +194,7 @@ swath profile of the erosion in the mainstem channel from the erosion raster \n 
 	cout << "\nCreating IndexChannelTree..." << endl;
 	int organization_switch = 1;
 	int pruning_switch = 0;
-	LSDIndexChannelTree ChannelTree(FlowInfo, ChanNetwork, JunctionIndex, organization_switch,
+	LSDIndexChannelTree ChannelTree(*FlowInfo, ChanNetwork, JunctionIndex, organization_switch,
                                         DistanceFromOutlet, pruning_switch, SourceThreshold);   // pruning_threshold = SourceThreshold (is good yes?)
   cout << "got index channel tree." << endl;
     
@@ -200,11 +203,13 @@ swath profile of the erosion in the mainstem channel from the erosion raster \n 
 	string Chan_fname = "_ChanNet";
 	string Chan_ext = ".chan";
 	string Chan_for_swath_ingestion_fname = path_name + DEM_name + Chan_fname + Chan_ext;
-	ChannelTree.print_LSDChannels_for_chi_network_ingestion(FlowInfo,
+	ChannelTree.print_LSDChannels_for_chi_network_ingestion(*FlowInfo,
                              filled_topo_test, DistanceFromOutlet, Chan_for_swath_ingestion_fname);
     
   cout << "wrote index channel tree to file: " << Chan_for_swath_ingestion_fname << endl;   
-     
+   
+
+  delete FlowInfo;  
   // Now we are going to use a nifty tool from LSDShapeTools to write the index channel tree to a PointData object
   cout << "\nCreating PointData object from the tree file just written..." << endl;
   PointData BaselinePoints = LoadChannelTree(Chan_for_swath_ingestion_fname, multistem_option, trib_number);   // Zero argument tells it to just pick out the mainstem // 1 means all tribs
