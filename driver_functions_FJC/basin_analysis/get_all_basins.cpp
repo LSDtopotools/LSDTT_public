@@ -171,15 +171,29 @@ int main (int nNumberofArgs,char *argv[])
 	cout << "Removing lochs..." << endl;
 	vector<int> new_basin_nodes = ChanNetwork.modify_basin_nodes_from_mask(basin_nodes, FlowInfo, MaskRaster);
 
-	cout << "Number of basins = " << basin_nodes.size() << endl;
+	//checking position of new basin nodes
+	string csv_out = "tay_basin_nodes_check";
+	ofstream output_file;
+	output_file.open((path_name+csv_out+"."+csv_extension).c_str());
 
-	vector<int> basin_junctions = ChanNetwork.extract_basin_junctions_from_nodes(basin_nodes, FlowInfo);
-	cout << "Got the basin junctions" << endl;
+	for (int i = 0; i < int(new_basin_nodes.size()); i++)
+	{
+		int row, col;
+		FlowInfo.retrieve_current_row_and_col(new_basin_nodes[i], row, col);
+		output_file << new_basin_nodes[i] << "," << row << "," << col << endl;
+	}
 
-	// get raster of basins from the junction vector
-	LSDIndexRaster BasinRaster = ChanNetwork.extract_basins_from_junction_vector_nested(basin_junctions, FlowInfo);
-	string basin_ext = "_basins";
-	BasinRaster.write_raster((path_name+DEM_name+basin_ext), DEM_extension);
+	output_file.close();
+
+	// cout << "Number of basins = " << basin_nodes.size() << endl;
+	//
+	// vector<int> basin_junctions = ChanNetwork.extract_basin_junctions_from_nodes(basin_nodes, FlowInfo);
+	// cout << "Got the basin junctions" << endl;
+	//
+	// // get raster of basins from the junction vector
+	// LSDIndexRaster BasinRaster = ChanNetwork.extract_basins_from_junction_vector_nested(basin_junctions, FlowInfo);
+	// string basin_ext = "_basins";
+	// BasinRaster.write_raster((path_name+DEM_name+basin_ext), DEM_extension);
 
 	// Done, check how long it took
 	clock_t end = clock();
