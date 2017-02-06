@@ -187,17 +187,18 @@ int main (int nNumberofArgs,char *argv[])
 	LSDIndexRaster SOArray((path_name+DEM_name+SO_ext), FileExtension);
 
 	//get metrics for each basin for plotting
-	float DD, Mean, Median, SD, SE, P5th, P95th;
+	float DD, Mean, Median, SD, SE, P5th, P16th, P84th, P95th, BinWidth;
 	int Percentile, junction_number;
+	vector<float> DataVector;
+	string OutputFile, Hist_Filename;
 
-	string OutputFile;
 	OutputFile = DEM_name+"_basin_topo_metrics.txt";
   	ofstream OutputStream;
 	OutputStream.open(OutputFile.c_str());
-	OutputStream 	<< "ID DD CHT_Mean CHT_Median CHT_SD CHT_SE CHT_P5th CHT_P95th "
-						<< "LH_Mean LH_Median LH_SD LH_SE LH_P5th LH_P95th "
-						<< "SLP_Mean SLP_Median SLP_SD SLP_SE SLP_P5th SLP_P95th "
-						<< "MChi_Mean MChi_Median MChi_SD MChi_SE MChi_P5th MChi_P95th" << endl;
+	OutputStream 	<< "ID DD CHT_Mean CHT_Median CHT_SD CHT_SE CHT_P5th CHT_P16th CHT_P84th CHT_P95th "
+						<< "LH_Mean LH_Median LH_SD LH_SE LH_P5th LH_P16th LH_P84th LH_P95th "
+						<< "SLP_Mean SLP_Median SLP_SD SLP_SE SLP_P5th SLP_P16th SLP_P84th SLP_P95th "
+						<< "MChi_Mean MChi_Median MChi_SD MChi_SE MChi_P5th MChi_P16th MChi_P84th MChi_P95th" << endl;
 
 	for (int i = 0; i < int(junction_list.size()); i++)
 	{
@@ -224,11 +225,21 @@ int main (int nNumberofArgs,char *argv[])
 		SE = Basin.CalculateBasinStdError(FlowInfo,CHT_Basin);
 		Percentile = 5;
 		P5th = Basin.CalculateBasinPercentile(FlowInfo,CHT_Basin,Percentile);
+		Percentile = 16;
+		P16th = Basin.CalculateBasinPercentile(FlowInfo,CHT_Basin,Percentile);
+		Percentile = 84;
+		P84th = Basin.CalculateBasinPercentile(FlowInfo,CHT_Basin,Percentile);
 		Percentile = 95;
 		P95th = Basin.CalculateBasinPercentile(FlowInfo,CHT_Basin,Percentile);
 
 		//write to file
-		OutputStream << Mean << " " << Median << " " << SD << " " << SE << " " << P5th << " " << P95th << " ";
+		OutputStream << Mean << " " << Median << " " << SD << " " << SE << " " << P5th << " " << P16th << " " << P84th << P95th << " ";
+
+		//Generate histogram
+		DataVector = CHT_Basin.get_RasterData_vector_No_NDVs();
+		BinWidth = 0.001;
+		Hist_Filename = "Basin_"+string(itoa(junction_number))+"_CHT_hist.txt";
+		print_histogram(DataVector, BinWidth, Hist_Filename);
 
 		//Hillslope length
 		LSDRaster LH_Basin = Basin.write_raster_data_to_LSDRaster(LH, FlowInfo);
@@ -238,11 +249,21 @@ int main (int nNumberofArgs,char *argv[])
 		SE = Basin.CalculateBasinStdError(FlowInfo,LH_Basin);
 		Percentile = 5;
 		P5th = Basin.CalculateBasinPercentile(FlowInfo,LH_Basin,Percentile);
+		Percentile = 15;
+		P16th = Basin.CalculateBasinPercentile(FlowInfo,LH_Basin,Percentile);
+		Percentile = 84;
+		P84th = Basin.CalculateBasinPercentile(FlowInfo,LH_Basin,Percentile);
 		Percentile = 95;
 		P95th = Basin.CalculateBasinPercentile(FlowInfo,LH_Basin,Percentile);
 
 		//write to file
-		OutputStream << Mean << " " << Median << " " << SD << " " << SE << " " << P5th << " " << P95th << " ";
+		OutputStream << Mean << " " << Median << " " << SD << " " << SE << " " << P5th << " " << P16th << " " << P84th << P95th << " ";
+
+		//Generate histogram
+		DataVector = LH_Basin.get_RasterData_vector_No_NDVs();
+		BinWidth = 1.;
+		Hist_Filename = "Basin_"+string(itoa(junction_number))+"_LH_hist.txt";
+		print_histogram(DataVector, BinWidth, Hist_Filename);
 
 		// Slope
 		LSDRaster SLP_Basin = Basin.write_raster_data_to_LSDRaster(SLP, FlowInfo);
@@ -252,11 +273,21 @@ int main (int nNumberofArgs,char *argv[])
 		SE = Basin.CalculateBasinStdError(FlowInfo,SLP_Basin);
 		Percentile = 5;
 		P5th = Basin.CalculateBasinPercentile(FlowInfo,SLP_Basin,Percentile);
+		Percentile = 16;
+		P16th = Basin.CalculateBasinPercentile(FlowInfo,SLP_Basin,Percentile);
+		Percentile = 84;
+		P84th = Basin.CalculateBasinPercentile(FlowInfo,SLP_Basin,Percentile);
 		Percentile = 95;
 		P95th = Basin.CalculateBasinPercentile(FlowInfo,SLP_Basin,Percentile);
 
 		//write to file
-		OutputStream << Mean << " " << Median << " " << SD << " " << SE << " " << P5th << " " << P95th << " ";
+		OutputStream << Mean << " " << Median << " " << SD << " " << SE << " " << P5th << " " << P16th << " " << P84th << P95th << " ";
+
+		//Generate histogram
+		DataVector = SLP_Basin.get_RasterData_vector_No_NDVs();
+		BinWidth = 0.01;
+		Hist_Filename = "Basin_"+string(itoa(junction_number))+"_SLP_hist.txt";
+		print_histogram(DataVector, BinWidth, Hist_Filename);
 
 		// Chi steepness
 		LSDRaster MChi_Basin = Basin.write_raster_data_to_LSDRaster(MChi, FlowInfo);
@@ -266,10 +297,21 @@ int main (int nNumberofArgs,char *argv[])
 		SE = Basin.CalculateBasinStdError(FlowInfo,MChi_Basin);
 		Percentile = 5;
 		P5th = Basin.CalculateBasinPercentile(FlowInfo,MChi_Basin,Percentile);
+		Percentile = 16;
+		P16th = Basin.CalculateBasinPercentile(FlowInfo,MChi_Basin,Percentile);
+		Percentile = 84;
+		P84th = Basin.CalculateBasinPercentile(FlowInfo,MChi_Basin,Percentile);
 		Percentile = 95;
 		P95th = Basin.CalculateBasinPercentile(FlowInfo,MChi_Basin,Percentile);
 
 		//write to file
-		OutputStream << Mean << " " << Median << " " << SD << " " << SE << " " << P5th << " " << P95th << endl;
+		OutputStream << Mean << " " << Median << " " << SD << " " << SE << " " << P5th << " " << P16th << " " << P84th << P95th << endl;
+		
+		//Generate histogram
+		DataVector = MChi_Basin.get_RasterData_vector_No_NDVs();
+		BinWidth = 0.01;
+		Hist_Filename = "Basin_"+string(itoa(junction_number))+"_MChi_hist.txt";
+		print_histogram(DataVector, BinWidth, Hist_Filename);
+
 	}    
 }
