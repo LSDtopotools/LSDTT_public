@@ -4242,11 +4242,17 @@ LSDIndexRaster LSDJunctionNetwork::SplitChannel(LSDFlowInfo& FlowInfo, vector<in
 // segment after the target segment length, when the stream order increases (to
 // preserve structure of drainage network), or when a channel pixel has already
 // been visited.
+// Also gets the
 //
 // Modified FJC 06/02/17
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
-LSDIndexRaster LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int> Sources, int MinReachLength)
+void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int> Sources, int MinReachLength, LSDIndexRaster& ChannelSegmentsRaster, vector< vector<int> >& SegmentInfo)
 {
+  //vectors for storing information about the segments
+  vector<int> SegmentIDs;       // ID of each segment
+  vector<int> StartNodes;       // start node (upstream) of each segment
+  vector<int> EndNodes;         // end node (downstream) of each segment
+
   //LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
   Array2D<int> ChannelSegments(NRows,NCols,int(NoDataValue));
   Array2D<int> NodesVisitedBefore(NRows,NCols,0);
@@ -4269,6 +4275,10 @@ LSDIndexRaster LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, v
     // check that seg length is at least the minimum
     if (SegmentLength < MinReachLength) { SegmentLength = MinReachLength; }
     int NSegmentNodes = ceil(SegmentLength/DataResolution);
+
+    //push back the source to the vector of starting nodes
+    StartNodes.push_back(CurrentNode);
+    SegmentIDs.push_back(SegmentID);
     // Trace downstream until you rach the end of this channel reach
     while(EndOfReach == false)
     {
@@ -4284,6 +4294,9 @@ LSDIndexRaster LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, v
       {
         ++SegmentID;
         NodeCount = 0;
+        EndNodes.push_back(CurrentNode);
+        StartNodes.push_back(ReceiverNode);
+        SegmentIDs.push_back(SegmentID);
 
         // recalculate the segment length
         ThisArea = FlowInfo.get_DrainageArea_square_km(ReceiverNode);
@@ -4299,6 +4312,9 @@ LSDIndexRaster LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, v
       {
         NodeCount = 0;
         ++SegmentID;
+        EndNodes.push_back(CurrentNode);
+        StartNodes.push_back(ReceiverNode);
+        SegmentIDs.push_back(SegmentID);
 
         // recalculate the segment length
         ThisArea = FlowInfo.get_DrainageArea_square_km(ReceiverNode);
@@ -4316,6 +4332,7 @@ LSDIndexRaster LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, v
         EndOfReach = true;
         ++SegmentID;
         ++i_source;
+        EndNodes.push_back(CurrentNode);
       }
       else
       {
@@ -4324,11 +4341,75 @@ LSDIndexRaster LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, v
       }
     }
   }
-  LSDIndexRaster ChannelSegmentsRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ChannelSegments,GeoReferencingStrings);
-  return ChannelSegmentsRaster;
+  //cout << "Checking segment node finder, n_start nodes: " << StartNodes.size() << " N_end nodes: " << EndNodes.size() << " N_segment ids: " << SegmentIDs.size() << " Final segment ID: " << SegmentID << endl;
+
+  //push back to master vector
+  SegmentInfo.push_back(SegmentIDs);
+  SegmentInfo.push_back(StartNodes);
+  SegmentInfo.push_back(EndNodes);
+
+  LSDIndexRaster SegmentsRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ChannelSegments,GeoReferencingStrings);
+  ChannelSegmentsRaster = SegmentsRaster;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Print channel segment information to csv file
+//
+// FJC 07/02/17
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDJunctionNetwork::print_channel_segments_to_csv(LSDFlowInfo& FlowInfo, vector <vector <int> > SegmentInfo, string outfilename)
+{
+  // fid the last '.' in the filename to use in the scv filename
+  unsigned dot = outfilename.find_last_of(".");
 
+  string prefix = outfilename.substr(0,dot);
+  //string suffix = str.substr(dot);
+  string insert = "_all_segment_nodes.csv";
+  string outfname = prefix+insert;
+  ofstream csv_out;
+  csv_out.open(outfname.c_str());
+  csv_out.precision(8);
 
+  csv_out << "SegmentID,NodeType,NodeNumber,x,y" << endl;
+  int current_row, current_col;
+  float x,y;
+  cout << "N segments: " << SegmentInfo[0].size() << endl;
+
+  // first print all the start nodes to csv file
+  for (int i = 0; i < int(SegmentInfo[0].size()); i++)
+  {
+    int current_node = SegmentInfo[1][i];
+    // get the row and col
+    FlowInfo.retrieve_current_row_and_col(current_node, current_row, current_col);
+    // get the x and y location of the node
+    // the last 0.0001*DataResolution is to make sure there are no integer data points
+    x = XMinimum + float(current_col)*DataResolution + 0.5*DataResolution + 0.0001*DataResolution;
+
+    // the last 0.0001*DataResolution is to make sure there are no integer data points
+    // y coord a bit different since the DEM starts from the top corner
+    y = YMinimum + float(NRows-current_row)*DataResolution - 0.5*DataResolution + 0.0001*DataResolution;
+
+    csv_out << SegmentInfo[0][i] << ",Start," << current_node << "," << x << "," << y << endl;
+  }
+
+  // now print all the end nodes
+  for (int i = 0; i < int(SegmentInfo[0].size()); i++)
+  {
+    int current_node = SegmentInfo[2][i];
+    // get the row and col
+    FlowInfo.retrieve_current_row_and_col(current_node, current_row, current_col);
+    // get the x and y location of the node
+    // the last 0.0001*DataResolution is to make sure there are no integer data points
+    x = XMinimum + float(current_col)*DataResolution + 0.5*DataResolution + 0.0001*DataResolution;
+
+    // the last 0.0001*DataResolution is to make sure there are no integer data points
+    // y coord a bit different since the DEM starts from the top corner
+    y = YMinimum + float(NRows-current_row)*DataResolution - 0.5*DataResolution + 0.0001*DataResolution;
+
+    csv_out << SegmentInfo[0][i] << ",End," << current_node << "," << x << "," << y << endl;
+  }
+
+}
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 // SplitHillslopes
 // This function is intended to follow the SplitChannel function.  It traces
