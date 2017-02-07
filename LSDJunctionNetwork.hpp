@@ -1015,7 +1015,7 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
 
 
   /// SplitChannelAdaptive
-  /// @brief This function splits the channel into a series of segments,
+  /// @details This function splits the channel into a series of segments,
   /// providing a convenient unit with which to analyse landscapes.
   /// Function modified from original SplitChannel function so that the
   /// segment length varies with the drainage area of the cahtchment.
@@ -1025,12 +1025,16 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// The algorithm starts a new segment either after the target length,
   /// when the stream order increases, or when a channel pixel has already
   /// been visited.
-  /// User must pass in an empty LSDIndexRaster and vec<vec> which will be
-  /// populated with the segment information. Vector of vectors has the following
-  /// structure:
-  /// 0 - segment IDs
+  /// User must pass in an empty IndexRaster which will be populated with the channel
+  /// segments data, and two vector of vectors which will be populated:
+  /// vector< vector<int> > SegmentInfoInts has the following layout:
+  /// 0 - segment IDS
   /// 1 - start node of each segment (upstream)
-  /// 2 - end node of each segment (downstream)
+  /// 2 - end nodes (downstream)
+  /// vector< vector<float> > SegmentInfoFloats has the following layout:
+  /// 0 - segment lengths
+  /// 1 - elevation of the start nodes
+  /// 2 - slope of the segment
   ///
   /// @param FlowInfo LSDFlowInfo object
   /// @param Sources a vector of sources
@@ -1039,14 +1043,15 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @param SegmentInfo vec<vec> with segment info
   /// @author FJC
   /// @date 06/02/17
-  void SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int> Sources, int MinReachLength, LSDIndexRaster& ChannelSegments, vector <vector<int> >& SegmentInfo);
+  void SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int> Sources, int MinReachLength, LSDRaster& ElevationRaster, LSDIndexRaster& ChannelSegments, vector< vector<int> >& SegmentInfoInts, vector< vector<float> >& SegmentInfoFloats);
 
   /// @brief This function prints information about the channel segments from the
   /// SplitChannelAdaptive function to a csv file so it can be read by a GIS
   /// @param FlowInfo LSDFlowInfo object
-  /// @param SegmentInfo vec<vec> of segment info
+  /// @param SegmentInfoInts vec<vec> of segment info (integer)
+  /// @param SegmentInfoFloats vec<vec> of segment info (floating point)
   /// @param outfilename string, csv filename
-  void print_channel_segments_to_csv(LSDFlowInfo& FlowInfo, vector <vector <int> > SegmentInfo, string outfilename);
+  void print_channel_segments_to_csv(LSDFlowInfo& FlowInfo, vector <vector <int> > SegmentInfoInts, vector <vector <float> > SegmentInfoFloats, string outfilename);
 
   /// SplitHillslopes
   /// @brief This function is intended to follow the SplitChannel function.  It traces

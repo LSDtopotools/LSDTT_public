@@ -142,8 +142,9 @@ int main (int nNumberofArgs,char *argv[])
 	cout << "\t Now splitting the channel into segments..." << endl;
 	// now test the split channel function
 	LSDIndexRaster ChannelSegments;
-	vector < vector<int> > SegmentInfo;
-	ChanNetwork.SplitChannelAdaptive(FlowInfo, sources, MinReachLength, ChannelSegments, SegmentInfo);
+	vector < vector<int> > SegmentInfoInts;
+	vector < vector<float> > SegmentInfoFloats;
+	ChanNetwork.SplitChannelAdaptive(FlowInfo, sources, MinReachLength, filled_DEM, ChannelSegments, SegmentInfoInts, SegmentInfoFloats);
 	string segment_ext = "_segments";
 	ChannelSegments.write_raster((path_name+DEM_name+segment_ext), DEM_extension);
 
@@ -154,7 +155,7 @@ int main (int nNumberofArgs,char *argv[])
 
 	//print to csv file
 	cout << "\t Writing csv file of channel segments..." << endl;
-	ChanNetwork.print_channel_segments_to_csv(FlowInfo, SegmentInfo, (path_name+DEM_name));
+	ChanNetwork.print_channel_segments_to_csv(FlowInfo, SegmentInfoInts, SegmentInfoFloats, (path_name+DEM_name));
 
 	// Done, check how long it took
 	clock_t end = clock();
