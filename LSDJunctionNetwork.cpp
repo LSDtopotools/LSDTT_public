@@ -4072,7 +4072,7 @@ void LSDJunctionNetwork::GetChannelNodesAndJunctions(LSDFlowInfo& flowinfo, vect
   int row = 0;  //ints to store the row and col of the current px
   int col = 0;
 
-  cout << "I am going to go through " << NJunctions << " Junctions for you." << endl;
+  //cout << "I am going to go through " << NJunctions << " Junctions for you." << endl;
 
   for (int q = 0; q < NJunctions; ++q)
   {
@@ -4081,15 +4081,15 @@ void LSDJunctionNetwork::GetChannelNodesAndJunctions(LSDFlowInfo& flowinfo, vect
     {
       cout << "\tJunction = " << q << " / " << NJunctions << "    \r";
     }
-    cout << "Junction is: " << q << " ";
+    //cout << "Junction is: " << q << " ";
 
     int sourcenodeindex = JunctionVector[q]; //first cell of segment
     int recieverjunction = ReceiverVector[q];
     int recievernodeindex = JunctionVector[recieverjunction]; //last cell of segment
 
-    cout << "Source NI : " << sourcenodeindex << " and receiver NI: " << recievernodeindex << endl;
+    //cout << "Source NI : " << sourcenodeindex << " and receiver NI: " << recievernodeindex << endl;
 
-    cout << "reciever is:"  <<  recieverjunction << " ";
+    //cout << "reciever is:"  <<  recieverjunction << " ";
     //get row and col of last px in junction. This location should not be written,
     //as it is the start of a new junction.
     int lp_row = 0;
@@ -4107,7 +4107,7 @@ void LSDJunctionNetwork::GetChannelNodesAndJunctions(LSDFlowInfo& flowinfo, vect
 
     if(recieverjunction == q)
     {
-      cout << "You are on a baselevel junction" << endl;
+      //cout << "You are on a baselevel junction" << endl;
       Flag = true;
     }
 
@@ -4123,12 +4123,12 @@ void LSDJunctionNetwork::GetChannelNodesAndJunctions(LSDFlowInfo& flowinfo, vect
       if (CurrentNodeIndex == next_receiver)
       {
         //need to stop 1 px before node
-        cout << "I found the base level" << endl;
+        //cout << "I found the base level" << endl;
         Flag = true;
       }
       else if(recievernodeindex== next_receiver)
       {
-        cout << "I found the receiver" << endl;
+        //cout << "I found the receiver" << endl;
         Flag = true;
       }
       else
@@ -4139,7 +4139,7 @@ void LSDJunctionNetwork::GetChannelNodesAndJunctions(LSDFlowInfo& flowinfo, vect
       }
     }
   }
-  cout << "Okay, I've got the nodes" << endl;
+  //cout << "Okay, I've got the nodes" << endl;
 
 
   NIvec = NI_vector;
