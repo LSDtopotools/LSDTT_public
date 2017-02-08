@@ -142,6 +142,8 @@ int main (int nNumberofArgs,char *argv[])
 	cout << "\n\t Getting raster from swath" << endl;
 	int NormaliseToBaseline = 1;
 	LSDRaster SwathRaster = TestSwath.get_raster_from_swath_profile(RasterTemplate, NormaliseToBaseline);
+	string swath_ext = "_swath_raster";
+	SwathRaster.write_raster((path_name+DEM_ID+swath_ext), DEM_extension);
 
   // get the slope
 	cout << "\t Getting the slope" << endl;

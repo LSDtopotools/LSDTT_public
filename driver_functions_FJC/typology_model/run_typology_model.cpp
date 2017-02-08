@@ -83,6 +83,7 @@ int main (int nNumberofArgs,char *argv[])
 	string HS_output = "_HS";
   string DEM_extension = "bil";
 	string fill_ext = "_fill";
+	string discharge_ext = "_Qmed";
 	vector<int> raster_selection(8,0);
 	raster_selection[0] = 1;  // get the smoothed elevation
 	raster_selection[1] = 1;  // get the slope
@@ -118,6 +119,9 @@ int main (int nNumberofArgs,char *argv[])
 	// cout << "Got the filled DEM" << endl;
 	LSDRaster filled_DEM((path_name+DEM_name+fill_ext), DEM_extension);
 
+	// load the discharge raster
+	LSDRaster Discharge((path_name+DEM_name+discharge_ext), DEM_extension);
+
 	//====================================================================//
 	// 							      	CHANNEL NETWORK EXTRACTION                    //
 	//====================================================================//
@@ -144,7 +148,7 @@ int main (int nNumberofArgs,char *argv[])
 	LSDIndexRaster ChannelSegments;
 	vector < vector<int> > SegmentInfoInts;
 	vector < vector<float> > SegmentInfoFloats;
-	ChanNetwork.SplitChannelAdaptive(FlowInfo, sources, MinReachLength, filled_DEM, ChannelSegments, SegmentInfoInts, SegmentInfoFloats);
+	ChanNetwork.SplitChannelAdaptive(FlowInfo, sources, MinReachLength, filled_DEM, Discharge, ChannelSegments, SegmentInfoInts, SegmentInfoFloats);
 	string segment_ext = "_segments";
 	ChannelSegments.write_raster((path_name+DEM_name+segment_ext), DEM_extension);
 
