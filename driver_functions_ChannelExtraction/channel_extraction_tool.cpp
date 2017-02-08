@@ -119,7 +119,7 @@ int main (int nNumberofArgs,char *argv[])
 
   // set default float parameters
   int_default_map["threshold_contributing_pixels"] = 100;
-  
+  int_default_map["connected_components_threshold"] = 100;
   
   
   int_default_map["n_iterations"] = 20;
@@ -133,7 +133,8 @@ int main (int nNumberofArgs,char *argv[])
   
   // set default in parameter
   float_default_map["min_slope_for_fill"] = 0.0001;
-
+  float_default_map["surface_fitting_radius"] = 6;
+  float_default_map["pruning_drainage_area"] = 1000;
 
 
   float_default_map["A_0"] = 1;
@@ -300,7 +301,74 @@ int main (int nNumberofArgs,char *argv[])
     cout << "and Grieve et al. (2016, doi:10.5194/esurf-4-627-2016) " << endl;
     cout << "and combines elements of the Pelletier and Passalacqua et al  methods: " << endl;
     cout << " doi:10.1029/2012WR012452 and doi:10.1029/2009JF001254" << endl;
+
+    // initiate the spectral raster
+    LSDRasterSpectral Spec_raster(topography_raster);
+    
+    string QQ_fname = OUT_DIR+OUT_ID+"__qq.txt";
+    
+    cout << "I am am getting the connected components using a weiner QQ filter." << endl;
+    LSDIndexRaster connected_components = Spec_raster.IsolateChannelsWienerQQ(this_float_map["pruning_area"], 
+                                                       this_float_map["surface_fitting_radius"], QQ_fname);
+    
+    cout << "I am filtering by connected components" << endl;
+    LSDIndexRaster connected_components_filtered = connected_components.filter_by_connected_components(this_int_map["connected_components_threshold"]);
+    LSDIndexRaster CC_raster = connected_components_filtered.ConnectedComponents();
+
+    cout << "I am thinning the network to a skeleton." << endl;
+    LSDIndexRaster skeleton_raster = connected_components_filtered.thin_to_skeleton();
+    
+    cout << "I am finding the finding end points" << endl;
+    LSDIndexRaster Ends = skeleton_raster.find_end_points();
+    Ends.remove_downstream_endpoints(CC_raster, Spec_raster);
+
+    //this processes the end points to only keep the upper extent of the channel network
+    cout << "getting channel heads" << endl;
+    vector<int> tmpsources = FlowInfo.ProcessEndPointsToChannelHeads(Ends);
+
+    // we need a temp junction network to search for single pixel channels
+    LSDJunctionNetwork tmpJunctionNetwork(tmpsources, FlowInfo);
+    LSDIndexRaster tmpStreamNetwork = tmpJunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
+
+    cout << "removing single px channels" << endl;
+    vector<int> FinalSources = FlowInfo.RemoveSinglePxChannels(tmpStreamNetwork, tmpsources);
+
+    //Now we have the final channel heads, so we can generate a channel network from them
+    LSDJunctionNetwork ChanNetwork(FinalSources, FlowInfo);
+
+    // Print sources
+    if( this_bool_map["print_sources_to_csv"])
+    {
+      string sources_csv_name = OUT_DIR+OUT_ID+"_Wsources.csv";
+      
+      //write channel_heads to a csv file
+      FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(FinalSources, sources_csv_name);
+    }
+
+    if( this_bool_map["print_sources_to_raster"])
+    {
+      string sources_raster_name = OUT_DIR+OUT_ID+"_Wsources";
+      
+      //write channel heads to a raster
+      LSDIndexRaster Channel_heads_raster = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(FinalSources);
+      Channel_heads_raster.write_raster(sources_raster_name,raster_ext);
+    }
+
+    if( this_bool_map["print_stream_order_raster"])
+    {
+      string SO_raster_name = OUT_DIR+OUT_ID+"_W_SO";
+      
+      //write stream order array to a raster
+      LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
+      SOArray.write_raster(SO_raster_name,raster_ext);
+    }
   
+    if( this_bool_map["print_channels_to_csv"])
+    {
+      string channel_csv_name = OUT_DIR+OUT_ID+"_W_CN";
+      ChanNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+    }
+
   }  
   
 
