@@ -294,7 +294,7 @@ int main (int nNumberofArgs,char *argv[])
   //===============================================================
   // WIENER
   //===============================================================
-  if (this_bool_map["print_weiner_channels"])
+  if (this_bool_map["print_wiener_channels"])
   {
     cout << "I am calculating channels using the weiner algorithm (doi:10.1029/2012WR012452)." << endl;
     cout << "This algorithm was used by Clubb et al. (2016, DOI: 10.1002/2015JF003747) " << endl;
