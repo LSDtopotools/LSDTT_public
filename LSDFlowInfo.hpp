@@ -703,7 +703,7 @@ class LSDFlowInfo
   /// @brief Function to return the closest value of a raster to a specified node index
   /// @param NodeIndex of interest
   /// @param InputRaster raster to return value of
-  /// @param search_radius rectangular window to search for
+  /// @param search_radius rectangular window to search for, in n_pixels
   /// @return float value of raster closest to the node index
   /// @author FJC
   /// @date 08/02/17

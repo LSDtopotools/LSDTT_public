@@ -4252,10 +4252,12 @@ LSDIndexRaster LSDJunctionNetwork::SplitChannel(LSDFlowInfo& FlowInfo, vector<in
 // 0 - segment lengths
 // 1 - elevation of the start nodes
 // 2 - slope of the segment
+// 3 - discharge of the segment (need to pass in raster of discharge for this. Think
+// about switch for when this won't be the case)
 //
 // Modified FJC 06/02/17
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
-void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int> Sources, int MinReachLength, LSDRaster& ElevationRaster, LSDRaster& DischargeRaster, LSDIndexRaster& ChannelSegmentsRaster, vector< vector<int> >& SegmentInfoInts, vector< vector<float> >& SegmentInfoFloats)
+void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int> Sources, int MinReachLength, int search_radius, LSDRaster& ElevationRaster, LSDRaster& DischargeRaster, LSDIndexRaster& ChannelSegmentsRaster, vector< vector<int> >& SegmentInfoInts, vector< vector<float> >& SegmentInfoFloats)
 {
   //vectors for storing information about the segments
   vector<int> SegmentIDs;       // ID of each segment
@@ -4297,7 +4299,9 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
     Elevations.push_back(ThisElev);
     SegmentLengths.push_back(SegmentLength);
 
-    //snap the discharge to the nearest Qmed
+    //find the nearest discharge value to this nodes
+    float ThisDischarge = FlowInfo.snap_RasterData_to_Node(CurrentNode,DischargeRaster,search_radius);
+    Discharges.push_back(ThisDischarge);
     // Trace downstream until you rach the end of this channel reach
     while(EndOfReach == false)
     {
@@ -4327,6 +4331,10 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
         Slopes.push_back(ReachSlope);
         ThisElev = ReceiverElev;
 
+        // get discharge and push back to vector
+        float ReceiverDischarge = FlowInfo.snap_RasterData_to_Node(ReceiverNode,DischargeRaster,search_radius);
+        Discharges.push_back(ReceiverDischarge);
+
         // recalculate the segment length
         ThisArea = FlowInfo.get_DrainageArea_square_km(ReceiverNode);
         SegmentLength = MinReachLength*sqrt(ThisArea);
@@ -4354,6 +4362,10 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
         float ReachSlope = (ThisElev - ReceiverElev)/SegmentLength;
         Slopes.push_back(ReachSlope);
         ThisElev = ReceiverElev;
+
+        // get discharge and push back to vector
+        float ReceiverDischarge = FlowInfo.snap_RasterData_to_Node(ReceiverNode,DischargeRaster,search_radius);
+        Discharges.push_back(ReceiverDischarge);
 
         // recalculate the segment length
         ThisArea = FlowInfo.get_DrainageArea_square_km(ReceiverNode);
@@ -4394,6 +4406,7 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
   SegmentInfoFloats.push_back(SegmentLengths);
   SegmentInfoFloats.push_back(Elevations);
   SegmentInfoFloats.push_back(Slopes);
+  SegmentInfoFloats.push_back(Discharges);
 
   LSDIndexRaster SegmentsRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ChannelSegments,GeoReferencingStrings);
   ChannelSegmentsRaster = SegmentsRaster;

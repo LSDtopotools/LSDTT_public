@@ -3012,7 +3012,7 @@ int LSDFlowInfo::get_node_index_of_coordinate_point(float X_coordinate, float Y_
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // For a given node, find the nearest point in the raster that is not a NoDataValue and
-// snap it to the node
+// snap it to the node.  User must specify the search radius in pixels.
 // FJC 08/02/17
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
