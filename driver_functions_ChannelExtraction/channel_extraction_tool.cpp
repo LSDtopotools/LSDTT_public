@@ -118,6 +118,10 @@ int main (int nNumberofArgs,char *argv[])
   map<string,string> string_default_map;
 
   // set default float parameters
+  int_default_map["threshold_contributing_pixels"] = 100;
+  
+  
+  
   int_default_map["n_iterations"] = 20;
   int_default_map["minimum_segment_length"] = 10;
   int_default_map["n_nodes_to_visit"] = 10;
@@ -125,32 +129,33 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["skip"] = 2;
   int_default_map["threshold_pixels_for_chi"] = 1000;
   int_default_map["minimum_basin_size_pixels"] = 1000;
-  int_default_map["threshold_contributing_pixels"] = 1000;
+  
   
   // set default in parameter
   float_default_map["min_slope_for_fill"] = 0.0001;
+
+
+
   float_default_map["A_0"] = 1;
   float_default_map["m_over_n"] = 0.5;
   float_default_map["sigma"] = 20;
   
   // set default methods
-  bool_default_map["print_area_threshold_channels"] = false;
+  bool_default_map["print_area_threshold_channels"] = true;
   bool_default_map["print_dreich_channels"] = false;
   bool_default_map["print_pelletier_channels"] = false;
   bool_default_map["print_wiener_channels"] = false;
   
-  bool_default_map["print_stream_order_raster"] = false;
-  bool_default_map["print_junction_index_raster"] = false;
+  bool_default_map["print_stream_order_raster"] = true;
+  bool_default_map["print_sources_to_raster"] = false;
   bool_default_map["print_fill_raster"] = false;
   bool_default_map["print_DrainageArea_raster"] = false;
   bool_default_map["write hillshade"] = false;
   
+  bool_default_map["print_sources_to_csv"] = true;
+  bool_default_map["print_channels_to_csv"] = true;
   
-  bool_default_map["print_source_keys"] = false;
-  bool_default_map["print_baselevel_keys"] = false;
-  bool_default_map["print_basin_raster"] = false;
 
-  
   // set default string method
   string_default_map["CHeads_file"] = "NULL";
   
@@ -191,7 +196,7 @@ int main (int nNumberofArgs,char *argv[])
   //============================================================================
   // Get the fill
   cout << "Filling topography." << endl;
-  LSDRaster filled_topography = topography_raster.fill(this_float_map[["min_slope_for_fill"]);
+  LSDRaster filled_topography = topography_raster.fill(this_float_map["min_slope_for_fill"]);
   
   if (this_bool_map["print_fill_raster"])
   {
@@ -220,7 +225,52 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["print_area_threshold_channels"])
   {
     cout << "I am calculating channels using an area threshold." << endl;
+    cout << "Only use this if you aren't that bothered about where the channel heads actually are!" << endl;
+    
+    // get some relevant rasters
+    LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
+    LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+    
+    //get the sources: note: this is only to select basins!
+    vector<int> sources;
+    sources = FlowInfo.get_sources_index_threshold(ContributingPixels, this_int_map["threshold_contributing_pixels"]);
   
+    // now get the junction network
+    LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
+    
+    
+    // Print sources
+    if( this_bool_map["print_sources_to_csv"])
+    {
+      string sources_csv_name = OUT_DIR+OUT_ID+"_ATsources.csv";
+      
+      //write channel_heads to a csv file
+      FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(sources, sources_csv_name);
+    }
+
+    if( this_bool_map["print_sources_to_raster"])
+    {
+      string sources_raster_name = OUT_DIR+OUT_ID+"_ATsources";
+      
+      //write channel heads to a raster
+      LSDIndexRaster Channel_heads_raster = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(sources);
+      Channel_heads_raster.write_raster(sources_raster_name,raster_ext);
+    }
+
+    if( this_bool_map["print_stream_order_raster"])
+    {
+      string SO_raster_name = OUT_DIR+OUT_ID+"_AT_SO";
+      
+      //write stream order array to a raster
+      LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
+      SOArray.write_raster(SO_raster_name,raster_ext);
+    }
+  
+    if( this_bool_map["print_channels_to_csv"])
+    {
+      string channel_csv_name = OUT_DIR+OUT_ID+"_AT_CN";
+      ChanNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+    }
   }
 
   //===============================================================
@@ -238,7 +288,6 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["print_pelletier_channels"])
   {
     cout << "I am calculating channels using the pelletier algorighm (doi:10.1029/2012WR012452)." << endl;
-  
   }
   
   //===============================================================

@@ -14,7 +14,7 @@ SOURCES=channel_extraction_tool.cpp \
          ../LSDJunctionNetwork.cpp \
          ../LSDChannel.cpp \
          ../LSDRasterInfo.cpp \
-         ../LSDParameterParser \
+         ../LSDParameterParser.cpp \
          ../LSDMostLikelyPartitionsFinder.cpp \
          ../LSDShapeTools.cpp
 LIBS   = -lm -lstdc++ -lfftw3
