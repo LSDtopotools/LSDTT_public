@@ -135,6 +135,9 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["min_slope_for_fill"] = 0.0001;
   float_default_map["surface_fitting_radius"] = 6;
   float_default_map["pruning_drainage_area"] = 1000;
+  float_default_map["curvature_threshold"] = 0.1;
+  float_default_map["minimum_drainage_area"] = 400;
+
 
 
   float_default_map["A_0"] = 1;
@@ -289,6 +292,119 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["print_pelletier_channels"])
   {
     cout << "I am calculating channels using the pelletier algorighm (doi:10.1029/2012WR012452)." << endl;
+    cout << endl << "!!!!WARNING!!!" << endl;
+    cout << "This routine is memory intensive! You will need ~20-30 times as much memory as the size of your DEM!" << endl;
+    cout << "On a 3 Gb vagrant box a 100 Mb DEM is likeley to crash the machine." << endl;
+    cout << "If you have this problem try reducing DEM resolution (3-5 m is okay, see Grieve et al 2016 ESURF)" << endl;
+    cout << "or tile your DEM and run this multiple times. Or get a linux workstation." << endl << endl;
+    LSDRasterSpectral SpectralRaster(topography_raster);
+    
+    cout << "I am running a wiener filter" << endl;
+    LSDRaster topo_test_wiener = SpectralRaster.fftw2D_wiener();
+    int border_width = 100;	
+    topo_test_wiener = topo_test_wiener.border_with_nodata(border_width);       
+ 
+    // get some relevant rasters
+    LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
+    LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+
+    // get an initial sources network
+    vector<int> sources;
+    sources = FlowInfo.get_sources_index_threshold(ContributingPixels, this_int_map["threshold_contributing_pixels"]); 
+
+    // now get an initial junction network. This will be refined in later steps.
+    LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
+
+    int surface_fitting_window_radius = 7;
+    int surface_fitting_window_radius_LW = 25;
+    vector<LSDRaster> surface_fitting, surface_fitting_LW;
+    LSDRaster tan_curvature;
+    LSDRaster tan_curvature_LW;
+    string curv_name = "_tan_curv";
+    vector<int> raster_selection(8, 0);
+    raster_selection[6] = 1;
+    
+    // Two surface fittings: one for the short wacelength and one long wavelength
+    surface_fitting = topo_test_wiener.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
+    surface_fitting_LW = topo_test_wiener.calculate_polyfit_surface_metrics(surface_fitting_window_radius_LW, raster_selection);
+  
+    for(int i = 0; i<int(raster_selection.size()); ++i)
+    {
+      if(raster_selection[i]==1)
+      {
+        tan_curvature = surface_fitting[i];
+        //tan_curvature.write_raster((path_name+DEM_name+curv_name), DEM_flt_extension);
+        tan_curvature_LW = surface_fitting[i];
+        //tan_curvature_LW.write_raster((path_name+DEM_name+curv_name+"_LW"), DEM_flt_extension);
+      }
+    }
+
+
+    Array2D<float> topography = filled_topography.get_RasterData();
+    Array2D<float> curvature = tan_curvature.get_RasterData();
+    Array2D<float> curvature_LW = tan_curvature_LW.get_RasterData();
+    cout << "\tLocating channel heads..." << endl;
+    vector<int> ChannelHeadNodes = ChanNetwork.calculate_pelletier_channel_heads_DTM(FlowInfo, topography, this_float_map["curvature_threshold"], curvature,curvature_LW);
+  
+    // Now filter out false positives along channel according to a threshold 
+    // catchment area
+    cout << "\tFiltering out false positives..." << endl;
+    LSDJunctionNetwork ChanNetworkNew(ChannelHeadNodes, FlowInfo);
+    vector<int> ChannelHeadNodesFilt;
+    int count = 0;
+    for(int i = 0; i<int(ChannelHeadNodes.size()); ++i)
+    {
+      int upstream_junc = ChanNetworkNew.get_Junction_of_Node(ChannelHeadNodes[i], FlowInfo);
+      int test_node = ChanNetworkNew.get_penultimate_node_from_stream_link(upstream_junc, FlowInfo);
+      float catchment_area = float(FlowInfo.retrieve_contributing_pixels_of_node(test_node)) * FlowInfo.get_DataResolution();
+      if (catchment_area >= this_float_map["minimum_drainage_area"]) 
+      {
+        ChannelHeadNodesFilt.push_back(ChannelHeadNodes[i]);
+      }
+      else
+      {
+        ++count;
+      }
+    }
+    cout << "\t...removed " << count << " nodes out of " << ChannelHeadNodes.size() << endl;
+
+    vector<int> FinalSources = ChannelHeadNodesFilt;
+    //create a channel network based on these channel heads
+    LSDJunctionNetwork NewChanNetwork(ChannelHeadNodesFilt, FlowInfo);
+
+    // Print sources
+    if( this_bool_map["print_sources_to_csv"])
+    {
+      string sources_csv_name = OUT_DIR+OUT_ID+"_Psources.csv";
+      
+      //write channel_heads to a csv file
+      FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(FinalSources, sources_csv_name);
+    }
+
+    if( this_bool_map["print_sources_to_raster"])
+    {
+      string sources_raster_name = OUT_DIR+OUT_ID+"_Psources";
+      
+      //write channel heads to a raster
+      LSDIndexRaster Channel_heads_raster = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(FinalSources);
+      Channel_heads_raster.write_raster(sources_raster_name,raster_ext);
+    }
+
+    if( this_bool_map["print_stream_order_raster"])
+    {
+      string SO_raster_name = OUT_DIR+OUT_ID+"_P_SO";
+      
+      //write stream order array to a raster
+      LSDIndexRaster SOArray = NewChanNetwork.StreamOrderArray_to_LSDIndexRaster();
+      SOArray.write_raster(SO_raster_name,raster_ext);
+    }
+  
+    if( this_bool_map["print_channels_to_csv"])
+    {
+      string channel_csv_name = OUT_DIR+OUT_ID+"_W_CN";
+      NewChanNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+    }
+
   }
   
   //===============================================================
