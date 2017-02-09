@@ -179,8 +179,8 @@ int main (int nNumberofArgs,char *argv[])
 
   //Finally we write the channel network and channel heads to files so they can be used in other drivers.
   LSDIndexRaster Heads = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(FinalSources);
-  Heads.write_raster((Output_name+"_CH_wiener"),DEM_extension);
-  StreamNetwork.write_raster((Output_name+"_SO_wiener"),DEM_extension);
+  Heads.write_raster((Output_name+"_CH_wiener_old"),DEM_extension);
+  StreamNetwork.write_raster((Output_name+"_SO_wiener_old"),DEM_extension);
   FlowInfo.print_vector_of_nodeindices_to_csv_file(FinalSources,(Output_name+"_CH_wiener"));
 
   cout << "DONE" << endl;

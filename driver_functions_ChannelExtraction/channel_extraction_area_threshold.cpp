@@ -152,13 +152,13 @@ int main (int nNumberofArgs,char *argv[])
   FlowInfo.print_vector_of_nodeindices_to_csv_file(sources, complete_fname);
 
   //write channel heads to a raster
-  string CH_name = "_CH";
+  string CH_name = "_AT_CH_old";
   LSDIndexRaster Channel_heads_raster = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(sources);
   Channel_heads_raster.write_raster((path_name+DEM_name+CH_name),DEM_flt_extension);
 
   //write stream order array to a raster
   LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
-  string SO_name = "_SO";
+  string SO_name = "_AT_SO_old";
 
   SOArray.write_raster((path_name+DEM_name+SO_name),DEM_flt_extension);
 	

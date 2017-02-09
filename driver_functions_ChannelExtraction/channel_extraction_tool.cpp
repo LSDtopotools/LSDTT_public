@@ -137,7 +137,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_pelletier_channels"] = false;
   bool_default_map["print_wiener_channels"] = false;
   
-  bool_default_map["print_stream_order_raster"] = true;
+  bool_default_map["print_stream_order_raster"] = false;
   bool_default_map["print_sources_to_raster"] = false;
   bool_default_map["print_fill_raster"] = false;
   bool_default_map["write hillshade"] = false;
@@ -378,19 +378,23 @@ int main (int nNumberofArgs,char *argv[])
     cout << "I am running a wiener filter" << endl;
     LSDRaster topo_test_wiener = SpectralRaster.fftw2D_wiener();
     int border_width = 100;
-    topo_test_wiener = topo_test_wiener.border_with_nodata(border_width);       
- 
+    topo_test_wiener = topo_test_wiener.border_with_nodata(border_width);
+    
+    cout << "I am going to fill and calculate flow info based on the filtered DEM." << endl;
+    LSDRaster filter_fill = topo_test_wiener.fill(this_float_map["min_slope_for_fill"]);       
+    LSDFlowInfo FilterFlowInfo(boundary_conditions,filter_fill);
+    
     // get some relevant rasters
-    LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
-    LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+    LSDRaster DistanceFromOutlet = FilterFlowInfo.distance_from_outlet();
+    LSDIndexRaster ContributingPixels = FilterFlowInfo.write_NContributingNodes_to_LSDIndexRaster();
 
     // get an initial sources network
     vector<int> sources;
     int pelletier_threshold = 250;
-    sources = FlowInfo.get_sources_index_threshold(ContributingPixels, pelletier_threshold); 
+    sources = FilterFlowInfo.get_sources_index_threshold(ContributingPixels, pelletier_threshold); 
 
     // now get an initial junction network. This will be refined in later steps.
-    LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
+    LSDJunctionNetwork ChanNetwork(sources, FilterFlowInfo);
 
     float surface_fitting_window_radius = this_float_map["surface_fitting_radius"];
     float surface_fitting_window_radius_LW = 25;
@@ -421,19 +425,19 @@ int main (int nNumberofArgs,char *argv[])
     Array2D<float> curvature = tan_curvature.get_RasterData();
     Array2D<float> curvature_LW = tan_curvature_LW.get_RasterData();
     cout << "\tLocating channel heads..." << endl;
-    vector<int> ChannelHeadNodes = ChanNetwork.calculate_pelletier_channel_heads_DTM(FlowInfo, topography, this_float_map["curvature_threshold"], curvature,curvature_LW);
+    vector<int> ChannelHeadNodes = ChanNetwork.calculate_pelletier_channel_heads_DTM(FilterFlowInfo, topography, this_float_map["curvature_threshold"], curvature,curvature_LW);
   
     // Now filter out false positives along channel according to a threshold 
     // catchment area
     cout << "\tFiltering out false positives..." << endl;
-    LSDJunctionNetwork ChanNetworkNew(ChannelHeadNodes, FlowInfo);
+    LSDJunctionNetwork ChanNetworkNew(ChannelHeadNodes, FilterFlowInfo);
     vector<int> ChannelHeadNodesFilt;
     int count = 0;
     for(int i = 0; i<int(ChannelHeadNodes.size()); ++i)
     {
-      int upstream_junc = ChanNetworkNew.get_Junction_of_Node(ChannelHeadNodes[i], FlowInfo);
-      int test_node = ChanNetworkNew.get_penultimate_node_from_stream_link(upstream_junc, FlowInfo);
-      float catchment_area = float(FlowInfo.retrieve_contributing_pixels_of_node(test_node)) * FlowInfo.get_DataResolution();
+      int upstream_junc = ChanNetworkNew.get_Junction_of_Node(ChannelHeadNodes[i], FilterFlowInfo);
+      int test_node = ChanNetworkNew.get_penultimate_node_from_stream_link(upstream_junc, FilterFlowInfo);
+      float catchment_area = float(FilterFlowInfo.retrieve_contributing_pixels_of_node(test_node)) * FilterFlowInfo.get_DataResolution() * FilterFlowInfo.get_DataResolution();
       if (catchment_area >= this_float_map["minimum_drainage_area"]) 
       {
         ChannelHeadNodesFilt.push_back(ChannelHeadNodes[i]);
@@ -446,8 +450,11 @@ int main (int nNumberofArgs,char *argv[])
     cout << "\t...removed " << count << " nodes out of " << ChannelHeadNodes.size() << endl;
 
     vector<int> FinalSources = ChannelHeadNodesFilt;
+    
     //create a channel network based on these channel heads
-    LSDJunctionNetwork NewChanNetwork(ChannelHeadNodesFilt, FlowInfo);
+    cout << "Making a channel network from the filtered channel heads." << endl;
+    LSDJunctionNetwork NewChanNetwork(ChannelHeadNodesFilt, FilterFlowInfo);
+    cout << "Got the network!" << endl;
 
     // Print sources
     if( this_bool_map["print_sources_to_csv"])
@@ -455,7 +462,7 @@ int main (int nNumberofArgs,char *argv[])
       string sources_csv_name = OUT_DIR+OUT_ID+"_Psources.csv";
       
       //write channel_heads to a csv file
-      FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(FinalSources, sources_csv_name);
+      FilterFlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(FinalSources, sources_csv_name);
     }
 
     if( this_bool_map["print_sources_to_raster"])
@@ -463,7 +470,7 @@ int main (int nNumberofArgs,char *argv[])
       string sources_raster_name = OUT_DIR+OUT_ID+"_Psources";
       
       //write channel heads to a raster
-      LSDIndexRaster Channel_heads_raster = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(FinalSources);
+      LSDIndexRaster Channel_heads_raster = FilterFlowInfo.write_NodeIndexVector_to_LSDIndexRaster(FinalSources);
       Channel_heads_raster.write_raster(sources_raster_name,raster_ext);
     }
 
@@ -479,7 +486,7 @@ int main (int nNumberofArgs,char *argv[])
     if( this_bool_map["print_channels_to_csv"])
     {
       string channel_csv_name = OUT_DIR+OUT_ID+"_P_CN";
-      NewChanNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+      NewChanNetwork.PrintChannelNetworkToCSV(FilterFlowInfo, channel_csv_name);
     }
 
   }
@@ -501,7 +508,9 @@ int main (int nNumberofArgs,char *argv[])
     string QQ_fname = OUT_DIR+OUT_ID+"__qq.txt";
     
     cout << "I am am getting the connected components using a weiner QQ filter." << endl;
-    LSDIndexRaster connected_components = Spec_raster.IsolateChannelsWienerQQ(this_float_map["pruning_area"], 
+    cout << "Area threshold is: " << this_float_map["pruning_area"] << " window is: " <<  this_float_map["surface_fitting_radius"] << endl;
+    
+    LSDIndexRaster connected_components = Spec_raster.IsolateChannelsWienerQQ(this_float_map["pruning_drainage_area"], 
                                                        this_float_map["surface_fitting_radius"], QQ_fname);
     
     cout << "I am filtering by connected components" << endl;
