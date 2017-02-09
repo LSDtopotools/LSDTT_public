@@ -155,6 +155,8 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_fill_raster"] = false;
   bool_default_map["print_DrainageArea_raster"] = false;
   bool_default_map["write hillshade"] = false;
+  bool_default_map["print_wiener_filtered_raster"] = false;
+  bool_default_map["print_curvature_raster"] = false;
   
   bool_default_map["print_sources_to_csv"] = true;
   bool_default_map["print_channels_to_csv"] = true;
@@ -315,8 +317,8 @@ int main (int nNumberofArgs,char *argv[])
     // now get an initial junction network. This will be refined in later steps.
     LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 
-    int surface_fitting_window_radius = 7;
-    int surface_fitting_window_radius_LW = 25;
+    float surface_fitting_window_radius = 7;
+    float surface_fitting_window_radius_LW = 25;
     vector<LSDRaster> surface_fitting, surface_fitting_LW;
     LSDRaster tan_curvature;
     LSDRaster tan_curvature_LW;
@@ -401,7 +403,7 @@ int main (int nNumberofArgs,char *argv[])
   
     if( this_bool_map["print_channels_to_csv"])
     {
-      string channel_csv_name = OUT_DIR+OUT_ID+"_W_CN";
+      string channel_csv_name = OUT_DIR+OUT_ID+"_P_CN";
       NewChanNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
     }
 
@@ -489,7 +491,47 @@ int main (int nNumberofArgs,char *argv[])
   
 
 
+  //============================================================================
+  // Write some rasters. THis is inefficient because it could duplicate
+  // Creation of rasters above, but means the different extraction
+  // switches don't need to be turned on for these rasters to be printed
+  //============================================================================
+  if (this_bool_map["print_wiener_filtered_raster"])
+  {
+  
+    cout << "I am running a filter to print to raster" << endl;
+    LSDRasterSpectral SpectralRaster(topography_raster);
+    LSDRaster topo_test_wiener = SpectralRaster.fftw2D_wiener();
 
+    string wiener_name = OUT_DIR+OUT_ID+"_Wfilt";
+    topo_test_wiener.write_raster(wiener_name,raster_ext);
+  }
+
+
+  if (this_bool_map["print_curvature_raster"])
+  {
+    vector<int> raster_selection(8, 0);
+    raster_selection[6] = 1;
+
+    float surface_fitting_window_radius = 7;
+    float surface_fitting_window_radius_LW = 25;
+    vector<LSDRaster> surface_fitting, surface_fitting_LW;
+
+    cout << "I am printing curvature rasters for you. These are not filtered!" << endl;
+
+    // Two surface fittings: one for the short wavelength and one long wavelength
+    surface_fitting = topography_raster.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
+    surface_fitting_LW = topography_raster.calculate_polyfit_surface_metrics(surface_fitting_window_radius_LW, raster_selection);
+  
+    string curv_name = OUT_DIR+OUT_ID+"_tan_curv";
+    string curv_name_LW = OUT_DIR+OUT_ID+"_tan_curv_LW";
+    
+    surface_fitting[6].write_raster(curv_name,raster_ext);
+    surface_fitting_LW[6].write_raster(curv_name_LW,raster_ext);
+  }
+  
+  
+  
   // Done, check how long it took
   clock_t end = clock();
   float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
