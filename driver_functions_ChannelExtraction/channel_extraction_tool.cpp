@@ -118,18 +118,9 @@ int main (int nNumberofArgs,char *argv[])
   map<string,string> string_default_map;
 
   // set default float parameters
-  int_default_map["threshold_contributing_pixels"] = 100;
+  int_default_map["threshold_contributing_pixels"] = 1000;
   int_default_map["connected_components_threshold"] = 100;
-  
-  
-  int_default_map["n_iterations"] = 20;
-  int_default_map["minimum_segment_length"] = 10;
-  int_default_map["n_nodes_to_visit"] = 10;
-  int_default_map["target_nodes"] = 80;
-  int_default_map["skip"] = 2;
-  int_default_map["threshold_pixels_for_chi"] = 1000;
-  int_default_map["minimum_basin_size_pixels"] = 1000;
-  
+  int_default_map["number_of_junctions_dreich"] = 1;
   
   // set default in parameter
   float_default_map["min_slope_for_fill"] = 0.0001;
@@ -137,12 +128,8 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["pruning_drainage_area"] = 1000;
   float_default_map["curvature_threshold"] = 0.1;
   float_default_map["minimum_drainage_area"] = 400;
-
-
-
   float_default_map["A_0"] = 1;
   float_default_map["m_over_n"] = 0.5;
-  float_default_map["sigma"] = 20;
   
   // set default methods
   bool_default_map["print_area_threshold_channels"] = true;
@@ -153,7 +140,6 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_stream_order_raster"] = true;
   bool_default_map["print_sources_to_raster"] = false;
   bool_default_map["print_fill_raster"] = false;
-  bool_default_map["print_DrainageArea_raster"] = false;
   bool_default_map["write hillshade"] = false;
   bool_default_map["print_wiener_filtered_raster"] = false;
   bool_default_map["print_curvature_raster"] = false;
@@ -285,7 +271,95 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["print_dreich_channels"])
   {
     cout << "I am calculating channels using the dreich algorighm (DOI: 10.1002/2013WR015167)." << endl;
+
+    // get some relevant rasters
+    LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
+
+    LSDRasterSpectral raster(topography_raster);
+    string QQ_fname = OUT_DIR+OUT_ID+"__qq.txt";
+    
+    cout << "I am am getting the connected components using a weiner QQ filter." << endl;
+    LSDIndexRaster connected_components = raster.IsolateChannelsWienerQQ(this_float_map["pruning_area"], 
+                                                       this_float_map["surface_fitting_radius"], QQ_fname);
+
+    cout << "Filtering by connected components." << endl;
+    LSDIndexRaster connected_components_filtered = connected_components.filter_by_connected_components(this_int_map["connected_components_threshold"]);
+    LSDIndexRaster CC_raster = connected_components_filtered.ConnectedComponents();
+
+    cout << "thin network to skeleton" << endl;
+    LSDIndexRaster skeleton_raster = connected_components_filtered.thin_to_skeleton();
+    cout << "finding end points" << endl;
+    LSDIndexRaster Ends = skeleton_raster.find_end_points();
+    Ends.remove_downstream_endpoints(CC_raster, raster);
+
+
+    cout << "Starting channel head processing" << endl;
+
+    //this processes the end points to only keep the upper extent of the channel network
+    cout << "getting channel heads" << endl;
+    vector<int> tmpsources = FlowInfo.ProcessEndPointsToChannelHeads(Ends);
+    cout << "processed all end points" << endl;
+      
+    // we need a temp junction network to search for single pixel channels
+    LSDJunctionNetwork tmpJunctionNetwork(tmpsources, FlowInfo);
+    LSDIndexRaster tmpStreamNetwork = tmpJunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
   
+    cout << "removing single px channels" << endl;
+    vector<int> FinalSources = FlowInfo.RemoveSinglePxChannels(tmpStreamNetwork, tmpsources);
+  
+    // using these sources as the input to run the DrEICH algorithm  - FJC
+   
+    //Generate a channel netowrk from the sources
+    LSDJunctionNetwork JunctionNetwork(FinalSources, FlowInfo);
+    LSDIndexRaster JIArray = JunctionNetwork.JunctionIndexArray_to_LSDIndexRaster();
+
+    LSDIndexRaster StreamNetwork = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
+
+    // Calculate the channel head nodes
+    int MinSegLength = 10;  
+    vector<int> ChannelHeadNodes_temp = JunctionNetwork.GetChannelHeadsChiMethodFromSources(FinalSources, 
+                    MinSegLength, this_float_map["A_0"], this_float_map["m_over_n"],
+                    FlowInfo, DistanceFromOutlet, filled_topography, this_int_map["number_of_junctions_dreich"]);
+
+    LSDIndexRaster Channel_heads_raster_temp = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(ChannelHeadNodes_temp);
+
+    //create a channel network based on these channel heads
+    LSDJunctionNetwork NewChanNetwork(ChannelHeadNodes_temp, FlowInfo);
+
+
+    // Print sources
+    if( this_bool_map["print_sources_to_csv"])
+    {
+      string sources_csv_name = OUT_DIR+OUT_ID+"_Dsources.csv";
+      
+      //write channel_heads to a csv file
+      FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(ChannelHeadNodes_temp, sources_csv_name);
+    }
+
+    if( this_bool_map["print_sources_to_raster"])
+    {
+      string sources_raster_name = OUT_DIR+OUT_ID+"_Dsources";
+      
+      //write channel heads to a raster
+      LSDIndexRaster Channel_heads_raster = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(ChannelHeadNodes_temp);
+      Channel_heads_raster.write_raster(sources_raster_name,raster_ext);
+    }
+
+    if( this_bool_map["print_stream_order_raster"])
+    {
+      string SO_raster_name = OUT_DIR+OUT_ID+"_D_SO";
+      
+      //write stream order array to a raster
+      LSDIndexRaster SOArray = NewChanNetwork.StreamOrderArray_to_LSDIndexRaster();
+      SOArray.write_raster(SO_raster_name,raster_ext);
+    }
+  
+    if( this_bool_map["print_channels_to_csv"])
+    {
+      string channel_csv_name = OUT_DIR+OUT_ID+"_D_CN";
+      NewChanNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+    }
+
   }
 
   //===============================================================
@@ -303,7 +377,7 @@ int main (int nNumberofArgs,char *argv[])
     
     cout << "I am running a wiener filter" << endl;
     LSDRaster topo_test_wiener = SpectralRaster.fftw2D_wiener();
-    int border_width = 100;	
+    int border_width = 100;
     topo_test_wiener = topo_test_wiener.border_with_nodata(border_width);       
  
     // get some relevant rasters
@@ -312,12 +386,13 @@ int main (int nNumberofArgs,char *argv[])
 
     // get an initial sources network
     vector<int> sources;
-    sources = FlowInfo.get_sources_index_threshold(ContributingPixels, this_int_map["threshold_contributing_pixels"]); 
+    int pelletier_threshold = 250;
+    sources = FlowInfo.get_sources_index_threshold(ContributingPixels, pelletier_threshold); 
 
     // now get an initial junction network. This will be refined in later steps.
     LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 
-    float surface_fitting_window_radius = 7;
+    float surface_fitting_window_radius = this_float_map["surface_fitting_radius"];
     float surface_fitting_window_radius_LW = 25;
     vector<LSDRaster> surface_fitting, surface_fitting_LW;
     LSDRaster tan_curvature;
@@ -513,7 +588,7 @@ int main (int nNumberofArgs,char *argv[])
     vector<int> raster_selection(8, 0);
     raster_selection[6] = 1;
 
-    float surface_fitting_window_radius = 7;
+    float surface_fitting_window_radius = this_float_map["surface_fitting_radius"];
     float surface_fitting_window_radius_LW = 25;
     vector<LSDRaster> surface_fitting, surface_fitting_LW;
 

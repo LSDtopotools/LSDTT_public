@@ -141,7 +141,7 @@ int main (int nNumberofArgs,char *argv[])
 	
 	// Get the valleys using the contour curvature
 	
-  int surface_fitting_window_radius = 7;
+  int surface_fitting_window_radius = 6;
   int surface_fitting_window_radius_LW = 25;
   vector<LSDRaster> surface_fitting, surface_fitting_LW;
   LSDRaster tan_curvature;
