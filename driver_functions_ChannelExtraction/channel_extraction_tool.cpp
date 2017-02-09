@@ -279,7 +279,7 @@ int main (int nNumberofArgs,char *argv[])
     string QQ_fname = OUT_DIR+OUT_ID+"__qq.txt";
     
     cout << "I am am getting the connected components using a weiner QQ filter." << endl;
-    LSDIndexRaster connected_components = raster.IsolateChannelsWienerQQ(this_float_map["pruning_area"], 
+    LSDIndexRaster connected_components = raster.IsolateChannelsWienerQQ(this_float_map["pruning_drainage_area"], 
                                                        this_float_map["surface_fitting_radius"], QQ_fname);
 
     cout << "Filtering by connected components." << endl;
@@ -508,7 +508,7 @@ int main (int nNumberofArgs,char *argv[])
     string QQ_fname = OUT_DIR+OUT_ID+"__qq.txt";
     
     cout << "I am am getting the connected components using a weiner QQ filter." << endl;
-    cout << "Area threshold is: " << this_float_map["pruning_area"] << " window is: " <<  this_float_map["surface_fitting_radius"] << endl;
+    cout << "Area threshold is: " << this_float_map["pruning_drainage_area"] << " window is: " <<  this_float_map["surface_fitting_radius"] << endl;
     
     LSDIndexRaster connected_components = Spec_raster.IsolateChannelsWienerQQ(this_float_map["pruning_drainage_area"], 
                                                        this_float_map["surface_fitting_radius"], QQ_fname);
