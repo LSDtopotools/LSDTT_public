@@ -3055,23 +3055,29 @@ float LSDFlowInfo::snap_RasterData_to_Node(int NodeIndex, LSDRaster& InputRaster
     for (int row = i_min; row < i_max; ++row){
       for (int col = j_min; col < j_max; ++col){
 
-        if (InputRasterData[row][col] != NoDataValue){
-
+        if (InputRasterData[row][col] != NoDataValue)
+        {
           //get the  raster data and distance at each point in the window
           Data_in_window.push_back(InputRasterData[row][col]);
 
           float Dist = distbetween(i,j,row,col);
           Dists_in_window.push_back(Dist);
-
         }
       }
     }
+    if (int(Data_in_window.size()) != 0)
+    {
+      matlab_float_sort(Dists_in_window, Dists_in_window_sorted, index_map);
 
-    matlab_float_sort(Dists_in_window, Dists_in_window_sorted, index_map);
-
-    // return the raster value at the smallest distance from the point
-    RasterValue_at_Node = Data_in_window[index_map[0]];
-
+      // return the raster value at the smallest distance from the point
+      RasterValue_at_Node = Data_in_window[index_map[0]];
+      //cout << "Raster value: " << RasterValue_at_Node << endl;
+    }
+    else
+    {
+      //cout << "No data in window, returning no data value" << endl;
+      RasterValue_at_Node = NoDataValue;
+    }
   }
 
   return RasterValue_at_Node;
