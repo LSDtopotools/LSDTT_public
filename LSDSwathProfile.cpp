@@ -630,7 +630,7 @@ LSDRaster LSDSwath::get_raster_from_swath_profile(LSDRaster& Raster, int Normali
   float XMinimum = Raster.get_XMinimum();
   float YMinimum = Raster.get_YMinimum();
   map<string,string> GeoReferencingStrings = Raster.get_GeoReferencingStrings();
-  
+
   // Define bounding box of swath profile
   int ColStart = int(floor((XMin)/Resolution));
   int ColEnd = ColStart + int(ceil((XMax-XMin)/Resolution));
@@ -650,7 +650,7 @@ LSDRaster LSDSwath::get_raster_from_swath_profile(LSDRaster& Raster, int Normali
   {
     for(int j = ColStart; j<ColEnd; ++j)
     {
-      if((DistanceToBaselineArray[i][j]!=NoDataValue) && (Raster.get_data_element(i,j)!=NoDataValue))
+      if((DistanceToBaselineArray[i][j]!=NoDataValue) && (Raster.get_data_element(i,j)!=NoDataValue) && BaselineValueArray[i][j]!=NoDataValue)
       {
         TransverseDistance.push_back(DistanceToBaselineArray[i][j]);
         // To normalise the profile values, subtract baseline value from raster value

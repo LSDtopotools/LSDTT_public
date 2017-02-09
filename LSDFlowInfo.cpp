@@ -3071,11 +3071,10 @@ float LSDFlowInfo::snap_RasterData_to_Node(int NodeIndex, LSDRaster& InputRaster
 
       // return the raster value at the smallest distance from the point
       RasterValue_at_Node = Data_in_window[index_map[0]];
-      //cout << "Raster value: " << RasterValue_at_Node << endl;
     }
     else
     {
-      //cout << "No data in window, returning no data value" << endl;
+      // if no raster values in the window then return nodatavalue
       RasterValue_at_Node = NoDataValue;
     }
   }
