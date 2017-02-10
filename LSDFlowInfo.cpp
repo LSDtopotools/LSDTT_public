@@ -3009,6 +3009,79 @@ int LSDFlowInfo::get_node_index_of_coordinate_point(float X_coordinate, float Y_
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// For a given node, find the nearest point in the raster that is not a NoDataValue and
+// snap it to the node.  User must specify the search radius in pixels.
+// FJC 08/02/17
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+float LSDFlowInfo::snap_RasterData_to_Node(int NodeIndex, LSDRaster& InputRaster, int search_radius)
+{
+  float RasterValue_at_Node;
+  Array2D<float> InputRasterData = InputRaster.get_RasterData();
+  int i,j;
+  retrieve_current_row_and_col(NodeIndex,i,j);
+  if (InputRasterData[i][j] != NoDataValue)
+  {
+    // The node index already has a raster value!
+    RasterValue_at_Node = InputRasterData[i][j];
+  }
+  else
+  {
+
+    vector<float> Data_in_window;
+    vector<float> Dists_in_window;
+    vector<float> Dists_in_window_sorted;
+    vector<size_t> index_map;
+    Data_in_window.reserve(4 * search_radius);
+    Dists_in_window.reserve(4 * search_radius);
+    Dists_in_window_sorted.reserve(4 * search_radius);
+    index_map.reserve(4 * search_radius);
+
+    //set up the bounding box
+    int i_min = i - search_radius;
+    int i_max = i + search_radius;
+    int j_min = j - search_radius;
+    int j_max = j + search_radius;
+
+    //out of bounds checking
+    if (i_min < 0){i_min = 0;}
+    if (j_min < 0){j_min = 0;}
+    if (i_max > (NRows - 1)){i_max = (NRows - 1);}
+    if (j_max > (NCols - 1)){j_max = (NCols - 1);}
+
+    // only iterate over the search area.
+    for (int row = i_min; row < i_max; ++row){
+      for (int col = j_min; col < j_max; ++col){
+
+        if (InputRasterData[row][col] != NoDataValue)
+        {
+          //get the  raster data and distance at each point in the window
+          Data_in_window.push_back(InputRasterData[row][col]);
+
+          float Dist = distbetween(i,j,row,col);
+          Dists_in_window.push_back(Dist);
+        }
+      }
+    }
+    if (int(Data_in_window.size()) != 0)
+    {
+      matlab_float_sort(Dists_in_window, Dists_in_window_sorted, index_map);
+
+      // return the raster value at the smallest distance from the point
+      RasterValue_at_Node = Data_in_window[index_map[0]];
+    }
+    else
+    {
+      // if no raster values in the window then return nodatavalue
+      RasterValue_at_Node = NoDataValue;
+    }
+  }
+
+  return RasterValue_at_Node;
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //

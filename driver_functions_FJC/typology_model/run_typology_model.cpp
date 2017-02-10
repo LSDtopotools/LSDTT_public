@@ -148,7 +148,8 @@ int main (int nNumberofArgs,char *argv[])
 	LSDIndexRaster ChannelSegments;
 	vector < vector<int> > SegmentInfoInts;
 	vector < vector<float> > SegmentInfoFloats;
-	ChanNetwork.SplitChannelAdaptive(FlowInfo, sources, MinReachLength, filled_DEM, Discharge, ChannelSegments, SegmentInfoInts, SegmentInfoFloats);
+	int search_radius = 10;
+	ChanNetwork.SplitChannelAdaptive(FlowInfo, sources, MinReachLength, search_radius, filled_DEM, Discharge, ChannelSegments, SegmentInfoInts, SegmentInfoFloats);
 	string segment_ext = "_segments";
 	ChannelSegments.write_raster((path_name+DEM_name+segment_ext), DEM_extension);
 

@@ -191,7 +191,7 @@ int main (int nNumberofArgs,char *argv[])
 										                    							                    
                                                  
   //write channel heads to a raster
-  string CH_name = "_CH_DrEICH";
+  string CH_name = "_CH_DrEICH_old";
   Channel_heads_raster_temp.write_raster((Output_name+CH_name),DEM_extension);
   
   //write channel heads to csv file
@@ -201,7 +201,7 @@ int main (int nNumberofArgs,char *argv[])
   LSDJunctionNetwork NewChanNetwork(ChannelHeadNodes_temp, FlowInfo);
   //int n_junctions = NewChanNetwork.get_Number_of_Junctions();
   LSDIndexRaster SOArrayNew = NewChanNetwork.StreamOrderArray_to_LSDIndexRaster();
-  string SO_name_new = "_SO_DrEICH";
+  string SO_name_new = "_SO_DrEICH_old";
 
   SOArrayNew.write_raster((Output_name+SO_name_new),DEM_extension);                                               
 }

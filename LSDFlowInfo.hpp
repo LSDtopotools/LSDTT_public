@@ -699,6 +699,16 @@ class LSDFlowInfo
   /// @date 11/02/14
   int get_node_index_of_coordinate_point(float X_coordinate, float Y_coordinate);
 
+
+  /// @brief Function to return the closest value of a raster to a specified node index
+  /// @param NodeIndex of interest
+  /// @param InputRaster raster to return value of
+  /// @param search_radius rectangular window to search for, in n_pixels
+  /// @return float value of raster closest to the node index
+  /// @author FJC
+  /// @date 08/02/17
+  float snap_RasterData_to_Node(int NodeIndex, LSDRaster& InputRaster, int search_radius);
+
   ///@brief A get sources version that uses the flow accumulation pixels.
   ///@param FlowPixels LSDIndexRaster of flow accumulation in pixels.
   ///@param threshold Integer flow accumulation threshold.

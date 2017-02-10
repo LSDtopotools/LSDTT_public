@@ -1,8 +1,8 @@
 # make with make -f channel_extraction_tool.make
 
 CC=g++
-CFLAGS=-c -Wall -O3 -pg
-OFLAGS = -Wall -O3 -pg
+CFLAGS=-c -Wall -O3
+OFLAGS = -Wall -O3
 LDFLAGS= -Wall
 SOURCES=channel_extraction_tool.cpp \
          ../LSDIndexRaster.cpp \

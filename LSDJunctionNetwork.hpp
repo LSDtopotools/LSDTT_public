@@ -1039,11 +1039,13 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @param FlowInfo LSDFlowInfo object
   /// @param Sources a vector of sources
   /// @param MinReachLength in metres
+  /// @param search_radius search radius for snapping rasters to the channel segments (pixels)
   /// @param ChannelSegments empty LSDIndexRaster, returned with channel segments labelled by unique ID
-  /// @param SegmentInfo vec<vec> with segment info
+  /// @param SegmentInfoInt vec<vec> with integer segment info
+  /// @param SegmentInfoFloat vec<vec> with floating segment info
   /// @author FJC
   /// @date 06/02/17
-  void SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int> Sources, int MinReachLength, LSDRaster& ElevationRaster, LSDRaster& DischargeRaster, LSDIndexRaster& ChannelSegments, vector< vector<int> >& SegmentInfoInts, vector< vector<float> >& SegmentInfoFloats);
+  void SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int> Sources, int MinReachLength, int search_radius, LSDRaster& ElevationRaster, LSDRaster& DischargeRaster, LSDIndexRaster& ChannelSegments, vector< vector<int> >& SegmentInfoInts, vector< vector<float> >& SegmentInfoFloats);
 
   /// @brief This function prints information about the channel segments from the
   /// SplitChannelAdaptive function to a csv file so it can be read by a GIS
