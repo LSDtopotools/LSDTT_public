@@ -112,6 +112,7 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["threshold_pixels_for_chi"] = 1000;
   int_default_map["minimum_basin_size_pixels"] = 1000;
   int_default_map["threshold_contributing_pixels"] = 1000;
+  int_default_map["threshold_knickpoint_detection"] = 10; // threshold for the detection of knickpoints in the m_chi value
 
   // set default in parameter
   float_default_map["min_slope_for_fill"] = 0.0001;
@@ -137,6 +138,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["write hillshade"] = false;
   bool_default_map["print_simple_chi_map_with_basins_to_csv"] = false;
   bool_default_map["print_segments"] = false;
+  bool_default_map["print_knickpoint_detection"] = false;
 
   // set default string method
   string_default_map["CHeads_file"] = "NULL";
@@ -385,7 +387,15 @@ int main (int nNumberofArgs,char *argv[])
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_coordinate, target_nodes,
                             n_iterations, skip, minimum_segment_length, sigma);
-      ChiTool.segment_counter(FlowInfo);
+
+      if (this_bool_map["print_knickpoint_detection"])
+      {
+        ChiTool.segment_counter_knickpoint(FlowInfo);
+      }
+      else
+      {
+        ChiTool.segment_counter(FlowInfo);
+      }
     }
     else
     {
