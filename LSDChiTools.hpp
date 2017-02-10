@@ -103,13 +103,13 @@ class LSDChiTools
     /// @author SMM
     /// @date 24/05/2016
     LSDChiTools(LSDIndexRaster& ThisRaster)  { create(ThisRaster); }
-  
+
     /// @brief Create an LSDChiTools from a LSDFlowInfo object.
     /// @param ThisFI An LSDFlowInfo object
     /// @author SMM
     /// @date 24/05/2016
     LSDChiTools(LSDFlowInfo& ThisFI)  { create(ThisFI); }
-  
+
     /// @brief Create an LSDChiTools from a LSDJunctionNetwork.
     /// @param ThisJN An LSDJunctionNetwork object
     /// @author SMM
@@ -120,7 +120,7 @@ class LSDChiTools
     /// @author SMM
     /// :date 02/06/2016
     void reset_data_maps();
-    
+
     /// @brief this gets the x and y location of a node at row and column
     /// @param row the row of the node
     /// @param col the column of the node
@@ -152,12 +152,12 @@ class LSDChiTools
     /// @param Converter a converter object (from LSDShapeTools)
     /// @author SMM
     /// @date 24/05/2015
-    void get_lat_and_long_locations(int row, int col, double& lat, 
+    void get_lat_and_long_locations(int row, int col, double& lat,
                   double& longitude, LSDCoordinateConverterLLandUTM Converter);
 
     /// @brief this function gets the UTM_zone and a boolean that is true if
     /// the map is in the northern hemisphere
-    /// @param UTM_zone the UTM zone. Replaced in function. 
+    /// @param UTM_zone the UTM zone. Replaced in function.
     /// @param is_North a boolean that is true if the DEM is in the northern hemisphere.
     ///  replaced in function
     /// @author SMM
@@ -174,26 +174,26 @@ class LSDChiTools
     /// @param area_threshold the threshold over which to print chi
     /// @author SMM
     /// @date 24/05/2016
-    void chi_map_to_csv(LSDFlowInfo& FlowInfo, string filename, 
+    void chi_map_to_csv(LSDFlowInfo& FlowInfo, string filename,
                         float A_0, float m_over_n, float area_threshold);
- 
-    /// @brief This function takes a raster prints to a csv file 
+
+    /// @brief This function takes a raster prints to a csv file
     /// @detail the lat and long coordinates in the csv are in WGS84
     /// @param FlowInfo an LSDFlowInfo object
     /// @param filename The string filename including path and extension
     /// @param chi_coord the raster of the chi coordinate (printed elsewhere)
     /// @author SMM
-    /// @date 03/06/2016 
+    /// @date 03/06/2016
     void chi_map_to_csv(LSDFlowInfo& FlowInfo, string chi_map_fname, LSDRaster& chi_coord);
 
     /// @brief This function takes a raster prints to a csv file. Includes the junction number in the file
     /// @detail the lat and long coordinates in the csv are in WGS84
     /// @param FlowInfo an LSDFlowInfo object
     /// @param filename The string filename including path and extension
-    /// @param chi_coord the raster of the chi coordinate (printed elsewhere) 
+    /// @param chi_coord the raster of the chi coordinate (printed elsewhere)
     /// @param basin_raster A raster with the basin numbers (calculated elsewhere)
     /// @author SMM
-    /// @date 31/01/2017 
+    /// @date 31/01/2017
     void chi_map_to_csv(LSDFlowInfo& FlowInfo, string chi_map_fname, LSDRaster& chi_coord, LSDIndexRaster& basin_raster);
 
     /// @brief This function is used to tag channels with a segment number
@@ -201,7 +201,7 @@ class LSDChiTools
     ///  with chi networks that have used a skip of 0 and a monte carlo itertions of 1
     ///  This data is used by other routines to look at the spatial distribution of
     ///  hillslope-channel coupling.
-    /// @detail WARNING: ONLY use if you have segmented with skip 0 and iterations 1. Otherwise 
+    /// @detail WARNING: ONLY use if you have segmented with skip 0 and iterations 1. Otherwise
     ///  you will get a new segment for every channel pixel
     /// @param FlowInfo an LSDFlowInfo object
     /// @author SMM
@@ -209,18 +209,26 @@ class LSDChiTools
     void segment_counter(LSDFlowInfo& FlowInfo);
 
     /// @brief This function calculates the fitted elevations: It uses m_chi and b_chi
-    ///  data to get the fitted elevation of the channel points. 
+    ///  data to get the fitted elevation of the channel points.
     /// @param FlowInfo an LSDFlowInfo object
     /// @author SMM
     /// @date 4/02/2017
+    void segment_counter_knickpoint(LSDFlowInfo& FlowInfo);
+
+    /// @brief Development function based on segment_counter to help
+    ///  knickpoint detection. More description will be added when it will be
+    ///  functional.
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @author BG
+    /// @date 10/02/2017
     void calculate_segmented_elevation(LSDFlowInfo& FlowInfo);
-    
-    
+
+
     /// @brief This function maps out the chi steepness and other channel
-    ///  metrics in chi space from all the sources supplied in the 
-    ///  source_nodes vector. The source and outlet nodes vector is 
+    ///  metrics in chi space from all the sources supplied in the
+    ///  source_nodes vector. The source and outlet nodes vector is
     ///  generated by LSDJunctionNetwork.get_overlapping_channels
-    /// @detail Takes vector so source and outlet nodes and performs the segment 
+    /// @detail Takes vector so source and outlet nodes and performs the segment
     ///  fitting routine on them
     /// @param FlowInfo an LSDFlowInfo object
     /// @param source_nodes a vector continaing the sorted sorce nodes (by flow distance)
@@ -236,14 +244,14 @@ class LSDChiTools
     /// @author SMM
     /// @date 23/05/2016
     void chi_map_automator(LSDFlowInfo& FlowInfo, vector<int> source_nodes,
-                           vector<int> outlet_nodes, LSDRaster& Elevation, LSDRaster& FlowDistance, 
-                           LSDRaster& DrainageArea, LSDRaster& chi_coordinate, 
+                           vector<int> outlet_nodes, LSDRaster& Elevation, LSDRaster& FlowDistance,
+                           LSDRaster& DrainageArea, LSDRaster& chi_coordinate,
                            int target_nodes, int n_iterations, int skip,
                            int minimum_segment_length, float sigma);
-  
+
     /// @brief This function maps out the chi steepness and other channel
-    ///  metrics in chi space from all the sources supplied in the 
-    ///  source_nodes vector. The source and outlet nodes vector is 
+    ///  metrics in chi space from all the sources supplied in the
+    ///  source_nodes vector. The source and outlet nodes vector is
     ///  generated by LSDJunctionNetwork.get_overlapping_channels
     /// @detail This is simpler than the above function: it simply performs
     ///   a linear regression ofve a fixed number of data points: no effort is
@@ -254,14 +262,14 @@ class LSDChiTools
     /// @param Elevation an LSDRaster containing elevation info
     /// @param DistanceFromOutlet an LSDRaster with the flow distance
     /// @param DrainageArea an LSDRaster with the drainage area
-    /// @param regression_nodes the number of nodes in each segment over which 
+    /// @param regression_nodes the number of nodes in each segment over which
     ///   to perform a linear regression. This number should be odd to it has
     ///   a clear midpoint
     /// @author SMM
     /// @date 02/06/2016
     void chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo, vector<int> source_nodes, vector<int> outlet_nodes,
-                                    LSDRaster& Elevation, LSDRaster& FlowDistance, 
-                                    LSDRaster& DrainageArea, LSDRaster& chi_coordinate, 
+                                    LSDRaster& Elevation, LSDRaster& FlowDistance,
+                                    LSDRaster& DrainageArea, LSDRaster& chi_coordinate,
                                     int regression_nodes);
 
     /// @brief This returns an LSDIndexRaster with basins numbered by outlet junction
@@ -271,7 +279,7 @@ class LSDChiTools
     /// @return The basin raster
     /// @author SMM
     /// @date 19/01/2017
-    LSDIndexRaster get_basin_raster(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork, 
+    LSDIndexRaster get_basin_raster(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork,
                                vector<int> Juntions);
 
 
@@ -303,7 +311,7 @@ class LSDChiTools
     ///   path but no extension. The "_AllBasins" will be added
     /// @author SMM
     /// @date 19/01/2017
-    void print_basins(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork, 
+    void print_basins(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork,
                                vector<int> Juntions, string base_filename);
 
     /// @brief This prints a csv file with all the data from the data maps
@@ -325,7 +333,7 @@ class LSDChiTools
     /// @author SMM
     /// @date 02/06/2016
     void print_data_maps_to_file_basic(LSDFlowInfo& FlowInfo, string filename);
-  
+
   protected:
     ///Number of rows.
     int NRows;
@@ -343,7 +351,7 @@ class LSDChiTools
 
     ///A map of strings for holding georeferencing information
     map<string,string> GeoReferencingStrings;
-    
+
     // Some maps to store the data
     /// A map of the M_chi values. The indices are node numbers from FlowInfo
     map<int,float> M_chi_data_map;
@@ -357,16 +365,16 @@ class LSDChiTools
     map<int,float>  flow_distance_data_map;
     /// A map of the M_chi values. The indices are node numbers from FlowInfo
     map<int,float>  drainage_area_data_map;
-    /// A map that holds elevations regressed from fitted sections. 
+    /// A map that holds elevations regressed from fitted sections.
     map<int,float> segmented_elevation_map;
     /// A map that holds segment numbers: used with skip = 0. Can be used to map
     /// distinct segments
     map<int,int> segment_counter_map;
-    
+
     /// A vector to hold the order of the nodes. Starts from longest channel
     /// and then works through sources in descending order of channel lenght
     vector<int> node_sequence;
-    
+
     /// vectors to hold the source nodes and the outlet nodes
     /// The source keys are indecies into the source_to_key_map.
     /// In big DEMs the node numbers become huge so for printing efficiency we
@@ -374,10 +382,10 @@ class LSDChiTools
     map<int,int> source_keys_map;
     /// This holds the baselevel key of each node. Again used for visualisation
     map<int,int> baselevel_keys_map;
-    /// This is a map where the sources are linked to the source nodes. 
-    map<int,int> key_to_source_map; 
-    /// This is a map where the baselevel keys are linked to the baselelvel nodes. 
-    map<int,int> key_to_baselevel_map; 
+    /// This is a map where the sources are linked to the source nodes.
+    map<int,int> key_to_source_map;
+    /// This is a map where the baselevel keys are linked to the baselelvel nodes.
+    map<int,int> key_to_baselevel_map;
 
   private:
     void create(LSDRaster& Raster);
