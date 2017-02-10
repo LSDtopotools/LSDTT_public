@@ -213,12 +213,13 @@ class LSDChiTools
     /// @param FlowInfo an LSDFlowInfo object
     /// @author SMM
     /// @date 4/02/2017
-    void segment_counter_knickpoint(LSDFlowInfo& FlowInfo);
+    void segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float threshold_knickpoint);
 
     /// @brief Development function based on segment_counter to help
     ///  knickpoint detection. More description will be added when it will be
     ///  functional.
     /// @param FlowInfo an LSDFlowInfo object
+    /// @param float threshold_knickpoint the knickpoints detection threshold
     /// @author BG
     /// @date 10/02/2017
     void calculate_segmented_elevation(LSDFlowInfo& FlowInfo);
