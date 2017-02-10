@@ -88,39 +88,45 @@ int main (int nNumberofArgs,char *argv[])
 	raster_selection[0] = 1;  // get the smoothed elevation
 	raster_selection[1] = 1;  // get the slope
 
-	// // load the raster and remove values below 0
-	// LSDRaster dem(path_name+DEM_name, DEM_extension);
-	// dem.remove_seas();
-	// //dem.write_raster((path_name+DEM_name+raster_output), DEM_extension);
-	//
-	// //====================================================================//
-	// // 							              	SMOOTHING                             //
-	// //====================================================================//
-	//
-	// cout << "\t Running polyfitting..." << endl;
-	//
-	// vector<LSDRaster> output_rasters;
-	// output_rasters = dem.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
-	//
-	// // smoothed elevation
-	// output_rasters[0].write_raster((path_name+DEM_name+elev_output), DEM_extension);
-	// // slope
-	// output_rasters[1].write_raster((path_name+DEM_name+slope_output), DEM_extension);
-	//
-	// // write smoothed hillshade
-	// LSDRaster HS = output_rasters[0].hillshade(45, 315, 1);
-	// HS.write_raster((path_name+DEM_name+elev_output+HS_output), DEM_extension);
-	//
-	// cout << "\t Filling the DEM..." << endl;
-	// // fill
-	// //LSDRaster filled_DEM((path_name+DEM_name+fill_ext), DEM_extension);
-	// LSDRaster filled_DEM = output_rasters[0].fill(Minimum_Slope);
-	// filled_DEM.write_raster((path_name+DEM_name+fill_ext), DEM_extension);
-	// cout << "Got the filled DEM" << endl;
-	LSDRaster filled_DEM((path_name+DEM_name+fill_ext), DEM_extension);
+	// load the raster and remove values below 0
+	LSDRaster dem(path_name+DEM_name, DEM_extension);
+	dem.remove_seas();
+	//dem.write_raster((path_name+DEM_name+raster_output), DEM_extension);
+
+	//====================================================================//
+	// 							              	SMOOTHING                             //
+	//====================================================================//
+
+	cout << "\t Running polyfitting..." << endl;
+
+	vector<LSDRaster> output_rasters;
+	output_rasters = dem.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
+
+	// smoothed elevation
+	output_rasters[0].write_raster((path_name+DEM_name+elev_output), DEM_extension);
+	// slope
+	output_rasters[1].write_raster((path_name+DEM_name+slope_output), DEM_extension);
+
+	// write smoothed hillshade
+	LSDRaster HS = output_rasters[0].hillshade(45, 315, 1);
+	HS.write_raster((path_name+DEM_name+elev_output+HS_output), DEM_extension);
+
+	cout << "\t Filling the DEM..." << endl;
+	// fill
+	//LSDRaster filled_DEM((path_name+DEM_name+fill_ext), DEM_extension);
+	LSDRaster filled_DEM = output_rasters[0].fill(Minimum_Slope);
+	filled_DEM.write_raster((path_name+DEM_name+fill_ext), DEM_extension);
+	cout << "Got the filled DEM" << endl;
+	//LSDRaster filled_DEM((path_name+DEM_name+fill_ext), DEM_extension);
 
 	// load the discharge raster
 	LSDRaster Discharge((path_name+DEM_name+discharge_ext), DEM_extension);
+
+	// buffer the discharge raster
+	float buffer_radius = 100;
+	LSDRaster BufferedQ = Discharge.BufferRasterData(buffer_radius);
+	string buffer_ext = "_Qmed_buffer";
+	BufferedQ.write_raster((path_name+DEM_name+buffer_ext), DEM_extension);
 
 	//====================================================================//
 	// 							      	CHANNEL NETWORK EXTRACTION                    //
@@ -148,8 +154,8 @@ int main (int nNumberofArgs,char *argv[])
 	LSDIndexRaster ChannelSegments;
 	vector < vector<int> > SegmentInfoInts;
 	vector < vector<float> > SegmentInfoFloats;
-	int search_radius = 10;
-	ChanNetwork.SplitChannelAdaptive(FlowInfo, sources, MinReachLength, search_radius, filled_DEM, Discharge, ChannelSegments, SegmentInfoInts, SegmentInfoFloats);
+	int search_radius = 25;
+	ChanNetwork.SplitChannelAdaptive(FlowInfo, sources, MinReachLength, search_radius, filled_DEM, BufferedQ, ChannelSegments, SegmentInfoInts, SegmentInfoFloats);
 	string segment_ext = "_segments";
 	ChannelSegments.write_raster((path_name+DEM_name+segment_ext), DEM_extension);
 

@@ -1610,6 +1610,7 @@ vector<int> LSDJunctionNetwork::modify_basin_nodes_from_mask(vector<int> basin_n
         {
           // node not masked, return the upstream node
           NewBasinNodes.push_back(UpstreamNode);
+          cout << "New node: " << UpstreamNode << endl;
           reached_upstream = 1;
         }
         else
@@ -4300,7 +4301,8 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
     SegmentLengths.push_back(SegmentLength);
 
     //find the nearest discharge value to this nodes
-    float ThisDischarge = FlowInfo.snap_RasterData_to_Node(CurrentNode,DischargeRaster,search_radius);
+    //float ThisDischarge = FlowInfo.snap_RasterData_to_Node(CurrentNode,DischargeRaster,search_radius);
+    float ThisDischarge = DischargeRaster.get_data_element(CurrentRow,CurrentCol);
     Discharges.push_back(ThisDischarge);
     // Trace downstream until you rach the end of this channel reach
     while(EndOfReach == false)
@@ -4332,7 +4334,8 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
         ThisElev = ReceiverElev;
 
         // get discharge and push back to vector
-        float ReceiverDischarge = FlowInfo.snap_RasterData_to_Node(ReceiverNode,DischargeRaster,search_radius);
+        //float ReceiverDischarge = FlowInfo.snap_RasterData_to_Node(ReceiverNode,DischargeRaster,search_radius);
+        float ReceiverDischarge = DischargeRaster.get_data_element(ReceiverRow,ReceiverCol);
         Discharges.push_back(ReceiverDischarge);
 
         // recalculate the segment length
@@ -4364,7 +4367,8 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
         ThisElev = ReceiverElev;
 
         // get discharge and push back to vector
-        float ReceiverDischarge = FlowInfo.snap_RasterData_to_Node(ReceiverNode,DischargeRaster,search_radius);
+        //float ReceiverDischarge = FlowInfo.snap_RasterData_to_Node(ReceiverNode,DischargeRaster,search_radius);
+        float ReceiverDischarge = DischargeRaster.get_data_element(ReceiverRow,ReceiverCol);
         Discharges.push_back(ReceiverDischarge);
 
         // recalculate the segment length
