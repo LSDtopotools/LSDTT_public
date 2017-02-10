@@ -112,13 +112,13 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["threshold_pixels_for_chi"] = 1000;
   int_default_map["minimum_basin_size_pixels"] = 1000;
   int_default_map["threshold_contributing_pixels"] = 1000;
-  int_default_map["threshold_knickpoint_detection"] = 10; // threshold for the detection of knickpoints in the m_chi value
 
   // set default in parameter
   float_default_map["min_slope_for_fill"] = 0.0001;
   float_default_map["A_0"] = 1;
   float_default_map["m_over_n"] = 0.5;
   float_default_map["sigma"] = 20;
+  float_default_map["threshold_knickpoint_detection"] = 10; // threshold for the detection of knickpoints in the m_chi value
 
   // set default methods
   bool_default_map["only_check_parameters"] = false;
@@ -137,8 +137,8 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_basin_raster"] = false;
   bool_default_map["write hillshade"] = false;
   bool_default_map["print_simple_chi_map_with_basins_to_csv"] = false;
-  bool_default_map["print_segments"] = false;
-  bool_default_map["print_knickpoint_detection"] = false;
+  bool_default_map["print_segments"] = true; // TEST DO NOT FORGET TO RESET IT TO FALSE
+  bool_default_map["print_knickpoint_detection"] = true; // TEST DO NOT FORGET TO RESET IT TO FALSE
 
   // set default string method
   string_default_map["CHeads_file"] = "NULL";
@@ -185,6 +185,7 @@ int main (int nNumberofArgs,char *argv[])
   int threshold_contributing_pixels = this_int_map["threshold_contributing_pixels"];
   int minimum_basin_size_pixels = this_int_map["minimum_basin_size_pixels"];
   int basic_Mchi_regression_nodes = this_int_map["basic_Mchi_regression_nodes"];
+  float threshold_knickpoint_detection = this_float_map["threshold_knickpoint_detection"];
   bool test_drainage_boundaries = this_bool_map["test_drainage_boundaries"];
 
   // load the  DEM
@@ -381,16 +382,17 @@ int main (int nNumberofArgs,char *argv[])
     // skip and iterations default to 0 and 1
     if (this_bool_map["print_segments"])
     {
+      cout << "IS THIS FUNCTION EXECUTED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!?????????????????????????????" << endl;
       n_iterations = 1;
       skip = 0;
       ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes,
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_coordinate, target_nodes,
                             n_iterations, skip, minimum_segment_length, sigma);
-
+      cout << "IS THIS FUNCTION EXECUTED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!?????????????????????????????" << endl;
       if (this_bool_map["print_knickpoint_detection"])
       {
-        ChiTool.segment_counter_knickpoint(FlowInfo);
+        ChiTool.segment_counter_knickpoint(FlowInfo, threshold_knickpoint_detection);
       }
       else
       {
