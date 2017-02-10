@@ -935,13 +935,19 @@ void LSDChiTools::segment_counter(LSDFlowInfo& FlowInfo)
 // This data is used by other routines to look at the spatial distribution of
 // hillslope-channel coupling.
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo)
+void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float threshold_knickpoint)
 {
+  cout << "IS THIS FUNCTION EXECUTED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!?????????????????????????????" << endl;
   // these are for extracting element-wise data from the channel profiles.
+  int abs_threshhold_knickpoint = abs (threshold_knickpoint);
   int this_node;
-  int segment_counter_knickpoint = 0;
+  int segment_counter_knickpoint = 0; // count the number of knickpoints
+  int segment_counter = 0; // count the number of segments
   map<int,int> this_segment_counter_knickpoint_map;
   float last_M_chi, this_M_chi;
+  int temp_counter = 0; // debugging stuff
+  float delta_m = 0;
+  float temp_delta_m = 0; // debugging stuff
 
   // find the number of nodes
   int n_nodes = (node_sequence.size());
@@ -964,15 +970,26 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo)
       // If the M_chi has changed, increment the segment counter
       if (this_M_chi != last_M_chi)
       {
-        segment_counter_knickpoint++;
+        delta_m= last_M_chi - this_M_chi;
+        delta_m = abs(delta_m);
+        segment_counter++; // increment the counter
+        if(delta_m > temp_delta_m) {temp_delta_m = delta_m;} // debugging stuff
+        if(delta_m > abs_threshhold_knickpoint)
+        {
+          cout << delta_m << " || " << threshold_knickpoint << endl;
+          segment_counter_knickpoint++; // Checking if there are some of these
+        }
         last_M_chi = this_M_chi;
       }
+
 
       // Print the segment counter to the data map
       this_segment_counter_knickpoint_map[this_node]  = segment_counter_knickpoint;
     }
+
   }
-  //segment_counter_knickpoint_map = this_segment_counter_knickpoint_map; //Not sure of what this is??
+  cout << "segment_counter_knickpoint is   " << segment_counter_knickpoint << "/" << segment_counter << " delta max is " << temp_delta_m << endl;
+  //segment_counter_knickpoint_map = this_segment_counter_knickpoint_map; // Not sure of what this is??
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
