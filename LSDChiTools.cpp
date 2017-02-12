@@ -944,6 +944,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
   int segment_counter_knickpoint = 0; // count the number of knickpoints
   int segment_counter = 0; // count the number of segments
   map<int,int> this_segment_counter_knickpoint_map;
+  map<int,int> this_segment_counter_map;
   float last_M_chi, this_M_chi;
   int temp_counter = 0; // debugging stuff
   float delta_m = 0;
@@ -978,18 +979,24 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
         {
           cout << delta_m << " || " << threshold_knickpoint << endl;
           segment_counter_knickpoint++; // Checking if there are some of these
+          this_segment_counter_knickpoint_map[this_node] = 1;
         }
         last_M_chi = this_M_chi;
+      }
+      else
+      {
+        //this_segment_counter_knickpoint_map[this_node]  = 0;
       }
 
 
       // Print the segment counter to the data map
-      this_segment_counter_knickpoint_map[this_node]  = segment_counter_knickpoint;
+
+      this_segment_counter_map[this_node]  = segment_counter;
     }
 
   }
   cout << "segment_counter_knickpoint is   " << segment_counter_knickpoint << "/" << segment_counter << " delta max is " << temp_delta_m << endl;
-  //segment_counter_knickpoint_map = this_segment_counter_knickpoint_map; // Not sure of what this is??
+  segment_counter_knickpoint_map = this_segment_counter_knickpoint_map; // Not sure of what this is??
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -1121,6 +1128,99 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Development function to Print data maps to file including knickpoints
+// BG
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::print_data_maps_to_file_full_knickpoints(LSDFlowInfo& FlowInfo, string filename)
+{
+
+  // these are for extracting element-wise data from the channel profiles.
+  int this_node, row,col;
+  double latitude,longitude;
+  LSDCoordinateConverterLLandUTM Converter;
+
+  // find the number of nodes
+  int n_nodes = (node_sequence.size());
+
+  // test to see if there is segment numbering
+  bool have_segments = false;
+  if( segment_counter_map.size() == node_sequence.size())
+  {
+    have_segments = true;
+  }
+
+  // test to see if the fitted elevations have been calculated
+  bool have_segmented_elevation = false;
+  if( segmented_elevation_map.size() == node_sequence.size())
+  {
+    have_segmented_elevation = true;
+  }
+
+
+  // open the data file
+  ofstream  chi_data_out;
+  chi_data_out.open(filename.c_str());
+  chi_data_out << "latitude,longitude,chi,elevation,flow distance,drainage area,m_chi,b_chi,source_key,basin_key";
+  if(have_segmented_elevation)
+  {
+    chi_data_out << ",segmented_elevation";
+  }
+  if (have_segments)
+  {
+    chi_data_out << ",segment_number";
+  }
+  chi_data_out << ",knickpoints"; // add the knickpoint col
+  chi_data_out << endl;
+
+  cout << "test #2###############################################################################################################################################" << endl;
+
+
+  if (n_nodes <= 0)
+  {
+    cout << "Cannot print since you have not calculated channel properties yet." << endl;
+  }
+  else
+  {
+    for (int n = 0; n< n_nodes; n++)
+    {
+      this_node = node_sequence[n];
+      FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+      get_lat_and_long_locations(row, col, latitude, longitude, Converter);
+
+      chi_data_out.precision(9);
+      chi_data_out << latitude << ","
+                   << longitude << ",";
+      chi_data_out.precision(5);
+      chi_data_out << chi_data_map[this_node] << ","
+                   << elev_data_map[this_node] << ","
+                   << flow_distance_data_map[this_node] << ","
+                   << drainage_area_data_map[this_node] << ","
+                   << M_chi_data_map[this_node] << ","
+                   << b_chi_data_map[this_node] << ","
+                   << source_keys_map[this_node] << ","
+                   << baselevel_keys_map[this_node];
+
+      if(have_segmented_elevation)
+      {
+        chi_data_out << "," << segmented_elevation_map[this_node];
+      }
+      if (have_segments)
+      {
+        chi_data_out << "," << segment_counter_map[this_node];
+      }
+
+      chi_data_out << "," << segment_counter_knickpoint_map[this_node];
+      chi_data_out << endl;
+    }
+  }
+
+  chi_data_out.close();
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Print data maps to file

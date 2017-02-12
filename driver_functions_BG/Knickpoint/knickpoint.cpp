@@ -118,7 +118,7 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["A_0"] = 1;
   float_default_map["m_over_n"] = 0.5;
   float_default_map["sigma"] = 20;
-  float_default_map["threshold_knickpoint_detection"] = 10; // threshold for the detection of knickpoints in the m_chi value
+  float_default_map["threshold_knickpoint_detection"] = 500; // threshold for the detection of knickpoints in the m_chi value
 
   // set default methods
   bool_default_map["only_check_parameters"] = false;
@@ -409,7 +409,7 @@ int main (int nNumberofArgs,char *argv[])
 
     string csv_full_fname = OUT_DIR+OUT_ID+"_MChiSegmented.csv";
     cout << "Let me print all the data for you into a csv file called " << csv_full_fname << endl;
-    ChiTool.print_data_maps_to_file_full(FlowInfo, csv_full_fname);
+    ChiTool.print_data_maps_to_file_full_knickpoints(FlowInfo, csv_full_fname);
     cout << "That is your file printed!" << endl;
 
     // These print the source and baselelvel keys if wanted

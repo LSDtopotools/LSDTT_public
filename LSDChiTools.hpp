@@ -333,6 +333,17 @@ class LSDChiTools
     ///   path and the extension .csv
     /// @author SMM
     /// @date 02/06/2016
+    void print_data_maps_to_file_full_knickpoints(LSDFlowInfo& FlowInfo, string filename);
+
+    /// @brief This prints a csv file with a subset of the data from the data maps
+    ///  the columns are:
+    ///  latitude,longitude,m_chi,b_chi,knickpoint
+    /// Development function
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param filename The name of the filename to print to (should have full
+    ///   path and the extension .csv
+    /// @author SMM/BG
+    /// @date 02/06/2016
     void print_data_maps_to_file_basic(LSDFlowInfo& FlowInfo, string filename);
 
   protected:
@@ -371,6 +382,8 @@ class LSDChiTools
     /// A map that holds segment numbers: used with skip = 0. Can be used to map
     /// distinct segments
     map<int,int> segment_counter_map;
+    /// A map that holds knickpoints information
+    map<int,int> segment_counter_knickpoint_map;
 
     /// A vector to hold the order of the nodes. Starts from longest channel
     /// and then works through sources in descending order of channel lenght
