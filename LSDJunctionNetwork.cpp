@@ -5786,7 +5786,7 @@ int LSDJunctionNetwork::get_nodeindex_of_nearest_channel_for_specified_coordinat
     NearestChannel = NoDataValue;
   }
 
-  //cout << "Nearest_channel is: " << NearestChannel << endl;
+  //cout << "LSDJunctionNetwork 5789 Nearest_channel node is: " << NearestChannel << endl;
   return NearestChannel;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -6127,14 +6127,14 @@ void LSDJunctionNetwork::snap_point_locations_to_channels(vector<float> x_locs,
 
     if(is_in_raster)
     {
-      //cout << "JN 4307 This point is in the raster!" << endl;
+      cout << "JN 4307 This point is in the raster!" << endl;
       this_chan_node = get_nodeindex_of_nearest_channel_for_specified_coordinates(x_loc, y_loc,
                        search_radius_nodes, threshold_stream_order,
                        FlowInfo);
-      //cout << "JN 431 Got channel!, channel node is: " << this_chan_node << endl;
+      cout << "JN 431 Got channel!, channel node is: " << this_chan_node << endl;
 
       this_junc = find_upstream_junction_from_channel_nodeindex(this_chan_node, FlowInfo);
-      //cout << "JN line 4314, got_this_junc!" << endl;
+      cout << "JN line 4314, got_this_junc!" << endl;
       snapped_node_indices.push_back(this_chan_node);
       snapped_junction_indices.push_back(this_junc);
       valid_cosmo_points.push_back(samp);
@@ -6679,11 +6679,22 @@ float LSDJunctionNetwork::find_distance_to_nearest_floodplain_pixel(int point_no
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDJunctionNetwork::print_junctions_to_csv(LSDFlowInfo& FlowInfo, vector<int> JunctionList, string fname)
 {
-  int n_junctions = (JunctionList.size());
+  int n_junctions = int(JunctionList.size());
   int this_node;
   int row,col;
   double x_loc,y_loc;
   double latitude,longitude;
+  
+  int NJunctions = int(JunctionVector.size());
+  if (n_junctions == 0)
+  {
+    cout << "You passed me an empty junction list. Printing all the junctions!" << endl;
+    for (int i = 0; i<NJunctions; i++)
+    {
+      JunctionList.push_back(i);
+    }
+    n_junctions  = NJunctions;
+  }
 
   // open the outfile
   ofstream sources_out;
