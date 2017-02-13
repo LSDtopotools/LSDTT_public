@@ -937,7 +937,6 @@ void LSDChiTools::segment_counter(LSDFlowInfo& FlowInfo)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float threshold_knickpoint)
 {
-  cout << "IS THIS FUNCTION EXECUTED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!?????????????????????????????" << endl;
   // these are for extracting element-wise data from the channel profiles.
   int abs_threshhold_knickpoint = abs (threshold_knickpoint);
   int this_node;
@@ -977,16 +976,12 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
         if(delta_m > temp_delta_m) {temp_delta_m = delta_m;} // debugging stuff
         if(delta_m > abs_threshhold_knickpoint)
         {
-          cout << delta_m << " || " << threshold_knickpoint << endl;
           segment_counter_knickpoint++; // Checking if there are some of these
-          this_segment_counter_knickpoint_map[this_node] = 1;
+          this_segment_counter_knickpoint_map[this_node] = delta_m;
         }
         last_M_chi = this_M_chi;
       }
-      else
-      {
-        //this_segment_counter_knickpoint_map[this_node]  = 0;
-      }
+
 
 
       // Print the segment counter to the data map
@@ -1173,9 +1168,6 @@ void LSDChiTools::print_data_maps_to_file_full_knickpoints(LSDFlowInfo& FlowInfo
   }
   chi_data_out << ",knickpoints"; // add the knickpoint col
   chi_data_out << endl;
-
-  cout << "test #2###############################################################################################################################################" << endl;
-
 
   if (n_nodes <= 0)
   {
