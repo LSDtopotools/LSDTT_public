@@ -1588,6 +1588,7 @@ vector<int> LSDJunctionNetwork::modify_basin_nodes_from_mask(vector<int> basin_n
     // check mask to see if nodes fall within the mask
     int row, col;
     int this_node = basin_nodes[i];
+    cout << "This basin node: " << this_node << endl;
     FlowInfo.retrieve_current_row_and_col(this_node, row, col);
     float mask_value = MaskRaster.get_data_element(row,col);
     if (mask_value <= 0)
@@ -1602,22 +1603,27 @@ vector<int> LSDJunctionNetwork::modify_basin_nodes_from_mask(vector<int> basin_n
       while (reached_upstream == 0)
       {
         int UpstreamNode = get_upstream_node_max_stream_order(this_node, FlowInfo);
-        // check the upstream node
-        int upstream_row, upstream_col;
-        FlowInfo.retrieve_current_row_and_col(UpstreamNode, upstream_row, upstream_col);
-        float UpstreamValue = MaskRaster.get_data_element(upstream_row, upstream_col);
-        if (UpstreamValue == NoDataValue)
+        if (UpstreamNode != NoDataValue)
         {
-          // node not masked, return the upstream node
-          NewBasinNodes.push_back(UpstreamNode);
-          cout << "New node: " << UpstreamNode << endl;
-          reached_upstream = 1;
+          // check the upstream node
+          int upstream_row, upstream_col;
+          FlowInfo.retrieve_current_row_and_col(UpstreamNode, upstream_row, upstream_col);
+          //cout << " Upstream row: " << upstream_row << " Upstream col: " << upstream_col << endl;
+          float UpstreamValue = MaskRaster.get_data_element(upstream_row, upstream_col);
+          if (UpstreamValue == NoDataValue)
+          {
+            // node not masked, return the upstream node
+            NewBasinNodes.push_back(UpstreamNode);
+            cout << "New node: " << UpstreamNode << endl;
+            reached_upstream = 1;
+          }
+          else
+          {
+            // node masked, move upstream
+            this_node = UpstreamNode;
+          }
         }
-        else
-        {
-          // node masked, move upstream
-          this_node = UpstreamNode;
-        }
+        else { break; }
       }
     }
   }

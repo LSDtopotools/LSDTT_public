@@ -121,7 +121,7 @@ void LSDIndexChannel::create(int SJN, int EJN, LSDFlowInfo& FlowInfo)
 	StartNode = SJN;
 	EndNode = EJN;
 
-  cout << "Start node: " << StartNode << " and end node: " << EndNode << endl;
+  //cout << "Start node: " << StartNode << " and end node: " << EndNode << endl;
   if (StartNode == EndNode)
   {
     cout << "This appears to be a channel made up of a single pixel!" << endl;
@@ -171,10 +171,10 @@ void LSDIndexChannel::create(int SJN, int EJN, LSDFlowInfo& FlowInfo)
 	RowSequence = RowI;
 	ColSequence = ColI;
 	NodeSequence = NdI;
-	
-	cout << "The number of nodes is: " << NodeSequence.size() << endl;
-	
-	
+
+	//cout << "The number of nodes is: " << NodeSequence.size() << endl;
+
+
 }
 
 

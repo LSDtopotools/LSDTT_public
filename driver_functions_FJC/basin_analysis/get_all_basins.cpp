@@ -127,9 +127,9 @@ int main (int nNumberofArgs,char *argv[])
 	boundary_conditions[3] = "No flux";
 
 	// load the filled DEM
-	//LSDRaster filled_topo_test((path_name+DEM_name+fill_ext), DEM_extension);
-	LSDRaster filled_topo_test = topo_test.fill(Minimum_Slope);
-	filled_topo_test.write_raster((path_name+DEM_name+fill_ext), DEM_extension);
+	LSDRaster filled_topo_test((path_name+DEM_name+fill_ext), DEM_extension);
+	//LSDRaster filled_topo_test = topo_test.fill(Minimum_Slope);
+	//filled_topo_test.write_raster((path_name+DEM_name+fill_ext), DEM_extension);
 	cout << "Got the filled DEM" << endl;
 
   //get a FlowInfo object
