@@ -5,12 +5,23 @@ CFLAGS=-c -Wall -O3
 OFLAGS = -Wall -O3
 LDFLAGS= -Wall
 SOURCES=DEM_preprocessing.cpp \
-    ../LSDIndexRaster.cpp \
-    ../LSDRaster.cpp \
-    ../LSDShapeTools.cpp \
-    ../LSDStatsTools.cpp \
-    ../LSDRasterInfo.cpp \
-    ../LSDParameterParser.cpp
+             ../LSDMostLikelyPartitionsFinder.cpp \
+             ../LSDIndexRaster.cpp \
+             ../LSDRaster.cpp \
+             ../LSDRasterInfo.cpp \
+             ../LSDFlowInfo.cpp \
+             ../LSDJunctionNetwork.cpp \
+             ../LSDIndexChannel.cpp \
+             ../LSDChannel.cpp \
+             ../LSDIndexChannelTree.cpp \
+             ../LSDStatsTools.cpp \
+             ../LSDShapeTools.cpp \
+             ../LSDChiNetwork.cpp \
+             ../LSDBasin.cpp \
+             ../LSDParticle.cpp \
+             ../LSDChiTools.cpp \
+             ../LSDParameterParser.cpp \
+             ../LSDCRNParameters.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=DEM_preprocessing.exe
 

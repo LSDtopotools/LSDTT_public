@@ -829,6 +829,45 @@ void LSDJunctionNetwork::get_lat_and_long_locations(int row, int col, double& la
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+void LSDJunctionNetwork::get_x_and_y_from_latlong(vector<float> latitude, vector<float> longitude,
+                                                   vector<float>& UTME,vector<float>& UTMN)
+{
+  // initilise the converter
+  LSDCoordinateConverterLLandUTM Converter;
+  
+  int N_samples =  int(latitude.size());
+  
+  // set up some temporary vectors
+  vector<float> this_UTMN(N_samples,0);
+  vector<float> this_UTME(N_samples,0);
+  
+  double this_Northing;
+  double this_Easting;
+
+  int UTM_zone;
+  bool is_North;
+  get_UTM_information(UTM_zone, is_North);
+
+
+  // loop throught the samples collecting UTM information
+  int eId = 22;             // defines the ellipsiod. This is WGS
+  for(int i = 0; i<N_samples; i++)
+  {
+    cout << "Converting point " << i << " to UTM." << endl;
+    Converter.LLtoUTM_ForceZone(eId, latitude[i], longitude[i], 
+                      this_Northing, this_Easting, UTM_zone);
+    this_UTMN[i] = this_Northing;
+    this_UTME[i] = this_Easting;
+    cout << "Easting: " << this_Easting << " and northing: " << this_Northing << endl;
+  }
+  
+  UTME = this_UTME;
+  UTMN = this_UTMN;
+
+
+}
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // recursive add_to_stack routine, from Braun and Willett eq. 12 and 13
@@ -6033,6 +6072,7 @@ int LSDJunctionNetwork::get_upstream_node_max_stream_order(int current_node, LSD
 
   return max_NI;
 }
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //

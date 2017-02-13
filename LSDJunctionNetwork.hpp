@@ -153,6 +153,16 @@ class LSDJunctionNetwork
   void get_lat_and_long_locations(int row, int col, double& lat,
                   double& longitude, LSDCoordinateConverterLLandUTM Converter);
 
+  /// @brief This takes latitude and longitude (in WGS 84) and converts to vectors
+  ///  of easting and northing in UTM
+  /// @param latitude a vector of latitudes in UTM84
+  /// @param longitude a vector of longitudes in WGS84
+  /// @param UTME The easting coordinate (is overwritten)
+  /// @param UTMN The northing coordinate (is overwritten)
+  /// @author SMM
+  /// @date 13/02/2017
+  void get_x_and_y_from_latlong(vector<float> latitude, vector<float> longitude,
+                                                   vector<float>& UTME,vector<float>& UTMN);
 
   ///@brief Recursive add_to_stack routine to build the junction tree, from Braun and Willett (2012)
   ///equations 12 and 13.
