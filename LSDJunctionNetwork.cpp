@@ -1588,7 +1588,7 @@ vector<int> LSDJunctionNetwork::modify_basin_nodes_from_mask(vector<int> basin_n
     // check mask to see if nodes fall within the mask
     int row, col;
     int this_node = basin_nodes[i];
-    cout << "This basin node: " << this_node << endl;
+    //cout << "This basin node: " << this_node << endl;
     FlowInfo.retrieve_current_row_and_col(this_node, row, col);
     float mask_value = MaskRaster.get_data_element(row,col);
     if (mask_value <= 0)

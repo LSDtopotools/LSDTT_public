@@ -175,15 +175,12 @@ int main (int nNumberofArgs,char *argv[])
 	string csv_out = "tay_basin_nodes_check";
 	ofstream output_file;
 	output_file.open((path_name+csv_out+"."+csv_extension).c_str());
+	
+	string old_basins = "basins_old";
+	FlowInfo.print_vector_of_nodeindices_to_csv_file(basin_nodes, path_name+DEM_name+old_basins);
 
-	for (int i = 0; i < int(new_basin_nodes.size()); i++)
-	{
-		int row, col;
-		FlowInfo.retrieve_current_row_and_col(new_basin_nodes[i], row, col);
-		output_file << new_basin_nodes[i] << "," << row << "," << col << endl;
-	}
-
-	output_file.close();
+	string new_basins = "basins_new";
+	FlowInfo.print_vector_of_nodeindices_to_csv_file(new_basin_nodes, path_name+DEM_name+new_basins);
 
 	// cout << "Number of basins = " << basin_nodes.size() << endl;
 	//
