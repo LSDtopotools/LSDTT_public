@@ -58,7 +58,7 @@ int main (int nNumberofArgs,char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	string DEM_name;
+	string DEM_name, csv_filename;
 	float surface_fitting_window_radius, Minimum_Slope;
 	int AreaThreshold, MinReachLength;
 	string temp;
@@ -66,7 +66,8 @@ int main (int nNumberofArgs,char *argv[])
 							 >> temp >> Minimum_Slope
 							 >> temp >> AreaThreshold
 							 >> temp >> surface_fitting_window_radius
-							 >> temp >> MinReachLength;
+							 >> temp >> MinReachLength
+							 >> temp >> csv_filename;
 
 	file_info_in.close();
 
@@ -75,7 +76,8 @@ int main (int nNumberofArgs,char *argv[])
 	cout << "\t Minimum slope for filling: " << Minimum_Slope << endl;
 	cout << "\t Area threshold for channel extraction: " << AreaThreshold << endl;
 	cout << "\t Surface fitting radius: " << surface_fitting_window_radius << endl;
-	cout <<" \t Minimum reach length: " << MinReachLength << endl;
+	cout <<	"\t Minimum reach length: " << MinReachLength << endl;
+	cout << "\t Baseline CSV filename: " << csv_filename << endl;
 
 	string raster_output = "_test";
 	string elev_output = "_elev";
@@ -113,7 +115,6 @@ int main (int nNumberofArgs,char *argv[])
 
 	cout << "\t Filling the DEM..." << endl;
 	// fill
-	//LSDRaster filled_DEM((path_name+DEM_name+fill_ext), DEM_extension);
 	LSDRaster filled_DEM = output_rasters[0].fill(Minimum_Slope);
 	filled_DEM.write_raster((path_name+DEM_name+fill_ext), DEM_extension);
 	cout << "Got the filled DEM" << endl;
@@ -149,6 +150,22 @@ int main (int nNumberofArgs,char *argv[])
 	// now get the junction network
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 
+	cout << "\t Reading in the baseline channel network" << endl;
+	vector<int> NIs;
+	vector<float> X_coords;
+	vector<float> Y_coords;
+	FlowInfo.get_nodeindices_from_csv((path_name+csv_filename), NIs, X_coords, Y_coords);
+
+	int search_radius_nodes = 25;
+	int threshold_SO = 1;
+	vector<int> valid_points;
+	vector<int> snapped_NIs;
+	vector<int> snapped_JNs;
+	ChanNetwork.snap_point_locations_to_channels(X_coords, Y_coords, search_radius_nodes, threshold_SO, FlowInfo, valid_points, snapped_NIs, snapped_JNs);
+
+	string snapped_file = "_snapped";
+	FlowInfo.print_vector_of_nodeindices_to_csv_file(snapped_NIs, (path_name+DEM_name+snapped_file));
+
 	cout << "\t Now splitting the channel into segments..." << endl;
 	// now test the split channel function
 	LSDIndexRaster ChannelSegments;
@@ -159,10 +176,9 @@ int main (int nNumberofArgs,char *argv[])
 	string segment_ext = "_segments";
 	ChannelSegments.write_raster((path_name+DEM_name+segment_ext), DEM_extension);
 
-	// for (int i = 0; i < SegmentInfo.size(); i++)
-	// {
-	// 	cout << "vecvec data size: " << SegmentInfo[i].size() << endl;
-	// }
+	// removing segments not downstream of baseline sources
+	cout << "\t Removing segments not downstream of baseline sources..." << endl;
+	ChanNetwork.remove_tributary_segments(FlowInfo, snapped_NIs, SegmentInfoInts, SegmentInfoFloats);
 
 	//print to csv file
 	cout << "\t Writing csv file of channel segments..." << endl;
