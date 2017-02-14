@@ -38,5 +38,9 @@ int main (int nNumberofArgs,char *argv[])
 	cout << "\t Removing seas" << endl;
 
 	DEM.remove_seas();
-	DEM.write_raster((path_name+DEM_ID), DEM_extension);	
+
+  // for discharge data remove stupid values
+  float threshold = 1000000;
+  LSDRaster NewDEM = DEM.mask_to_nodata_using_threshold(threshold, 0);
+	NewDEM.write_raster((path_name+DEM_ID), DEM_extension);
 }
