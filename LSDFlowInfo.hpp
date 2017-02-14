@@ -699,6 +699,12 @@ class LSDFlowInfo
   /// @date 11/02/14
   int get_node_index_of_coordinate_point(float X_coordinate, float Y_coordinate);
 
+  /// @brief Get vector of nodeindices from csv file
+  /// @param csv_filename input csv file
+  /// @return vector<int> with nodeindices. Ignores nodatavalues
+  /// @author FJC
+  /// @date 14/02/17
+  vector<int> get_nodeindices_from_csv(string csv_filename);
 
   /// @brief Function to return the closest value of a raster to a specified node index
   /// @param NodeIndex of interest

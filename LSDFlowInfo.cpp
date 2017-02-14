@@ -3008,6 +3008,80 @@ int LSDFlowInfo::get_node_index_of_coordinate_point(float X_coordinate, float Y_
   return CurrentNode;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Get vector of nodeindices from a csv file with X and Y coordinates
+// The csv file must have the format: ID, X, Y
+//
+// FJC 14/02/17
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+vector<int> LSDFlowInfo::get_nodeindices_from_csv(string csv_filename)
+{
+  ifstream csv_input(csv_filename.c_str());
+  vector<int> NIs;
+  //initiate the string to hold the file
+  string line_from_file;
+  vector<string> empty_string_vec;
+  vector<string> this_string_vec;
+  string temp_string;
+
+  // discard the first line
+  getline(csv_input, line_from_file);
+
+  // now loop through the rest of the lines
+  while (getline(csv_input,line_from_file))
+  {
+    // reset the string vec
+    this_string_vec = empty_string_vec;
+
+    // create a stringstream
+    stringstream ss(line_from_file);
+
+    while (ss.good())
+    {
+      string substr;
+      getline(ss,substr,',');
+
+      // remove the spaces
+      substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
+
+      // remove control characters
+      substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
+
+      // add the string to the string vec
+      this_string_vec.push_back( substr );
+    }
+
+    // for some reason our compiler can't deal with stof so converting to doubles
+    double X_coordinate = atof(this_string_vec[1].c_str());
+    double Y_coordinate = atof(this_string_vec[2].c_str());
+    cout << "X_coord: " << X_coordinate << " Y_coord: " << Y_coordinate << endl;
+
+    // Shift origin to that of dataset
+    float X_coordinate_shifted_origin = X_coordinate - XMinimum - DataResolution*0.5;
+    float Y_coordinate_shifted_origin = Y_coordinate - YMinimum - DataResolution*0.5;
+
+    // Get row and column of point
+    int col_point = int(X_coordinate_shifted_origin/DataResolution);
+    int row_point = (NRows-1) - int(round(Y_coordinate_shifted_origin/DataResolution));
+
+    // Get node of point
+    int CurrentNode;
+    if(col_point>=0 && col_point<NCols && row_point>=0 && row_point<NRows)
+    {
+      CurrentNode = retrieve_node_from_row_and_column(row_point, col_point);
+    }
+    if (CurrentNode != NoDataValue)
+    {
+      NIs.push_back(CurrentNode);
+    }
+
+  }
+  return NIs;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
