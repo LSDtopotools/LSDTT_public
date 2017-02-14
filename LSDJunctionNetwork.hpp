@@ -1057,6 +1057,14 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @date 06/02/17
   void SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int> Sources, int MinReachLength, int search_radius, LSDRaster& ElevationRaster, LSDRaster& DischargeRaster, LSDIndexRaster& ChannelSegments, vector< vector<int> >& SegmentInfoInts, vector< vector<float> >& SegmentInfoFloats);
 
+  /// @brief This function removes channel segments which are not downstream of a given
+  /// list of source nodes
+  /// @param FlowInfo LSDFlowInfo object
+  /// @param Sources vector of source nodes
+  /// @param SegmentInfoInts vec<vec> of segment info (integer)
+  /// @param SegmentInfoFloats vec<vec> of segment info (floating point)
+  void remove_tributary_segments(LSDFlowInfo& FlowInfo, vector<int> Sources, vector <vector <int> >& SegmentInfoInts, vector <vector <float> >& SegmentInfoFloats);
+
   /// @brief This function prints information about the channel segments from the
   /// SplitChannelAdaptive function to a csv file so it can be read by a GIS
   /// @param FlowInfo LSDFlowInfo object

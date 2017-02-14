@@ -834,13 +834,13 @@ void LSDJunctionNetwork::get_x_and_y_from_latlong(vector<float> latitude, vector
 {
   // initilise the converter
   LSDCoordinateConverterLLandUTM Converter;
-  
+
   int N_samples =  int(latitude.size());
-  
+
   // set up some temporary vectors
   vector<float> this_UTMN(N_samples,0);
   vector<float> this_UTME(N_samples,0);
-  
+
   double this_Northing;
   double this_Easting;
 
@@ -854,13 +854,13 @@ void LSDJunctionNetwork::get_x_and_y_from_latlong(vector<float> latitude, vector
   for(int i = 0; i<N_samples; i++)
   {
     cout << "Converting point " << i << " to UTM." << endl;
-    Converter.LLtoUTM_ForceZone(eId, latitude[i], longitude[i], 
+    Converter.LLtoUTM_ForceZone(eId, latitude[i], longitude[i],
                       this_Northing, this_Easting, UTM_zone);
     this_UTMN[i] = this_Northing;
     this_UTME[i] = this_Easting;
     cout << "Easting: " << this_Easting << " and northing: " << this_Northing << endl;
   }
-  
+
   UTME = this_UTME;
   UTMN = this_UTMN;
 
@@ -4432,7 +4432,6 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
       {
         EndOfReach = true;
         ++SegmentID;
-        ++i_source;
         EndNodes.push_back(CurrentNode);
         //get the slope of this reach and push back to vector
         float ReachSlope = (ThisElev - ReceiverElev)/SegmentLength;
@@ -4460,6 +4459,65 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
   LSDIndexRaster SegmentsRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ChannelSegments,GeoReferencingStrings);
   ChannelSegmentsRaster = SegmentsRaster;
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Remove channel segments which are not downstream given a list of source
+// nodes
+//
+// FJC 14/02/17
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDJunctionNetwork::remove_tributary_segments(LSDFlowInfo& FlowInfo, vector<int> Sources, vector < vector<int> >& SegmentInfoInts, vector < vector<float> >& SegmentInfoFloats)
+{
+  vector < vector<int> > SegmentInfoInts_temp;
+  vector < vector<float> > SegmentInfoFloats_temp;
+  //vectors for storing information about the segments
+  vector<int> SegmentIDs;       // ID of each segment
+  vector<int> StartNodes;       // start node (upstream) of each segment
+  vector<int> EndNodes;         // end node (downstream) of each segment
+  vector<float> SegmentLengths; // length of each segment
+  vector<float> Elevations;     // elevation of each start node
+  vector<float> Slopes;         // slope of each segment
+  vector<float> Discharges;     // discharge of each segment
+
+  // loop through all the start nodes and check whether they are downstream of a source node
+  for (int i = 0; i < int(SegmentInfoInts[0].size()); ++i)
+  {
+    int CurrentNode = SegmentInfoInts[1][i];
+    int downstream_test = 0;
+    //check whether this node is downstream of a source node
+    for (int j = 0; j < int(Sources.size()); ++j)
+    {
+      int this_test = FlowInfo.is_node_upstream(CurrentNode, Sources[j]);
+      if (this_test == 1) { downstream_test = 1; }
+    }
+    if (downstream_test == 1)
+    {
+      //cout << "This node is downstream of a source! Keeping..." << endl;
+      SegmentIDs.push_back(SegmentInfoInts[0][i]);
+      StartNodes.push_back(SegmentInfoInts[1][i]);
+      EndNodes.push_back(SegmentInfoInts[2][i]);
+      SegmentLengths.push_back(SegmentInfoFloats[0][i]);
+      Elevations.push_back(SegmentInfoFloats[1][i]);
+      Slopes.push_back(SegmentInfoFloats[2][i]);
+      Discharges.push_back(SegmentInfoFloats[3][i]);
+    }
+  }
+  // push back to master vectors
+  SegmentInfoInts_temp.push_back(SegmentIDs);
+  SegmentInfoInts_temp.push_back(StartNodes);
+  SegmentInfoInts_temp.push_back(EndNodes);
+  SegmentInfoFloats_temp.push_back(SegmentLengths);
+  SegmentInfoFloats_temp.push_back(Elevations);
+  SegmentInfoFloats_temp.push_back(Slopes);
+  SegmentInfoFloats_temp.push_back(Discharges);
+
+  //copy to output vecvecs
+  SegmentInfoInts = SegmentInfoInts_temp;
+  SegmentInfoFloats = SegmentInfoFloats_temp;
+
+}
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Print channel segment information to csv file
 //
@@ -6684,7 +6742,7 @@ void LSDJunctionNetwork::print_junctions_to_csv(LSDFlowInfo& FlowInfo, vector<in
   int row,col;
   double x_loc,y_loc;
   double latitude,longitude;
-  
+
   int NJunctions = int(JunctionVector.size());
   if (n_junctions == 0)
   {
