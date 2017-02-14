@@ -704,7 +704,7 @@ class LSDFlowInfo
   /// @return vector<int> with nodeindices. Ignores nodatavalues
   /// @author FJC
   /// @date 14/02/17
-  vector<int> get_nodeindices_from_csv(string csv_filename);
+void get_nodeindices_from_csv(string csv_filename, vector<int>& NIs, vector<float>& X_coords, vector<float>& Y_coords);
 
   /// @brief Function to return the closest value of a raster to a specified node index
   /// @param NodeIndex of interest

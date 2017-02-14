@@ -3017,10 +3017,12 @@ int LSDFlowInfo::get_node_index_of_coordinate_point(float X_coordinate, float Y_
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-vector<int> LSDFlowInfo::get_nodeindices_from_csv(string csv_filename)
+void LSDFlowInfo::get_nodeindices_from_csv(string csv_filename, vector<int>& NIs, vector<float>& X_coords, vector<float>& Y_coords)
 {
   ifstream csv_input(csv_filename.c_str());
-  vector<int> NIs;
+  vector<int> temp_NIs;
+  vector<float> temp_X_Coords;
+  vector<float> temp_Y_Coords;
   //initiate the string to hold the file
   string line_from_file;
   vector<string> empty_string_vec;
@@ -3057,7 +3059,6 @@ vector<int> LSDFlowInfo::get_nodeindices_from_csv(string csv_filename)
     // for some reason our compiler can't deal with stof so converting to doubles
     double X_coordinate = atof(this_string_vec[1].c_str());
     double Y_coordinate = atof(this_string_vec[2].c_str());
-    cout << "X_coord: " << X_coordinate << " Y_coord: " << Y_coordinate << endl;
 
     // Shift origin to that of dataset
     float X_coordinate_shifted_origin = X_coordinate - XMinimum - DataResolution*0.5;
@@ -3068,18 +3069,24 @@ vector<int> LSDFlowInfo::get_nodeindices_from_csv(string csv_filename)
     int row_point = (NRows-1) - int(round(Y_coordinate_shifted_origin/DataResolution));
 
     // Get node of point
-    int CurrentNode;
+    int CurrentNode = NoDataValue;
     if(col_point>=0 && col_point<NCols && row_point>=0 && row_point<NRows)
     {
       CurrentNode = retrieve_node_from_row_and_column(row_point, col_point);
     }
     if (CurrentNode != NoDataValue)
     {
-      NIs.push_back(CurrentNode);
+      temp_X_Coords.push_back(float(X_coordinate));
+      temp_Y_Coords.push_back(float(Y_coordinate));
+      temp_NIs.push_back(CurrentNode);
     }
 
   }
-  return NIs;
+
+  //copy to output vectors
+  NIs = temp_NIs;
+  X_coords = temp_X_Coords;
+  Y_coords = temp_Y_Coords;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
