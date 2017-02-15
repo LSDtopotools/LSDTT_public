@@ -93,6 +93,19 @@ class LSDSwath
   ///@date 24/01/17
   vector <vector <float> > get_connected_components_along_swath(LSDIndexRaster& ConnectedComponents, LSDRaster& RasterTemplate, int NormaliseToBaseline);
 
+  ///@details This function takes in a raster and returns the mean, min and max values of the raster
+  /// at each point along the swath
+  /// vector of vectors has the format:
+  /// 0 = distance along swath
+  /// 1 = mean value along swath
+  /// 2 = min value along swath
+  /// 3 = max value along swath
+  /// if NormaliseToBaseline == 1 then the values will be normalised to the baseline.
+  ///@return vector of vectors
+  ///@author FJC
+  ///@date 15/02/17
+  vector <vector <float> > get_RasterValues_along_swath(LSDRaster& RasterTemplate, int NormaliseToBaseline);
+  
   // write profiles to file
   void write_transverse_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix, int NormaliseToBaseline);
   void write_longitudinal_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix, int NormaliseToBaseline);
