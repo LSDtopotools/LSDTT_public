@@ -831,6 +831,93 @@ vector <vector <float> > LSDSwath::get_connected_components_along_swath(LSDIndex
 
   return MasterVector;
 }
+
+//------------------------------------------------------------------------------
+// This function takes in a  raster and returns the mean, min and max values of
+// the raster at each point along the swath
+// vector of vectors has the format:
+// 0 = distance along swath
+// 1 = mean value along swath
+// 2 = min value along swath
+// 3 = max value along swath
+// FJC
+// 15/02/17
+//
+//------------------------------------------------------------------------------
+vector <vector <float> > LSDSwath::get_RasterValues_along_swath(LSDRaster& RasterTemplate, int NormaliseToBaseline)
+{
+  // set up vectors
+  vector <vector <float> > MasterVector;
+  vector<float> DistAlongBaseline;
+  vector<float> MeanRasterValues;
+  vector<float> MinRasterValues;
+  vector<float> MaxRasterValues;
+
+  float Resolution = RasterTemplate.get_DataResolution();
+	Array2D<float> RasterValues_temp = RasterTemplate.get_RasterData();
+	map<string,string> GeoReferencingStrings = RasterTemplate.get_GeoReferencingStrings();
+
+  // Define bounding box of swath profile
+  int ColStart = int(floor((XMin)/Resolution));
+  int ColEnd = ColStart + int(ceil((XMax-XMin)/Resolution));
+  ColStart = ColStart - int(ceil(ProfileHalfWidth/Resolution));
+  ColEnd = ColEnd + int(ceil(ProfileHalfWidth/Resolution));
+  if (ColStart < 0) ColStart = 0;
+  if (ColEnd > NCols) ColEnd = NCols;
+
+  int RowEnd = NRows - 1 - int(floor(YMin/Resolution));
+  int RowStart = RowEnd - int(ceil((YMax-YMin)/Resolution));
+  RowStart = RowStart - int(ceil(ProfileHalfWidth/Resolution));
+  RowEnd = RowEnd + int(ceil(ProfileHalfWidth/Resolution));
+  if (RowEnd > NRows) RowEnd = NRows;
+  if (RowStart < 0) RowStart = 0;
+
+  // loop through each point on the baseline and find all the pixels that are closest to that point
+  for (int i = 0; i < int(BaselineValue.size()); i++)
+  {
+    float this_distance = DistanceAlongBaseline[i];
+    vector<float> raster_values;
+    int n_observations = 0;
+    for (int row=RowStart; row<RowEnd; row++)
+    {
+      for (int col=ColStart; col<ColEnd; col++)
+      {
+        // get the points that correspond to this baseline distance
+        if (DistanceAlongBaselineArray[row][col] == this_distance)
+        {
+          if (NormaliseToBaseline == 1)
+          {
+            // normalise to the baseline values
+            float baseline_value = BaselineValue[i];
+            float this_value = RasterValues_temp[row][col] - baseline_value;
+            raster_values.push_back(this_value);
+          }
+          else
+          {
+            // push back corresponding values to a raster
+            raster_values.push_back(RasterValues_temp[row][col]);
+          }
+        }
+      }
+    }
+    float mean_value = get_mean(raster_values);
+    float min_value = Get_Minimum(raster_values, NoDataValue);
+    float max_value = Get_Maximum(raster_values, NoDataValue);
+    DistAlongBaseline.push_back(this_distance);
+    MeanRasterValues.push_back(mean_value);
+    MinRasterValues.push_back(min_value);
+    MaxRasterValues.push_back(max_value);
+  }
+
+  // store in the MasterVector
+  MasterVector.push_back(DistAlongBaseline);
+  MasterVector.push_back(MeanRasterValues);
+  MasterVector.push_back(MinRasterValues);
+  MasterVector.push_back(MaxRasterValues);
+
+  return MasterVector;
+}
+
 //------------------------------------------------------------------------------
 // WRITE PROFILES TO FILE
 // These routines take a swath profile template, comprising the LSDSwath object,
