@@ -944,12 +944,17 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
   int segment_counter = 0; // count the number of segments
   map<int,int> this_segment_counter_knickpoint_map;
   map<int,int> this_segment_counter_map;
-  map<int,int> this_segment_knickpoint_sign;
+  map<int,int> this_segment_knickpoint_sign_map;
+  map<int,int> this_segment_length_map;
   float last_M_chi, this_M_chi;
   int temp_counter = 0; // debugging stuff
   float delta_m = 0; // difference between last and new m_chi
   int knickpoint_sign = 0; // sign of the knickpoint: + =1 and - = -1
   float temp_delta_m = 0; // debugging stuff
+  int this_segment_length = 0;
+  int last_node;
+  int n_nodes_segment = 0;
+
 
   // find the number of nodes
   int n_nodes = (node_sequence.size());
@@ -966,8 +971,13 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
     {
 
       // Get the M_chi from the current node
+      if(n>0)
+      {
+        last_node = this_node;
+      }
       this_node = node_sequence[n];
       this_M_chi = M_chi_data_map[this_node];
+      n_nodes_segment++;
 
       // If the M_chi has changed, increment the segment counter
       if (this_M_chi != last_M_chi)
@@ -982,22 +992,39 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
           segment_counter_knickpoint++; // Checking if there are some of these
           this_segment_counter_knickpoint_map[this_node] = delta_m;
         }
+        this_segment_length = n_nodes_segment * FlowInfo.get_DataResolution();
+
+        for(int i = n_nodes_segment ; i >= 0 ; i--)
+        {
+          this_segment_length_map[node_sequence[n - i]] =  this_segment_length;
+          cout << "test" << endl;
+        }
         last_M_chi = this_M_chi;
-        this_segment_knickpoint_sign[this_node] = knickpoint_sign;
+        this_segment_knickpoint_sign_map[this_node] = knickpoint_sign;
+        n_nodes_segment = 0;
       }
 
 
 
       // Print the segment counter to the data map
-
       this_segment_counter_map[this_node]  = segment_counter;
+
+      /*this_segment_length_map[this_node] = this_segment_length;
+      //cout << this_segment_length_map[this_node] << "||" << this_segment_length_map[last_node] << endl;
+      if (n>0 && this_segment_length > this_segment_length_map[last_node])
+      {
+        this_segment_length_map[last_node] = this_segment_length;
+        cout << this_segment_length_map[this_node] << "||" << this_segment_length_map[last_node] << endl;
+      }*/
 
     }
 
   }
   cout << "segment_counter_knickpoint is   " << segment_counter_knickpoint << "/" << segment_counter << " delta max is " << temp_delta_m << endl;
-  segment_counter_knickpoint_map = this_segment_counter_knickpoint_map; // Not sure of what this is??
-  segment_knickpoint_sign = this_segment_knickpoint_sign;
+
+  segment_counter_knickpoint_map = this_segment_counter_knickpoint_map;
+  segment_knickpoint_sign_map = this_segment_knickpoint_sign_map;
+  segment_length_map = this_segment_length_map;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -1172,7 +1199,7 @@ void LSDChiTools::print_data_maps_to_file_full_knickpoints(LSDFlowInfo& FlowInfo
   {
     chi_data_out << ",segment_number";
   }
-  chi_data_out << ",knickpoints,knickpoint_sign"; // add the knickpoint col
+  chi_data_out << ",knickpoints,knickpoint_sign,segment_length"; // add the knickpoint col
   chi_data_out << endl;
 
   if (n_nodes <= 0)
@@ -1210,7 +1237,8 @@ void LSDChiTools::print_data_maps_to_file_full_knickpoints(LSDFlowInfo& FlowInfo
       }
 
       chi_data_out << "," << segment_counter_knickpoint_map[this_node];
-      chi_data_out << "," << segment_knickpoint_sign[this_node];
+      chi_data_out << "," << segment_knickpoint_sign_map[this_node];
+      chi_data_out << "," << segment_length_map[this_node];
       chi_data_out << endl;
     }
   }
