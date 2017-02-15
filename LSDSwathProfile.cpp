@@ -875,38 +875,45 @@ vector <vector <float> > LSDSwath::get_RasterValues_along_swath(LSDRaster& Raste
   // loop through each point on the baseline and find all the pixels that are closest to that point
   for (int i = 0; i < int(BaselineValue.size()); i++)
   {
-    float this_distance = DistanceAlongBaseline[i];
+    float this_baselinevalue = BaselineValue[i];
     vector<float> raster_values;
-    int n_observations = 0;
     for (int row=RowStart; row<RowEnd; row++)
     {
       for (int col=ColStart; col<ColEnd; col++)
       {
+        //cout << "DistanceAlongBaselineArray: " << DistanceAlongBaselineArray[row][col] << endl;
         // get the points that correspond to this baseline distance
-        if (DistanceAlongBaselineArray[row][col] == this_distance)
+        if (BaselineValueArray[row][col] == this_baselinevalue)
         {
-          if (NormaliseToBaseline == 1)
+          if (RasterValues_temp[row][col] != NoDataValue)
           {
-            // normalise to the baseline values
-            float baseline_value = BaselineValue[i];
-            float this_value = RasterValues_temp[row][col] - baseline_value;
-            raster_values.push_back(this_value);
-          }
-          else
-          {
-            // push back corresponding values to a raster
-            raster_values.push_back(RasterValues_temp[row][col]);
+            if (NormaliseToBaseline == 1)
+            {
+              // normalise to the baseline values
+              float baseline_value = BaselineValue[i];
+              float this_value = RasterValues_temp[row][col] - baseline_value;
+              raster_values.push_back(this_value);
+            }
+            else
+            {
+              // push back corresponding values to a raster
+              raster_values.push_back(RasterValues_temp[row][col]);
+            }
           }
         }
       }
     }
-    float mean_value = get_mean(raster_values);
-    float min_value = Get_Minimum(raster_values, NoDataValue);
-    float max_value = Get_Maximum(raster_values, NoDataValue);
-    DistAlongBaseline.push_back(this_distance);
-    MeanRasterValues.push_back(mean_value);
-    MinRasterValues.push_back(min_value);
-    MaxRasterValues.push_back(max_value);
+    if (int(raster_values.size()) > 1)
+    {
+      float mean_value = get_mean_ignore_ndv(raster_values, NoDataValue);
+      float min_value = Get_Minimum(raster_values, NoDataValue);
+      float max_value = Get_Maximum(raster_values, NoDataValue);
+      DistAlongBaseline.push_back(DistanceAlongBaseline[i]);
+      MeanRasterValues.push_back(mean_value);
+      MinRasterValues.push_back(min_value);
+      MaxRasterValues.push_back(max_value);
+      cout << "Distance: " << DistanceAlongBaseline[i] << " n_raster values: " << raster_values.size() << endl;
+    }
   }
 
   // store in the MasterVector
