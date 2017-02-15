@@ -944,9 +944,11 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
   int segment_counter = 0; // count the number of segments
   map<int,int> this_segment_counter_knickpoint_map;
   map<int,int> this_segment_counter_map;
+  map<int,int> this_segment_knickpoint_sign;
   float last_M_chi, this_M_chi;
   int temp_counter = 0; // debugging stuff
-  float delta_m = 0;
+  float delta_m = 0; // difference between last and new m_chi
+  int knickpoint_sign = 0; // sign of the knickpoint: + =1 and - = -1
   float temp_delta_m = 0; // debugging stuff
 
   // find the number of nodes
@@ -971,6 +973,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
       if (this_M_chi != last_M_chi)
       {
         delta_m= last_M_chi - this_M_chi;
+        if(delta_m<0){knickpoint_sign = -1;} else {knickpoint_sign = 1;} // Assign the knickpoint sign value
         delta_m = abs(delta_m);
         segment_counter++; // increment the counter
         if(delta_m > temp_delta_m) {temp_delta_m = delta_m;} // debugging stuff
@@ -980,6 +983,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
           this_segment_counter_knickpoint_map[this_node] = delta_m;
         }
         last_M_chi = this_M_chi;
+        this_segment_knickpoint_sign[this_node] = knickpoint_sign;
       }
 
 
@@ -987,11 +991,13 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
       // Print the segment counter to the data map
 
       this_segment_counter_map[this_node]  = segment_counter;
+
     }
 
   }
   cout << "segment_counter_knickpoint is   " << segment_counter_knickpoint << "/" << segment_counter << " delta max is " << temp_delta_m << endl;
   segment_counter_knickpoint_map = this_segment_counter_knickpoint_map; // Not sure of what this is??
+  segment_knickpoint_sign = this_segment_knickpoint_sign;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -1166,7 +1172,7 @@ void LSDChiTools::print_data_maps_to_file_full_knickpoints(LSDFlowInfo& FlowInfo
   {
     chi_data_out << ",segment_number";
   }
-  chi_data_out << ",knickpoints"; // add the knickpoint col
+  chi_data_out << ",knickpoints,knickpoint_sign"; // add the knickpoint col
   chi_data_out << endl;
 
   if (n_nodes <= 0)
@@ -1204,6 +1210,7 @@ void LSDChiTools::print_data_maps_to_file_full_knickpoints(LSDFlowInfo& FlowInfo
       }
 
       chi_data_out << "," << segment_counter_knickpoint_map[this_node];
+      chi_data_out << "," << segment_knickpoint_sign[this_node];
       chi_data_out << endl;
     }
   }
