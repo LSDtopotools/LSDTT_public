@@ -86,7 +86,7 @@ int main (int nNumberofArgs,char *argv[])
 
 	// push back results to file for plotting
 	ofstream output_file;
-	string output_fname = "_swath_elevations.txt";
+	string output_fname = "_swath_elevations.csv";
 	output_file.open((path_name+DEM_ID+output_fname).c_str());
 	output_file << "Distance,Mean,Min,Max" << endl;
 	for (int i = 0; i < int(ElevationValues[0].size()); ++i)
