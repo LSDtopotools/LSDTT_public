@@ -180,6 +180,10 @@ void LSDSoilHydroRaster::create(LSDRaster& DEM, LSDRaster& OtherRaster, int min_
     Array2D<float> tmp = OtherRaster.get_RasterData();
     min_max_val = Get_Maximum(tmp, NoDataValue);
   }
+  else if (min_max == 2){
+    // Fill with NDVs
+    min_max_val = NoDataValue;
+  }
 
   // for each cell, if there is no paramter data but there is topo, fill in the data with the minimum/maximum value
   // otherwise, just keep the minimum value.
