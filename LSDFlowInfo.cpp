@@ -2989,7 +2989,7 @@ int LSDFlowInfo::get_node_index_of_coordinate_point(float X_coordinate, float Y_
 {
   // Shift origin to that of dataset
   float X_coordinate_shifted_origin = X_coordinate - XMinimum - DataResolution*0.5;
-  float Y_coordinate_shifted_origin = Y_coordinate - YMinimum - DataResolution*0.5;;
+  float Y_coordinate_shifted_origin = Y_coordinate - YMinimum - DataResolution*0.5;
 
   // Get row and column of point
   int col_point = int(X_coordinate_shifted_origin/DataResolution);
