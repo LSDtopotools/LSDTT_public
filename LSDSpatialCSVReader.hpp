@@ -51,8 +51,11 @@
 #include <fstream>
 #include <math.h>
 #include <iostream>
+#include <string>
+#include <vector>
 #include <map>
 #include "LSDRaster.hpp"
+#include "LSDRasterInfo.hpp"
 #include "LSDFlowInfo.hpp"
 #include "LSDJunctionNetwork.hpp"
 using namespace std;
@@ -60,10 +63,32 @@ using namespace std;
 #ifndef LSDSpatialCSVReader_HPP
 #define LSDSpatialCSVReader_HPP
 
-class LSDCosmoData
+class LSDSpatialCSVReader
 {
   public:
-  
+
+    /// @brief Create an LSDSpatialCSVReader from a raster and csv filenname
+    /// @param ThisRaster An LSDRaster object
+    /// @param csv_fname The name of the csv file including extension  and path
+    /// @author SMM
+    /// @date 16/02/2017
+    LSDSpatialCSVReader(LSDRaster& ThisRaster, string csv_fname)  { create(ThisRaster,csv_fname); }
+
+    /// @brief Create an LSDChiTools from a raster.
+    /// @param ThisRaster An LSDIndexRaster object
+    /// @param csv_fname The name of the csv file including extension  and path
+    /// @author SMM
+    /// @date 16/02/2017
+    LSDSpatialCSVReader(LSDRasterInfo& ThisRaster, string csv_fname)  { create(ThisRaster,csv_fname); }
+
+    /// @brief This loads a csv file, grabbing the latitude and longitude, 
+    ///  and putting the rest of the data into data maps
+    /// @param filename The name of the csv file including path and extension
+    /// @author SMM
+    /// @date 16/02/2017
+    void load_csv_data(string filename);
+
+
   protected:
   
     ///Number of rows.
@@ -84,12 +109,20 @@ class LSDCosmoData
     map<string,string> GeoReferencingStrings;
     
     /// A vector of the latitude (in WGS84)
-    vector<double latitude;
+    vector<double> latitude;
     
     /// A vector of the longitude (in WGS84)
     vector<double> longitude;
+    
+    /// The map to hold all the read data
+    map<string, vector<string> > data_map;
   
   private:
+  
+    void create(LSDRaster&,string);
+    
+    void create(LSDRasterInfo&,string);
+    
   
     
 

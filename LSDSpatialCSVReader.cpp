@@ -64,6 +64,7 @@
 #include "LSDFlowInfo.hpp"
 #include "LSDJunctionNetwork.hpp"
 #include "LSDBasin.hpp"
+#include "LSDSpatialCSVReader.hpp"
 #include "LSDRasterInfo.hpp"
 #include "TNT/tnt.h"
 using namespace std;
@@ -72,7 +73,7 @@ using namespace TNT;
 #ifndef LSDSpatialCSVReader_CPP
 #define LSDSpatialCSVReader_CPP
 
-void LSDSpatialCSVReader::create(LSDRasterInfo& ThisRasterInfo)
+void LSDSpatialCSVReader::create(LSDRasterInfo& ThisRasterInfo, string csv_fname)
 {
   NRows = ThisRasterInfo.get_NRows();
   NCols = ThisRasterInfo.get_NCols();
@@ -81,9 +82,12 @@ void LSDSpatialCSVReader::create(LSDRasterInfo& ThisRasterInfo)
   DataResolution = ThisRasterInfo.get_DataResolution();
   NoDataValue = ThisRasterInfo.get_NoDataValue();
   GeoReferencingStrings = ThisRasterInfo.get_GeoReferencingStrings();
+  
+  load_csv_data(csv_fname);
+  
 }
 
-void LSDSpatialCSVReader::create(LSDRaster& ThisRaster)
+void LSDSpatialCSVReader::create(LSDRaster& ThisRaster, string csv_fname)
 {
   NRows = ThisRaster.get_NRows();
   NCols = ThisRaster.get_NCols();
@@ -92,22 +96,14 @@ void LSDSpatialCSVReader::create(LSDRaster& ThisRaster)
   DataResolution = ThisRaster.get_DataResolution();
   NoDataValue = ThisRaster.get_NoDataValue();
   GeoReferencingStrings = ThisRaster.get_GeoReferencingStrings();
+  
+  load_csv_data(csv_fname);
 }
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
-// This loads a csv file of cosmogenic data
-// The first row is a header
-// the following rows contain the data. 
-// The data columns are:
-//  column[0]: sample_name (NO SPACES OR COMMAS!!)
-//  column[1]: latitude (decimal degrees)
-//  column[2]: longitude (decimal degrees)
-//  column[3]: Nuclide (Be10 or Al26)
-//  column[4]: Nuclide concentration (atoms per gram)
-//  column[6]: Nuclide uncertainty (atoms per gram)
-//  column[7]: standardisation
+// This loads a csv file 
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDSpatialCSVReader::load_csv_data(string filename)
@@ -122,7 +118,7 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
   }
   
   // Initiate the data map
-  map<string,vector<string>> temp_data_map;
+  map<string, vector<string> > temp_data_map;
 
   // initiate the string to hold the file
   string line_from_file;
@@ -141,9 +137,7 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
     
   // create a stringstream
   stringstream ss(line_from_file);
-  
-  // create a stringstream
-  stringstream ss(line_from_file);
+
   
   while( ss.good() )
   {
@@ -163,15 +157,15 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
   int n_headers = int(this_string_vec.size());
   vector<string> header_vector = this_string_vec;
   int latitude_index = -9999;
-  int longitidue_index = -9999;
+  int longitude_index = -9999;
   for (int i = 0; i<n_headers; i++)
   {
-    if (this_string_vec[i]= "latitude")
+    if (this_string_vec[i]== "latitude")
     {
       latitude_index = i;
     
     }
-    else if (this_string_vec[i] = "longitude")
+    else if (this_string_vec[i] == "longitude")
     {
       longitude_index = i;
     }
@@ -207,7 +201,7 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
     }
     
     //cout << "Yoyoma! size of the string vec: " <<  this_string_vec.size() << endl;
-    if ( int(this_string_vec.size()) < =0)
+    if ( int(this_string_vec.size()) <= 0)
     {
       cout << "Hey there, I am trying to load your csv data but you seem not to have" << endl;
       cout << "enough columns in your file. I am ignoring a line" << endl;
