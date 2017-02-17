@@ -951,9 +951,17 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
   float delta_m = 0; // difference between last and new m_chi
   int knickpoint_sign = 0; // sign of the knickpoint: + =1 and - = -1
   float temp_delta_m = 0; // debugging stuff
-  int this_segment_length = 0;
+  float this_segment_length = 0;
   int last_node;
   int n_nodes_segment = 0;
+  float x1_temp =0;
+  float y1_temp =0;
+  float x2_temp =0;
+  float y2_temp =0;
+  int row1_temp = 0;
+  int row2_temp = 0;
+  int col1_temp = 0;
+  int col2_temp = 0;
 
 
   // find the number of nodes
@@ -977,7 +985,6 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
       }
       this_node = node_sequence[n];
       this_M_chi = M_chi_data_map[this_node];
-      n_nodes_segment++;
 
       // If the M_chi has changed, increment the segment counter
       if (this_M_chi != last_M_chi)
@@ -989,10 +996,10 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
         if(delta_m > temp_delta_m) {temp_delta_m = delta_m;} // debugging stuff
         if(delta_m > abs_threshhold_knickpoint)
         {
-          segment_counter_knickpoint++; // Checking if there are some of these
-          this_segment_counter_knickpoint_map[this_node] = delta_m;
+          segment_counter_knickpoint++; // number of knickpoints
+          this_segment_counter_knickpoint_map[this_node] = delta_m; // adding the knickpoint value
         }
-        this_segment_length = n_nodes_segment * FlowInfo.get_DataResolution();
+        this_segment_length = n_nodes_segment * FlowInfo.get_DataResolution(); // getting the length of the segment using the resolution * number of nodes
 
         for(int i = n_nodes_segment ; i >= 0 ; i--)
         {
@@ -1003,7 +1010,17 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
         this_segment_knickpoint_sign_map[this_node] = knickpoint_sign;
         n_nodes_segment = 0;
       }
+      else
+      {
+        // incrementing the segment length
+        if (n<0)
+        {
+          // Now calculating the distance between the two last nodes
+          n_nodes_segment++;
+          //FlowInfo.retrieve_current_row_and_col(this_node,row,col);
 
+        }
+      }
 
 
       // Print the segment counter to the data map
