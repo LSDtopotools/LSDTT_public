@@ -961,6 +961,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
   int row2_temp = 0;
   int col1_temp = 0;
   int col2_temp = 0;
+  bool same_channel = true;
 
 
   // find the number of nodes
@@ -994,13 +995,25 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
         delta_m = abs(delta_m);
         segment_counter++; // increment the counter
         if(delta_m > temp_delta_m) {temp_delta_m = delta_m;} // debugging stuff
-        if(delta_m > abs_threshhold_knickpoint)
+        // now checking if the difference of m_chi between two segment is not due to a channel change
+          // first retrieving xy coordinates
+        FlowInfo.retrieve_current_row_and_col(last_node,row1_temp,col1_temp);
+        FlowInfo.retrieve_current_row_and_col(this_node,row2_temp,col2_temp);
+        FlowInfo.get_x_and_y_locations(row1_temp, col1_temp, x1_temp, y1_temp);
+        FlowInfo.get_x_and_y_locations(row2_temp, col2_temp, x2_temp, y2_temp);
+          // Then check if the distance betweenthe two is more than 2 nodes
+        if (sqrt((x2_temp - x1_temp)*(x2_temp - x1_temp)+(y2_temp - y1_temp)*(y2_temp - y1_temp))> (2*FlowInfo.get_DataResolution()))
+        {
+          same_channel = false;
+        }
+          // done
+        if(delta_m > abs_threshhold_knickpoint && same_channel)
         {
           segment_counter_knickpoint++; // number of knickpoints
           this_segment_counter_knickpoint_map[this_node] = delta_m; // adding the knickpoint value
         }
         //this_segment_length = n_nodes_segment * FlowInfo.get_DataResolution(); // getting the length of the segment using the resolution * number of nodes
-
+        same_channel = true; // Set back the same channel parameter to true
         for(int i = n_nodes_segment ; i > 0 ; i--)
         {
           this_segment_length_map[node_sequence[n - i]] =  this_segment_length;
