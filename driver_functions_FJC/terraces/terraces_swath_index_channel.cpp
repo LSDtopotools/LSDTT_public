@@ -134,9 +134,11 @@ int main (int nNumberofArgs,char *argv[])
 
 	// get the index channel object
 	LSDIndexChannel MainChan(StartingJN, EndingJN, FlowInfo);
+	vector<double> X_coords;
+	vector<double> Y_coords;
 
 	// get the X and Y points from the channel
-	PointData BaselinePoints = get_point_data_from_index_channel(MainChan);
+	PointData BaselinePoints = get_point_data_from_coordinates(X_coords, Y_coords);
 
   cout << "\t creating swath template" << endl;
   LSDSwath TestSwath(BaselinePoints, RasterTemplate, HalfWidth);
