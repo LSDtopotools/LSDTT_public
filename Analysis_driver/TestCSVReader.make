@@ -1,8 +1,8 @@
 # make with make -f TestCSVReader.make
 
 CC=g++
-CFLAGS=-c -Wall -O3 -g 
-OFLAGS = -Wall -O3 -g 
+CFLAGS=-c -Wall -O3
+OFLAGS = -Wall -O3
 LDFLAGS= -Wall
 SOURCES=TestCSVReader.cpp \
     ../LSDIndexRaster.cpp \
@@ -13,7 +13,7 @@ SOURCES=TestCSVReader.cpp \
     ../LSDSpatialCSVReader.cpp \
     ../LSDParameterParser.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=basin_averager.out
+EXECUTABLE=TestCSVReader.out
 
 all: $(SOURCES) $(EXECUTABLE)
 

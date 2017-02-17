@@ -88,6 +88,11 @@ class LSDSpatialCSVReader
     /// @date 16/02/2017
     void load_csv_data(string filename);
 
+    /// @brief this prints the latitude and longitude to screen
+    /// @author SMM
+    /// @date 17/02/2017
+    void print_lat_long_to_screen();
+
 
   protected:
   

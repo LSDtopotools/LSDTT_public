@@ -6,7 +6,9 @@ OFLAGS = -Wall -O3
 LDFLAGS= -Wall
 SOURCES=get_CHT_SMM.cpp \
         ../LSDMostLikelyPartitionsFinder.cpp \
+        ../LSDStatsTools.cpp \
         ../LSDRasterInfo.cpp \
+        ../LSDParameterParser.cpp \
         ../LSDIndexRaster.cpp \
         ../LSDRaster.cpp \
         ../LSDRasterSpectral.cpp \
@@ -15,13 +17,11 @@ SOURCES=get_CHT_SMM.cpp \
         ../LSDIndexChannel.cpp \
         ../LSDChannel.cpp \
         ../LSDIndexChannelTree.cpp \
-        ../LSDStatsTools.cpp \
         ../LSDChiNetwork.cpp \
         ../LSDShapeTools.cpp \
         ../LSDBasin.cpp \
         ../LSDCosmoData.cpp \
         ../LSDCRNParameters.cpp \
-        ../LSDRasterInfo.cpp \
         ../LSDParticle.cpp
 LIBS= -lm -lstdc++ -lfftw3
 OBJECTS=$(SOURCES:.cpp=.o)

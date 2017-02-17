@@ -119,5 +119,6 @@ int main (int nNumberofArgs,char *argv[])
   LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);  
         
   // Load the csv file
-  LSDSpatialCSVReader CSVFile(RI,this_string_map["basin_outlet_csv"]);
+  LSDSpatialCSVReader CSVFile(RI,(DATA_DIR+this_string_map["basin_outlet_csv"]));
+  CSVFile.print_lat_long_to_screen();
 }

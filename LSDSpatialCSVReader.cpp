@@ -116,6 +116,10 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
          << "doesn't exist; LINE 245 LSDCosmoData" << endl;
     exit(EXIT_FAILURE);
   }
+  else
+  {
+    cout << "I have opened the csv file." << endl;
+  }
   
   // Initiate the data map
   map<string, vector<string> > temp_data_map;
@@ -137,6 +141,7 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
     
   // create a stringstream
   stringstream ss(line_from_file);
+  ss.precision(9);
 
   
   while( ss.good() )
@@ -160,14 +165,17 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
   int longitude_index = -9999;
   for (int i = 0; i<n_headers; i++)
   {
+    cout << "This header is: " << this_string_vec[i] << endl;
     if (this_string_vec[i]== "latitude")
     {
       latitude_index = i;
+      cout << "The latitude index is: " << latitude_index << endl;
     
     }
     else if (this_string_vec[i] == "longitude")
     {
       longitude_index = i;
+      cout << "The longitude index is: " << longitude_index << endl;
     }
     else
     {
@@ -179,6 +187,7 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
   // now loop through the rest of the lines, getting the data. 
   while( getline(ifs, line_from_file))
   {
+    cout << "Getting line, it is: " << line_from_file << endl;
     // reset the string vec
     this_string_vec = empty_string_vec;
     
@@ -209,6 +218,7 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
     else
     {
       int n_cols = int(this_string_vec.size());
+      cout << "N cols is: " << n_cols << endl;
       for (int i = 0; i<n_cols; i++)
       {
         if (i == latitude_index)
@@ -229,6 +239,22 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
     }
   
   }
+  latitude = temp_latitude;
+  longitude = temp_longitude;
+  data_map = temp_data_map;
+}
+
+
+void LSDSpatialCSVReader::print_lat_long_to_screen()
+{
+  int N_data = int(latitude.size());
+  cout << "latitude,longitude"<< endl;
+  cout.precision(9);
+  for (int i = 0; i< N_data; i++)
+  {
+    cout << latitude[i] << "," << longitude[i] << endl;
+  }
+
 }
 
 
