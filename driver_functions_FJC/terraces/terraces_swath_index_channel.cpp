@@ -129,15 +129,30 @@ int main (int nNumberofArgs,char *argv[])
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
   cout << "\t Got the channel network" << endl;
 
+	//print for checking
+	//print out the junction network
+	string JI_name = "_JI";
+  LSDIndexRaster JIArray = ChanNetwork.JunctionIndexArray_to_LSDIndexRaster();
+  JIArray.write_raster((path_name+DEM_ID+JI_name), DEM_extension);
+
+	LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
+	string SO_name = "_SO";
+	SOArray.write_raster((path_name+DEM_ID+SO_name), DEM_extension);
+
   cout << "\t Creating points from index channel" << endl;
 	cout << "The starting junction is: " << StartingJN << " The ending junction is: " << EndingJN << endl;
 
+	int StartNode = ChanNetwork.get_Node_of_Junction(StartingJN);
+	int EndNode = ChanNetwork.get_Node_of_Junction(EndingJN);
+
 	// get the index channel object
-	LSDIndexChannel MainChan(StartingJN, EndingJN, FlowInfo);
-	vector<double> X_coords;
-	vector<double> Y_coords;
+	LSDIndexChannel MainChan(StartNode, EndNode, FlowInfo);
+	// print for checking
+	MainChan.write_channel_to_csv(path_name, DEM_ID);
 
 	// get the X and Y points from the channel
+	vector<double> X_coords;
+	vector<double> Y_coords;
 	PointData BaselinePoints = get_point_data_from_coordinates(X_coords, Y_coords);
 
   cout << "\t creating swath template" << endl;

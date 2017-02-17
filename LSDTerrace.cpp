@@ -399,7 +399,7 @@ LSDRaster LSDTerrace::get_Terraces_RasterValues(LSDRaster& InputRaster)
 		for (int col = 0; col < NCols; col++)
 		{
 			float RasterValue = InputRaster.get_data_element(row,col);
-			if (ConnectedComponents_Array[row][col] != NoDataValue & RasterValue != NoDataValue)
+			if ((ConnectedComponents_Array[row][col] != NoDataValue) && (RasterValue != NoDataValue))
 			{
 				Terrace_RasterValues[row][col] = RasterValue;
 			}
