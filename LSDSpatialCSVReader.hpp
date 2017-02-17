@@ -88,6 +88,23 @@ class LSDSpatialCSVReader
     /// @date 16/02/2017
     void load_csv_data(string filename);
 
+    /// @brief this function gets the UTM_zone and a boolean that is true if
+    /// the map is in the northern hemisphere
+    /// @param UTM_zone the UTM zone. Replaced in function.
+    /// @param is_North a boolean that is true if the DEM is in the northern hemisphere.
+    ///  replaced in function
+    /// @author SMM
+    /// @date 22/12/2014
+    void get_UTM_information(int& UTM_zone, bool& is_North);
+
+    /// @brief This takes latitude and longitude (in WGS 84) and converts to vectors
+    ///  of easting and northing in UTM
+    /// @param UTME The easting coordinate (is overwritten)
+    /// @param UTMN The northing coordinate (is overwritten)
+    /// @author SMM
+    /// @date 17/02/2017
+  void get_x_and_y_from_latlong(vector<float>& UTME,vector<float>& UTMN);
+
     /// @brief this prints the latitude and longitude to screen
     /// @author SMM
     /// @date 17/02/2017

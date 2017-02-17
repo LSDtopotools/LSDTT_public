@@ -73,6 +73,9 @@ using namespace TNT;
 #ifndef LSDSpatialCSVReader_CPP
 #define LSDSpatialCSVReader_CPP
 
+//==============================================================================
+// Basic create function
+//==============================================================================
 void LSDSpatialCSVReader::create(LSDRasterInfo& ThisRasterInfo, string csv_fname)
 {
   NRows = ThisRasterInfo.get_NRows();
@@ -87,6 +90,9 @@ void LSDSpatialCSVReader::create(LSDRasterInfo& ThisRasterInfo, string csv_fname
   
 }
 
+//==============================================================================
+// Basic create function
+//==============================================================================
 void LSDSpatialCSVReader::create(LSDRaster& ThisRaster, string csv_fname)
 {
   NRows = ThisRaster.get_NRows();
@@ -243,8 +249,111 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
   longitude = temp_longitude;
   data_map = temp_data_map;
 }
+//==============================================================================
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function gets the UTM zone
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDSpatialCSVReader::get_UTM_information(int& UTM_zone, bool& is_North)
+{
+
+  // set up strings and iterators
+  map<string,string>::iterator iter;
+
+  //check to see if there is already a map info string
+  string mi_key = "ENVI_map_info";
+  iter = GeoReferencingStrings.find(mi_key);
+  if (iter != GeoReferencingStrings.end() )
+  {
+    string info_str = GeoReferencingStrings[mi_key] ;
+
+    // now parse the string
+    vector<string> mapinfo_strings;
+    istringstream iss(info_str);
+    while( iss.good() )
+    {
+      string substr;
+      getline( iss, substr, ',' );
+      mapinfo_strings.push_back( substr );
+    }
+    UTM_zone = atoi(mapinfo_strings[7].c_str());
+    //cout << "Line 1041, UTM zone: " << UTM_zone << endl;
+    //cout << "LINE 1042 LSDRaster, N or S: " << mapinfo_strings[7] << endl;
+
+    // find if the zone is in the north
+    string n_str = "n";
+    string N_str = "N";
+    is_North = false;
+    size_t found = mapinfo_strings[8].find(N_str);
+    if (found!=std::string::npos)
+    {
+      is_North = true;
+    }
+    found = mapinfo_strings[8].find(n_str);
+    if (found!=std::string::npos)
+    {
+      is_North = true;
+    }
+    //cout << "is_North is: " << is_North << endl;
+
+  }
+  else
+  {
+    UTM_zone = NoDataValue;
+    is_North = false;
+  }
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//==============================================================================
+// This gets the x and y locations from the latitude and longitude
+//==============================================================================
+void LSDSpatialCSVReader::get_x_and_y_from_latlong(vector<float>& UTME,vector<float>& UTMN)
+{
+  // initilise the converter
+  LSDCoordinateConverterLLandUTM Converter;
+
+  int N_samples =  int(latitude.size());
+
+  // set up some temporary vectors
+  vector<float> this_UTMN(N_samples,0);
+  vector<float> this_UTME(N_samples,0);
+
+  double this_Northing;
+  double this_Easting;
+
+  int UTM_zone;
+  bool is_North;
+  get_UTM_information(UTM_zone, is_North);
+
+
+  // loop throught the samples collecting UTM information
+  int eId = 22;             // defines the ellipsiod. This is WGS
+  for(int i = 0; i<N_samples; i++)
+  {
+    cout << "Converting point " << i << " to UTM." << endl;
+    Converter.LLtoUTM_ForceZone(eId, latitude[i], longitude[i],
+                      this_Northing, this_Easting, UTM_zone);
+    this_UTMN[i] = this_Northing;
+    this_UTME[i] = this_Easting;
+    cout << "Easting: " << this_Easting << " and northing: " << this_Northing << endl;
+  }
+
+  UTME = this_UTME;
+  UTMN = this_UTMN;
+
+
+}
+
+
+
+//==============================================================================
+// This prints the lat and long to screen
+//==============================================================================
 void LSDSpatialCSVReader::print_lat_long_to_screen()
 {
   int N_data = int(latitude.size());
@@ -256,6 +365,9 @@ void LSDSpatialCSVReader::print_lat_long_to_screen()
   }
 
 }
+
+
+
 
 
 #endif
