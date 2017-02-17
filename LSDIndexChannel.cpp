@@ -462,6 +462,41 @@ void LSDIndexChannel::get_coordinates_of_channel_nodes(vector<double>& X_coordin
 	Y_coordinates = Y_coords_temp;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function writes an index channel to a CSV file
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDIndexChannel::write_channel_to_csv(string path, string filename)
+{
+
+  ofstream chan_out;
+  string chan_fname = path+filename+"_index_chan.csv";
+  chan_out.open(chan_fname.c_str());
+
+  int NNodes = NodeSequence.size();
+
+  int this_row,this_col;
+  float x,y;
+
+  int id = 0;
+
+  chan_out << "id,x,y,row,column" << endl;
+  for(int node = 0; node<NNodes; node++)
+  {
+    id++;
+    this_row = RowSequence[node];
+    this_col = ColSequence[node];
+    x = XMinimum + float(this_col)*DataResolution + 0.5*DataResolution;
+
+    // Slightly different logic for y because the DEM starts from the top corner
+    y = YMinimum + float(NRows-this_row)*DataResolution - 0.5*DataResolution;
+
+    chan_out << id << "," << x << "," << y << "," << this_row << ","
+             << this_col << endl;
+  }
+  chan_out.close();
+}
+
+
 
 
 #endif
