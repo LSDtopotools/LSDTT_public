@@ -254,6 +254,53 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
+// This returns the string vector of data from a given column name
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<string> LSDSpatialCSVReader::get_data_column(string column_name)
+{
+  vector<string> data_vector;
+  if ( data_map.find(column_name) == data_map.end() ) 
+  {
+    // not found
+    cout << "I'm afraid the column "<< column_name << " is not in this dataset" << endl;
+  } 
+  else
+  {
+    data_vector = data_map[column_name];
+  } 
+  return data_vector;
+}
+
+
+// Converts a data column to a float vector
+vector<float> LSDSpatialCSVReader::data_column_to_float(string column_name)
+{
+  vector<string> string_vec = get_data_column(column_name);
+  vector<float> float_vec;
+  int N_data_elements = string_vec.size();
+  for(int i = 0; i<N_data_elements; i++)
+  {
+    float_vec.push_back( atof(string_vec[i].c_str()));
+  }
+  return float_vec;
+}
+
+// Converts a data column to a float vector
+vector<int> LSDSpatialCSVReader::data_column_to_int(string column_name)
+{
+  vector<string> string_vec = get_data_column(column_name);
+  vector<int> int_vec;
+  int N_data_elements = string_vec.size();
+  for(int i = 0; i<N_data_elements; i++)
+  {
+    int_vec.push_back( atoi(string_vec[i].c_str()));
+  }
+  return int_vec;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
 // This function gets the UTM zone
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

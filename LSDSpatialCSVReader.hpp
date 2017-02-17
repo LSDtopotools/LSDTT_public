@@ -103,12 +103,39 @@ class LSDSpatialCSVReader
     /// @param UTMN The northing coordinate (is overwritten)
     /// @author SMM
     /// @date 17/02/2017
-  void get_x_and_y_from_latlong(vector<float>& UTME,vector<float>& UTMN);
+    void get_x_and_y_from_latlong(vector<float>& UTME,vector<float>& UTMN);
+
+    /// @brief This gets a data column from the csv file
+    /// @param column_name a string that holds the column name
+    /// @return a vector of strings: this holds the data. 
+    /// @author SMM
+    /// @date 17/02/2017
+    vector<string> get_data_column(string column_name);
+
+    /// @brief This gets a data column from the csv file, and converts it to a
+    ///   float vector
+    /// @param column_name a string that holds the column name
+    /// @return a vector of floats: this holds the data. 
+    /// @author SMM
+    /// @date 17/02/2017
+    vector<float> data_column_to_float(string column_name);
+
+    /// @brief This gets a data column from the csv file, and converts it to an
+    ///   int vector
+    /// @param column_name a string that holds the column name
+    /// @return a vector of ints: this holds the data. 
+    /// @author SMM
+    /// @date 17/02/2017
+    vector<int> data_column_to_int(string column_name);
 
     /// @brief this prints the latitude and longitude to screen
     /// @author SMM
     /// @date 17/02/2017
     void print_lat_long_to_screen();
+
+    /// Gets the various data members
+    vector<double> get_latitude()  const {return latitude;}
+    vector<double> getlongitude()  const {return longitude;}
 
 
   protected:
