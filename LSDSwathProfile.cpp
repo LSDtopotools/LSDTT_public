@@ -912,7 +912,7 @@ vector <vector <float> > LSDSwath::get_RasterValues_along_swath(LSDRaster& Raste
       MeanRasterValues.push_back(mean_value);
       MinRasterValues.push_back(min_value);
       MaxRasterValues.push_back(max_value);
-      cout << "Distance: " << DistanceAlongBaseline[i] << " n_raster values: " << raster_values.size() << endl;
+      //cout << "Distance: " << DistanceAlongBaseline[i] << " n_raster values: " << raster_values.size() << endl;
     }
   }
 
