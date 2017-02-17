@@ -961,6 +961,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
   int row2_temp = 0;
   int col1_temp = 0;
   int col2_temp = 0;
+  bool same_channel = true;
 
 
   // find the number of nodes
@@ -977,39 +978,55 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
     for (int n = 0; n< n_nodes; n++)
     {
 
-      // Get the M_chi from the current node
+      // set the nodes number and keep information about the previous one
       if(n>0)
       {
         last_node = this_node;
       }
       this_node = node_sequence[n];
+      // Get the M_chi from the current node
       this_M_chi = M_chi_data_map[this_node];
+      // increment the segment node counter
       n_nodes_segment++;
 
-      // If the M_chi has changed, increment the segment counter
+      // If the M_chi has changed, do stuffs
       if (this_M_chi != last_M_chi)
       {
-        delta_m= last_M_chi - this_M_chi;
+        segment_counter++; // increment the  segment counter
+        delta_m= last_M_chi - this_M_chi; // Magnitude of the difference
         if(delta_m<0){knickpoint_sign = -1;} else {knickpoint_sign = 1;} // Assign the knickpoint sign value
-        delta_m = abs(delta_m);
-        segment_counter++; // increment the counter
+        delta_m = abs(delta_m); // required to detect all the knickpoints
         if(delta_m > temp_delta_m) {temp_delta_m = delta_m;} // debugging stuff
-        if(delta_m > abs_threshhold_knickpoint)
+        // now checking if the difference of m_chi between two segment is not due to a channel change
+          // first retrieving xy coordinates
+        FlowInfo.retrieve_current_row_and_col(last_node,row1_temp,col1_temp);
+        FlowInfo.retrieve_current_row_and_col(this_node,row2_temp,col2_temp);
+        FlowInfo.get_x_and_y_locations(row1_temp, col1_temp, x1_temp, y1_temp);
+        FlowInfo.get_x_and_y_locations(row2_temp, col2_temp, x2_temp, y2_temp);
+          // Then check if the distance betweenthe two is more than 2 nodes (distance between two points via pytagore)
+        if (sqrt((x2_temp - x1_temp)*(x2_temp - x1_temp)+(y2_temp - y1_temp)*(y2_temp - y1_temp))> (2*FlowInfo.get_DataResolution()))
+        {
+          same_channel = false;
+        }
+          // done
+        // Check if the threshold is (over)reached
+        if(delta_m > abs_threshhold_knickpoint && same_channel)
         {
           segment_counter_knickpoint++; // number of knickpoints
           this_segment_counter_knickpoint_map[this_node] = delta_m; // adding the knickpoint value
         }
         //this_segment_length = n_nodes_segment * FlowInfo.get_DataResolution(); // getting the length of the segment using the resolution * number of nodes
-
+        same_channel = true; // Set back the same channel parameter to true
+        // now assign the segment lenght to all the point of the segment
         for(int i = n_nodes_segment ; i > 0 ; i--)
         {
           this_segment_length_map[node_sequence[n - i]] =  this_segment_length;
-
         }
+
         last_M_chi = this_M_chi;
-        this_segment_knickpoint_sign_map[this_node] = knickpoint_sign;
-        n_nodes_segment = 0;
-        this_segment_length = 0;
+        this_segment_knickpoint_sign_map[this_node] = knickpoint_sign; // assign the segment polarity
+        n_nodes_segment = 0; // reinitialyse the # of node for the next segment
+        this_segment_length = 0; // same
       }
       else
       {
@@ -1023,7 +1040,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
           FlowInfo.retrieve_current_row_and_col(this_node,row2_temp,col2_temp);
           FlowInfo.get_x_and_y_locations(row1_temp, col1_temp, x1_temp, y1_temp);
           FlowInfo.get_x_and_y_locations(row2_temp, col2_temp, x2_temp, y2_temp);
-
+          // calculate and increment the distance from the last node
           this_segment_length += sqrt((x2_temp - x1_temp)*(x2_temp - x1_temp)+(y2_temp - y1_temp)*(y2_temp - y1_temp));
           //cout << "distance : " << this_segment_length;
 
@@ -1046,7 +1063,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
 
   }
   cout << "segment_counter_knickpoint is   " << segment_counter_knickpoint << "/" << segment_counter << " delta max is " << temp_delta_m << endl;
-
+  // print everything in the public/protected variables
   segment_counter_knickpoint_map = this_segment_counter_knickpoint_map;
   segment_knickpoint_sign_map = this_segment_knickpoint_sign_map;
   segment_length_map = this_segment_length_map;
