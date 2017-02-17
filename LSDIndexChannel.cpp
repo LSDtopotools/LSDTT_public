@@ -433,6 +433,35 @@ void LSDIndexChannel::append_index_channel_to_index_raster(LSDIndexRaster& old_r
 	old_raster = Channel_loc;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// this gets the x and y coordinates of all points in the channel
+//
+// FJC 17/02/17
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDIndexChannel::get_coordinates_of_channel_nodes(vector<double>& X_coordinates, vector<double>& Y_coordinates)
+{
+	vector<double> X_coords_temp;
+	vector<double> Y_coords_temp;
+
+	int n_nodes_in_channel = int(NodeSequence.size());
+
+	for (int i = 0; i < n_nodes_in_channel; ++i)
+	{
+		// get the x and y coords for this row and col
+		int row = RowSequence[i];
+		int col = ColSequence[i];
+		double x = XMinimum + float(col)*DataResolution + 0.5 * DataResolution;
+		double y = YMinimum + float(NRows - row)*DataResolution - 0.5*DataResolution;
+		X_coords_temp.push_back(x);
+		Y_coords_temp.push_back(y);
+	}
+
+	// copy to vectors
+	X_coordinates = X_coords_temp;
+	Y_coordinates = Y_coords_temp;
+}
+
 
 
 #endif

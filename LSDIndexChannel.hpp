@@ -132,7 +132,7 @@ class LSDIndexChannel
 	int get_NoDataValue() const			{ return NoDataValue; }
   /// @return Georeferencing information
   map<string,string> get_GeoReferencingStrings() const { return GeoReferencingStrings; }
-  
+
   /// @return Get vector of row indexes.
 	vector<int> get_RowSequence() const		{ return RowSequence; }
 	/// @return Get vector of column indexes.
@@ -145,7 +145,7 @@ class LSDIndexChannel
 
   /// @brief gets the row and column of the end node
   /// @param FlowInfo the LSDFlowInfo object
-  /// @param row, the row that will be replaced 
+  /// @param row, the row that will be replaced
   /// @param col the col that will be replaced with the correct value
   /// @author SMM
   /// @date 06/05/2015
@@ -208,6 +208,13 @@ class LSDIndexChannel
     /// @date 26/09/2013
 	void append_index_channel_to_index_raster(LSDIndexRaster& old_raster);
 
+	/// @brief Function to get vectors with the X and Y coordinates of nodes in the channel
+	/// @param X_coordinates vector to write X_coords
+	/// @param Y_coordinates vector to write Y_coords
+	/// @author FJC
+  /// @date 17/02/17
+	void get_coordinates_of_channel_nodes(vector<double>& X_coordinates, vector<double>& Y_coordinates);
+
 
 	protected:
 
@@ -224,7 +231,7 @@ class LSDIndexChannel
 	float DataResolution;
 	///No data value.
 	int NoDataValue;
-	
+
 	///A map of strings for holding georeferencing information
   map<string,string> GeoReferencingStrings;
 
