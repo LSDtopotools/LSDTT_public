@@ -1014,6 +1014,14 @@ void get_nodeindices_from_csv(string csv_filename, vector<int>& NIs, vector<floa
   /// @date 29/09/2016
 	float get_flow_length_between_nodes(int UpstreamNode, int DownstreamNode);
 
+  /// @brief This function gets the Euclidian distance between two nodes
+  /// @param node_A the first node
+  /// @param node_B the second node
+  /// @return distance between the two nodes
+  /// @author FJC
+  /// @date 17/02/17
+  float get_Euclidian_distance(int node_A, int node_B);
+
   /// @brief Method to snap a point, given as raster coordinates, to a cell in
   /// a raster of hilltops.
   /// @param a Integer row index.

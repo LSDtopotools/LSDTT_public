@@ -7440,6 +7440,24 @@ float LSDFlowInfo::get_flow_length_between_nodes(int UpstreamNode, int Downstrea
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function gets the Euclidian distance between two nodes
+// FJC 17/02/17
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDFlowInfo::get_Euclidian_distance(int node_A, int node_B)
+{
+  int row_A, row_B, col_A, col_B;
+  // get the row and cols of the nodes
+  retrieve_current_row_and_col(node_A, row_A, col_A);
+  retrieve_current_row_and_col(node_B, row_B, col_B);
+
+  //find the distance between these nodes
+  float dist = sqrt((row_B-row_A)*(row_B-row_A) + (col_B-col_A)*(col_B-col_A));
+
+  return dist;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Snap a given point to the nearest hilltop pixel, within a search radius.
 // Returns the nodeindex of the snapped point.
 // SWDG 23/1/17
