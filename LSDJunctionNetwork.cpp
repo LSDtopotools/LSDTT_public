@@ -4313,6 +4313,8 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
   vector<float> Elevations;     // elevation of each start node
   vector<float> Slopes;         // slope of each segment
   vector<float> Discharges;     // discharge of each segment
+  //vector<float> TransportCapacities // transport capacity of each segment: Q*S
+  //vector<float> SedimentSupplies    // sediment supply L*Q*S
 
   //LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
   Array2D<int> ChannelSegments(NRows,NCols,int(NoDataValue));
@@ -6190,14 +6192,15 @@ void LSDJunctionNetwork::snap_point_locations_to_channels(vector<float> x_locs,
                        search_radius_nodes, threshold_stream_order,
                        FlowInfo);
       cout << "JN 431 Got channel!, channel node is: " << this_chan_node << endl;
-
-      this_junc = find_upstream_junction_from_channel_nodeindex(this_chan_node, FlowInfo);
-      cout << "JN line 4314, got_this_junc!" << endl;
-      snapped_node_indices.push_back(this_chan_node);
-      snapped_junction_indices.push_back(this_junc);
-      valid_cosmo_points.push_back(samp);
-
-      if(this_chan_node == NoDataValue)
+      if(this_chan_node != NoDataValue)
+      {
+        this_junc = find_upstream_junction_from_channel_nodeindex(this_chan_node, FlowInfo);
+        cout << "JN line 4314, got_this_junc!" << endl;
+        snapped_node_indices.push_back(this_chan_node);
+        snapped_junction_indices.push_back(this_junc);
+        valid_cosmo_points.push_back(samp);
+      }
+      else
       {
         cout << endl << "+++" << endl;
         cout << "WARNING LSDJunctionNetwork::snap_point_locations_to_channels." << endl;
