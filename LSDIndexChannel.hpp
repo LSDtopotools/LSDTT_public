@@ -145,7 +145,7 @@ class LSDIndexChannel
 
   /// @brief gets the row and column of the end node
   /// @param FlowInfo the LSDFlowInfo object
-  /// @param row, the row that will be replaced
+  /// @param row the row that will be replaced
   /// @param col the col that will be replaced with the correct value
   /// @author SMM
   /// @date 06/05/2015
@@ -215,6 +215,12 @@ class LSDIndexChannel
   /// @date 17/02/17
 	void get_coordinates_of_channel_nodes(vector<double>& X_coordinates, vector<double>& Y_coordinates);
 
+	/// @brief Function to get write index channel to csv
+	/// @param path the path name
+	/// @param filename prefix for the csv file
+	/// @author FJC
+  /// @date 17/02/17
+	void write_channel_to_csv(string path, string filename);
 
 	protected:
 
