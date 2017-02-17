@@ -939,7 +939,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
 {
   // these are for extracting element-wise data from the channel profiles.
   int abs_threshhold_knickpoint = abs (threshold_knickpoint);
-  int this_node;
+  int this_node = 0;
   int segment_counter_knickpoint = 0; // count the number of knickpoints
   int segment_counter = 0; // count the number of segments
   map<int,int> this_segment_counter_knickpoint_map;
@@ -947,12 +947,11 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
   map<int,int> this_segment_knickpoint_sign_map;
   map<int,int> this_segment_length_map;
   float last_M_chi, this_M_chi;
-  int temp_counter = 0; // debugging stuff
   float delta_m = 0; // difference between last and new m_chi
   int knickpoint_sign = 0; // sign of the knickpoint: + =1 and - = -1
   float temp_delta_m = 0; // debugging stuff
   float this_segment_length = 0;
-  int last_node;
+  int last_node = 0;
   int n_nodes_segment = 0;
   float x1_temp =0;
   float y1_temp =0;
@@ -985,6 +984,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
       }
       this_node = node_sequence[n];
       this_M_chi = M_chi_data_map[this_node];
+      n_nodes_segment++;
 
       // If the M_chi has changed, increment the segment counter
       if (this_M_chi != last_M_chi)
@@ -999,25 +999,33 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
           segment_counter_knickpoint++; // number of knickpoints
           this_segment_counter_knickpoint_map[this_node] = delta_m; // adding the knickpoint value
         }
-        this_segment_length = n_nodes_segment * FlowInfo.get_DataResolution(); // getting the length of the segment using the resolution * number of nodes
+        //this_segment_length = n_nodes_segment * FlowInfo.get_DataResolution(); // getting the length of the segment using the resolution * number of nodes
 
-        for(int i = n_nodes_segment ; i >= 0 ; i--)
+        for(int i = n_nodes_segment ; i > 0 ; i--)
         {
           this_segment_length_map[node_sequence[n - i]] =  this_segment_length;
-          cout << "test" << endl;
+
         }
         last_M_chi = this_M_chi;
         this_segment_knickpoint_sign_map[this_node] = knickpoint_sign;
         n_nodes_segment = 0;
+        this_segment_length = 0;
       }
       else
       {
         // incrementing the segment length
-        if (n<0)
+        if (n>0)
         {
           // Now calculating the distance between the two last nodes
-          n_nodes_segment++;
-          //FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+
+          // Retrieving the x/y coordinates of the last two nodes
+          FlowInfo.retrieve_current_row_and_col(last_node,row1_temp,col1_temp);
+          FlowInfo.retrieve_current_row_and_col(this_node,row2_temp,col2_temp);
+          FlowInfo.get_x_and_y_locations(row1_temp, col1_temp, x1_temp, y1_temp);
+          FlowInfo.get_x_and_y_locations(row2_temp, col2_temp, x2_temp, y2_temp);
+
+          this_segment_length += sqrt((x2_temp - x1_temp)*(x2_temp - x1_temp)+(y2_temp - y1_temp)*(y2_temp - y1_temp));
+          //cout << "distance : " << this_segment_length;
 
         }
       }
