@@ -262,6 +262,102 @@ void LSDIndexChannel::create(int SJ, int SJN, int EJ, int EJN, LSDFlowInfo& Flow
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// creates an index channel from two X and Y coordinate points. It will snap
+// the upstream point to a threshold drainage area to ensure that you are on
+// a channel.  Then moves downstream until you are within a reasonable distance
+// from the downstream point.
+// If this create function is used then the start and end junctions are not
+// assigned in the object
+//
+// FJC 17/02/17
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDIndexChannel::create(float upstream_X, float upstream_Y, float downstream_X, float downstream_Y, LSDFlowInfo& FlowInfo, float threshold_area, float threshold_distance)
+{
+	// populate the protected variables
+	NRows = FlowInfo.get_NRows();
+	NCols = FlowInfo.get_NCols();
+	XMinimum = FlowInfo.get_XMinimum();
+	YMinimum = FlowInfo.get_YMinimum();
+	DataResolution = FlowInfo.get_DataResolution();
+	NoDataValue = FlowInfo.get_NoDataValue();
+	GeoReferencingStrings =  FlowInfo.get_GeoReferencingStrings();
+
+	// don't set junctions for this create routine
+	StartJunction = -1;
+	EndJunction = -1;
+
+	// find the nearest channel node to the upstream X and Y coords
+	int ThisNode = FlowInfo.get_node_index_of_coordinate_point(upstream_X, upstream_Y);
+	int ThisRow, ThisCol, ChanNode;
+	FlowInfo.retrieve_current_row_and_col(ThisNode, ThisRow, ThisCol);
+	// get the drainage area of this node
+	int ThisCP = FlowInfo.retrieve_contributing_pixels_of_node(ThisNode);
+	float ThisArea = ThisCP*DataResolution*DataResolution;
+	if (ThisArea >= threshold_area)
+	{
+		// you are already at the channel
+		ChanNode = ThisNode;
+		NodeSequence.push_back(ThisNode);
+		RowSequence.push_back(ThisRow);
+		ColSequence.push_back(ThisCol);
+	}
+	else
+	{
+		bool reached_chan = false;
+		while(reached_chan == false)
+		{
+			int ReceiverNode, ReceiverRow, ReceiverCol;
+			FlowInfo.retrieve_receiver_information(ThisNode,ReceiverNode, ReceiverRow, ReceiverCol);
+			int ReceiverCP = FlowInfo.retrieve_contributing_pixels_of_node(ReceiverNode);
+			float ReceiverArea = ReceiverCP*DataResolution*DataResolution;
+			if (ReceiverArea >= threshold_area)
+			{
+				// reached the channel
+				reached_chan = true;
+				ChanNode = ReceiverNode;
+				NodeSequence.push_back(ReceiverNode);
+				RowSequence.push_back(ReceiverRow);
+				ColSequence.push_back(ReceiverCol);
+			}
+			else
+			{
+				// move to the next receiver
+				ThisNode = ReceiverNode;
+			}
+		}
+	}
+
+	// got the nearest channel to the starting coordinate point. Now move downstream and create the index channel.
+	StartNode = ChanNode;
+	// get the node index of the downstream coordinate point
+	int DownstreamNode = FlowInfo.get_node_index_of_coordinate_point(downstream_X, downstream_Y);
+	bool reached_downstream = false;
+	ThisNode = StartNode;
+	while (reached_downstream == false)
+	{
+		int ReceiverNode, ReceiverRow, ReceiverCol;
+		FlowInfo.retrieve_receiver_information(ThisNode,ReceiverNode, ReceiverRow, ReceiverCol);
+		NodeSequence.push_back(ReceiverNode);
+		RowSequence.push_back(ReceiverRow);
+		ColSequence.push_back(ReceiverCol);
+		// check the receiver node and see how far it is from the end node
+		float dist_to_end = FlowInfo.get_Euclidian_distance(ReceiverNode, DownstreamNode);
+		if (dist_to_end < threshold_distance)
+		{
+			cout << "You are within the threshold distance of the end point!" << endl;
+			reached_downstream = true;
+			EndNode = ReceiverNode;
+		}
+		else
+		{
+			// move downstream
+			ThisNode = ReceiverNode;
+		}
+	}
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // This gets the row and column of the end node
 // row and col are replaced
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

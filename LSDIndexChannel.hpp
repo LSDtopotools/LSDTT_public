@@ -107,6 +107,9 @@ class LSDIndexChannel
 							{ create(StartJunction,StartNode,
 							  EndJunction,EndNode, FlowInfo); }
 
+	LSDIndexChannel(float upstream_X, float upstream_Y, float downstream_X, float downstream_Y, LSDFlowInfo& FlowInfo, float threshold_area, float threshold_distance)
+							{ create(upstream_X, upstream_Y, downstream_X, downstream_Y, FlowInfo, threshold_area, threshold_distance); }
+
 	// get functions
 
 	/// @return Starting junction ID.
@@ -262,6 +265,7 @@ class LSDIndexChannel
 	void create(int StartNode, int EndNode, LSDFlowInfo& FlowInfo);
 	void create(int StartJunction, int StartNode,
 	            int EndJunction, int EndNode, LSDFlowInfo& FlowInfo);
+	void create(float upstream_X, float upstream_Y, float downstream_X, float downstream_Y, LSDFlowInfo& FlowInfo, float threshold_area, float threshold_distance);
 
 
 };
