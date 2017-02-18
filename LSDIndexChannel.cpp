@@ -269,10 +269,15 @@ void LSDIndexChannel::create(int SJ, int SJN, int EJ, int EJN, LSDFlowInfo& Flow
 // from the downstream point.
 // If this create function is used then the start and end junctions are not
 // assigned in the object
+// reads in a vector of X and Y coords where:
+// upstream_X = X_coords[0]
+// downstream_X = X_coords[1]
+// upstream_Y = Y_coords[0]
+// downstream_Y = Y_coords[1]
 //
 // FJC 17/02/17
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDIndexChannel::create(float upstream_X, float upstream_Y, float downstream_X, float downstream_Y, LSDFlowInfo& FlowInfo, float threshold_area, float threshold_distance)
+void LSDIndexChannel::create(vector<float>& X_coords, vector<float>& Y_coords, LSDFlowInfo& FlowInfo, float threshold_area, float threshold_distance)
 {
 	// populate the protected variables
 	NRows = FlowInfo.get_NRows();
@@ -282,6 +287,11 @@ void LSDIndexChannel::create(float upstream_X, float upstream_Y, float downstrea
 	DataResolution = FlowInfo.get_DataResolution();
 	NoDataValue = FlowInfo.get_NoDataValue();
 	GeoReferencingStrings =  FlowInfo.get_GeoReferencingStrings();
+
+	float upstream_X = X_coords[0];
+	float downstream_X = X_coords[1];
+	float upstream_Y = Y_coords[0];
+	float downstream_Y = Y_coords[1];
 
 	// don't set junctions for this create routine
 	StartJunction = -1;
