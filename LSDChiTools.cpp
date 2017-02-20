@@ -1040,8 +1040,8 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
           // Retrieving the x/y coordinates of the last two nodes
           FlowInfo.retrieve_current_row_and_col(last_node,row1_temp,col1_temp);
           FlowInfo.retrieve_current_row_and_col(this_node,row2_temp,col2_temp);
-          FlowInfo.get_x_and_y_locations(row1_temp, col1_temp, x1_temp, y1_temp);
-          FlowInfo.get_x_and_y_locations(row2_temp, col2_temp, x2_temp, y2_temp);
+          FlowInfo.get_x_and_y_from_current_node(last_node, x1_temp, y1_temp);
+          FlowInfo.get_x_and_y_from_current_node(this_node, x2_temp, y2_temp);
           // calculate and increment the distance from the last node
           this_segment_length += sqrt((x2_temp - x1_temp)*(x2_temp - x1_temp)+(y2_temp - y1_temp)*(y2_temp - y1_temp));
           //cout << "distance : " << this_segment_length;
