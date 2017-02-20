@@ -4299,6 +4299,7 @@ LSDIndexRaster LSDJunctionNetwork::SplitChannel(LSDFlowInfo& FlowInfo, vector<in
 // 1 - flow length of each segment
 // 2 - elevation of the start nodes
 // 3 - slope of the segment
+// 4 - slope of the segment based on flow length
 // 4 - discharge of the segment
 // 5 - transport capacity of the segment
 //
@@ -4314,6 +4315,7 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
   vector<float> FlowLengths;    // flow length of each segment
   vector<float> Elevations;     // elevation of each start node
   vector<float> Slopes;         // slope of each segment
+  vector<float> Slopes_Lf;      // slope based on flow length
   vector<float> Discharges;     // discharge of each segment
   vector<float> TransportCapacities; // transport capacity of each segment: Q*S
   //vector<float> SedimentSupplies    // sediment supply L*Q*S
@@ -4392,7 +4394,7 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
           TransportCapacities.push_back(TC);
         }
         else{ TransportCapacities.push_back(float(NoDataValue)); }
-        ThisElev = ReceiverElev;
+
 
         // get the flow length of this reach
         int NStartNodes = int(StartNodes.size());
@@ -4401,6 +4403,10 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
         float FlowLength = FlowInfo.get_flow_length_between_nodes(ThisStartNode, CurrentNode);
         FlowLengths.push_back(FlowLength);
 
+        // get the slope based on the flow length
+        float Slope_Lf = (ThisElev - ReceiverElev)/FlowLength;
+        Slopes_Lf.push_back(Slope_Lf);
+        ThisElev = ReceiverElev;
         // get discharge and push back to vector
         //float ReceiverDischarge = FlowInfo.snap_RasterData_to_Node(ReceiverNode,DischargeRaster,search_radius);
         float ReceiverDischarge = DischargeRaster.get_data_element(ReceiverRow,ReceiverCol);
@@ -4441,6 +4447,9 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
         int ThisStartNode = StartNodes[NStartNodes-2];
         float FlowLength = FlowInfo.get_flow_length_between_nodes(ThisStartNode, CurrentNode);
         FlowLengths.push_back(FlowLength);
+        // get the slope based on the flow length
+        float Slope_Lf = (ThisElev - ReceiverElev)/FlowLength;
+        Slopes_Lf.push_back(Slope_Lf);
       }
       else
       {
@@ -4449,7 +4458,7 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
       }
     }
   }
-   cout << "Checking segment node finder, n_start nodes: " << StartNodes.size() << " N_end nodes: " << EndNodes.size() << " N_segment ids: " << SegmentIDs.size() << " Final segment ID: " << SegmentID << " N elevations: " << Elevations.size() << " N slopes: " << Slopes.size() << " N segment lengths: " << SegmentLengths.size() << " N flow lengths: " << FlowLengths.size() << " N transport capacities: " << TransportCapacities.size() << endl;
+   cout << "Checking segment node finder, n_start nodes: " << StartNodes.size() << " N_end nodes: " << EndNodes.size() << " N_segment ids: " << SegmentIDs.size() << " Final segment ID: " << SegmentID << " N elevations: " << Elevations.size() << " N slopes: " << Slopes.size() << " N slopes lf: " << Slopes_Lf.size() << " N segment lengths: " << SegmentLengths.size() << " N flow lengths: " << FlowLengths.size() << " N transport capacities: " << TransportCapacities.size() << endl;
 
   //push back to master vectors
   SegmentInfoInts.push_back(SegmentIDs);
@@ -4460,6 +4469,7 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
   SegmentInfoFloats.push_back(FlowLengths);
   SegmentInfoFloats.push_back(Elevations);
   SegmentInfoFloats.push_back(Slopes);
+  SegmentInfoFloats.push_back(Slopes_Lf);
   SegmentInfoFloats.push_back(Discharges);
   SegmentInfoFloats.push_back(TransportCapacities);
 
@@ -4486,6 +4496,7 @@ void LSDJunctionNetwork::remove_tributary_segments(LSDFlowInfo& FlowInfo, vector
   vector<float> FlowLengths;    // flow length of each segment
   vector<float> Elevations;     // elevation of each start node
   vector<float> Slopes;         // slope of each segment
+  vector<float> Slopes_Lf;      // slopes based on flow length
   vector<float> Discharges;     // discharge of each segment
   vector<float> TransportCapacities; // transport capacity of each segment
 
@@ -4511,8 +4522,9 @@ void LSDJunctionNetwork::remove_tributary_segments(LSDFlowInfo& FlowInfo, vector
       FlowLengths.push_back(SegmentInfoFloats[1][i]);
       Elevations.push_back(SegmentInfoFloats[2][i]);
       Slopes.push_back(SegmentInfoFloats[3][i]);
-      Discharges.push_back(SegmentInfoFloats[4][i]);
-      TransportCapacities.push_back(SegmentInfoFloats[5][i]);
+      Slopes_Lf.push_back(SegmentInfoFloats[4][i]);
+      Discharges.push_back(SegmentInfoFloats[5][i]);
+      TransportCapacities.push_back(SegmentInfoFloats[6][i]);
     }
   }
   // push back to master vectors
@@ -4523,6 +4535,7 @@ void LSDJunctionNetwork::remove_tributary_segments(LSDFlowInfo& FlowInfo, vector
   SegmentInfoFloats_temp.push_back(FlowLengths);
   SegmentInfoFloats_temp.push_back(Elevations);
   SegmentInfoFloats_temp.push_back(Slopes);
+  SegmentInfoFloats_temp.push_back(Slopes_Lf);
   SegmentInfoFloats_temp.push_back(Discharges);
   SegmentInfoFloats_temp.push_back(TransportCapacities);
 
@@ -4551,7 +4564,7 @@ void LSDJunctionNetwork::print_channel_segments_to_csv(LSDFlowInfo& FlowInfo, ve
   csv_out.open(outfname.c_str());
   csv_out.precision(8);
 
-  csv_out << "SegmentID,NodeNumber,x,y,SegmentLength,FlowLength,Elevation,Slope,Qmed,Q_c" << endl;
+  csv_out << "SegmentID,NodeNumber,x,y,SegmentLength,FlowLength,Elevation,Slope,Slope_Lf,Qmed,Q_c" << endl;
   int current_row, current_col;
   float x,y;
   cout << "N segments: " << SegmentInfoInts[0].size() << endl;
@@ -4570,7 +4583,7 @@ void LSDJunctionNetwork::print_channel_segments_to_csv(LSDFlowInfo& FlowInfo, ve
     // y coord a bit different since the DEM starts from the top corner
     y = YMinimum + float(NRows-current_row)*DataResolution - 0.5*DataResolution + 0.0001*DataResolution;
 
-    csv_out << SegmentInfoInts[0][i] << "," << current_node << "," << x << "," << y << "," << SegmentInfoFloats[0][i] << "," << SegmentInfoFloats[1][i] << "," << SegmentInfoFloats[2][i] << "," << SegmentInfoFloats[3][i] << "," << SegmentInfoFloats[4][i] << "," << SegmentInfoFloats[5][i] << endl;
+    csv_out << SegmentInfoInts[0][i] << "," << current_node << "," << x << "," << y << "," << SegmentInfoFloats[0][i] << "," << SegmentInfoFloats[1][i] << "," << SegmentInfoFloats[2][i] << "," << SegmentInfoFloats[3][i] << "," << SegmentInfoFloats[4][i] << "," << SegmentInfoFloats[5][i] << "," << SegmentInfoFloats[6][i] << endl;
   }
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
