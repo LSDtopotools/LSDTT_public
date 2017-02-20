@@ -105,6 +105,20 @@ class LSDSpatialCSVReader
     /// @date 17/02/2017
     void get_x_and_y_from_latlong(vector<float>& UTME,vector<float>& UTMN);
 
+    /// @brief This gets UTM coordinates and a data vector (usually IDs)
+    ///  for snapping to a channel network
+    /// @param column_name a string that holds the column name
+    /// @param UTMEasting The easting coordinate (is overwritten)
+    /// @param UTMNorthing The northing coordinate (is overwritten)
+    /// @param data_vector the data in a strong vector from the column. Usually sample ID for snapping
+    /// @author SMM
+    /// @date 20/02/2017
+    void get_data_in_raster_for_snapping(string column_name, 
+                                    vector<float>& UTMEasting, 
+                                    vector<float>& UTMNorthing,
+                                    vector<string>& data_vector);
+
+
     /// @brief This gets a data column from the csv file
     /// @param column_name a string that holds the column name
     /// @return a vector of strings: this holds the data. 
@@ -137,6 +151,10 @@ class LSDSpatialCSVReader
     /// @date 13/11/2014
     void check_if_points_are_in_raster();
 
+    /// @brief this prints keys of the data map to screen
+    /// @author SMM
+    /// @date 20/02/2017
+    void print_data_map_keys_to_screen();
 
     /// @brief this prints the latitude and longitude to screen
     /// @author SMM

@@ -255,7 +255,6 @@ int main (int nNumberofArgs,char *argv[])
   // Now get the lat long data
   basin_outlet_fname = DATA_DIR+this_string_map["basin_outlet_csv"];
   LSDSpatialCSVReader BasinOutlets(RI,basin_outlet_fname);
-  ll_data.open(this_string_map["basin_outlet_csv"].c_str());
 
   // variables for ingesting data
   string temp_string;

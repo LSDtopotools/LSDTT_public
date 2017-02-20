@@ -199,17 +199,17 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
   int longitude_index = -9999;
   for (int i = 0; i<n_headers; i++)
   {
-    cout << "This header is: " << this_string_vec[i] << endl;
+    //cout << "This header is: " << this_string_vec[i] << endl;
     if (this_string_vec[i]== "latitude")
     {
       latitude_index = i;
-      cout << "The latitude index is: " << latitude_index << endl;
+      //cout << "The latitude index is: " << latitude_index << endl;
     
     }
     else if (this_string_vec[i] == "longitude")
     {
       longitude_index = i;
-      cout << "The longitude index is: " << longitude_index << endl;
+      //cout << "The longitude index is: " << longitude_index << endl;
     }
     else
     {
@@ -221,7 +221,7 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
   // now loop through the rest of the lines, getting the data. 
   while( getline(ifs, line_from_file))
   {
-    cout << "Getting line, it is: " << line_from_file << endl;
+    //cout << "Getting line, it is: " << line_from_file << endl;
     // reset the string vec
     this_string_vec = empty_string_vec;
     
@@ -252,7 +252,7 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
     else
     {
       int n_cols = int(this_string_vec.size());
-      cout << "N cols is: " << n_cols << endl;
+      //cout << "N cols is: " << n_cols << endl;
       for (int i = 0; i<n_cols; i++)
       {
         if (i == latitude_index)
@@ -270,20 +270,21 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
         }
       
       }
-      cout << "Done with this line." << endl;
+      //cout << "Done with this line." << endl;
     }
     
   }
   
   
   
-  cout << "Assigning the vectors." << endl;
+  //cout << "Assigning the vectors." << endl;
   latitude = temp_latitude;
   longitude = temp_longitude;
   data_map = temp_data_map;
-  cout << "Done reading your file." << endl;
+  //cout << "Done reading your file." << endl;
 }
 //==============================================================================
+
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -306,8 +307,68 @@ vector<string> LSDSpatialCSVReader::get_data_column(string column_name)
   return data_vector;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function returns data that is in the raster for snapping 
+// It focuses on the ID vector, and converts to Easting-Northing coordinates
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDSpatialCSVReader::get_data_in_raster_for_snapping(string column_name, 
+                                    vector<float>& UTMEasting, 
+                                    vector<float>& UTMNorthing,
+                                    vector<string>& data_vector)
+{
+  vector<string> this_data_vector;
+  vector<string> thinned_data_vector;
+  vector<float> easting;
+  vector<float> northing;
+  if ( data_map.find(column_name) == data_map.end() ) 
+  {
+    // not found
+    cout << "I am afraid you tried to access data in the csv file that isn't there." << endl;
+    cout << "The missing column name is: " << column_name << endl;
+    exit(EXIT_SUCCESS);
+  } 
+  else
+  {
+    this_data_vector = data_map[column_name];
 
+  }
+  
+  // make sure the vector of booleans stating if the point is in the DEM exists
+  check_if_points_are_in_raster();
+  
+  // convert to UTM
+  vector<float> UTME;
+  vector<float> UTMN;
+  get_x_and_y_from_latlong(UTME,UTMN);
+  
+  // now loop through the samples
+  int N_samples = int(longitude.size());
+  for (int i = 0; i<N_samples; i++)
+  {
+    if (is_point_in_raster[i])
+    {
+      easting.push_back(UTME[i]);
+      northing.push_back(UTMN[i]);
+      thinned_data_vector.push_back(this_data_vector[i]);
+      
+      cout << "I am pushing E: " << UTME[i] << " N: " << UTMN[i] << " and data: " << this_data_vector[i] << endl;
+    
+    }
+  }
+  
+  UTMEasting = easting;
+  UTMNorthing = northing;
+  data_vector = thinned_data_vector;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Converts a data column to a float vector
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 vector<float> LSDSpatialCSVReader::data_column_to_float(string column_name)
 {
   vector<string> string_vec = get_data_column(column_name);
@@ -416,12 +477,12 @@ void LSDSpatialCSVReader::get_x_and_y_from_latlong(vector<float>& UTME,vector<fl
   int eId = 22;             // defines the ellipsiod. This is WGS
   for(int i = 0; i<N_samples; i++)
   {
-    cout << "Converting point " << i << " to UTM." << endl;
+    //cout << "Converting point " << i << " to UTM." << endl;
     Converter.LLtoUTM_ForceZone(eId, latitude[i], longitude[i],
                       this_Northing, this_Easting, UTM_zone);
     this_UTMN[i] = this_Northing;
     this_UTME[i] = this_Easting;
-    cout << "Easting: " << this_Easting << " and northing: " << this_Northing << endl;
+    //cout << "Easting: " << this_Easting << " and northing: " << this_Northing << endl;
   }
 
   UTME = this_UTME;
@@ -468,7 +529,19 @@ void LSDSpatialCSVReader::check_if_points_are_in_raster()
   is_point_in_raster = temp_is_point_in_raster;
 }
 
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This prints the data column keys to screen
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDSpatialCSVReader::print_data_map_keys_to_screen()
+{
+  cout << "These are the keys: " << endl;
+  for( map<string, vector<string> >::iterator it = data_map.begin(); it != data_map.end(); ++it) 
+  {
+    cout << "Key is: " <<it->first << "\n";
+  }
+}
 
 //==============================================================================
 // This prints the lat and long to screen
