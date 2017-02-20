@@ -4277,7 +4277,7 @@ LSDIndexRaster LSDJunctionNetwork::SplitChannel(LSDFlowInfo& FlowInfo, vector<in
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
-// SplitChannelAdaptive
+// TypologyModel
 // This function splits the channel into a series of segments, providing a
 // convenient unit with which to analyse landscapes.  Function modified from
 // original SplitChannel function so that the segment length varies with the
@@ -4296,20 +4296,22 @@ LSDIndexRaster LSDJunctionNetwork::SplitChannel(LSDFlowInfo& FlowInfo, vector<in
 // 2 - end nodes (downstream)
 // vector< vector<float> > SegmentInfoFloats has the following layout:
 // 0 - segment lengths
-// 1 - elevation of the start nodes
-// 2 - slope of the segment
-// 3 - discharge of the segment (need to pass in raster of discharge for this. Think
-// about switch for when this won't be the case)
+// 1 - flow length of each segment
+// 2 - elevation of the start nodes
+// 3 - slope of the segment
+// 4 - discharge of the segment
+// 5 - transport capacity of the segment
 //
 // Modified FJC 06/02/17
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
-void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int> Sources, int MinReachLength, int search_radius, LSDRaster& ElevationRaster, LSDRaster& DischargeRaster, LSDIndexRaster& ChannelSegmentsRaster, vector< vector<int> >& SegmentInfoInts, vector< vector<float> >& SegmentInfoFloats)
+void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Sources, int MinReachLength, int search_radius, LSDRaster& ElevationRaster, LSDRaster& DischargeRaster, LSDIndexRaster& ChannelSegmentsRaster, vector< vector<int> >& SegmentInfoInts, vector< vector<float> >& SegmentInfoFloats)
 {
   //vectors for storing information about the segments
   vector<int> SegmentIDs;       // ID of each segment
   vector<int> StartNodes;       // start node (upstream) of each segment
   vector<int> EndNodes;         // end node (downstream) of each segment
   vector<float> SegmentLengths; // length of each segment
+  vector<float> FlowLengths;    // flow length of each segment
   vector<float> Elevations;     // elevation of each start node
   vector<float> Slopes;         // slope of each segment
   vector<float> Discharges;     // discharge of each segment
@@ -4364,8 +4366,12 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
       NodesVisitedBefore[CurrentRow][CurrentCol] = 1;
       ++NodeCount;
 
-      // Now check whether we have enough channel nodes
-      if(NodeCount >= NSegmentNodes)
+      ReceiverStreamOrder = StreamOrderArray[ReceiverRow][ReceiverCol];
+      CurrentStreamOrder = StreamOrderArray[CurrentRow][CurrentCol];
+
+      // Now check whether we have enough channel nodes or whether stream order
+      // increases (want to start a new segment if this is the case)
+      if(NodeCount >= NSegmentNodes || ReceiverStreamOrder > CurrentStreamOrder)
       {
         ++SegmentID;
         NodeCount = 0;
@@ -4388,46 +4394,12 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
         else{ TransportCapacities.push_back(float(NoDataValue)); }
         ThisElev = ReceiverElev;
 
-        // get discharge and push back to vector
-        //float ReceiverDischarge = FlowInfo.snap_RasterData_to_Node(ReceiverNode,DischargeRaster,search_radius);
-        float ReceiverDischarge = DischargeRaster.get_data_element(ReceiverRow,ReceiverCol);
-        Discharges.push_back(ReceiverDischarge);
-        ThisDischarge = ReceiverDischarge;
-
-        // recalculate the segment length
-        ThisArea = FlowInfo.get_DrainageArea_square_km(ReceiverNode);
-        SegmentLength = MinReachLength*sqrt(ThisArea);
-        if (SegmentLength < MinReachLength) { SegmentLength = MinReachLength; }
-        NSegmentNodes = ceil(SegmentLength/DataResolution);
-        SegmentLengths.push_back(SegmentLength);
-
-      }
-      // Now check to see whether stream order increases (want to start a new
-      // segment if this is the case)
-      ReceiverStreamOrder = StreamOrderArray[ReceiverRow][ReceiverCol];
-      CurrentStreamOrder = StreamOrderArray[CurrentRow][CurrentCol];
-      if (ReceiverStreamOrder > CurrentStreamOrder)
-      {
-        NodeCount = 0;
-        ++SegmentID;
-
-        // push back info to vectors
-        EndNodes.push_back(CurrentNode);
-        StartNodes.push_back(ReceiverNode);
-        SegmentIDs.push_back(SegmentID);
-        Elevations.push_back(ReceiverElev);
-
-        //get the slope of this reach and push back to vector
-        float ReachSlope = (ThisElev - ReceiverElev)/SegmentLength;
-        Slopes.push_back(ReachSlope);
-        ThisElev = ReceiverElev;
-        // get the transport capacity
-        if (ThisDischarge != NoDataValue && ReachSlope != NoDataValue)
-        {
-          float TC = ThisDischarge*ReachSlope;
-          TransportCapacities.push_back(TC);
-        }
-        else{ TransportCapacities.push_back(float(NoDataValue)); }
+        // get the flow length of this reach
+        int NStartNodes = int(StartNodes.size());
+        // get the penultimate start node (= start of this reach)
+        int ThisStartNode = StartNodes[NStartNodes-2];
+        float FlowLength = FlowInfo.get_flow_length_between_nodes(ThisStartNode, CurrentNode);
+        FlowLengths.push_back(FlowLength);
 
         // get discharge and push back to vector
         //float ReceiverDischarge = FlowInfo.snap_RasterData_to_Node(ReceiverNode,DischargeRaster,search_radius);
@@ -4441,6 +4413,7 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
         if (SegmentLength < MinReachLength) { SegmentLength = MinReachLength; }
         NSegmentNodes = ceil(SegmentLength/DataResolution);
         SegmentLengths.push_back(SegmentLength);
+
       }
 
       bool ReceiverVisitedBefore = false;
@@ -4463,6 +4436,14 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
         }
         else{ TransportCapacities.push_back(float(NoDataValue)); }
       }
+
+      // get the flow length of this reach
+      int NStartNodes = int(StartNodes.size());
+      // get the penultimate start node (= start of this reach)
+      int ThisStartNode = StartNodes[NStartNodes-2];
+      float FlowLength = FlowInfo.get_flow_length_between_nodes(ThisStartNode, CurrentNode);
+      FlowLengths.push_back(FlowLength);
+
       else
       {
         // Move downstream
@@ -4470,7 +4451,7 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
       }
     }
   }
-  // cout << "Checking segment node finder, n_start nodes: " << StartNodes.size() << " N_end nodes: " << EndNodes.size() << " N_segment ids: " << SegmentIDs.size() << " Final segment ID: " << SegmentID << " N elevations: " << Elevations.size() << " N slopes: " << Slopes.size() << " N segment lengths: " << SegmentLengths.size() << endl;
+   cout << "Checking segment node finder, n_start nodes: " << StartNodes.size() << " N_end nodes: " << EndNodes.size() << " N_segment ids: " << SegmentIDs.size() << " Final segment ID: " << SegmentID << " N elevations: " << Elevations.size() << " N slopes: " << Slopes.size() << " N segment lengths: " << SegmentLengths.size() << " N flow lengths: " << FlowLengths.size() << " N transport capacities: " << TransportCapacities.size() << endl;
 
   //push back to master vectors
   SegmentInfoInts.push_back(SegmentIDs);
@@ -4478,6 +4459,7 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
   SegmentInfoInts.push_back(EndNodes);
 
   SegmentInfoFloats.push_back(SegmentLengths);
+  SegmentInfoFloats.push_back(FlowLengths);
   SegmentInfoFloats.push_back(Elevations);
   SegmentInfoFloats.push_back(Slopes);
   SegmentInfoFloats.push_back(Discharges);
@@ -4503,6 +4485,7 @@ void LSDJunctionNetwork::remove_tributary_segments(LSDFlowInfo& FlowInfo, vector
   vector<int> StartNodes;       // start node (upstream) of each segment
   vector<int> EndNodes;         // end node (downstream) of each segment
   vector<float> SegmentLengths; // length of each segment
+  vector<float> FlowLengths;    // flow length of each segment
   vector<float> Elevations;     // elevation of each start node
   vector<float> Slopes;         // slope of each segment
   vector<float> Discharges;     // discharge of each segment
@@ -4527,10 +4510,11 @@ void LSDJunctionNetwork::remove_tributary_segments(LSDFlowInfo& FlowInfo, vector
       StartNodes.push_back(SegmentInfoInts[1][i]);
       EndNodes.push_back(SegmentInfoInts[2][i]);
       SegmentLengths.push_back(SegmentInfoFloats[0][i]);
-      Elevations.push_back(SegmentInfoFloats[1][i]);
-      Slopes.push_back(SegmentInfoFloats[2][i]);
-      Discharges.push_back(SegmentInfoFloats[3][i]);
-      TransportCapacities.push_back(SegmentInfoFloats[4][i]);
+      FlowLengths.push_back(SegmentInfoFloats[1][i]);
+      Elevations.push_back(SegmentInfoFloats[2][i]);
+      Slopes.push_back(SegmentInfoFloats[3][i]);
+      Discharges.push_back(SegmentInfoFloats[4][i]);
+      TransportCapacities.push_back(SegmentInfoFloats[5][i]);
     }
   }
   // push back to master vectors
@@ -4538,6 +4522,7 @@ void LSDJunctionNetwork::remove_tributary_segments(LSDFlowInfo& FlowInfo, vector
   SegmentInfoInts_temp.push_back(StartNodes);
   SegmentInfoInts_temp.push_back(EndNodes);
   SegmentInfoFloats_temp.push_back(SegmentLengths);
+  SegmentInfoFloats_temp.push_back(FlowLengths);
   SegmentInfoFloats_temp.push_back(Elevations);
   SegmentInfoFloats_temp.push_back(Slopes);
   SegmentInfoFloats_temp.push_back(Discharges);
@@ -4568,7 +4553,7 @@ void LSDJunctionNetwork::print_channel_segments_to_csv(LSDFlowInfo& FlowInfo, ve
   csv_out.open(outfname.c_str());
   csv_out.precision(8);
 
-  csv_out << "SegmentID,NodeNumber,x,y,SegmentLength,Elevation,Slope,Qmed,Q_c" << endl;
+  csv_out << "SegmentID,NodeNumber,x,y,SegmentLength,FlowLength,Elevation,Slope,Qmed,Q_c" << endl;
   int current_row, current_col;
   float x,y;
   cout << "N segments: " << SegmentInfoInts[0].size() << endl;
@@ -4587,7 +4572,7 @@ void LSDJunctionNetwork::print_channel_segments_to_csv(LSDFlowInfo& FlowInfo, ve
     // y coord a bit different since the DEM starts from the top corner
     y = YMinimum + float(NRows-current_row)*DataResolution - 0.5*DataResolution + 0.0001*DataResolution;
 
-    csv_out << SegmentInfoInts[0][i] << "," << current_node << "," << x << "," << y << "," << SegmentInfoFloats[0][i] << "," << SegmentInfoFloats[1][i] << "," << SegmentInfoFloats[2][i] << "," << SegmentInfoFloats[3][i] << "," << SegmentInfoFloats[4][i] << endl;
+    csv_out << SegmentInfoInts[0][i] << "," << current_node << "," << x << "," << y << "," << SegmentInfoFloats[0][i] << "," << SegmentInfoFloats[1][i] << "," << SegmentInfoFloats[2][i] << "," << SegmentInfoFloats[3][i] << "," << SegmentInfoFloats[4][i] << "," << SegmentInfoFloats[5][i] << endl;
   }
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=

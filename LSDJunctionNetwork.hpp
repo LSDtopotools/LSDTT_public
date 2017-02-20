@@ -1024,7 +1024,7 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   LSDIndexRaster SplitChannel(LSDFlowInfo& FlowInfo, vector<int> Sources, int TargetSegmentLength);
 
 
-  /// SplitChannelAdaptive
+  /// TypologyModel
   /// @details This function splits the channel into a series of segments,
   /// providing a convenient unit with which to analyse landscapes.
   /// Function modified from original SplitChannel function so that the
@@ -1055,9 +1055,9 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @param SegmentInfoFloat vec<vec> with floating segment info
   /// @author FJC
   /// @date 06/02/17
-  void SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int> Sources, int MinReachLength, int search_radius, LSDRaster& ElevationRaster, LSDRaster& DischargeRaster, LSDIndexRaster& ChannelSegments, vector< vector<int> >& SegmentInfoInts, vector< vector<float> >& SegmentInfoFloats);
+  void TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Sources, int MinReachLength, int search_radius, LSDRaster& ElevationRaster, LSDRaster& DischargeRaster, LSDIndexRaster& ChannelSegments, vector< vector<int> >& SegmentInfoInts, vector< vector<float> >& SegmentInfoFloats);
 
-  /// @brief This function removes channel segments which are not downstream of a given
+  /// @brief This function removes channel segments from the typology model which are not downstream of a given
   /// list of source nodes
   /// @param FlowInfo LSDFlowInfo object
   /// @param Sources vector of source nodes
@@ -1066,7 +1066,7 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   void remove_tributary_segments(LSDFlowInfo& FlowInfo, vector<int> Sources, vector <vector <int> >& SegmentInfoInts, vector <vector <float> >& SegmentInfoFloats);
 
   /// @brief This function prints information about the channel segments from the
-  /// SplitChannelAdaptive function to a csv file so it can be read by a GIS
+  /// TypologyModel function to a csv file so it can be read by a GIS
   /// @param FlowInfo LSDFlowInfo object
   /// @param SegmentInfoInts vec<vec> of segment info (integer)
   /// @param SegmentInfoFloats vec<vec> of segment info (floating point)
