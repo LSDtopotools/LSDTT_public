@@ -1106,9 +1106,10 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
               FlowInfo.get_x_and_y_from_current_node(this_node+(g-1), x2_temp, y2_temp);
               if(this_segment_counter_knickpoint_map.count(this_node+g) && sqrt((x2_temp - x1_temp)*(x2_temp - x1_temp)+(y2_temp - y1_temp)*(y2_temp - y1_temp))< sqrt(2)*FlowInfo.get_DataResolution())
               {
+                cout << "before erase :" << this_segment_knickpoint_sign_map[this_node+g] << endl;
                 this_segment_counter_knickpoint_map.erase(this_node+g);
                 this_segment_knickpoint_sign_map.erase(this_node+g);
-                cout << "something to test blablabla2" << endl;
+                cout << "after erase :" << this_segment_knickpoint_sign_map[this_node+g] << endl;
                 distance_to_substract += sqrt((x2_temp - x1_temp)*(x2_temp - x1_temp)+(y2_temp - y1_temp)*(y2_temp - y1_temp));
               }
               else{distance_to_substract+=sqrt(2)*FlowInfo.get_DataResolution();}
@@ -1153,6 +1154,8 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
 
 
   }
+
+
   cout << "segment_counter_knickpoint is   " << segment_counter_knickpoint << "/" << segment_counter << " delta max is " << temp_delta_m << endl;
   // print everything in the public/protected variables
   segment_counter_knickpoint_map = this_segment_counter_knickpoint_map;
