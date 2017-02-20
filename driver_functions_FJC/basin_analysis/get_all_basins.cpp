@@ -175,7 +175,7 @@ int main (int nNumberofArgs,char *argv[])
 	string csv_out = "tay_basin_nodes_check";
 	ofstream output_file;
 	output_file.open((path_name+csv_out+"."+csv_extension).c_str());
-	
+
 	string old_basins = "basins_old";
 	FlowInfo.print_vector_of_nodeindices_to_csv_file(basin_nodes, path_name+DEM_name+old_basins);
 

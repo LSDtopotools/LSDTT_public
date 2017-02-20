@@ -4313,7 +4313,7 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
   vector<float> Elevations;     // elevation of each start node
   vector<float> Slopes;         // slope of each segment
   vector<float> Discharges;     // discharge of each segment
-  //vector<float> TransportCapacities // transport capacity of each segment: Q*S
+  vector<float> TransportCapacities; // transport capacity of each segment: Q*S
   //vector<float> SedimentSupplies    // sediment supply L*Q*S
 
   //LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
@@ -4351,6 +4351,7 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
     //float ThisDischarge = FlowInfo.snap_RasterData_to_Node(CurrentNode,DischargeRaster,search_radius);
     float ThisDischarge = DischargeRaster.get_data_element(CurrentRow,CurrentCol);
     Discharges.push_back(ThisDischarge);
+
     // Trace downstream until you rach the end of this channel reach
     while(EndOfReach == false)
     {
@@ -4378,12 +4379,16 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
         //get the slope of this reach and push back to vector
         float ReachSlope = (ThisElev - ReceiverElev)/SegmentLength;
         Slopes.push_back(ReachSlope);
+        // get the transport capacity
+        float TC = ThisDischarge*ReachSlope;
+        TransportCapacities.push_back(TC);
         ThisElev = ReceiverElev;
 
         // get discharge and push back to vector
         //float ReceiverDischarge = FlowInfo.snap_RasterData_to_Node(ReceiverNode,DischargeRaster,search_radius);
         float ReceiverDischarge = DischargeRaster.get_data_element(ReceiverRow,ReceiverCol);
         Discharges.push_back(ReceiverDischarge);
+        ThisDischarge = ReceiverDischarge;
 
         // recalculate the segment length
         ThisArea = FlowInfo.get_DrainageArea_square_km(ReceiverNode);
@@ -4412,11 +4417,15 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
         float ReachSlope = (ThisElev - ReceiverElev)/SegmentLength;
         Slopes.push_back(ReachSlope);
         ThisElev = ReceiverElev;
+        // get the transport capacity
+        float TC = ThisDischarge*ReachSlope;
+        TransportCapacities.push_back(TC);
 
         // get discharge and push back to vector
         //float ReceiverDischarge = FlowInfo.snap_RasterData_to_Node(ReceiverNode,DischargeRaster,search_radius);
         float ReceiverDischarge = DischargeRaster.get_data_element(ReceiverRow,ReceiverCol);
         Discharges.push_back(ReceiverDischarge);
+        ThisDischarge = ReceiverDischarge;
 
         // recalculate the segment length
         ThisArea = FlowInfo.get_DrainageArea_square_km(ReceiverNode);
@@ -4438,6 +4447,9 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
         //get the slope of this reach and push back to vector
         float ReachSlope = (ThisElev - ReceiverElev)/SegmentLength;
         Slopes.push_back(ReachSlope);
+        // get the transport capacity
+        float TC = ThisDischarge*ReachSlope;
+        TransportCapacities.push_back(TC);
       }
       else
       {
@@ -4457,6 +4469,7 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
   SegmentInfoFloats.push_back(Elevations);
   SegmentInfoFloats.push_back(Slopes);
   SegmentInfoFloats.push_back(Discharges);
+  SegmentInfoFloats.push_back(TransportCapacities);
 
   LSDIndexRaster SegmentsRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ChannelSegments,GeoReferencingStrings);
   ChannelSegmentsRaster = SegmentsRaster;
@@ -4481,6 +4494,8 @@ void LSDJunctionNetwork::remove_tributary_segments(LSDFlowInfo& FlowInfo, vector
   vector<float> Elevations;     // elevation of each start node
   vector<float> Slopes;         // slope of each segment
   vector<float> Discharges;     // discharge of each segment
+  vector<float> TransportCapacities; // transport capacity of each segment
+
 
   // loop through all the start nodes and check whether they are downstream of a source node
   for (int i = 0; i < int(SegmentInfoInts[0].size()); ++i)
@@ -4503,6 +4518,7 @@ void LSDJunctionNetwork::remove_tributary_segments(LSDFlowInfo& FlowInfo, vector
       Elevations.push_back(SegmentInfoFloats[1][i]);
       Slopes.push_back(SegmentInfoFloats[2][i]);
       Discharges.push_back(SegmentInfoFloats[3][i]);
+      TransportCapacities.push_back(SegmentInfoFloats[4][i]);
     }
   }
   // push back to master vectors
@@ -4513,6 +4529,7 @@ void LSDJunctionNetwork::remove_tributary_segments(LSDFlowInfo& FlowInfo, vector
   SegmentInfoFloats_temp.push_back(Elevations);
   SegmentInfoFloats_temp.push_back(Slopes);
   SegmentInfoFloats_temp.push_back(Discharges);
+  SegmentInfoFloats_temp.push_back(TransportCapacities);
 
   //copy to output vecvecs
   SegmentInfoInts = SegmentInfoInts_temp;
