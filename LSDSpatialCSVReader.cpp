@@ -73,11 +73,24 @@ using namespace TNT;
 #ifndef LSDSpatialCSVReader_CPP
 #define LSDSpatialCSVReader_CPP
 
+
+
+// empty create function
+void LSDSpatialCSVReader::create()
+{
+  cout << "Size data map: " << data_map.size() << endl;
+  map<string, vector<string> > empty_map; 
+  cout << "Size empty map: " << empty_map.size() << endl;
+  data_map = empty_map;
+}
+
+
 //==============================================================================
 // Basic create function
 //==============================================================================
 void LSDSpatialCSVReader::create(LSDRasterInfo& ThisRasterInfo, string csv_fname)
 {
+  cout << "I am creating something for you" << endl;
   NRows = ThisRasterInfo.get_NRows();
   NCols = ThisRasterInfo.get_NCols();
   XMinimum = ThisRasterInfo.get_XMinimum();
@@ -85,6 +98,14 @@ void LSDSpatialCSVReader::create(LSDRasterInfo& ThisRasterInfo, string csv_fname
   DataResolution = ThisRasterInfo.get_DataResolution();
   NoDataValue = ThisRasterInfo.get_NoDataValue();
   GeoReferencingStrings = ThisRasterInfo.get_GeoReferencingStrings();
+  
+  //cout << "Size data map: " << data_map.size() << endl;
+  //cout << "Size test map: " << test_map.size() << endl;
+   
+  //map<string, vector<string> > empty_map; 
+  //cout << "Size empty map: " << empty_map.size() << endl;
+  //data_map = empty_map;
+  
   
   load_csv_data(csv_fname);
   
@@ -95,6 +116,7 @@ void LSDSpatialCSVReader::create(LSDRasterInfo& ThisRasterInfo, string csv_fname
 //==============================================================================
 void LSDSpatialCSVReader::create(LSDRaster& ThisRaster, string csv_fname)
 {
+  cout << "I am creating something for you2" << endl;
   NRows = ThisRaster.get_NRows();
   NCols = ThisRaster.get_NCols();
   XMinimum = ThisRaster.get_XMinimum();
@@ -102,7 +124,7 @@ void LSDSpatialCSVReader::create(LSDRaster& ThisRaster, string csv_fname)
   DataResolution = ThisRaster.get_DataResolution();
   NoDataValue = ThisRaster.get_NoDataValue();
   GeoReferencingStrings = ThisRaster.get_GeoReferencingStrings();
-  
+
   load_csv_data(csv_fname);
 }
 
@@ -128,7 +150,13 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
   }
   
   // Initiate the data map
+  map<string, int > temp_vec_vec_key;
+  vector< vector<string> > temp_vec_vec;
   map<string, vector<string> > temp_data_map;
+  
+  cout << "Data map size is: " << data_map.size() << endl;
+  cout << "longitude size is: " << longitude.size() << endl;
+  data_map = temp_data_map;
 
   // initiate the string to hold the file
   string line_from_file;
@@ -242,12 +270,18 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
         }
       
       }
+      cout << "Done with this line." << endl;
     }
-  
+    
   }
+  
+  
+  
+  cout << "Assigning the vectors." << endl;
   latitude = temp_latitude;
   longitude = temp_longitude;
   data_map = temp_data_map;
+  cout << "Done reading your file." << endl;
 }
 //==============================================================================
 
@@ -396,6 +430,44 @@ void LSDSpatialCSVReader::get_x_and_y_from_latlong(vector<float>& UTME,vector<fl
 
 }
 
+//==============================================================================
+// This checks if points are in raster
+//==============================================================================
+void LSDSpatialCSVReader::check_if_points_are_in_raster()
+{
+  vector<float> UTME;   // easting
+  vector<float> UTMN;   // northing
+  vector<bool> temp_is_point_in_raster;
+  
+  // get the easting and northing
+  get_x_and_y_from_latlong(UTME,UTMN);
+
+  bool is_in_raster;
+
+  int N_samples = int(latitude.size());
+  for(int i = 0; i<N_samples; i++)
+  {
+
+    is_in_raster = true;
+
+    // Shift origin to that of dataset
+    float X_coordinate_shifted_origin = UTME[i] - XMinimum;
+    float Y_coordinate_shifted_origin = UTMN[i] - YMinimum;
+
+    // Get row and column of point
+    int col_point = int(X_coordinate_shifted_origin/DataResolution);
+    int row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/DataResolution));
+
+    if(col_point < 0 || col_point > NCols-1 || row_point < 0 || row_point > NRows -1)
+    {
+      is_in_raster = false;
+    }
+    temp_is_point_in_raster.push_back(is_in_raster);
+  }
+
+  is_point_in_raster = temp_is_point_in_raster;
+}
+
 
 
 //==============================================================================
@@ -410,10 +482,38 @@ void LSDSpatialCSVReader::print_lat_long_to_screen()
   {
     cout << latitude[i] << "," << longitude[i] << endl;
   }
-
 }
 
-
+//==============================================================================
+// This prints the lat and long to screen
+//==============================================================================
+void LSDSpatialCSVReader::print_lat_long_to_screen(bool only_print_in_raster)
+{
+  if (only_print_in_raster)
+  {
+    check_if_points_are_in_raster();
+  }
+  
+  
+  int N_data = int(latitude.size());
+  cout << "latitude,longitude"<< endl;
+  cout.precision(9);
+  for (int i = 0; i< N_data; i++)
+  {
+    if (only_print_in_raster)
+    {
+      if (is_point_in_raster[i])
+      {
+        cout << latitude[i] << "," << longitude[i] << endl;
+      }
+    
+    }
+    else
+    {
+      cout << latitude[i] << "," << longitude[i] << endl;
+    }
+  }
+}
 
 
 

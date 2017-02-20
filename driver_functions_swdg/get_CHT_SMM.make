@@ -10,6 +10,7 @@ SOURCES=get_CHT_SMM.cpp \
         ../LSDRasterInfo.cpp \
         ../LSDParameterParser.cpp \
         ../LSDIndexRaster.cpp \
+        ../LSDSpatialCSVReader.cpp \
         ../LSDRaster.cpp \
         ../LSDRasterSpectral.cpp \
         ../LSDFlowInfo.cpp \

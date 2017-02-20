@@ -128,10 +128,26 @@ class LSDSpatialCSVReader
     /// @date 17/02/2017
     vector<int> data_column_to_int(string column_name);
 
+
+    /// @brief this check to see if a point is within the raster
+    /// @param X_coordinate the x location of the point
+    /// @param Y_coordinate the y location of the point
+    /// @return is_in_raster a boolean telling if the point is in the raster
+    /// @author SMM
+    /// @date 13/11/2014
+    void check_if_points_are_in_raster();
+
+
     /// @brief this prints the latitude and longitude to screen
     /// @author SMM
     /// @date 17/02/2017
     void print_lat_long_to_screen();
+
+    /// @brief this prints the latitude and longitude to screen
+    /// @param only_print_in_raster a bool when true only prints points in raster
+    /// @author SMM
+    /// @date 20/02/2017
+    void print_lat_long_to_screen(bool only_print_in_raster);
 
     /// Gets the various data members
     vector<double> get_latitude()  const {return latitude;}
@@ -163,11 +179,17 @@ class LSDSpatialCSVReader
     /// A vector of the longitude (in WGS84)
     vector<double> longitude;
     
-    /// The map to hold all the read data
+    /// A vector of bools telling if the points are in the raster
+    vector<bool> is_point_in_raster;
+    
+    /// The map
     map<string, vector<string> > data_map;
-  
+
+
   private:
-  
+
+    void create();
+
     void create(LSDRaster&,string);
     
     void create(LSDRasterInfo&,string);

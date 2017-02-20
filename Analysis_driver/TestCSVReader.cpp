@@ -121,4 +121,8 @@ int main (int nNumberofArgs,char *argv[])
   // Load the csv file
   LSDSpatialCSVReader CSVFile(RI,(DATA_DIR+this_string_map["basin_outlet_csv"]));
   CSVFile.print_lat_long_to_screen();
+  
+  bool check_points = true;
+  CSVFile.check_if_points_are_in_raster();
+  CSVFile.print_lat_long_to_screen(check_points);
 }
