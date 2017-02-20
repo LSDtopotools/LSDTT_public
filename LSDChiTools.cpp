@@ -962,6 +962,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
   int col1_temp = 0;
   int col2_temp = 0;
   bool same_channel = true;
+  float max_knickpoint_value =0;
 
 
   // find the number of nodes
@@ -1003,8 +1004,8 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
         FlowInfo.retrieve_current_row_and_col(this_node,row2_temp,col2_temp);
         FlowInfo.get_x_and_y_locations(row1_temp, col1_temp, x1_temp, y1_temp);
         FlowInfo.get_x_and_y_locations(row2_temp, col2_temp, x2_temp, y2_temp);
-          // Then check if the distance betweenthe two is more than 2 nodes (distance between two points via pytagore)
-        if (sqrt((x2_temp - x1_temp)*(x2_temp - x1_temp)+(y2_temp - y1_temp)*(y2_temp - y1_temp))> (2*FlowInfo.get_DataResolution()))
+          // Then check if the distance betweenthe two is more than 2 nodes (distance between two points via pytagore or thing like this)
+        if (sqrt((x2_temp - x1_temp)*(x2_temp - x1_temp)+(y2_temp - y1_temp)*(y2_temp - y1_temp)) > (2*FlowInfo.get_DataResolution()))
         {
           same_channel = false;
         }
@@ -1014,6 +1015,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
         {
           segment_counter_knickpoint++; // number of knickpoints
           this_segment_counter_knickpoint_map[this_node] = delta_m; // adding the knickpoint value
+          if(delta_m>max_knickpoint_value){max_knickpoint_value=delta_m;} // assign the new knickpoint max value
         }
         //this_segment_length = n_nodes_segment * FlowInfo.get_DataResolution(); // getting the length of the segment using the resolution * number of nodes
         same_channel = true; // Set back the same channel parameter to true
@@ -1060,6 +1062,20 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
       }*/
 
     }
+    // now sorting and calculating the knickpoint values by length (hopefully)
+    int nodes_of_knickpoints [segment_counter_knickpoint];
+    int knickpoint_id = 0;
+    for(int i = 0; i< n_nodes; i++)
+    {
+      this_node = node_sequence[i];
+      if(this_segment_counter_knickpoint_map.count(this_node)) // supposed to test if this map has a value assigned for this key
+      {
+        nodes_of_knickpoints[knickpoint_id] = this_node;
+        cout << this_node << " || " << nodes_of_knickpoints[knickpoint_id] << endl;
+      }
+
+    }
+
 
   }
   cout << "segment_counter_knickpoint is   " << segment_counter_knickpoint << "/" << segment_counter << " delta max is " << temp_delta_m << endl;
