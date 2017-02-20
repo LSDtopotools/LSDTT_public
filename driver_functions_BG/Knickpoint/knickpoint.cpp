@@ -119,7 +119,7 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["m_over_n"] = 0.5;
   float_default_map["sigma"] = 20;
   float_default_map["threshold_knickpoint_detection"] = 1; // threshold for the detection of knickpoints in the m_chi value
-  float_default_map["threshold_knickpoint_length"] = 100; // length threshold to avoid too close knickpoints
+  float_default_map["threshold_knickpoint_length"] = 15000; // length threshold to avoid too close knickpoints
 
   // set default methods
   bool_default_map["only_check_parameters"] = false;
@@ -384,14 +384,14 @@ int main (int nNumberofArgs,char *argv[])
     // skip and iterations default to 0 and 1
     if (this_bool_map["print_segments"])
     {
-      cout << "IS THIS FUNCTION EXECUTED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!?????????????????????????????" << endl;
+      //cout << "IS THIS FUNCTION EXECUTED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!?????????????????????????????" << endl;
       n_iterations = 1;
       skip = 0;
       ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes,
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_coordinate, target_nodes,
                             n_iterations, skip, minimum_segment_length, sigma);
-      cout << "IS THIS FUNCTION EXECUTED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!?????????????????????????????" << endl;
+      //cout << "IS THIS FUNCTION EXECUTED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!?????????????????????????????" << endl;
       if (this_bool_map["print_knickpoint_detection"])
       {
         ChiTool.segment_counter_knickpoint(FlowInfo, threshold_knickpoint_detection, threshold_knickpoint_length);
