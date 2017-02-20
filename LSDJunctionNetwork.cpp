@@ -4380,8 +4380,12 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
         float ReachSlope = (ThisElev - ReceiverElev)/SegmentLength;
         Slopes.push_back(ReachSlope);
         // get the transport capacity
-        float TC = ThisDischarge*ReachSlope;
-        TransportCapacities.push_back(TC);
+        if (ThisDischarge != NoDataValue && ReachSlope != NoDataValue)
+        {
+          float TC = ThisDischarge*ReachSlope;
+          TransportCapacities.push_back(TC);
+        }
+        else{ TransportCapacities.push_back(float(NoDataValue)); }
         ThisElev = ReceiverElev;
 
         // get discharge and push back to vector
@@ -4418,8 +4422,12 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
         Slopes.push_back(ReachSlope);
         ThisElev = ReceiverElev;
         // get the transport capacity
-        float TC = ThisDischarge*ReachSlope;
-        TransportCapacities.push_back(TC);
+        if (ThisDischarge != NoDataValue && ReachSlope != NoDataValue)
+        {
+          float TC = ThisDischarge*ReachSlope;
+          TransportCapacities.push_back(TC);
+        }
+        else{ TransportCapacities.push_back(float(NoDataValue)); }
 
         // get discharge and push back to vector
         //float ReceiverDischarge = FlowInfo.snap_RasterData_to_Node(ReceiverNode,DischargeRaster,search_radius);
@@ -4448,8 +4456,12 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
         float ReachSlope = (ThisElev - ReceiverElev)/SegmentLength;
         Slopes.push_back(ReachSlope);
         // get the transport capacity
-        float TC = ThisDischarge*ReachSlope;
-        TransportCapacities.push_back(TC);
+        if (ThisDischarge != NoDataValue && ReachSlope != NoDataValue)
+        {
+          float TC = ThisDischarge*ReachSlope;
+          TransportCapacities.push_back(TC);
+        }
+        else{ TransportCapacities.push_back(float(NoDataValue)); }
       }
       else
       {
