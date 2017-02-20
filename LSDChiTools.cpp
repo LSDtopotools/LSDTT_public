@@ -957,10 +957,6 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
   float y1_temp =0;
   float x2_temp =0;
   float y2_temp =0;
-  int row1_temp = 0;
-  int row2_temp = 0;
-  int col1_temp = 0;
-  int col2_temp = 0;
   bool same_channel = true;
   float max_knickpoint_value =0;
 
@@ -1000,10 +996,8 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
         if(delta_m > temp_delta_m) {temp_delta_m = delta_m;} // debugging stuff
         // now checking if the difference of m_chi between two segment is not due to a channel change
           // first retrieving xy coordinates
-        FlowInfo.retrieve_current_row_and_col(last_node,row1_temp,col1_temp);
-        FlowInfo.retrieve_current_row_and_col(this_node,row2_temp,col2_temp);
-        FlowInfo.get_x_and_y_locations(row1_temp, col1_temp, x1_temp, y1_temp);
-        FlowInfo.get_x_and_y_locations(row2_temp, col2_temp, x2_temp, y2_temp);
+        FlowInfo.get_x_and_y_from_current_node(last_node, x1_temp, y1_temp);
+        FlowInfo.get_x_and_y_from_current_node(this_node, x2_temp, y2_temp);
           // Then check if the distance betweenthe two is more than 2 nodes (distance between two points via pytagore or thing like this)
         if (sqrt((x2_temp - x1_temp)*(x2_temp - x1_temp)+(y2_temp - y1_temp)*(y2_temp - y1_temp)) > (2*FlowInfo.get_DataResolution()))
         {
@@ -1038,8 +1032,6 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
           // Now calculating the distance between the two last nodes
 
           // Retrieving the x/y coordinates of the last two nodes
-          FlowInfo.retrieve_current_row_and_col(last_node,row1_temp,col1_temp);
-          FlowInfo.retrieve_current_row_and_col(this_node,row2_temp,col2_temp);
           FlowInfo.get_x_and_y_from_current_node(last_node, x1_temp, y1_temp);
           FlowInfo.get_x_and_y_from_current_node(this_node, x2_temp, y2_temp);
           // calculate and increment the distance from the last node
@@ -1077,22 +1069,83 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
     }
 
     float distance_to_process = threshold_knickpoint_length;
+    float distance_to_substract = 0;
     bool still_processing = true;
+    bool still_processing_total = true;
+    int current_node_erase_length = 0;
+    int old_max = 0;
     //number_of_nodes_to_investigate_length = threshold_knickpoint_length;
-
-    for(int i = 0; i< segment_counter_knickpoint; i++)
+    cout << "beginning the length calculation stuffs" << endl;
+    while(still_processing_total)
     {
-      this_node = nodes_of_knickpoints[i];
-      if(this_segment_counter_knickpoint_map.count(this_node))
+      for(int i = 0; i< segment_counter_knickpoint && still_processing; i++)
       {
-        if(max_knickpoint_value = this_segment_counter_knickpoint_map[this_node])
-        {
-          while(distance_to_process > 0){
-            distance_to_process =0;
-          }
-        }
-      }
+        this_node = nodes_of_knickpoints[i];
+        still_processing = true;
 
+        if(this_segment_counter_knickpoint_map.count(this_node))
+        {
+
+          if(max_knickpoint_value = this_segment_counter_knickpoint_map[this_node])
+          {
+            for(int g = 1; distance_to_process > 0; g++)
+            {
+
+              FlowInfo.get_x_and_y_from_current_node(this_node-g, x1_temp, y1_temp);
+              FlowInfo.get_x_and_y_from_current_node(this_node-(g-1), x2_temp, y2_temp);
+              if(this_segment_counter_knickpoint_map.count(this_node-g) && (sqrt((x2_temp - x1_temp)*(x2_temp - x1_temp)+(y2_temp - y1_temp)*(y2_temp - y1_temp))< sqrt(2)*FlowInfo.get_DataResolution()))
+              {
+                this_segment_counter_knickpoint_map.erase(this_node-g);
+                this_segment_knickpoint_sign_map.erase(this_node-g);
+                cout << "something to test blablabla" << endl;
+                distance_to_substract += sqrt((x2_temp - x1_temp)*(x2_temp - x1_temp)+(y2_temp - y1_temp)*(y2_temp - y1_temp));
+              }
+              else{distance_to_substract+=sqrt(2)*FlowInfo.get_DataResolution();}
+
+              FlowInfo.get_x_and_y_from_current_node(this_node+g, x1_temp, y1_temp);
+              FlowInfo.get_x_and_y_from_current_node(this_node+(g-1), x2_temp, y2_temp);
+              if(this_segment_counter_knickpoint_map.count(this_node+g) && sqrt((x2_temp - x1_temp)*(x2_temp - x1_temp)+(y2_temp - y1_temp)*(y2_temp - y1_temp))< sqrt(2)*FlowInfo.get_DataResolution())
+              {
+                this_segment_counter_knickpoint_map.erase(this_node+g);
+                this_segment_knickpoint_sign_map.erase(this_node+g);
+                cout << "something to test blablabla2" << endl;
+                distance_to_substract += sqrt((x2_temp - x1_temp)*(x2_temp - x1_temp)+(y2_temp - y1_temp)*(y2_temp - y1_temp));
+              }
+              else{distance_to_substract+=sqrt(2)*FlowInfo.get_DataResolution();}
+              distance_to_process -= distance_to_substract;
+              distance_to_substract = 0;
+            }
+
+            old_max = max_knickpoint_value;
+            max_knickpoint_value = 0;
+            for(int j = 0; j< segment_counter_knickpoint; j++)
+            {
+              //cout << "Am I reaching this point?? j: "<< j << endl;
+              this_node = nodes_of_knickpoints[j];
+              if(this_segment_counter_knickpoint_map.count(this_node))
+              {
+                if(this_segment_counter_knickpoint_map[this_node] > max_knickpoint_value && this_segment_counter_knickpoint_map[this_node] <= old_max)
+                  {
+                    max_knickpoint_value =this_segment_counter_knickpoint_map[this_node];
+                  }
+              }
+            }
+            still_processing = false;
+            distance_to_process = threshold_knickpoint_length;
+            }
+        }
+
+
+
+
+
+        if(i == segment_counter_knickpoint-1)
+        {
+          still_processing = false;
+          still_processing_total = false;
+        }
+        else{still_processing = true;}
+      }
     }
 
 
