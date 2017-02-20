@@ -199,6 +199,16 @@ class LSDFlowInfo
   void retrieve_current_row_and_col(int current_node,int& curr_row,
                                              int& curr_col);
 
+  ///@brief Get the X and Y coordinates of a given node.
+  ///@param current_node Integer index of a given node.
+  ///@param current_X Empty integer to be assigned the X coordinate of the given
+  ///node.
+  ///@param current_Y Empty integer to be assigned the Y coordinate of the given
+  ///node.
+  /// @author BG
+  /// @date 20/02/2017
+  void get_x_and_y_from_current_node(int current_node,float& current_X, float& current_Y);
+
   ///@brief This function takes a vector of node indices and prints a csv
   ///file that can be read by arcmap
   ///@param nodeindex vec is a vector of nodeindices (which are ints)
