@@ -4313,7 +4313,7 @@ void LSDJunctionNetwork::SplitChannelAdaptive(LSDFlowInfo& FlowInfo, vector<int>
   vector<float> Elevations;     // elevation of each start node
   vector<float> Slopes;         // slope of each segment
   vector<float> Discharges;     // discharge of each segment
-  vector<float> TransportCapacities // transport capacity of each segment: Q*S
+  vector<float> TransportCapacities; // transport capacity of each segment: Q*S
   //vector<float> SedimentSupplies    // sediment supply L*Q*S
 
   //LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
