@@ -4435,15 +4435,13 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
           TransportCapacities.push_back(TC);
         }
         else{ TransportCapacities.push_back(float(NoDataValue)); }
+        // get the flow length of this reach
+        int NStartNodes = int(StartNodes.size());
+        // get the penultimate start node (= start of this reach)
+        int ThisStartNode = StartNodes[NStartNodes-2];
+        float FlowLength = FlowInfo.get_flow_length_between_nodes(ThisStartNode, CurrentNode);
+        FlowLengths.push_back(FlowLength);
       }
-
-      // get the flow length of this reach
-      int NStartNodes = int(StartNodes.size());
-      // get the penultimate start node (= start of this reach)
-      int ThisStartNode = StartNodes[NStartNodes-2];
-      float FlowLength = FlowInfo.get_flow_length_between_nodes(ThisStartNode, CurrentNode);
-      FlowLengths.push_back(FlowLength);
-
       else
       {
         // Move downstream
