@@ -935,7 +935,7 @@ void LSDChiTools::segment_counter(LSDFlowInfo& FlowInfo)
 // This data is used by other routines to look at the spatial distribution of
 // hillslope-channel coupling.
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float threshold_knickpoint)
+void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float threshold_knickpoint, float threshold_knickpoint_length)
 {
   // these are for extracting element-wise data from the channel profiles.
   int abs_threshhold_knickpoint = abs (threshold_knickpoint);
@@ -1071,10 +1071,32 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
       if(this_segment_counter_knickpoint_map.count(this_node)) // supposed to test if this map has a value assigned for this key
       {
         nodes_of_knickpoints[knickpoint_id] = this_node;
-        cout << this_node << " || " << nodes_of_knickpoints[knickpoint_id] << endl;
+        knickpoint_id++;
+        //cout << this_node << " || " << nodes_of_knickpoints[knickpoint_id] << endl;
+      }
+    }
+
+    float distance_to_process = threshold_knickpoint_length;
+    bool still_processing = true;
+    //number_of_nodes_to_investigate_length = threshold_knickpoint_length;
+
+    for(int i = 0; i< segment_counter_knickpoint; i++)
+    {
+      this_node = nodes_of_knickpoints[i];
+      if(this_segment_counter_knickpoint_map.count(this_node))
+      {
+        if(max_knickpoint_value = this_segment_counter_knickpoint_map[this_node])
+        {
+          while(distance_to_process > 0){
+            distance_to_process =0;
+          }
+        }
       }
 
     }
+
+
+
 
 
   }

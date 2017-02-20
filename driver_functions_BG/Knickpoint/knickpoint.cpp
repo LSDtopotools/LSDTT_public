@@ -119,6 +119,7 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["m_over_n"] = 0.5;
   float_default_map["sigma"] = 20;
   float_default_map["threshold_knickpoint_detection"] = 1; // threshold for the detection of knickpoints in the m_chi value
+  float_default_map["threshold_knickpoint_length"] = 100; // length threshold to avoid too close knickpoints
 
   // set default methods
   bool_default_map["only_check_parameters"] = false;
@@ -186,6 +187,7 @@ int main (int nNumberofArgs,char *argv[])
   int minimum_basin_size_pixels = this_int_map["minimum_basin_size_pixels"];
   int basic_Mchi_regression_nodes = this_int_map["basic_Mchi_regression_nodes"];
   float threshold_knickpoint_detection = this_float_map["threshold_knickpoint_detection"];
+  float threshold_knickpoint_length = this_float_map["threshold_knickpoint_length"];
   bool test_drainage_boundaries = this_bool_map["test_drainage_boundaries"];
 
   // load the  DEM
@@ -392,7 +394,7 @@ int main (int nNumberofArgs,char *argv[])
       cout << "IS THIS FUNCTION EXECUTED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!?????????????????????????????" << endl;
       if (this_bool_map["print_knickpoint_detection"])
       {
-        ChiTool.segment_counter_knickpoint(FlowInfo, threshold_knickpoint_detection);
+        ChiTool.segment_counter_knickpoint(FlowInfo, threshold_knickpoint_detection, threshold_knickpoint_length);
       }
       else
       {
