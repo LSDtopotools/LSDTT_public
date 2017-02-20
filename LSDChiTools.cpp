@@ -1063,8 +1063,10 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
       this_node = node_sequence[i];
       if(this_segment_counter_knickpoint_map.count(this_node)) // supposed to test if this map has a value assigned for this key
       {
+        if(this_segment_counter_knickpoint_map[this_node] == max_knickpoint_value) {cout<< "biiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiite"<< endl;}
         nodes_of_knickpoints[knickpoint_id] = this_node;
         knickpoint_id++;
+
         //cout << this_node << " || " << nodes_of_knickpoints[knickpoint_id] << endl;
       }
     }
@@ -1088,7 +1090,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
         if(this_segment_counter_knickpoint_map.count(this_node))
         {
 
-          if(max_knickpoint_value = this_segment_counter_knickpoint_map[this_node])
+          if(  this_segment_counter_knickpoint_map[this_node]==max_knickpoint_value)
           {
             for(int g = 1; distance_to_process > 0; g++)
             {
