@@ -126,7 +126,7 @@ int main (int nNumberofArgs,char *argv[])
   
   // set default float parameters
   int_default_map["basin_order"] = 2;
-  int_default_map["threshold_contributing_pixels"] = 2000;
+  int_default_map["threshold_contributing_pixels"] = 1500;
   int_default_map["search_radius_nodes"] = 10;
   int_default_map["connected_components_threshold"] = 100;
   int_default_map["threshold_stream_order"] = 1;
@@ -135,9 +135,9 @@ int main (int nNumberofArgs,char *argv[])
 
   // set default in parameter
   float_default_map["min_slope_for_fill"] = 0.0001;
-  float_default_map["window_radius"] = 7;
-  float_default_map["roughness_threshold"] = 7;
-  float_default_map["roughness_radius"] = 25;
+  float_default_map["surface_fitting_radius"] = 6;
+  float_default_map["roughness_threshold"] = 0.015;
+  float_default_map["roughness_radius"] = 5;
   float_default_map["pruning_drainage_area"] = 1000;
   float_default_map["hilltop_slope_threshold"] = 0.4;
   
@@ -155,6 +155,7 @@ int main (int nNumberofArgs,char *argv[])
   // set default string method
   string_default_map["q_q_filename_prefix"] = "NULL";
   string_default_map["basin_outlet_csv"] = "NULL";
+  string_default_map["sample_ID_column_name"] = "sample";
   
   // Use the parameter parser to get the maps of the parameters required for the 
   // analysis
@@ -253,52 +254,16 @@ int main (int nNumberofArgs,char *argv[])
   LSDCoordinateConverterLLandUTM Converter;
 
   // Now get the lat long data
-  basin_outlet_fname = DATA_DIR+this_string_map["basin_outlet_csv"];
+  string basin_outlet_fname = DATA_DIR+this_string_map["basin_outlet_csv"];
   LSDSpatialCSVReader BasinOutlets(RI,basin_outlet_fname);
 
-  // variables for ingesting data
-  string temp_string;
-  float Lat;
-  float Long;
-  int id;
-
-  // the LL data
-  vector<float> latitude;
-  vector<float> longitude;
-  vector<int> IDs;
-
-  // skip the header
-  ll_data >> temp_string;
-  char delimiter;
-
-  // now get the data
-  while ((ll_data >> id >> delimiter >> Lat >> delimiter >> Long) && (delimiter == ',')){
-    latitude.push_back(Lat);
-    longitude.push_back(Long);
-    IDs.push_back(id);
-  }
-  ll_data.close();
-
-
-  int N_samples = int(latitude.size());  // number of coordinate pairs loaded
-
   // set up some vectors
-  vector<float> fUTM_northing(N_samples,0);
-  vector<float> fUTM_easting(N_samples,0);
+  vector<float> fUTM_northing;
+  vector<float> fUTM_easting;
+  vector<string> IDs;
 
-  double this_Northing;
-  double this_Easting;
-  int eId = 22;
-  int UTM_zone;
-  bool is_North;
-  DEM.get_UTM_information(UTM_zone, is_North);
-  // loop through the coordinates, converting to UTM
-  for(int i = 0; i<N_samples; i++)
-  {
-    Converter.LLtoUTM_ForceZone(eId, latitude[i], longitude[i], this_Northing, this_Easting, UTM_zone);
-    fUTM_easting[i] = float(this_Easting);
-    fUTM_northing[i] = float(this_Northing);
-  }
+  string column_name = "sample";
+  BasinOutlets.get_data_in_raster_for_snapping(this_string_map["sample_ID_column_name"],fUTM_easting,fUTM_northing,IDs);
 
   vector<int> valid_cosmo_points;         // a vector to hold the valid nodes
   vector<int> snapped_node_indices;       // a vector to hold the valid node indices
@@ -309,10 +274,6 @@ int main (int nNumberofArgs,char *argv[])
             valid_cosmo_points, snapped_node_indices, snapped_junction_indices);
 
   int n_valid_points = int(valid_cosmo_points.size());  //The bumber of points which were within the current DEM
-
-  if (n_valid_points != N_samples){
-    cout << "Not every point was located within the DEM" << endl;
-  }
 
   //Open a file to write the basin average data to
   ofstream WriteData;
@@ -366,6 +327,10 @@ int main (int nNumberofArgs,char *argv[])
   CHT.write_raster((OUT_DIR+OUT_ID+"_CHT"), raster_ext);
   stringstream ss;
   ss << OUT_DIR+OUT_ID << "_Spatial_CHT.csv";
+  bool is_North;
+  int UTM_zone;
+  FilledDEM.get_UTM_information(UTM_zone, is_North);
+  int eId = 22;
   FilledDEM.HilltopsToCSV(CHT, CHT_gradient, Surfaces[1], UTM_zone, is_North, eId, ss.str());
 
 }

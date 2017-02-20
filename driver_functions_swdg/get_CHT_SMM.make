@@ -26,7 +26,7 @@ SOURCES=get_CHT_SMM.cpp \
         ../LSDParticle.cpp
 LIBS= -lm -lstdc++ -lfftw3
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=get_CHT.out
+EXECUTABLE=get_CHT_SMM.out
 
 all: $(SOURCES) $(EXECUTABLE)
 
