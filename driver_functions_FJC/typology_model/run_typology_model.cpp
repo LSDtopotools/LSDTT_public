@@ -172,7 +172,7 @@ int main (int nNumberofArgs,char *argv[])
 	vector < vector<int> > SegmentInfoInts;
 	vector < vector<float> > SegmentInfoFloats;
 	int search_radius = 25;
-	ChanNetwork.SplitChannelAdaptive(FlowInfo, sources, MinReachLength, search_radius, filled_DEM, BufferedQ, ChannelSegments, SegmentInfoInts, SegmentInfoFloats);
+	ChanNetwork.TypologyModel(FlowInfo, sources, MinReachLength, search_radius, filled_DEM, BufferedQ, ChannelSegments, SegmentInfoInts, SegmentInfoFloats);
 	string segment_ext = "_segments";
 	ChannelSegments.write_raster((path_name+DEM_name+segment_ext), DEM_extension);
 
