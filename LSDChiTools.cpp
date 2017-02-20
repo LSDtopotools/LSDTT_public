@@ -959,6 +959,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
   float y2_temp =0;
   bool same_channel = true;
   float max_knickpoint_value =0;
+  int new_knickpoint_counter =0;
 
 
   // find the number of nodes
@@ -1074,6 +1075,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
     bool still_processing_total = true;
     int current_node_erase_length = 0;
     int old_max = 0;
+    new_knickpoint_counter = segment_counter_knickpoint;
     //number_of_nodes_to_investigate_length = threshold_knickpoint_length;
     cout << "beginning the length calculation stuffs" << endl;
     while(still_processing_total)
@@ -1097,6 +1099,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
               {
                 this_segment_counter_knickpoint_map.erase(this_node-g);
                 this_segment_knickpoint_sign_map.erase(this_node-g);
+                new_knickpoint_counter--;
                 cout << "something to test blablabla" << endl;
                 distance_to_substract += sqrt((x2_temp - x1_temp)*(x2_temp - x1_temp)+(y2_temp - y1_temp)*(y2_temp - y1_temp));
               }
@@ -1109,6 +1112,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
                 cout << "before erase :" << this_segment_knickpoint_sign_map[this_node+g] << endl;
                 this_segment_counter_knickpoint_map.erase(this_node+g);
                 this_segment_knickpoint_sign_map.erase(this_node+g);
+                new_knickpoint_counter--;
                 cout << "after erase :" << this_segment_knickpoint_sign_map[this_node+g] << endl;
                 distance_to_substract += sqrt((x2_temp - x1_temp)*(x2_temp - x1_temp)+(y2_temp - y1_temp)*(y2_temp - y1_temp));
               }
@@ -1156,7 +1160,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
   }
 
 
-  cout << "segment_counter_knickpoint is   " << segment_counter_knickpoint << "/" << segment_counter << " delta max is " << temp_delta_m << endl;
+  cout << "segment_counter_knickpoint is   " << new_knickpoint_counter << "/" << segment_counter << " delta max is " << temp_delta_m << endl;
   // print everything in the public/protected variables
   segment_counter_knickpoint_map = this_segment_counter_knickpoint_map;
   segment_knickpoint_sign_map = this_segment_knickpoint_sign_map;
