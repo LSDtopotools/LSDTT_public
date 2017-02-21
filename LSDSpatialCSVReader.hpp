@@ -151,16 +151,19 @@ class LSDSpatialCSVReader
     /// @date 13/11/2014
     void check_if_points_are_in_raster();
 
-    /// @brief This function gets vectors of x and y coordinates
+    /// @brief This function gets vectors of x and y coordinates and node indices
+    /// from these points
     /// @details This DOES NOT use latitude and longitude, instead
     /// it assumes that your csv file has columns labelled "X" and "Y".
     /// Can be used when you want to read in points without converting
     /// from latitude and longitude.
+    /// @param FlowInfo LSDFLowInfo object
     /// @param X_coords vector to write X coords to
     /// @param Y_coords vector to write Y coords to
+    /// @param NodeIndices vector to write node indices
     /// @author FJC
     /// @date 21/02/17
-    void get_vectors_of_x_and_y_coords(vector<float>& X_coords, vector<float>& Y_coords);
+    void get_nodeindices_from_x_and_y_coords(LSDFlowInfo& FlowInfo, vector<float>& X_coords, vector<float>& Y_coords, vector<int>& NodeIndices);
 
     /// @brief this prints keys of the data map to screen
     /// @author SMM

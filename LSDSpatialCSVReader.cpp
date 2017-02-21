@@ -531,24 +531,32 @@ void LSDSpatialCSVReader::check_if_points_are_in_raster()
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
-// Function to get vectors of x and y coordinates - this DOES NOT use latitude
-// and longitude, instead it assumes that your csv file has columns labelled
-// "X" and "Y". Can be used when you want to read in points without converting
-// from latitude and longitude.
+// Function to get vectors of x and y coordinates, and the node indices of these
+// points - this DOES NOT use latitude and longitude, instead it assumes that
+// your csv file has columns labelled "X" and "Y". Can be used when you want to
+// read in points without converting from latitude and longitude.
 // FJC 21/02/17
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDSpatialCSVReader::get_vectors_of_x_and_y_coords(vector<float>& X_coords, vector<float>& Y_coords)
+void LSDSpatialCSVReader::get_nodeindices_from_x_and_y_coords(LSDFlowInfo& FlowInfo, vector<float>& X_coords, vector<float>& Y_coords, vector<int> & NodeIndices)
 {
   // get vectors from the columns in the csv file
   string X_coords_name = "X";
   string Y_coords_name = "Y";
   vector<float> X_coords_temp = data_column_to_float(X_coords_name);
   vector<float> Y_coords_temp = data_column_to_float(Y_coords_name);
+  vector<int> NodeIndices_temp;
+
+  for (int i = 0; i < int(X_coords_temp.size()); ++i)
+  {
+    int NodeIndex = FlowInfo.get_node_index_of_coordinate_point(X_coords_temp[i], Y_coords_temp[i]);
+    NodeIndices_temp.push_back(NodeIndex);
+  }
 
   //copy to output vectors
   X_coords = X_coords_temp;
   Y_coords = Y_coords_temp;
+  NodeIndices = NodeIndices_temp;
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
