@@ -4300,9 +4300,10 @@ LSDIndexRaster LSDJunctionNetwork::SplitChannel(LSDFlowInfo& FlowInfo, vector<in
 // 2 - elevation of the start nodes
 // 3 - slope of the segment
 // 4 - slope of the segment based on flow length
-// 4 - discharge of the segment
-// 5 - transport capacity of the segment
-// 6 - sediment supply of the segment
+// 5 - discharge of the segment
+// 6 - transport capacity of the segment
+// 7 - sediment supply of the segment
+// 8 - algorithm value of the segment
 //
 // Modified FJC 06/02/17
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
@@ -4319,8 +4320,8 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
   vector<float> Slopes_Lf;      // slope based on flow length
   vector<float> Discharges;     // discharge of each segment
   vector<float> TransportCapacities; // transport capacity (Q_c) of each segment: Q*S
-  vector<float> SedimentSupplies;    // sediment supply: Q_c of upstream reach * ratio of
-                                    // upstream length to current length
+  vector<float> SedimentSupplies;    // sediment supply: Q_c of upstream reach * ratio of upstream length to current length
+  vector<float> AVs;            // algorithm value, sqrt((Q_C)^2 + (Q_S)^2)
 
   //LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
   Array2D<int> ChannelSegments(NRows,NCols,int(NoDataValue));
@@ -4504,11 +4505,20 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
   {
     int row, col;
     FlowInfo.retrieve_current_row_and_col(StartNodes[i], row, col);
-    SedimentSupplies.push_back(SedimentSupply[row][col]);
+    float ThisQs = SedimentSupply[row][col];
+    SedimentSupplies.push_back(ThisQs);
+
+    //calculate the AV for each Q_s and Q_c
+    float AV = float(NoDataValue);
+    if (TransportCapacities[i] != NoDataValue && ThisQs != NoDataValue)
+    {
+      AV = sqrt((TransportCapacities[i]*TransportCapacities[i]) + (ThisQs*ThisQs));
+    }
+    AVs.push_back(AV);
   }
 
 
-  cout << "Checking segment node finder, n_start nodes: " << StartNodes.size() << " N_end nodes: " << EndNodes.size() << " N_segment ids: " << SegmentIDs.size() << " Final segment ID: " << SegmentID << " N elevations: " << Elevations.size() << " N slopes: " << Slopes.size() << " N slopes lf: " << Slopes_Lf.size() << " N segment lengths: " << SegmentLengths.size() << " N flow lengths: " << FlowLengths.size() << " N TransportCapacities: " << TransportCapacities.size() << " N sediment supplies: " << SedimentSupplies.size() << endl;
+  cout << "Checking segment node finder, n_start nodes: " << StartNodes.size() << " N_end nodes: " << EndNodes.size() << " N_segment ids: " << SegmentIDs.size() << " Final segment ID: " << SegmentID << " N elevations: " << Elevations.size() << " N slopes: " << Slopes.size() << " N slopes lf: " << Slopes_Lf.size() << " N segment lengths: " << SegmentLengths.size() << " N flow lengths: " << FlowLengths.size() << " N TransportCapacities: " << TransportCapacities.size() << " N sediment supplies: " << SedimentSupplies.size() << " N algorithm values: " << AVs.size() << endl;
 
   //push back to master vectors
   SegmentInfoInts.push_back(SegmentIDs);
@@ -4523,6 +4533,7 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
   SegmentInfoFloats.push_back(Discharges);
   SegmentInfoFloats.push_back(TransportCapacities);
   SegmentInfoFloats.push_back(SedimentSupplies);
+  SegmentInfoFloats.push_back(AVs);
 
   LSDIndexRaster SegmentsRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ChannelSegments,GeoReferencingStrings);
   ChannelSegmentsRaster = SegmentsRaster;
@@ -4615,7 +4626,7 @@ void LSDJunctionNetwork::print_channel_segments_to_csv(LSDFlowInfo& FlowInfo, ve
   csv_out.open(outfname.c_str());
   csv_out.precision(8);
 
-  csv_out << "SegmentID,NodeNumber,x,y,SegmentLength,FlowLength,Elevation,Slope,Slope_Lf,Qmed,Q_c,Q_s" << endl;
+  csv_out << "SegmentID,NodeNumber,x,y,SegmentLength,FlowLength,Elevation,Slope,Slope_Lf,Qmed,Q_c,Q_s,AV" << endl;
   int current_row, current_col;
   float x,y;
   cout << "N segments: " << SegmentInfoInts[0].size() << endl;
@@ -4634,7 +4645,7 @@ void LSDJunctionNetwork::print_channel_segments_to_csv(LSDFlowInfo& FlowInfo, ve
     // y coord a bit different since the DEM starts from the top corner
     y = YMinimum + float(NRows-current_row)*DataResolution - 0.5*DataResolution + 0.0001*DataResolution;
 
-    csv_out << SegmentInfoInts[0][i] << "," << current_node << "," << x << "," << y << "," << SegmentInfoFloats[0][i] << "," << SegmentInfoFloats[1][i] << "," << SegmentInfoFloats[2][i] << "," << SegmentInfoFloats[3][i] << "," << SegmentInfoFloats[4][i] << "," << SegmentInfoFloats[5][i] << "," << SegmentInfoFloats[6][i] << "," << SegmentInfoFloats[7][i] << endl;
+    csv_out << SegmentInfoInts[0][i] << "," << current_node << "," << x << "," << y << "," << SegmentInfoFloats[0][i] << "," << SegmentInfoFloats[1][i] << "," << SegmentInfoFloats[2][i] << "," << SegmentInfoFloats[3][i] << "," << SegmentInfoFloats[4][i] << "," << SegmentInfoFloats[5][i] << "," << SegmentInfoFloats[6][i] << "," << SegmentInfoFloats[7][i] << "," << SegmentInfoFloats[8][i] << endl;
   }
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
