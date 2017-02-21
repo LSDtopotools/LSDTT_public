@@ -133,4 +133,16 @@ int main (int nNumberofArgs,char *argv[])
   vector<string> ID;
   string column_name = "sample";
   CSVFile.get_data_in_raster_for_snapping(column_name,E,N,ID);
+  
+  // test the conversion tool
+  LSDCoordinateConverterLLandUTM Converter;
+  double BNG_northing = 62300;
+  double BNG_easting = 429157;
+  
+  double Lat;
+  double Long;
+  Converter.BNGtoLL(BNG_northing, BNG_easting,Lat, Long);
+  cout << "Latitude: " << Lat << " and longitude: " << Long << endl;
+  
+  
 }

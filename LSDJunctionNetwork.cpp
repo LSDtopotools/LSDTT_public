@@ -4300,8 +4300,10 @@ LSDIndexRaster LSDJunctionNetwork::SplitChannel(LSDFlowInfo& FlowInfo, vector<in
 // 2 - elevation of the start nodes
 // 3 - slope of the segment
 // 4 - slope of the segment based on flow length
-// 4 - discharge of the segment
-// 5 - transport capacity of the segment
+// 5 - discharge of the segment
+// 6 - transport capacity of the segment
+// 7 - sediment supply of the segment
+// 8 - algorithm value of the segment
 //
 // Modified FJC 06/02/17
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
@@ -4317,12 +4319,14 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
   vector<float> Slopes;         // slope of each segment
   vector<float> Slopes_Lf;      // slope based on flow length
   vector<float> Discharges;     // discharge of each segment
-  vector<float> TransportCapacities; // transport capacity of each segment: Q*S
-  //vector<float> SedimentSupplies    // sediment supply L*Q*S
+  vector<float> TransportCapacities; // transport capacity (Q_c) of each segment: Q*S
+  vector<float> SedimentSupplies;    // sediment supply: Q_c of upstream reach * ratio of upstream length to current length
+  vector<float> AVs;            // algorithm value, sqrt((Q_C)^2 + (Q_S)^2)
 
   //LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
   Array2D<int> ChannelSegments(NRows,NCols,int(NoDataValue));
   Array2D<int> NodesVisitedBefore(NRows,NCols,0);
+  Array2D<float> SedimentSupply(NRows,NCols,NoDataValue);
   //----------------------------------------------------------------------------
   //
   int SegmentID = 0;
@@ -4358,7 +4362,7 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
       float SegmentLength = MinReachLength*sqrt(ThisArea);
       // check that seg length is at least the minimum
       if (SegmentLength < MinReachLength) { SegmentLength = MinReachLength; }
-      //int NSegmentNodes = ceil(SegmentLength/DataResolution);
+
 
       //push back the source to the vector of starting nodes
       int ThisStartNode = CurrentNode;
@@ -4369,7 +4373,6 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
       SegmentLengths.push_back(SegmentLength);
 
       //find the nearest discharge value to this nodes
-      //float ThisDischarge = FlowInfo.snap_RasterData_to_Node(CurrentNode,DischargeRaster,search_radius);
       float ThisDischarge = DischargeRaster.get_data_element(CurrentRow,CurrentCol);
       Discharges.push_back(ThisDischarge);
 
@@ -4383,7 +4386,6 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
 
         ChannelSegments[CurrentRow][CurrentCol] = SegmentID;
         NodesVisitedBefore[CurrentRow][CurrentCol] = 1;
-        //++NodeCount;
 
         // get the distance to check the segment length
         float ThisDistance = FlowInfo.get_Euclidian_distance(ThisStartNode,CurrentNode);
@@ -4396,7 +4398,6 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
         if(ThisDistance >= SegmentLength || ReceiverStreamOrder > CurrentStreamOrder)
         {
           ++SegmentID;
-          //NodeCount = 0;
           //push back info to vectors
           EndNodes.push_back(CurrentNode);
           StartNodes.push_back(ReceiverNode);
@@ -4406,35 +4407,43 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
           //get the slope of this reach and push back to vector
           float ReachSlope = (ThisElev - ReceiverElev)/SegmentLength;
           Slopes.push_back(ReachSlope);
-          // get the transport capacity
-          if (ThisDischarge != NoDataValue && ReachSlope != NoDataValue)
-          {
-            float TC = ThisDischarge*ReachSlope;
-            TransportCapacities.push_back(TC);
-          }
-          else{ TransportCapacities.push_back(float(NoDataValue)); }
+
 
           // get the flow length of this reach
           float FlowLength = FlowInfo.get_flow_length_between_nodes(ThisStartNode, CurrentNode);
           FlowLengths.push_back(FlowLength);
-          ThisStartNode = ReceiverNode;
 
           // get the slope based on the flow length
           float Slope_Lf = (ThisElev - ReceiverElev)/FlowLength;
           Slopes_Lf.push_back(Slope_Lf);
-          ThisElev = ReceiverElev;
+
           // get discharge and push back to vector
-          //float ReceiverDischarge = FlowInfo.snap_RasterData_to_Node(ReceiverNode,DischargeRaster,search_radius);
           float ReceiverDischarge = DischargeRaster.get_data_element(ReceiverRow,ReceiverCol);
           Discharges.push_back(ReceiverDischarge);
-          ThisDischarge = ReceiverDischarge;
 
           // recalculate the segment length
           ThisArea = FlowInfo.get_DrainageArea_square_km(ReceiverNode);
-          SegmentLength = MinReachLength*sqrt(ThisArea);
-          if (SegmentLength < MinReachLength) { SegmentLength = MinReachLength; }
-          //NSegmentNodes = ceil(SegmentLength/DataResolution);
-          SegmentLengths.push_back(SegmentLength);
+          float NewSegmentLength = MinReachLength*sqrt(ThisArea);
+          if (NewSegmentLength < MinReachLength) { NewSegmentLength = MinReachLength; }
+          SegmentLengths.push_back(NewSegmentLength);
+
+          // get the transport capacity and sediment supply
+          float TC = float(NoDataValue);
+          if (ThisDischarge != NoDataValue && ReachSlope != NoDataValue)
+          {
+            TC = ThisDischarge*ReachSlope;
+            // get the sediment supply. We push this to an array because if we are at a junction
+            // then we will need to add the sediment supply from upstream afterwards.
+            float ReceiverQs = TC * (SegmentLength/NewSegmentLength);
+            SedimentSupply[ReceiverRow][ReceiverCol] = ReceiverQs;
+          }
+          TransportCapacities.push_back(TC);
+
+          //update variables
+          ThisStartNode = ReceiverNode;
+          ThisElev = ReceiverElev;
+          ThisDischarge = ReceiverDischarge;
+          SegmentLength = NewSegmentLength;
 
         }
 
@@ -4447,22 +4456,39 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
           EndOfReach = true;
           ++SegmentID;
           EndNodes.push_back(CurrentNode);
+
           //get the slope of this reach and push back to vector
           float ReachSlope = (ThisElev - ReceiverElev)/SegmentLength;
           Slopes.push_back(ReachSlope);
-          // get the transport capacity
-          if (ThisDischarge != NoDataValue && ReachSlope != NoDataValue)
-          {
-            float TC = ThisDischarge*ReachSlope;
-            TransportCapacities.push_back(TC);
-          }
-          else{ TransportCapacities.push_back(float(NoDataValue)); }
+
           // get the flow length of this reach
           float FlowLength = FlowInfo.get_flow_length_between_nodes(ThisStartNode, CurrentNode);
           FlowLengths.push_back(FlowLength);
+
           // get the slope based on the flow length
           float Slope_Lf = (ThisElev - ReceiverElev)/FlowLength;
           Slopes_Lf.push_back(Slope_Lf);
+
+          // recalculate the segment length
+          ThisArea = FlowInfo.get_DrainageArea_square_km(ReceiverNode);
+          float NewSegmentLength = MinReachLength*sqrt(ThisArea);
+          if (NewSegmentLength < MinReachLength) { NewSegmentLength = MinReachLength; }
+          SegmentLengths.push_back(NewSegmentLength);
+
+          float TC = float(NoDataValue);
+          // get the transport capacity
+          if (ThisDischarge != NoDataValue && ReachSlope != NoDataValue)
+          {
+            TC = ThisDischarge*ReachSlope;
+            // get the sediment supply of this reach. This needs to be added to any existing
+            // values in the sediment supply array.
+            if (SedimentSupply[ReceiverRow][ReceiverCol] != NoDataValue)
+            {
+              float ReceiverQS = TC * (SegmentLength/NewSegmentLength);
+              SedimentSupply[ReceiverRow][ReceiverCol] = SedimentSupply[ReceiverRow][ReceiverCol] + ReceiverQS;
+            }
+          }
+          TransportCapacities.push_back(TC);
         }
         else
         {
@@ -4472,7 +4498,27 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
       }
     }
   }
-   cout << "Checking segment node finder, n_start nodes: " << StartNodes.size() << " N_end nodes: " << EndNodes.size() << " N_segment ids: " << SegmentIDs.size() << " Final segment ID: " << SegmentID << " N elevations: " << Elevations.size() << " N slopes: " << Slopes.size() << " N slopes lf: " << Slopes_Lf.size() << " N segment lengths: " << SegmentLengths.size() << " N flow lengths: " << FlowLengths.size() << " N transport capacities: " << TransportCapacities.size() << endl;
+
+
+  // getting the sediment supply from array to vector. This is annoying but I'm too dumb to think of a more efficient way of doing this.
+  for (int i = 0; i < int(StartNodes.size()); i++)
+  {
+    int row, col;
+    FlowInfo.retrieve_current_row_and_col(StartNodes[i], row, col);
+    float ThisQs = SedimentSupply[row][col];
+    SedimentSupplies.push_back(ThisQs);
+
+    //calculate the AV for each Q_s and Q_c
+    float AV = float(NoDataValue);
+    if (TransportCapacities[i] != NoDataValue && ThisQs != NoDataValue)
+    {
+      AV = sqrt((TransportCapacities[i]*TransportCapacities[i]) + (ThisQs*ThisQs));
+    }
+    AVs.push_back(AV);
+  }
+
+
+  cout << "Checking segment node finder, n_start nodes: " << StartNodes.size() << " N_end nodes: " << EndNodes.size() << " N_segment ids: " << SegmentIDs.size() << " Final segment ID: " << SegmentID << " N elevations: " << Elevations.size() << " N slopes: " << Slopes.size() << " N slopes lf: " << Slopes_Lf.size() << " N segment lengths: " << SegmentLengths.size() << " N flow lengths: " << FlowLengths.size() << " N TransportCapacities: " << TransportCapacities.size() << " N sediment supplies: " << SedimentSupplies.size() << " N algorithm values: " << AVs.size() << endl;
 
   //push back to master vectors
   SegmentInfoInts.push_back(SegmentIDs);
@@ -4486,6 +4532,8 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
   SegmentInfoFloats.push_back(Slopes_Lf);
   SegmentInfoFloats.push_back(Discharges);
   SegmentInfoFloats.push_back(TransportCapacities);
+  SegmentInfoFloats.push_back(SedimentSupplies);
+  SegmentInfoFloats.push_back(AVs);
 
   LSDIndexRaster SegmentsRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, ChannelSegments,GeoReferencingStrings);
   ChannelSegmentsRaster = SegmentsRaster;
@@ -4578,7 +4626,7 @@ void LSDJunctionNetwork::print_channel_segments_to_csv(LSDFlowInfo& FlowInfo, ve
   csv_out.open(outfname.c_str());
   csv_out.precision(8);
 
-  csv_out << "SegmentID,NodeNumber,x,y,SegmentLength,FlowLength,Elevation,Slope,Slope_Lf,Qmed,Q_c" << endl;
+  csv_out << "SegmentID,NodeNumber,x,y,SegmentLength,FlowLength,Elevation,Slope,Slope_Lf,Qmed,Q_c,Q_s,AV" << endl;
   int current_row, current_col;
   float x,y;
   cout << "N segments: " << SegmentInfoInts[0].size() << endl;
@@ -4597,7 +4645,7 @@ void LSDJunctionNetwork::print_channel_segments_to_csv(LSDFlowInfo& FlowInfo, ve
     // y coord a bit different since the DEM starts from the top corner
     y = YMinimum + float(NRows-current_row)*DataResolution - 0.5*DataResolution + 0.0001*DataResolution;
 
-    csv_out << SegmentInfoInts[0][i] << "," << current_node << "," << x << "," << y << "," << SegmentInfoFloats[0][i] << "," << SegmentInfoFloats[1][i] << "," << SegmentInfoFloats[2][i] << "," << SegmentInfoFloats[3][i] << "," << SegmentInfoFloats[4][i] << "," << SegmentInfoFloats[5][i] << "," << SegmentInfoFloats[6][i] << endl;
+    csv_out << SegmentInfoInts[0][i] << "," << current_node << "," << x << "," << y << "," << SegmentInfoFloats[0][i] << "," << SegmentInfoFloats[1][i] << "," << SegmentInfoFloats[2][i] << "," << SegmentInfoFloats[3][i] << "," << SegmentInfoFloats[4][i] << "," << SegmentInfoFloats[5][i] << "," << SegmentInfoFloats[6][i] << "," << SegmentInfoFloats[7][i] << "," << SegmentInfoFloats[8][i] << endl;
   }
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=

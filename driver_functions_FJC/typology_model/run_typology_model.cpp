@@ -28,6 +28,7 @@
 #include "../../LSDIndexRaster.hpp"
 #include "../../LSDFlowInfo.hpp"
 #include "../../LSDJunctionNetwork.hpp"
+#include "../../LSDSpatialCSVReader.hpp"
 #include "../../TNT/tnt.h"
 
 int main (int nNumberofArgs,char *argv[])
@@ -124,7 +125,7 @@ int main (int nNumberofArgs,char *argv[])
 	LSDRaster Discharge((path_name+DEM_name+discharge_ext), DEM_extension);
 
 	// buffer the discharge raster
-	float buffer_radius = 100;
+	float buffer_radius = 150;
 	LSDRaster BufferedQ = Discharge.BufferRasterData(buffer_radius);
 	string buffer_ext = "_Qmed_buffer";
 	BufferedQ.write_raster((path_name+DEM_name+buffer_ext), DEM_extension);
@@ -150,13 +151,19 @@ int main (int nNumberofArgs,char *argv[])
 	// now get the junction network
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 
-	// prin
+	// print the channel network to raster
+	LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
+	string SO_name = "_SO";
+	SOArray.write_raster((path_name+DEM_name+SO_name), DEM_extension);
 
 	cout << "\t Reading in the baseline channel network" << endl;
 	vector<int> NIs;
 	vector<float> X_coords;
 	vector<float> Y_coords;
-	FlowInfo.get_nodeindices_from_csv((path_name+csv_filename), NIs, X_coords, Y_coords);
+	//FlowInfo.get_nodeindices_from_csv((path_name+csv_filename), NIs, X_coords, Y_coords);
+
+	LSDSpatialCSVReader BaselineSources(filled_DEM, (path_name+csv_filename));
+	BaselineSources.get_nodeindices_from_x_and_y_coords(FlowInfo, X_coords, Y_coords, NIs);
 
 	int search_radius_nodes = 25;
 	int threshold_SO = 1;

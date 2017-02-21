@@ -5,7 +5,7 @@
 //
 // An object within the University
 //  of Edinburgh Land Surface Dynamics group topographic toolbox
-//  for reading csv data. The data needs to have latitude and longitude 
+//  for reading csv data. The data needs to have latitude and longitude
 //  in WGS84 coordinates.
 //
 // Developed by:
@@ -20,7 +20,7 @@
 //
 // Developer can be contacted by simon.m.mudd _at_ ed.ac.uk
 //
-//    Simon Mudd                                                    
+//    Simon Mudd
 //    University of Edinburgh
 //    School of GeoSciences
 //    Drummond Street
@@ -81,7 +81,7 @@ class LSDSpatialCSVReader
     /// @date 16/02/2017
     LSDSpatialCSVReader(LSDRasterInfo& ThisRaster, string csv_fname)  { create(ThisRaster,csv_fname); }
 
-    /// @brief This loads a csv file, grabbing the latitude and longitude, 
+    /// @brief This loads a csv file, grabbing the latitude and longitude,
     ///  and putting the rest of the data into data maps
     /// @param filename The name of the csv file including path and extension
     /// @author SMM
@@ -113,15 +113,15 @@ class LSDSpatialCSVReader
     /// @param data_vector the data in a strong vector from the column. Usually sample ID for snapping
     /// @author SMM
     /// @date 20/02/2017
-    void get_data_in_raster_for_snapping(string column_name, 
-                                    vector<float>& UTMEasting, 
+    void get_data_in_raster_for_snapping(string column_name,
+                                    vector<float>& UTMEasting,
                                     vector<float>& UTMNorthing,
                                     vector<string>& data_vector);
 
 
     /// @brief This gets a data column from the csv file
     /// @param column_name a string that holds the column name
-    /// @return a vector of strings: this holds the data. 
+    /// @return a vector of strings: this holds the data.
     /// @author SMM
     /// @date 17/02/2017
     vector<string> get_data_column(string column_name);
@@ -129,7 +129,7 @@ class LSDSpatialCSVReader
     /// @brief This gets a data column from the csv file, and converts it to a
     ///   float vector
     /// @param column_name a string that holds the column name
-    /// @return a vector of floats: this holds the data. 
+    /// @return a vector of floats: this holds the data.
     /// @author SMM
     /// @date 17/02/2017
     vector<float> data_column_to_float(string column_name);
@@ -137,7 +137,7 @@ class LSDSpatialCSVReader
     /// @brief This gets a data column from the csv file, and converts it to an
     ///   int vector
     /// @param column_name a string that holds the column name
-    /// @return a vector of ints: this holds the data. 
+    /// @return a vector of ints: this holds the data.
     /// @author SMM
     /// @date 17/02/2017
     vector<int> data_column_to_int(string column_name);
@@ -150,6 +150,20 @@ class LSDSpatialCSVReader
     /// @author SMM
     /// @date 13/11/2014
     void check_if_points_are_in_raster();
+
+    /// @brief This function gets vectors of x and y coordinates and node indices
+    /// from these points
+    /// @details This DOES NOT use latitude and longitude, instead
+    /// it assumes that your csv file has columns labelled "X" and "Y".
+    /// Can be used when you want to read in points without converting
+    /// from latitude and longitude.
+    /// @param FlowInfo LSDFLowInfo object
+    /// @param X_coords vector to write X coords to
+    /// @param Y_coords vector to write Y coords to
+    /// @param NodeIndices vector to write node indices
+    /// @author FJC
+    /// @date 21/02/17
+    void get_nodeindices_from_x_and_y_coords(LSDFlowInfo& FlowInfo, vector<float>& X_coords, vector<float>& Y_coords, vector<int>& NodeIndices);
 
     /// @brief this prints keys of the data map to screen
     /// @author SMM
@@ -173,7 +187,7 @@ class LSDSpatialCSVReader
 
 
   protected:
-  
+
     ///Number of rows.
     int NRows;
     ///Number of columns.
@@ -190,16 +204,16 @@ class LSDSpatialCSVReader
 
     ///A map of strings for holding georeferencing information
     map<string,string> GeoReferencingStrings;
-    
+
     /// A vector of the latitude (in WGS84)
     vector<double> latitude;
-    
+
     /// A vector of the longitude (in WGS84)
     vector<double> longitude;
-    
+
     /// A vector of bools telling if the points are in the raster
     vector<bool> is_point_in_raster;
-    
+
     /// The map
     map<string, vector<string> > data_map;
 
@@ -209,11 +223,11 @@ class LSDSpatialCSVReader
     void create();
 
     void create(LSDRaster&,string);
-    
+
     void create(LSDRasterInfo&,string);
-    
-  
-    
+
+
+
 
 };
 

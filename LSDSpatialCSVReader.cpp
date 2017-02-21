@@ -5,7 +5,7 @@
 //
 // An object within the University
 //  of Edinburgh Land Surface Dynamics group topographic toolbox
-//  for reading csv data. The data needs to have latitude and longitude 
+//  for reading csv data. The data needs to have latitude and longitude
 //  in WGS84 coordinates.
 //
 // Developed by:
@@ -20,7 +20,7 @@
 //
 // Developer can be contacted by simon.m.mudd _at_ ed.ac.uk
 //
-//    Simon Mudd                                                    
+//    Simon Mudd
 //    University of Edinburgh
 //    School of GeoSciences
 //    Drummond Street
@@ -55,7 +55,7 @@
 #include <string>
 #include <ctype.h>
 #include <sstream>
-#include <algorithm> 
+#include <algorithm>
 #include <vector>
 #include "LSDStatsTools.hpp"
 #include "LSDShapeTools.hpp"
@@ -79,7 +79,7 @@ using namespace TNT;
 void LSDSpatialCSVReader::create()
 {
   cout << "Size data map: " << data_map.size() << endl;
-  map<string, vector<string> > empty_map; 
+  map<string, vector<string> > empty_map;
   cout << "Size empty map: " << empty_map.size() << endl;
   data_map = empty_map;
 }
@@ -98,17 +98,17 @@ void LSDSpatialCSVReader::create(LSDRasterInfo& ThisRasterInfo, string csv_fname
   DataResolution = ThisRasterInfo.get_DataResolution();
   NoDataValue = ThisRasterInfo.get_NoDataValue();
   GeoReferencingStrings = ThisRasterInfo.get_GeoReferencingStrings();
-  
+
   //cout << "Size data map: " << data_map.size() << endl;
   //cout << "Size test map: " << test_map.size() << endl;
-   
-  //map<string, vector<string> > empty_map; 
+
+  //map<string, vector<string> > empty_map;
   //cout << "Size empty map: " << empty_map.size() << endl;
   //data_map = empty_map;
-  
-  
+
+
   load_csv_data(csv_fname);
-  
+
 }
 
 //==============================================================================
@@ -131,7 +131,7 @@ void LSDSpatialCSVReader::create(LSDRaster& ThisRaster, string csv_fname)
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
-// This loads a csv file 
+// This loads a csv file
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDSpatialCSVReader::load_csv_data(string filename)
@@ -148,12 +148,12 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
   {
     cout << "I have opened the csv file." << endl;
   }
-  
+
   // Initiate the data map
   map<string, int > temp_vec_vec_key;
   vector< vector<string> > temp_vec_vec;
   map<string, vector<string> > temp_data_map;
-  
+
   cout << "Data map size is: " << data_map.size() << endl;
   cout << "longitude size is: " << longitude.size() << endl;
   data_map = temp_data_map;
@@ -163,32 +163,32 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
   vector<string> empty_string_vec;
   vector<string> this_string_vec;
   string temp_string;
-  
+
   vector<double> temp_longitude;
   vector<double> temp_latitude;
-  
+
   // get the headers from the first line
   getline(ifs, line_from_file);
-  
+
   // reset the string vec
   this_string_vec = empty_string_vec;
-    
+
   // create a stringstream
   stringstream ss(line_from_file);
   ss.precision(9);
 
-  
+
   while( ss.good() )
   {
     string substr;
     getline( ss, substr, ',' );
-      
+
     // remove the spaces
     substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
-      
+
     // remove control characters
     substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
-      
+
     // add the string to the string vec
     this_string_vec.push_back( substr );
   }
@@ -204,7 +204,7 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
     {
       latitude_index = i;
       //cout << "The latitude index is: " << latitude_index << endl;
-    
+
     }
     else if (this_string_vec[i] == "longitude")
     {
@@ -216,33 +216,33 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
       temp_data_map[header_vector[i]] = empty_string_vec;
     }
   }
-  
-  
-  // now loop through the rest of the lines, getting the data. 
+
+
+  // now loop through the rest of the lines, getting the data.
   while( getline(ifs, line_from_file))
   {
     //cout << "Getting line, it is: " << line_from_file << endl;
     // reset the string vec
     this_string_vec = empty_string_vec;
-    
+
     // create a stringstream
     stringstream ss(line_from_file);
-    
+
     while( ss.good() )
     {
       string substr;
       getline( ss, substr, ',' );
-      
+
       // remove the spaces
       substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
-      
+
       // remove control characters
       substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
-      
+
       // add the string to the string vec
       this_string_vec.push_back( substr );
     }
-    
+
     //cout << "Yoyoma! size of the string vec: " <<  this_string_vec.size() << endl;
     if ( int(this_string_vec.size()) <= 0)
     {
@@ -262,21 +262,21 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
         else if (i == longitude_index)
         {
           temp_longitude.push_back( atof(this_string_vec[i].c_str() ) );
-        
+
         }
         else
         {
           temp_data_map[header_vector[i]].push_back(this_string_vec[i]);
         }
-      
+
       }
       //cout << "Done with this line." << endl;
     }
-    
+
   }
-  
-  
-  
+
+
+
   //cout << "Assigning the vectors." << endl;
   latitude = temp_latitude;
   longitude = temp_longitude;
@@ -295,26 +295,26 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
 vector<string> LSDSpatialCSVReader::get_data_column(string column_name)
 {
   vector<string> data_vector;
-  if ( data_map.find(column_name) == data_map.end() ) 
+  if ( data_map.find(column_name) == data_map.end() )
   {
     // not found
     cout << "I'm afraid the column "<< column_name << " is not in this dataset" << endl;
-  } 
+  }
   else
   {
     data_vector = data_map[column_name];
-  } 
+  }
   return data_vector;
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
-// This function returns data that is in the raster for snapping 
+// This function returns data that is in the raster for snapping
 // It focuses on the ID vector, and converts to Easting-Northing coordinates
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDSpatialCSVReader::get_data_in_raster_for_snapping(string column_name, 
-                                    vector<float>& UTMEasting, 
+void LSDSpatialCSVReader::get_data_in_raster_for_snapping(string column_name,
+                                    vector<float>& UTMEasting,
                                     vector<float>& UTMNorthing,
                                     vector<string>& data_vector)
 {
@@ -322,27 +322,27 @@ void LSDSpatialCSVReader::get_data_in_raster_for_snapping(string column_name,
   vector<string> thinned_data_vector;
   vector<float> easting;
   vector<float> northing;
-  if ( data_map.find(column_name) == data_map.end() ) 
+  if ( data_map.find(column_name) == data_map.end() )
   {
     // not found
     cout << "I am afraid you tried to access data in the csv file that isn't there." << endl;
     cout << "The missing column name is: " << column_name << endl;
     exit(EXIT_SUCCESS);
-  } 
+  }
   else
   {
     this_data_vector = data_map[column_name];
 
   }
-  
+
   // make sure the vector of booleans stating if the point is in the DEM exists
   check_if_points_are_in_raster();
-  
+
   // convert to UTM
   vector<float> UTME;
   vector<float> UTMN;
   get_x_and_y_from_latlong(UTME,UTMN);
-  
+
   // now loop through the samples
   int N_samples = int(longitude.size());
   for (int i = 0; i<N_samples; i++)
@@ -352,12 +352,12 @@ void LSDSpatialCSVReader::get_data_in_raster_for_snapping(string column_name,
       easting.push_back(UTME[i]);
       northing.push_back(UTMN[i]);
       thinned_data_vector.push_back(this_data_vector[i]);
-      
+
       cout << "I am pushing E: " << UTME[i] << " N: " << UTMN[i] << " and data: " << this_data_vector[i] << endl;
-    
+
     }
   }
-  
+
   UTMEasting = easting;
   UTMNorthing = northing;
   data_vector = thinned_data_vector;
@@ -499,7 +499,7 @@ void LSDSpatialCSVReader::check_if_points_are_in_raster()
   vector<float> UTME;   // easting
   vector<float> UTMN;   // northing
   vector<bool> temp_is_point_in_raster;
-  
+
   // get the easting and northing
   get_x_and_y_from_latlong(UTME,UTMN);
 
@@ -531,13 +531,43 @@ void LSDSpatialCSVReader::check_if_points_are_in_raster()
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
+// Function to get vectors of x and y coordinates, and the node indices of these
+// points - this DOES NOT use latitude and longitude, instead it assumes that
+// your csv file has columns labelled "X" and "Y". Can be used when you want to
+// read in points without converting from latitude and longitude.
+// FJC 21/02/17
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDSpatialCSVReader::get_nodeindices_from_x_and_y_coords(LSDFlowInfo& FlowInfo, vector<float>& X_coords, vector<float>& Y_coords, vector<int> & NodeIndices)
+{
+  // get vectors from the columns in the csv file
+  string X_coords_name = "X";
+  string Y_coords_name = "Y";
+  vector<float> X_coords_temp = data_column_to_float(X_coords_name);
+  vector<float> Y_coords_temp = data_column_to_float(Y_coords_name);
+  vector<int> NodeIndices_temp;
+
+  for (int i = 0; i < int(X_coords_temp.size()); ++i)
+  {
+    int NodeIndex = FlowInfo.get_node_index_of_coordinate_point(X_coords_temp[i], Y_coords_temp[i]);
+    NodeIndices_temp.push_back(NodeIndex);
+  }
+
+  //copy to output vectors
+  X_coords = X_coords_temp;
+  Y_coords = Y_coords_temp;
+  NodeIndices = NodeIndices_temp;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
 // This prints the data column keys to screen
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDSpatialCSVReader::print_data_map_keys_to_screen()
 {
   cout << "These are the keys: " << endl;
-  for( map<string, vector<string> >::iterator it = data_map.begin(); it != data_map.end(); ++it) 
+  for( map<string, vector<string> >::iterator it = data_map.begin(); it != data_map.end(); ++it)
   {
     cout << "Key is: " <<it->first << "\n";
   }
@@ -566,8 +596,8 @@ void LSDSpatialCSVReader::print_lat_long_to_screen(bool only_print_in_raster)
   {
     check_if_points_are_in_raster();
   }
-  
-  
+
+
   int N_data = int(latitude.size());
   cout << "latitude,longitude"<< endl;
   cout.precision(9);
@@ -579,7 +609,7 @@ void LSDSpatialCSVReader::print_lat_long_to_screen(bool only_print_in_raster)
       {
         cout << latitude[i] << "," << longitude[i] << endl;
       }
-    
+
     }
     else
     {
