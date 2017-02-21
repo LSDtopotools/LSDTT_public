@@ -150,6 +150,8 @@ int main (int nNumberofArgs,char *argv[])
 	// now get the junction network
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 
+	// prin
+
 	cout << "\t Reading in the baseline channel network" << endl;
 	vector<int> NIs;
 	vector<float> X_coords;
@@ -172,13 +174,13 @@ int main (int nNumberofArgs,char *argv[])
 	vector < vector<int> > SegmentInfoInts;
 	vector < vector<float> > SegmentInfoFloats;
 	int search_radius = 25;
-	ChanNetwork.TypologyModel(FlowInfo, sources, MinReachLength, search_radius, filled_DEM, BufferedQ, ChannelSegments, SegmentInfoInts, SegmentInfoFloats);
+	ChanNetwork.TypologyModel(FlowInfo, sources, snapped_NIs, MinReachLength, search_radius, filled_DEM, BufferedQ, ChannelSegments, SegmentInfoInts, SegmentInfoFloats);
 	string segment_ext = "_segments";
 	ChannelSegments.write_raster((path_name+DEM_name+segment_ext), DEM_extension);
 
 	// removing segments not downstream of baseline sources
-	cout << "\t Removing segments not downstream of baseline sources..." << endl;
-	ChanNetwork.remove_tributary_segments(FlowInfo, snapped_NIs, SegmentInfoInts, SegmentInfoFloats);
+	//cout << "\t Removing segments not downstream of baseline sources..." << endl;
+	//ChanNetwork.remove_tributary_segments(FlowInfo, snapped_NIs, SegmentInfoInts, SegmentInfoFloats);
 
 	//print to csv file
 	cout << "\t Writing csv file of channel segments..." << endl;

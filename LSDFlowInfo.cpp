@@ -7457,7 +7457,7 @@ float LSDFlowInfo::get_flow_length_between_nodes(int UpstreamNode, int Downstrea
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// This function gets the Euclidian distance between two nodes
+// This function gets the Euclidian distance between two nodes in metres
 // FJC 17/02/17
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float LSDFlowInfo::get_Euclidian_distance(int node_A, int node_B)
@@ -7467,8 +7467,11 @@ float LSDFlowInfo::get_Euclidian_distance(int node_A, int node_B)
   retrieve_current_row_and_col(node_A, row_A, col_A);
   retrieve_current_row_and_col(node_B, row_B, col_B);
 
+  float row_length = (row_B - row_A)*DataResolution;
+  float col_length = (col_B - col_A)*DataResolution;
+
   //find the distance between these nodes
-  float dist = sqrt((row_B-row_A)*(row_B-row_A) + (col_B-col_A)*(col_B-col_A));
+  float dist = sqrt(row_length*row_length + col_length*col_length);
 
   return dist;
 }

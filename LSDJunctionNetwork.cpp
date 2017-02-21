@@ -4305,7 +4305,7 @@ LSDIndexRaster LSDJunctionNetwork::SplitChannel(LSDFlowInfo& FlowInfo, vector<in
 //
 // Modified FJC 06/02/17
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
-void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Sources, int MinReachLength, int search_radius, LSDRaster& ElevationRaster, LSDRaster& DischargeRaster, LSDIndexRaster& ChannelSegmentsRaster, vector< vector<int> >& SegmentInfoInts, vector< vector<float> >& SegmentInfoFloats)
+void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Sources, vector<int> BaselineSources, int MinReachLength, int search_radius, LSDRaster& ElevationRaster, LSDRaster& DischargeRaster, LSDIndexRaster& ChannelSegmentsRaster, vector< vector<int> >& SegmentInfoInts, vector< vector<float> >& SegmentInfoFloats)
 {
   //vectors for storing information about the segments
   vector<int> SegmentIDs;       // ID of each segment
@@ -4330,131 +4330,145 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
   // Loop through sources
   for (int i_source = 0; i_source < N_Sources; ++i_source)
   {
-    bool EndOfReach = false;
-    int NodeCount = 0;
-    vector<int> ChannelNodesInSegment;
-    int CurrentNode = Sources[i_source];
-    int CurrentRow,CurrentCol,ReceiverNode,ReceiverRow,ReceiverCol,CurrentStreamOrder,ReceiverStreamOrder;
-    FlowInfo.retrieve_current_row_and_col(CurrentNode,CurrentRow,CurrentCol);
-    // get the drainage area of the sources
-    float ThisArea = FlowInfo.get_DrainageArea_square_km(CurrentNode);
-    // calculate the segment length from the drainage area.
-    float SegmentLength = MinReachLength*sqrt(ThisArea);
-    // check that seg length is at least the minimum
-    if (SegmentLength < MinReachLength) { SegmentLength = MinReachLength; }
-    int NSegmentNodes = ceil(SegmentLength/DataResolution);
-
-    //push back the source to the vector of starting nodes
-    StartNodes.push_back(CurrentNode);
-    SegmentIDs.push_back(SegmentID);
-    float ThisElev = ElevationRaster.get_data_element(CurrentRow,CurrentCol);
-    Elevations.push_back(ThisElev);
-    SegmentLengths.push_back(SegmentLength);
-
-    //find the nearest discharge value to this nodes
-    //float ThisDischarge = FlowInfo.snap_RasterData_to_Node(CurrentNode,DischargeRaster,search_radius);
-    float ThisDischarge = DischargeRaster.get_data_element(CurrentRow,CurrentCol);
-    Discharges.push_back(ThisDischarge);
-
-    // Trace downstream until you rach the end of this channel reach
-    while(EndOfReach == false)
+    int node_test = 0;
+    // thin to the baseline channel network
+    for (int j = 0; j < int(BaselineSources.size()); ++j)
     {
-      FlowInfo.retrieve_current_row_and_col(CurrentNode,CurrentRow,CurrentCol);
-      FlowInfo.retrieve_receiver_information(CurrentNode, ReceiverNode, ReceiverRow, ReceiverCol);
-      // get the elevation information
-      float ReceiverElev = ElevationRaster.get_data_element(ReceiverRow,ReceiverCol);
-
-      ChannelSegments[CurrentRow][CurrentCol] = SegmentID;
-      NodesVisitedBefore[CurrentRow][CurrentCol] = 1;
-      ++NodeCount;
-
-      ReceiverStreamOrder = StreamOrderArray[ReceiverRow][ReceiverCol];
-      CurrentStreamOrder = StreamOrderArray[CurrentRow][CurrentCol];
-
-      // Now check whether we have enough channel nodes or whether stream order
-      // increases (want to start a new segment if this is the case)
-      if(NodeCount >= NSegmentNodes || ReceiverStreamOrder > CurrentStreamOrder)
-      {
-        ++SegmentID;
-        NodeCount = 0;
-
-        //push back info to vectors
-        EndNodes.push_back(CurrentNode);
-        StartNodes.push_back(ReceiverNode);
-        SegmentIDs.push_back(SegmentID);
-        Elevations.push_back(ReceiverElev);
-
-        //get the slope of this reach and push back to vector
-        float ReachSlope = (ThisElev - ReceiverElev)/SegmentLength;
-        Slopes.push_back(ReachSlope);
-        // get the transport capacity
-        if (ThisDischarge != NoDataValue && ReachSlope != NoDataValue)
-        {
-          float TC = ThisDischarge*ReachSlope;
-          TransportCapacities.push_back(TC);
-        }
-        else{ TransportCapacities.push_back(float(NoDataValue)); }
-
-
-        // get the flow length of this reach
-        int NStartNodes = int(StartNodes.size());
-        // get the penultimate start node (= start of this reach)
-        int ThisStartNode = StartNodes[NStartNodes-2];
-        float FlowLength = FlowInfo.get_flow_length_between_nodes(ThisStartNode, CurrentNode);
-        FlowLengths.push_back(FlowLength);
-
-        // get the slope based on the flow length
-        float Slope_Lf = (ThisElev - ReceiverElev)/FlowLength;
-        Slopes_Lf.push_back(Slope_Lf);
-        ThisElev = ReceiverElev;
-        // get discharge and push back to vector
-        //float ReceiverDischarge = FlowInfo.snap_RasterData_to_Node(ReceiverNode,DischargeRaster,search_radius);
-        float ReceiverDischarge = DischargeRaster.get_data_element(ReceiverRow,ReceiverCol);
-        Discharges.push_back(ReceiverDischarge);
-        ThisDischarge = ReceiverDischarge;
-
-        // recalculate the segment length
-        ThisArea = FlowInfo.get_DrainageArea_square_km(ReceiverNode);
-        SegmentLength = MinReachLength*sqrt(ThisArea);
-        if (SegmentLength < MinReachLength) { SegmentLength = MinReachLength; }
-        NSegmentNodes = ceil(SegmentLength/DataResolution);
-        SegmentLengths.push_back(SegmentLength);
-
-      }
-
-      bool ReceiverVisitedBefore = false;
-      // test to see whether we have visited this node before
-      if(NodesVisitedBefore[ReceiverRow][ReceiverCol]==1) ReceiverVisitedBefore = true;
-
-      if(ReceiverVisitedBefore == true)
-      {
-        EndOfReach = true;
-        ++SegmentID;
-        EndNodes.push_back(CurrentNode);
-        //get the slope of this reach and push back to vector
-        float ReachSlope = (ThisElev - ReceiverElev)/SegmentLength;
-        Slopes.push_back(ReachSlope);
-        // get the transport capacity
-        if (ThisDischarge != NoDataValue && ReachSlope != NoDataValue)
-        {
-          float TC = ThisDischarge*ReachSlope;
-          TransportCapacities.push_back(TC);
-        }
-        else{ TransportCapacities.push_back(float(NoDataValue)); }
-        // get the flow length of this reach
-        int NStartNodes = int(StartNodes.size());
-        // get the penultimate start node (= start of this reach)
-        int ThisStartNode = StartNodes[NStartNodes-2];
-        float FlowLength = FlowInfo.get_flow_length_between_nodes(ThisStartNode, CurrentNode);
-        FlowLengths.push_back(FlowLength);
-        // get the slope based on the flow length
-        float Slope_Lf = (ThisElev - ReceiverElev)/FlowLength;
-        Slopes_Lf.push_back(Slope_Lf);
-      }
+      // check if the source is the same as the baseline
+      if (Sources[i_source] == BaselineSources[j]) {node_test = 1;}
       else
       {
-        // Move downstream
-        CurrentNode = ReceiverNode;
+        //check if node is downstream or upstream of the source
+        int upstream_test = FlowInfo.is_node_upstream(Sources[i_source], BaselineSources[j]);
+        int downstream_test = FlowInfo.is_node_upstream(BaselineSources[j], Sources[i_source]);
+        if (upstream_test == 1 || downstream_test == 1) { node_test = 1; }
+      }
+    }
+    if (node_test == 1)
+    {
+      bool EndOfReach = false;
+      //int NodeCount = 0;
+      vector<int> ChannelNodesInSegment;
+      int CurrentNode = Sources[i_source];
+      int CurrentRow,CurrentCol,ReceiverNode,ReceiverRow,ReceiverCol,CurrentStreamOrder,ReceiverStreamOrder;
+      FlowInfo.retrieve_current_row_and_col(CurrentNode,CurrentRow,CurrentCol);
+      // get the drainage area of the sources
+      float ThisArea = FlowInfo.get_DrainageArea_square_km(CurrentNode);
+      // calculate the segment length from the drainage area.
+      float SegmentLength = MinReachLength*sqrt(ThisArea);
+      // check that seg length is at least the minimum
+      if (SegmentLength < MinReachLength) { SegmentLength = MinReachLength; }
+      //int NSegmentNodes = ceil(SegmentLength/DataResolution);
+
+      //push back the source to the vector of starting nodes
+      int ThisStartNode = CurrentNode;
+      StartNodes.push_back(ThisStartNode);
+      SegmentIDs.push_back(SegmentID);
+      float ThisElev = ElevationRaster.get_data_element(CurrentRow,CurrentCol);
+      Elevations.push_back(ThisElev);
+      SegmentLengths.push_back(SegmentLength);
+
+      //find the nearest discharge value to this nodes
+      //float ThisDischarge = FlowInfo.snap_RasterData_to_Node(CurrentNode,DischargeRaster,search_radius);
+      float ThisDischarge = DischargeRaster.get_data_element(CurrentRow,CurrentCol);
+      Discharges.push_back(ThisDischarge);
+
+      // Trace downstream until you rach the end of this channel reach
+      while(EndOfReach == false)
+      {
+        FlowInfo.retrieve_current_row_and_col(CurrentNode,CurrentRow,CurrentCol);
+        FlowInfo.retrieve_receiver_information(CurrentNode, ReceiverNode, ReceiverRow, ReceiverCol);
+        // get the elevation information
+        float ReceiverElev = ElevationRaster.get_data_element(ReceiverRow,ReceiverCol);
+
+        ChannelSegments[CurrentRow][CurrentCol] = SegmentID;
+        NodesVisitedBefore[CurrentRow][CurrentCol] = 1;
+        //++NodeCount;
+
+        // get the distance to check the segment length
+        float ThisDistance = FlowInfo.get_Euclidian_distance(ThisStartNode,CurrentNode);
+
+        ReceiverStreamOrder = StreamOrderArray[ReceiverRow][ReceiverCol];
+        CurrentStreamOrder = StreamOrderArray[CurrentRow][CurrentCol];
+
+        // Now check whether we have a long enough segment or whether stream order
+        // increases (want to start a new segment if this is the case)
+        if(ThisDistance >= SegmentLength || ReceiverStreamOrder > CurrentStreamOrder)
+        {
+          ++SegmentID;
+          //NodeCount = 0;
+          //push back info to vectors
+          EndNodes.push_back(CurrentNode);
+          StartNodes.push_back(ReceiverNode);
+          SegmentIDs.push_back(SegmentID);
+          Elevations.push_back(ReceiverElev);
+
+          //get the slope of this reach and push back to vector
+          float ReachSlope = (ThisElev - ReceiverElev)/SegmentLength;
+          Slopes.push_back(ReachSlope);
+          // get the transport capacity
+          if (ThisDischarge != NoDataValue && ReachSlope != NoDataValue)
+          {
+            float TC = ThisDischarge*ReachSlope;
+            TransportCapacities.push_back(TC);
+          }
+          else{ TransportCapacities.push_back(float(NoDataValue)); }
+
+          // get the flow length of this reach
+          float FlowLength = FlowInfo.get_flow_length_between_nodes(ThisStartNode, CurrentNode);
+          FlowLengths.push_back(FlowLength);
+          ThisStartNode = ReceiverNode;
+
+          // get the slope based on the flow length
+          float Slope_Lf = (ThisElev - ReceiverElev)/FlowLength;
+          Slopes_Lf.push_back(Slope_Lf);
+          ThisElev = ReceiverElev;
+          // get discharge and push back to vector
+          //float ReceiverDischarge = FlowInfo.snap_RasterData_to_Node(ReceiverNode,DischargeRaster,search_radius);
+          float ReceiverDischarge = DischargeRaster.get_data_element(ReceiverRow,ReceiverCol);
+          Discharges.push_back(ReceiverDischarge);
+          ThisDischarge = ReceiverDischarge;
+
+          // recalculate the segment length
+          ThisArea = FlowInfo.get_DrainageArea_square_km(ReceiverNode);
+          SegmentLength = MinReachLength*sqrt(ThisArea);
+          if (SegmentLength < MinReachLength) { SegmentLength = MinReachLength; }
+          //NSegmentNodes = ceil(SegmentLength/DataResolution);
+          SegmentLengths.push_back(SegmentLength);
+
+        }
+
+        bool ReceiverVisitedBefore = false;
+        // test to see whether we have visited this node before
+        if(NodesVisitedBefore[ReceiverRow][ReceiverCol]==1) ReceiverVisitedBefore = true;
+
+        if(ReceiverVisitedBefore == true)
+        {
+          EndOfReach = true;
+          ++SegmentID;
+          EndNodes.push_back(CurrentNode);
+          //get the slope of this reach and push back to vector
+          float ReachSlope = (ThisElev - ReceiverElev)/SegmentLength;
+          Slopes.push_back(ReachSlope);
+          // get the transport capacity
+          if (ThisDischarge != NoDataValue && ReachSlope != NoDataValue)
+          {
+            float TC = ThisDischarge*ReachSlope;
+            TransportCapacities.push_back(TC);
+          }
+          else{ TransportCapacities.push_back(float(NoDataValue)); }
+          // get the flow length of this reach
+          float FlowLength = FlowInfo.get_flow_length_between_nodes(ThisStartNode, CurrentNode);
+          FlowLengths.push_back(FlowLength);
+          // get the slope based on the flow length
+          float Slope_Lf = (ThisElev - ReceiverElev)/FlowLength;
+          Slopes_Lf.push_back(Slope_Lf);
+        }
+        else
+        {
+          // Move downstream
+          CurrentNode = ReceiverNode;
+        }
       }
     }
   }
