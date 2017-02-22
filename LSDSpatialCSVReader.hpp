@@ -67,6 +67,13 @@ class LSDSpatialCSVReader
 {
   public:
 
+
+    /// @brief Create an LSDSpatialCSVReader from a raster and csv filenname
+    /// @param csv_fname The name of the csv file including extension  and path
+    /// @author SMM
+    /// @date 22/02/2017
+    LSDSpatialCSVReader(string csv_fname)  { create(csv_fname); }
+
     /// @brief Create an LSDSpatialCSVReader from a raster and csv filenname
     /// @param ThisRaster An LSDRaster object
     /// @param csv_fname The name of the csv file including extension  and path
@@ -87,6 +94,15 @@ class LSDSpatialCSVReader
     /// @author SMM
     /// @date 16/02/2017
     void load_csv_data(string filename);
+
+    /// @brief this function sets a UTM_ coordinate system string
+    /// the map is in the northern hemisphere
+    /// @param UTM_zone the UTM zone. Replaced in function.
+    /// @param is_North a boolean that is true if the DEM is in the northern hemisphere.
+    ///  replaced in function
+    /// @author SMM
+    /// @date 22/02/2017
+    void set_UTM_information(int UTM_zone, bool is_North);
 
     /// @brief this function gets the UTM_zone and a boolean that is true if
     /// the map is in the northern hemisphere
@@ -221,6 +237,8 @@ class LSDSpatialCSVReader
   private:
 
     void create();
+    
+    void create(string);
 
     void create(LSDRaster&,string);
 

@@ -84,6 +84,36 @@ void LSDSpatialCSVReader::create()
   data_map = empty_map;
 }
 
+//==============================================================================
+// Basic create function
+//==============================================================================
+void LSDSpatialCSVReader::create(string csv_fname)
+{
+  cout << "I am creating something for you" << endl;
+  NRows = -9999;
+  NCols = -9999;
+  XMinimum = -9999;
+  YMinimum = -9999;
+  DataResolution = -9999;
+  NoDataValue = -9999;
+  
+  ///A map of strings for holding georeferencing information
+  map<string,string> EmptyString;
+  GeoReferencingStrings = EmptyString;
+
+  //cout << "Size data map: " << data_map.size() << endl;
+  //cout << "Size test map: " << test_map.size() << endl;
+
+  //map<string, vector<string> > empty_map;
+  //cout << "Size empty map: " << empty_map.size() << endl;
+  //data_map = empty_map;
+
+
+  load_csv_data(csv_fname);
+
+}
+
+
 
 //==============================================================================
 // Basic create function
@@ -408,6 +438,7 @@ void LSDSpatialCSVReader::get_UTM_information(int& UTM_zone, bool& is_North)
   //check to see if there is already a map info string
   string mi_key = "ENVI_map_info";
   iter = GeoReferencingStrings.find(mi_key);
+  
   if (iter != GeoReferencingStrings.end() )
   {
     string info_str = GeoReferencingStrings[mi_key] ;
@@ -451,6 +482,57 @@ void LSDSpatialCSVReader::get_UTM_information(int& UTM_zone, bool& is_North)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This sets some coordinate system strings for UTM
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDSpatialCSVReader::set_UTM_information(int UTM_zone, bool is_North)
+{
+  string cs_key = "coordinate system string";
+  
+  string fpart = "{PROJCS[\"WGS_1984_UTM_Zone_";
+  string spart = itoa(UTM_zone);
+  
+  string tpart;
+  if(is_North)
+  {
+    tpart = "N";
+  }
+  else
+  {
+    tpart = "S";
+  }
+  string fopart = ",GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",";
+
+  int start_cm = -183;
+  int cm = start_cm+UTM_zone*6;
+  string fipart = itoa(cm);
+  string sipart = "],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"Meter\",1]]}";
+
+  string cs_string = fpart+spart+tpart+fopart+fipart+sipart;
+  GeoReferencingStrings[cs_key] = cs_string;
+  cout << "The coordinate system string is: " << cs_string << endl; 
+
+  string mi_key = "ENVI_map_info";
+  string mi_p1 = "{UTM, 1, 1, -9999, -9999, -9999, -9999,";
+  string mi_p2 = itoa(UTM_zone);
+  
+  string mi_p3;
+  if(is_North)
+  {
+    mi_p3 = ", North,WGS-84}";
+  }
+  else
+  {
+    mi_p3 = ", South,WGS-84}";
+  }
+  
+  string mi = mi_p1+mi_p2+mi_p3;
+  GeoReferencingStrings[mi_key] = mi;
+  cout << "the map info string is:" << mi << endl;
+
+}
+
+
 //==============================================================================
 // This gets the x and y locations from the latitude and longitude
 //==============================================================================
@@ -487,8 +569,6 @@ void LSDSpatialCSVReader::get_x_and_y_from_latlong(vector<float>& UTME,vector<fl
 
   UTME = this_UTME;
   UTMN = this_UTMN;
-
-
 }
 
 //==============================================================================
