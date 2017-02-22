@@ -121,6 +121,14 @@ class LSDSpatialCSVReader
     /// @date 17/02/2017
     void get_x_and_y_from_latlong(vector<float>& UTME,vector<float>& UTMN);
 
+    /// @brief This takes the X and Y columns in a csv, assumes they are UTM, and converts to 
+    ///  latitude and loingitude in WGS84
+    /// @param X_column_name Name of the column in the csv with X coordinate (easting)
+    /// @param Y_column_name Name of the column in the csv with Y coordinate (northing)
+    /// @author SMM
+    /// @date 22/02/2017
+    void get_latlong_from_x_and_y(string X_column_name, string Y_column_name);
+
     /// @brief This gets UTM coordinates and a data vector (usually IDs)
     ///  for snapping to a channel network
     /// @param column_name a string that holds the column name
@@ -180,6 +188,9 @@ class LSDSpatialCSVReader
     /// @author FJC
     /// @date 21/02/17
     void get_nodeindices_from_x_and_y_coords(LSDFlowInfo& FlowInfo, vector<float>& X_coords, vector<float>& Y_coords, vector<int>& NodeIndices);
+
+
+
 
     /// @brief this prints keys of the data map to screen
     /// @author SMM

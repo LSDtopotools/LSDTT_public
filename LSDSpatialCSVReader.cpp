@@ -572,6 +572,69 @@ void LSDSpatialCSVReader::get_x_and_y_from_latlong(vector<float>& UTME,vector<fl
 }
 
 //==============================================================================
+// This gets the latitude and longitude from x and y columns
+//==============================================================================
+void LSDSpatialCSVReader::get_latlong_from_x_and_y(string X_column_name, string Y_column_name)
+{
+  // initilise the converter
+  LSDCoordinateConverterLLandUTM Converter;
+  
+  vector<double> new_lat;
+  vector<double> new_long;
+
+  int UTM_zone; 
+  bool is_North;
+  int eId = 22;
+  get_UTM_information(UTM_zone,is_North);
+  cout << "Getting lat and long from UTM Easting and Northing. " << endl;
+  cout << "Zone: " << UTM_zone << " and is north? ";
+  if (is_North)
+  {
+    cout <<  "youbetcha!" << endl;
+  }
+  else
+  {
+    cout << " no, it is south." << endl;
+  }
+  
+  vector<float> X_data = data_column_to_float(X_column_name);
+  vector<float> Y_data = data_column_to_float(Y_column_name);
+
+  int N_x = int(X_data.size());
+  int N_y = int(Y_data.size());
+  if (N_x != N_y)
+  {
+    cout << "Your X and Y columns don't have the same lengths, something has gone wrong." << endl;
+    cout << "I am not updating the latitude and longitude" << endl;
+  }
+  else
+  {
+    for (int i = 0; i<N_x; i++)
+    {
+      double thisX = X_data[i];
+      double thisY = Y_data[i];
+      
+      double Lat;
+      double Long;
+      Converter.UTMtoLL(eId, thisY, thisX, UTM_zone, is_North,Lat, Long);
+      new_lat.push_back(Lat);
+      new_long.push_back(Long);
+      
+      //if (i == 0)
+      //{
+      //  cout << "X: " << thisX << " Y: " << thisY << " Lat: " << Lat << " Long: " << Long << endl;
+      //}
+    
+    }
+    
+    latitude = new_lat;
+    longitude = new_long;
+  }
+
+}
+
+
+//==============================================================================
 // This checks if points are in raster
 //==============================================================================
 void LSDSpatialCSVReader::check_if_points_are_in_raster()
