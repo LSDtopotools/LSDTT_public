@@ -1050,38 +1050,39 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
     // calculating equivalent between nodes_of_knickpoints and nodes to be able to properly navigate inside the map
     int nodes_of_knickpoints [segment_counter_knickpoint];
     int knickpoint_id = 0;
+    int last_knickpoint_id = 0;
     for(int i = 0; i< n_nodes; i++)
+    {
+      this_node = node_sequence[i];
+      if(this_segment_counter_knickpoint_map.count(this_node)) // supposed to test if this map has a value assigned for this key
       {
-        this_node = node_sequence[i];
-        if(this_segment_counter_knickpoint_map.count(this_node)) // supposed to test if this map has a value assigned for this key
-        {
-          nodes_of_knickpoints[knickpoint_id] = this_node;
-          knickpoint_id++;
-        }
+        nodes_of_knickpoints[knickpoint_id] = this_node;
+        knickpoint_id++;
+        last_knickpoint_id = knickpoint_id; // stock the last knickpoint_id
       }
-
+    }
     // setting up the calculation for the length threshold
     bool still_processing = true;
     bool still_processing_total = true;
     float old_max_knickpoint_value = max_knickpoint_value;
     float distance_to_process_down = threshold_knickpoint_length/2; // represents the threshold
     float distance_to_process_up = threshold_knickpoint_length/2; // represents the threshold
+    int number_of_erase = 0;
 
     while (still_processing_total)
     {
-      distance_to_process_down = threshold_knickpoint_length/2;
-      distance_to_process_up = threshold_knickpoint_length/2;
       still_processing = true;
       vector <int> knickpoint_to_delete;
       knickpoint_id = 0;
-      cout<< "near BM Time" << endl;
+
       map<int, int>::iterator it = this_segment_counter_knickpoint_map.begin();
       while(still_processing && it != this_segment_counter_knickpoint_map.end())
       {
         //cout<<it->first<<" :: "<<it->second<<endl;
         if(it->second == max_knickpoint_value)
         {
-          cout << "test etc etc etc" << endl;
+          distance_to_process_down = threshold_knickpoint_length/2;
+          distance_to_process_up = threshold_knickpoint_length/2;
           // let's know test the distance before and beyond this nodes
           for(int g = 1; distance_to_process_down>0 || distance_to_process_up >0 ;g++)
           {
@@ -1095,14 +1096,15 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
               FlowInfo.get_x_and_y_from_current_node(last_node, x1_temp, y1_temp);
               FlowInfo.get_x_and_y_from_current_node(this_node, x2_temp, y2_temp);
               float temp_distance = sqrt((x2_temp - x1_temp)*(x2_temp - x1_temp)+(y2_temp - y1_temp)*(y2_temp - y1_temp));
-              if(temp_distance > distance_to_process_down)
+              if(temp_distance < distance_to_process_down)
               {
                 distance_to_process_down-=temp_distance;
                 knickpoint_to_delete.push_back(this_node);
               } else{distance_to_process_down = 0;}
             }
             else{distance_to_process_down = 0;}
-            if(this_segment_counter_knickpoint_map.count(nodes_of_knickpoints[knickpoint_id + g]))
+            // calculate the case up
+            if(this_segment_counter_knickpoint_map.count(nodes_of_knickpoints[knickpoint_id + g]) && distance_to_process_up> 0)
             {
               //cout << "up exists" << endl;
               this_node = nodes_of_knickpoints[knickpoint_id + g];
@@ -1110,7 +1112,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
               FlowInfo.get_x_and_y_from_current_node(last_node, x1_temp, y1_temp);
               FlowInfo.get_x_and_y_from_current_node(this_node, x2_temp, y2_temp);
               float temp_distance = sqrt((x2_temp - x1_temp)*(x2_temp - x1_temp)+(y2_temp - y1_temp)*(y2_temp - y1_temp));
-              if(temp_distance > distance_to_process_down)
+              if(temp_distance < distance_to_process_down)
               {
                 distance_to_process_down-=temp_distance;
                 knickpoint_to_delete.push_back(this_node);
@@ -1119,10 +1121,11 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
             else {distance_to_process_up = 0;}
           }
           // Now I have to erase everything I planned to
-          for (std::vector<int>::iterator it2 = knickpoint_to_delete.begin() ; it2 != knickpoint_to_delete.end(); ++it)
+          for (std::vector<int>::iterator it2 = knickpoint_to_delete.begin() ; it2 != knickpoint_to_delete.end(); it2++)
           {
-            this_segment_counter_knickpoint_map.erase(it->second);
-            it2++;
+            this_segment_counter_knickpoint_map.erase(*it2);
+            //cout << *it2 <<endl;
+            number_of_erase++;
           }
 
           it = this_segment_counter_knickpoint_map.begin();
@@ -1137,9 +1140,9 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
             this_node = nodes_of_knickpoints[j];
             if(this_segment_counter_knickpoint_map.count(this_node))
             {
-              if(this_segment_counter_knickpoint_map[this_node] > max_knickpoint_value && this_segment_counter_knickpoint_map[this_node] <= old_max_knickpoint_value)
+              if(this_segment_counter_knickpoint_map[this_node] > max_knickpoint_value && this_segment_counter_knickpoint_map[this_node] < old_max_knickpoint_value && j!=knickpoint_id )
                 {
-                  max_knickpoint_value =this_segment_counter_knickpoint_map[this_node];
+                  max_knickpoint_value = this_segment_counter_knickpoint_map[this_node];
                   //if(this_segment_counter_knickpoint_map[this_node] == max_knickpoint_value) {cout<< "biiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiite"<< endl;}
                 }
             }
@@ -1154,7 +1157,8 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
 
           it++;
           knickpoint_id++;
-          if(it == this_segment_counter_knickpoint_map.end())
+          cout <<"application of the length threshold: " << it->first << "||" << number_of_erase <<"||"<<old_max_knickpoint_value<<"||" <<max_knickpoint_value <<endl;
+          if(it->first == nodes_of_knickpoints[last_knickpoint_id] || max_knickpoint_value == 0)
           {
             still_processing_total = false;
           }
