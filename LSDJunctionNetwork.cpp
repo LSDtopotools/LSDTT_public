@@ -4363,17 +4363,21 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
       // check that seg length is at least the minimum
       if (SegmentLength < MinReachLength) { SegmentLength = MinReachLength; }
 
-
       //push back the source to the vector of starting nodes
       int ThisStartNode = CurrentNode;
       StartNodes.push_back(ThisStartNode);
       SegmentIDs.push_back(SegmentID);
       float ThisElev = ElevationRaster.get_data_element(CurrentRow,CurrentCol);
       Elevations.push_back(ThisElev);
-      SegmentLengths.push_back(SegmentLength);
+      //SegmentLengths.push_back(SegmentLength);
 
+      float ThisDischarge;
       //find the nearest discharge value to this nodes
-      float ThisDischarge = DischargeRaster.get_data_element(CurrentRow,CurrentCol);
+      if (DischargeRaster.get_data_element(CurrentRow,CurrentCol) != NoDataValue)
+      {
+        ThisDischarge = (DischargeRaster.get_data_element(CurrentRow,CurrentCol))*0.001;  // convert discharge to m^3/s
+      }
+      else { ThisDischarge = float(NoDataValue); }
       Discharges.push_back(ThisDischarge);
 
       // Trace downstream until you rach the end of this channel reach
@@ -4398,34 +4402,27 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
         if(ThisDistance >= SegmentLength || ReceiverStreamOrder > CurrentStreamOrder)
         {
           ++SegmentID;
-          //push back info to vectors
-          EndNodes.push_back(CurrentNode);
-          StartNodes.push_back(ReceiverNode);
-          SegmentIDs.push_back(SegmentID);
-          Elevations.push_back(ReceiverElev);
-
           //get the slope of this reach and push back to vector
           float ReachSlope = (ThisElev - ReceiverElev)/SegmentLength;
-          Slopes.push_back(ReachSlope);
-
 
           // get the flow length of this reach
           float FlowLength = FlowInfo.get_flow_length_between_nodes(ThisStartNode, CurrentNode);
-          FlowLengths.push_back(FlowLength);
 
           // get the slope based on the flow length
           float Slope_Lf = (ThisElev - ReceiverElev)/FlowLength;
-          Slopes_Lf.push_back(Slope_Lf);
 
           // get discharge and push back to vector
-          float ReceiverDischarge = DischargeRaster.get_data_element(ReceiverRow,ReceiverCol);
-          Discharges.push_back(ReceiverDischarge);
+          float ReceiverDischarge;
+          if (DischargeRaster.get_data_element(ReceiverRow,ReceiverCol) != NoDataValue)
+          {
+            ReceiverDischarge = (DischargeRaster.get_data_element(ReceiverRow,ReceiverCol))*0.001;  // convert to m^3/s
+          }
+          else { ReceiverDischarge = float(NoDataValue); }
 
           // recalculate the segment length
           ThisArea = FlowInfo.get_DrainageArea_square_km(ReceiverNode);
           float NewSegmentLength = MinReachLength*sqrt(ThisArea);
           if (NewSegmentLength < MinReachLength) { NewSegmentLength = MinReachLength; }
-          SegmentLengths.push_back(NewSegmentLength);
 
           // get the transport capacity and sediment supply
           float TC = float(NoDataValue);
@@ -4434,9 +4431,22 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
             TC = ThisDischarge*ReachSlope;
             // get the sediment supply. We push this to an array because if we are at a junction
             // then we will need to add the sediment supply from upstream afterwards.
-            float ReceiverQs = TC * (SegmentLength/NewSegmentLength);
+            float UpstreamDistance = SegmentLengths.back();
+            float ReceiverQs = TC * (UpstreamDistance/ThisDistance);
             SedimentSupply[ReceiverRow][ReceiverCol] = ReceiverQs;
           }
+
+          //push back info to vectors
+          EndNodes.push_back(CurrentNode);
+          StartNodes.push_back(ReceiverNode);
+          SegmentIDs.push_back(SegmentID);
+
+          SegmentLengths.push_back(ThisDistance);
+          FlowLengths.push_back(FlowLength);
+          Elevations.push_back(ReceiverElev);
+          Slopes.push_back(ReachSlope);
+          Slopes_Lf.push_back(Slope_Lf);
+          Discharges.push_back(ReceiverDischarge);
           TransportCapacities.push_back(TC);
 
           //update variables
@@ -4455,25 +4465,20 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
         {
           EndOfReach = true;
           ++SegmentID;
-          EndNodes.push_back(CurrentNode);
 
           //get the slope of this reach and push back to vector
           float ReachSlope = (ThisElev - ReceiverElev)/SegmentLength;
-          Slopes.push_back(ReachSlope);
 
           // get the flow length of this reach
           float FlowLength = FlowInfo.get_flow_length_between_nodes(ThisStartNode, CurrentNode);
-          FlowLengths.push_back(FlowLength);
 
           // get the slope based on the flow length
           float Slope_Lf = (ThisElev - ReceiverElev)/FlowLength;
-          Slopes_Lf.push_back(Slope_Lf);
 
           // recalculate the segment length
           ThisArea = FlowInfo.get_DrainageArea_square_km(ReceiverNode);
           float NewSegmentLength = MinReachLength*sqrt(ThisArea);
           if (NewSegmentLength < MinReachLength) { NewSegmentLength = MinReachLength; }
-          SegmentLengths.push_back(NewSegmentLength);
 
           float TC = float(NoDataValue);
           // get the transport capacity
@@ -4484,10 +4489,18 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
             // values in the sediment supply array.
             if (SedimentSupply[ReceiverRow][ReceiverCol] != NoDataValue)
             {
-              float ReceiverQS = TC * (SegmentLength/NewSegmentLength);
-              SedimentSupply[ReceiverRow][ReceiverCol] = SedimentSupply[ReceiverRow][ReceiverCol] + ReceiverQS;
+              float UpstreamDistance = SegmentLengths.back();
+              float ReceiverQs = TC * (UpstreamDistance/ThisDistance);
+              SedimentSupply[ReceiverRow][ReceiverCol] = SedimentSupply[ReceiverRow][ReceiverCol] + ReceiverQs;
             }
           }
+
+          //push back info to vectors
+          EndNodes.push_back(CurrentNode);
+          SegmentLengths.push_back(ThisDistance);
+          FlowLengths.push_back(FlowLength);
+          Slopes.push_back(ReachSlope);
+          Slopes_Lf.push_back(Slope_Lf);
           TransportCapacities.push_back(TC);
         }
         else
