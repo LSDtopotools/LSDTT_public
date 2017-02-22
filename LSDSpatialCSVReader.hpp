@@ -209,8 +209,8 @@ class LSDSpatialCSVReader
     void print_lat_long_to_screen(bool only_print_in_raster);
 
     /// Gets the various data members
-    vector<double> get_latitude()  const {return latitude;}
-    vector<double> getlongitude()  const {return longitude;}
+    vector<double> get_latitude() const {return latitude;}
+    vector<double> get_longitude() const {return longitude;}
 
 
   protected:
