@@ -119,7 +119,7 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["m_over_n"] = 0.5;
   float_default_map["sigma"] = 20;
   float_default_map["threshold_knickpoint_detection"] = 1; // threshold for the detection of knickpoints in the m_chi value
-  float_default_map["threshold_knickpoint_length"] = 15000; // length threshold to avoid too close knickpoints
+  float_default_map["threshold_knickpoint_length"] = 0; // length threshold to avoid too close knickpoints
 
   // set default methods
   bool_default_map["only_check_parameters"] = false;
