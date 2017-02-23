@@ -165,6 +165,12 @@ int main (int nNumberofArgs,char *argv[])
 	LSDSpatialCSVReader BaselineSources(filled_DEM, (path_name+csv_filename));
 	BaselineSources.get_nodeindices_from_x_and_y_coords(FlowInfo, X_coords, Y_coords, NIs);
 
+	// get the catch_ID and hydro_code from the baseline sources
+	string catch_name = "CATCH_";
+	string hydro_code_name = "HYDRO_CODE";
+	vector<int> CatchIDs = BaselineSources.data_column_to_int(catch_name);
+	vector<int> HydroCodes = BaselineSources.data_column_to_int(hydro_code_name);
+
 	int search_radius_nodes = 25;
 	int threshold_SO = 1;
 	vector<int> valid_points;
