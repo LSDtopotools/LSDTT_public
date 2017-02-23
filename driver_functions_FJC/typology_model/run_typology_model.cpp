@@ -168,15 +168,26 @@ int main (int nNumberofArgs,char *argv[])
 	// get the catch_ID and hydro_code from the baseline sources
 	string catch_name = "CATCH_";
 	string hydro_code_name = "HYDRO_CODE";
-	vector<int> CatchIDs = BaselineSources.data_column_to_int(catch_name);
-	vector<int> HydroCodes = BaselineSources.data_column_to_int(hydro_code_name);
+	vector<int> CatchIDs_temp = BaselineSources.data_column_to_int(catch_name);
+	vector<int> HydroCodes_temp = BaselineSources.data_column_to_int(hydro_code_name);
 
 	int search_radius_nodes = 25;
 	int threshold_SO = 1;
-	vector<int> valid_points;
+	vector<int> ValidIndices;
 	vector<int> snapped_NIs;
 	vector<int> snapped_JNs;
-	ChanNetwork.snap_point_locations_to_channels(X_coords, Y_coords, search_radius_nodes, threshold_SO, FlowInfo, valid_points, snapped_NIs, snapped_JNs);
+	ChanNetwork.snap_point_locations_to_channels(X_coords, Y_coords, search_radius_nodes, threshold_SO, FlowInfo, ValidIndices, snapped_NIs, snapped_JNs);
+
+	// loop through the snapped NIs and get the CatchIDs and HydroCodes_temp
+	vector<int> CatchIDs, HydroCodes;
+	for (int i = 0; i < int(snapped_NIs.size()); ++i)
+	{
+		int this_index = ValidIndices[i];
+		CatchIDs.push_back(CatchIDs_temp[this_index]);
+		HydroCodes.push_back(HydroCodes_temp[this_index]);
+		cout << "This NI is: " << snapped_NIs[i] << " CATCH_: " << CatchIDs_temp[this_index] << " HYDRO_CODE: " << HydroCodes_temp[this_index] << endl;
+	}
+
 
 	string snapped_file = "_snapped";
 	FlowInfo.print_vector_of_nodeindices_to_csv_file(snapped_NIs, (path_name+DEM_name+snapped_file));
@@ -187,7 +198,7 @@ int main (int nNumberofArgs,char *argv[])
 	vector < vector<int> > SegmentInfoInts;
 	vector < vector<float> > SegmentInfoFloats;
 	int search_radius = 25;
-	ChanNetwork.TypologyModel(FlowInfo, sources, snapped_NIs, MinReachLength, search_radius, filled_DEM, BufferedQ, ChannelSegments, SegmentInfoInts, SegmentInfoFloats);
+	ChanNetwork.TypologyModel(FlowInfo, sources, snapped_NIs, CatchIDs, HydroCodes, MinReachLength, search_radius, filled_DEM, BufferedQ, ChannelSegments, SegmentInfoInts, SegmentInfoFloats);
 	string segment_ext = "_segments";
 	ChannelSegments.write_raster((path_name+DEM_name+segment_ext), DEM_extension);
 

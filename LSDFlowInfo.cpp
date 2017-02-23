@@ -2342,7 +2342,7 @@ LSDRaster LSDFlowInfo::upslope_variable_accumulator(LSDRaster& accum_raster)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// This function tests whether one node is upstream of another node
+// This function tests whether the test is upstream of the current node
 //
 // FC 01/06/2012
 //
@@ -7460,7 +7460,7 @@ float LSDFlowInfo::get_flow_length_between_nodes(int UpstreamNode, int Downstrea
     		}
     	}
     }
-  }  
+  }
 	return length;
 }
 

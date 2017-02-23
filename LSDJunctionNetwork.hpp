@@ -1048,14 +1048,19 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   ///
   /// @param FlowInfo LSDFlowInfo object
   /// @param Sources a vector of sources
+  /// @param BaselineSources vector of baseline DRN sources
+  /// @param CatchIDs vector of catchment IDs from DRN
+  /// @param HydroCodes vector of hydrocodes from DRN
   /// @param MinReachLength in metres
   /// @param search_radius search radius for snapping rasters to the channel segments (pixels)
+  /// @param ElevationRaster raster with elevation values
+  /// @param DischargeRaster raster with discharge values (CEH one is in l/second, weirdly)
   /// @param ChannelSegments empty LSDIndexRaster, returned with channel segments labelled by unique ID
   /// @param SegmentInfoInt vec<vec> with integer segment info
   /// @param SegmentInfoFloat vec<vec> with floating segment info
   /// @author FJC
   /// @date 06/02/17
-  void TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Sources, vector<int> BaselineSources, int MinReachLength, int search_radius, LSDRaster& ElevationRaster, LSDRaster& DischargeRaster, LSDIndexRaster& ChannelSegments, vector< vector<int> >& SegmentInfoInts, vector< vector<float> >& SegmentInfoFloats);
+  void TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Sources, vector<int> BaselineSources, vector<int> CatchIDs, vector<int> HydroCodes, int MinReachLength, int search_radius, LSDRaster& ElevationRaster, LSDRaster& DischargeRaster, LSDIndexRaster& ChannelSegments, vector< vector<int> >& SegmentInfoInts, vector< vector<float> >& SegmentInfoFloats);
 
   /// @brief This function removes channel segments from the typology model which are not downstream of a given
   /// list of source nodes
@@ -1249,8 +1254,6 @@ void get_info_nearest_channel_to_node_main_stem(int& StartingNode, LSDFlowInfo& 
                 int search_radius_nodes, int threshold_stream_order,
                 LSDFlowInfo& FlowInfo, vector<int>& valid_cosmo_points,
                 vector<int>& snapped_node_indices, vector<int>& snapped_junction_indices);
-
-
 
   /// @brief This functions takes a junction number and then follwos the receiver
   /// junctions until it hits a baselevel junction.

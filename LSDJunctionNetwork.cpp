@@ -4307,12 +4307,14 @@ LSDIndexRaster LSDJunctionNetwork::SplitChannel(LSDFlowInfo& FlowInfo, vector<in
 //
 // Modified FJC 06/02/17
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
-void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Sources, vector<int> BaselineSources, int MinReachLength, int search_radius, LSDRaster& ElevationRaster, LSDRaster& DischargeRaster, LSDIndexRaster& ChannelSegmentsRaster, vector< vector<int> >& SegmentInfoInts, vector< vector<float> >& SegmentInfoFloats)
+void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Sources, vector<int> BaselineSources, vector<int> CatchIDs, vector<int> HydroCodes, int MinReachLength, int search_radius, LSDRaster& ElevationRaster, LSDRaster& DischargeRaster, LSDIndexRaster& ChannelSegmentsRaster, vector< vector<int> >& SegmentInfoInts, vector< vector<float> >& SegmentInfoFloats)
 {
   //vectors for storing information about the segments
   vector<int> SegmentIDs;       // ID of each segment
   vector<int> StartNodes;       // start node (upstream) of each segment
   vector<int> EndNodes;         // end node (downstream) of each segment
+  vector<int> CatchIDs_final;   // catch ID of each DRN source
+  vector<int> HydroCodes_final; // hydro code of each DRN source
   vector<float> SegmentLengths; // length of each segment
   vector<float> FlowLengths;    // flow length of each segment
   vector<float> Elevations;     // elevation of each start node
@@ -4326,6 +4328,7 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
   //LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
   Array2D<int> ChannelSegments(NRows,NCols,int(NoDataValue));
   Array2D<int> NodesVisitedBefore(NRows,NCols,0);
+  Array2D<int> HydroCodes_array(NRows,NCols,int(NoDataValue));
   Array2D<float> SedimentSupply(NRows,NCols,NoDataValue);
   //----------------------------------------------------------------------------
   //
@@ -4335,6 +4338,7 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
   for (int i_source = 0; i_source < N_Sources; ++i_source)
   {
     int node_test = 0;
+    int CatchID, HydroCode;
     // thin to the baseline channel network
     for (int j = 0; j < int(BaselineSources.size()); ++j)
     {
@@ -4346,6 +4350,12 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
         int upstream_test = FlowInfo.is_node_upstream(Sources[i_source], BaselineSources[j]);
         int downstream_test = FlowInfo.is_node_upstream(BaselineSources[j], Sources[i_source]);
         if (upstream_test == 1 || downstream_test == 1) { node_test = 1; }
+      }
+      if (node_test == 1)
+      {
+        //assign the catchID and hydrocode of this source
+        CatchID = CatchIDs[j];
+        HydroCode = HydroCodes[j];
       }
     }
     if (node_test == 1)
@@ -4379,6 +4389,10 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
       }
       else { ThisDischarge = float(NoDataValue); }
       Discharges.push_back(ThisDischarge);
+
+      //push back the catch IDs and HydroCodes
+      CatchIDs_final.push_back(CatchID);
+      HydroCodes_final.push_back(HydroCode);
 
       // Trace downstream until you rach the end of this channel reach
       while(EndOfReach == false)
@@ -4435,6 +4449,26 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
             float ReceiverQs = TC * (UpstreamDistance/ThisDistance);
             SedimentSupply[ReceiverRow][ReceiverCol] = ReceiverQs;
           }
+
+          // get the catchment id and hydrocodes. Need to check the source points
+          // for hydrocodes and push back the one with the lowest value
+          int LowestHC = 1000000;
+          for (int i = 0; i < int(BaselineSources.size()); ++i)
+          {
+            int upstream_test = FlowInfo.is_node_upstream(ReceiverNode, BaselineSources[i]);
+            if (upstream_test == 1)
+            {
+              int This_HC = HydroCodes[i];
+              //cout << "THIS HC: " << This_HC << endl;
+              if (This_HC < LowestHC)
+              {
+                LowestHC = This_HC;
+              }
+            }
+          }
+          if (LowestHC == 1000000) { LowestHC = int(NoDataValue); }
+          CatchIDs_final.push_back(CatchID);
+          HydroCodes_final.push_back(LowestHC);
 
           //push back info to vectors
           EndNodes.push_back(CurrentNode);
@@ -4537,6 +4571,8 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
   SegmentInfoInts.push_back(SegmentIDs);
   SegmentInfoInts.push_back(StartNodes);
   SegmentInfoInts.push_back(EndNodes);
+  SegmentInfoInts.push_back(CatchIDs_final);
+  SegmentInfoInts.push_back(HydroCodes_final);
 
   SegmentInfoFloats.push_back(SegmentLengths);
   SegmentInfoFloats.push_back(FlowLengths);
@@ -4639,7 +4675,7 @@ void LSDJunctionNetwork::print_channel_segments_to_csv(LSDFlowInfo& FlowInfo, ve
   csv_out.open(outfname.c_str());
   csv_out.precision(8);
 
-  csv_out << "SegmentID,NodeNumber,x,y,SegmentLength,FlowLength,Elevation,Slope,Slope_Lf,Qmed,Q_c,Q_s,AV" << endl;
+  csv_out << "SegmentID,NodeNumber,x,y,SegmentLength,FlowLength,Elevation,Slope,Slope_Lf,Qmed,Q_c,Q_s,AV,CATCH_,HYDRO_CODE" << endl;
   int current_row, current_col;
   float x,y;
   cout << "N segments: " << SegmentInfoInts[0].size() << endl;
@@ -4658,7 +4694,7 @@ void LSDJunctionNetwork::print_channel_segments_to_csv(LSDFlowInfo& FlowInfo, ve
     // y coord a bit different since the DEM starts from the top corner
     y = YMinimum + float(NRows-current_row)*DataResolution - 0.5*DataResolution + 0.0001*DataResolution;
 
-    csv_out << SegmentInfoInts[0][i] << "," << current_node << "," << x << "," << y << "," << SegmentInfoFloats[0][i] << "," << SegmentInfoFloats[1][i] << "," << SegmentInfoFloats[2][i] << "," << SegmentInfoFloats[3][i] << "," << SegmentInfoFloats[4][i] << "," << SegmentInfoFloats[5][i] << "," << SegmentInfoFloats[6][i] << "," << SegmentInfoFloats[7][i] << "," << SegmentInfoFloats[8][i] << endl;
+    csv_out << SegmentInfoInts[0][i] << "," << current_node << "," << x << "," << y << "," << SegmentInfoFloats[0][i] << "," << SegmentInfoFloats[1][i] << "," << SegmentInfoFloats[2][i] << "," << SegmentInfoFloats[3][i] << "," << SegmentInfoFloats[4][i] << "," << SegmentInfoFloats[5][i] << "," << SegmentInfoFloats[6][i] << "," << SegmentInfoFloats[7][i] << "," << SegmentInfoFloats[8][i] << "," << SegmentInfoInts[3][i] << "," << SegmentInfoInts[4][i] << endl;
   }
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
@@ -6320,9 +6356,6 @@ void LSDJunctionNetwork::snap_point_locations_to_channels(vector<float> x_locs,
   }
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-
-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
