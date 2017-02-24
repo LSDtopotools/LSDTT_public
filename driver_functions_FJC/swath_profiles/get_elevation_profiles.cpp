@@ -1,7 +1,7 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // get_elevation_profiles.cpp
-// Takes in a baseline shapefile and gets the mean, max, and min elevation at each point_types
+// Takes in a baseline shapefile and gets the mean, max, and min elevation at each point
 // along the shapefile.
 // Writes the values to a csv file for visualisation.
 //
@@ -52,7 +52,7 @@ int main (int nNumberofArgs,char *argv[])
 	string DEM_extension = "bil";
 	string csv_extension = "csv";
 
-	// read in the parameters
+	// read in the parameters. need to have an input string before each parameter in the input file. I will update this with the parameter parser at some point when I have time...
 	file_info_in >> temp >> DEM_ID
 						   >> temp >> Baseline_file
 							 >> temp >> HalfWidth
