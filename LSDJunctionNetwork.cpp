@@ -4329,7 +4329,9 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
   Array2D<int> ChannelSegments(NRows,NCols,int(NoDataValue));
   Array2D<int> NodesVisitedBefore(NRows,NCols,0);
   Array2D<int> HydroCodes_array(NRows,NCols,int(NoDataValue));
+  // need these arrays to deal with sediment supply
   Array2D<float> SedimentSupply(NRows,NCols,NoDataValue);
+  Array2D<float> Distances(NRows,NCols,NoDataValue);
   //----------------------------------------------------------------------------
   //
   int SegmentID = 0;
@@ -4375,6 +4377,8 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
 
       //push back the source to the vector of starting nodes
       int ThisStartNode = CurrentNode;
+      int ThisStartRow = CurrentRow;
+      int ThisStartCol = CurrentCol;
       StartNodes.push_back(ThisStartNode);
       SegmentIDs.push_back(SegmentID);
       float ThisElev = ElevationRaster.get_data_element(CurrentRow,CurrentCol);
@@ -4411,9 +4415,13 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
         ReceiverStreamOrder = StreamOrderArray[ReceiverRow][ReceiverCol];
         CurrentStreamOrder = StreamOrderArray[CurrentRow][CurrentCol];
 
+        bool ReceiverVisitedBefore = false;
+        // test to see whether we have visited this node before
+        if(NodesVisitedBefore[ReceiverRow][ReceiverCol]==1) ReceiverVisitedBefore = true;
+
         // Now check whether we have a long enough segment or whether stream order
         // increases (want to start a new segment if this is the case)
-        if(ThisDistance >= SegmentLength || ReceiverStreamOrder > CurrentStreamOrder)
+        if((ThisDistance >= SegmentLength || ReceiverStreamOrder > CurrentStreamOrder) && ReceiverVisitedBefore == false)
         {
           ++SegmentID;
           //get the slope of this reach and push back to vector
@@ -4422,8 +4430,9 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
           // get the flow length of this reach
           float FlowLength = FlowInfo.get_flow_length_between_nodes(ThisStartNode, CurrentNode);
 
+          float Slope_Lf = float(NoDataValue);
           // get the slope based on the flow length
-          float Slope_Lf = (ThisElev - ReceiverElev)/FlowLength;
+          if (FlowLength > 0) { Slope_Lf = (ThisElev - ReceiverElev)/FlowLength; }
 
           // get discharge and push back to vector
           float ReceiverDischarge;
@@ -4440,14 +4449,22 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
 
           // get the transport capacity and sediment supply
           float TC = float(NoDataValue);
-          if (ThisDischarge != NoDataValue && ReachSlope != NoDataValue)
+          if (ThisDischarge != NoDataValue && ReachSlope != NoDataValue) { TC = ThisDischarge*ReachSlope; }
+
+          // get the sediment supply. We push this to an array because if we are at a junction
+          // then we will need to add the sediment supply from upstream afterwards.
+          //cout << "Getting upstream values..." << endl;
+          if (ThisStartNode != Sources[i_source])
           {
-            TC = ThisDischarge*ReachSlope;
-            // get the sediment supply. We push this to an array because if we are at a junction
-            // then we will need to add the sediment supply from upstream afterwards.
             float UpstreamDistance = SegmentLengths.back();
-            float ReceiverQs = TC * (UpstreamDistance/ThisDistance);
-            SedimentSupply[ReceiverRow][ReceiverCol] = ReceiverQs;
+            float UpstreamTC = TransportCapacities.back();
+            //cout << "Got the upstream values" << endl;
+            if (UpstreamTC != NoDataValue && ThisDistance > 0)
+            {
+              float ThisQs = UpstreamTC * (UpstreamDistance/ThisDistance);
+              SedimentSupply[ThisStartRow][ThisStartCol] = ThisQs;
+              Distances[ThisStartRow][ThisStartCol] = ThisDistance;
+            }
           }
 
           // get the catchment id and hydrocodes. Need to check the source points
@@ -4488,12 +4505,10 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
           ThisElev = ReceiverElev;
           ThisDischarge = ReceiverDischarge;
           SegmentLength = NewSegmentLength;
+          ThisStartRow = ReceiverRow;
+          ThisStartCol = ReceiverCol;
 
         }
-
-        bool ReceiverVisitedBefore = false;
-        // test to see whether we have visited this node before
-        if(NodesVisitedBefore[ReceiverRow][ReceiverCol]==1) ReceiverVisitedBefore = true;
 
         if(ReceiverVisitedBefore == true)
         {
@@ -4506,27 +4521,26 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
           // get the flow length of this reach
           float FlowLength = FlowInfo.get_flow_length_between_nodes(ThisStartNode, CurrentNode);
 
+          float Slope_Lf = float(NoDataValue);
           // get the slope based on the flow length
-          float Slope_Lf = (ThisElev - ReceiverElev)/FlowLength;
+          if (FlowLength > 0) { Slope_Lf = (ThisElev - ReceiverElev)/FlowLength; }
 
           // recalculate the segment length
           ThisArea = FlowInfo.get_DrainageArea_square_km(ReceiverNode);
           float NewSegmentLength = MinReachLength*sqrt(ThisArea);
           if (NewSegmentLength < MinReachLength) { NewSegmentLength = MinReachLength; }
 
+          // get the transport capacity and sediment supply
           float TC = float(NoDataValue);
-          // get the transport capacity
-          if (ThisDischarge != NoDataValue && ReachSlope != NoDataValue)
+          if (ThisDischarge != NoDataValue && ReachSlope != NoDataValue) { TC = ThisDischarge*ReachSlope; }
+
+          // get the sediment supply. We push this to an array because if we are at a junction
+          // then we will need to add the sediment supply from upstream afterwards.
+          if (SedimentSupply[ReceiverRow][ReceiverCol] != NoDataValue && TC != NoDataValue)
           {
-            TC = ThisDischarge*ReachSlope;
-            // get the sediment supply of this reach. This needs to be added to any existing
-            // values in the sediment supply array.
-            if (SedimentSupply[ReceiverRow][ReceiverCol] != NoDataValue)
-            {
-              float UpstreamDistance = SegmentLengths.back();
-              float ReceiverQs = TC * (UpstreamDistance/ThisDistance);
-              SedimentSupply[ReceiverRow][ReceiverCol] = SedimentSupply[ReceiverRow][ReceiverCol] + ReceiverQs;
-            }
+            float DownstreamDistance = Distances[ReceiverRow][ReceiverCol];
+            float ReceiverQS = TC * (ThisDistance/DownstreamDistance);
+            if (ReceiverQS > 0) { SedimentSupply[ReceiverRow][ReceiverCol] += ReceiverQS; }
           }
 
           //push back info to vectors
@@ -4669,13 +4683,13 @@ void LSDJunctionNetwork::print_channel_segments_to_csv(LSDFlowInfo& FlowInfo, ve
 
   string prefix = outfilename.substr(0,dot);
   //string suffix = str.substr(dot);
-  string insert = "_all_segment_nodes.csv";
+  string insert = "_sub_reaches.csv";
   string outfname = prefix+insert;
   ofstream csv_out;
   csv_out.open(outfname.c_str());
   csv_out.precision(8);
 
-  csv_out << "SegmentID,NodeNumber,x,y,SegmentLength,FlowLength,Elevation,Slope,Slope_Lf,Qmed,Q_c,Q_s,AV,CATCH_,HYDRO_CODE" << endl;
+  csv_out << "SegmentID,NodeNumber,x,y,SegmentLength,FlowLength,Elevation,Slope,Slope_Lf,Qmed,Q_c,Q_s,t,CATCH_,HYDRO_CODE" << endl;
   int current_row, current_col;
   float x,y;
   cout << "N segments: " << SegmentInfoInts[0].size() << endl;
@@ -6305,7 +6319,7 @@ void LSDJunctionNetwork::snap_point_locations_to_channels(vector<float> x_locs,
     x_loc = x_locs[samp];
     y_loc = y_locs[samp];
 
-    //cout << "JN 4298 x_loc: " << x_loc << " y_loc: " << y_loc << endl;
+    cout << "JN 6322 x_loc: " << x_loc << " y_loc: " << y_loc << endl;
 
     // check to see if the node is in the raster
     bool is_in_raster = FlowInfo.check_if_point_is_in_raster(x_loc,y_loc);
@@ -6314,12 +6328,17 @@ void LSDJunctionNetwork::snap_point_locations_to_channels(vector<float> x_locs,
     int tmpNode = FlowInfo.get_node_index_of_coordinate_point(x_loc,y_loc);
     int tmpRow;
     int tmpCol;
+    //cout << "Node Index: " << tmpNode << endl;
+    if (tmpNode != NoDataValue)
+    {
 
-    FlowInfo.retrieve_current_row_and_col(tmpNode, tmpRow, tmpCol);
+      FlowInfo.retrieve_current_row_and_col(tmpNode, tmpRow, tmpCol);
 
-    if (FlowInfo.get_LocalFlowDirection(tmpRow, tmpCol) == NoDataValue){
-      is_in_raster = false;
+      if (FlowInfo.get_LocalFlowDirection(tmpRow, tmpCol) == NoDataValue){
+        is_in_raster = false;
+      }
     }
+    else { is_in_raster = false; }
 
     if(is_in_raster)
     {

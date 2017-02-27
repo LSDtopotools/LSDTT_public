@@ -96,7 +96,7 @@ void LSDSpatialCSVReader::create(string csv_fname)
   YMinimum = -9999;
   DataResolution = -9999;
   NoDataValue = -9999;
-  
+
   ///A map of strings for holding georeferencing information
   map<string,string> EmptyString;
   GeoReferencingStrings = EmptyString;
@@ -206,7 +206,6 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
   // create a stringstream
   stringstream ss(line_from_file);
   ss.precision(9);
-
 
   while( ss.good() )
   {
@@ -417,6 +416,10 @@ vector<int> LSDSpatialCSVReader::data_column_to_int(string column_name)
   vector<string> string_vec = get_data_column(column_name);
   vector<int> int_vec;
   int N_data_elements = string_vec.size();
+  if (N_data_elements == 0)
+  {
+    cout << "Couldn't read in the data column. Check the column name!" << endl;
+  }
   for(int i = 0; i<N_data_elements; i++)
   {
     int_vec.push_back( atoi(string_vec[i].c_str()));
@@ -438,7 +441,7 @@ void LSDSpatialCSVReader::get_UTM_information(int& UTM_zone, bool& is_North)
   //check to see if there is already a map info string
   string mi_key = "ENVI_map_info";
   iter = GeoReferencingStrings.find(mi_key);
-  
+
   if (iter != GeoReferencingStrings.end() )
   {
     string info_str = GeoReferencingStrings[mi_key] ;
@@ -488,10 +491,10 @@ void LSDSpatialCSVReader::get_UTM_information(int& UTM_zone, bool& is_North)
 void LSDSpatialCSVReader::set_UTM_information(int UTM_zone, bool is_North)
 {
   string cs_key = "coordinate system string";
-  
+
   string fpart = "{PROJCS[\"WGS_1984_UTM_Zone_";
   string spart = itoa(UTM_zone);
-  
+
   string tpart;
   if(is_North)
   {
@@ -510,12 +513,12 @@ void LSDSpatialCSVReader::set_UTM_information(int UTM_zone, bool is_North)
 
   string cs_string = fpart+spart+tpart+fopart+fipart+sipart;
   GeoReferencingStrings[cs_key] = cs_string;
-  cout << "The coordinate system string is: " << cs_string << endl; 
+  cout << "The coordinate system string is: " << cs_string << endl;
 
   string mi_key = "ENVI_map_info";
   string mi_p1 = "{UTM, 1, 1, -9999, -9999, -9999, -9999,";
   string mi_p2 = itoa(UTM_zone);
-  
+
   string mi_p3;
   if(is_North)
   {
@@ -525,7 +528,7 @@ void LSDSpatialCSVReader::set_UTM_information(int UTM_zone, bool is_North)
   {
     mi_p3 = ", South,WGS-84}";
   }
-  
+
   string mi = mi_p1+mi_p2+mi_p3;
   GeoReferencingStrings[mi_key] = mi;
   cout << "the map info string is:" << mi << endl;
@@ -578,11 +581,11 @@ void LSDSpatialCSVReader::get_latlong_from_x_and_y(string X_column_name, string 
 {
   // initilise the converter
   LSDCoordinateConverterLLandUTM Converter;
-  
+
   vector<double> new_lat;
   vector<double> new_long;
 
-  int UTM_zone; 
+  int UTM_zone;
   bool is_North;
   int eId = 22;
   get_UTM_information(UTM_zone,is_North);
@@ -596,7 +599,7 @@ void LSDSpatialCSVReader::get_latlong_from_x_and_y(string X_column_name, string 
   {
     cout << " no, it is south." << endl;
   }
-  
+
   vector<float> X_data = data_column_to_float(X_column_name);
   vector<float> Y_data = data_column_to_float(Y_column_name);
 
@@ -613,20 +616,20 @@ void LSDSpatialCSVReader::get_latlong_from_x_and_y(string X_column_name, string 
     {
       double thisX = X_data[i];
       double thisY = Y_data[i];
-      
+
       double Lat;
       double Long;
       Converter.UTMtoLL(eId, thisY, thisX, UTM_zone, is_North,Lat, Long);
       new_lat.push_back(Lat);
       new_long.push_back(Long);
-      
+
       //if (i == 0)
       //{
       //  cout << "X: " << thisX << " Y: " << thisY << " Lat: " << Lat << " Long: " << Long << endl;
       //}
-    
+
     }
-    
+
     latitude = new_lat;
     longitude = new_long;
   }
@@ -693,7 +696,7 @@ void LSDSpatialCSVReader::get_nodeindices_from_x_and_y_coords(LSDFlowInfo& FlowI
   for (int i = 0; i < int(X_coords_temp.size()); ++i)
   {
     int NodeIndex = FlowInfo.get_node_index_of_coordinate_point(X_coords_temp[i], Y_coords_temp[i]);
-    NodeIndices_temp.push_back(NodeIndex);
+    if (NodeIndex != NoDataValue) { NodeIndices_temp.push_back(NodeIndex); }
   }
 
   //copy to output vectors

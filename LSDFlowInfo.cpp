@@ -7427,7 +7427,7 @@ float LSDFlowInfo::get_flow_length_between_nodes(int UpstreamNode, int Downstrea
   	int upstream_test = is_node_upstream(DownstreamNode, UpstreamNode);
   	if (upstream_test != 1)
   	{
-  		cout << "FATAL ERROR: The selected node is not upstream" << endl;
+  		cout << "FlowInfo 7430: FATAL ERROR: The selected node is not upstream" << endl;
       length = float(NoDataValue);
   	}
     else
