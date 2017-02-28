@@ -102,7 +102,7 @@ int main (int nNumberofArgs,char *argv[])
 
   // set default float parameters
 
-
+  int_default_map["HalfWidth"] = 1000; // HalfWidth in meters
   // set default in parameter
 
 
@@ -217,6 +217,19 @@ int main (int nNumberofArgs,char *argv[])
     ifs.close();
     cout << n_lines<< endl ;
     cout << coordinate_csv_fname<< endl ;
+    vector<float> points_before_processing;
+    float HalfWidth = 1000;
+
+    for(int i=0; i<n_lines;i++)
+    {
+      // get the swath
+      cout << "\t creating swath template for row " << i << endl;
+      points_before_processing.push_back(latitudeA[i]);
+      points_before_processing.push_back(longitudeA[i]);
+      points_before_processing.push_back(latitudeB[i]);
+      points_before_processing.push_back(longitudeB[i]);
+      LSDSwath TestSwath(points_before_processing, topography_raster, HalfWidth);
+    }
     for (int i = 0; i<n_lines;i++)
     {
       cout << "row: " << i << endl;
@@ -224,12 +237,6 @@ int main (int nNumberofArgs,char *argv[])
     }
     cout << "Done"<< endl ;
 
-    vector < vector<float> > points_before_processing;
-
-    points_before_processing.push_back(latitudeA);
-    points_before_processing.push_back(longitudeA);
-    points_before_processing.push_back(latitudeB);
-    points_before_processing.push_back(longitudeB);
 
 
 
