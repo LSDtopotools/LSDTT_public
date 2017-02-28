@@ -56,6 +56,20 @@ class LSDSwath
   ///
   LSDSwath(PointData& ProfilePoints, LSDRaster& RasterTemplate, float HalfWidth) { create(ProfilePoints, RasterTemplate, HalfWidth); }
 
+  ///@brief create an LSDSwath using a raster as a template.
+  ///
+  ///@param vector<vector<float> >& Lat_Long_points -> coordinates of points
+  /// forming the extremities of the baseline of the profile.
+  ///@param LSDRaster RasterTemplate -> a raster dataset that is used as a
+  /// template for the swath profile i.e. any rasters that you wish to generate
+  /// the profile for should have the same characteristics/spatial extent as the
+  /// original template.
+  ///@param float ProfileHalfWidth
+  ///@author DTM
+  ///@date 28/02/2017
+  ///
+  LSDSwath(vector<float>& Lat_Long_points, LSDRaster& RasterTemplate, float& HalfWidth) { create(Lat_Long_points, RasterTemplate, HalfWidth); }
+
   void get_transverse_swath_profile(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth,
        vector<float>& mid_points, vector<float>& mean_profile, vector<float>& sd_profile, vector< vector<float> >& output_percentile_profiles,
        int NormaliseToBaseline);
@@ -105,7 +119,7 @@ class LSDSwath
   ///@author FJC
   ///@date 15/02/17
   vector <vector <float> > get_RasterValues_along_swath(LSDRaster& RasterTemplate, int NormaliseToBaseline);
-  
+
   // write profiles to file
   void write_transverse_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix, int NormaliseToBaseline);
   void write_longitudinal_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix, int NormaliseToBaseline);
@@ -143,6 +157,7 @@ class LSDSwath
 	private:
   void create();
   void create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float ProfileHalfWidth);
+  void create(vector<float>& Lat_Long_points, LSDRaster& RasterTemplate, float& ProfileHalfWidth);
 
 
 

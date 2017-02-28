@@ -412,6 +412,11 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
   BaselineValueArray = BaselineValueArray_temp.copy();
 }
 
+void LSDSwath::create(vector<float>& Lat_Long_points, LSDRaster& RasterTemplate, float& HalfWidth)
+{
+  cout << "Creation of the swath from WGS coordinates" << endl;
+}
+
 //------------------------------------------------------------------------------
 // SWATH PROFILE GENERATION
 // These routines take a swath profile template, comprising the LSDSwath object,
