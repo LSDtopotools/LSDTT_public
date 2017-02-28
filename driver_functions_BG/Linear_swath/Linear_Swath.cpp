@@ -111,16 +111,17 @@ int main (int nNumberofArgs,char *argv[])
 
   // set default string method
 
-  string_default_map["coordinate_csv_file"] = "NULL";
+  string_default_map["coordinate_csv_file"] = "example_coordinate.csv";
 
   // Use the parameter parser to get the maps of the parameters required for the
   // analysis
 
   LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
+  map<string,string> this_string_map = LSDPP.get_string_parameters();
   map<string,float> this_float_map = LSDPP.get_float_parameters();
   map<string,int> this_int_map = LSDPP.get_int_parameters();
   map<string,bool> this_bool_map = LSDPP.get_bool_parameters();
-  map<string,string> this_string_map = LSDPP.get_string_parameters();
+
 
   // Now print the parameters for bug checking
   LSDPP.print_parameters();
@@ -142,8 +143,8 @@ int main (int nNumberofArgs,char *argv[])
   // load the  DEM
   LSDRaster topography_raster((DATA_DIR+DEM_ID), raster_ext);
   cout << "Got the dem: " <<  DATA_DIR+DEM_ID << endl;
-
-  string coordinate_csv_fname = DATA_DIR+this_string_map["coordinate_csv_file"];
+  cout << this_string_map["coordinate_csv_file"]<<endl;
+  string coordinate_csv_fname = DATA_DIR+"example_coordinate.csv";
 
   ifstream ifs;
   ifs.open(coordinate_csv_fname.c_str());
@@ -206,10 +207,10 @@ int main (int nNumberofArgs,char *argv[])
 
 
         IDs.push_back( s );
-        latitudeA.push_back( atof( this_string_vec[1].c_str() ) );
-        longitudeA.push_back( atof(this_string_vec[2].c_str() ) );
-        latitudeB.push_back( atof( this_string_vec[1].c_str() ) );
-        longitudeB.push_back( atof(this_string_vec[2].c_str() ) );
+        latitudeA.push_back( atof( this_string_vec[0].c_str() ) );
+        longitudeA.push_back( atof(this_string_vec[1].c_str() ) );
+        latitudeB.push_back( atof( this_string_vec[2].c_str() ) );
+        longitudeB.push_back( atof(this_string_vec[3].c_str() ) );
         n_lines++;
       }
     }
@@ -218,10 +219,17 @@ int main (int nNumberofArgs,char *argv[])
     cout << coordinate_csv_fname<< endl ;
     for (int i = 0; i<n_lines;i++)
     {
-      cout << "i" << endl;
-      cout << latitudeA[i] << "||" << longitudeA[i] << "||" << latitudeB[i] << "||" << longitudeB[i] << "||" << endl;
+      cout << "row: " << i << endl;
+      cout << latitudeA[i] << "||" << longitudeA[i] << "||" << latitudeB[i] << "||" << longitudeB[i] << endl;
     }
     cout << "Done"<< endl ;
+
+    vector < vector<float> > points_before_processing;
+
+    points_before_processing.push_back(latitudeA);
+    points_before_processing.push_back(longitudeA);
+    points_before_processing.push_back(latitudeB);
+    points_before_processing.push_back(longitudeB);
 
 
 
