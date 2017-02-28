@@ -460,7 +460,7 @@ void LSDSwath::create(vector<float>& Y_X_points, LSDRaster& RasterTemplate, floa
 	//}
 	//output_file.close();
 
-  // Now run the same constructor as it should
+  // Now run the same constructor as it should be
 
   PointData ProfilePoints = PD;
   NPtsInProfile = ProfilePoints.X.size();   // Number of points in profile

@@ -272,20 +272,31 @@ int main (int nNumberofArgs,char *argv[])
       points_before_processing.push_back(XA[i]);
       points_before_processing.push_back(YB[i]);
       points_before_processing.push_back(XB[i]);
-      cout << "I am creating a swath profile between: " << YA[i] << "/" << XA[i]<< " and " << YB[i]<< "/" << XB[i]<<endl;
+      cout << "I am creating the swath profile " << i<< " between: " << YA[i] << "/" << XA[i]<< " and " << YB[i]<< "/" << XB[i]<<endl;
       LSDSwath TestSwath(points_before_processing, topography_raster, HalfWidth);
       points_before_processing.clear();
+
+      bool NormaliseToBaseline = false;
+    	LSDRaster SwathRaster = TestSwath.get_raster_from_swath_profile(topography_raster, NormaliseToBaseline);
+    	string swath_ext = "_swath_raster"+i;
+      string DEM_extension = "bil";
+    	SwathRaster.write_raster((path_name+DEM_ID+swath_ext), DEM_extension);
+
+      // get the raster values along the swath
+    	vector <vector <float> > ElevationValues = TestSwath.get_RasterValues_along_swath(topography_raster, NormaliseToBaseline);
+
+    	// push back results to file for plotting
+    	ofstream output_file;
+    	string output_fname = "_swath_elevations"+i;
+      string CSV_ext = ".csv";
+    	output_file.open((path_name+DEM_ID+output_fname+CSV_ext).c_str());
+    	output_file << "Distance,Mean,Min,Max" << endl;
+    	for (int j = 0; j < int(ElevationValues[0].size()); j++)
+    	{
+    		output_file << ElevationValues[0][j] << "," << ElevationValues[1][j] << "," << ElevationValues[2][j] << "," << ElevationValues[3][j] << endl;
+    	}
+    	output_file.close();
     }
-    for (int i = 0; i<n_lines;i++)
-    {
-      cout << "row: " << i << endl;
-      cout << latitudeA[i] << "||" << longitudeA[i] << "||" << latitudeB[i] << "||" << longitudeB[i] << endl;
-    }
-    cout << "Done"<< endl ;
-
-
-
-
   }
 cout << "End of the program"<< endl ;
 }
