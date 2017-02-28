@@ -412,9 +412,53 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
   BaselineValueArray = BaselineValueArray_temp.copy();
 }
 
-void LSDSwath::create(vector<float>& Lat_Long_points, LSDRaster& RasterTemplate, float& HalfWidth)
+void LSDSwath::create(vector<float>& Y_X_points, LSDRaster& RasterTemplate, float& HalfWidth)
 {
   cout << "Creation of the swath from WGS coordinates" << endl;
+  // initialization of the variables
+  vector<vector<float> > points; // contains all the points of the profile
+  vector<float> unity; // Unity vector
+  vector<float> temp_vecta;
+  float temp_Y, temp_X, temp_distance_AB;
+  float d_point = 50; // distance between points
+
+  // calculating the unity vector
+  temp_distance_AB = sqrt( pow((Y_X_points[3]-Y_X_points[1]),2) + pow((Y_X_points[2]-Y_X_points[0]),2)); // distance between A and B
+  temp_X = ((Y_X_points[3]-Y_X_points[1])/temp_distance_AB);
+  temp_Y = ((Y_X_points[2]-Y_X_points[0])/temp_distance_AB);
+  unity.push_back(temp_Y);
+  unity.push_back(temp_X);
+  cout<< temp_distance_AB << "test_inside" << endl;
+
+  // generation of the points
+  for(int i = 0; i < temp_distance_AB; i += d_point)
+  {
+    temp_X = Y_X_points[1] + unity[1]*i;
+    temp_Y = Y_X_points[0] + unity[0]*i;
+    temp_vecta.push_back(temp_Y);
+    temp_vecta.push_back(temp_X);
+    points.push_back(temp_vecta);
+    temp_vecta.clear();
+  }
+  // pushing the last point
+  temp_vecta.push_back(Y_X_points[2]);
+  temp_vecta.push_back(Y_X_points[3]);
+  points.push_back(temp_vecta);
+  temp_vecta.clear();
+
+  // test for development of the function, just to check if the points are written between A and B
+  //ofstream output_file;
+	//string output_fname = "/home/s1675537/PhD/DataStoreBoris/GIS/Data/Carpathian/Basins/Olt_Basin/DEV_swath_elevations.csv";
+	//output_file.open(output_fname.c_str());
+	//output_file << "Y,X" << endl;
+	//for (int i = 0; i < int(points.size()); ++i)
+	//{
+	//	output_file << points[i][0] << "," << points[i][1] << endl;
+	//}
+	//output_file.close();
+
+  
+
 }
 
 //------------------------------------------------------------------------------
