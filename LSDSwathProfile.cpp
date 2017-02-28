@@ -417,6 +417,7 @@ void LSDSwath::create(vector<float>& Y_X_points, LSDRaster& RasterTemplate, floa
   cout << "Creation of the swath from WGS coordinates" << endl;
   // initialization of the variables
   vector<vector<float> > points; // contains all the points of the profile
+  PointData PD;
   vector<float> unity; // Unity vector
   vector<float> temp_vecta;
   float temp_Y, temp_X, temp_distance_AB;
@@ -439,6 +440,8 @@ void LSDSwath::create(vector<float>& Y_X_points, LSDRaster& RasterTemplate, floa
     temp_vecta.push_back(temp_X);
     points.push_back(temp_vecta);
     temp_vecta.clear();
+    PD.X.push_back(temp_X);
+    PD.Y.push_back(temp_Y);
   }
   // pushing the last point
   temp_vecta.push_back(Y_X_points[2]);
@@ -457,7 +460,313 @@ void LSDSwath::create(vector<float>& Y_X_points, LSDRaster& RasterTemplate, floa
 	//}
 	//output_file.close();
 
-  
+  // Now run the same constructor as it should
+
+  PointData ProfilePoints = PD;
+  NPtsInProfile = ProfilePoints.X.size();   // Number of points in profile
+  NoDataValue = RasterTemplate.get_NoDataValue();
+  NRows = RasterTemplate.get_NRows();
+  NCols = RasterTemplate.get_NCols();
+  ProfileHalfWidth = HalfWidth;
+  float Resolution = RasterTemplate.get_DataResolution();
+  // Loop through profile points, calculating cumulative distance along profile
+  // with each iteration
+  vector<float> DistanceAlongBaseline_temp(NPtsInProfile,NoDataValue);
+  vector<float> BaselineValue_temp(NPtsInProfile,NoDataValue);
+	vector<int> BaselineRows(NPtsInProfile,NoDataValue);
+	vector<int> BaselineCols(NPtsInProfile,NoDataValue);
+  float cumulative_distance = 0;
+  DistanceAlongBaseline_temp[0]=cumulative_distance;
+  // Retrieve baseline value at each point - sample closest pixel in template raster
+  float X_coordinate_shifted_origin = ProfilePoints.X[0] - RasterTemplate.get_XMinimum();
+  float Y_coordinate_shifted_origin = ProfilePoints.Y[0] - RasterTemplate.get_YMinimum();
+  // Get row and column of point
+  int col_point = int(round(X_coordinate_shifted_origin/Resolution));
+  int row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/Resolution));
+  if(col_point < 0 || col_point > NCols-1 || row_point < 0 || row_point > NRows) BaselineValue_temp[0]=NoDataValue;
+  else
+	{
+		BaselineValue_temp[0] = RasterTemplate.get_data_element(row_point,col_point);
+		BaselineRows[0] = row_point;
+		BaselineCols[0] = col_point;
+	}
+
+
+  for(int i = 1; i<NPtsInProfile; ++i)
+  {
+    // Calculate cumulative distance
+    cumulative_distance += sqrt((ProfilePoints.X[i]-ProfilePoints.X[i-1])*(ProfilePoints.X[i]-ProfilePoints.X[i-1])
+                                              +(ProfilePoints.Y[i]-ProfilePoints.Y[i-1])*(ProfilePoints.Y[i]-ProfilePoints.Y[i-1]));
+    DistanceAlongBaseline_temp[i]=cumulative_distance;
+
+    // Retrieve baseline value at each point - sample closest pixel in template raster
+    X_coordinate_shifted_origin = ProfilePoints.X[i] - RasterTemplate.get_XMinimum();
+    Y_coordinate_shifted_origin = ProfilePoints.Y[i] - RasterTemplate.get_YMinimum();
+
+    // Get row and column of point
+    col_point = int(round(X_coordinate_shifted_origin/Resolution));
+    row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/Resolution));
+    if(col_point < 0 || col_point > NCols-1 || row_point < 0 || row_point > NRows) BaselineValue_temp[i]=NoDataValue;
+    else
+		{
+			BaselineValue_temp[i] = RasterTemplate.get_data_element(row_point,col_point);
+			BaselineRows[i] = row_point;
+			BaselineCols[i] = col_point;
+		}
+  }
+
+  DistanceAlongBaseline = DistanceAlongBaseline_temp;
+  BaselineValue = BaselineValue_temp;
+
+  // Read profile data into a LSDCloud object for querying
+  vector<float> zeros(NPtsInProfile,0.0);
+  LSDCloud ProfileCloud(ProfilePoints, RasterTemplate);
+
+  // For each point in array, find nearest point along the profile and calculate
+  // signed distance to profile.  The convention here is that points lying on
+  // left hand side of profile as you traverse from start to finish are
+  // considered positive, and those on the right are negative.
+  Array2D<float> DistanceToBaseline_temp(NRows,NCols,NoDataValue);
+  Array2D<float> ProjectedDistanceAlongBaseline_temp(NRows,NCols,NoDataValue);
+  Array2D<float> ProjectedBaselineValue_temp(NRows,NCols,NoDataValue);
+  Array2D<float> BaselineValueArray_temp(NRows,NCols,NoDataValue);
+
+  float searchPoint_x,searchPoint_y;
+  vector<float> SquaredDistanceToBaseline,temp,temp2;
+  vector<int> ProfilePointIndex;
+  int K=2;
+
+  // Define bounding box of swath profile
+  YMin = ProfileCloud.get_YMin();
+  YMax = ProfileCloud.get_YMax();
+  XMin = ProfileCloud.get_XMin();
+  XMax = ProfileCloud.get_XMax();
+  int ColStart = int(floor(XMin/Resolution));
+  int ColEnd = ColStart + int(ceil((XMax-XMin)/Resolution));
+  ColStart = ColStart - int(ceil(ProfileHalfWidth/Resolution));
+  ColEnd = ColEnd + int(ceil(ProfileHalfWidth/Resolution));
+  if (ColStart < 0) ColStart = 0;
+  if (ColEnd > NCols) ColEnd = NCols;
+
+  int RowEnd = NRows - 1 - int(floor(YMin/Resolution));
+  int RowStart = RowEnd - int(ceil((YMax-YMin)/Resolution));
+  RowStart = RowStart - int(ceil(ProfileHalfWidth/Resolution));
+  RowEnd = RowEnd + int(ceil(ProfileHalfWidth/Resolution));
+  if (RowEnd > NRows) RowEnd = NRows;
+  if (RowStart < 0) RowStart = 0;
+
+  for(int i = RowStart; i<RowEnd; ++i)
+  {
+    cout << flush << "\t\t\t row " << i+1 << "/" << NRows << "\r";
+    for(int j = ColStart; j<ColEnd; ++j)
+    {
+      vector<float> V_p;  // the search point coordinates
+      V_p.push_back(float(j)*Resolution);
+      V_p.push_back((float(NRows - 1) - float(i))*Resolution);
+      // Find nearest two points on profile baseline
+      ProfileCloud.NearestNeighbourSearch2D(V_p[0], V_p[1], K, temp, ProfilePointIndex, SquaredDistanceToBaseline);
+
+      if(SquaredDistanceToBaseline.size()<1) cout << "No profile points found - check input files";
+      else if(SquaredDistanceToBaseline.size()<2) cout << "Only one point found - check input files";
+      else
+      {
+        // SCENARIO 1
+        //----------------------------------------------------------------------
+        // Check that two points are adjacenet on baseline - simplest (and
+        // usual) scenario)
+        vector<float> V_a, V_b; // first, second nearest points on profile
+        int V_a_index, V_b_index;
+        if(abs(ProfilePointIndex[0]-ProfilePointIndex[1]) <= 1)
+        {
+//           cout << "SCENARIO 1" << endl;
+          // If yes, then find point along cojoining line that minimises this
+          // distance.
+          // Note that this point is located at the point given by the vector:
+          // (V_a + (V_b - V_a)*t).
+          // t is calculated using the equation:
+          // t = -(V_b-V_a).(V_a-V_p)/(|V_b - V_a|^2)
+          V_a_index = ProfilePointIndex[0];
+          V_b_index = ProfilePointIndex[1];
+          V_a.push_back(ProfileCloud.get_point_x(V_a_index));
+          V_a.push_back(ProfileCloud.get_point_y(V_a_index));
+          V_b.push_back(ProfileCloud.get_point_x(V_b_index));
+          V_b.push_back(ProfileCloud.get_point_y(V_b_index));
+        }
+
+        // SCENARIO 2
+        //----------------------------------------------------------------------
+        // Two nearest points are not adjacent on the profile.  This is quite
+        // common on the inside of a bend on a baseline.  At this point, the
+        // strategy used is to find all baseline points located at a radius that
+        // is equal to that of the nearest baseline point.  Then, the strategy
+        // is to search through all located baseline points, and find the
+        // nearest point that neighbours one of these baseline points.  The
+        // program then searches through to find the closest point on the
+        // baseline between those points.
+        else
+        {
+//           cout << "SCENARIO 2" << endl;//" " << sqrt(SquaredDistanceToBaseline[0]) << endl;
+          vector<int> ClosestPointIndex;
+          float shortest_distance = NoDataValue;
+          float distance_to_point;
+          //ProfileCloud.RadiusSearch2D(V_p[0], V_p[1], sqrt(SquaredDistanceToBaseline[0]), temp, ClosestPointIndex, temp2);
+          ProfileCloud.NearestNeighbourSearch2D(V_p[0], V_p[1], 8, temp, ClosestPointIndex, temp2);
+          for(int i_point_iter = 0; i_point_iter < ClosestPointIndex.size(); ++i_point_iter)
+          {
+            if((ClosestPointIndex[i_point_iter]!=0) && (ClosestPointIndex[i_point_iter]!=NPtsInProfile-1))
+            {
+              // Check step backwards
+              vector<float> V_a_test, V_b_test;
+              V_a_test.push_back(ProfileCloud.get_point_x(ClosestPointIndex[i_point_iter]));
+              V_a_test.push_back(ProfileCloud.get_point_y(ClosestPointIndex[i_point_iter]));
+              V_b_test.push_back(ProfileCloud.get_point_x(ClosestPointIndex[i_point_iter]-1));
+              V_b_test.push_back(ProfileCloud.get_point_y(ClosestPointIndex[i_point_iter]-1));
+              distance_to_point = calculate_distance_between_two_points(V_p,V_b_test);
+              if(shortest_distance == NoDataValue || shortest_distance > distance_to_point)
+              {
+                shortest_distance = distance_to_point;
+                V_a = V_a_test;
+                V_b = V_b_test;
+                V_a_index = ClosestPointIndex[i_point_iter];
+                V_b_index = ClosestPointIndex[i_point_iter]-1;
+              }
+              // Check step forwards
+              V_b_test.clear();
+              V_b_test.push_back(ProfileCloud.get_point_x(ClosestPointIndex[i_point_iter]+1));
+              V_b_test.push_back(ProfileCloud.get_point_y(ClosestPointIndex[i_point_iter]+1));
+              distance_to_point = calculate_distance_between_two_points(V_p,V_b_test);
+              if(shortest_distance == NoDataValue || shortest_distance > distance_to_point)
+              {
+                shortest_distance = distance_to_point;
+                V_a = V_a_test;
+                V_b = V_b_test;
+                V_a_index = ClosestPointIndex[i_point_iter];
+                V_b_index = ClosestPointIndex[i_point_iter]+1;
+              }
+            }
+            // conditions for edge of profile
+            else if(ClosestPointIndex[i_point_iter]==0)
+            {
+              // Check step forwards only
+              vector<float> V_a_test, V_b_test;
+              V_a_test.push_back(ProfileCloud.get_point_x(ClosestPointIndex[i_point_iter]));
+              V_a_test.push_back(ProfileCloud.get_point_y(ClosestPointIndex[i_point_iter]));
+              V_b_test.push_back(ProfileCloud.get_point_x(ClosestPointIndex[i_point_iter]+1));
+              V_b_test.push_back(ProfileCloud.get_point_y(ClosestPointIndex[i_point_iter]+1));
+              distance_to_point = calculate_distance_between_two_points(V_p,V_b_test);
+              if(shortest_distance == NoDataValue || shortest_distance > distance_to_point)
+              {
+                shortest_distance = distance_to_point;
+                V_a = V_a_test;
+                V_b = V_b_test;
+                V_a_index = ClosestPointIndex[i_point_iter];
+                V_b_index = ClosestPointIndex[i_point_iter]+1;
+              }
+            }
+            else if(ClosestPointIndex[i_point_iter]==NPtsInProfile-1)
+            {
+              // Check step backwards only
+              vector<float> V_a_test, V_b_test;
+              V_a_test.push_back(ProfileCloud.get_point_x(ClosestPointIndex[i_point_iter]));
+              V_a_test.push_back(ProfileCloud.get_point_y(ClosestPointIndex[i_point_iter]));
+              V_b_test.push_back(ProfileCloud.get_point_x(ClosestPointIndex[i_point_iter]-1));
+              V_b_test.push_back(ProfileCloud.get_point_y(ClosestPointIndex[i_point_iter]-1));
+              distance_to_point = calculate_distance_between_two_points(V_p,V_b_test);
+              if(shortest_distance == NoDataValue || shortest_distance > distance_to_point)
+              {
+                shortest_distance = distance_to_point;
+                V_a = V_a_test;
+                V_b = V_b_test;
+                V_a_index = ClosestPointIndex[i_point_iter];
+                V_b_index = ClosestPointIndex[i_point_iter]-1;
+              }
+            }
+          }
+        }
+        // calculate position along baseline vector
+        float t = calculate_t(V_a, V_b, V_p);
+        float d;
+        if(t>0 && t<1)
+        // find the distance to the nearest point along the straight line
+        // segment that links the two points
+        {
+//          cout << "test1" << endl;
+          d = calculate_shortest_distance_to_line(V_a,V_b,V_p);
+          if(d<ProfileHalfWidth)
+          {
+            ProjectedDistanceAlongBaseline_temp[i][j] = DistanceAlongBaseline[V_a_index]+(DistanceAlongBaseline[V_b_index]-DistanceAlongBaseline[V_a_index])*t;
+            // determine which side of the profile the point is on using the cross
+            // product
+            if(V_a_index < V_b_index)
+            {
+              if(test_point_left(V_b,V_a,V_p)==false) DistanceToBaseline_temp[i][j] = -1*d;
+              else DistanceToBaseline_temp[i][j] = d;
+            }
+            else
+            {
+              if(test_point_left(V_a,V_b,V_p)==false) DistanceToBaseline_temp[i][j] = -1*d;
+              else DistanceToBaseline_temp[i][j] = d;
+            }
+            // Now get baseline value
+            BaselineValueArray_temp[i][j] = BaselineValue[V_a_index]+(BaselineValue[V_b_index]-BaselineValue[V_a_index])*t;
+          }
+          else
+          {
+            DistanceToBaseline_temp[i][j] = NoDataValue;
+            ProjectedDistanceAlongBaseline_temp[i][j] = NoDataValue;
+            BaselineValueArray_temp[i][j] = NoDataValue;
+          }
+        }
+
+        else if(V_a_index==0 || V_a_index==NPtsInProfile-1)
+        // Avoid end points
+        {
+//          cout << "test2" << endl;
+          DistanceToBaseline_temp[i][j] = NoDataValue;
+          ProjectedDistanceAlongBaseline_temp[i][j] = NoDataValue;
+          BaselineValueArray_temp[i][j] = NoDataValue;
+        }
+        else
+        // Select nearest point (e.g. on outer side of bend)
+        {
+//          cout << "test3" << endl;
+          d = calculate_distance_between_two_points(V_a,V_p);
+          if(d<ProfileHalfWidth)
+          {
+            ProjectedDistanceAlongBaseline_temp[i][j] = DistanceAlongBaseline[V_a_index];
+            BaselineValueArray_temp[i][j] = BaselineValue[V_a_index];
+            // determine which side of the profile the point is on using the cross
+            // product.  In this case, take the baseline vector as being formed
+            // by straight line that joins the points on either side.
+            vector<float> V_c(2,0.0);
+            if(V_a_index < V_b_index)
+            {
+              V_c[0]=ProfileCloud.get_point_x(V_a_index-1);
+              V_c[1]=ProfileCloud.get_point_y(V_a_index-1);
+              if(test_point_left(V_b,V_c,V_p)==false) DistanceToBaseline_temp[i][j] = -1*d;
+              else DistanceToBaseline_temp[i][j] = d;
+            }
+            else
+            {
+              V_c[0]=ProfileCloud.get_point_x(V_a_index+1);
+              V_c[1]=ProfileCloud.get_point_y(V_a_index+1);
+              if(test_point_left(V_c,V_b,V_p)==false) DistanceToBaseline_temp[i][j] = -1*d;
+              else DistanceToBaseline_temp[i][j] = d;
+            }
+          }
+          else
+          {
+            DistanceToBaseline_temp[i][j] = NoDataValue;
+            ProjectedDistanceAlongBaseline_temp[i][j] = NoDataValue;
+            BaselineValueArray_temp[i][j] = NoDataValue;
+          }
+        }
+      }
+    }
+  }
+  DistanceToBaselineArray = DistanceToBaseline_temp.copy();
+  DistanceAlongBaselineArray = ProjectedDistanceAlongBaseline_temp.copy();
+  BaselineValueArray = BaselineValueArray_temp.copy();
 
 }
 
