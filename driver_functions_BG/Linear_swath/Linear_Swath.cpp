@@ -54,6 +54,37 @@
 #include "../../LSDParameterParser.hpp"
 #include "../../LSDSwathProfile.hpp"
 #include "../../LSDShapeTools.hpp"
+#include "../../LSDSpatialCSVReader.hpp"
+
+void get_x_and_y_from_latlong(vector<float>& UTME,vector<float>& UTMN, int& Number_of_lines, int UTM_zone_func)
+{
+  // initilise the converter
+  LSDCoordinateConverterLLandUTM Converter;
+
+  int N_samples =  Number_of_lines;
+
+  // set up some temporary vectors
+  vector<float> this_UTMN(N_samples,0);
+  vector<float> this_UTME(N_samples,0);
+
+  double this_Northing;
+  double this_Easting;
+
+  // loop throught the samples collecting UTM information
+  int eId = 22;             // defines the ellipsiod. This is WGS
+  for(int i = 0; i<N_samples; i++)
+  {
+    //cout << "Converting point " << i << " to UTM." << endl;
+    Converter.LLtoUTM_ForceZone(eId, UTMN[i], UTME[i],
+                      this_Northing, this_Easting, UTM_zone_func);
+    this_UTMN[i] = this_Northing;
+    this_UTME[i] = this_Easting;
+    //cout << "Easting: " << this_Easting << " and northing: " << this_Northing << endl;
+  }
+
+  UTME = this_UTME;
+  UTMN = this_UTMN;
+}
 
 int main (int nNumberofArgs,char *argv[])
 {
@@ -219,16 +250,31 @@ int main (int nNumberofArgs,char *argv[])
     cout << coordinate_csv_fname<< endl ;
     vector<float> points_before_processing;
     float HalfWidth = 1000;
+    vector<float> XA = longitudeA;
+    vector<float> XB = longitudeB;
+    vector<float> YA = latitudeA;
+    vector<float> YB = latitudeB;
+
+    //conversion of lat/long into UTM
+    int UTM_zone;
+    bool is_North;
+    topography_raster.get_UTM_information(UTM_zone, is_North);
+    get_x_and_y_from_latlong(XA,YA,n_lines,UTM_zone);
+    get_x_and_y_from_latlong(XB,YB,n_lines,UTM_zone);
+
+
 
     for(int i=0; i<n_lines;i++)
     {
       // get the swath
       cout << "\t creating swath template for row " << i << endl;
-      points_before_processing.push_back(latitudeA[i]);
-      points_before_processing.push_back(longitudeA[i]);
-      points_before_processing.push_back(latitudeB[i]);
-      points_before_processing.push_back(longitudeB[i]);
+      points_before_processing.push_back(YA[i]);
+      points_before_processing.push_back(XA[i]);
+      points_before_processing.push_back(YB[i]);
+      points_before_processing.push_back(XB[i]);
+      cout << "I am creating a swath profile between: " << YA[i] << "/" << XA[i]<< " and " << YB[i]<< "/" << XB[i]<<endl;
       LSDSwath TestSwath(points_before_processing, topography_raster, HalfWidth);
+      points_before_processing.clear();
     }
     for (int i = 0; i<n_lines;i++)
     {
