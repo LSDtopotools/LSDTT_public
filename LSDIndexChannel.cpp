@@ -279,6 +279,7 @@ void LSDIndexChannel::create(int SJ, int SJN, int EJ, int EJN, LSDFlowInfo& Flow
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDIndexChannel::create(vector<float>& X_coords, vector<float>& Y_coords, LSDFlowInfo& FlowInfo, float threshold_area, float threshold_distance)
 {
+	cout << "Threshold area is: " << threshold_area << " Threshold distance is: " << threshold_distance << endl;
 	// populate the protected variables
 	NRows = FlowInfo.get_NRows();
 	NCols = FlowInfo.get_NCols();
@@ -293,12 +294,15 @@ void LSDIndexChannel::create(vector<float>& X_coords, vector<float>& Y_coords, L
 	float upstream_Y = Y_coords[0];
 	float downstream_Y = Y_coords[1];
 
+	cout << "upstream X: " << upstream_X << " downstream X: " << downstream_X << " upstream Y: " << upstream_Y << " downstream Y: " << downstream_Y << endl;
+
 	// don't set junctions for this create routine
 	StartJunction = -1;
 	EndJunction = -1;
 
 	// find the nearest channel node to the upstream X and Y coords
 	int ThisNode = FlowInfo.get_node_index_of_coordinate_point(upstream_X, upstream_Y);
+	cout << "Node index: " << ThisNode << endl;
 	int ThisRow, ThisCol, ChanNode;
 	FlowInfo.retrieve_current_row_and_col(ThisNode, ThisRow, ThisCol);
 	// get the drainage area of this node
@@ -311,6 +315,7 @@ void LSDIndexChannel::create(vector<float>& X_coords, vector<float>& Y_coords, L
 		NodeSequence.push_back(ThisNode);
 		RowSequence.push_back(ThisRow);
 		ColSequence.push_back(ThisCol);
+		cout << "At the channel!" << endl;
 	}
 	else
 	{
@@ -319,8 +324,13 @@ void LSDIndexChannel::create(vector<float>& X_coords, vector<float>& Y_coords, L
 		{
 			int ReceiverNode, ReceiverRow, ReceiverCol;
 			FlowInfo.retrieve_receiver_information(ThisNode,ReceiverNode, ReceiverRow, ReceiverCol);
+			if (ThisNode == ReceiverNode)
+			{
+				cout << "WARNING: at base level. This is an infinite loop, ARGH." << endl;
+			}
 			int ReceiverCP = FlowInfo.retrieve_contributing_pixels_of_node(ReceiverNode);
 			float ReceiverArea = ReceiverCP*DataResolution*DataResolution;
+			cout << "ReceiverNode: " << ReceiverNode << " ReceiverArea: " << ReceiverArea << endl;
 			if (ReceiverArea >= threshold_area)
 			{
 				// reached the channel
@@ -329,6 +339,7 @@ void LSDIndexChannel::create(vector<float>& X_coords, vector<float>& Y_coords, L
 				NodeSequence.push_back(ReceiverNode);
 				RowSequence.push_back(ReceiverRow);
 				ColSequence.push_back(ReceiverCol);
+				cout << "At the channel!" << endl;
 			}
 			else
 			{
@@ -337,6 +348,7 @@ void LSDIndexChannel::create(vector<float>& X_coords, vector<float>& Y_coords, L
 			}
 		}
 	}
+	cout << "Got the starting point, now moving downstream" << endl;
 
 	// got the nearest channel to the starting coordinate point. Now move downstream and create the index channel.
 	StartNode = ChanNode;
