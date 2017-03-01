@@ -6,6 +6,7 @@
 // The driver file has a number of options that allow the user to produce
 // linear swath profiles between a list of two lat/long points
 //
+// B.G.
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
@@ -56,11 +57,12 @@
 #include "../../LSDShapeTools.hpp"
 #include "../../LSDSpatialCSVReader.hpp"
 
+// This funcion converts Lat/long coordinates into UTM
 void get_x_and_y_from_latlong(vector<float>& UTME,vector<float>& UTMN, int& Number_of_lines, int UTM_zone_func)
 {
   // initilise the converter
   LSDCoordinateConverterLLandUTM Converter;
-
+  // number of samples
   int N_samples =  Number_of_lines;
 
   // set up some temporary vectors
@@ -84,6 +86,7 @@ void get_x_and_y_from_latlong(vector<float>& UTME,vector<float>& UTMN, int& Numb
 
   UTME = this_UTME;
   UTMN = this_UTMN;
+  // done
 }
 
 int main (int nNumberofArgs,char *argv[])
@@ -92,12 +95,12 @@ int main (int nNumberofArgs,char *argv[])
   if (nNumberofArgs!=3)
   {
     cout << "=========================================================" << endl;
-    cout << "|| Welcome to the basin averaging tool!                ||" << endl;
-    cout << "|| This program has a number of options to compute     ||" << endl;
-    cout << "|| basin averaged statistics                           ||" << endl;
+    cout << "|| Welcome to the Linear Swath Tool!                   ||" << endl;
+    cout << "|| This program has a number of options to produce     ||" << endl;
+    cout << "|| Swath profile(s) between pair of lat/long points    ||" << endl;
     cout << "|| This program was developed by                       ||" << endl;
-    cout << "|| Simon M. Mudd and Stuart W.D. Grieve                ||" << endl;
-    cout << "||  at the University of Edinburgh                     ||" << endl;
+    cout << "|| Boris Gailleton, Fiona Clubb and Simon Mudd         ||" << endl;
+    cout << "|| at the University of Edinburgh                      ||" << endl;
     cout << "=========================================================" << endl;
     cout << "This program requires two inputs: " << endl;
     cout << "* First the path to the parameter file." << endl;
@@ -105,7 +108,7 @@ int main (int nNumberofArgs,char *argv[])
     cout << "---------------------------------------------------------" << endl;
     cout << "Then the command line argument will be, for example: " << endl;
     cout << "In linux:" << endl;
-    cout << "./basin_averaging_tool.exe /LSDTopoTools/Topographic_projects/Test_data/ LSDTT_BasinAvg.param" << endl;
+    cout << "./Linear_swath.out /LSDTopoTools/Topographic_projects/Test_data/ LSDTT_LS.param" << endl;
     cout << "=========================================================" << endl;
     cout << "For more documentation on the parameter file, " << endl;
     cout << " see readme and online documentation." << endl;
@@ -131,18 +134,12 @@ int main (int nNumberofArgs,char *argv[])
   map<string,bool> bool_default_map;
 
 
-  // set default float parameters
+  // set default  parameters
 
-  int_default_map["HalfWidth"] = 1000; // HalfWidth in meters
-  // set default in parameter
+  int_default_map["HalfWidth"] = 1000; // HalfWidth of the profile in meters
+  float HalfWidth = 1000; //TEMPORARY MANUAL SETTING OF THE HalfWidth (I need to sort the parameter reader bug)
+  string_default_map["coordinate_csv_file"] = "example_coordinate.csv"; // csv file theat host Coordinates
 
-
-  // set default methods
-
-
-  // set default string method
-
-  string_default_map["coordinate_csv_file"] = "example_coordinate.csv";
 
   // Use the parameter parser to get the maps of the parameters required for the
   // analysis
@@ -173,10 +170,12 @@ int main (int nNumberofArgs,char *argv[])
 
   // load the  DEM
   LSDRaster topography_raster((DATA_DIR+DEM_ID), raster_ext);
-  cout << "Got the dem: " <<  DATA_DIR+DEM_ID << endl;
-  cout << this_string_map["coordinate_csv_file"]<<endl;
-  string coordinate_csv_fname = DATA_DIR+"example_coordinate.csv";
 
+  string coordinate_csv_fname = DATA_DIR+"example_coordinate.csv";  // SAME REASON THAN ABOVE (I need to sort the parameter reader bug)
+
+
+
+  // Loading the csv file and everything
   ifstream ifs;
   ifs.open(coordinate_csv_fname.c_str());
 
@@ -188,11 +187,13 @@ int main (int nNumberofArgs,char *argv[])
   }
   else
   {
+    // Host the coordinates of the "A" and "B" points
     vector<float> latitudeA;
     vector<float> longitudeA;
     vector<float> latitudeB;
     vector<float> longitudeB;
 
+    // Other paraneters
     vector<string> this_string_vec;
     vector<string> empty_string_vec;
     string line_from_file;
@@ -231,12 +232,8 @@ int main (int nNumberofArgs,char *argv[])
       else
       {
         // now convert the data
-        //cout << "Getting sample name: " <<  this_string_vec[0] << endl;
 
-        // let the user know about offending underscores, and replace them
         string s = this_string_vec[0];
-
-
         IDs.push_back( s );
         latitudeA.push_back( atof( this_string_vec[0].c_str() ) );
         longitudeA.push_back( atof(this_string_vec[1].c_str() ) );
@@ -246,10 +243,11 @@ int main (int nNumberofArgs,char *argv[])
       }
     }
     ifs.close();
-    cout << n_lines<< endl ;
-    cout << coordinate_csv_fname<< endl ;
+
+    // Hosts the points
     vector<float> points_before_processing;
-    float HalfWidth = 1000;
+
+    // host the UTm cordinates
     vector<float> XA = longitudeA;
     vector<float> XB = longitudeB;
     vector<float> YA = latitudeA;
@@ -261,9 +259,9 @@ int main (int nNumberofArgs,char *argv[])
     topography_raster.get_UTM_information(UTM_zone, is_North);
     get_x_and_y_from_latlong(XA,YA,n_lines,UTM_zone);
     get_x_and_y_from_latlong(XB,YB,n_lines,UTM_zone);
+    // done
 
 
-    
     for(int i=0; i<n_lines;i++)
     {
       // get the swath
@@ -275,13 +273,14 @@ int main (int nNumberofArgs,char *argv[])
       cout << "I am creating the swath profile " << i<< " between: " << YA[i] << "/" << XA[i]<< " and " << YB[i]<< "/" << XB[i]<<endl;
       LSDSwath TestSwath(points_before_processing, topography_raster, HalfWidth);
       points_before_processing.clear();
-
+      // preparing the output parameters
       ostringstream oss;
       ostringstream oss1;
       bool NormaliseToBaseline = false;
     	LSDRaster SwathRaster = TestSwath.get_raster_from_swath_profile(topography_raster, NormaliseToBaseline);
       oss << "_swath_raster_" << i;
     	//string swath_ext = ("_swath_raster"+i.str());
+      // Writing the DEM
       string DEM_extension = "bil";
     	SwathRaster.write_raster((path_name+DEM_ID+oss.str()), DEM_extension);
 
@@ -294,6 +293,7 @@ int main (int nNumberofArgs,char *argv[])
     	//string output_fname = "_swath_elevations_" + i.str();
       string CSV_ext = ".csv";
     	output_file.open((path_name+DEM_ID+oss1.str()+CSV_ext).c_str());
+      // writing the csv
     	output_file << "Distance,Mean,Min,Max" << endl;
     	for (int j = 0; j < int(ElevationValues[0].size()); j++)
     	{
