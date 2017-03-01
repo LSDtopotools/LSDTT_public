@@ -4352,6 +4352,9 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
         int upstream_test = FlowInfo.is_node_upstream(Sources[i_source], BaselineSources[j]);
         int downstream_test = FlowInfo.is_node_upstream(BaselineSources[j], Sources[i_source]);
         if (upstream_test == 1 || downstream_test == 1) { node_test = 1; }
+
+        //get stream order of baseline
+        //int BaselineSO = FlowInfo.get_StreamOrder_of_Node(BaselineSources[j]);
       }
       if (node_test == 1)
       {
@@ -5911,11 +5914,12 @@ int LSDJunctionNetwork::get_nodeindex_of_nearest_channel_for_specified_coordinat
   // Get row and column of point
   int col_point = int(X_coordinate_shifted_origin/DataResolution);
   int row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/DataResolution));
+  int CurrentNode = FlowInfo.NodeIndex[row_point][col_point];
 
   bool is_in_raster = true;
   int NearestChannel;
 
-  if(col_point < 0 || col_point > NCols-1 || row_point < 0 || row_point > NRows -1)
+  if(col_point < 0 || col_point > NCols-1 || row_point < 0 || row_point > NRows -1 || CurrentNode == NoDataValue)
   {
     is_in_raster = false;
   }
@@ -5926,14 +5930,16 @@ int LSDJunctionNetwork::get_nodeindex_of_nearest_channel_for_specified_coordinat
     // find a junction.
     int CurrentNode = FlowInfo.NodeIndex[row_point][col_point];
     int ReceiverRow, ReceiverCol, ReceiverNode, CurrentCol, CurrentRow;
+    cout << "Current node: " << CurrentNode << endl;
 
     // get the current row and column
     FlowInfo.retrieve_current_row_and_col(CurrentNode,CurrentRow,CurrentCol);
 
+    cout << "line 5937" << endl;
     // get the first receiver
     FlowInfo.retrieve_receiver_information(CurrentNode, ReceiverNode, ReceiverRow, ReceiverCol);
 
-
+    cout << "CurrentNode: " << CurrentNode << " ReceiverNode: " << ReceiverNode << endl;
     // make sure you are not at base level
     NearestChannel = NoDataValue;
 
@@ -5946,6 +5952,7 @@ int LSDJunctionNetwork::get_nodeindex_of_nearest_channel_for_specified_coordinat
     // loop until you find a channel
     while(NearestChannel == NoDataValue && CurrentNode != ReceiverNode)
     {
+      cout << "Found a channel" << endl;
       // now move down one node
       CurrentNode = ReceiverNode;
 
@@ -5987,7 +5994,7 @@ int LSDJunctionNetwork::get_nodeindex_of_nearest_channel_for_specified_coordinat
       else    // get the next node
       {
         FlowInfo.retrieve_receiver_information(CurrentNode, ReceiverNode, ReceiverRow, ReceiverCol);
-        //cout << "CurrentNode: " << CurrentNode << " RN: " << ReceiverNode << endl;
+        cout << "CurrentNode: " << CurrentNode << " RN: " << ReceiverNode << endl;
       }
     }
   }

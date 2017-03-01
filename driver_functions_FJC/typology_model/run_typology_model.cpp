@@ -91,44 +91,53 @@ int main (int nNumberofArgs,char *argv[])
 	raster_selection[0] = 1;  // get the smoothed elevation
 	raster_selection[1] = 1;  // get the slope
 
-	// load the raster and remove values below 0
-	// LSDRaster dem(path_name+DEM_name, DEM_extension);
-	// dem.remove_seas();
-	// //dem.write_raster((path_name+DEM_name+raster_output), DEM_extension);
-	//
-	// //====================================================================//
-	// // 							              	SMOOTHING                             //
-	// //====================================================================//
-	//
-	// cout << "\t Running polyfitting..." << endl;
-	//
-	// vector<LSDRaster> output_rasters;
-	// output_rasters = dem.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
-	//
-	// // smoothed elevation
-	// output_rasters[0].write_raster((path_name+DEM_name+elev_output), DEM_extension);
-	// // slope
-	// output_rasters[1].write_raster((path_name+DEM_name+slope_output), DEM_extension);
-	//
-	// // write smoothed hillshade
-	// LSDRaster HS = output_rasters[0].hillshade(45, 315, 1);
-	// HS.write_raster((path_name+DEM_name+elev_output+HS_output), DEM_extension);
-	//
-	// cout << "\t Filling the DEM..." << endl;
-	// // fill
-	// LSDRaster filled_DEM = output_rasters[0].fill(Minimum_Slope);
-	// filled_DEM.write_raster((path_name+DEM_name+fill_ext), DEM_extension);
-	// cout << "Got the filled DEM" << endl;
-	LSDRaster filled_DEM((path_name+DEM_name+fill_ext), DEM_extension);
+	//load the raster and remove values below 0
+	LSDRaster dem(path_name+DEM_name, DEM_extension);
+	dem.remove_seas();
+	//dem.write_raster((path_name+DEM_name+raster_output), DEM_extension);
+
+	//====================================================================//
+	// 							              	SMOOTHING                             //
+	//====================================================================//
+
+	cout << "\t Running polyfitting..." << endl;
+
+	vector<LSDRaster> output_rasters;
+	output_rasters = dem.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
+
+	// smoothed elevation
+	//output_rasters[0].write_raster((path_name+DEM_name+elev_output), DEM_extension);
+	// slope
+	//output_rasters[1].write_raster((path_name+DEM_name+slope_output), DEM_extension);
+
+	// write smoothed hillshade
+	LSDRaster HS = output_rasters[0].hillshade(45, 315, 1);
+	HS.write_raster((path_name+DEM_name+elev_output+HS_output), DEM_extension);
+
+	cout << "\t Filling the DEM..." << endl;
+	// fill
+	LSDRaster filled_DEM = output_rasters[0].fill(Minimum_Slope);
+	//filled_DEM.write_raster((path_name+DEM_name+fill_ext), DEM_extension);
+	cout << "Got the filled DEM" << endl;
+	// LSDRaster filled_DEM((path_name+DEM_name+fill_ext), DEM_extension);
 
 	// load the discharge raster
 	LSDRaster Discharge((path_name+DEM_name+discharge_ext), DEM_extension);
 
+	// fix no data values in the discharge raster
+	Discharge.remove_seas();
+
+	// for discharge data remove stupid values
+	float threshold = 1000000;
+	LSDRaster NewDischarge = Discharge.mask_to_nodata_using_threshold(threshold, 0);
+	//NewDEM.write_raster((path_name+DEM_ID), DEM_extension);
+
 	// buffer the discharge raster
 	float buffer_radius = 150;
-	LSDRaster BufferedQ = Discharge.BufferRasterData(buffer_radius);
-	string buffer_ext = "_Qmed_buffer";
-	BufferedQ.write_raster((path_name+DEM_name+buffer_ext), DEM_extension);
+	LSDRaster BufferedQ = NewDischarge.BufferRasterData(buffer_radius);
+	// string buffer_ext = "_Qmed_buffer";
+	// BufferedQ.write_raster((path_name+DEM_name+buffer_ext), DEM_extension);
+	//LSDRaster BufferedQ((path_name+DEM_name+buffer_ext), DEM_extension);
 
 	//====================================================================//
 	// 							      	CHANNEL NETWORK EXTRACTION                    //
@@ -152,9 +161,9 @@ int main (int nNumberofArgs,char *argv[])
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 
 	// print the channel network to raster
-	LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
-	string SO_name = "_SO";
-	SOArray.write_raster((path_name+DEM_name+SO_name), DEM_extension);
+	//LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
+	//string SO_name = "_SO";
+	//SOArray.write_raster((path_name+DEM_name+SO_name), DEM_extension);
 
 	cout << "\t Reading in the baseline channel network" << endl;
 	vector<int> NIs;
@@ -165,11 +174,15 @@ int main (int nNumberofArgs,char *argv[])
 	LSDSpatialCSVReader BaselineSources(filled_DEM, (path_name+csv_filename));
 	BaselineSources.get_nodeindices_from_x_and_y_coords(FlowInfo, X_coords, Y_coords, NIs);
 
+	cout << "\t Got the baseline channel network, reading in the IDs..." << endl;
+
 	// get the catch_ID and hydro_code from the baseline sources
 	string catch_name = "CATCH_";
 	string hydro_code_name = "HYDRO_CODE";
 	vector<int> CatchIDs_temp = BaselineSources.data_column_to_int(catch_name);
 	vector<int> HydroCodes_temp = BaselineSources.data_column_to_int(hydro_code_name);
+
+	cout << "\t Snapping locations to channels..." << endl;
 
 	int search_radius_nodes = 25;
 	int threshold_SO = 1;
@@ -177,6 +190,8 @@ int main (int nNumberofArgs,char *argv[])
 	vector<int> snapped_NIs;
 	vector<int> snapped_JNs;
 	ChanNetwork.snap_point_locations_to_channels(X_coords, Y_coords, search_radius_nodes, threshold_SO, FlowInfo, ValidIndices, snapped_NIs, snapped_JNs);
+
+	cout << "Getting the CatchIDs and Hydrocodes from snapped points..." << endl;
 
 	// loop through the snapped NIs and get the CatchIDs and HydroCodes_temp
 	vector<int> CatchIDs, HydroCodes;
@@ -199,12 +214,8 @@ int main (int nNumberofArgs,char *argv[])
 	vector < vector<float> > SegmentInfoFloats;
 	int search_radius = 25;
 	ChanNetwork.TypologyModel(FlowInfo, sources, snapped_NIs, CatchIDs, HydroCodes, MinReachLength, search_radius, filled_DEM, BufferedQ, ChannelSegments, SegmentInfoInts, SegmentInfoFloats);
-	string segment_ext = "_segments";
-	ChannelSegments.write_raster((path_name+DEM_name+segment_ext), DEM_extension);
-
-	// removing segments not downstream of baseline sources
-	//cout << "\t Removing segments not downstream of baseline sources..." << endl;
-	//ChanNetwork.remove_tributary_segments(FlowInfo, snapped_NIs, SegmentInfoInts, SegmentInfoFloats);
+	//string segment_ext = "_segments";
+	//ChannelSegments.write_raster((path_name+DEM_name+segment_ext), DEM_extension);
 
 	//print to csv file
 	cout << "\t Writing csv file of channel segments..." << endl;
