@@ -263,7 +263,7 @@ int main (int nNumberofArgs,char *argv[])
     get_x_and_y_from_latlong(XB,YB,n_lines,UTM_zone);
 
 
-
+    
     for(int i=0; i<n_lines;i++)
     {
       // get the swath
@@ -276,26 +276,31 @@ int main (int nNumberofArgs,char *argv[])
       LSDSwath TestSwath(points_before_processing, topography_raster, HalfWidth);
       points_before_processing.clear();
 
+      ostringstream oss;
+      ostringstream oss1;
       bool NormaliseToBaseline = false;
     	LSDRaster SwathRaster = TestSwath.get_raster_from_swath_profile(topography_raster, NormaliseToBaseline);
-    	string swath_ext = "_swath_raster"+i;
+      oss << "_swath_raster_" << i;
+    	//string swath_ext = ("_swath_raster"+i.str());
       string DEM_extension = "bil";
-    	SwathRaster.write_raster((path_name+DEM_ID+swath_ext), DEM_extension);
+    	SwathRaster.write_raster((path_name+DEM_ID+oss.str()), DEM_extension);
 
       // get the raster values along the swath
     	vector <vector <float> > ElevationValues = TestSwath.get_RasterValues_along_swath(topography_raster, NormaliseToBaseline);
 
     	// push back results to file for plotting
     	ofstream output_file;
-    	string output_fname = "_swath_elevations"+i;
+      oss1 << "_swath_elevations_" << i;
+    	//string output_fname = "_swath_elevations_" + i.str();
       string CSV_ext = ".csv";
-    	output_file.open((path_name+DEM_ID+output_fname+CSV_ext).c_str());
+    	output_file.open((path_name+DEM_ID+oss1.str()+CSV_ext).c_str());
     	output_file << "Distance,Mean,Min,Max" << endl;
     	for (int j = 0; j < int(ElevationValues[0].size()); j++)
     	{
     		output_file << ElevationValues[0][j] << "," << ElevationValues[1][j] << "," << ElevationValues[2][j] << "," << ElevationValues[3][j] << endl;
     	}
     	output_file.close();
+
     }
   }
 cout << "End of the program"<< endl ;
