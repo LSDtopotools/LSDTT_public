@@ -136,8 +136,11 @@ int main (int nNumberofArgs,char *argv[])
 
   // set default  parameters
 
-  int_default_map["HalfWidth"] = 1000; // HalfWidth of the profile in meters
-  float HalfWidth = 1000; //TEMPORARY MANUAL SETTING OF THE HalfWidth (I need to sort the parameter reader bug)
+  float_default_map["HalfWidth"] = 1000; // HalfWidth of the profile in meters
+  float HalfWidth = 50000; //TEMPORARY MANUAL SETTING OF THE HalfWidth (I need to sort the parameter reader bug)
+  float_default_map["d_space"] = 250; // spacing between the sampling points
+  float d_space = 100; //TEMPORARY MANUAL SETTING OF THE d_space (I need to sort the parameter reader bug)
+
   string_default_map["coordinate_csv_file"] = "example_coordinate.csv"; // csv file theat host Coordinates
 
 
@@ -271,7 +274,7 @@ int main (int nNumberofArgs,char *argv[])
       points_before_processing.push_back(YB[i]);
       points_before_processing.push_back(XB[i]);
       cout << "I am creating the swath profile " << i<< " between: " << YA[i] << "/" << XA[i]<< " and " << YB[i]<< "/" << XB[i]<<endl;
-      LSDSwath TestSwath(points_before_processing, topography_raster, HalfWidth);
+      LSDSwath TestSwath(points_before_processing, topography_raster, HalfWidth, d_space);
       points_before_processing.clear();
       // preparing the output parameters
       ostringstream oss;

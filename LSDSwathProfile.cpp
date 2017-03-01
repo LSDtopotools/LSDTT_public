@@ -412,7 +412,7 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
   BaselineValueArray = BaselineValueArray_temp.copy();
 }
 
-void LSDSwath::create(vector<float>& Y_X_points, LSDRaster& RasterTemplate, float& HalfWidth)
+void LSDSwath::create(vector<float>& Y_X_points, LSDRaster& RasterTemplate, float& HalfWidth, float d_space)
 {
   cout << "Creation of the swath from WGS coordinates" << endl;
   // initialization of the variables
@@ -421,7 +421,7 @@ void LSDSwath::create(vector<float>& Y_X_points, LSDRaster& RasterTemplate, floa
   vector<float> unity; // Unity vector
   vector<float> temp_vecta;
   float temp_Y, temp_X, temp_distance_AB;
-  float d_point = 50; // distance between points
+  float d_point = d_space; // distance between points
 
   // calculating the unity vector
   temp_distance_AB = sqrt( pow((Y_X_points[3]-Y_X_points[1]),2) + pow((Y_X_points[2]-Y_X_points[0]),2)); // distance between A and B
@@ -429,7 +429,7 @@ void LSDSwath::create(vector<float>& Y_X_points, LSDRaster& RasterTemplate, floa
   temp_Y = ((Y_X_points[2]-Y_X_points[0])/temp_distance_AB);
   unity.push_back(temp_Y);
   unity.push_back(temp_X);
-  cout<< temp_distance_AB << "test_inside" << endl;
+
 
   // generation of the points
   for(int i = 0; i < temp_distance_AB; i += d_point)

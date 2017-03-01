@@ -68,7 +68,7 @@ class LSDSwath
   ///@author DTM
   ///@date 28/02/2017
   ///
-  LSDSwath(vector<float>& Y_X_points, LSDRaster& RasterTemplate, float& HalfWidth) { create(Y_X_points, RasterTemplate, HalfWidth); }
+  LSDSwath(vector<float>& Y_X_points, LSDRaster& RasterTemplate, float& HalfWidth, float d_space) { create(Y_X_points, RasterTemplate, HalfWidth, d_space); }
 
   void get_transverse_swath_profile(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth,
        vector<float>& mid_points, vector<float>& mean_profile, vector<float>& sd_profile, vector< vector<float> >& output_percentile_profiles,
@@ -157,7 +157,7 @@ class LSDSwath
 	private:
   void create();
   void create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float ProfileHalfWidth);
-  void create(vector<float>& Y_X_points, LSDRaster& RasterTemplate, float& ProfileHalfWidth);
+  void create(vector<float>& Y_X_points, LSDRaster& RasterTemplate, float& ProfileHalfWidth, float d_space);
 
 
 
