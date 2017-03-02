@@ -308,6 +308,7 @@ void LSDIndexChannel::create(vector<float>& X_coords, vector<float>& Y_coords, L
 	// get the drainage area of this node
 	int ThisCP = FlowInfo.retrieve_contributing_pixels_of_node(ThisNode);
 	float ThisArea = ThisCP*DataResolution*DataResolution;
+	bool reached_chan = false;
 	if (ThisArea >= threshold_area)
 	{
 		// you are already at the channel
@@ -319,18 +320,18 @@ void LSDIndexChannel::create(vector<float>& X_coords, vector<float>& Y_coords, L
 	}
 	else
 	{
-		bool reached_chan = false;
 		while(reached_chan == false)
 		{
 			int ReceiverNode, ReceiverRow, ReceiverCol;
 			FlowInfo.retrieve_receiver_information(ThisNode,ReceiverNode, ReceiverRow, ReceiverCol);
 			if (ThisNode == ReceiverNode)
 			{
-				cout << "WARNING: at base level. This is an infinite loop, ARGH." << endl;
+				cout << "WARNING: at base level. Can't get an index channel." << endl;
+				break;
 			}
 			int ReceiverCP = FlowInfo.retrieve_contributing_pixels_of_node(ReceiverNode);
 			float ReceiverArea = ReceiverCP*DataResolution*DataResolution;
-			cout << "ReceiverNode: " << ReceiverNode << " ReceiverArea: " << ReceiverArea << endl;
+			//cout << "ReceiverNode: " << ReceiverNode << " ReceiverArea: " << ReceiverArea << endl;
 			if (ReceiverArea >= threshold_area)
 			{
 				// reached the channel
@@ -348,33 +349,36 @@ void LSDIndexChannel::create(vector<float>& X_coords, vector<float>& Y_coords, L
 			}
 		}
 	}
-	cout << "Got the starting point, now moving downstream" << endl;
 
-	// got the nearest channel to the starting coordinate point. Now move downstream and create the index channel.
-	StartNode = ChanNode;
-	// get the node index of the downstream coordinate point
-	int DownstreamNode = FlowInfo.get_node_index_of_coordinate_point(downstream_X, downstream_Y);
-	bool reached_downstream = false;
-	ThisNode = StartNode;
-	while (reached_downstream == false)
+	if (reached_chan == true)
 	{
-		int ReceiverNode, ReceiverRow, ReceiverCol;
-		FlowInfo.retrieve_receiver_information(ThisNode,ReceiverNode, ReceiverRow, ReceiverCol);
-		NodeSequence.push_back(ReceiverNode);
-		RowSequence.push_back(ReceiverRow);
-		ColSequence.push_back(ReceiverCol);
-		// check the receiver node and see how far it is from the end node
-		float dist_to_end = FlowInfo.get_Euclidian_distance(ReceiverNode, DownstreamNode);
-		if (dist_to_end < threshold_distance)
+		cout << "Got the starting point, now moving downstream" << endl;
+		// got the nearest channel to the starting coordinate point. Now move downstream and create the index channel.
+		StartNode = ChanNode;
+		// get the node index of the downstream coordinate point
+		int DownstreamNode = FlowInfo.get_node_index_of_coordinate_point(downstream_X, downstream_Y);
+		bool reached_downstream = false;
+		ThisNode = StartNode;
+		while (reached_downstream == false)
 		{
-			cout << "You are within the threshold distance of the end point!" << endl;
-			reached_downstream = true;
-			EndNode = ReceiverNode;
-		}
-		else
-		{
-			// move downstream
-			ThisNode = ReceiverNode;
+			int ReceiverNode, ReceiverRow, ReceiverCol;
+			FlowInfo.retrieve_receiver_information(ThisNode,ReceiverNode, ReceiverRow, ReceiverCol);
+			NodeSequence.push_back(ReceiverNode);
+			RowSequence.push_back(ReceiverRow);
+			ColSequence.push_back(ReceiverCol);
+			// check the receiver node and see how far it is from the end node
+			float dist_to_end = FlowInfo.get_Euclidian_distance(ReceiverNode, DownstreamNode);
+			if (dist_to_end < threshold_distance)
+			{
+				cout << "You are within the threshold distance of the end point!" << endl;
+				reached_downstream = true;
+				EndNode = ReceiverNode;
+			}
+			else
+			{
+				// move downstream
+				ThisNode = ReceiverNode;
+			}
 		}
 	}
 }
