@@ -139,7 +139,7 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["HalfWidth"] = 1000; // HalfWidth of the profile in meters
   float HalfWidth = 50000; //TEMPORARY MANUAL SETTING OF THE HalfWidth (I need to sort the parameter reader bug)
   float_default_map["d_space"] = 250; // spacing between the sampling points
-  float d_space = 100; //TEMPORARY MANUAL SETTING OF THE d_space (I need to sort the parameter reader bug)
+  float d_space = 500; //TEMPORARY MANUAL SETTING OF THE d_space (I need to sort the parameter reader bug)
 
   string_default_map["coordinate_csv_file"] = "example_coordinate.csv"; // csv file theat host Coordinates
 
@@ -280,12 +280,19 @@ int main (int nNumberofArgs,char *argv[])
       ostringstream oss;
       ostringstream oss1;
       bool NormaliseToBaseline = false;
+
+      //getting the raster
     	LSDRaster SwathRaster = TestSwath.get_raster_from_swath_profile(topography_raster, NormaliseToBaseline);
       oss << "_swath_raster_" << i;
     	//string swath_ext = ("_swath_raster"+i.str());
       // Writing the DEM
       string DEM_extension = "bil";
-    	SwathRaster.write_raster((path_name+DEM_ID+oss.str()), DEM_extension);
+
+      // Reducing the Raster
+      cout << "I am now trying to reduce your raster, by removing part the NoDataValue" << endl;
+      LSDRaster LightRaster = SwathRaster.RasterTrimmerPadded(50);
+      // Writing the raster
+      LightRaster.write_raster((path_name+DEM_ID+oss.str()), DEM_extension);
 
       // get the raster values along the swath
     	vector <vector <float> > ElevationValues = TestSwath.get_RasterValues_along_swath(topography_raster, NormaliseToBaseline);
