@@ -235,7 +235,7 @@ int main (int nNumberofArgs,char *argv[])
       else
       {
         // now convert the data
-
+        cout << "I am reading the data from the csv" << endl;
         string s = this_string_vec[0];
         IDs.push_back( s );
         latitudeA.push_back( atof( this_string_vec[0].c_str() ) );
@@ -257,6 +257,7 @@ int main (int nNumberofArgs,char *argv[])
     vector<float> YB = latitudeB;
 
     //conversion of lat/long into UTM
+    cout << "I am converting the points from WGS to UTM" << endl;
     int UTM_zone;
     bool is_North;
     topography_raster.get_UTM_information(UTM_zone, is_North);
@@ -279,6 +280,7 @@ int main (int nNumberofArgs,char *argv[])
       // preparing the output parameters
       ostringstream oss;
       ostringstream oss1;
+      ostringstream oss2;
       bool NormaliseToBaseline = false;
 
       //getting the raster
@@ -303,14 +305,30 @@ int main (int nNumberofArgs,char *argv[])
     	//string output_fname = "_swath_elevations_" + i.str();
       string CSV_ext = ".csv";
     	output_file.open((path_name+DEM_ID+oss1.str()+CSV_ext).c_str());
-      // writing the csv
+      // writing the csv and calculating some stats
+      float minimum_value = 9999999;
+      float maximum_value = 0;
+      float mean_value = 0;
+      float counter_element =0;
     	output_file << "Distance,Mean,Min,Max" << endl;
-    	for (int j = 0; j < int(ElevationValues[0].size()); j++)
+      for (int j = 0; j < int(ElevationValues[0].size()); j++)
     	{
     		output_file << ElevationValues[0][j] << "," << ElevationValues[1][j] << "," << ElevationValues[2][j] << "," << ElevationValues[3][j] << endl;
+        if(ElevationValues[2][j] < minimum_value){minimum_value = ElevationValues[2][j];}
+        if(ElevationValues[3][j] > maximum_value){maximum_value = ElevationValues[3][j];}
+        mean_value += ElevationValues[1][j];
+        counter_element++;
     	}
     	output_file.close();
-
+      mean_value = mean_value/counter_element;
+      // Writing a second csv file about general information
+      oss2 << "_swath_genInfo_" << i;
+      ofstream output_file2;
+      output_file2.open((path_name+DEM_ID+oss2.str()+CSV_ext).c_str());
+      output_file2 << "latitudeA,longitudeA,latitudeB,longitudeB,general_mean_elevation,general_min_elevation,general_max_elevation,Xmin,Ymin" << endl;
+      output_file2 << latitudeA[i]<< "," << longitudeA[i]<< "," << latitudeB[i]<< "," << longitudeB[i]<< "," << mean_value<< "," << minimum_value<< "," << maximum_value<< "," << LightRaster.get_XMinimum()<< "," << LightRaster.get_YMinimum() << endl;
+      output_file2.close();
+      cout << "Done with with file " << i << "/" << longitudeA.size()-1 << endl;
     }
   }
 cout << "End of the program"<< endl ;
