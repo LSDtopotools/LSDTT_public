@@ -121,7 +121,7 @@ class LSDSpatialCSVReader
     /// @date 17/02/2017
     void get_x_and_y_from_latlong(vector<float>& UTME,vector<float>& UTMN);
 
-    /// @brief This takes the X and Y columns in a csv, assumes they are UTM, and converts to 
+    /// @brief This takes the X and Y columns in a csv, assumes they are UTM, and converts to
     ///  latitude and loingitude in WGS84
     /// @param X_column_name Name of the column in the csv with X coordinate (easting)
     /// @param Y_column_name Name of the column in the csv with Y coordinate (northing)
@@ -208,6 +208,13 @@ class LSDSpatialCSVReader
     /// @date 20/02/2017
     void print_lat_long_to_screen(bool only_print_in_raster);
 
+    /// @brief print the UTM coords to a csv file for checking
+    /// @param UTME eastings
+    /// @param UTMN northings
+    /// @author FJC
+    /// @date 03/03/17
+    void print_UTM_coords_to_csv(vector<float> UTME, vector<float> UTMN, string csv_outname);
+
     /// Gets the various data members
     vector<double> get_latitude() const {return latitude;}
     vector<double> get_longitude() const {return longitude;}
@@ -248,7 +255,7 @@ class LSDSpatialCSVReader
   private:
 
     void create();
-    
+
     void create(string);
 
     void create(LSDRaster&,string);

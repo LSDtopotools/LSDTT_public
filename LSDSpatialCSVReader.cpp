@@ -764,6 +764,22 @@ void LSDSpatialCSVReader::print_lat_long_to_screen(bool only_print_in_raster)
   }
 }
 
+//==============================================================================
+// This prints the UTM coordinates to csv for checking
+// FJC 03/03/17
+//==============================================================================
+void LSDSpatialCSVReader::print_UTM_coords_to_csv(vector<float> UTME, vector<float> UTMN, string csv_outname)
+{
+  ofstream outfile;
+  outfile.open(csv_outname.c_str());
+
+  outfile << "PointNo,x,y" << endl;
+  for (int i = 0; i < int(UTME.size()); i++)
+  {
+    outfile << i+1 << "," << UTME[i] << "," << UTMN[i] << endl;
+  }
+  outfile.close();
+}
 
 
 #endif
