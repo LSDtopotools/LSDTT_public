@@ -2024,6 +2024,7 @@ LSDRaster LSDFlowInfo::write_DrainageArea_to_LSDRaster()
     {
       row = RowIndex[node];
       col = ColIndex[node];
+      //cout << NContributingNodes[node] << endl;
       this_DA = float(NContributingNodes[node])*DataResolution*DataResolution;
       DrainageArea_local[row][col] = this_DA;
     }
