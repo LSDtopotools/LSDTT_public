@@ -117,7 +117,8 @@ void LSDTerrace::create(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJunctionN
         float slope = Slope.get_data_element(i,j);
         float relief = ChannelRelief.get_data_element(i,j);
 				//terraces must fall within the relief and slope thresholds
-				if (relief < relief_threshold && relief > RemoveChannelThreshold && slope < slope_threshold && StreamOrderArray[i][j] < 3)
+				// if (relief < relief_threshold && relief > RemoveChannelThreshold && slope < slope_threshold && StreamOrderArray[i][j] < 3)
+				if (relief < relief_threshold && relief > RemoveChannelThreshold && slope < slope_threshold)
         {
           BinaryArray[i][j] = 1;
         }
