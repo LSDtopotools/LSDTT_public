@@ -115,7 +115,8 @@ int main (int nNumberofArgs,char *argv[])
 	{
 		 // load the DEM
 		 cout << "Loading the DEM..." << endl;
-		 LSDRaster RasterTemplate((DATA_DIR+DEM_ID), DEM_extension);
+		 LSDRaster load_DEM((DATA_DIR+DEM_ID), DEM_extension);
+		 RasterTemplate = load_DEM;
 
 		 // filter using Perona Malik
 		 int timesteps = 50;
@@ -238,6 +239,10 @@ int main (int nNumberofArgs,char *argv[])
 		LSDRaster ChannelRelief = Terraces.get_Terraces_RasterValues(SwathRaster);
 		string relief_ext = "_terrace_relief_final";
 		ChannelRelief.write_raster((DATA_DIR+DEM_ID+relief_ext), DEM_extension);
+
+		// write csv file of terrace areas
+		string area_fname = "_terrace_areas.csv";
+		Terraces.print_TerraceAreas_to_file((DATA_DIR+DEM_ID+area_fname), FlowInfo);
 	}
 	else
 	{

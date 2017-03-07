@@ -139,6 +139,12 @@ void Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwork, LSDFlowInfo&
 	/// @date 20/10/16
 	void print_Binned_ChannelRelief_to_File(string filename, float& bin_width, float& bin_lower_limit, float& bin_threshold);
 
+  ////----------------------------------------------------------------------------------------
+  //// Write a csv file with the area of each terrace.
+  //// FJC 07/03/17
+  ////----------------------------------------------------------------------------------------
+  void print_TerraceAreas_to_file(string filename, LSDFlowInfo& FlowInfo);
+
   protected:
 
 	/// Number of rows
@@ -178,6 +184,8 @@ void Get_Relief_of_Nearest_Channel(LSDJunctionNetwork& ChanNetwork, LSDFlowInfo&
 	vector<int> TerraceNodes;
 	/// array of terrace nodes
 	Array2D<int> TerraceNodes_array;
+  /// vector of terrace IDs, unique values from the connected components array
+  vector<int> TerraceIDs;
 
 	/// Store information for a specified main stem junction
 	/// vector of nodes on the main stem

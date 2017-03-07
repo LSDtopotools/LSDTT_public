@@ -138,6 +138,9 @@ void LSDTerrace::create(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJunctionN
 		ConnectedComponents_Array = ConnectedComponents.get_RasterData();
 	}
 
+	// push back the terrace IDs to vector
+	vector<int> TerraceIDs_temp = Unique(ConnectedComponents_Array, NoDataValue);
+
 	for (int row = 0; row < NRows; row++)
 	{
 		for (int col = 0; col < NCols; col++)
@@ -153,6 +156,7 @@ void LSDTerrace::create(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJunctionN
 
 	//copy to vector
 	TerraceNodes = TerraceNodes_temp;
+	TerraceIDs = TerraceIDs_temp;
 }
 
 
@@ -468,5 +472,34 @@ void LSDTerrace::print_Binned_ChannelRelief_to_File(string filename, float& bin_
 	output_file.close();
 }
 
+////----------------------------------------------------------------------------------------
+//// Write a csv file with the area of each terrace.
+//// FJC 07/03/17
+////----------------------------------------------------------------------------------------
+void LSDTerrace::print_TerraceAreas_to_file(string filename, LSDFlowInfo& FlowInfo)
+{
+	ofstream output_file;
+	output_file.open(filename.c_str());
+	output_file << "TerraceID,Area(m)" << endl;
+	for (int i = 0; i < int(TerraceIDs.size()); i++)
+	{
+		//get the n pixels of each CC value
+		int this_CC = TerraceIDs[i];
+		int n_pixels = 0;
+		for (int j = 0; j < int(TerraceNodes.size()); j++)
+		{
+			int row, col;
+			FlowInfo.retrieve_current_row_and_col(TerraceNodes[j], row, col);
+			if (ConnectedComponents_Array[row][col] == this_CC)
+			{
+				n_pixels++;
+			}
+		}
+		// get the area of this terrace - n pixels * DataRes^2
+		float TerraceArea = n_pixels*DataResolution*DataResolution;
+		output_file << this_CC << "," << TerraceArea << endl;
+	}
+	output_file.close();
+}
 
 #endif
