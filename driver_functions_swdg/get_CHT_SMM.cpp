@@ -274,6 +274,14 @@ int main (int nNumberofArgs,char *argv[])
             valid_cosmo_points, snapped_node_indices, snapped_junction_indices);
 
   int n_valid_points = int(valid_cosmo_points.size());  //The bumber of points which were within the current DEM
+  cout << "I found " << n_valid_points << " in this raster. Here they are:" << endl;
+  for (int i = 0; i< n_valid_points; i++)
+  {
+    int valid_point_index = valid_cosmo_points[i];
+    cout << "Point " << i << endl;
+    cout << "easting: " << fUTM_easting[valid_point_index] << " northing: " <<  fUTM_northing[valid_point_index] << endl;
+    cout << "Snapped junction index: " << snapped_junction_indices[i] << endl << endl;
+  }
 
   //Open a file to write the basin average data to
   ofstream WriteData;
