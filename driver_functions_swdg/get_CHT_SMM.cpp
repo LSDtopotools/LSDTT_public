@@ -211,7 +211,7 @@ int main (int nNumberofArgs,char *argv[])
   LSDJunctionNetwork JunctionNetwork(FinalSources, FlowInfo);
 
   //Finally we write the channel heads to file so they can be used in other drivers.
-  FlowInfo.print_vector_of_nodeindices_to_csv_file(FinalSources,(OUT_DIR+OUT_ID+"_CH"));
+  FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(FinalSources,(OUT_DIR+OUT_ID+"_CH"));
 
   vector< int > basin_junctions = JunctionNetwork.ExtractBasinJunctionOrder(this_int_map["basin_order"], FlowInfo);
   LSDIndexRaster Basin_Raster = JunctionNetwork.extract_basins_from_junction_vector(basin_junctions, FlowInfo);
@@ -283,6 +283,31 @@ int main (int nNumberofArgs,char *argv[])
     cout << "Snapped junction index: " << snapped_junction_indices[i] << endl << endl;
   }
 
+
+  // print some stuff. We need to do this before the basin loop since it seems to be crashing there.
+  if(this_bool_map["print_junction_csv"])
+  {
+    cout << "I am printing a junction csv" << endl;
+    string JN_fname = OUT_DIR+OUT_ID+"_Junctions.csv";
+    vector<int> JunctionList;
+    JunctionNetwork.print_junctions_to_csv(FlowInfo, JunctionList,JN_fname);
+  }
+
+  if (this_bool_map["print_basin_raster"])
+  {
+    cout << "I am printing a basin raster." << endl;
+    string BR_fname = OUT_DIR+OUT_ID+"_AllBasins.bil";
+    LSDIndexRaster BasinRaster = JunctionNetwork.extract_basins_from_junction_vector_nested(basin_junctions, FlowInfo);
+  }
+
+  if( this_bool_map["print_stream_order_csv"])
+  {
+    cout << "I am printing the channel netowk to csv." << endl;
+    string channel_csv_name = OUT_DIR+OUT_ID+"_W_CN";
+    JunctionNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+  }
+
+
   //Open a file to write the basin average data to
   ofstream WriteData;
   stringstream ss2;
@@ -294,13 +319,16 @@ int main (int nNumberofArgs,char *argv[])
 
   for(int samp = 0; samp<n_valid_points; samp++)
   {
+    cout << "Cout getting the snapped basin: " << snapped_junction_indices[samp] << endl;
     LSDBasin thisBasin(snapped_junction_indices[samp], FlowInfo, JunctionNetwork);
 
+    cout << "Writing CHT rasters." << endl;
     LSDRaster CHT_basin = thisBasin.write_raster_data_to_LSDRaster(CHT, FlowInfo);
     LSDRaster CHT_internal = thisBasin.keep_only_internal_hilltop_curvature(CHT_basin, FlowInfo);
     LSDRaster CHT_basin_gradient = thisBasin.write_raster_data_to_LSDRaster(CHT_gradient, FlowInfo);
     LSDRaster CHT_internal_gradient = thisBasin.keep_only_internal_hilltop_curvature(CHT_basin_gradient, FlowInfo);
 
+    cout << "Calculating bedrock outcrop." << endl;
     float bedrock_full = FilledDEM.get_percentage_bedrock_ridgetops(Roughness[2], CHT_basin, this_float_map["roughness_threshold"]);
     float bedrock_internal = FilledDEM.get_percentage_bedrock_ridgetops(Roughness[2], CHT_internal, this_float_map["roughness_threshold"]);
 
@@ -310,9 +338,11 @@ int main (int nNumberofArgs,char *argv[])
     CHTs[2] = CHT_internal;
     CHTs[3] = CHT_internal_gradient;
 
+    cout << "Writing data, the sample is: "  << IDs[valid_cosmo_points[samp]] << endl;
     WriteData << IDs[valid_cosmo_points[samp]];
 
-    for (int a=0; a < 4; ++a){
+    for (int a=0; a < 4; ++a)
+    {
 
       float mean = thisBasin.CalculateBasinMean(FlowInfo, CHTs[a]);
       float max = thisBasin.CalculateBasinMax(FlowInfo, CHTs[a]);
@@ -340,5 +370,7 @@ int main (int nNumberofArgs,char *argv[])
   FilledDEM.get_UTM_information(UTM_zone, is_North);
   int eId = 22;
   FilledDEM.HilltopsToCSV(CHT, CHT_gradient, Surfaces[1], UTM_zone, is_North, eId, ss.str());
+
+
 
 }
