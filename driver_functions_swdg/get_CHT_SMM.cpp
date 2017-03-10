@@ -147,15 +147,23 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_filled_raster"] = false;
   bool_default_map["print_basin_raster"] = false;
   bool_default_map["print_stream_order_raster"] = false;
-  bool_default_map["print_stream_order_csv"] = false;
+
   bool_default_map["check_basin_locations"] = false;
-  bool_default_map["print_junction_csv"] = false;
+  
   bool_default_map["spawn_basins_from_outlets"] = false;
+
+  bool_default_map["print_channels_to_csv"] = false;  
+  bool_default_map["print_junction_csv"] = false;
+  bool_default_map["print_sources_to_csv"] = true;
   
   // set default string method
   string_default_map["q_q_filename_prefix"] = "NULL";
   string_default_map["basin_outlet_csv"] = "NULL";
   string_default_map["sample_ID_column_name"] = "sample";
+  
+  // set default string method
+  string_default_map["CHeads_file"] = "NULL";
+  
   
   // Use the parameter parser to get the maps of the parameters required for the 
   // analysis
@@ -183,36 +191,63 @@ int main (int nNumberofArgs,char *argv[])
     // check to see if the raster exists
   LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);  
 
-  //Start of channel extraction
-  string QQ_fname = OUT_DIR+OUT_ID+"__qq.txt";
-  LSDRasterSpectral raster(DATA_DIR+DEM_ID, raster_ext);
-  LSDIndexRaster connected_components = raster.IsolateChannelsWienerQQ(this_float_map["pruning_drainage_area"], 
-                            this_float_map["surface_fitting_radius"], QQ_fname);
-  LSDIndexRaster connected_components_filtered = connected_components.filter_by_connected_components(this_int_map["connected_components_threshold"]);
-  LSDIndexRaster CC_raster = connected_components_filtered.ConnectedComponents();
-  LSDIndexRaster skeleton_raster = connected_components_filtered.thin_to_skeleton();
-  LSDIndexRaster Ends = skeleton_raster.find_end_points();
-  Ends.remove_downstream_endpoints(CC_raster, raster);
-
   //Load the elevation data, fill it and generate a FlowInfo object
   LSDRaster DEM(DATA_DIR+DEM_ID, raster_ext);
   LSDRaster FilledDEM = DEM.fill(this_float_map["min_slope_for_fill"]);
+  cout << "Filling the DEM. This may take a while..." << endl;
   LSDFlowInfo FlowInfo(boundary_conditions,FilledDEM);
 
-  //this processes the end points to only keep the upper extent of the channel network
-  vector<int> tmpsources = FlowInfo.ProcessEndPointsToChannelHeads(Ends);
+  vector<int> FinalSources;
+  // test if you have a channel heads file. If not, extract channels using our in hourse Wiener method.
+  if(this_string_map["CHeads_file"] == "NULL")
+  {
+    cout << "You didn't give me a channel heads file, I am computing the channel heads" << endl;
+    // NOTE: this is the Wiener method
+    
+    //Start of channel extraction
+    string QQ_fname = OUT_DIR+OUT_ID+"__qq.txt";
+    LSDRasterSpectral raster(DATA_DIR+DEM_ID, raster_ext);
+    LSDIndexRaster connected_components = raster.IsolateChannelsWienerQQ(this_float_map["pruning_drainage_area"], 
+                            this_float_map["surface_fitting_radius"], QQ_fname);
+    
+    cout << "Filtering connected components." << endl;
+    LSDIndexRaster connected_components_filtered = connected_components.filter_by_connected_components(this_int_map["connected_components_threshold"]);
+    LSDIndexRaster CC_raster = connected_components_filtered.ConnectedComponents();
+    
+    cout << "Making drainage skeleton." << endl;
+    LSDIndexRaster skeleton_raster = connected_components_filtered.thin_to_skeleton();
+    LSDIndexRaster Ends = skeleton_raster.find_end_points();
+    
+    cout << "Processing endpoints." << endl;
+    Ends.remove_downstream_endpoints(CC_raster, raster);
 
-  // we need a temp junction network to search for single pixel channels
-  LSDJunctionNetwork tmpJunctionNetwork(tmpsources, FlowInfo);
-  LSDIndexRaster tmpStreamNetwork = tmpJunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
+    //this processes the end points to only keep the upper extent of the channel network
+    vector<int> tmpsources = FlowInfo.ProcessEndPointsToChannelHeads(Ends);
 
-  //Now we have the final channel heads, so we can generate a channel network from them
-  vector<int> FinalSources = FlowInfo.RemoveSinglePxChannels(tmpStreamNetwork, tmpsources);
+    // we need a temp junction network to search for single pixel channels
+    LSDJunctionNetwork tmpJunctionNetwork(tmpsources, FlowInfo);
+    LSDIndexRaster tmpStreamNetwork = tmpJunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
+
+    //Now we have the final channel heads, so we can generate a channel network from them
+    FinalSources = FlowInfo.RemoveSinglePxChannels(tmpStreamNetwork, tmpsources);
+  }
+  else
+  {
+    cout << "Loading channel heads from the file: " << DATA_DIR+CHeads_file << endl;
+    FinalSources = FlowInfo.Ingest_Channel_Heads((DATA_DIR+CHeads_file), "csv",2);
+    cout << "\t Got sources!" << endl;
+  }
+  
   LSDJunctionNetwork JunctionNetwork(FinalSources, FlowInfo);
 
   //Finally we write the channel heads to file so they can be used in other drivers.
-  FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(FinalSources,(OUT_DIR+OUT_ID+"_CH"));
-
+  if (this_bool_map["print_sources_to_csv"])
+  {
+    cout << "Let me print the sources for you. You can use this later to skip channel extraction." << endl;
+    string this_sources_file = OUT_DIR+OUT_ID+"_CH";
+    FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(FinalSources,this_sources_file);
+  }
+  
   vector< int > basin_junctions = JunctionNetwork.ExtractBasinJunctionOrder(this_int_map["basin_order"], FlowInfo);
   LSDIndexRaster Basin_Raster = JunctionNetwork.extract_basins_from_junction_vector(basin_junctions, FlowInfo);
 
@@ -228,6 +263,7 @@ int main (int nNumberofArgs,char *argv[])
   raster_selection.push_back(0);
   raster_selection.push_back(0);
 
+  cout << "Calculating polyfit." << endl;
   vector<LSDRaster> Surfaces = FilledDEM.calculate_polyfit_surface_metrics(this_float_map["surface_fitting_radius"], raster_selection);
 
   //raster_selection.clear();
@@ -237,18 +273,22 @@ int main (int nNumberofArgs,char *argv[])
   raster_selection2.push_back(0);
   raster_selection2.push_back(1);
 
+  cout << "Calculating roughness." << endl;
   vector<LSDRaster> Roughness = FilledDEM.calculate_polyfit_roughness_metrics(this_float_map["surface_fitting_radius"], 
                            this_float_map["roughness_radius"], raster_selection2);
 
   // extract hilltops
+  cout << "Getting the ridgetops." << endl;
   LSDRaster hilltops = JunctionNetwork.ExtractRidges(FlowInfo);
 
   //get hilltop curvature using filter to remove positive curvatures
+  cout << "Mapping the curvature onto the hilltops." << endl;
   LSDRaster cht_raster = FilledDEM.get_hilltop_curvature(Surfaces[3], hilltops);
   LSDRaster CHT = FilledDEM.remove_positive_hilltop_curvature(cht_raster);
 
   //perform a gradient filter on the CHT data
-  LSDRaster CHT_gradient = JunctionNetwork.ExtractHilltops(CHT, Surfaces[1], this_float_map["hilltop_slope_threshold"]);
+ cout << "Hilltops with a gradient filter." << endl;
+ LSDRaster CHT_gradient = JunctionNetwork.ExtractHilltops(CHT, Surfaces[1], this_float_map["hilltop_slope_threshold"]);
 
   //Set up a converter object to transform Lat Long into UTM
   LSDCoordinateConverterLLandUTM Converter;
@@ -300,7 +340,7 @@ int main (int nNumberofArgs,char *argv[])
     LSDIndexRaster BasinRaster = JunctionNetwork.extract_basins_from_junction_vector_nested(basin_junctions, FlowInfo);
   }
 
-  if( this_bool_map["print_stream_order_csv"])
+  if( this_bool_map["print_channels_to_csv"])
   {
     cout << "I am printing the channel netowk to csv." << endl;
     string channel_csv_name = OUT_DIR+OUT_ID+"_W_CN";
