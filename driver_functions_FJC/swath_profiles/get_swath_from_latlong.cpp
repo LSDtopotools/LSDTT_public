@@ -66,6 +66,7 @@ int main (int nNumberofArgs,char *argv[])
 
 	// set default string parameters
 	string_default_map["csv_file"] = "NULL";
+	string_default_map["CHeads_format"] = "csv";
 
 	// set default float parameters
 	float_default_map["Minimum_Slope"] = 0.0001;
@@ -122,7 +123,7 @@ int main (int nNumberofArgs,char *argv[])
 
 	// get the channel network
 	cout << "Loading channel heads from the file: " << DATA_DIR+CHeads_file << endl;
-	vector<int> sources = FlowInfo.Ingest_Channel_Heads((DATA_DIR+CHeads_file), "csv", 2);
+	vector<int> sources = FlowInfo.Ingest_Channel_Heads((DATA_DIR+CHeads_file), this_string_map["CHeads_format"], 2);
 	cout << "\t Got sources!" << endl;
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 
