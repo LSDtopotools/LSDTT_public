@@ -15,13 +15,13 @@
 #include <vector>
 #include <fstream>
 #include <ctime>
-#include "../../LSDRaster.hpp"
-#include "../../LSDSwathProfile.hpp"
-#include "../../LSDShapeTools.hpp"
-#include "../../LSDJunctionNetwork.hpp"
-#include "../../LSDTerrace.hpp"
-#include "../../LSDParameterParser.hpp"
-#include "../../LSDSpatialCSVReader.hpp"
+#include "../LSDRaster.hpp"
+#include "../LSDSwathProfile.hpp"
+#include "../LSDShapeTools.hpp"
+#include "../LSDJunctionNetwork.hpp"
+#include "../LSDTerrace.hpp"
+#include "../LSDParameterParser.hpp"
+#include "../LSDSpatialCSVReader.hpp"
 
 int main (int nNumberofArgs,char *argv[])
 {
@@ -68,7 +68,8 @@ int main (int nNumberofArgs,char *argv[])
 	int_default_map["Slope lower percentile"] = 25;
 	int_default_map["Slope upper percentile"] = 75;
 	int_default_map["Min patch size"] = 1000;
-	int_default_map["Search distance"] = 10;
+	int_default_map["search_radius"] = 10;
+	int_default_map["NormaliseToBaseline"] = 0;
 
 	// set default float parameters
 	float_default_map["surface_fitting_window_radius"] = 6;
@@ -81,7 +82,7 @@ int main (int nNumberofArgs,char *argv[])
 	bool_default_map["Filter topography"] = true;
 
 	// set default string parameters
-	string_default_map["csv_file"] = "NULL";
+	string_default_map["coords_csv_file"] = "NULL";
 
 	// Use the parameter parser to get the maps of the parameters required for the
 	// analysis
@@ -153,7 +154,7 @@ int main (int nNumberofArgs,char *argv[])
 
 	// reading in the csv file with the lat long points
 	cout << "\t Reading in the csv file" << endl;
-	LSDSpatialCSVReader SwathPoints(RasterTemplate, DATA_DIR+this_string_map["csv_file"]);
+	LSDSpatialCSVReader SwathPoints(RasterTemplate, DATA_DIR+this_string_map["coords_csv_file"]);
 	vector<float> UTME;
 	vector<float> UTMN;
 	SwathPoints.get_x_and_y_from_latlong(UTME, UTMN);
@@ -185,8 +186,7 @@ int main (int nNumberofArgs,char *argv[])
 	  LSDSwath TestSwath(BaselinePoints, RasterTemplate, this_float_map["HalfWidth"]);
 
 		cout << "\n\t Getting raster from swath" << endl;
-		int NormaliseToBaseline = 1;
-		LSDRaster SwathRaster = TestSwath.get_raster_from_swath_profile(RasterTemplate, NormaliseToBaseline);
+		LSDRaster SwathRaster = TestSwath.get_raster_from_swath_profile(RasterTemplate, this_int_map["NormaliseToBaseline"]);
 		string swath_ext = "_swath_raster";
 		SwathRaster.write_raster((DATA_DIR+DEM_ID+swath_ext), DEM_extension);
 
@@ -223,7 +223,7 @@ int main (int nNumberofArgs,char *argv[])
 		ConnectedComponents.write_raster((DATA_DIR+DEM_ID+CC_ext), DEM_extension);
 
 		cout << "\t Testing connected components" << endl;
-		vector <vector <float> > CC_vector = TestSwath.get_connected_components_along_swath(ConnectedComponents, RasterTemplate, NormaliseToBaseline);
+		vector <vector <float> > CC_vector = TestSwath.get_connected_components_along_swath(ConnectedComponents, RasterTemplate, this_int_map["NormaliseToBaseline"]);
 
 		// push back results to file for plotting
 		ofstream output_file_CC;
@@ -239,10 +239,6 @@ int main (int nNumberofArgs,char *argv[])
 		LSDRaster ChannelRelief = Terraces.get_Terraces_RasterValues(SwathRaster);
 		string relief_ext = "_terrace_relief_final";
 		ChannelRelief.write_raster((DATA_DIR+DEM_ID+relief_ext), DEM_extension);
-
-		// write csv file of terrace areas
-		string area_fname = "_terrace_areas.csv";
-		Terraces.print_TerraceAreas_to_file((DATA_DIR+DEM_ID+area_fname), FlowInfo);
 	}
 	else
 	{
