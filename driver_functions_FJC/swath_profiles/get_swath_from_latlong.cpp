@@ -156,6 +156,19 @@ int main (int nNumberofArgs,char *argv[])
 		LSDRaster SwathRaster = TestSwath.get_raster_from_swath_profile(FilledRaster, this_int_map["NormaliseToBaseline"]);
 		string swath_ext = "_swath_raster";
 		SwathRaster.write_raster((DATA_DIR+DEM_ID+swath_ext), raster_ext);
+		// get the raster values along the swath
+		vector <vector <float> > ElevationValues = TestSwath.get_RasterValues_along_swath(RasterTemplate, this_int_map["NormaliseToBaseline"]);
+
+		// push back results to file for plotting
+		ofstream output_file;
+		string output_fname = "_swath_elevations.csv";
+		output_file.open((path_name+DEM_ID+output_fname).c_str());
+		output_file << "Distance,Mean,Min,Max" << endl;
+		for (int i = 0; i < int(ElevationValues[0].size()); ++i)
+		{
+			output_file << ElevationValues[0][i] << "," << ElevationValues[1][i] << "," << ElevationValues[2][i] << "," << ElevationValues[3][i] << endl;
+		}
+		output_file.close();
 
 	}
 	else
