@@ -782,4 +782,33 @@ void LSDSpatialCSVReader::print_UTM_coords_to_csv(vector<float> UTME, vector<flo
 }
 
 
+//==============================================================================
+// This prints a new csv name
+//==============================================================================
+void LSDSpatialCSVReader::print_data_to_csv(string csv_outname)
+{
+  ofstream outfile;
+  outfile.open(csv_outname.c_str());
+
+  outfile << "latitude,longitude"<< endl;
+  for( map<string, vector<string> >::iterator it = data_map.begin(); it != data_map.end(); ++it)
+  {
+    outfile << "," <<it->first;
+  }
+  
+  int N_nodes = int(latitude.size());
+  for (int i = 0; i < N_nodes; i++)
+  {
+    outfile << latitude[i] << "," << longitude[i] << endl;
+    for( map<string, vector<string> >::iterator it = data_map.begin(); it != data_map.end(); ++it)
+    {
+      outfile << "," <<it->second[i];
+    }
+    outfile << endl;
+  }
+
+  outfile.close();
+}
+
+
 #endif

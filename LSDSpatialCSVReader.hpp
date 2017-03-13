@@ -215,6 +215,12 @@ class LSDSpatialCSVReader
     /// @date 03/03/17
     void print_UTM_coords_to_csv(vector<float> UTME, vector<float> UTMN, string csv_outname);
 
+    /// @brief print the data to a csv. Used after updating data
+    /// @param csv_outname the name of the new file
+    /// @author SMM
+    /// @date 03/03/17
+    void print_data_to_csv(string csv_outname);
+
     /// Gets the various data members
     vector<double> get_latitude() const {return latitude;}
     vector<double> get_longitude() const {return longitude;}
