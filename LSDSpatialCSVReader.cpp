@@ -945,7 +945,6 @@ void LSDSpatialCSVReader::print_data_to_csv(string csv_outname)
 void LSDSpatialCSVReader::print_data_to_geojson(string json_outname)
 {
 
-
   // the file will be projected in WGS84 so you need lat-long coordinates
   if (check_if_latitude_and_longitude_exist())
   {
@@ -954,9 +953,25 @@ void LSDSpatialCSVReader::print_data_to_geojson(string json_outname)
     
     outfile << "{" << endl;
     outfile << "\"type\": \"FeatureCollection\"," << endl;
-    outfile << "\"cr\s": { \"type\": \"name\", \"properties\": { \"name\": \"urn:ogc:def:crs:OGC:1.3:CRS84\" } }," << endl;
+    outfile << "\"crs\": { \"type\": \"name\", \"properties\": { \"name\": \"urn:ogc:def:crs:OGC:1.3:CRS84\" } }," << endl;
     outfile << "\"features\": [" << endl;
     
+    int n_nodes = int(latitude.size());
+    for(int i = 0; i< n_nodes; i++)
+    {
+      string first_bit = "{ \"type\": \"Feature\", \"properties\": { \"latitude\": ";
+      string second_bit = dtoa(latitude[i])+", \"longitude\": "+ dtoa(longitude[i]);
+
+      string third_bit;
+      for( map<string, vector<string> >::iterator it = data_map.begin(); it != data_map.end(); ++it)
+      {
+        third_bit += ", \""+it->first+"\": "+(it->second)[i];
+      }
+      string fourth_bit = " }, \"geometry\": { \"type\": \"Point\", \"coordinates\": [ ";
+      string fifth_bit = dtoa(longitude[i]) +","+ dtoa(latitude[i]) +" ] } },";
+      
+      outfile << first_bit+second_bit+third_bit+fourth_bit+fifth_bit << endl;
+    }
     outfile << "]" << endl;
     outfile << "}" << endl;
     

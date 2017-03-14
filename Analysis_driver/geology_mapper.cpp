@@ -100,11 +100,13 @@ int main (int nNumberofArgs,char *argv[])
   // The name of the csv file
   string_default_map["csv_for_burning"] = "NULL";
   string_default_map["updated_csv_name"] = "updated.csv";
+  string_default_map["geojson_name"] = "new_json.geojson";
   string_default_map["x_column_name"] = "easting";
   string_default_map["y_column_name"] = "northing";
   
   // soe switches that determine the output
   bool_default_map["print_updated_csv"] = true;
+  bool_default_map["print_geojson"] = false;
   
   // Use the parameter parser to get the maps of the parameters required for the 
   // analysis
@@ -181,6 +183,13 @@ int main (int nNumberofArgs,char *argv[])
     {
       string out_csv_name = OUT_DIR+this_string_map["updated_csv_name"];
       CSVFile.print_data_to_csv(out_csv_name);
+    }
+    
+    if(this_bool_map["print_geojson"])
+    {
+      cout << "I am printing a geojson file for you." << endl;
+      string out_json_name = OUT_DIR+this_string_map["geojson_name"];
+      CSVFile.print_data_to_geojson(out_json_name);
     }
   
   }
