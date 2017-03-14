@@ -145,6 +145,18 @@ class LSDSpatialCSVReader
     /// @date 22/02/2017
     void get_latlong_from_x_and_y(string X_column_name, string Y_column_name);
 
+    /// @brief Takes raster data and adds it to the data column
+    /// @param TheRaster an LSDRaster
+    /// @author SMM
+    /// @date 14/03/2017
+    void burn_raster_data_to_csv(LSDRaster& ThisRaster,string column_name);
+
+    /// @brief Takes raster data and adds it to the data column
+    /// @param TheRaster an LSDIndexRaster
+    /// @author SMM
+    /// @date 14/03/2017
+    void burn_raster_data_to_csv(LSDIndexRaster& ThisRaster,string column_name);
+
     /// @brief This gets UTM coordinates and a data vector (usually IDs)
     ///  for snapping to a channel network
     /// @param column_name a string that holds the column name
@@ -157,6 +169,8 @@ class LSDSpatialCSVReader
                                     vector<float>& UTMEasting,
                                     vector<float>& UTMNorthing,
                                     vector<string>& data_vector);
+
+
 
 
     /// @brief This gets a data column from the csv file
@@ -234,8 +248,15 @@ class LSDSpatialCSVReader
     /// @brief print the data to a csv. Used after updating data
     /// @param csv_outname the name of the new file
     /// @author SMM
-    /// @date 03/03/17
+    /// @date 13/03/17
     void print_data_to_csv(string csv_outname);
+
+
+    /// @brief print the data to a geojson. Used after updating data
+    /// @param json_outname the name of the new file
+    /// @author SMM
+    /// @date 14/03/17
+    void print_data_to_geojson(string json_outname);
 
     /// Gets the various data members
     vector<double> get_latitude() const {return latitude;}

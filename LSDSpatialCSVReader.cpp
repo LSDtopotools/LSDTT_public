@@ -342,7 +342,7 @@ bool LSDSpatialCSVReader::check_if_latitude_and_longitude_exist()
 bool LSDSpatialCSVReader::check_if_all_data_columns_same_length()
 {
 
-  bool all_data_columns_same_legth = false; 
+  bool all_data_columns_same_legth = true; 
   int n_lat;
   
   n_lat = int(latitude.size());
@@ -352,6 +352,17 @@ bool LSDSpatialCSVReader::check_if_all_data_columns_same_length()
     n_this_column = int((it->second).size());
     
     cout << "The size of this data column is: " <<n_this_column << "\n";
+    
+    // if the columns being teh same length is still true, check if the next
+    // column is the same length
+    if(all_data_columns_same_legth)
+    {
+      if (n_this_column != n_lat)
+      {
+        all_data_columns_same_legth = false;
+      }
+    
+    }
   }
   
   return all_data_columns_same_legth;
@@ -488,7 +499,9 @@ void LSDSpatialCSVReader::get_UTM_information(int& UTM_zone, bool& is_North)
 
   if (iter != GeoReferencingStrings.end() )
   {
-    string info_str = GeoReferencingStrings[mi_key] ;
+    string info_str = GeoReferencingStrings[mi_key];
+    
+    //cout << "info str is: " << info_str << endl;
 
     // now parse the string
     vector<string> mapinfo_strings;
@@ -682,6 +695,76 @@ void LSDSpatialCSVReader::get_latlong_from_x_and_y(string X_column_name, string 
 
 
 //==============================================================================
+// Burns data from a raster to the shapefile
+//==============================================================================
+void LSDSpatialCSVReader::burn_raster_data_to_csv(LSDRaster& ThisRaster,string column_name)
+{
+  vector<float> UTME;
+  vector<float> UTMN;
+  float this_UTME, this_UTMN;
+  float this_value;
+  
+  vector<string> new_column_data; 
+  
+  // The csv file needs to have lat-long data
+  if (not check_if_latitude_and_longitude_exist())
+  {
+    cout << "You must have lat-long data for burning to work. " << endl;
+    exit(EXIT_FAILURE);
+  }
+  else
+  {
+    get_x_and_y_from_latlong(UTME,UTMN);
+    int n_nodes = int(UTME.size());
+    for(int i = 0; i<n_nodes; i++)
+    {
+      this_UTME = UTME[i];
+      this_UTMN = UTMN[i];
+      
+      this_value = ThisRaster.get_value_of_point(this_UTME, this_UTMN);
+      new_column_data.push_back(itoa(this_value));
+    }
+    data_map[column_name] = new_column_data;
+  }
+
+}
+
+//==============================================================================
+// Burns data from a raster to the shapefile
+//==============================================================================
+void LSDSpatialCSVReader::burn_raster_data_to_csv(LSDIndexRaster& ThisRaster,string column_name)
+{
+  vector<float> UTME;
+  vector<float> UTMN;
+  float this_UTME, this_UTMN;
+  int this_value;
+  
+  vector<string> new_column_data; 
+  
+  // The csv file needs to have lat-long data
+  if (not check_if_latitude_and_longitude_exist())
+  {
+    cout << "You must have lat-long data for burning to work. " << endl;
+    exit(EXIT_FAILURE);
+  }
+  else
+  {
+    get_x_and_y_from_latlong(UTME,UTMN);
+    int n_nodes = int(UTME.size());
+    for(int i = 0; i<n_nodes; i++)
+    {
+      this_UTME = UTME[i];
+      this_UTMN = UTMN[i];
+      
+      this_value = ThisRaster.get_value_of_point(this_UTME, this_UTMN);
+      new_column_data.push_back(itoa(this_value));
+    }
+    data_map[column_name] = new_column_data;
+  }
+}
+
+
+//==============================================================================
 // This checks if points are in raster
 //==============================================================================
 void LSDSpatialCSVReader::check_if_points_are_in_raster()
@@ -834,16 +917,17 @@ void LSDSpatialCSVReader::print_data_to_csv(string csv_outname)
   ofstream outfile;
   outfile.open(csv_outname.c_str());
 
-  outfile << "latitude,longitude"<< endl;
+  outfile << "latitude,longitude";
   for( map<string, vector<string> >::iterator it = data_map.begin(); it != data_map.end(); ++it)
   {
     outfile << "," <<it->first;
   }
+  outfile << endl;
   
   int N_nodes = int(latitude.size());
   for (int i = 0; i < N_nodes; i++)
   {
-    outfile << latitude[i] << "," << longitude[i] << endl;
+    outfile << latitude[i] << "," << longitude[i];
     for( map<string, vector<string> >::iterator it = data_map.begin(); it != data_map.end(); ++it)
     {
       outfile << "," <<it->second[i];
@@ -852,6 +936,40 @@ void LSDSpatialCSVReader::print_data_to_csv(string csv_outname)
   }
 
   outfile.close();
+}
+
+
+//==============================================================================
+// This prints a new geojson
+//==============================================================================
+void LSDSpatialCSVReader::print_data_to_geojson(string json_outname)
+{
+
+
+  // the file will be projected in WGS84 so you need lat-long coordinates
+  if (check_if_latitude_and_longitude_exist())
+  {
+    ofstream outfile;
+    outfile.open(json_outname.c_str());
+    
+    outfile << "{" << endl;
+    outfile << "\"type\": \"FeatureCollection\"," << endl;
+    outfile << "\"cr\s": { \"type\": \"name\", \"properties\": { \"name\": \"urn:ogc:def:crs:OGC:1.3:CRS84\" } }," << endl;
+    outfile << "\"features\": [" << endl;
+    
+    outfile << "]" << endl;
+    outfile << "}" << endl;
+    
+    outfile.close();
+  }
+  else
+  {
+    cout << "LSDSpatialCSVReader::print_data_to_geojson error." << endl;
+    cout << "This dataset does not have lat-long information so I cannot print a geojson" << endl;
+  }
+
+
+
 }
 
 

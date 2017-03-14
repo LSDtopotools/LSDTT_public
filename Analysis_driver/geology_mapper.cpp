@@ -99,6 +99,12 @@ int main (int nNumberofArgs,char *argv[])
   
   // The name of the csv file
   string_default_map["csv_for_burning"] = "NULL";
+  string_default_map["updated_csv_name"] = "updated.csv";
+  string_default_map["x_column_name"] = "easting";
+  string_default_map["y_column_name"] = "northing";
+  
+  // soe switches that determine the output
+  bool_default_map["print_updated_csv"] = true;
   
   // Use the parameter parser to get the maps of the parameters required for the 
   // analysis
@@ -127,18 +133,18 @@ int main (int nNumberofArgs,char *argv[])
   LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);  
         
   // load the  DEM
-  LSDRaster geology_raster((DATA_DIR+DEM_ID), raster_ext);
+  LSDIndexRaster geology_raster((DATA_DIR+DEM_ID), raster_ext);
   cout << "Got the dem: " <<  DATA_DIR+DEM_ID << endl;
 
   if(this_string_map["csv_for_burning"]=="NULL" || this_string_map["csv_for_burning"]=="Null" || this_string_map["csv_for_burning"]=="null")
   {
-    cout << "I don't have a csv file for burning. Please enter one with the parameter flag csv_for_burning:" << endl;
+    cout << "I don't have a csv file for burning. Please enter one with the parameter flag csv_for_burning" << endl;
     exit(EXIT_SUCCESS);
   }
   else
   {
     // Try to open the file
-    LSDSpatialCSVReader CSVFile(DATA_DIR+this_string_map["csv_for_burning"]);
+    LSDSpatialCSVReader CSVFile(RI,DATA_DIR+this_string_map["csv_for_burning"]);
     
     // now check if it has lat and long
     bool have_latlong =  CSVFile.check_if_latitude_and_longitude_exist();
@@ -149,6 +155,8 @@ int main (int nNumberofArgs,char *argv[])
     else
     {
       cout << "I didn't find lat-long coordinates" << endl;
+      cout << "I am going to get lat-long from x and y coordinates" << endl;
+      CSVFile.get_latlong_from_x_and_y(this_string_map["x_column_name"], this_string_map["y_column_name"]);
     }
     
     cout << "Let me check all the data columns" << endl;
@@ -159,7 +167,20 @@ int main (int nNumberofArgs,char *argv[])
     }
     else
     {
-      cout << "You seem to be missing some data in your columns" << endl;
+      cout << "You seem to be missing some data in your columns." << endl;
+      exit(EXIT_SUCCESS);
+    }
+    
+    
+    cout << "I am burning the raster to the csv file." << endl;
+    string column_name = "geology";
+    CSVFile.burn_raster_data_to_csv(geology_raster,column_name);
+    
+    
+    if(this_bool_map["print_updated_csv"])
+    {
+      string out_csv_name = OUT_DIR+this_string_map["updated_csv_name"];
+      CSVFile.print_data_to_csv(out_csv_name);
     }
   
   }
