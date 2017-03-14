@@ -140,7 +140,27 @@ int main (int nNumberofArgs,char *argv[])
     // Try to open the file
     LSDSpatialCSVReader CSVFile(DATA_DIR+this_string_map["csv_for_burning"]);
     
-    // 
+    // now check if it has lat and long
+    bool have_latlong =  CSVFile.check_if_latitude_and_longitude_exist();
+    if (have_latlong)
+    {
+      cout << "This csv has lat long coordinates" << endl;
+    }
+    else
+    {
+      cout << "I didn't find lat-long coordinates" << endl;
+    }
+    
+    cout << "Let me check all the data columns" << endl;
+    bool have_all_columns = CSVFile.check_if_all_data_columns_same_length();
+    if (have_all_columns)
+    {
+      cout << "Data columns seem to be in order" << endl;
+    }
+    else
+    {
+      cout << "You seem to be missing some data in your columns" << endl;
+    }
   
   }
 }

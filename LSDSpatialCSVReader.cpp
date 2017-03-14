@@ -170,8 +170,8 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
   ifstream ifs(filename.c_str());
   if( ifs.fail() )
   {
-    cout << "\nFATAL ERROR: Trying to load csv cosmo data file, but the file" << filename
-         << "doesn't exist; LINE 245 LSDCosmoData" << endl;
+    cout << "\nFATAL ERROR: Trying to load csv data file, but the file" << filename
+         << " doesn't exist;  LSDSpatialCSVReader::load_csv_data" << endl;
     exit(EXIT_FAILURE);
   }
   else
@@ -314,6 +314,50 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
 }
 //==============================================================================
 
+
+
+
+//==============================================================================
+// Some functions to check the data members
+//==============================================================================
+bool LSDSpatialCSVReader::check_if_latitude_and_longitude_exist()
+{
+  int n_lat, n_long;
+  n_lat = int(latitude.size());
+  n_long = int(longitude.size());
+  bool lat_and_long_exist = false;
+  if (n_lat == n_long && n_lat > 0)
+  {
+    lat_and_long_exist = true;
+  }
+  return lat_and_long_exist;
+
+}
+//==============================================================================
+
+
+//==============================================================================
+// Some functions to check the data members
+//==============================================================================
+bool LSDSpatialCSVReader::check_if_all_data_columns_same_length()
+{
+
+  bool all_data_columns_same_legth = false; 
+  int n_lat;
+  
+  n_lat = int(latitude.size());
+  for( map<string, vector<string> >::iterator it = data_map.begin(); it != data_map.end(); ++it)
+  {
+    int n_this_column; 
+    n_this_column = int((it->second).size());
+    
+    cout << "The size of this data column is: " <<n_this_column << "\n";
+  }
+  
+  return all_data_columns_same_legth;
+
+}
+//==============================================================================
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

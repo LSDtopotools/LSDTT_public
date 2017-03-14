@@ -95,6 +95,22 @@ class LSDSpatialCSVReader
     /// @date 16/02/2017
     void load_csv_data(string filename);
 
+    /// @brief This tests to see if there are latitude and longitude vectors
+    /// @return lat_and_long_exist This is true if the lat and long vectors exist
+    ///  are the same length. 
+    /// @author SMM
+    /// @date 14/03/2017
+    bool check_if_latitude_and_longitude_exist();
+
+    /// @brief This tests to see if  all the data columns are the same length
+    ///  as the latitude and longitude data columns
+    /// @return all_data_columns_exist This is true if the data columns are the
+    ///  same length as the lat and long vectyors 
+    /// @author SMM
+    /// @date 14/03/2017
+    bool check_if_all_data_columns_same_length();
+
+
     /// @brief this function sets a UTM_ coordinate system string
     /// the map is in the northern hemisphere
     /// @param UTM_zone the UTM zone. Replaced in function.
