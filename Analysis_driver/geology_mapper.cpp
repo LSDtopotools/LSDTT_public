@@ -75,10 +75,6 @@ int main (int nNumberofArgs,char *argv[])
     cout << "In linux:" << endl;
     cout << "./geology_mapping_tool.exe /LSDTopoTools/Topographic_projects/Test_data/ LSDTT_Geol.param" << endl;
     cout << "=========================================================" << endl;
-    cout << "For more documentation on the parameter file, " << endl;
-    cout << " see readme and online documentation." << endl;
-    cout << " http://lsdtopotools.github.io/LSDTT_book/#_chi_analysis_part_3_getting_chi_gradients_for_the_entire_landscape" << endl;
-    cout << "=========================================================" << endl;
     exit(EXIT_SUCCESS);
   }
 
