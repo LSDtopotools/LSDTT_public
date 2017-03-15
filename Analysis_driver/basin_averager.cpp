@@ -353,6 +353,16 @@ int main (int nNumberofArgs,char *argv[])
       {
         cout << "I am going to spawn csv files with the appropriate basins" << endl;
         cout << "This sample is: " << IDs[samp] << endl;
+
+        // first we see if the nodes file exists
+        string basin_outlet_fname = DATA_DIR+this_string_map["basin_outlet_csv"];
+
+        string csv_spawn_fname = OUT_DIR+OUT_ID+"_CSVSpawned_"+itoa(samp)+".csv";
+        LSDSpatialCSVReader Outlet_CSV_data(RI,basin_outlet_fname);
+        vector<string> data_for_selection;
+        data_for_selection.push_back(IDs[samp]);
+        LSDSpatialCSVReader filtered = Outlet_CSV_data.select_data_to_new_csv_object(this_string_map["sample_ID_column_name"], data_for_selection);
+        filtered.print_data_to_csv(csv_spawn_fname);
       }
       
     }
