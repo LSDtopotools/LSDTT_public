@@ -224,9 +224,25 @@ class LSDParameterParser
     /// @brief This prints your parameters to file so you can check if the
     ///  parameters have been ingested properly
     /// @author SMM
-    /// @date 0/11/2016
+    /// @date 01/11/2016
     void print_parameters();
 
+    /// @brief This is used to update a parameter file within LSDTopoTools
+    ///  and is primarily intended to be used in spawning operations, 
+    ///  e.g. where you select a bunch of catchemetns and create driver
+    ///    functions for each one that can be run on different CPUs. 
+    /// @param parameter_fname the name of the output parameter file
+    /// @param new_read_path the new path. 
+    /// @param new_read_fname the new read filename (no extension!)
+    /// @param new_write_path says what it does on the tin
+    /// @param new_write_fname no extension for this file
+    /// @param replace_parameters a map of <string,string> that replaces parameters
+    /// @author SMM
+    /// @date 15/03/2017
+    void replace_and_print_parameter_file(string parameter_fname,
+                                     string new_read_path, string new_read_fname,
+                                     string new_write_path, string new_write_fname,
+                                     map<string,string> replace_parameters);
 
   protected:
 
@@ -245,7 +261,7 @@ class LSDParameterParser
     /// Path to which files will be written
     string write_path;
 
-    /// Path from which files will be written
+    /// Path from which files will be written 
     string read_path;
 
     /// Prefix of files to be written (i.e., no path, no extension)

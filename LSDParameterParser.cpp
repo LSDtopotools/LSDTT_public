@@ -702,4 +702,71 @@ void LSDParameterParser::print_parameters()
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This prints parameters read to file, so you can make sure your parameters
+// have ingested properly
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDParameterParser::replace_and_print_parameter_file(string parameter_fname,
+                                     string new_read_path, string new_read_fname,
+                                     string new_write_path, string new_write_fname,
+                                     map<string,string> replace_parameters)
+{
+  string fname = write_path+parameter_fname;
+  ofstream params_out;
+  params_out.open(fname.c_str());
+
+  params_out << "# This is an adjusted parameter file" << endl;
+  params_out << "# The file names and paths are: " << endl;
+  params_out << "read path: " << new_read_path << endl;
+  params_out << "read fname: " << new_read_fname << endl;
+  params_out << "write path: " << new_write_path << endl;
+  params_out << "write fname: " << new_write_fname << endl;
+  params_out << "CHeads file: " << CHeads_file << endl;
+
+  params_out << "read extension: " << dem_read_extension << endl;
+  params_out << "write extension: " << dem_write_extension << endl << endl;
+
+  params_out << "# ===================================="  << endl;
+  params_out << "# Now for parameters read from file." << endl;
+  params_out << "# If an expected parameter is not here check your spelling." << endl;
+
+  vector<string> empty_vec;
+  vector<string> these_keys = extract_keys(parameters_read_map);
+  for(int i = 0; i< int(these_keys.size()); i++)
+  {
+    // If the key is contained in the replace parameters, use the replace parameter
+    if(replace_parameters.find(these_keys[i]) != replace_parameters.end())
+    {
+      cout << "I found a replace parameter!" << endl;
+      params_out << these_keys[i] << ": " << replace_parameters[these_keys[i]]  << endl;
+    }
+    else
+    {
+      params_out << these_keys[i] << ": " << parameters_read_map[these_keys[i]]  << endl;
+    }
+  }
+
+  params_out << endl << "# ===================================="  << endl;
+  params_out << "# Now for the default parameters." << endl;
+
+  these_keys = empty_vec;
+  these_keys = extract_keys(defaults_used_map);
+  for(int i = 0; i< int(these_keys.size()); i++)
+  {
+    // If the key is contained in the replace parameters, use the replace parameter
+    if(replace_parameters.find(these_keys[i]) != replace_parameters.end())
+    {
+      cout << "I found a replace parameter!" << endl;
+      params_out << these_keys[i] << ": " << replace_parameters[these_keys[i]]  << endl;
+    }
+    else
+    {
+      params_out << these_keys[i] << ": " << defaults_used_map[these_keys[i]]  << endl;
+    }
+  }
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
 #endif
