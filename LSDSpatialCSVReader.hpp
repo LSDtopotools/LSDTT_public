@@ -81,12 +81,36 @@ class LSDSpatialCSVReader
     /// @date 16/02/2017
     LSDSpatialCSVReader(LSDRaster& ThisRaster, string csv_fname)  { create(ThisRaster,csv_fname); }
 
-    /// @brief Create an LSDChiTools from a raster.
+    /// @brief Create an LSDSpatialCSVReader from a raster.
     /// @param ThisRaster An LSDIndexRaster object
     /// @param csv_fname The name of the csv file including extension  and path
     /// @author SMM
     /// @date 16/02/2017
     LSDSpatialCSVReader(LSDRasterInfo& ThisRaster, string csv_fname)  { create(ThisRaster,csv_fname); }
+
+    /// @brief Create an LSDSpatialCSVReader from all the data elements
+    /// @param nrows An integer of the number of rows.
+    /// @param ncols An integer of the number of columns.
+    /// @param xmin A float of the minimum X coordinate.
+    /// @param ymin A float of the minimum Y coordinate.
+    /// @param cellsize A float of the cellsize.
+    /// @param ndv An integer of the no data value.
+    /// @param data An Array2D of floats in the shape nrows*ncols,
+    /// @param temp_GRS a map of strings containing georeferencing information. Used
+    /// mainly with ENVI format files
+    /// @param this_latitude the latitudes in WGS84
+    /// @param this_longitude the longitudes in WGS84
+    /// @param this_is_point_in_raster bool vec for testing if point in raster domain
+    /// @param this_data_map the data elements
+    /// @author SMM
+    /// @date 15/03/2017
+   LSDSpatialCSVReader(int nrows, int ncols, float xmin, float ymin,
+           float cellsize, float ndv, map<string,string> temp_GRS,
+           vector<double>& this_latitude, vector<double>& this_longitude,
+           vector<bool>& this_is_point_in_raster, map<string, vector<string> >& this_data_map)
+             { create(nrows, ncols, xmin, ymin, cellsize, ndv, temp_GRS,
+                    this_latitude, this_longitude,this_is_point_in_raster, this_data_map); }
+
 
     /// @brief This loads a csv file, grabbing the latitude and longitude,
     ///  and putting the rest of the data into data maps
@@ -305,7 +329,10 @@ class LSDSpatialCSVReader
 
     void create(LSDRasterInfo&,string);
 
-
+    void create(int nrows, int ncols, float xmin, float ymin,
+           float cellsize, float ndv, map<string,string> temp_GRS,
+           vector<double>& this_latitude, vector<double>& this_longitude,
+           vector<bool>& this_is_point_in_raster, map<string, vector<string> >& this_data_map);
 
 
 };

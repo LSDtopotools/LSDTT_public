@@ -159,6 +159,32 @@ void LSDSpatialCSVReader::create(LSDRaster& ThisRaster, string csv_fname)
 }
 
 
+
+// A create function for getting all the elements to copy or duplicate a csv object
+void LSDSpatialCSVReader::create(int nrows, int ncols, float xmin, float ymin,
+           float cellsize, float ndv, map<string,string> temp_GRS,
+           vector<double>& this_latitude, vector<double>& this_longitude,
+           vector<bool>& this_is_point_in_raster, map<string, vector<string> >& this_data_map)
+{
+
+
+  NRows = nrows;
+  NCols = ncols;
+  XMinimum = xmin;
+  YMinimum = ymin;
+  DataResolution = cellsize;
+  NoDataValue = ndv;
+
+  //cout << "Now for the georeferencing strings" << endl;
+  GeoReferencingStrings = temp_GRS;
+  
+  latitude = this_latitude;
+  longitude = this_longitude;
+  is_point_in_raster = this_is_point_in_raster;
+  data_map = this_data_map;
+  }
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // This loads a csv file

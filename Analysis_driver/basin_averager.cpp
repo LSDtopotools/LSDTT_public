@@ -390,7 +390,7 @@ int main (int nNumberofArgs,char *argv[])
     //========================
     // LOOPING THROUGH BASINS
     //========================
-    // now loop through the valid points, getting the cosmo data 
+    // now loop through the valid points, spawning a basin each time 
     int n_valid_points =  int(SnappedJunctions.size());
     int padding_pixels = 100;
     cout << "I am trying to spawn basins, found " << n_valid_points << " valid points." << endl;
@@ -409,6 +409,7 @@ int main (int nNumberofArgs,char *argv[])
       string DEMnewname = OUT_DIR+OUT_ID+"_Spawned_"+itoa(samp);
       cout << "Writing a new basin to: " << DEMnewname << endl;
       BasinRaster.write_raster(DEMnewname,"bil");
+      
     }
   }
 
