@@ -858,6 +858,72 @@ void LSDSpatialCSVReader::get_nodeindices_from_x_and_y_coords(LSDFlowInfo& FlowI
   NodeIndices = NodeIndices_temp;
 }
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This selects data and then returns a new LSDSpatialCSVobject with only
+// the selected data
+// Note: this is brute force appraoch: there is probably a faster way to do this!
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LSDSpatialCSVReader LSDSpatialCSVReader::select_data_to_new_csv_object(string selection_column, vector<string> data_for_selection)
+{
+  // get the data column
+  vector<string> select_column = get_data_column(selection_column);
+  int n_nodes = int(select_column.size());
+  vector<int> selected_indices;
+  string this_item;
+  
+  for(int i = 0; i<n_nodes; i++)
+  {
+    //cout << "Looking for: " << select_column[i] << endl;
+    if (std::find(data_for_selection.begin(), data_for_selection.end(), select_column[i]) != data_for_selection.end())
+    {
+      //cout << "Found it!" << endl;
+      selected_indices.push_back(i);
+    }
+  }
+  
+  // now we need to go through the data and remove the rows that don't meet selection
+  int n_selected_nodes = int(selected_indices.size());
+  map<string, vector<string> > new_data_map;
+  vector<string> empty_vec;
+  vector<double> new_latitude;
+  vector<double> new_longitude;
+  
+  // set up the new data map
+  for( map<string, vector<string> >::iterator it = data_map.begin(); it != data_map.end(); ++it)
+  {
+    //cout << "Key is: " <<it->first << "\n";
+    new_data_map[it->first] = empty_vec;
+  }
+  
+  int this_index;
+  for(int i = 0; i<n_selected_nodes; i++)
+  {
+    this_index = selected_indices[i];
+    
+    new_latitude.push_back(latitude[this_index]);
+    new_longitude.push_back(longitude[this_index]);
+    
+    // now loop through the data map
+    for( map<string, vector<string> >::iterator it = data_map.begin(); it != data_map.end(); ++it)
+    {
+      //cout << "Key is: " <<it->first << "\n";
+      string element = it->second[this_index];
+      new_data_map[it->first].push_back(element);
+    }
+  }
+  
+  // now create the new csv object
+  vector<bool> new_in_raster_vec;
+  LSDSpatialCSVReader new_csv(NRows,NCols,XMinimum,YMinimum,DataResolution,
+                             NoDataValue,GeoReferencingStrings,new_latitude,
+                             new_longitude,new_in_raster_vec,new_data_map);
+  return new_csv;
+
+}
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // This prints the data column keys to screen

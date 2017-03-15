@@ -1,8 +1,8 @@
 # make with make -f geology_mapper.make
 
 CC=g++
-CFLAGS=-c -Wall -O3 -g 
-OFLAGS = -Wall -O3 -g 
+CFLAGS=-c -Wall -O3
+OFLAGS = -Wall -O3
 LDFLAGS= -Wall
 SOURCES=geology_mapper.cpp \
     ../LSDIndexRaster.cpp \

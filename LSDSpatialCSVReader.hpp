@@ -243,8 +243,13 @@ class LSDSpatialCSVReader
     /// @date 21/02/17
     void get_nodeindices_from_x_and_y_coords(LSDFlowInfo& FlowInfo, vector<float>& X_coords, vector<float>& Y_coords, vector<int>& NodeIndices);
 
-
-
+    /// @brief This selects specified data and crease a new csv object with just that data
+    /// @param selection_column The name of the column from which the data will be selected
+    /// @param data_for_selection a vector holding the values of the data column that
+    ///  will be selected. Rows without these values will be removed
+    /// @author SMM
+    /// @date 15/03/2017
+    LSDSpatialCSVReader select_data_to_new_csv_object(string selection_column, vector<string> data_for_selection);
 
     /// @brief this prints keys of the data map to screen
     /// @author SMM

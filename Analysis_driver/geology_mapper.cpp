@@ -187,6 +187,16 @@ int main (int nNumberofArgs,char *argv[])
       string out_json_name = OUT_DIR+this_string_map["geojson_name"];
       CSVFile.print_data_to_geojson(out_json_name);
     }
-  
+    
+    // this is just a test
+    vector<string> selection;
+    selection.push_back("hibernian");
+    selection.push_back("chumdrop");
+    selection.push_back("3325");
+    selection.push_back("fs-5");
+    string selection_column = "sampleID";
+    LSDSpatialCSVReader new_csv = CSVFile.select_data_to_new_csv_object(selection_column, selection);
+    string new_out_csv_name = OUT_DIR+"grumbo.csv";
+    new_csv.print_data_to_csv(new_out_csv_name);
   }
 }
