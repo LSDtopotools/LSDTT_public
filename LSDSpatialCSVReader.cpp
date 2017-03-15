@@ -993,6 +993,7 @@ void LSDSpatialCSVReader::print_UTM_coords_to_csv(vector<float> UTME, vector<flo
   outfile.open(csv_outname.c_str());
 
   outfile << "PointNo,x,y" << endl;
+  outfile.precision(9);
   for (int i = 0; i < int(UTME.size()); i++)
   {
     outfile << i+1 << "," << UTME[i] << "," << UTMN[i] << endl;
@@ -1019,6 +1020,7 @@ void LSDSpatialCSVReader::print_data_to_csv(string csv_outname)
   int N_nodes = int(latitude.size());
   for (int i = 0; i < N_nodes; i++)
   {
+    outfile.precision(9);
     outfile << latitude[i] << "," << longitude[i];
     for( map<string, vector<string> >::iterator it = data_map.begin(); it != data_map.end(); ++it)
     {
@@ -1041,6 +1043,7 @@ void LSDSpatialCSVReader::print_data_to_geojson(string json_outname)
   if (check_if_latitude_and_longitude_exist())
   {
     ofstream outfile;
+    outfile.precision(9);
     outfile.open(json_outname.c_str());
     
     outfile << "{" << endl;
