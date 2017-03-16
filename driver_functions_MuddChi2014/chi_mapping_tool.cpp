@@ -131,11 +131,13 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["test_drainage_boundaries"] = false;  
   bool_default_map["only_take_largest_basin"] = false;  
   bool_default_map["print_source_keys"] = false;
+  bool_default_map["print_sources_to_csv"] = false;
   bool_default_map["print_baselevel_keys"] = false;
   bool_default_map["print_basin_raster"] = false;
   bool_default_map["write hillshade"] = false;
   bool_default_map["print_simple_chi_map_with_basins_to_csv"] = false;
   bool_default_map["print_segments"] = false;
+  bool_default_map["raster_is_filled"] = false;
   
   // set default string method
   string_default_map["CHeads_file"] = "NULL";
@@ -172,7 +174,6 @@ int main (int nNumberofArgs,char *argv[])
   // These will all be assigned default values
   float A_0 = this_float_map["A_0"];
   float movern = this_float_map["m_over_n"];
-  float Minimum_Slope = this_float_map["min_slope_for_fill"];
   int n_iterations = this_int_map["n_iterations"];
   int minimum_segment_length = this_int_map["minimum_segment_length"];
   int n_nodes_to_visit = this_int_map["n_nodes_to_visit"];             // when constructing channel network, this 
@@ -203,8 +204,20 @@ int main (int nNumberofArgs,char *argv[])
   //============================================================================
   // Start gathering necessary rasters
   //============================================================================
-  cout << "Filling topography." << endl;
-  LSDRaster filled_topography = topography_raster.fill(Minimum_Slope);
+  LSDRaster filled_topography;
+  // now get the flow info object
+  if ( this_bool_map["raster_is_filled"] )
+  {
+    cout << "You have chosen to use a filled raster." << endl;
+    filled_topography = topography_raster;
+  }
+  else
+  {
+    cout << "Let me fill that raster for you, the min slope is: "
+         << this_float_map["min_slope_for_fill"] << endl;
+    filled_topography = topography_raster.fill(this_float_map["min_slope_for_fill"]);
+  }
+  
   
   if (this_bool_map["print_fill_raster"])
   {
@@ -256,7 +269,15 @@ int main (int nNumberofArgs,char *argv[])
 
   // now get the junction network
   LSDJunctionNetwork JunctionNetwork(sources, FlowInfo);
-  
+
+  // Print sources
+  if( this_bool_map["print_sources_to_csv"])
+  {
+    string sources_csv_name = OUT_DIR+OUT_ID+"_ATsources.csv";
+      
+    //write channel_heads to a csv file
+    FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(sources, sources_csv_name);
+  }
   if (this_bool_map["print_stream_order_raster"])
   { 
     LSDIndexRaster SOArray = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
@@ -434,5 +455,8 @@ int main (int nNumberofArgs,char *argv[])
     string hs_fname = OUT_DIR+OUT_ID+"_hs";
     hs_raster.write_raster(hs_fname,raster_ext);
   }
+
+
+
 
 }
