@@ -169,12 +169,14 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_junction_csv"] = false;
   bool_default_map["spawn_basins_from_outlets"] = false;
   bool_default_map["spawn_csv_file_from_basin_spawn"] = false;
+  bool_default_map["spawn_parameter_files_from_basin_spawn"] = false;
   
   // set default string method
   string_default_map["slope method"] = "polynomial";
   string_default_map["averaging_raster_vector"] = "NULL";
   string_default_map["basin_outlet_csv"] = "NULL";
   string_default_map["sample_ID_column_name"] = "IDs";
+  string_default_map["parameter_file_for_spawning"] = "NULL";
   
   // Use the parameter parser to get the maps of the parameters required for the 
   // analysis
@@ -349,6 +351,7 @@ int main (int nNumberofArgs,char *argv[])
       cout << "Writing a new basin to: " << DEMnewname << endl;
       BasinRaster.write_raster(DEMnewname,"bil");
       
+      
       if(this_bool_map["spawn_csv_file_from_basin_spawn"])
       {
         cout << "I am going to spawn csv files with the appropriate basins" << endl;
@@ -363,10 +366,33 @@ int main (int nNumberofArgs,char *argv[])
         data_for_selection.push_back(IDs[samp]);
         LSDSpatialCSVReader filtered = Outlet_CSV_data.select_data_to_new_csv_object(this_string_map["sample_ID_column_name"], data_for_selection);
         filtered.print_data_to_csv(csv_spawn_fname);
+        
+        if(this_bool_map["spawn_parameter_files_from_basin_spawn"])
+        {
+          cout << "Let me update and print a parameter file for you for the spawned basin." << endl;
+          
+          // load a parameter parser
+          LSDParameterParser SpawnPP(DATA_DIR,this_string_map["parameter_file_for_spawning"]);
+          
+          // force the parsing of everything in the file
+          SpawnPP.force_parse();
+          
+          // update the file names and paths
+          string parameter_fname = OUT_ID+"_Spawned_"+itoa(samp)+".param";
+          map<string,string> replace_parameters;
+          string new_read_fname = OUT_ID+"_Spawned_"+itoa(samp);
+          string new_write_fname = OUT_ID+"_Spawned_"+itoa(samp);
+          replace_parameters["basin_outlet_csv"] = OUT_ID+"_CSVSpawned_"+itoa(samp)+".csv";
+          
+          cout << "I am loading the file: " << endl << DATA_DIR+this_string_map["parameter_file_for_spawning"] << endl;
+          cout << "I am writing the file: " << endl << parameter_fname << endl;
+          
+          SpawnPP.replace_and_print_parameter_file(parameter_fname,
+                                     DATA_DIR, new_read_fname, OUT_DIR, new_write_fname,
+                                     replace_parameters);
+        }
       }
-      
     }
-    
   }
 
   // print basins to file if wanted

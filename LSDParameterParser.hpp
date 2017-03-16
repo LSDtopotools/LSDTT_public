@@ -107,6 +107,12 @@ class LSDParameterParser
     /// @date 03/11/2016
     void parse_file_IO();
 
+    /// @brief This forces parsing of all the parameters into strings
+    /// @detail It is used for copying parameter files
+    /// @author SMM
+    /// @date 16/03/2017
+    void force_parse();
+
     /// @brief This parses all of the defalt parameter maps
     /// @param default_param_f a map of the default parameters, keys are string, values are floats
     /// @param default_param_i a map of the default parameters, keys are string, values are int
@@ -227,6 +233,13 @@ class LSDParameterParser
     /// @date 01/11/2016
     void print_parameters();
 
+    /// @brief This prints your parameters to file so you can check if the
+    ///  parameters have been ingested properly. You tell it what the file is called
+    /// @param fname_prefix the name of the fname (with extension, no path)
+    /// @author SMM
+    /// @date 16/03/2017
+    void print_parameters(string fname_prefix);
+    
     /// @brief This is used to update a parameter file within LSDTopoTools
     ///  and is primarily intended to be used in spawning operations, 
     ///  e.g. where you select a bunch of catchemetns and create driver

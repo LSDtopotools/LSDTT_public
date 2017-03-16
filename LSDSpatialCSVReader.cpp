@@ -89,7 +89,7 @@ void LSDSpatialCSVReader::create()
 //==============================================================================
 void LSDSpatialCSVReader::create(string csv_fname)
 {
-  cout << "I am creating something for you" << endl;
+  //cout << "I am creating something for you" << endl;
   NRows = -9999;
   NCols = -9999;
   XMinimum = -9999;
