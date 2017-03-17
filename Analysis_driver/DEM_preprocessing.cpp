@@ -106,6 +106,9 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["fill_nodata"] = false;
   bool_default_map["remove_low_relief"] = false;
   bool_default_map["write_relief_raster"] = false;
+  bool_default_map["find_holes"] = false;
+  
+  int_default_map["hole_filling_steps"] = 500;
 
   // Use the parameter parser to get the maps of the parameters required for the 
   // analysis
@@ -183,22 +186,25 @@ int main (int nNumberofArgs,char *argv[])
       string relief_str = "_REL";
       Relief.write_raster(OUT_DIR+OUT_ID+relief_str,raster_ext);
     }
-  
   }
   
-  
+  //cout << "Find holes is: " << this_bool_map["find_holes"] << endl;
   if(this_bool_map["find_holes"])
   {
-    int const_value = 0;
-    LSDIndexRaster(FinalRaster,0)
+    cout << "I am finding some holes for you. " << endl;
+    LSDIndexRaster LookForHoles = FinalRaster.create_binary_isdata_raster();
+    
+    string LFH_str = "_LFH";
+    LookForHoles.write_raster(OUT_DIR+OUT_ID+LFH_str,raster_ext);
   
+    LSDIndexRaster Holer = LookForHoles.find_holes_with_nodata_bots(this_int_map["hole_filling_steps"]);
+    
+    string Holer_str = "_HOLES";
+    Holer.write_raster(OUT_DIR+OUT_ID+Holer_str,raster_ext);
   
   }
   
-  
-  
-  
-  
+
   // Now write the final raster
   string preprocess_str = "_PP";
   FinalRaster.write_raster(OUT_DIR+OUT_ID+preprocess_str,raster_ext);
