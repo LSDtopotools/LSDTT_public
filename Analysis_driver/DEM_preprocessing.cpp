@@ -101,12 +101,14 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["relief_radius"] = 100;
   float_default_map["relief_threshold"] = 50;
 
+  string_default_map["filling_raster_fname"] = "NULL";
 
   // set default methods
   bool_default_map["fill_nodata"] = false;
   bool_default_map["remove_low_relief"] = false;
   bool_default_map["write_relief_raster"] = false;
   bool_default_map["find_holes"] = false;
+  bool_default_map["fill_holes_with_coarse_raster"] = false;
   
   int_default_map["hole_filling_steps"] = 500;
   int_default_map["hole_filling_sweeps"] = 50;
@@ -203,6 +205,33 @@ int main (int nNumberofArgs,char *argv[])
     string Holer_str = "_HOLES";
     Holer.write_raster(OUT_DIR+OUT_ID+Holer_str,raster_ext);
   
+  }
+  
+  
+  if(this_bool_map["fill_holes_with_coarse_raster"])
+  {
+    cout << "Getting the locations of the holes. " << endl;
+    LSDIndexRaster LookForHoles = FinalRaster.create_binary_isdata_raster();
+    
+    vector<float> UTME;
+    vector<float> UTMN;
+    vector<int> rows_of_nodes;
+    vector<int> cols_of_nodes;
+    LookForHoles.get_points_in_holes_for_interpolation(this_int_map["hole_filling_steps"], 
+                                  this_int_map["hole_filling_sweeps"],
+                                  UTME,UTMN,rows_of_nodes,cols_of_nodes);
+    
+    
+    string filling_raster_fname = DATA_DIR+this_string_map["filling_raster_fname"];
+    cout << "I am getting the filling raster for interpolation. " << endl;
+    LSDRaster filling_raster(filling_raster_fname,raster_ext);
+    
+    vector<float> filled_data = filling_raster.interpolate_points_bilinear(UTME, UTMN);
+    
+    LSDRaster HolesFilled = FinalRaster.fill_with_interpolated_data(UTME, UTMN, filled_data);
+    
+    string HF_str = "_HF";
+    HolesFilled.write_raster(OUT_DIR+OUT_ID+HF_str,raster_ext);
   }
   
 
