@@ -109,6 +109,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["find_holes"] = false;
   
   int_default_map["hole_filling_steps"] = 500;
+  int_default_map["hole_filling_sweeps"] = 50;
 
   // Use the parameter parser to get the maps of the parameters required for the 
   // analysis
@@ -197,7 +198,7 @@ int main (int nNumberofArgs,char *argv[])
     string LFH_str = "_LFH";
     LookForHoles.write_raster(OUT_DIR+OUT_ID+LFH_str,raster_ext);
   
-    LSDIndexRaster Holer = LookForHoles.find_holes_with_nodata_bots(this_int_map["hole_filling_steps"]);
+    LSDIndexRaster Holer = LookForHoles.find_holes_with_nodata_bots(this_int_map["hole_filling_steps"], this_int_map["hole_filling_sweeps"]);
     
     string Holer_str = "_HOLES";
     Holer.write_raster(OUT_DIR+OUT_ID+Holer_str,raster_ext);
