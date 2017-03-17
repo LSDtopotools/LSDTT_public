@@ -221,6 +221,8 @@ int main (int nNumberofArgs,char *argv[])
                                   this_int_map["hole_filling_sweeps"],
                                   UTME,UTMN,rows_of_nodes,cols_of_nodes);
     
+    cout << "Number of hole points is: " << UTME.size() << endl;
+    
     
     string filling_raster_fname = DATA_DIR+this_string_map["filling_raster_fname"];
     cout << "I am getting the filling raster for interpolation. " << endl;
@@ -228,7 +230,7 @@ int main (int nNumberofArgs,char *argv[])
     
     vector<float> filled_data = filling_raster.interpolate_points_bilinear(UTME, UTMN);
     
-    LSDRaster HolesFilled = FinalRaster.fill_with_interpolated_data(UTME, UTMN, filled_data);
+    LSDRaster HolesFilled = FinalRaster.fill_with_interpolated_data(rows_of_nodes,cols_of_nodes, filled_data);
     
     string HF_str = "_HF";
     HolesFilled.write_raster(OUT_DIR+OUT_ID+HF_str,raster_ext);
