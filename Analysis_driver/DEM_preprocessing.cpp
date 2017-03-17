@@ -186,6 +186,8 @@ int main (int nNumberofArgs,char *argv[])
   
   }
   
-
+  // Now write the final raster
+  string preprocess_str = "_PP";
+  FinalRaster.write_raster(OUT_DIR+OUT_ID+preprocess_str,raster_ext);
   
 }
