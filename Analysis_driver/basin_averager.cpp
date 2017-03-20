@@ -51,6 +51,7 @@
 #include "../LSDJunctionNetwork.hpp"
 #include "../LSDBasin.hpp"
 #include "../LSDShapeTools.hpp"
+#include "../LSDSpatialCSVReader.hpp"
 #include "../LSDParameterParser.hpp"
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -164,14 +165,20 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_basin_raster"] = false;
   bool_default_map["print_stream_order_raster"] = false;
   bool_default_map["print_stream_order_csv"] = false;
-  bool_default_map["check_basin_locations"] = false;
+  bool_default_map["get_basins_from_outlets"] = false;
   bool_default_map["print_junction_csv"] = false;
+  bool_default_map["print_channels_to_csv"] = false;
   bool_default_map["spawn_basins_from_outlets"] = false;
+  bool_default_map["spawn_csv_file_from_basin_spawn"] = false;
+  bool_default_map["spawn_parameter_files_from_basin_spawn"] = false;
+  bool_default_map["write hillshade"] = false;
   
   // set default string method
   string_default_map["slope method"] = "polynomial";
   string_default_map["averaging_raster_vector"] = "NULL";
   string_default_map["basin_outlet_csv"] = "NULL";
+  string_default_map["sample_ID_column_name"] = "IDs";
+  string_default_map["parameter_file_for_spawning"] = "NULL";
   
   // Use the parameter parser to get the maps of the parameters required for the 
   // analysis
@@ -208,10 +215,29 @@ int main (int nNumberofArgs,char *argv[])
   
     // check to see if the raster exists
   LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);  
-        
+
+  // debugging
+  //string basin_outlet_fname = DATA_DIR+this_string_map["basin_outlet_csv"];
+  //cout << "The basin file is: " << basin_outlet_fname << endl;
+  //LSDSpatialCSVReader Outlet_CSV_data(RI,basin_outlet_fname);
+  //exit(EXIT_FAILURE);
+
   // load the  DEM
   LSDRaster topography_raster((DATA_DIR+DEM_ID), raster_ext);
   cout << "Got the dem: " <<  DATA_DIR+DEM_ID << endl;
+
+  // check to see if you need hillshade
+  if (this_bool_map["write hillshade"])
+  {
+    float hs_azimuth = 315;
+    float hs_altitude = 45;
+    float hs_z_factor = 1;
+    LSDRaster hs_raster = topography_raster.hillshade(hs_altitude,hs_azimuth,hs_z_factor);
+
+    string hs_fname = OUT_DIR+OUT_ID+"_hs";
+    hs_raster.write_raster(hs_fname,raster_ext);
+  }
+
 
   LSDRaster FillRaster;
   // now get the flow info object
@@ -268,138 +294,92 @@ int main (int nNumberofArgs,char *argv[])
   
   // Now create the network
   LSDJunctionNetwork JunctionNetwork(sources, FlowInfo);
-  
-  
-  // now we check for basins (if you've ask for that)
-  vector<int> SnappedJunctions;
-  if(this_bool_map["check_basin_locations"])
+
+  if( this_bool_map["print_channels_to_csv"])
   {
+    string channel_csv_name = OUT_DIR+OUT_ID+"_W_CN";
+    JunctionNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+  }
+
+
+  // now we check for basins (if you've ask for that)
+  vector<int> basin_junctions;
+  vector<string> IDs;
+  
+  if(this_bool_map["get_basins_from_outlets"])
+  {
+    cout << "I am getting your basins from a list of nodes. " << endl;
+    
     // first we see if the nodes file exists
     string basin_outlet_fname = DATA_DIR+this_string_map["basin_outlet_csv"];
     
-    cout << "I am checking basins, the outlet points are: " <<  basin_outlet_fname << endl;
-  
-    ifstream ifs; 
-    ifs.open(basin_outlet_fname.c_str());
-  
-    // check if the parameter file exists
-    if( ifs.fail() )
+    
+    cout << "The basin file is: " << basin_outlet_fname << endl;
+    LSDSpatialCSVReader Outlet_CSV_data(RI,basin_outlet_fname);
+    IDs = Outlet_CSV_data.get_data_column(this_string_map["sample_ID_column_name"]);
+    
+    cout << "I am reading the following samples: " << endl;
+    vector<double> latitude = Outlet_CSV_data.get_latitude();
+    vector<double> longitude = Outlet_CSV_data.get_longitude();
+    int n_samples = int(latitude.size());
+    for(int samp = 0; samp<n_samples; samp++)
     {
-      cout << "\nFATAL ERROR: The basin points file \"" << basin_outlet_fname
-           << "\" doesn't exist" << endl;
+      cout << "ID: " << IDs[samp] << " lat: " << latitude[samp] << " long: " << longitude[samp] << endl;
     }
-    else
-    {
-      // the LL data
-      vector<float> latitude;
-      vector<float> longitude;
-      vector<string> IDs;
-      string line_from_file;
-      vector<string> this_string_vec;
-      vector<string> empty_string_vec;
-      
-      // now loop through the rest of the lines, getting the data. 
-      while( getline(ifs, line_from_file))
-      {
-        // reset the string vec
-        this_string_vec = empty_string_vec;
     
-        // create a stringstream
-        stringstream ss(line_from_file);
+    // now get the junction network
+    vector<float> fUTM_easting;
+    vector<float> fUTM_northing;
+    Outlet_CSV_data.get_x_and_y_from_latlong(fUTM_easting,fUTM_northing);
     
-        while( ss.good() )
-        {
-          string substr;
-          getline( ss, substr, ',' );
-      
-          // remove the spaces
-          substr.erase(remove_if(substr.begin(), substr.end(), ::isspace), substr.end());
-      
-          // remove control characters
-          substr.erase(remove_if(substr.begin(), substr.end(), ::iscntrl), substr.end());
-      
-          // add the string to the string vec
-          this_string_vec.push_back( substr );
-        }
-    
-        //cout << "Yoyoma! size of the string vec: " <<  this_string_vec.size() << endl;
-        if ( int(this_string_vec.size()) < 3)
-        {    
-          cout << "Hey there, I am trying to load your basin outlet data but you seem not to have" << endl;
-          cout << "enough columns in your file. I am ignoring a line" << endl;
-        }
-        else
-        {
-          // now convert the data
-          //cout << "Getting sample name: " <<  this_string_vec[0] << endl;
-      
-          // let the user know about offending underscores, and replace them
-          string s = this_string_vec[0];
-          string uscore = "_";
-          size_t found = s.find(uscore);
-          if (found!=std::string::npos)
-          {
-            cout << "I found an underscore in the sample name. Replacing with a dash." <<endl;
-            replace( s.begin(), s.end(), '_', '-');
-            cout << "New sample name is: " << s << endl;
-          }
-
-          IDs.push_back( s );
-          latitude.push_back( atof( this_string_vec[1].c_str() ) );
-          longitude.push_back( atof(this_string_vec[2].c_str() ) );
-        }
-      }
-      ifs.close();
-
-      int N_lats = int(latitude.size());
-      cout << "N outlets: " << N_lats << endl;
-      for (int i = 0; i< N_lats; i++)
-      {
-        cout << "lat: " << latitude[i] << " and long: " <<  longitude[i] << endl;
-      }
-
-      // now get the junction network
-      vector<float> fUTM_easting;
-      vector<float> fUTM_northing;
-
-      // find the x any y locations of the points for snapping
-      JunctionNetwork.get_x_and_y_from_latlong(latitude, longitude,fUTM_easting,fUTM_northing);
-
-      int threshold_stream_order = 2;
-      vector<int> valid_cosmo_points;         // a vector to hold the valid nodes
-      vector<int> snapped_node_indices;       // a vector to hold the valid node indices
-      vector<int> snapped_junction_indices;   // a vector to hold the valid junction indices
-      cout << "The search radius is: " << this_int_map["search_radius_nodes"] << endl;
-      JunctionNetwork.snap_point_locations_to_channels(fUTM_easting, fUTM_northing, 
+    int threshold_stream_order = 2;
+    vector<int> valid_cosmo_points;         // a vector to hold the valid nodes
+    vector<int> snapped_node_indices;       // a vector to hold the valid node indices
+    vector<int> snapped_junction_indices;   // a vector to hold the valid junction indices
+    cout << "The search radius is: " << this_int_map["search_radius_nodes"] << endl;
+    JunctionNetwork.snap_point_locations_to_channels(fUTM_easting, fUTM_northing, 
                 this_int_map["search_radius_nodes"], threshold_stream_order, FlowInfo, 
                 valid_cosmo_points, snapped_node_indices, snapped_junction_indices);
       
-      cout << "The number of valid points is: " << int(valid_cosmo_points.size()) << endl;
+    cout << "The number of valid points is: " << int(valid_cosmo_points.size()) << endl;
       
-      // Now get the basin rasters
-      string basin_raster_name = OUT_DIR+OUT_ID+"_AllBasins";
-      print_basins(basin_raster_name, FlowInfo, JunctionNetwork,
+    // Now get the basin rasters
+    string basin_raster_name = OUT_DIR+OUT_ID+"_AllBasins";
+    print_basins(basin_raster_name, FlowInfo, JunctionNetwork,
                    snapped_junction_indices);
-      SnappedJunctions = snapped_junction_indices;
-    }
+    basin_junctions = snapped_junction_indices;
+  }
+  else
+  {
+    cout << "I am getting the basins from all basins of order " << this_int_map["basin_order"] << endl;
+    basin_junctions = JunctionNetwork.ExtractBasinJunctionOrder(this_int_map["basin_order"], FlowInfo);
   }
 
 
   if (this_bool_map["spawn_basins_from_outlets"])
   {
-    //========================
-    // LOOPING THROUGH BASINS
-    //========================
-    // now loop through the valid points, getting the cosmo data 
-    int n_valid_points =  int(SnappedJunctions.size());
+    // now loop through the valid points, spawning a basin each time 
+    int n_valid_points =  int(basin_junctions.size());
     int padding_pixels = 100;
+    
+    // check to see if there is a sample name vector, if not write one with junction indices
+    if (IDs.size() != basin_junctions.size())
+    {
+      vector<string> newID;
+      for (int i = 0; i<n_valid_points; i++)
+      {
+        newID.push_back(itoa(basin_junctions[i]));
+      } 
+      IDs = newID;
+    }
+    
     cout << "I am trying to spawn basins, found " << n_valid_points << " valid points." << endl;
     for(int samp = 0; samp<n_valid_points; samp++)
     {
        
       cout << "Getting basin" << endl;
-      LSDBasin thisBasin(SnappedJunctions[samp],FlowInfo, JunctionNetwork);
-      
+      LSDBasin thisBasin(basin_junctions[samp],FlowInfo, JunctionNetwork);
+
       cout << "Now getting the basin raster" << endl;  
       LSDRaster BasinRaster = thisBasin.TrimPaddedRasterToBasin(padding_pixels, 
                                            FlowInfo,FillRaster);
@@ -409,19 +389,61 @@ int main (int nNumberofArgs,char *argv[])
       string DEMnewname = OUT_DIR+OUT_ID+"_Spawned_"+itoa(samp);
       cout << "Writing a new basin to: " << DEMnewname << endl;
       BasinRaster.write_raster(DEMnewname,"bil");
+      
+      
+      if(this_bool_map["spawn_csv_file_from_basin_spawn"])
+      {
+        cout << "I am going to spawn csv files with the appropriate basins" << endl;
+        cout << "This sample is: " << IDs[samp] << endl;
+
+        // first we see if the nodes file exists
+        string basin_outlet_fname = DATA_DIR+this_string_map["basin_outlet_csv"];
+
+        string csv_spawn_fname = OUT_DIR+OUT_ID+"_CSVSpawned_"+itoa(samp)+".csv";
+        LSDSpatialCSVReader Outlet_CSV_data(RI,basin_outlet_fname);
+        vector<string> data_for_selection;
+        data_for_selection.push_back(IDs[samp]);
+        LSDSpatialCSVReader filtered = Outlet_CSV_data.select_data_to_new_csv_object(this_string_map["sample_ID_column_name"], data_for_selection);
+        filtered.print_data_to_csv(csv_spawn_fname);
+        
+        if(this_bool_map["spawn_parameter_files_from_basin_spawn"])
+        {
+          cout << "Let me update and print a parameter file for you for the spawned basin." << endl;
+          
+          cout << "I am going to parse this file: " << endl;
+          cout << this_string_map["parameter_file_for_spawning"] << endl;
+          // load a parameter parser
+          LSDParameterParser SpawnPP(DATA_DIR,this_string_map["parameter_file_for_spawning"]);
+          
+          // force the parsing of everything in the file
+          SpawnPP.force_parse();
+          
+          // update the file names and paths
+          string parameter_fname = OUT_ID+"_Spawned_"+itoa(samp)+".param";
+          map<string,string> replace_parameters;
+          string new_read_fname = OUT_ID+"_Spawned_"+itoa(samp);
+          string new_write_fname = OUT_ID+"_Spawned_"+itoa(samp);
+          replace_parameters["basin_outlet_csv"] = OUT_ID+"_CSVSpawned_"+itoa(samp)+".csv";
+          
+          cout << "I am loading the file: " << endl << DATA_DIR+this_string_map["parameter_file_for_spawning"] << endl;
+          cout << "I am writing the file: " << endl << parameter_fname << endl;
+          
+          SpawnPP.replace_and_print_parameter_file(parameter_fname,
+                                     DATA_DIR, new_read_fname, OUT_DIR, new_write_fname,
+                                     replace_parameters);
+        }
+      }
     }
   }
 
+  // print basins to file if wanted
+  if(this_bool_map["print_basin_raster"])
+  {
+    LSDIndexRaster Basin_Raster = JunctionNetwork.extract_basins_from_junction_vector(basin_junctions, FlowInfo);
+    string BRExt = "_AllBasins";
+    Basin_Raster.write_raster(OUT_DIR+OUT_ID+BRExt, raster_ext);
+  }
 
-  // and get the basins
-  cout << "I am getting the basins with basin order: " << this_int_map["basin_order"] << endl;
-  vector< int > basin_junctions = JunctionNetwork.ExtractBasinJunctionOrder(this_int_map["basin_order"], FlowInfo);
-  LSDIndexRaster Basin_Raster = JunctionNetwork.extract_basins_from_junction_vector(basin_junctions, FlowInfo);
-
-  cout << "I extracted " << basin_junctions.size() << " basins!" << endl;
-
-  LSDBasin A_basin(basin_junctions[0],FlowInfo,JunctionNetwork);
-  
 
   // print stream order to file if wanted
   if(this_bool_map["print_stream_order_raster"])
@@ -431,13 +453,7 @@ int main (int nNumberofArgs,char *argv[])
     SO_array.write_raster(OUT_DIR+OUT_ID+SOExt, raster_ext);
   }
 
-  // print basins to file if wanted
-  if(this_bool_map["print_basin_raster"])
-  {
-    //LSDIndexRaster Basin_Raster = A_basin.write_integer_data_to_LSDIndexRaster(basin_junctions[0], FlowInfo);
-    string BRExt = "_BR";
-    Basin_Raster.write_raster(OUT_DIR+OUT_ID+BRExt, raster_ext);
-  }
+
   
   // print stream order CSV to file if wanted
   if(this_bool_map["print_stream_order_csv"])
