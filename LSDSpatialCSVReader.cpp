@@ -120,7 +120,7 @@ void LSDSpatialCSVReader::create(string csv_fname)
 //==============================================================================
 void LSDSpatialCSVReader::create(LSDRasterInfo& ThisRasterInfo, string csv_fname)
 {
-  cout << "I am creating something for you" << endl;
+  cout << "I am creating a csv object from a raster info object and a csv name." << endl;
   NRows = ThisRasterInfo.get_NRows();
   NCols = ThisRasterInfo.get_NCols();
   XMinimum = ThisRasterInfo.get_XMinimum();
@@ -146,7 +146,7 @@ void LSDSpatialCSVReader::create(LSDRasterInfo& ThisRasterInfo, string csv_fname
 //==============================================================================
 void LSDSpatialCSVReader::create(LSDRaster& ThisRaster, string csv_fname)
 {
-  cout << "I am creating something for you2" << endl;
+  cout << "I am creating a csv object from a raster info object and a csv name." << endl;
   NRows = ThisRaster.get_NRows();
   NCols = ThisRaster.get_NCols();
   XMinimum = ThisRaster.get_XMinimum();
@@ -210,8 +210,6 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
   vector< vector<string> > temp_vec_vec;
   map<string, vector<string> > temp_data_map;
 
-  cout << "Data map size is: " << data_map.size() << endl;
-  cout << "longitude size is: " << longitude.size() << endl;
   data_map = temp_data_map;
 
   // initiate the string to hold the file
@@ -254,17 +252,17 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
   int longitude_index = -9999;
   for (int i = 0; i<n_headers; i++)
   {
-    //cout << "This header is: " << this_string_vec[i] << endl;
+    cout << "This header is: " << this_string_vec[i] << endl;
     if (this_string_vec[i]== "latitude")
     {
       latitude_index = i;
-      //cout << "The latitude index is: " << latitude_index << endl;
+      cout << "The latitude index is: " << latitude_index << endl;
 
     }
     else if (this_string_vec[i] == "longitude")
     {
       longitude_index = i;
-      //cout << "The longitude index is: " << longitude_index << endl;
+      cout << "The longitude index is: " << longitude_index << endl;
     }
     else
     {

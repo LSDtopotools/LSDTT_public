@@ -213,7 +213,9 @@ int main (int nNumberofArgs,char *argv[])
   
     // check to see if the raster exists
   LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);  
-        
+
+  string basin_outlet_fname = DATA_DIR+this_string_map["basin_outlet_csv"];
+
   // load the  DEM
   LSDRaster topography_raster((DATA_DIR+DEM_ID), raster_ext);
   cout << "Got the dem: " <<  DATA_DIR+DEM_ID << endl;
@@ -285,8 +287,19 @@ int main (int nNumberofArgs,char *argv[])
     // first we see if the nodes file exists
     string basin_outlet_fname = DATA_DIR+this_string_map["basin_outlet_csv"];
     
+    
+    cout << "The basin file is: " << basin_outlet_fname << endl;
     LSDSpatialCSVReader Outlet_CSV_data(RI,basin_outlet_fname);
     IDs = Outlet_CSV_data.get_data_column(this_string_map["sample_ID_column_name"]);
+    
+    cout << "I am reading the following samples: " << endl;
+    vector<double> latitude = Outlet_CSV_data.get_latitude();
+    vector<double> longitude = Outlet_CSV_data.get_longitude();
+    int n_samples = int(latitude.size());
+    for(int samp = 0; samp<n_samples; samp++)
+    {
+      cout << "ID: " << IDs[samp] << " lat: " << latitude[samp] << " long: " << longitude[samp] << endl;
+    }
     
     // now get the junction network
     vector<float> fUTM_easting;
