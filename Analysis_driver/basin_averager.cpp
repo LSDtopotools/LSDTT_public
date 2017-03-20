@@ -167,6 +167,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_stream_order_csv"] = false;
   bool_default_map["get_basins_from_outlets"] = false;
   bool_default_map["print_junction_csv"] = false;
+  bool_default_map["print_channels_to_csv"] = false;
   bool_default_map["spawn_basins_from_outlets"] = false;
   bool_default_map["spawn_csv_file_from_basin_spawn"] = false;
   bool_default_map["spawn_parameter_files_from_basin_spawn"] = false;
@@ -293,7 +294,14 @@ int main (int nNumberofArgs,char *argv[])
   
   // Now create the network
   LSDJunctionNetwork JunctionNetwork(sources, FlowInfo);
-  
+
+  if( this_bool_map["print_channels_to_csv"])
+  {
+    string channel_csv_name = OUT_DIR+OUT_ID+"_W_CN";
+    JunctionNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+  }
+
+
   // now we check for basins (if you've ask for that)
   vector<int> basin_junctions;
   vector<string> IDs;
