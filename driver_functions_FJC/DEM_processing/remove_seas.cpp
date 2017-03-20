@@ -35,12 +35,12 @@ int main (int nNumberofArgs,char *argv[])
   cout << "\t Loading the DEM" << endl;
 	LSDRaster DEM(path_name+DEM_ID, DEM_extension);
 
+  // remove the seas
 	cout << "\t Removing seas" << endl;
+  DEM.remove_seas();
 
-	DEM.remove_seas();
-
-  // for discharge data remove stupid values
-  float threshold = 1000000;
-  LSDRaster NewDEM = DEM.mask_to_nodata_using_threshold(threshold, 0);
-	NewDEM.write_raster((path_name+DEM_ID), DEM_extension);
+  // trim the raster_array
+  cout << "\t Trimming the raster" << endl;
+  DEM.RasterTrimmer();
+	DEM.write_raster((path_name+DEM_ID), DEM_extension);
 }
