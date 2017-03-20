@@ -253,13 +253,13 @@ void LSDSpatialCSVReader::load_csv_data(string filename)
   for (int i = 0; i<n_headers; i++)
   {
     cout << "This header is: " << this_string_vec[i] << endl;
-    if (this_string_vec[i]== "latitude")
+    if (this_string_vec[i]== "latitude" || this_string_vec[i] == "Latitude" || this_string_vec[i] == "lat" || this_string_vec[i] == "Lat")
     {
       latitude_index = i;
       cout << "The latitude index is: " << latitude_index << endl;
 
     }
-    else if (this_string_vec[i] == "longitude")
+    else if (this_string_vec[i] == "longitude" || this_string_vec[i] == "Longitude" || this_string_vec[i] == "long" || this_string_vec[i] == "Lon")
     {
       longitude_index = i;
       cout << "The longitude index is: " << longitude_index << endl;

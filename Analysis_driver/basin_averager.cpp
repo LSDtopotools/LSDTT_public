@@ -170,6 +170,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["spawn_basins_from_outlets"] = false;
   bool_default_map["spawn_csv_file_from_basin_spawn"] = false;
   bool_default_map["spawn_parameter_files_from_basin_spawn"] = false;
+  bool_default_map["write hillshade"] = false;
   
   // set default string method
   string_default_map["slope method"] = "polynomial";
@@ -214,11 +215,28 @@ int main (int nNumberofArgs,char *argv[])
     // check to see if the raster exists
   LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);  
 
-  string basin_outlet_fname = DATA_DIR+this_string_map["basin_outlet_csv"];
+  // debugging
+  //string basin_outlet_fname = DATA_DIR+this_string_map["basin_outlet_csv"];
+  //cout << "The basin file is: " << basin_outlet_fname << endl;
+  //LSDSpatialCSVReader Outlet_CSV_data(RI,basin_outlet_fname);
+  //exit(EXIT_FAILURE);
 
   // load the  DEM
   LSDRaster topography_raster((DATA_DIR+DEM_ID), raster_ext);
   cout << "Got the dem: " <<  DATA_DIR+DEM_ID << endl;
+
+  // check to see if you need hillshade
+  if (this_bool_map["write hillshade"])
+  {
+    float hs_azimuth = 315;
+    float hs_altitude = 45;
+    float hs_z_factor = 1;
+    LSDRaster hs_raster = topography_raster.hillshade(hs_altitude,hs_azimuth,hs_z_factor);
+
+    string hs_fname = OUT_DIR+OUT_ID+"_hs";
+    hs_raster.write_raster(hs_fname,raster_ext);
+  }
+
 
   LSDRaster FillRaster;
   // now get the flow info object
@@ -384,6 +402,8 @@ int main (int nNumberofArgs,char *argv[])
         {
           cout << "Let me update and print a parameter file for you for the spawned basin." << endl;
           
+          cout << "I am going to parse this file: " << endl;
+          cout << this_string_map["parameter_file_for_spawning"] << endl;
           // load a parameter parser
           LSDParameterParser SpawnPP(DATA_DIR,this_string_map["parameter_file_for_spawning"]);
           
