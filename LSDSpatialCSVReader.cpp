@@ -797,6 +797,12 @@ void LSDSpatialCSVReader::burn_raster_data_to_csv(LSDIndexRaster& ThisRaster,str
     get_x_and_y_from_latlong(UTME,UTMN);
     int n_nodes = int(UTME.size());
     
+    if (n_nodes == 0)
+    {
+      cout << "The csv file has no lat and long locations. Exiting." << endl;
+      exit(EXIT_FAILURE);
+    }
+    
     if (UTME.size() != UTMN.size())
     {
       cout << "Something is wrong with your csv file, the easting and northing columns are not the same size." << endl;
