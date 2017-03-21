@@ -1295,7 +1295,57 @@ LSDIndexChannel LSDJunctionNetwork::generate_longest_index_channel_in_basin(int 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// this function takes a vector of basin junctions and returns a vector of the farthest
+// upstream source nodes
+//
+// FJC 21/03/17
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+vector<int> LSDJunctionNetwork::get_basin_sources_from_outlet_vector(vector<int> basin_junctions, LSDFlowInfo& FlowInfo,
+                           LSDRaster& dist_from_outlet)
+{
+  vector<int> basin_sources;
 
+  for (int i = 0; i < int(basin_junctions.size()); i++)
+  {
+    int basin_junction = basin_junctions[i];
+    if (basin_junction >= int(JunctionVector.size()))
+    {
+      cout << "LSDJunctionNetwork::generate_longest_index_channel_in_basin junction not in list" << endl;
+      exit(EXIT_FAILURE);
+    }
+    // first get the number of junctions upslope of the junction
+    vector<int> us_junctions = get_upslope_junctions(basin_junction);
+
+    int n_us_junctions = int(us_junctions.size());
+    int farthest_junc = basin_junction;
+    float farthest_dist = 0;
+    float current_dist;
+    int current_junc, current_row, current_col, current_node;
+
+    // loop through these junctions, looking for the one that is farthest from the outlet
+    for (int j = 0; j<n_us_junctions; j++)
+    {
+      current_junc = us_junctions[j];
+      current_node = JunctionVector[current_junc];
+      current_row = FlowInfo.RowIndex[current_node];
+      current_col = FlowInfo.ColIndex[current_node];
+      current_dist = dist_from_outlet.get_data_element(current_row,current_col);
+      if(current_dist > farthest_dist)
+      {
+        farthest_dist = current_dist;
+        farthest_junc = current_junc;
+      }
+    }
+    int start_junction_node = JunctionVector[farthest_junc];
+    basin_sources.push_back(start_junction_node);
+  }
+
+  return basin_sources;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this function gets tributaries along a continous channel.
