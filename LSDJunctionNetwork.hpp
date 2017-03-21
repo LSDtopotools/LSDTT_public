@@ -427,6 +427,22 @@ class LSDJunctionNetwork
   LSDIndexChannel generate_longest_index_channel_in_basin(int basin_junction, LSDFlowInfo& FInfo,
             LSDRaster& dist_from_outlet);
 
+  /// @brief This generates the upstream source nodes from a vector of basin junctions
+  ///
+  /// @details The basin starts where a channel of some order intersects with a
+  /// channel of higher order. So the bain includes the basin junction, but also
+  /// the channel flowing downstream from this basin junction. It starts from the
+  /// node of the reciever junction, so if one were to extract the basin from
+  /// this node one would get a basin that starts one node upstream from the lowest node in this.
+  /// @param basin_junction
+  /// @param FInfo LSDFlowInfo object.
+  /// @param dist_from_outlet
+  /// @return LSDIndexRaster of the longest channel.
+  /// @author FJC
+  /// @date 21/03/17
+  vector<int> get_basin_sources_from_outlet_vector(vector<int> basin_junctions, LSDFlowInfo& FlowInfo,
+                             LSDRaster& dist_from_outlet);
+
   /// @brief This extracts the junction numbers, in a vector of integers, of all basins of a
   /// given order.
   ///
