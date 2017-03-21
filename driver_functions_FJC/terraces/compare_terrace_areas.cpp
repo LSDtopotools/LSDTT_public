@@ -57,27 +57,34 @@ int main (int nNumberofArgs,char *argv[])
 	string actual_raster;
   string DEM_extension = "bil";
 	string temp;
-	string input_path;	
+	string input_path;
   
 	// read in the parameters
 	file_info_in >> temp >> predicted_raster
 							 >> temp >> actual_raster;
-	
+
 	// load the predicted raster
 	LSDIndexRaster PredictedRaster((path_name+predicted_raster), DEM_extension);
 	cout << "Got the predicted raster" << endl;
 	// load the actual raster
 	LSDIndexRaster ActualRaster((path_name+actual_raster), DEM_extension);
 	cout << "Got the actual raster" << endl;
-	
+
 	//Get the number of pixels in the DEM
 	int NRows = PredictedRaster.get_NRows();
 	int NCols = PredictedRaster.get_NCols();
 	int NPixels = NRows*NCols;
 	cout << "N pixels: " << NPixels << endl;
-	
+
 	// calculate the TPs, FPs, TNs, and FNs
 	float PercentageDiff = PredictedRaster.GetAreaDifference(ActualRaster);
 	cout << "Area: " << PercentageDiff << endl;
-	
+
+	// write to text file
+	ofstream output_file;
+	string output_fname = "TerraceAreas.txt";
+	output_file.open((path_name+output_fname.c_str()));
+
+	output_file <<
+
 }

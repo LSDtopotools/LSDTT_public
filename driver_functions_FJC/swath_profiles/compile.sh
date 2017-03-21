@@ -1,5 +1,5 @@
 #!/bin/sh
 cd build/
 make
-mv get_elevation_profiles.out ../
+mv get_swath_from_latlong.out ../
 cd ..
