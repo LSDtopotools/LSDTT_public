@@ -727,6 +727,7 @@ void LSDSpatialCSVReader::burn_raster_data_to_csv(LSDRaster& ThisRaster,string c
   vector<float> UTMN;
   float this_UTME, this_UTMN;
   float this_value;
+  bool is_in_raster;
   
   vector<string> new_column_data; 
   
@@ -740,12 +741,31 @@ void LSDSpatialCSVReader::burn_raster_data_to_csv(LSDRaster& ThisRaster,string c
   {
     get_x_and_y_from_latlong(UTME,UTMN);
     int n_nodes = int(UTME.size());
+    
+    if (UTME.size() != UTMN.size())
+    {
+      cout << "Something is wrong with your csv file, the easting and northing columns are not the same size." << endl;
+      exit(EXIT_FAILURE);
+    }
+    
     for(int i = 0; i<n_nodes; i++)
     {
       this_UTME = UTME[i];
       this_UTMN = UTMN[i];
       
-      this_value = ThisRaster.get_value_of_point(this_UTME, this_UTMN);
+      // check if point is in raster 
+      is_in_raster = ThisRaster.check_if_point_is_in_raster(this_UTME, this_UTMN);
+      
+      // now add the current value
+      if (is_in_raster)
+      {
+        this_value = ThisRaster.get_value_of_point(this_UTME, this_UTMN);
+      }
+      else
+      {
+        cout << "Found a point that is not in your raster. Have you double checked your UTM zone?" << endl;
+        this_value = NoDataValue;
+      }
       new_column_data.push_back(itoa(this_value));
     }
     data_map[column_name] = new_column_data;
@@ -762,6 +782,7 @@ void LSDSpatialCSVReader::burn_raster_data_to_csv(LSDIndexRaster& ThisRaster,str
   vector<float> UTMN;
   float this_UTME, this_UTMN;
   int this_value;
+  bool is_in_raster;
   
   vector<string> new_column_data; 
   
@@ -775,12 +796,31 @@ void LSDSpatialCSVReader::burn_raster_data_to_csv(LSDIndexRaster& ThisRaster,str
   {
     get_x_and_y_from_latlong(UTME,UTMN);
     int n_nodes = int(UTME.size());
+    
+    if (UTME.size() != UTMN.size())
+    {
+      cout << "Something is wrong with your csv file, the easting and northing columns are not the same size." << endl;
+      exit(EXIT_FAILURE);
+    }
+    
     for(int i = 0; i<n_nodes; i++)
     {
       this_UTME = UTME[i];
       this_UTMN = UTMN[i];
       
-      this_value = ThisRaster.get_value_of_point(this_UTME, this_UTMN);
+      // check if point is in raster 
+      is_in_raster = ThisRaster.check_if_point_is_in_raster(this_UTME, this_UTMN);
+      
+      // now add the current value
+      if (is_in_raster)
+      {
+        this_value = ThisRaster.get_value_of_point(this_UTME, this_UTMN);
+      }
+      else
+      {
+        cout << "Found a point that is not in your raster. Have you double checked your UTM zone?" << endl;
+        this_value = NoDataValue;
+      }
       new_column_data.push_back(itoa(this_value));
     }
     data_map[column_name] = new_column_data;
