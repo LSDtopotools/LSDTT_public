@@ -141,6 +141,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_stream_order_raster"] = true; // TEST DO NOT FORGET TO RESET IT TO FALSE
   bool_default_map["print_segments"] = true; // TEST DO NOT FORGET TO RESET IT TO FALSE
   bool_default_map["print_knickpoint_detection"] = true; // TEST DO NOT FORGET TO RESET IT TO FALSE
+  bool_default_map["print_sources_to_raster"] = true;
 
   // set default string method
   string_default_map["CHeads_file"] = "NULL";
