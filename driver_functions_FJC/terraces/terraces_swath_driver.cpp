@@ -69,7 +69,7 @@ int main (int nNumberofArgs,char *argv[])
 	int_default_map["Slope upper percentile"] = 75;
 	int_default_map["Min patch size"] = 1000;
 	int_default_map["search_radius"] = 10;
-	int_default_map["NormaliseToBaseline"] = 0;
+	int_default_map["NormaliseToBaseline"] = 1;
 
 	// set default float parameters
 	float_default_map["surface_fitting_window_radius"] = 6;
@@ -107,6 +107,18 @@ int main (int nNumberofArgs,char *argv[])
 	string DEM_extension =  LSDPP.get_dem_read_extension();
 	vector<string> boundary_conditions = LSDPP.get_boundary_conditions();
 	string CHeads_file = LSDPP.get_CHeads_file();
+
+	// some error checking
+	if (CHeads_file.empty())
+	{
+		cout << "FATAL ERROR: I can't find your channel heads file. Check your spelling!! \n The parameter key needs to be 'channel heads fname'" << endl;
+		exit(EXIT_SUCCESS);
+	}
+	if (this_string_map["coords_csv_file"] == "NULL")
+	{
+		cout << "FATAL ERROR: I can't find your coordinates file. Check your spelling!! \n The parameter key needs to be 'coords_csv_file'" << endl;
+		exit(EXIT_SUCCESS);
+	}
 
   cout << "starting the test run... here we go!" << endl;
 
