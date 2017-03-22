@@ -779,7 +779,7 @@ void LSDSpatialCSVReader::burn_raster_data_to_csv(LSDIndexRaster& ThisRaster,str
     {
       this_UTME = UTME[i];
       this_UTMN = UTMN[i];
-      cout << "i: " << i << "/" << n_nodes<< endl;
+      cout << this_UTME << "/" << this_UTMN << endl;
       this_value = ThisRaster.get_value_of_point(this_UTME, this_UTMN);
       new_column_data.push_back(itoa(this_value));
     }
