@@ -740,7 +740,6 @@ void LSDSpatialCSVReader::burn_raster_data_to_csv(LSDRaster& ThisRaster,string c
   {
     get_x_and_y_from_latlong(UTME,UTMN);
     int n_nodes = int(UTME.size());
-    cout << "Is this reaching this"<< endl;
     for(int i = 0; i<n_nodes; i++)
     {
       this_UTME = UTME[i];
@@ -775,6 +774,7 @@ void LSDSpatialCSVReader::burn_raster_data_to_csv(LSDIndexRaster& ThisRaster,str
   else
   {
     get_x_and_y_from_latlong(UTME,UTMN);
+    cout << "Is this reaching this"<< endl;
     int n_nodes = int(UTME.size());
     for(int i = 0; i<n_nodes; i++)
     {
