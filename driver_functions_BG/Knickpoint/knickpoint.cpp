@@ -138,6 +138,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_basin_raster"] = false;
   bool_default_map["write hillshade"] = false;
   bool_default_map["print_simple_chi_map_with_basins_to_csv"] = false;
+  bool_default_map["print_stream_order_raster"] = true; // TEST DO NOT FORGET TO RESET IT TO FALSE
   bool_default_map["print_segments"] = true; // TEST DO NOT FORGET TO RESET IT TO FALSE
   bool_default_map["print_knickpoint_detection"] = true; // TEST DO NOT FORGET TO RESET IT TO FALSE
 
@@ -448,6 +449,23 @@ int main (int nNumberofArgs,char *argv[])
 
     string hs_fname = OUT_DIR+OUT_ID+"_hs";
     hs_raster.write_raster(hs_fname,raster_ext);
+  }
+  if( this_bool_map["print_sources_to_raster"])
+  {
+    string sources_raster_name = OUT_DIR+OUT_ID+"_ATsources";
+
+    //write channel heads to a raster
+    LSDIndexRaster Channel_heads_raster = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(sources);
+    Channel_heads_raster.write_raster(sources_raster_name,raster_ext);
+  }
+
+  if( this_bool_map["print_stream_order_raster"])
+  {
+    string SO_raster_name = OUT_DIR+OUT_ID+"_AT_SO";
+
+    //write stream order array to a raster
+    LSDIndexRaster SOArray = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
+    SOArray.write_raster(SO_raster_name,raster_ext);
   }
 
 }
