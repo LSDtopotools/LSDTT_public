@@ -261,6 +261,37 @@ int main (int nNumberofArgs,char *argv[])
     DA5.write_raster(DA_raster_name,raster_ext);
   }
 
+  //=================================================================
+  // This is used to check on previously read sources
+  //=================================================================
+  cout << endl << endl << "The channel heads file is " << CHeads_file << endl;
+  if (CHeads_file != "NULL" && CHeads_file != "Null" && CHeads_file != "null")
+  {
+    cout << "Loading channel heads from the file: " << DATA_DIR+CHeads_file << endl;
+    vector<int> sources = FlowInfo.Ingest_Channel_Heads((DATA_DIR+CHeads_file), 2);
+    cout << "\t Got sources!" << endl;
+    
+    // now get the junction network
+    LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
+
+    if( this_bool_map["print_stream_order_raster"])
+    {
+      string SO_raster_name = OUT_DIR+OUT_ID+"_FromCHF_SO";
+      
+      //write stream order array to a raster
+      LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
+      SOArray.write_raster(SO_raster_name,raster_ext);
+    }
+  
+    if( this_bool_map["print_channels_to_csv"])
+    {
+      string channel_csv_name = OUT_DIR+OUT_ID+"_FromCHF_CN";
+      ChanNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+    }
+  }
+
+
+
   //===============================================================
   // AREA THRESHOLD
   //===============================================================

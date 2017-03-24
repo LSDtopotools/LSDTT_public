@@ -1569,8 +1569,18 @@ map<string, vector<string> > LSDFlowInfo::load_csv_data(string filename)
     }
 
   }
+  
+
 
   data_map = temp_data_map;
+
+  cout << "I loaded a csv with the keys: " << endl;
+  for( map<string, vector<string> >::iterator it = data_map.begin(); it != data_map.end(); ++it)
+  {
+    cout << "Key is: " <<it->first << "\n";
+  }
+  
+  return data_map;
 
 }
 //==============================================================================
@@ -1659,15 +1669,15 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension,
 
   // if this is a csv file, read its contents directly into the node index vector
   if(extension == "csv")
-    {
-      if(input_switch != 0 && input_switch != 1 && input_switch != 2)
   {
-    cout << "\t Note, you have specified an unsupported value for the input switch.  Note: \n\t\t 0=take node index\n\t\t 1=take row and column indices\n\t\t 2=take x and y coordinates"  << endl;
-    cout << "\t ...taking node index by default" << endl;
-  }
-      ifstream ch_csv_in;
-      string fname = filename +"."+extension;
-      ch_csv_in.open(fname.c_str());
+    if(input_switch != 0 && input_switch != 1 && input_switch != 2)
+    {
+      cout << "\t Note, you have specified an unsupported value for the input switch.  Note: \n\t\t 0=take node index\n\t\t 1=take row and column indices\n\t\t 2=take x and y coordinates"  << endl;
+      cout << "\t ...taking node index by default" << endl;
+    }
+    ifstream ch_csv_in;
+    string fname = filename +"."+extension;
+    ch_csv_in.open(fname.c_str());
 
       if(not ch_csv_in.good())
   {
