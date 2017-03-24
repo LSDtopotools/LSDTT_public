@@ -1679,30 +1679,32 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension,
     string fname = filename +"."+extension;
     ch_csv_in.open(fname.c_str());
 
-      if(not ch_csv_in.good())
-  {
-    cout << "Hey DUDE, you are trying to ingest a sources file that doesn't exist!!" << endl;
-    cout << fname << endl;
-    cout << "Check your filename" << endl;
-    exit(EXIT_FAILURE);
-  }
+    if(not ch_csv_in.good())
+    {
+      cout << "You are trying to ingest a sources file that doesn't exist!!" << endl;
+      cout << fname << endl;
+      cout << "Check your filename" << endl;
+      exit(EXIT_FAILURE);
+    }
 
-      cout << "fname is: " << fname << endl;
+    cout << "fname is: " << fname << endl;
 
-      string sline = "";
-      getline(ch_csv_in,sline);
+    string sline = "";
+    getline(ch_csv_in,sline);
 
-      vector<int> nodeindex,rowindex,colindex;
-      vector<float> x_coord,y_coord;
-      while(!ch_csv_in.eof())
-  {
-    char name[256];
-    ch_csv_in.getline(name,256);
-    sline = name;
+    vector<int> nodeindex,rowindex,colindex;
+    vector<float> x_coord,y_coord;
+    
+    // TODO This needs to be rplaced with the csv reader!!!
+    while(!ch_csv_in.eof())
+    {
+      char name[256];
+      ch_csv_in.getline(name,256);
+      sline = name;
 
-    // a very tedious way to get the right bit of data. There is probably a
-    // better way to do this but this way works
-    if (sline.size() > 0)
+      // a very tedious way to get the right bit of data. There is probably a
+      // better way to do this but this way works
+      if (sline.size() > 0)
       {
         // column index
         string prefix = sline.substr(0,sline.size());
@@ -1730,82 +1732,85 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension,
         suffix = prefix.substr(comma+1,prefix.size());
         x_coord.push_back(atof(suffix.c_str()));
       }
-  }
-      int node;
-      // use row and column indices to locate source nodes.
-      if(input_switch == 1)
-  {
-    for(int i = 0; i < int(rowindex.size()); ++i)
+    }
+    int node;
+    // use row and column indices to locate source nodes.
+    if(input_switch == 1)
+    {
+      for(int i = 0; i < int(rowindex.size()); ++i)
       {
         if(rowindex[i]<NRows && rowindex[i]>=0 && colindex[i]<NCols && colindex[i] >=0 && NodeIndex[rowindex[i]][colindex[i]]!=NoDataValue)
-    {
-      node = retrieve_node_from_row_and_column(rowindex[i],colindex[i]);
-      Sources.push_back(node);
-    }
+        {
+          node = retrieve_node_from_row_and_column(rowindex[i],colindex[i]);
+          Sources.push_back(node);
+        }
       }
-  }
-      // Use coordinates to locate source nodes. Note that this enables the use
-      // of LiDAR derived channel heads in coarser DEMs of the same area or
-      // subsets of the original DEM for more efficient processing.
-      else if(input_switch == 2)
-  {
-    vector<int> Sources_temp;
-    int N_coords = x_coord.size();
-    int N_sources_1 = 0;
-    for(int i = 0; i < N_coords; ++i)
+    }
+    // Use coordinates to locate source nodes. Note that this enables the use
+    // of LiDAR derived channel heads in coarser DEMs of the same area or
+    // subsets of the original DEM for more efficient processing.
+    else if(input_switch == 2)
+    {
+      vector<int> Sources_temp;
+      int N_coords = x_coord.size();
+      int N_sources_1 = 0;
+      for(int i = 0; i < N_coords; ++i)
       {
         node = get_node_index_of_coordinate_point(x_coord[i], y_coord[i]);
         if (node != NoDataValue)
-    {
-      // Test 1 - Check for channel heads that fall in same pixel
-      int test1 = 0;
-      N_sources_1 = Sources_temp.size();
-      for(int i_test=0; i_test<N_sources_1;++i_test)
         {
-          if(node==Sources_temp[i_test]) test1 = 1;
+          // Test 1 - Check for channel heads that fall in same pixel
+          int test1 = 0;
+          N_sources_1 = Sources_temp.size();
+          for(int i_test=0; i_test<N_sources_1;++i_test)
+          {
+            if(node==Sources_temp[i_test]) test1 = 1;
+          }
+          if(test1==0) Sources_temp.push_back(node);
+          else cout << "\t\t ! removed node from sources list - coincident with another source node" << endl;
         }
-      if(test1==0) Sources_temp.push_back(node);
-      else cout << "\t\t ! removed node from sources list - coincident with another source node" << endl;
-    }
       }
-    // Test 2 - Need to do some extra checks to load sources correctly.
-    int N_sources_2 = Sources_temp.size();
-    for(int i = 0; i<N_sources_2; ++i)
+      // Test 2 - Need to do some extra checks to load sources correctly.
+      int N_sources_2 = Sources_temp.size();
+      for(int i = 0; i<N_sources_2; ++i)
       {
         int test2 = 0;
         for(int i_test = 0; i_test<int(Sources_temp.size()); ++i_test)
-    {
-      if(i!=i_test)
         {
-          if(is_node_upstream(Sources_temp[i],Sources_temp[i_test])==true) test2 = 1;
+          if(i!=i_test)
+          {
+            if(is_node_upstream(Sources_temp[i],Sources_temp[i_test])==true) test2 = 1;
+          }
         }
-    }
         if(test2 ==0) Sources.push_back(Sources_temp[i]);
         else cout << "\t\t ! removed node from sources list - other sources upstream" << endl;
       }
-  }
-      // Using Node Index directly (default)
-      else Sources = nodeindex;
-
     }
+    // Using Node Index directly (default)
+    else Sources = nodeindex;
+
+  }
 
   // if not the code assums a sources raster.
   else
-    {
-      LSDIndexRaster CHeads(filename, extension);
+  {
+    LSDIndexRaster CHeads(filename, extension);
 
-      for (int i = 0; i < NRows; ++i){
-  for (int j = 0; j < NCols; ++j){
-    if (CHeads.get_data_element(i,j) != NoDataValue){
-      CH_node = retrieve_node_from_row_and_column(i,j);
-			//cout << "Row: " << i << " Col: " << j << endl;
-      if (CH_node != NoDataValue){
-        Sources.push_back(CH_node);
+    for (int i = 0; i < NRows; ++i)
+    {
+      for (int j = 0; j < NCols; ++j)
+      {
+        if (CHeads.get_data_element(i,j) != NoDataValue)
+        {
+          CH_node = retrieve_node_from_row_and_column(i,j);
+          if (CH_node != NoDataValue)
+          {
+            Sources.push_back(CH_node);
+          }
+        }
       }
     }
   }
-      }
-    }
   return Sources;
 }
 
