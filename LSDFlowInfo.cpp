@@ -4408,105 +4408,113 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
   }
 
   // cycle through study area, find hilltops and trace downstream
-  for (i=1; i<NRows-1; ++i) {
+  for (i=1; i<NRows-1; ++i) 
+  {
     cout << flush <<  "\tRow: " << i << " of = " << NRows-1 << "              \r";
-    for (j=1; j<NCols-1; ++j) {
+    for (j=1; j<NCols-1; ++j) 
+    {
 
       // ignore edge cells and non-hilltop cells
       // route initial node by aspect and get outlet coordinates
       if (hilltops[i][j] != NoDataValue) {
 
-  length = 0;
-  flag = true;
-  count = 1;
-  path = blank.copy();
-        DivergentCountFlag = 0; //initialise count of divergent cells in trace
-        PlanarCountFlag = 0;
-        skip_trace = false; //initialise skip trace flag as false, will only be switched if no path to stream can be found. Very rare.
+      length = 0;
+      flag = true;
+      count = 1;
+      path = blank.copy();
+      DivergentCountFlag = 0; //initialise count of divergent cells in trace
+      PlanarCountFlag = 0;
+      skip_trace = false; //initialise skip trace flag as false, will only be switched if no path to stream can be found. Very rare.
 
-        E_Star = 0;
-        R_Star = 0;
-        EucDist = 0;
+      E_Star = 0;
+      R_Star = 0;
+      EucDist = 0;
 
-  ++ht_count;
+      ++ht_count;
 
-  degs = aspect[i][j];
-  theta = rads[i][j];
-  a = i;
-  b = j;
-  path[a][b] += 1;
-  east_vec[0] = easting[b];
-  north_vec[0] = northing[a];
-  s_local = slope[a][b];
+      degs = aspect[i][j];
+      theta = rads[i][j];
+      a = i;
+      b = j;
+      path[a][b] += 1;
+      east_vec[0] = easting[b];
+      north_vec[0] = northing[a];
+      s_local = slope[a][b];
 
-  //test direction, calculate outlet coordinates and update indicies
-  // easterly
-  if (degs >= 45 && degs < 135) {
-    //cout << "\neasterly" << endl;
-    xo = 1, yo = (1+tan(theta))/2;
-    d = abs(1/(2*cos(theta)));
-    xi = 0, yi = yo;
-    dir = 1;
-    east_vec[count] = easting[b] + 0.5*DataResolution;
-    north_vec[count] = northing[a] + yo - 0.5*DataResolution;
-    ++b;
-    if (yi == 0) yi = 0.00001;
-    else if (yi == 1) yi = 1 - 0.00001;
-  }
-  //southerly
-  else if (degs >= 135 && degs < 225) {
-    //cout << "\nsoutherly" << endl;
-    xo = (1-(1/tan(theta)))/2, yo = 0;
-    d = abs(1/(2*cos((PI/2)-theta)));
-    xi = xo, yi = 1;
-    dir = 2;
-    east_vec[count] = easting[b] + xo - 0.5*DataResolution;
-    north_vec[count] = northing[a] - 0.5*DataResolution;
-    ++a;
-    if (xi == 0) xi = 0.00001;
-    else if (xi == 1) xi = 1 - 0.00001;
-  }
-  // westerly
-  else if (degs >= 225 && degs < 315) {
-    xo = 0, yo = (1-tan(theta))/2;
-    d = abs(1/(2*cos(theta)));
-    xi = 1,  yi = yo;
-    dir = 3;
-    east_vec[count] = easting[b] -0.5*DataResolution;
-    north_vec[count] = northing[a] + yo - 0.5*DataResolution;
-    --b;
-    if (yi == 0) yi = 0.00001;
-    else if (yi == 1) yi = 1 - 0.00001;
-  }
-  //northerly
-  else if (degs >= 315 || degs < 45) {
-    xo = (1+(1/tan(theta)))/2, yo = 1;
-    d = abs(1/(2*cos((PI/2) - theta)));
-    xi = xo, yi = 0;
-    dir = 4;
-    east_vec[count] = easting[b] + xo - 0.5*DataResolution;
-    north_vec[count] = northing[a] + 0.5*DataResolution;
-    --a;
-    if (xi == 0) xi = 0.00001;
-    else if (xi == 1) xi = 1 - 0.00001;
-  }
-  else {
-    cout << "FATAL ERROR, Kinematic routing algorithm enountered null aspect value" << endl;
-    exit(EXIT_FAILURE);
-  }
+      //test direction, calculate outlet coordinates and update indicies
+      // easterly
+      if (degs >= 45 && degs < 135) 
+      {
+        //cout << "\neasterly" << endl;
+        xo = 1, yo = (1+tan(theta))/2;
+        d = abs(1/(2*cos(theta)));
+        xi = 0, yi = yo;
+        dir = 1;
+        east_vec[count] = easting[b] + 0.5*DataResolution;
+        north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+        ++b;
+        if (yi == 0) yi = 0.00001;
+        else if (yi == 1) yi = 1 - 0.00001;
+      }
+      //southerly
+      else if (degs >= 135 && degs < 225) 
+      {
+        //cout << "\nsoutherly" << endl;
+        xo = (1-(1/tan(theta)))/2, yo = 0;
+        d = abs(1/(2*cos((PI/2)-theta)));
+        xi = xo, yi = 1;
+        dir = 2;
+        east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+        north_vec[count] = northing[a] - 0.5*DataResolution;
+        ++a;
+        if (xi == 0) xi = 0.00001;
+        else if (xi == 1) xi = 1 - 0.00001;
+      }
+      // westerly
+      else if (degs >= 225 && degs < 315) 
+      {
+        xo = 0, yo = (1-tan(theta))/2;
+        d = abs(1/(2*cos(theta)));
+        xi = 1,  yi = yo;
+        dir = 3;
+        east_vec[count] = easting[b] -0.5*DataResolution;
+        north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+        --b;
+        if (yi == 0) yi = 0.00001;
+        else if (yi == 1) yi = 1 - 0.00001;
+      }
+      //northerly
+      else if (degs >= 315 || degs < 45) 
+      {
+        xo = (1+(1/tan(theta)))/2, yo = 1;
+        d = abs(1/(2*cos((PI/2) - theta)));
+        xi = xo, yi = 0;
+        dir = 4;
+        east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+        north_vec[count] = northing[a] + 0.5*DataResolution;
+        --a;
+        if (xi == 0) xi = 0.00001;
+        else if (xi == 1) xi = 1 - 0.00001;
+      }
+      else 
+      {
+        cout << "FATAL ERROR, Kinematic routing algorithm enountered null aspect value" << endl;
+        exit(EXIT_FAILURE);
+      }
 
-  //collect slopes and totals weighted by path length
-  length += d;
-  s_local = slope[a][b];
+      //collect slopes and totals weighted by path length
+      length += d;
+      s_local = slope[a][b];
 
-  //continue trace until a stream node is encountered
-  while (flag == true && a > 0 && a < NRows-1 && b > 0 && b < NCols-1) {   //added boudary checking to catch cells which flow off the  edge of the DEM tile.
+      //continue trace until a stream node is encountered
+      while (flag == true && a > 0 && a < NRows-1 && b > 0 && b < NCols-1)
+      {   //added boudary checking to catch cells which flow off the  edge of the DEM tile.
 
-    path[a][b] += 1;
+        path[a][b] += 1;
 
-    degs_new = aspect[a][b];
-    theta = rads[a][b];
-          ++count;
+        degs_new = aspect[a][b];
+        theta = rads[a][b];
+        ++count;
 
     //Test for perimeter flow paths
     if ((dir == 1 && degs_new > 0 && degs_new < 180)
