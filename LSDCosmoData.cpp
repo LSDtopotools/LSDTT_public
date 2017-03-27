@@ -3175,13 +3175,14 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
     cout << "Looking for toposhield raster, name is: " << Raster_names[3] << endl;
     if( Raster_names[3] != "NULL")
     {
+      cout << "You have given me a toposheld raster" << endl;
       LSDRaster T_shield(Raster_names[3], DEM_bil_extension);
       Topographic_shielding = T_shield;
     }
     else
     {
       // get the topographic shielding
-      cout << "Starting topographic shielding" << endl;
+      cout << "No toposheild raster. Starting topographic shielding." << endl;
       LSDRaster T_shield = filled_raster.TopographicShielding(theta_step, phi_step);
       Topographic_shielding = T_shield;
       
@@ -3211,6 +3212,7 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
       // snow shielding with a single parameter
       have_snow_raster = false;
       constant_snow_depth = CRN_params[0];
+      cout << "There is no snow shielding raster. I am assuming a constant depth of " << constant_snow_depth << endl;
     }
     if (Raster_names[2] != "NULL")
      {
@@ -3225,6 +3227,7 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
       // self shielding with a single parameter
       have_self_raster = false;
       constant_self_depth = CRN_params[1];
+      cout << "There is no self shielding raster. I am assuming a constant depth of " << constant_self_depth << endl;
     }
 
     // some temporary doubles to hold the nuclide concentrations
@@ -3320,6 +3323,7 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
       // now do the snow and self shielding
       if (have_snow_raster)
       {
+        cout << "I have a snow raster" << endl;
         if(have_self_raster)
         {
           cout << "Getting effective depths" << endl;
@@ -3337,6 +3341,7 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
       }
       else
       {
+        cout << "I don't have a snow raster and am using a constant depth." << endl;
         if(have_self_raster)
         {
           cout << "Getting effective depths" << endl;
@@ -3354,25 +3359,29 @@ void LSDCosmoData::full_shielding_cosmogenic_analysis_for_spawned(vector<string>
       }
 
       // Now topographic sheidling and production scaling
+      cout << "I am now populating the scaling vectors." << endl;
       thisBasin.populate_scaling_vectors(FlowInfo, filled_raster, 
                                          Topographic_shielding,
                                          path_to_atmospheric_data);
 
       // GET THE EROSION RATES
+      cout << "I have finished with the scaling vectors and am now doing the erosion rate analysis." << endl;
       vector<double> erate_analysis = thisBasin.full_CRN_erosion_analysis(test_N, 
                                           valid_nuclide_names[samp], test_dN, 
                                           prod_uncert_factor, Muon_scaling);
+      cout << "Done with the erosion rate analysis" << endl;
     
       //cout << "Line 1493, doing analysis" << endl;
     
     
       // now get parameters for cosmogenic calculators
+      cout << "Let me calculate some effective pressures to test against calculators like CRONUS." << endl;
       vector<double> param_for_calc = 
           thisBasin.calculate_effective_pressures_for_calculators(filled_raster,
                                             FlowInfo, path_to_atmospheric_data);
         
       //cout << "Paramforcalc size: " << param_for_calc.size() << endl;              
-      //cout << "Getting pressures" << endl;
+      cout << "Got pressures for calculators." << endl;
 
 
       // get the relief of the basin
@@ -5395,6 +5404,11 @@ void LSDCosmoData::print_basins_to_for_checking()
     LSDIndexRaster SO_raster = JNetwork.StreamOrderArray_to_LSDIndexRaster();
     string SO_filename = DEM_fname+"_SO";
     SO_raster.write_raster(SO_filename,DEM_bil_extension);
+
+    // Also print a csv of the channel nodes
+    string channel_csv_name = DEM_fname+"_CN";
+    JNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+
 
     // Now convert the data into this UTM zone
     convert_to_UTM(filled_raster);

@@ -111,6 +111,9 @@ int main (int nNumberofArgs,char *argv[])
   string path_name = argv[1];
   string param_name_prefix = argv[2];
 
+  // make sure the path has a slash at the end
+  path_name = FixPath(path_name);
+
   cout << "===========================================================" << endl;
   cout << "Welcome to the Basinwide cosmogenic analysis tool" << endl;
   cout << "This software was developed at the University of Edinburgh," << endl;

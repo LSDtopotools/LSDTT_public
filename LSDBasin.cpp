@@ -3930,6 +3930,8 @@ vector<double> LSDCosmoBasin::calculate_effective_pressures_for_calculators(LSDR
   int end_node = int(BasinNodes.size());
   for (int q = 0; q < end_node; ++q)
   {
+    cout << "node " << q << " of " << end_node << endl;
+    
     
     //exclude NDV from average
     if(topographic_shielding[q] != NoDataValue)
