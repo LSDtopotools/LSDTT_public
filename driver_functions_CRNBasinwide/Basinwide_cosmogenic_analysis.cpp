@@ -117,6 +117,9 @@ int main (int nNumberofArgs,char *argv[])
   string path_name = argv[1];
   string param_name_prefix = argv[2];
   int method_flag = atoi(argv[3]);
+  
+  // make sure the path has a slash at the end
+  path_name = FixPath(path_name);
 
   // now load the CRNCosmoData object
   LSDCosmoData CosmoData(path_name,param_name_prefix);

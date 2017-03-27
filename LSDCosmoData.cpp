@@ -1495,6 +1495,7 @@ void LSDCosmoData::BasinSpawnerMaster(string path, string prefix, int padding_pi
   // open the file for this dem
   ofstream new_CRNRasters_csv;
   string new_csv_name =  path+prefix+"_Spawned_CRNRasters.csv";
+  cout << endl << endl << "=======================" << endl << "SPAWNING" << endl;
   cout << "New csv name is: " << new_csv_name << endl;
   new_CRNRasters_csv.open(new_csv_name.c_str());
   
@@ -1858,8 +1859,14 @@ void LSDCosmoData::print_renamed_cosmo_data(string path, string prefix)
   // make sure you don't lose any information
   new_CRN_data.precision(8);
   
+
+  
   string new_CRN_data_name = path+prefix+"_CRNData.csv";
   new_CRN_data.open(new_CRN_data_name.c_str());
+
+  cout << "I am printing a renamed cosmo data file for you." << endl;
+  cout << "The filename is: " <<  new_CRN_data_name << endl;
+
   new_CRN_data << "Sample_name,Latitude,Longitude,Nuclide,Concentration,Uncertainty,Standardisation" << endl;
   
   for (int i= 0; i<N_samples; i++)
@@ -1878,6 +1885,10 @@ void LSDCosmoData::print_renamed_parameter_data(string path, string prefix)
 {
   ofstream new_param_data;
   string new_param_data_name = path+prefix+".CRNParam";
+  
+  cout << "I am printing a renamed cosmo data file for you." << endl;
+  cout << "The filename is: " <<  new_param_data_name << endl;
+  
   new_param_data.open(new_param_data_name.c_str());
   new_param_data << "min_slope: " << min_slope << endl;
   new_param_data << "source_threshold: " << source_threshold << endl;
