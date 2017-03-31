@@ -1661,11 +1661,15 @@ vector<int> LSDFlowInfo::data_column_to_int(string column_name, map<string, vect
 // can be loaded in to another covering a subsample of the area, or a different
 // resolution, which was impossible before.
 // DTM
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension, int input_switch){
+//
+// Update 31/03/2017 Now reads the file using csv reader so that columns appear in any order. 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension, int input_switch)
+{
 
   vector<int> Sources;
   int CH_node;
+  map<string, vector<string> > data_map;
 
   // if this is a csv file, read its contents directly into the node index vector
   if(extension == "csv")
@@ -1675,64 +1679,19 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension,
       cout << "\t Note, you have specified an unsupported value for the input switch.  Note: \n\t\t 0=take node index\n\t\t 1=take row and column indices\n\t\t 2=take x and y coordinates"  << endl;
       cout << "\t ...taking node index by default" << endl;
     }
-    ifstream ch_csv_in;
-    string fname = filename +"."+extension;
-    ch_csv_in.open(fname.c_str());
-
-    if(not ch_csv_in.good())
-    {
-      cout << "You are trying to ingest a sources file that doesn't exist!!" << endl;
-      cout << fname << endl;
-      cout << "Check your filename" << endl;
-      exit(EXIT_FAILURE);
-    }
-
-    cout << "fname is: " << fname << endl;
-
-    string sline = "";
-    getline(ch_csv_in,sline);
-
+    
+      // load the csv file
+    data_map = load_csv_data(filename+".csv");
+    
     vector<int> nodeindex,rowindex,colindex;
     vector<float> x_coord,y_coord;
-    
-    // TODO This needs to be rplaced with the csv reader!!!
-    while(!ch_csv_in.eof())
-    {
-      char name[256];
-      ch_csv_in.getline(name,256);
-      sline = name;
 
-      // a very tedious way to get the right bit of data. There is probably a
-      // better way to do this but this way works
-      if (sline.size() > 0)
-      {
-        // column index
-        string prefix = sline.substr(0,sline.size());
-        unsigned comma = sline.find_last_of(",");
-        string suffix = prefix.substr(comma+1,prefix.size());
-        colindex.push_back(atoi(suffix.c_str()));
-        // row index
-        prefix = sline.substr(0,comma);
-        comma = prefix.find_last_of(",");
-        suffix = prefix.substr(comma+1,prefix.size());
-        rowindex.push_back(atoi(suffix.c_str()));
-        // node index
-        prefix = sline.substr(0,comma);
-        comma = prefix.find_last_of(",");
-        suffix = prefix.substr(comma+1,prefix.size());
-        nodeindex.push_back(atoi(suffix.c_str()));
-        // y coordinate
-        prefix = sline.substr(0,comma);
-        comma = prefix.find_last_of(",");
-        suffix = prefix.substr(comma+1,prefix.size());
-        y_coord.push_back(atof(suffix.c_str()));
-        // x coordinate
-        prefix = sline.substr(0,comma);
-        comma = prefix.find_last_of(",");
-        suffix = prefix.substr(comma+1,prefix.size());
-        x_coord.push_back(atof(suffix.c_str()));
-      }
-    }
+    nodeindex = data_column_to_int("node", data_map);
+    rowindex = data_column_to_int("row", data_map);
+    colindex = data_column_to_int("col", data_map);
+    x_coord = data_column_to_float("x", data_map);
+    y_coord = data_column_to_float("y", data_map);
+
     int node;
     // use row and column indices to locate source nodes.
     if(input_switch == 1)
@@ -1788,10 +1747,8 @@ vector<int> LSDFlowInfo::Ingest_Channel_Heads(string filename, string extension,
     }
     // Using Node Index directly (default)
     else Sources = nodeindex;
-
   }
-
-  // if not the code assums a sources raster.
+  // if not the code assumes a sources raster.
   else
   {
     LSDIndexRaster CHeads(filename, extension);
