@@ -1,5 +1,5 @@
 #!/bin/sh
 cd build/
 make
-mv terraces_swath_driver.out ../
+mv get_terraces_from_outlet.out ../
 cd ..

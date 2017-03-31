@@ -33,8 +33,8 @@ int main (int nNumberofArgs,char *argv[])
   {
     cout << "=========================================================" << endl;
     cout << "|| Welcome to the terrace swath tool!  	              ||" << endl;
-    cout << "|| This program gets all basins over a threshold area  ||" << endl;
-		cout << "|| and gets a swath  between the outlet and the        ||" << endl;
+    cout << "|| This program takes in a text file of outlet jns     ||" << endl;
+		cout << "|| and gets a swath between the outlet and the         ||" << endl;
 		cout << "|| longest channel in the basin. It then extracts  		||" << endl;
 		cout << "|| the terraces along the swath using slope and   		  ||" << endl;
 		cout << "|| relief thresholds.																	||" << endl;
@@ -48,7 +48,7 @@ int main (int nNumberofArgs,char *argv[])
     cout << "---------------------------------------------------------" << endl;
     cout << "Then the command line argument will be, for example: " << endl;
     cout << "In linux:" << endl;
-    cout << "./terraces_swath_basins.out /LSDTopoTools/Topographic_projects/Test_data/ LSDTT_Swath.param" << endl;
+    cout << "./get_terraces_from_outlet.out /LSDTopoTools/Topographic_projects/Test_data/ LSDTT_terraces.param" << endl;
     cout << "=========================================================" << endl;
     exit(EXIT_SUCCESS);
   }
@@ -81,6 +81,9 @@ int main (int nNumberofArgs,char *argv[])
 
 	// set default bool parameters
 	bool_default_map["Filter topography"] = true;
+
+	// set default string parameters
+	string_default_map["coords_csv_file"] = "NULL";
 
 	// Use the parameter parser to get the maps of the parameters required for the
 	// analysis
@@ -157,37 +160,33 @@ int main (int nNumberofArgs,char *argv[])
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
   cout << "\t Got the channel network" << endl;
 
-	// reading in the csv file with the lat long points
-	// cout << "\t Reading in the csv file" << endl;
-	// LSDSpatialCSVReader SwathPoints(RasterTemplate, DATA_DIR+this_string_map["coords_csv_file"]);
-	// vector<float> UTME;
-	// vector<float> UTMN;
-	// SwathPoints.get_x_and_y_from_latlong(UTME, UTMN);
-	// cout << "\t Got the x and y locations" << endl;
-	// string csv_outname = "_UTM_check.csv";
-	// SwathPoints.print_UTM_coords_to_csv(UTME, UTMN, (DATA_DIR+DEM_ID+csv_outname));
+	reading in the csv file with the lat long points
+	cout << "\t Reading in the csv file" << endl;
+	LSDSpatialCSVReader OutletPoints(RasterTemplate, DATA_DIR+this_string_map["coords_csv_file"]);
+	vector<float> UTME;
+	vector<float> UTMN;
+	OutletPoints.get_x_and_y_from_latlong(UTME, UTMN);
+	cout << "\t Got the x and y locations" << endl;
+	string csv_outname = "_UTM_check.csv";
+	OutletPoints.print_UTM_coords_to_csv(UTME, UTMN, (DATA_DIR+DEM_ID+csv_outname));
 	//
-	// // snap to nearest channel
-	// vector<int> valid_indices;
-	// vector<int> snapped_nodes;
-	// vector<int> snapped_JNs;
-	// ChanNetwork.snap_point_locations_to_channels(UTME, UTMN, this_int_map["search_radius"], this_int_map["Threshold_SO"], FlowInfo, valid_indices, snapped_nodes, snapped_JNs);
+	// snap to nearest channel
+	vector<int> valid_indices;
+	vector<int> snapped_nodes;
+	vector<int> snapped_JNs;
+	ChanNetwork.snap_point_locations_to_channels(UTME, UTMN, this_int_map["search_radius"], this_int_map["Threshold_SO"], FlowInfo, valid_indices, snapped_nodes, snapped_JNs);
+	int n_basins = snapped_nodes.size()
 
-	// getting the basins over a threshold area
-	vector<int> basin_nodes = ChanNetwork.extract_basin_nodes_by_drainage_area(this_float_map["DrainageAreaThreshold"], FlowInfo);
-	vector<int> basin_junctions = ChanNetwork.extract_basin_junctions_from_nodes(basin_nodes, FlowInfo);
-	int n_basins = basin_nodes.size();
-
-	cout << "The number of basins is: " << n_basins << endl;
+	cout << "The number of outlet nodes is: " << n_basins << endl;
 
 	// get the longest channel for each basins
-	vector<int> basin_sources = ChanNetwork.get_basin_sources_from_outlet_vector(basin_junctions, FlowInfo, DistanceFromOutlet);
+	vector<int> basin_sources = ChanNetwork.get_basin_sources_from_outlet_vector(snapped_JNs, FlowInfo, DistanceFromOutlet);
 
 	for (int i =0; i < n_basins; i++)
 	{
 		// assign info for this basin
 		int upstream_node = basin_sources[i];
-		int downstream_node = basin_nodes[i];
+		int downstream_node = snapped_nodes[i];
 		string jn_name = itoa(basin_junctions[i]);
 		string uscore = "_";
 		jn_name = uscore+jn_name;
