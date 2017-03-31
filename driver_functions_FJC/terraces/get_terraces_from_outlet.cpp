@@ -160,7 +160,7 @@ int main (int nNumberofArgs,char *argv[])
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
   cout << "\t Got the channel network" << endl;
 
-	reading in the csv file with the lat long points
+	//reading in the csv file with the lat long points
 	cout << "\t Reading in the csv file" << endl;
 	LSDSpatialCSVReader OutletPoints(RasterTemplate, DATA_DIR+this_string_map["coords_csv_file"]);
 	vector<float> UTME;
@@ -175,7 +175,7 @@ int main (int nNumberofArgs,char *argv[])
 	vector<int> snapped_nodes;
 	vector<int> snapped_JNs;
 	ChanNetwork.snap_point_locations_to_channels(UTME, UTMN, this_int_map["search_radius"], this_int_map["Threshold_SO"], FlowInfo, valid_indices, snapped_nodes, snapped_JNs);
-	int n_basins = snapped_nodes.size()
+	int n_basins = snapped_nodes.size();
 
 	cout << "The number of outlet nodes is: " << n_basins << endl;
 
@@ -187,7 +187,7 @@ int main (int nNumberofArgs,char *argv[])
 		// assign info for this basin
 		int upstream_node = basin_sources[i];
 		int downstream_node = snapped_nodes[i];
-		string jn_name = itoa(basin_junctions[i]);
+		string jn_name = itoa(snapped_JNs[i]);
 		string uscore = "_";
 		jn_name = uscore+jn_name;
 
