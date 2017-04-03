@@ -182,15 +182,15 @@ int main (int nNumberofArgs,char *argv[])
 	string new_basins = "basins_new";
 	FlowInfo.print_vector_of_nodeindices_to_csv_file(new_basin_nodes, path_name+DEM_name+new_basins);
 
-	// cout << "Number of basins = " << basin_nodes.size() << endl;
-	//
-	// vector<int> basin_junctions = ChanNetwork.extract_basin_junctions_from_nodes(basin_nodes, FlowInfo);
-	// cout << "Got the basin junctions" << endl;
-	//
-	// // get raster of basins from the junction vector
-	// LSDIndexRaster BasinRaster = ChanNetwork.extract_basins_from_junction_vector_nested(basin_junctions, FlowInfo);
-	// string basin_ext = "_basins";
-	// BasinRaster.write_raster((path_name+DEM_name+basin_ext), DEM_extension);
+	cout << "Number of basins = " << basin_nodes.size() << endl;
+
+	vector<int> basin_junctions = ChanNetwork.extract_basin_junctions_from_nodes(new_basin_nodes, FlowInfo);
+	cout << "Got the basin junctions" << endl;
+
+	// get raster of basins from the junction vector
+	LSDIndexRaster BasinRaster = ChanNetwork.extract_basins_from_junction_vector_nested(basin_junctions, FlowInfo);
+	string basin_ext = "_basins_new";
+	BasinRaster.write_raster((path_name+DEM_name+basin_ext), DEM_extension);
 
 	// Done, check how long it took
 	clock_t end = clock();
