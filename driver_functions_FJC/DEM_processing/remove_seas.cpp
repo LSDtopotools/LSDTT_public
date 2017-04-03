@@ -39,8 +39,13 @@ int main (int nNumberofArgs,char *argv[])
 	cout << "\t Removing seas" << endl;
   DEM.remove_seas();
 
+  //removing some weird values
+  float threshold = 0.5;
+  bool below_threshold = true;
+  DEM.mask_to_nodata_using_threshold(threshold, below_threshold);
+
   // trim the raster_array
   cout << "\t Trimming the raster" << endl;
-  DEM.RasterTrimmer();
+  //DEM.RasterTrimmer();
 	DEM.write_raster((path_name+DEM_ID), DEM_extension);
 }
