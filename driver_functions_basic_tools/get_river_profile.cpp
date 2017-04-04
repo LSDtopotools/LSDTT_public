@@ -56,7 +56,7 @@ using namespace std;
 int main(int argc, char *argv[])
 {
 
-  if (argc!=7)
+  if (argc!=3)
   {
     cout << "===========================================================" << endl;
     cout << "|| Welcome to the river profile tool!                    ||" << endl;
@@ -168,7 +168,9 @@ int main(int argc, char *argv[])
   LSDSpatialCSVReader ProfilePoints(filled_raster, DATA_DIR+this_string_map["coords_csv_file"]);
   vector<float> UTME;
   vector<float> UTMN;
-  ProfilePoints.get_x_and_y_from_latlong(UTME, UTMN);
+  string column_name = "Point";
+  vector<string> point_locations;
+  ProfilePoints.get_data_in_raster_for_snapping(column_name, UTME, UTMN, point_locations);
   cout << "\t Got the x and y locations" << endl;
   string csv_outname = "_UTM_check.csv";
   ProfilePoints.print_UTM_coords_to_csv(UTME, UTMN, (DATA_DIR+DEM_ID+csv_outname));
@@ -179,7 +181,25 @@ int main(int argc, char *argv[])
 	vector<int> snapped_JNs;
 	ChanNetwork.snap_point_locations_to_channels(UTME, UTMN, this_int_map["search_radius"], this_int_map["Threshold_SO"], FlowInfo, valid_indices, snapped_nodes, snapped_JNs);
 
-  if (int(valid_indices.size()) == 2)
+  cout << "\t Getting the upstream and downstream points of your channel..." << endl;
+  int upstream_node, downstream_node, downstream_jn;
+  int found_points = 0;
+  for (int i = 0; i < int(point_locations.size()); i++)
+  {
+    if (point_locations[i] == "upstream")
+    {
+      upstream_node = snapped_nodes[i];
+      found_points++;
+    }
+    if (point_locations[i] == "downstream")
+    {
+      downstream_node = snapped_nodes[i];
+      downstream_jn = snapped_JNs[i];
+      found_points++;
+    }
+  }
+
+  if (int(valid_indices.size()) == 2 || found_points == 2)
   {
     cout << "I've read in both the upstream and downstream points! Now getting your river profile..." << endl;
   }
@@ -188,10 +208,9 @@ int main(int argc, char *argv[])
     cout << "I couldn't read in all your points. Please check your latitude and longitude coordinates..." << endl;
   }
 
-  int upstream_node = snapped_nodes[0];
-  int downstream_node = snapped_nodes[1];
   LSDIndexChannel ThisChannel(upstream_node, downstream_node, FlowInfo);
-  string jn_name = itoa(snapped_JNs[1]);
+  string jn_name = itoa(downstream_jn);
   string out_name = "_profile_"+jn_name;
   ThisChannel.write_channel_to_csv(DATA_DIR,DEM_ID+out_name);
+  cout << "Done!" << endl;
 }
