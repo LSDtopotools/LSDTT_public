@@ -169,7 +169,12 @@ int main (int nNumberofArgs,char *argv[])
 	cout << "Got the basin nodes!" << endl;
 
 	cout << "Removing lochs..." << endl;
-	vector<int> new_basin_nodes = ChanNetwork.modify_basin_nodes_from_mask(basin_nodes, FlowInfo, MaskRaster);
+
+	//buffer the lochs shapefile
+	float window_radius = 20;
+	LSDRaster MaskBuffer = MaskRaster.BufferRasterData(window_radius);
+
+	vector<int> new_basin_nodes = ChanNetwork.modify_basin_nodes_from_mask(basin_nodes, FlowInfo, MaskBuffer);
 
 	//checking position of new basin nodes
 	string csv_out = "tay_basin_nodes_check";
