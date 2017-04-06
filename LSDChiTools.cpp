@@ -942,12 +942,12 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
   int this_node = 0;
   int segment_counter_knickpoint = 0; // count the number of knickpoints
   int segment_counter = 0; // count the number of segments
-  map<int,int> this_segment_counter_knickpoint_map;
+  map<int,float> this_segment_counter_knickpoint_map;
   map<int,int> this_segment_counter_map;
   map<int,int> this_segment_knickpoint_sign_map;
   map<int,int> this_segment_length_map;
   float last_M_chi, this_M_chi;
-  int delta_m = 0; // difference between last and new m_chi
+  float delta_m = 0; // difference between last and new m_chi
   int knickpoint_sign = 0; // sign of the knickpoint: + =1 and - = -1
   float temp_delta_m = 0; // debugging stuff
   float this_segment_length = 0;
@@ -1080,7 +1080,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
         vector <int> knickpoint_to_delete;
         knickpoint_id = 0;
 
-        map<int, int>::iterator it = this_segment_counter_knickpoint_map.begin();
+        map<int, float>::iterator it = this_segment_counter_knickpoint_map.begin();
         while(still_processing && it != this_segment_counter_knickpoint_map.end())
         {
           //cout<<it->first<<" :: "<<it->second<<endl;
