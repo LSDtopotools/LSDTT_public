@@ -991,8 +991,8 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
       if (this_M_chi != last_M_chi)
       {
         segment_counter++; // increment the  segment counter
-        delta_m= last_M_chi - this_M_chi; // Magnitude of the difference
-        if(delta_m<0){knickpoint_sign = -1;} else {knickpoint_sign = 1;} // Assign the knickpoint sign value
+        delta_m= last_M_chi/this_M_chi; // Ratio between last and new chi steepness
+        if(delta_m<1){knickpoint_sign = -1;} else {knickpoint_sign = 1;} // Assign the knickpoint sign value
         delta_m = abs(delta_m); // required to detect all the knickpoints
         if(delta_m > temp_delta_m) {temp_delta_m = delta_m;} // debugging stuff
         // now checking if the difference of m_chi between two segment is not due to a channel change
@@ -1006,7 +1006,8 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
         }
           // done
         // Check if the threshold is (over)reached
-        if(delta_m > abs_threshhold_knickpoint && same_channel)
+        //if(delta_m > abs_threshhold_knickpoint && same_channel) if we are are using the threshold value
+        if(true) // useless thing
         {
           segment_counter_knickpoint++; // number of knickpoints
           this_segment_counter_knickpoint_map[this_node] = delta_m; // adding the knickpoint value
