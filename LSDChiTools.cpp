@@ -993,8 +993,8 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
         segment_counter++; // increment the  segment counter
         delta_m= last_M_chi/this_M_chi; // Ratio between last and new chi steepness
         if(delta_m<1){knickpoint_sign = -1;} else {knickpoint_sign = 1;} // Assign the knickpoint sign value
-        delta_m = abs(delta_m); // required to detect all the knickpoints
-        if(delta_m > temp_delta_m) {temp_delta_m = delta_m;} // debugging stuff
+        //delta_m = abs(delta_m); // required to detect all the knickpoints
+        //if(delta_m > temp_delta_m) {temp_delta_m = delta_m;} // debugging stuff
         // now checking if the difference of m_chi between two segment is not due to a channel change
           // first retrieving xy coordinates
         FlowInfo.get_x_and_y_from_current_node(last_node, x1_temp, y1_temp);
