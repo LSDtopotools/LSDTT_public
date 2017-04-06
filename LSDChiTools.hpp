@@ -383,7 +383,7 @@ class LSDChiTools
     /// distinct segments
     map<int,int> segment_counter_map;
     /// A map that holds knickpoints information
-    map<int,int> segment_counter_knickpoint_map;
+    map<int,float> segment_counter_knickpoint_map;
     /// A map that holds knickpoints signs
     map<int,int> segment_knickpoint_sign_map;
     /// A map that holds knickpoints signs
