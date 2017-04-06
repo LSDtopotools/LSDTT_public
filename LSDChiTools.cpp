@@ -1048,6 +1048,11 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
       this_segment_counter_map[this_node]  = segment_counter;
     }
 
+
+
+
+
+    // Just Ignore this process for now!
     if(threshold_knickpoint_length>0)
     {
 
@@ -1148,7 +1153,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
                 if(this_segment_counter_knickpoint_map[this_node] > max_knickpoint_value && this_segment_counter_knickpoint_map[this_node] < old_max_knickpoint_value && j!=knickpoint_id )
                   {
                     max_knickpoint_value = this_segment_counter_knickpoint_map[this_node];
-                    //if(this_segment_counter_knickpoint_map[this_node] == max_knickpoint_value) {cout<< "biiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiite"<< endl;}
+                  
                   }
               }
             }
