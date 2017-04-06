@@ -164,12 +164,14 @@ int main (int nNumberofArgs,char *argv[])
 	cout << "\t Reading in the csv file" << endl;
 	LSDSpatialCSVReader OutletPoints(RasterTemplate, DATA_DIR+this_string_map["coords_csv_file"]);
 	vector<float> UTME;
-	vector<float> UTMN;
-	OutletPoints.get_x_and_y_from_latlong(UTME, UTMN);
-	cout << "\t Got the x and y locations" << endl;
-	string csv_outname = "_UTM_check.csv";
-	OutletPoints.print_UTM_coords_to_csv(UTME, UTMN, (DATA_DIR+DEM_ID+csv_outname));
-	//
+  vector<float> UTMN;
+  string column_name = "Main_stem_channel";
+  vector<string> channel_names;
+  OutletPoints.get_data_in_raster_for_snapping(column_name, UTME, UTMN, channel_names);
+  cout << "\t Got the x and y locations" << endl;
+  string csv_outname = "_UTM_check.csv";
+  OutletPoints.print_UTM_coords_to_csv(UTME, UTMN, (DATA_DIR+DEM_ID+csv_outname));
+
 	// snap to nearest channel
 	vector<int> valid_indices;
 	vector<int> snapped_nodes;
