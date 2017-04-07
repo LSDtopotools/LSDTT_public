@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 
   vector<int> sources;
   // getting the channel network
-  if (CHeads_file.empty())
+  if (CHeads_file == "NULL")
   {
     cout << "I'm using an area threshold to get your channel network..." << endl;
     // get some relevant rasters
