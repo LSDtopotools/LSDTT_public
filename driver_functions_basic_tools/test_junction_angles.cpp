@@ -77,6 +77,7 @@ int main (int nNumberofArgs,char *argv[])
     exit(EXIT_SUCCESS);
   }
 
+  /*
   string path_name = argv[1];
   string f_name = argv[2];
 
@@ -153,21 +154,51 @@ int main (int nNumberofArgs,char *argv[])
     string filled_raster_name = OUT_DIR+OUT_ID+"_Fill";
     filled_topography.write_raster(filled_raster_name,raster_ext);
   }
+
+*/
   
   // do a few tests
   // first make two vectors
-  float rad1 = 3.6;
-  float rad2 = 0.9;
+  float rad1 = 0.25*M_PI;
+  float rad2 = (0.75)*M_PI;
   
   float gradient1 = tan(rad1);
   float gradient2 = tan(rad2);
   
+  cout << "Gradient 1 is: " << gradient1 << " and gradient 2 is: " << gradient2 << endl;
+  
   float dx = 0.1;
+  
+  vector<float> x1;
+  vector<float> y1;
+  vector<float> x2;
+  vector<float> y2;
+  
+  x1.push_back(1.3);
+  y1.push_back(2.6);
+  x2.push_back(-0.2);
+  y2.push_back(0.4);
   
   for (int i = 0; i<11; i++)
   {
-  
+    x1.push_back( x1[i] +dx);
+    y1.push_back( y1[i] + dx*gradient1);
+    
+    x2.push_back( x2[i] +dx);
+    y2.push_back( y2[i] + dx*gradient2);
   }
   
+  // now try the gradient finder
+  float i1, g1, i2, g2;
+  vector<float> means1 = orthogonal_linear_regression( x1, y1, i1, g1);
+  vector<float> means2 = orthogonal_linear_regression( x2, y2, i2, g2);
   
+  cout << "Regressed orthogonal gradients are: " << g1 << " " << g2 << endl;
+  
+  // now normal regression
+  float R2;
+  least_squares_linear_regression(x1, y1, i1, g1,R2);
+  least_squares_linear_regression(x2, y2, i2, g2, R2);
+  
+  cout << "Regressed simple gradients are: " << g1 << " " << g2 << endl;
 }
