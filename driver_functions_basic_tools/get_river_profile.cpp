@@ -174,6 +174,9 @@ int main(int argc, char *argv[])
   cout << "\t Got the x and y locations" << endl;
   string csv_outname = "_UTM_check.csv";
   ProfilePoints.print_UTM_coords_to_csv(UTME, UTMN, (DATA_DIR+DEM_ID+csv_outname));
+  int UTM_zone = -9999;
+  bool is_North = false;
+  ProfilePoints.get_UTM_information(UTM_zone, is_North);
 
   // snap to nearest channel
 	vector<int> valid_indices;
@@ -212,5 +215,15 @@ int main(int argc, char *argv[])
   string jn_name = itoa(downstream_jn);
   string out_name = "_profile_"+jn_name;
   ThisChannel.write_channel_to_csv(DATA_DIR,DEM_ID+out_name);
+
+  //getting lat and longitude
+  string X_column_name = "x";
+  string Y_column_name = "y";
+  string file_name = DATA_DIR+DEM_ID+out_name+"_index_chan.csv";
+
+  LSDSpatialCSVReader csv_file(file_name);
+  csv_file.set_UTM_information(UTM_zone, is_North);
+  csv_file.get_latlong_from_x_and_y(X_column_name,Y_column_name);
+  csv_file.print_data_to_csv(file_name);
   cout << "Done!" << endl;
 }
