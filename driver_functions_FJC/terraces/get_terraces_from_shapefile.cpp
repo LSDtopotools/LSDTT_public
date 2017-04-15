@@ -163,7 +163,20 @@ int main (int nNumberofArgs,char *argv[])
 
  	// reading in the shapefile with the points
 	PointData ProfilePoints = LoadShapefile(path_name+shapefile_name.c_str());
+	// get the point data from the shapefile
 
+	vector<double> UTME = ProfilePoints.X;
+	vector<double> UTMN = ProfilePoints.Y;
+	int UTMZone = 0;
+	bool is_North = false;
+	RasterTemplate.get_UTM_information(UTMZone,is_North);
+
+	// create the polyline
+	LSDPolyline Line(UTME,UTMN,UTMZone);
+	// get the pixels along the line
+	vector<int> line_rows;
+	vector<int> line_cols;
+	Line.get_affected_pixels_in_line(RasterInfo, line_rows, line_cols);
 
 
 	// snap to nearest channel
@@ -192,9 +205,6 @@ int main (int nNumberofArgs,char *argv[])
 		vector<double> X_coords;
 		vector<double> Y_coords;
 		BaselineChannel.get_coordinates_of_channel_nodes(X_coords, Y_coords);
-
-		// get the point data from the BaselineChannel
-		PointData BaselinePoints = get_point_data_from_coordinates(X_coords, Y_coords);
 
 	  cout << "\t Creating swath template" << endl;
 	  LSDSwath TestSwath(BaselinePoints, RasterTemplate, this_float_map["HalfWidth"]);
