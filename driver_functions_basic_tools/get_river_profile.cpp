@@ -76,40 +76,43 @@ int main(int argc, char *argv[])
   string path_name = argv[1];
   string f_name = argv[2];
 
-	// maps for setting default parameters
-	map<string,int> int_default_map;
-	map<string,float> float_default_map;
-	map<string,bool> bool_default_map;
-	map<string,string> string_default_map;
+  // maps for setting default parameters
+  map<string,int> int_default_map;
+  map<string,float> float_default_map;
+  map<string,bool> bool_default_map;
+  map<string,string> string_default_map;
 
   // set default int parameters
   int_default_map["search_radius"] = 10;
   int_default_map["Threshold_SO"] = 1;
 
-	// set default float parameters
-	float_default_map["threshold_contributing_pixels"] = 400;
+  // set default float parameters
+  float_default_map["threshold_contributing_pixels"] = 400;
+  float_default_map["A_0"] = 1;
+  float_default_map["m_over_n"] = 0.5;
 
   // set default bool parameters
   bool_default_map["Ingest_Channel_Heads"] = false;
+  bool_default_map["print_chi_coordinate"] = false;
 
   // set default string parameters
   string_default_map["CHeads_file"] = "NULL";
-	string_default_map["coords_csv_file"] = "NULL";
+  string_default_map["coords_csv_file"] = "NULL";
 
-	// Use the parameter parser to get the maps of the parameters required for the
-	// analysis
-	// load parameter parser object
-	LSDParameterParser LSDPP(path_name,f_name);
-	LSDPP.force_bil_extension();
+  // Use the parameter parser to get the maps of the parameters required for the
+  // analysis
+  // load parameter parser object
+  LSDParameterParser LSDPP(path_name,f_name);
+  LSDPP.force_bil_extension();
 
-	LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
-	map<string,float> this_float_map = LSDPP.get_float_parameters();
-	map<string,int> this_int_map = LSDPP.get_int_parameters();
-	map<string,bool> this_bool_map = LSDPP.get_bool_parameters();
-	map<string,string> this_string_map = LSDPP.get_string_parameters();
+  LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
+  map<string,float> this_float_map = LSDPP.get_float_parameters();
+  map<string,int> this_int_map = LSDPP.get_int_parameters();
+  map<string,bool> this_bool_map = LSDPP.get_bool_parameters();
+  map<string,string> this_string_map = LSDPP.get_string_parameters();
 
-	// Now print the parameters for bug checking
-	LSDPP.print_parameters();
+  // Now print the parameters for bug checking
+  LSDPP.print_parameters();
 
   // location of the files
   string DATA_DIR =  LSDPP.get_read_path();
@@ -179,10 +182,10 @@ int main(int argc, char *argv[])
   ProfilePoints.get_UTM_information(UTM_zone, is_North);
 
   // snap to nearest channel
-	vector<int> valid_indices;
-	vector<int> snapped_nodes;
-	vector<int> snapped_JNs;
-	ChanNetwork.snap_point_locations_to_channels(UTME, UTMN, this_int_map["search_radius"], this_int_map["Threshold_SO"], FlowInfo, valid_indices, snapped_nodes, snapped_JNs);
+  vector<int> valid_indices;
+  vector<int> snapped_nodes;
+  vector<int> snapped_JNs;
+  ChanNetwork.snap_point_locations_to_channels(UTME, UTMN, this_int_map["search_radius"], this_int_map["Threshold_SO"], FlowInfo, valid_indices, snapped_nodes, snapped_JNs);
 
   cout << "\t Getting the upstream and downstream points of your channel..." << endl;
   int upstream_node, downstream_node, downstream_jn;
@@ -208,8 +211,11 @@ int main(int argc, char *argv[])
   }
   else
   {
-    cout << "I couldn't read in all your points. Please check your latitude and longitude coordinates..." << endl;
+    cout << "FATAL ERROR! I couldn't read in all your points. Please check your latitude and longitude coordinates..." << endl;
+    exit(EXIT_FAILURE);
   }
+
+
 
   LSDIndexChannel ThisChannel(upstream_node, downstream_node, FlowInfo);
   string jn_name = itoa(downstream_jn);
@@ -224,6 +230,18 @@ int main(int argc, char *argv[])
   LSDSpatialCSVReader csv_file(file_name);
   csv_file.set_UTM_information(UTM_zone, is_North);
   csv_file.get_latlong_from_x_and_y(X_column_name,Y_column_name);
+  
+  LSDRaster ChiCoord;
+  if (this_bool_map["print_chi_coordinate"])
+  {
+    float area_threshold = 0; 
+    ChiCoord = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(this_float_map["m_over_n"], 
+                           this_float_map["A_0"], area_threshold);
+    string column_name = "chi";
+    csv_file.burn_raster_data_to_csv(ChiCoord,column_name);
+  }
+  
+  
   csv_file.print_data_to_csv(file_name);
   cout << "Done!" << endl;
 }
