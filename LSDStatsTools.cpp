@@ -1177,14 +1177,18 @@ vector<float> orthogonal_linear_regression( vector<float>& x_data, vector<float>
   float SS_xy=0;
   float x_mean = get_mean(x_data);
   float y_mean = get_mean(y_data);
+  float n_nodes = float(x_data.size());
   for(int i = 0; i<int(x_data.size()); ++i)
   {
     SS_xx += (x_data[i]-x_mean)*(x_data[i]-x_mean);
     SS_yy += (y_data[i]-y_mean)*(y_data[i]-y_mean);
     SS_xy += (x_data[i]-x_mean)*(y_data[i]-y_mean);
   }
+  SS_xx = SS_xx/(n_nodes-1);
+  SS_yy = SS_yy/(n_nodes-1);
+  SS_xy = SS_xy/(n_nodes-1);
 
-  gradient = (SS_yy-SS_xx+sqrt( (SS_xx-SS_yy)*(SS_xx-SS_yy)+ 4*SS_xy*SS_xy ))/2*SS_xy;
+  gradient = (SS_yy-SS_xx+sqrt( (SS_yy-SS_xx)*(SS_yy-SS_xx)+ 4*SS_xy*SS_xy ))/(2*SS_xy);
   intercept = y_mean - gradient*x_mean;
   
   means[0] = x_mean;

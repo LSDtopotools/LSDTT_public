@@ -194,6 +194,7 @@ int main (int nNumberofArgs,char *argv[])
   vector<float> means2 = orthogonal_linear_regression( x2, y2, i2, g2);
   
   cout << "Regressed orthogonal gradients are: " << g1 << " " << g2 << endl;
+  cout << "Regressed orthogonal intercepts are: " << i1 << " " << i2 << endl;
   
   // now normal regression
   float R2;
@@ -201,4 +202,5 @@ int main (int nNumberofArgs,char *argv[])
   least_squares_linear_regression(x2, y2, i2, g2, R2);
   
   cout << "Regressed simple gradients are: " << g1 << " " << g2 << endl;
+  cout << "Regressed simple intercepts are: " << i1 << " " << i2 << endl;
 }
