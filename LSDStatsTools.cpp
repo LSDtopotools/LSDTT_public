@@ -1166,9 +1166,9 @@ void least_squares_linear_regression(vector<float> x_data,vector<float> y_data, 
 // NOTE: THis is more generally called Total Least Squares
 //  There is a solution using matrices that is probably compuationally faster
 //  Might want to implement that in the future if this is slow
-//  Also note this does not calculate R^2
+//  Note R^2 comes from the simple least squares
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-vector<float> orthogonal_linear_regression( vector<float>& x_data, vector<float>& y_data, float& intercept, float& gradient)
+vector<float> orthogonal_linear_regression( vector<float>& x_data, vector<float>& y_data, float& intercept, float& gradient, float& R_squared)
 {
   vector<float> means(2,0.0);
   
@@ -1177,22 +1177,24 @@ vector<float> orthogonal_linear_regression( vector<float>& x_data, vector<float>
   float SS_xy=0;
   float x_mean = get_mean(x_data);
   float y_mean = get_mean(y_data);
-  float n_nodes = float(x_data.size());
+  //float n_nodes = float(x_data.size());
   for(int i = 0; i<int(x_data.size()); ++i)
   {
     SS_xx += (x_data[i]-x_mean)*(x_data[i]-x_mean);
     SS_yy += (y_data[i]-y_mean)*(y_data[i]-y_mean);
     SS_xy += (x_data[i]-x_mean)*(y_data[i]-y_mean);
   }
-  SS_xx = SS_xx/(n_nodes-1);
-  SS_yy = SS_yy/(n_nodes-1);
-  SS_xy = SS_xy/(n_nodes-1);
+  // This isn't needed since the (n_nodes-1) cancels out.
+  //SS_xx = SS_xx/(n_nodes-1);
+  //SS_yy = SS_yy/(n_nodes-1);
+  //SS_xy = SS_xy/(n_nodes-1);
 
   gradient = (SS_yy-SS_xx+sqrt( (SS_yy-SS_xx)*(SS_yy-SS_xx)+ 4*SS_xy*SS_xy ))/(2*SS_xy);
   intercept = y_mean - gradient*x_mean;
   
   means[0] = x_mean;
   means[1]= y_mean;
+  R_squared = SS_xy*SS_xy/(SS_xx*SS_yy);
   return means;
 
 }
@@ -4885,6 +4887,7 @@ double deg(double radians)
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Get the angle between two vectors in radians
+// These vectors are mathematical vectors with a starting point at 0,0. 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float angle_between_vectors(float x1, float y1, float x2, float y2)
 {
@@ -4894,50 +4897,113 @@ float angle_between_vectors(float x1, float y1, float x2, float y2)
   return angle;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Get the angle between two vectors in radians
+// We need to calculate the (x1,y1) and (x2,y2) coordinates by moving
+// the vectors to intercept (0,0)
+// the bool vectors_point_downstream is true if the vector's first element is the 
+// upstream node in a channel and false if the first node is downstream. 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float angle_between_two_vector_datasets(vector<float>& x1_data, vector<float>& y1_data,
-                                        vector<float>& x2_data, vector<float>& y2_data)
+                                        vector<float>& x2_data, vector<float>& y2_data,
+                                        bool vectors_point_downstream)
 {
-  
-  // get the vector intercept and floats
-  float v1_intercept, v1_gradient, v2_intercept, v2_gradient;
-  vector<float> first_vector_mean = orthogonal_linear_regression( x1_data, y1_data, v1_intercept, v1_gradient);
-  vector<float> second_vector_mean = orthogonal_linear_regression( x2_data, y2_data, v2_intercept, v2_gradient);
+  vector<float> v1_floats = get_directional_vector_coords_from_dataset(x1_data, y1_data, vectors_point_downstream);
+  vector<float> v2_floats = get_directional_vector_coords_from_dataset(x2_data, y2_data, vectors_point_downstream);
 
-  // now we make the x,y coords for the vectors
-  // we need to know what quadrant each channel is in
-  int quadrant = 1;
-  if( first_vector_mean[0] > x1_data[0] )
+  float angle = angle_between_vectors(v1_floats[0], v1_floats[1], v2_floats[0], v2_floats[1]);
+  
+  return angle;
+
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function takes x and y data as vectors and returns a 2 element vector
+// where the 0 element is the x1 component of a directional vector 
+// and the 1 element is the y1 component of a directional vector
+// vector vector vector, Victor. 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<float> get_directional_vector_coords_from_dataset(vector<float> x_data, vector<float>& y_data, 
+                      bool vectors_point_downstream)
+{
+  // if the vectors point downstream we need to reverse the order of the nodes. 
+  if (vectors_point_downstream)
   {
-    if ( first_vector_mean[1] > y1_data[0])
+    reverse(x_data.begin(),x_data.end());
+    reverse(y_data.begin(),y_data.end());
+  }
+
+  // get the vector intercept and slopes
+  float intercept, gradient, R2;
+  vector<float> vector_mean = orthogonal_linear_regression( x_data, y_data, intercept, gradient, R2);
+
+
+  float x1,y1;
+  // now we go through a lot of tedious logic to figure out which direction
+  // the vector is pointing
+  if( vector_mean[0] > x_data[0] )
+  {
+    if ( vector_mean[1] > y_data[0])
     {
-      quadrant = 1;
+      x1 = 1.0;
+      if(gradient > 0)
+      {
+        y1 = gradient;
+      }
+      else
+      {
+        y1 = -gradient;
+      }
     }
     else
     {
-      quadrant = 4;
+      x1 = 1.0;
+      if(gradient > 0)
+      {
+        y1 = -gradient;
+      }
+      else
+      {
+        y1 = gradient;
+      }
     }
-  
   }
   else
   {
-    if ( first_vector_mean[1] > y1_data[0])
+    if ( vector_mean[1] > y_data[0])
     {
-      quadrant = 2;
+      x1 = -1.0;
+      if(gradient > 0)
+      {
+        y1 = gradient;
+      }
+      else
+      {
+        y1 = -gradient;
+      }
     }
     else
     {
-      quadrant = 3;
+      x1 = -1.0;
+      if(gradient > 0)
+      {
+        y1 = -gradient;
+      }
+      else
+      {
+        y1 = gradient;
+      }
     }  
-  
   }
   
-  
-  float x1 = 1;
-  float x2 = 1;
-  float y1 = v1_gradient;
-  float y2 = v2_gradient;
-
+  // okay, print the results
+  vector<float> vec_coords(2,0.0);
+  vec_coords[0] = x1;
+  vec_coords[1] = y1;
+  return vec_coords;
 }
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Get the data for a boxplot from an unsorted vector of floats, which does not

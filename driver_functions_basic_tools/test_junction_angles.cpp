@@ -189,18 +189,23 @@ int main (int nNumberofArgs,char *argv[])
   }
   
   // now try the gradient finder
+  float R2;
   float i1, g1, i2, g2;
-  vector<float> means1 = orthogonal_linear_regression( x1, y1, i1, g1);
-  vector<float> means2 = orthogonal_linear_regression( x2, y2, i2, g2);
+  vector<float> means1 = orthogonal_linear_regression( x1, y1, i1, g1, R2);
+  vector<float> means2 = orthogonal_linear_regression( x2, y2, i2, g2, R2);
   
   cout << "Regressed orthogonal gradients are: " << g1 << " " << g2 << endl;
   cout << "Regressed orthogonal intercepts are: " << i1 << " " << i2 << endl;
   
   // now normal regression
-  float R2;
   least_squares_linear_regression(x1, y1, i1, g1,R2);
   least_squares_linear_regression(x2, y2, i2, g2, R2);
   
   cout << "Regressed simple gradients are: " << g1 << " " << g2 << endl;
   cout << "Regressed simple intercepts are: " << i1 << " " << i2 << endl;
+  
+  
+  // now get angle between two datasets
+  
+  
 }
