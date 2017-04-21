@@ -59,7 +59,7 @@ int main (int nNumberofArgs,char *argv[])
   if (nNumberofArgs!=3)
   {
     cout << "=========================================================" << endl;
-    cout << "|| Welcome to the test junctionangle tool, developed by||" << endl;
+    cout << "|| Welcome to the junction angle tool, developed by    ||" << endl;
     cout << "|| Simon M. Mudd                                       ||" << endl;
     cout << "||  at the University of Edinburgh                     ||" << endl;
     cout << "=========================================================" << endl;
@@ -77,7 +77,7 @@ int main (int nNumberofArgs,char *argv[])
     exit(EXIT_SUCCESS);
   }
 
-  /*
+  
   string path_name = argv[1];
   string f_name = argv[2];
 
@@ -92,14 +92,40 @@ int main (int nNumberofArgs,char *argv[])
   map<string,float> float_default_map;
   map<string,bool> bool_default_map;
   map<string,string> string_default_map;
-  
-  // set default in parameters
-  string_default_map["filling_raster_fname"] = "NULL";
 
+  // set default float parameters
+  int_default_map["basin_order"] = 2;
+  int_default_map["threshold_contributing_pixels"] = 2000;
+  int_default_map["search_radius_nodes"] = 10;
+  
+  // set default in parameter
   float_default_map["min_slope_for_fill"] = 0.0001;
   
-  bool_default_map["print_fill_raster"] = false;
-    
+  // set default methods
+  bool_default_map["raster_is_filled"] = false;
+  bool_default_map["print_filled_raster"] = false;
+  bool_default_map["print_junctions_to_csv"] = false;
+  
+  
+  bool_default_map["print_basin_raster"] = false;
+  bool_default_map["print_stream_order_raster"] = false;
+  bool_default_map["print_stream_order_csv"] = false;
+  bool_default_map["get_basins_from_outlets"] = false;
+  bool_default_map["print_junction_csv"] = false;
+  bool_default_map["print_channels_to_csv"] = false;
+  bool_default_map["spawn_basins_from_outlets"] = false;
+  bool_default_map["spawn_csv_file_from_basin_spawn"] = false;
+  bool_default_map["spawn_parameter_files_from_basin_spawn"] = false;
+  bool_default_map["write hillshade"] = false;
+  
+  // set default string method
+  string_default_map["slope method"] = "polynomial";
+  string_default_map["averaging_raster_vector"] = "NULL";
+  string_default_map["basin_outlet_csv"] = "NULL";
+  string_default_map["sample_ID_column_name"] = "IDs";
+  string_default_map["parameter_file_for_spawning"] = "NULL";
+
+
     
   // Use the parameter parser to get the maps of the parameters required for the 
   // analysis
@@ -149,14 +175,94 @@ int main (int nNumberofArgs,char *argv[])
   }
   
   
-  if (this_bool_map["print_fill_raster"])
+  if (this_bool_map["print_filled_raster"])
   {
     string filled_raster_name = OUT_DIR+OUT_ID+"_Fill";
     filled_topography.write_raster(filled_raster_name,raster_ext);
   }
 
-*/
+  // check to see if you need hillshade
+  if (this_bool_map["write hillshade"])
+  {
+    float hs_azimuth = 315;
+    float hs_altitude = 45;
+    float hs_z_factor = 1;
+    LSDRaster hs_raster = topography_raster.hillshade(hs_altitude,hs_azimuth,hs_z_factor);
+
+    string hs_fname = OUT_DIR+OUT_ID+"_hs";
+    hs_raster.write_raster(hs_fname,raster_ext);
+  }
+
+  //============================================================================
+  // Get the flow info
+  //============================================================================
+  cout << "\t Flow routing..." << endl;
+  LSDFlowInfo FlowInfo(boundary_conditions,filled_topography);
   
+  // now deal with the channel network
+  cout << "\t Loading Sources..." << endl;
+  // load the sources
+  vector<int> sources;
+  if (CHeads_file == "NULL" || CHeads_file == "Null" || CHeads_file != "null")
+  {
+    // calculate the flow accumulation
+    cout << "\t Calculating flow accumulation (in pixels)..." << endl;
+    LSDIndexRaster FlowAcc = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+  
+    // Now get the sources from flow accumulation
+    cout << endl << endl << endl << "==================================" << endl;
+    cout << "The channel head file is null. " << endl;
+    cout << "Getting sources from a threshold of "<< this_int_map["threshold_contributing_pixels"] << " pixels." <<endl;
+    sources = FlowInfo.get_sources_index_threshold(FlowAcc, this_int_map["threshold_contributing_pixels"]);
+    
+    cout << "The number of sources is: " << sources.size() << endl;
+    
+  } 
+  else
+  {
+    cout << "Loading channel heads from the file: " << DATA_DIR+CHeads_file << endl;
+    sources = FlowInfo.Ingest_Channel_Heads((DATA_DIR+CHeads_file), "csv",2);
+    cout << "\t Got sources!" << endl;
+  }
+  
+  // Now create the network
+  LSDJunctionNetwork JunctionNetwork(sources, FlowInfo);
+
+  if( this_bool_map["print_channels_to_csv"])
+  {
+    cout << "I am writing the channels to csv." << endl;
+    string channel_csv_name = OUT_DIR+OUT_ID+"_W_CN";
+    JunctionNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+  }
+
+  if( this_bool_map["print_junctions_to_csv"])
+  {
+    cout << "I am writing the junctions to csv." << endl;
+    string channel_csv_name = OUT_DIR+OUT_ID+"_JN";
+    JunctionNetwork.print_junctions_to_csv(FlowInfo, channel_csv_name);
+  }
+  
+  
+  
+  // Now we need to get the junctions and calculate the angels between them
+  // We have to skip the 
+  
+  // this is a test to see about the donors
+  int NJ = JunctionNetwork.get_NJunctions();
+  for(int i = 0; i< NJ; i++)
+  {
+    vector<int> donors = JunctionNetwork.get_donor_nodes(i);
+    
+    int nd = int(donors.size());
+    cout << "Junction is: " << i << " and donor junctions are: ";
+    for (int j = 0; j< nd; j++)
+    {
+      cout << donors[j] << " ";
+    }
+    cout << endl;
+  }
+  
+/*  
   // do a few tests
   // first make two vectors
   float rad1 = 0.25*M_PI;
@@ -209,6 +315,6 @@ int main (int nNumberofArgs,char *argv[])
   bool channels_point_downstream = false;
   float angle = angle_between_two_vector_datasets(x1, y1,x2, y2,channels_point_downstream);
   cout << "Angle is: " << angle << " radians, which is " << deg(angle) << " degrees." << endl;
-  
+*/
   
 }

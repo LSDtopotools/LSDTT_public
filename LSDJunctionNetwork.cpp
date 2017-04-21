@@ -993,6 +993,7 @@ vector<int> LSDJunctionNetwork::get_all_source_nodes_of_an_outlet_junction(int j
 //
 // IMPORTANT: this has only retained the string "node" to keep equivalence
 //  with the FlowInfo object. It takes junctions and returns junctions!!
+// Also note that base level nodes have themselves as a donor
 //
 // SMM 16/6/2015
 //
@@ -1043,18 +1044,18 @@ int LSDJunctionNetwork::map_junction_to_upslope_junction_list(vector<int> upslop
 
 	return mapped_us_junction_index;
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function returns the maximum stream order
 //
 // SMM 01/09/2012
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 int LSDJunctionNetwork::get_maximum_stream_order()
 {
   int max_stream_order = 0;
@@ -1067,15 +1068,15 @@ int LSDJunctionNetwork::get_maximum_stream_order()
   }
   return max_stream_order;
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function returns the number of streams of a given stream order
 //
 // FJC 15/03/16
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 int LSDJunctionNetwork::get_number_of_streams(LSDFlowInfo& FlowInfo, int stream_order)
 {
   int count = 0;
@@ -1096,7 +1097,72 @@ int LSDJunctionNetwork::get_number_of_streams(LSDFlowInfo& FlowInfo, int stream_
   }
   return count;
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This gets the junction angles
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<float> LSDJunctionNetwork::calculate_junction_angles(vector<int> JunctionList, LSDFlowInfo& FlowInfo)
+{
+  int NJuncs = int(JunctionList.size());
+  if (NJuncs == 0)
+  {
+    NJuncs = get_NJunctions();
+    cout << "You gave me an empty junction list, I am getting angles for all junctions." << endl;
+    vector<int> JL;
+    for(int i = 0; i<NJunctions; i++)
+    {
+      JL.push_back(i);
+    }
+    JunctionList = JL;
+  }
+  
+  // now go through each junction getting the angles
+  vector<float> JunctionAngles;
+  vector<int> donors;
+  int ReceiverJN;
+  bool is_baselevel;
+  int end_node, start_node1, start_node2;
+  
+  // vectors for holding the channel locations
+  vector<float> x1, x2, y1, y2;
+  
+  for(int junc; junc < NJuncs; junc++ )
+  {
+    // check if it is a baselevel node
+    int ReceiverJN = get_Receiver_of_Junction(junc);
+    is_baselevel = (junc == ReceiverJN) ? true : false;
+    
+    // if not a baselevel see if it has donors
+    if (not is_baselevel)
+    {
+      // check the junction to see if it has two or more donors
+      donors = get_donor_nodes(junc);
+ 
+      // it has donors
+      if( int(donors.size()) >= 2)
+      {
+        if ( int(donors.size()) > 2)
+        {
+          cout << "Warning, this junction is a weirdo and has more than two donors. I am going to use the first two donors." << endl;
+        }
+        
+        // now get the two segments.
+        // The ending node is the current junction
+        end_node = get_Node_of_Junction(junc);
+        start_node1 = get_Node_of_Junction(donors[0]);
+        start_node1 = get_Node_of_Junction(donors[1]);
+        
+        LSDIndexChannel c1(start_node1, end_node,FlowInfo);
+        LSDIndexChannel c2(start_node1, end_node,FlowInfo);
+      }
+    }
+  }
+  
+  
+  return JunctionAngles;
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1105,7 +1171,7 @@ int LSDJunctionNetwork::get_number_of_streams(LSDFlowInfo& FlowInfo, int stream_
 //
 // FC 31/10/13
 //
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 int LSDJunctionNetwork::get_Junction_of_Node(int Node, LSDFlowInfo& FlowInfo)
 {
   int JunctionNumber, Row, Col;
@@ -1868,11 +1934,11 @@ int LSDJunctionNetwork::get_Next_StreamOrder_Junction(int junction)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 int LSDJunctionNetwork::is_Junction_BaseLevel(int junction)
 {
-	int base_level = 0;
-	int ReceiverJN = get_Receiver_of_Junction(junction);
-	if (junction == ReceiverJN) { base_level = 1; }
+  int base_level = 0;
+  int ReceiverJN = get_Receiver_of_Junction(junction);
+  if (junction == ReceiverJN) { base_level = 1; }
 
-	return base_level;
+  return base_level;
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=

@@ -199,7 +199,10 @@ class LSDJunctionNetwork
   /// @date 19/05/2016
   vector<int> get_all_source_nodes_of_an_outlet_junction(int junction_number_outlet);
 
-  /// @brief this function gets a list of the node indices of the donors to a particular node
+  /// @brief this function gets a list of the junction indices of the donors to a particular junction
+  /// @detail IMPORTANT: this has only retained the string "node" to keep equivalence
+  ///  with the FlowInfo object. It takes junctions and returns junctions!!
+  ///  Also note that base level nodes have themselves as a donor
   /// @param node this is the nodeindex of the node for which you want to find the donors
   /// @return a vector of the donor nodes
   /// @author SMM
@@ -231,6 +234,14 @@ class LSDJunctionNetwork
   /// @author FJC
   /// @date 15/03/16
   int get_number_of_streams(LSDFlowInfo& FlowInfo, int stream_order);
+
+  /// @brief This calculates the junction angles based on a number of junctions
+  /// @param JunctionList a list of junctions
+  /// @param FlowInfo an LSDFlowInfo object
+  /// @return A vector of junction angles
+  /// @author SMM
+  /// @date 21/04/2017
+  vector<float> calculate_junction_angles(vector<int> JunctionList, LSDFlowInfo& FlowInfo);
 
   /// @brief This gets the junction number of a given node.
   /// @param Node
