@@ -160,7 +160,7 @@ int main (int nNumberofArgs,char *argv[])
   // do a few tests
   // first make two vectors
   float rad1 = 0.25*M_PI;
-  float rad2 = (0.75)*M_PI;
+  float rad2 = (0.2)*M_PI;
   
   float gradient1 = tan(rad1);
   float gradient2 = tan(rad2);
@@ -206,6 +206,9 @@ int main (int nNumberofArgs,char *argv[])
   
   
   // now get angle between two datasets
+  bool channels_point_downstream = false;
+  float angle = angle_between_two_vector_datasets(x1, y1,x2, y2,channels_point_downstream);
+  cout << "Angle is: " << angle << " radians, which is " << deg(angle) << " degrees." << endl;
   
   
 }
