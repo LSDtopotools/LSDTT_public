@@ -1290,6 +1290,17 @@ void get_info_nearest_channel_to_node_main_stem(int& StartingNode, LSDFlowInfo& 
   /// @date 18/05/2016
   void print_junctions_to_csv(LSDFlowInfo& FlowInfo, vector<int> JunctionList, string fname);
 
+  /// @brief Prints all junctions, with their locations in both UTM and
+  ///  in lat long WGS1984 to file
+  /// @detail The format of the file is:
+  ///  junction,node,x,y,latitude,longitude
+  /// @param FlowInfo an LSDFlowInfo object
+  /// @param fname The filename of the csv file
+  /// @author SMM
+  /// @date 21/04/2017
+  void print_junctions_to_csv(LSDFlowInfo& FlowInfo, string fname);
+
+
   // Get functions
 
   /// @return Number of rows as an integer.

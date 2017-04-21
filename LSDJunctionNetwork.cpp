@@ -6939,11 +6939,66 @@ float LSDJunctionNetwork::find_distance_to_nearest_floodplain_pixel(int point_no
 	cout << "Got the distance for this FIP" << endl;
 }
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 // END OF FLOODPLAIN FUNCTIONS
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This function prints all junctions to a csv file
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDJunctionNetwork::print_junctions_to_csv(LSDFlowInfo& FlowInfo, string fname)
+{
+
+  int this_node;
+  int row,col;
+  double x_loc,y_loc;
+  double latitude,longitude;
+
+  vector<int> JunctionList;
+  for (int i = 0; i<NJunctions; i++)
+  {
+    JunctionList.push_back(i);
+  }
+
+  // open the outfile
+  ofstream sources_out;
+  sources_out.open(fname.c_str());
+  sources_out.precision(9);
+
+  sources_out << "junction,node,x,y,latitude,longitude" << endl;
+
+  // this is for latitude and longitude
+  LSDCoordinateConverterLLandUTM Converter;
+
+  for (int i = 0; i<NJunctions; i++)
+  {
+    this_node = get_Node_of_Junction(JunctionList[i]);
+
+    // get the row and column
+    FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+
+    // get the x and y locations
+    FlowInfo.get_x_and_y_locations(row, col, x_loc, y_loc);
+
+    // get the lat and long locations
+    FlowInfo.get_lat_and_long_locations(row, col, latitude, longitude, Converter);
+
+    // print to file
+    sources_out << JunctionList[i] << "," << this_node << "," << x_loc << ","
+                << y_loc << "," << latitude << "," << longitude << endl;
+
+  }
+  sources_out.close();
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // This function takes a list of junctions and prints them to a csv file
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
