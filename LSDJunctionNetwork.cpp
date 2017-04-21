@@ -988,8 +988,11 @@ vector<int> LSDJunctionNetwork::get_all_source_nodes_of_an_outlet_junction(int j
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
-// This function returns a vector of node indices to all the donor
-// nodes of a particular node
+// This function returns a vector of junction indices to all the donor
+// junctions of a particular junction
+//
+// IMPORTANT: this has only retained the string "node" to keep equivalence
+//  with the FlowInfo object. It takes junctions and returns junctions!!
 //
 // SMM 16/6/2015
 //

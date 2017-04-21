@@ -1386,7 +1386,8 @@ void get_info_nearest_channel_to_node_main_stem(int& StartingNode, LSDFlowInfo& 
   /// @return The number of junctions
   int get_NJunctions() const { return int(JunctionVector.size()); }
 
-  /// @return The Vector of Junctions.
+  /// @return The Vector of Junctions. Note that these are the node indices of the
+  ///  junctions. The junction numbers just go from 0 to NJunctions
   vector<int> get_JunctionVector() const { return JunctionVector; }
 
   /// @return Get the baselevel junstions
