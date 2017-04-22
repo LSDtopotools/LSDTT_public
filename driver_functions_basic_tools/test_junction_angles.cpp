@@ -105,6 +105,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["raster_is_filled"] = false;
   bool_default_map["print_filled_raster"] = false;
   bool_default_map["print_junctions_to_csv"] = false;
+  bool_default_map["print_junction_angles_to_csv"] = false;
   
   
   bool_default_map["print_basin_raster"] = false;
@@ -227,6 +228,15 @@ int main (int nNumberofArgs,char *argv[])
   
   // Now create the network
   LSDJunctionNetwork JunctionNetwork(sources, FlowInfo);
+  
+  if( this_bool_map["print_junction_angles_to_csv"])
+  {
+    cout << "I am testing the junction angle code." << endl;
+    string channel_csv_name = OUT_DIR+OUT_ID+"_JAngles.csv";
+    vector<int> JunctionList;
+    vector<float> junction_angles =  JunctionNetwork.calculate_junction_angles(JunctionList, FlowInfo);
+
+  }
 
   if( this_bool_map["print_channels_to_csv"])
   {

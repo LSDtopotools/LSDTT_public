@@ -1120,24 +1120,46 @@ vector<float> LSDJunctionNetwork::calculate_junction_angles(vector<int> Junction
   // now go through each junction getting the angles
   vector<float> JunctionAngles;
   vector<int> donors;
+  float this_angle;
   int ReceiverJN;
   bool is_baselevel;
+  bool channel_points_downstream = true;  // this is needed to get the correct 
+                                          // orientation of the channels
   int end_node, start_node1, start_node2;
   
   // vectors for holding the channel locations
   vector<float> x1, x2, y1, y2;
+  int this_junc;
   
+  // loop through junctions
   for(int junc; junc < NJuncs; junc++ )
   {
+
+    this_junc = JunctionList[junc];
+    cout << "Junction is: " << this_junc << endl;
+    
+    // check to see if the junction exists
+    if (this_junc >= NJunctions)
+    {
+      cout << "FATAL ERROR LSDJunctionNetwork::calculate_junction_angles" << endl;
+      cout << "You have called a junction that doesn't exist." << endl;
+      exit(EXIT_FAILURE);
+    }
+    
     // check if it is a baselevel node
-    int ReceiverJN = get_Receiver_of_Junction(junc);
-    is_baselevel = (junc == ReceiverJN) ? true : false;
+    int ReceiverJN = get_Receiver_of_Junction(this_junc);
+    is_baselevel = (this_junc == ReceiverJN) ? true : false;
     
     // if not a baselevel see if it has donors
-    if (not is_baselevel)
+    if (is_baselevel)
+    {
+      cout << "This is a baselevel junction." << endl;
+      JunctionAngles.push_back(NoDataValue);
+    }
+    else
     {
       // check the junction to see if it has two or more donors
-      donors = get_donor_nodes(junc);
+      donors = get_donor_nodes(this_junc);
  
       // it has donors
       if( int(donors.size()) >= 2)
@@ -1147,14 +1169,32 @@ vector<float> LSDJunctionNetwork::calculate_junction_angles(vector<int> Junction
           cout << "Warning, this junction is a weirdo and has more than two donors. I am going to use the first two donors." << endl;
         }
         
+        cout << "The donor junctions are: " << donors[0] << ", " << donors[1] << endl;
         // now get the two segments.
-        // The ending node is the current junction
+        // The ending node is the current junction, the starting nodes are the 
+        // two donor junctions. 
         end_node = get_Node_of_Junction(junc);
         start_node1 = get_Node_of_Junction(donors[0]);
         start_node1 = get_Node_of_Junction(donors[1]);
         
+        // extract the channel information
         LSDIndexChannel c1(start_node1, end_node,FlowInfo);
         LSDIndexChannel c2(start_node1, end_node,FlowInfo);
+        
+        // now get the locations of the nodes in the channels in x,y coordinates
+        c1.get_coordinates_of_channel_nodes(x1, y1);
+        c1.get_coordinates_of_channel_nodes(x1, y1);
+        
+        // now calculate the angle
+        this_angle = angle_between_two_vector_datasets(x1, y1,x2, y2,channel_points_downstream);
+        this_angle = fabs(this_angle);
+        JunctionAngles.push_back(this_angle);
+        cout << "Angle is: " << this_angle << " radians, which is " << deg(this_angle) << " degrees." << endl;
+      }
+      else
+      {
+        cout << "This junction doesn't have 2 donors; it must be a source." << endl;
+        JunctionAngles.push_back(NoDataValue);
       }
     }
   }
@@ -6998,7 +7038,7 @@ float LSDJunctionNetwork::find_distance_to_nearest_floodplain_pixel(int point_no
 	{
 		distance = upstream_dist*-1;
 	}
-	else
+  else
 	{
 		cout << "I couldn't find a FIP within the search radius, returning NDV" << endl;
 		distance = NoDataValue;
