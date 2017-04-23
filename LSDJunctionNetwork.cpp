@@ -86,6 +86,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <map>
 #include <algorithm>
 #include "TNT/tnt.h"
 #include "LSDFlowInfo.hpp"
@@ -1101,9 +1102,16 @@ int LSDJunctionNetwork::get_number_of_streams(LSDFlowInfo& FlowInfo, int stream_
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This gets the junction angles
+// returns a map of float vectors. The float vector actually contains a float
+// and 3 ints converted to float: the angle and the stream order of the junction
+// and its 2 donors. 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-vector<float> LSDJunctionNetwork::calculate_junction_angles(vector<int> JunctionList, LSDFlowInfo& FlowInfo)
+map<int, vector<float> > LSDJunctionNetwork::calculate_junction_angles(vector<int> JunctionList, LSDFlowInfo& FlowInfo)
 {
+  map<int, vector<float> > map_of_junction_angles;
+  vector<float> temp_junctioninfo;
+  vector<float> four_element(4,0);
+  
   int NJuncs = int(JunctionList.size());
   if (NJuncs == 0)
   {
@@ -1118,7 +1126,7 @@ vector<float> LSDJunctionNetwork::calculate_junction_angles(vector<int> Junction
   }
   
   // now go through each junction getting the angles
-  vector<float> JunctionAngles;
+  //vector<float> JunctionAngles;
   vector<int> donors;
   float this_angle;
   bool is_baselevel;
@@ -1154,7 +1162,7 @@ vector<float> LSDJunctionNetwork::calculate_junction_angles(vector<int> Junction
     if (is_baselevel)
     {
       cout << "This is a baselevel junction." << endl;
-      JunctionAngles.push_back(NoDataValue);
+      //JunctionAngles.push_back(NoDataValue);
     }
     else
     {
@@ -1168,6 +1176,10 @@ vector<float> LSDJunctionNetwork::calculate_junction_angles(vector<int> Junction
         {
           cout << "Warning, this junction is a weirdo and has more than two donors. I am going to use the first two donors." << endl;
         }
+        
+        
+        // reset the temp vector
+        temp_junctioninfo = four_element;
         
         cout << "The donor junctions are: " << donors[0] << ", " << donors[1] << endl;
         // now get the two segments.
@@ -1189,23 +1201,30 @@ vector<float> LSDJunctionNetwork::calculate_junction_angles(vector<int> Junction
         donor1_order = get_StreamOrder_of_Junction(FlowInfo,donors[0]);
         donor2_order = get_StreamOrder_of_Junction(FlowInfo,donors[1]);
         
+        temp_junctioninfo[1] = float(junction_order);
+        temp_junctioninfo[2] = float(donor1_order);
+        temp_junctioninfo[3] = float(donor2_order);
+        
         // now calculate the angle
         this_angle = angle_between_two_vector_datasets(x1, y1,x2, y2,channel_points_downstream);
         this_angle = fabs(this_angle);
-        JunctionAngles.push_back(this_angle);
+        //JunctionAngles.push_back(this_angle);
         cout << "Angle is: " << this_angle << " radians, which is " << deg(this_angle) << " degrees." << endl;
         cout << "Stream order is " << junction_order << " with donor 1: " << donor1_order << " and donor2: " << donor2_order << endl;
+        temp_junctioninfo[0] = this_angle;
+        
+        map_of_junction_angles[this_junc] = temp_junctioninfo;
       }
       else
       {
         cout << "This junction doesn't have 2 donors; it must be a source." << endl;
-        JunctionAngles.push_back(NoDataValue);
+        //JunctionAngles.push_back(NoDataValue);
       }
     }
   }
   
   
-  return JunctionAngles;
+  return map_of_junction_angles;
 }
 
 

@@ -78,6 +78,7 @@ contains a number of analysis tools built around drainage networks.
 
 #include <vector>
 #include <string>
+#include <map>
 #include "TNT/tnt.h"
 #include "LSDFlowInfo.hpp"
 #include "LSDRaster.hpp"
@@ -241,7 +242,7 @@ class LSDJunctionNetwork
   /// @return A vector of junction angles
   /// @author SMM
   /// @date 21/04/2017
-  vector<float> calculate_junction_angles(vector<int> JunctionList, LSDFlowInfo& FlowInfo);
+  map<int, vector<float> > calculate_junction_angles(vector<int> JunctionList, LSDFlowInfo& FlowInfo);
 
   /// @brief This gets the junction number of a given node.
   /// @param Node
