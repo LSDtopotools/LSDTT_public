@@ -1125,6 +1125,7 @@ vector<float> LSDJunctionNetwork::calculate_junction_angles(vector<int> Junction
   bool channel_points_downstream = true;  // this is needed to get the correct 
                                           // orientation of the channels
   int end_node, start_node1, start_node2;
+  int junction_order, donor1_order, donor2_order;
   
   // vectors for holding the channel locations
   vector<float> x1, x2, y1, y2;
@@ -1184,11 +1185,16 @@ vector<float> LSDJunctionNetwork::calculate_junction_angles(vector<int> Junction
         c1.get_coordinates_of_channel_nodes(x1, y1);
         c2.get_coordinates_of_channel_nodes(x2, y2);
         
+        junction_order = get_StreamOrder_of_Junction(FlowInfo,this_junc);
+        donor1_order = get_StreamOrder_of_Junction(FlowInfo,donors[0]);
+        donor2_order = get_StreamOrder_of_Junction(FlowInfo,donors[1]);
+        
         // now calculate the angle
         this_angle = angle_between_two_vector_datasets(x1, y1,x2, y2,channel_points_downstream);
         this_angle = fabs(this_angle);
         JunctionAngles.push_back(this_angle);
         cout << "Angle is: " << this_angle << " radians, which is " << deg(this_angle) << " degrees." << endl;
+        cout << "Stream order is " << junction_order << " with donor 1: " << donor1_order << " and donor2: " << donor2_order << endl;
       }
       else
       {

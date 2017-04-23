@@ -248,7 +248,7 @@ int main (int nNumberofArgs,char *argv[])
   if( this_bool_map["print_junctions_to_csv"])
   {
     cout << "I am writing the junctions to csv." << endl;
-    string channel_csv_name = OUT_DIR+OUT_ID+"_JN";
+    string channel_csv_name = OUT_DIR+OUT_ID+"_JN.csv";
     JunctionNetwork.print_junctions_to_csv(FlowInfo, channel_csv_name);
   }
   
