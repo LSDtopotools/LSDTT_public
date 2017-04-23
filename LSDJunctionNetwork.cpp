@@ -1121,7 +1121,6 @@ vector<float> LSDJunctionNetwork::calculate_junction_angles(vector<int> Junction
   vector<float> JunctionAngles;
   vector<int> donors;
   float this_angle;
-  int ReceiverJN;
   bool is_baselevel;
   bool channel_points_downstream = true;  // this is needed to get the correct 
                                           // orientation of the channels
@@ -1132,11 +1131,11 @@ vector<float> LSDJunctionNetwork::calculate_junction_angles(vector<int> Junction
   int this_junc;
   
   // loop through junctions
-  for(int junc; junc < NJuncs; junc++ )
+  for(int junc = 0; junc < NJuncs; junc++ )
   {
 
     this_junc = JunctionList[junc];
-    cout << "Junction is: " << this_junc << endl;
+    cout << endl << "==================" << endl << "Junction is: " << this_junc << endl;
     
     // check to see if the junction exists
     if (this_junc >= NJunctions)
@@ -1173,17 +1172,17 @@ vector<float> LSDJunctionNetwork::calculate_junction_angles(vector<int> Junction
         // now get the two segments.
         // The ending node is the current junction, the starting nodes are the 
         // two donor junctions. 
-        end_node = get_Node_of_Junction(junc);
+        end_node = get_Node_of_Junction(this_junc);
         start_node1 = get_Node_of_Junction(donors[0]);
-        start_node1 = get_Node_of_Junction(donors[1]);
+        start_node2 = get_Node_of_Junction(donors[1]);
         
         // extract the channel information
         LSDIndexChannel c1(start_node1, end_node,FlowInfo);
-        LSDIndexChannel c2(start_node1, end_node,FlowInfo);
+        LSDIndexChannel c2(start_node2, end_node,FlowInfo);
         
         // now get the locations of the nodes in the channels in x,y coordinates
         c1.get_coordinates_of_channel_nodes(x1, y1);
-        c1.get_coordinates_of_channel_nodes(x1, y1);
+        c2.get_coordinates_of_channel_nodes(x2, y2);
         
         // now calculate the angle
         this_angle = angle_between_two_vector_datasets(x1, y1,x2, y2,channel_points_downstream);
