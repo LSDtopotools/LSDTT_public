@@ -1227,6 +1227,54 @@ map<int, vector<float> > LSDJunctionNetwork::calculate_junction_angles(vector<in
   return map_of_junction_angles;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This prints junction angles to a csv file
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDJunctionNetwork::print_junction_angles_to_csv(vector<int> JunctionList, 
+                                                       LSDFlowInfo& FlowInfo, 
+                                                       string csv_name)
+{
+  ofstream csv_out;
+  csv_out.open(csv_name.c_str());
+  csv_out.precision(9);
+  
+  
+  // get the junction information
+  map<int, vector<float> > JuncInfo = calculate_junction_angles(JunctionList, FlowInfo);
+  map<int, vector<float> >::iterator iter;
+  vector<float> this_JI;
+  int this_junc;
+  int this_node,curr_row,curr_col;
+  int jso, d1so, d2so;
+  double latitude, longitude;
+
+  csv_out << "latitude,longitude,junction_number,junction_stream_order,donor1_stream_order,donor2_stream_order,junction_angle" << endl;
+  for(iter = JuncInfo.begin(); iter != JuncInfo.end(); ++iter)
+  {
+    this_junc = iter->first;
+    this_JI = iter->second;
+    
+    jso = int(this_JI[1]);
+    d1so = int(this_JI[2]);
+    d2so = int(this_JI[3]);
+    
+    // get the row and column of the junction from the junction node
+    this_node = JunctionVector[this_junc];
+    LSDCoordinateConverterLLandUTM Converter;
+    FlowInfo.retrieve_current_row_and_col(this_node,curr_row,curr_col);
+    get_lat_and_long_locations(curr_row, curr_col, latitude,longitude, Converter);
+    
+    // print to the csv file
+    csv_out << latitude <<"," << longitude <<"," << this_junc <<"," << jso << ","
+            << d1so << "," << d2so << "," << deg(this_JI[0]) << endl;
+  }
+
+  csv_out.close();
+}
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

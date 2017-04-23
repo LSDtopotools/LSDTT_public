@@ -232,10 +232,9 @@ int main (int nNumberofArgs,char *argv[])
   if( this_bool_map["print_junction_angles_to_csv"])
   {
     cout << "I am testing the junction angle code." << endl;
-    string channel_csv_name = OUT_DIR+OUT_ID+"_JAngles.csv";
+    string JAngles_csv_name = OUT_DIR+OUT_ID+"_JAngles.csv";
     vector<int> JunctionList;
-    vector<float> junction_angles =  JunctionNetwork.calculate_junction_angles(JunctionList, FlowInfo);
-
+    JunctionNetwork.print_junction_angles_to_csv(JunctionList, FlowInfo, JAngles_csv_name);
   }
 
   if( this_bool_map["print_channels_to_csv"])

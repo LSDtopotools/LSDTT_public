@@ -244,6 +244,16 @@ class LSDJunctionNetwork
   /// @date 21/04/2017
   map<int, vector<float> > calculate_junction_angles(vector<int> JunctionList, LSDFlowInfo& FlowInfo);
 
+  /// @brief This prints the junction angles to a csv file
+  /// @param JunctionList The list of junctions to analyze. If this is an empty vector, 
+  ///  the code analyses all junctions in the DEM
+  /// @param FlowInfo The LSDFlowInfo object
+  /// @param csv_name The name of the file. Needs full path and csv extension
+  /// @author SMM
+  /// @date 23/04/2017
+  void print_junction_angles_to_csv(vector<int> JunctionList, LSDFlowInfo& FlowInfo, 
+                                                       string csv_name);
+
   /// @brief This gets the junction number of a given node.
   /// @param Node
   /// @param FlowInfo Flow Info object
