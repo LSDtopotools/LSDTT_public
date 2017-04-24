@@ -244,6 +244,15 @@ class LSDJunctionNetwork
   /// @date 21/04/2017
   map<int, vector<float> > calculate_junction_angles(vector<int> JunctionList, LSDFlowInfo& FlowInfo);
 
+  /// @brief This function gets the mean and standard error of every junction angle
+  ///   upslope of a given junction
+  /// @param target_junction The target junction
+  /// @param FlowInfo an LSDFlowInfo object
+  /// @return A vector of that has the mean and the standard error of the upslope junction angles
+  /// @author SMM
+  /// @date 21/04/2017
+  vector<float> calculate_junction_angle_statistics_upstream_of_junction(int target_junction, LSDFlowInfo& FlowInfo);
+
   /// @brief This prints the junction angles to a csv file
   /// @param JunctionList The list of junctions to analyze. If this is an empty vector, 
   ///  the code analyses all junctions in the DEM

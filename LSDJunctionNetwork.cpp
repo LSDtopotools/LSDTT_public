@@ -1227,6 +1227,45 @@ map<int, vector<float> > LSDJunctionNetwork::calculate_junction_angles(vector<in
   return map_of_junction_angles;
 }
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function gets the mean and standard error of every junction angle
+// upslope of a given junction
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<float> LSDJunctionNetwork::calculate_junction_angle_statistics_upstream_of_junction(int target_junction, LSDFlowInfo& FlowInfo)
+{
+  // get all the upslope junctions
+  vector<int> JunctionList = get_upslope_junctions(target_junction);
+  vector<float> JI_stats;
+  
+  // now get all the 
+  map<int, vector<float> >::iterator iter;
+  map<int, vector<float> > JuncInfo = calculate_junction_angles(JunctionList,FlowInfo);
+  
+  // now get statistics from these
+  vector<float> junc_angles;
+  vector<float> this_JI;
+  for(iter = JuncInfo.begin(); iter != JuncInfo.end(); ++iter)
+  {
+    this_JI = iter->second;
+    junc_angles.push_back(this_JI[0]);
+  }
+  
+  // now get the stats
+  float mean = get_mean(junc_angles);
+  float stddev = get_standard_deviation(junc_angles,mean);
+  float stderr =  get_standard_error(junc_angles,stddev);
+  
+  JI_stats.push_back(mean);
+  JI_stats.push_back(stderr);
+  
+  return JI_stats;
+  
+  
+
+
+}
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // This prints junction angles to a csv file
