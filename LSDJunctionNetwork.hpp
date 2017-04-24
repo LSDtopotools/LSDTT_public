@@ -250,8 +250,28 @@ class LSDJunctionNetwork
   /// @param FlowInfo an LSDFlowInfo object
   /// @return A vector of that has the mean and the standard error of the upslope junction angles
   /// @author SMM
-  /// @date 21/04/2017
+  /// @date 23/04/2017
   vector<float> calculate_junction_angle_statistics_upstream_of_junction(int target_junction, LSDFlowInfo& FlowInfo);
+
+  /// @brief This takes the junction angle statistics for all basins of a given order
+  /// @param FlowInfo the LSDFlowInfo object
+  /// @param BasinOrder the basin order of interest
+  /// @param junction_list a vector of ints holding the junctions of interest
+  ///  is replaced in the function
+  /// @param junction_angle_averages Average junction angles
+  ///  is replaced in the function
+  /// @param junction_angle_stder a vector junction angle standard errors
+  ///  is replaced in the function
+  /// @param N_junctions a vector of ints holding the numer of junctions in each larger basin
+  ///  is replaced in the function
+  /// @author SMM
+  /// @date 24/04/2017
+  void calculate_junction_angle_statistics_for_order(LSDFlowInfo& FlowInfo, int BasinOrder, 
+                             vector<int>& junction_list,
+                             vector<float>& junction_angle_averages,
+                             vector<float>& junction_angle_stderr,
+                             vector<int>& N_junctions);
+
 
   /// @brief This prints the junction angles to a csv file
   /// @param JunctionList The list of junctions to analyze. If this is an empty vector, 

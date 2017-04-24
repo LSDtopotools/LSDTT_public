@@ -1245,6 +1245,7 @@ vector<float> LSDJunctionNetwork::calculate_junction_angle_statistics_upstream_o
   // now get statistics from these
   vector<float> junc_angles;
   vector<float> this_JI;
+  
   for(iter = JuncInfo.begin(); iter != JuncInfo.end(); ++iter)
   {
     this_JI = iter->second;
@@ -1258,13 +1259,53 @@ vector<float> LSDJunctionNetwork::calculate_junction_angle_statistics_upstream_o
   
   JI_stats.push_back(mean);
   JI_stats.push_back(stderr);
+  JI_stats.push_back(float(junc_angles.size()));
   
   return JI_stats;
   
-  
-
-
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This gets the junction angle stats for all basins of a given size
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDJunctionNetwork::calculate_junction_angle_statistics_for_order(LSDFlowInfo& FlowInfo, int BasinOrder, 
+                             vector<int>& junction_list,
+                             vector<float>& junction_angle_averages,
+                             vector<float>& junction_angle_stderr,
+                             vector<int>& N_junctions)
+{
+  vector<float> jaavg;
+  vector<float> jastderr;
+  vector<int> N_j;
+  
+  // get all the junctions of a given order
+  vector<int> OutletJunctions = ExtractBasinJunctionOrder(BasinOrder, FlowInfo);
+  
+  // the required information
+  pair<vector<float>,vector<float> > JA_stats;
+  
+  // now loop through these, getting the statistics of the upstream junctions. 
+  vector<float> JA_info;
+  int n_outlets = int(OutletJunctions.size());
+  for(int i = 0; i<n_outlets; i++)
+  {
+    JA_info = calculate_junction_angle_statistics_upstream_of_junction(OutletJunctions[i], FlowInfo);
+    jaavg.push_back(JA_info[0]);
+    jastderr.push_back(JA_info[1]);
+    N_j.push_back( int(JA_info[2]) );
+  }
+  
+  // replace the data vectors
+  junction_list = OutletJunctions;
+  junction_angle_averages = jaavg;
+  junction_angle_stderr = jastderr;
+  N_junctions = N_j;
+  
+}
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
