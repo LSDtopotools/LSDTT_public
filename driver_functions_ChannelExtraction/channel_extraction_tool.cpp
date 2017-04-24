@@ -67,6 +67,7 @@
 #include "../LSDIndexChannelTree.hpp"
 #include "../LSDChiNetwork.hpp" 
 #include "../LSDRasterInfo.hpp"
+#include "../LSDSpatialCSVReader.hpp"
 #include "../LSDParameterParser.hpp"
 
 int main (int nNumberofArgs,char *argv[])
@@ -136,6 +137,8 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_dreich_channels"] = false;
   bool_default_map["print_pelletier_channels"] = false;
   bool_default_map["print_wiener_channels"] = false;
+  
+  bool_default_map["convert_csv_to_geojson"] = false;
   
   bool_default_map["print_stream_order_raster"] = false;
   bool_default_map["print_sources_to_raster"] = false;
@@ -287,6 +290,13 @@ int main (int nNumberofArgs,char *argv[])
     {
       string channel_csv_name = OUT_DIR+OUT_ID+"_FromCHF_CN";
       ChanNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+      
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_FromCHF_CN.geojson";
+        LSDSpatialCSVReader thiscsv(OUT_DIR+OUT_ID+"_FromCHF_CN.csv");
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
     }
   }
 
@@ -319,6 +329,15 @@ int main (int nNumberofArgs,char *argv[])
       
       //write channel_heads to a csv file
       FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(sources, sources_csv_name);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_ATsources.geojson";
+        LSDSpatialCSVReader thiscsv(sources_csv_name);
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+
+
     }
 
     if( this_bool_map["print_sources_to_raster"])
@@ -343,6 +362,14 @@ int main (int nNumberofArgs,char *argv[])
     {
       string channel_csv_name = OUT_DIR+OUT_ID+"_AT_CN";
       ChanNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_AT_CN.geojson";
+        LSDSpatialCSVReader thiscsv(OUT_DIR+OUT_ID+"_AT_CN.csv");
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+
     }
   }
 
@@ -415,6 +442,13 @@ int main (int nNumberofArgs,char *argv[])
       
       //write channel_heads to a csv file
       FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(ChannelHeadNodes_temp, sources_csv_name);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_Dsources.geojson";
+        LSDSpatialCSVReader thiscsv(OUT_DIR+OUT_ID+"_Dsources.csv");
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
     }
 
     if( this_bool_map["print_sources_to_raster"])
@@ -439,6 +473,14 @@ int main (int nNumberofArgs,char *argv[])
     {
       string channel_csv_name = OUT_DIR+OUT_ID+"_D_CN";
       NewChanNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_D_CN.geojson";
+        LSDSpatialCSVReader thiscsv(OUT_DIR+OUT_ID+"_D_CN.csv");
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+
     }
 
   }
@@ -544,6 +586,14 @@ int main (int nNumberofArgs,char *argv[])
       
       //write channel_heads to a csv file
       FilterFlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(FinalSources, sources_csv_name);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_Psources.geojson";
+        LSDSpatialCSVReader thiscsv(OUT_DIR+OUT_ID+"_Psources.csv");
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+
     }
 
     if( this_bool_map["print_sources_to_raster"])
@@ -568,6 +618,14 @@ int main (int nNumberofArgs,char *argv[])
     {
       string channel_csv_name = OUT_DIR+OUT_ID+"_P_CN";
       NewChanNetwork.PrintChannelNetworkToCSV(FilterFlowInfo, channel_csv_name);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_P_CN.geojson";
+        LSDSpatialCSVReader thiscsv(OUT_DIR+OUT_ID+"_P_CN.csv");
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+
     }
 
   }
@@ -626,6 +684,14 @@ int main (int nNumberofArgs,char *argv[])
       
       //write channel_heads to a csv file
       FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(FinalSources, sources_csv_name);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_Wsources.geojson";
+        LSDSpatialCSVReader thiscsv(OUT_DIR+OUT_ID+"_Wsources.csv");
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+
     }
 
     if( this_bool_map["print_sources_to_raster"])
@@ -650,6 +716,13 @@ int main (int nNumberofArgs,char *argv[])
     {
       string channel_csv_name = OUT_DIR+OUT_ID+"_W_CN";
       ChanNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_W_CN.geojson";
+        LSDSpatialCSVReader thiscsv(OUT_DIR+OUT_ID+"_W_CN.csv");
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
     }
 
   }  
