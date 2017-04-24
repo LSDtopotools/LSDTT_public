@@ -21,6 +21,7 @@ SOURCES=test_junction_angles.cpp \
              ../LSDParticle.cpp \
              ../LSDChiTools.cpp \
              ../LSDParameterParser.cpp \
+             ../LSDSpatialCSVReader.cpp \
              ../LSDCRNParameters.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=test_junction_angles.exe

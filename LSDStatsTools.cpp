@@ -4938,8 +4938,8 @@ vector<float> get_directional_vector_coords_from_dataset(vector<float> x_data, v
   float intercept, gradient, R2;
   vector<float> vector_mean = orthogonal_linear_regression( x_data, y_data, intercept, gradient, R2);
 
-  cout << endl << "===================" << endl << "I am getting vector coords." << endl;
-  cout << "Gradient is: " << gradient << endl;
+  //cout << endl << "===================" << endl << "I am getting vector coords." << endl;
+  //cout << "Gradient is: " << gradient << endl;
 
 
   float x1,y1;
@@ -5011,10 +5011,13 @@ vector<float> get_directional_vector_coords_from_dataset(vector<float> x_data, v
       }
     }  
   }
-  
-  cout << "quadrant is: " << quadrant << endl;
-  cout << "x,y are: " << x1 << " " << y1 << endl;
-  cout << "======================" << endl << endl;
+  if (quadrant == -99)
+  {
+    cout << "Something has gone wrong in the vector angle code, I didn't find a quadrant" << endl;
+  }
+  //cout << "quadrant is: " << quadrant << endl;
+  //cout << "x,y are: " << x1 << " " << y1 << endl;
+  //cout << "======================" << endl << endl;
   
   // okay, print the results
   vector<float> vec_coords(2,0.0);

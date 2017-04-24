@@ -1144,7 +1144,7 @@ map<int, vector<float> > LSDJunctionNetwork::calculate_junction_angles(vector<in
   {
 
     this_junc = JunctionList[junc];
-    cout << endl << "==================" << endl << "Junction is: " << this_junc << endl;
+    //cout << endl << "==================" << endl << "Junction is: " << this_junc << endl;
     
     // check to see if the junction exists
     if (this_junc >= NJunctions)
@@ -1161,7 +1161,7 @@ map<int, vector<float> > LSDJunctionNetwork::calculate_junction_angles(vector<in
     // if not a baselevel see if it has donors
     if (is_baselevel)
     {
-      cout << "This is a baselevel junction." << endl;
+      //cout << "This is a baselevel junction." << endl;
       //JunctionAngles.push_back(NoDataValue);
     }
     else
@@ -1181,7 +1181,7 @@ map<int, vector<float> > LSDJunctionNetwork::calculate_junction_angles(vector<in
         // reset the temp vector
         temp_junctioninfo = four_element;
         
-        cout << "The donor junctions are: " << donors[0] << ", " << donors[1] << endl;
+        //cout << "The donor junctions are: " << donors[0] << ", " << donors[1] << endl;
         // now get the two segments.
         // The ending node is the current junction, the starting nodes are the 
         // two donor junctions. 
@@ -1209,15 +1209,15 @@ map<int, vector<float> > LSDJunctionNetwork::calculate_junction_angles(vector<in
         this_angle = angle_between_two_vector_datasets(x1, y1,x2, y2,channel_points_downstream);
         this_angle = fabs(this_angle);
         //JunctionAngles.push_back(this_angle);
-        cout << "Angle is: " << this_angle << " radians, which is " << deg(this_angle) << " degrees." << endl;
-        cout << "Stream order is " << junction_order << " with donor 1: " << donor1_order << " and donor2: " << donor2_order << endl;
+        //cout << "Angle is: " << this_angle << " radians, which is " << deg(this_angle) << " degrees." << endl;
+        //cout << "Stream order is " << junction_order << " with donor 1: " << donor1_order << " and donor2: " << donor2_order << endl;
         temp_junctioninfo[0] = this_angle;
         
         map_of_junction_angles[this_junc] = temp_junctioninfo;
       }
       else
       {
-        cout << "This junction doesn't have 2 donors; it must be a source." << endl;
+        //cout << "This junction doesn't have 2 donors; it must be a source." << endl;
         //JunctionAngles.push_back(NoDataValue);
       }
     }
@@ -4912,7 +4912,7 @@ void LSDJunctionNetwork::remove_tributary_segments(LSDFlowInfo& FlowInfo, vector
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDJunctionNetwork::print_channel_segments_to_csv(LSDFlowInfo& FlowInfo, vector <vector <int> > SegmentInfoInts, vector <vector <float> > SegmentInfoFloats, string outfilename)
 {
-  // fid the last '.' in the filename to use in the scv filename
+  // fid the last '.' in the filename to use in the csv filename
   unsigned dot = outfilename.find_last_of(".");
 
   string prefix = outfilename.substr(0,dot);
@@ -5598,7 +5598,7 @@ void LSDJunctionNetwork::PrintChannelNetworkToCSV(LSDFlowInfo& flowinfo, string 
   int this_NI;
   int row,col;
   int NNodes = int(NIvec.size());
-  cout << "The number of nodes is: " << NNodes << endl;
+  //cout << "The number of nodes is: " << NNodes << endl;
   for(int node = 0; node<NNodes; node++)
   {
     this_NI = NIvec[node];

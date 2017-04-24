@@ -50,6 +50,7 @@
 #include "../LSDBasin.hpp"
 #include "../LSDJunctionNetwork.hpp"
 #include "../LSDShapeTools.hpp"
+#include "../LSDSpatialCSVReader.hpp"
 using namespace std;
 
 int main (int nNumberofArgs,char *argv[])
@@ -106,6 +107,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_filled_raster"] = false;
   bool_default_map["print_junctions_to_csv"] = false;
   bool_default_map["print_junction_angles_to_csv"] = false;
+  bool_default_map["convert_csv_to_geojson"] = false;
   
   
   bool_default_map["print_basin_raster"] = false;
@@ -235,6 +237,13 @@ int main (int nNumberofArgs,char *argv[])
     string JAngles_csv_name = OUT_DIR+OUT_ID+"_JAngles.csv";
     vector<int> JunctionList;
     JunctionNetwork.print_junction_angles_to_csv(JunctionList, FlowInfo, JAngles_csv_name);
+    
+    if ( this_bool_map["convert_csv_to_geojson"])
+    {
+      string gjson_name = OUT_DIR+OUT_ID+"_JAngles.geojson";
+      LSDSpatialCSVReader thiscsv(JAngles_csv_name);
+      thiscsv.print_data_to_geojson(gjson_name);
+    }
   }
 
   if( this_bool_map["print_channels_to_csv"])
@@ -242,6 +251,14 @@ int main (int nNumberofArgs,char *argv[])
     cout << "I am writing the channels to csv." << endl;
     string channel_csv_name = OUT_DIR+OUT_ID+"_W_CN";
     JunctionNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+    
+    if ( this_bool_map["convert_csv_to_geojson"])
+    {
+      string gjson_name = OUT_DIR+OUT_ID+"_W_CN.geojson";
+      LSDSpatialCSVReader thiscsv(OUT_DIR+OUT_ID+"_W_CN.csv");
+      thiscsv.print_data_to_geojson(gjson_name);
+    }
+    
   }
 
   if( this_bool_map["print_junctions_to_csv"])
@@ -249,27 +266,15 @@ int main (int nNumberofArgs,char *argv[])
     cout << "I am writing the junctions to csv." << endl;
     string channel_csv_name = OUT_DIR+OUT_ID+"_JN.csv";
     JunctionNetwork.print_junctions_to_csv(FlowInfo, channel_csv_name);
-  }
-  
-  
-  
-  // Now we need to get the junctions and calculate the angels between them
-  // We have to skip the 
-  
-  // this is a test to see about the donors
-  int NJ = JunctionNetwork.get_NJunctions();
-  for(int i = 0; i< NJ; i++)
-  {
-    vector<int> donors = JunctionNetwork.get_donor_nodes(i);
     
-    int nd = int(donors.size());
-    cout << "Junction is: " << i << " and donor junctions are: ";
-    for (int j = 0; j< nd; j++)
+    if ( this_bool_map["convert_csv_to_geojson"])
     {
-      cout << donors[j] << " ";
+      string gjson_name = OUT_DIR+OUT_ID+"_JN.geojson";
+      LSDSpatialCSVReader thiscsv(channel_csv_name);
+      thiscsv.print_data_to_geojson(gjson_name);
     }
-    cout << endl;
   }
+
   
 /*  
   // do a few tests
