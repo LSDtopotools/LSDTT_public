@@ -1013,6 +1013,18 @@ void get_nodeindices_from_csv(string csv_filename, vector<int>& NIs, vector<floa
   LSDIndexRaster find_cells_influenced_by_nodata(LSDIndexRaster& Bordered_mask,
                                  LSDRaster& Topography);
 
+  /// @brief This function gets nodes that are possibly on basin edge by
+  ///  removind those that do not border NoData. Intended to be passed
+  ///  to function for finding concave hull of basin
+  /// @param outlet node The node of the outlet
+  /// @param Topography this is the LSDRaster containing topographic data
+  /// @return A vector with the node indices of nodes that are adjacent to 
+  ///  nodata within the basin
+  /// @author SMM
+  /// @date 25/04/2017
+  vector<int> basin_edge_extractor(int outlet_node, LSDRaster& Topography);
+
+
   /// @brief This function returns all the values from a raster for a corresponding
   /// input vector of node indices.
   /// @param An LSDRaster - must have same dimensions as the LSDFlowInfo object

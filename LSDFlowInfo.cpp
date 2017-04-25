@@ -84,6 +84,7 @@
 #include <fstream>
 #include <iomanip>
 #include <vector>
+#include <list>
 #include <string>
 #include <cstring>
 #include <algorithm>
@@ -6142,6 +6143,30 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting_Profile(LSDRaster Eleva
 
   return OutputArrays;
 }
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function takes a starting node, gets all upslope nodes, and determines
+// if they are bounded by noddata. Those that are not are eliminated from the
+// list so that what remains are nodes that are fully within the 
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDFlowInfo::basin_edge_extractor(int outlet_node, LSDRaster& Topography)
+{
+  
+  int n_nodes = (RowIndex.size());
+  if (outlet_node < n_nodes)
+  {
+    // first get the nodes upstream of the source node
+    vector<int> get_upslope_nodes(outlet_node);
+  
+    // convet this data to a list for easy insertion
+    list<int> myList(get_upslope_nodes.begin(), get_upslope_nodes.end());
+  }
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
