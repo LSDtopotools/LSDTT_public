@@ -759,6 +759,7 @@ void LSDBasin::print_perimeter_to_csv(LSDFlowInfo& FlowInfo, string perimeter_fn
     FlowInfo.get_lat_and_long_from_current_node(Perimeter_nodes[i], curr_lat, curr_long,converter);
     perim_out << Perimeter_nodes[i] << "," << curr_x << "," << curr_y <<"," << curr_lat << "," << curr_long << endl;
   }
+  perim_out.close();
 
 }
 

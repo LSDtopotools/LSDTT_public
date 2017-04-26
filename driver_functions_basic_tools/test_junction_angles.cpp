@@ -108,6 +108,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_junctions_to_csv"] = false;
   bool_default_map["print_junction_angles_to_csv"] = false;
   bool_default_map["convert_csv_to_geojson"] = false;
+  bool_default_map["get_basin_perimeter"] = false;
   
   
   bool_default_map["print_basin_raster"] = false;
@@ -235,13 +236,22 @@ int main (int nNumberofArgs,char *argv[])
   if( this_bool_map["get_basin_perimeter"])
   {
     cout << "I am testing the basin perimeter routine." << endl;
-    
+    string perimeter_name = OUT_DIR+OUT_ID+"_Perimeter.csv";
     // get one of the basins
     int JunctionNumber = 0;
     LSDBasin ABasin(JunctionNumber, FlowInfo, JunctionNetwork);
-    ABasin.set_Perimeter(FlowInfo);
     
-    
+    LSDRaster Yo = ABasin.write_raster_data_to_LSDRaster(filled_topography, FlowInfo);
+    Yo.write_raster((OUT_DIR+OUT_ID+"_Perimeter"),"bil");
+    ABasin.print_perimeter_to_csv(FlowInfo, perimeter_name);
+
+    if ( this_bool_map["convert_csv_to_geojson"])
+    {
+      string gjson_name = OUT_DIR+OUT_ID+"_Perimeter.geojson";
+      LSDSpatialCSVReader thiscsv(perimeter_name);
+      thiscsv.print_data_to_geojson(gjson_name);
+    }
+
   }
   
   
