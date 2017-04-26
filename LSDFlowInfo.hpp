@@ -209,6 +209,18 @@ class LSDFlowInfo
   /// @date 20/02/2017
   void get_x_and_y_from_current_node(int current_node,float& current_X, float& current_Y);
 
+
+  ///@brief Get the lat and longitude coordinates of a given node.
+  ///@param current_node Integer index of a given node.
+  ///@param current_lat latitude. Will be replaced by function
+  ///@param current_long longitude. Will be replaced by function
+  ///@param COnverter A coordinate converter object
+  /// @author SMM
+  /// @date 26/04/2017
+  void get_lat_and_long_from_current_node(int current_node, float& current_lat, float& current_long, LSDCoordinateConverterLLandUTM Converter);
+
+
+
   ///@brief This function takes a vector of node indices and prints a csv
   ///file that can be read by arcmap
   ///@param nodeindex vec is a vector of nodeindices (which are ints)
