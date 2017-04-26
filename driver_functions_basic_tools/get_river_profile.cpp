@@ -96,6 +96,7 @@ int main(int argc, char *argv[])
   bool_default_map["print_chi_coordinate"] = false;
   bool_default_map["print_distance_from_outlet"]  = false;
   bool_default_map["print_drainage_area"]  = false;
+  bool_default_map["print_elevation"] = false;
 
 
   // set default string parameters
@@ -233,31 +234,36 @@ int main(int argc, char *argv[])
   LSDSpatialCSVReader csv_file(file_name);
   csv_file.set_UTM_information(UTM_zone, is_North);
   csv_file.get_latlong_from_x_and_y(X_column_name,Y_column_name);
-  
+
   if (this_bool_map["print_chi_coordinate"])
   {
-    float area_threshold = 0; 
-    LSDRaster ChiCoord = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(this_float_map["m_over_n"], 
+    float area_threshold = 0;
+    LSDRaster ChiCoord = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(this_float_map["m_over_n"],
                            this_float_map["A_0"], area_threshold);
     string column_name = "chi";
     csv_file.burn_raster_data_to_csv(ChiCoord,column_name);
   }
-  
+
   if (this_bool_map["print_distance_from_outlet"])
   {
-    float area_threshold = 0; 
+    float area_threshold = 0;
     LSDRaster DistFromOutlet = FlowInfo.distance_from_outlet();
     string column_name = "distance_from_outlet";
     csv_file.burn_raster_data_to_csv(DistFromOutlet,column_name);
   }
-  
+
   if (this_bool_map["print_drainage_area"])
   {
     LSDRaster DA = FlowInfo.write_DrainageArea_to_LSDRaster();
     string column_name = "drainage_area";
     csv_file.burn_raster_data_to_csv(DA,column_name);
   }
-  
+  if (this_bool_map["print_elevation"])
+  {
+    string column_name = "elevation";
+    csv_file.burn_raster_data_to_csv(filled_raster,column_name);
+  }
+
   csv_file.print_data_to_csv(file_name);
   cout << "Done!" << endl;
 }
