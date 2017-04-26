@@ -842,7 +842,7 @@ void LSDFlowInfo::get_x_and_y_from_current_node(int current_node, float& current
 //
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDFlowInfo::get_lat_and_long_from_current_node(int current_node, float& current_lat, float& current_long, LSDCoordinateConverterLLandUTM Converter)
+void LSDFlowInfo::get_lat_and_long_from_current_node(int current_node, double& current_lat, double& current_long, LSDCoordinateConverterLLandUTM Converter)
 {
   int cr,cc;
   retrieve_current_row_and_col(current_node, cr,cc);

@@ -385,6 +385,13 @@ class LSDBasin
   /// @date 12/12/13
   void set_Perimeter(LSDFlowInfo& FlowInfo);
 
+  /// @brief Prints the perimeter nodes to a csv file
+  /// @param FlowInfo the LSDFlowInfo object
+  /// @param string perimeter_fname
+  /// @author SMM
+  /// @date 26/04/2017
+  void print_perimeter_to_csv(LSDFlowInfo& FlowInfo, string perimeter_fname);
+
   /// @brief Set the four different hillslope length measurements for the basin.
   /// @param FlowInfo Flowinfo object.
   /// @param HillslopeLengths LSDRaster of hillslope lengths from the hilltop flow routing method.

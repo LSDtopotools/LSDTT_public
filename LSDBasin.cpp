@@ -670,7 +670,8 @@ void LSDBasin::set_AspectMean(LSDFlowInfo& FlowInfo, LSDRaster Aspect){
 // messy and will be improved soon.
 // SWDG 12/12/13
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDBasin::set_Perimeter(LSDFlowInfo& FlowInfo){
+void LSDBasin::set_Perimeter(LSDFlowInfo& FlowInfo)
+{
 
   int i;
   int j;
@@ -681,18 +682,19 @@ void LSDBasin::set_Perimeter(LSDFlowInfo& FlowInfo){
   Array2D<float> BasinData(NRows, NCols, NoDataValue);
 
   //create subset arrays for just the basin data - this should be rolled into its own method.
-  for (int q = 0; q < int(BasinNodes.size()); ++q){
+  for (int q = 0; q < int(BasinNodes.size()); ++q)
+  {
     
     FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
       BasinData[i][j] = BasinNodes[q];
     
   }
 
-  for (int q = 0; q < int(BasinNodes.size()); ++q){
+  for (int q = 0; q < int(BasinNodes.size()); ++q)
+  {
     
     FlowInfo.retrieve_current_row_and_col(BasinNodes[q], i, j);
-    
-      NDVCount = 0;
+    NDVCount = 0;
       
       if (i != 0 && j != 0)
       {     
@@ -706,11 +708,12 @@ void LSDBasin::set_Perimeter(LSDFlowInfo& FlowInfo){
         if (BasinData[i][j+1] == NoDataValue){ ++NDVCount; }
         if (BasinData[i+1][j+1] == NoDataValue){ ++NDVCount; }
         
-        if (NDVCount >= 1 && NDVCount < 8){  //increase the first value to get a simpler polygon  (changed to 1 by FJC 23/03/15 to get only internal hilltops.
+        if (NDVCount >= 1 && NDVCount < 8)
+        {  //increase the first value to get a simpler polygon  (changed to 1 by FJC 23/03/15 to get only internal hilltops.
           //edge pixel                       // Otherwise not all external ridges were being excluded from the analysis).
           I.push_back(i);
           J.push_back(j);
-	  B.push_back(BasinNodes[q]);
+          B.push_back(BasinNodes[q]);
         }
       }
       else
@@ -726,6 +729,39 @@ void LSDBasin::set_Perimeter(LSDFlowInfo& FlowInfo){
   Perimeter_nodes = B;
 
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prints the perimeter to csv. It can then be ingested to find
+// concave hull of the basin (or the basin outline)
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDBasin::print_perimeter_to_csv(LSDFlowInfo& FlowInfo, string perimeter_fname)
+{
+  // make sure we have found the perimeter
+  if (int(Perimeter_nodes.size()) == 0)
+  {
+    set_Perimeter(FlowInfo);
+  }
+  
+  // open the file
+  ofstream perim_out;
+  perim_out.open(perimeter_fname.c_str());
+  perim_out << "node,x,y,latitude,longitude" << endl;
+  perim_out.precision(9);
+  
+  float curr_x,curr_y;
+  double curr_lat,curr_long;
+  
+  LSDCoordinateConverterLLandUTM converter;
+  int n_nodes = int(Perimeter_nodes.size());
+  for(int i = 0; i< n_nodes; i++)
+  {
+    FlowInfo.get_x_and_y_from_current_node(Perimeter_nodes[i], curr_x, curr_x);
+    FlowInfo.get_lat_and_long_from_current_node(Perimeter_nodes[i], curr_lat, curr_long,converter);
+    perim_out << Perimeter_nodes[i] << "," << curr_x << "," << curr_y <<"," << curr_lat << "," << curr_long << endl;
+  }
+
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Set the four different hillslope length measurements for the basin. 

@@ -231,6 +231,20 @@ int main (int nNumberofArgs,char *argv[])
   // Now create the network
   LSDJunctionNetwork JunctionNetwork(sources, FlowInfo);
   
+  // this is for testing basin perimeter tools.
+  if( this_bool_map["get_basin_perimeter"])
+  {
+    cout << "I am testing the basin perimeter routine." << endl;
+    
+    // get one of the basins
+    int JunctionNumber = 0;
+    LSDBasin ABasin(JunctionNumber, FlowInfo, JunctionNetwork);
+    ABasin.set_Perimeter(FlowInfo);
+    
+    
+  }
+  
+  
   if( this_bool_map["print_junction_angles_to_csv"])
   {
     cout << "I am testing the junction angle code." << endl;

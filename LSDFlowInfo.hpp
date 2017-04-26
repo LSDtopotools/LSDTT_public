@@ -214,10 +214,10 @@ class LSDFlowInfo
   ///@param current_node Integer index of a given node.
   ///@param current_lat latitude. Will be replaced by function
   ///@param current_long longitude. Will be replaced by function
-  ///@param COnverter A coordinate converter object
+  ///@param Converter A coordinate converter object
   /// @author SMM
   /// @date 26/04/2017
-  void get_lat_and_long_from_current_node(int current_node, float& current_lat, float& current_long, LSDCoordinateConverterLLandUTM Converter);
+  void get_lat_and_long_from_current_node(int current_node, double& current_lat, double& current_long, LSDCoordinateConverterLLandUTM Converter);
 
 
 
