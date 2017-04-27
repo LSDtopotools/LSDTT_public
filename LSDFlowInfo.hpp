@@ -1026,7 +1026,7 @@ void get_nodeindices_from_csv(string csv_filename, vector<int>& NIs, vector<floa
                                  LSDRaster& Topography);
 
   /// @brief This function gets nodes that are possibly on basin edge by
-  ///  removind those that do not border NoData. Intended to be passed
+  ///  removing those that do not border NoData. Intended to be passed
   ///  to function for finding concave hull of basin
   /// @param outlet node The node of the outlet
   /// @param Topography this is the LSDRaster containing topographic data
