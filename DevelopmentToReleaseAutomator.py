@@ -441,8 +441,8 @@ if __name__ == "__main__":
     # If you are in linux uncomment and comment out the windows version
     # Search for HIBERNIANFC SCOTTISH CUP 2016 to get to the correct line 
     ObjectsDirectory = './'
-    DriverDirectory = './Analysis_driver'
-    TargetDirectory = '../LSDTopoTools_AnalysisDriver/'   
+    DriverDirectory = './driver_functions_ChannelExtraction'
+    TargetDirectory = '../LSDTopoTools_ChannelExtraction/'   
     
     
     CopyRequiredFilesToGitRepository(ObjectsDirectory,DriverDirectory,TargetDirectory)    

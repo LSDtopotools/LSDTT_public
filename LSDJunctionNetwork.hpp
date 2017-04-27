@@ -78,6 +78,7 @@ contains a number of analysis tools built around drainage networks.
 
 #include <vector>
 #include <string>
+#include <map>
 #include "TNT/tnt.h"
 #include "LSDFlowInfo.hpp"
 #include "LSDRaster.hpp"
@@ -199,7 +200,10 @@ class LSDJunctionNetwork
   /// @date 19/05/2016
   vector<int> get_all_source_nodes_of_an_outlet_junction(int junction_number_outlet);
 
-  /// @brief this function gets a list of the node indices of the donors to a particular node
+  /// @brief this function gets a list of the junction indices of the donors to a particular junction
+  /// @detail IMPORTANT: this has only retained the string "node" to keep equivalence
+  ///  with the FlowInfo object. It takes junctions and returns junctions!!
+  ///  Also note that base level nodes have themselves as a donor
   /// @param node this is the nodeindex of the node for which you want to find the donors
   /// @return a vector of the donor nodes
   /// @author SMM
@@ -231,6 +235,53 @@ class LSDJunctionNetwork
   /// @author FJC
   /// @date 15/03/16
   int get_number_of_streams(LSDFlowInfo& FlowInfo, int stream_order);
+
+  /// @brief This calculates the junction angles based on a number of junctions
+  /// @param JunctionList a list of junctions
+  /// @param FlowInfo an LSDFlowInfo object
+  /// @return A vector of junction angles
+  /// @author SMM
+  /// @date 21/04/2017
+  map<int, vector<float> > calculate_junction_angles(vector<int> JunctionList, LSDFlowInfo& FlowInfo);
+
+  /// @brief This function gets the mean and standard error of every junction angle
+  ///   upslope of a given junction
+  /// @param target_junction The target junction
+  /// @param FlowInfo an LSDFlowInfo object
+  /// @return A vector of that has the mean and the standard error of the upslope junction angles
+  /// @author SMM
+  /// @date 23/04/2017
+  vector<float> calculate_junction_angle_statistics_upstream_of_junction(int target_junction, LSDFlowInfo& FlowInfo);
+
+  /// @brief This takes the junction angle statistics for all basins of a given order
+  /// @param FlowInfo the LSDFlowInfo object
+  /// @param BasinOrder the basin order of interest
+  /// @param junction_list a vector of ints holding the junctions of interest
+  ///  is replaced in the function
+  /// @param junction_angle_averages Average junction angles
+  ///  is replaced in the function
+  /// @param junction_angle_stder a vector junction angle standard errors
+  ///  is replaced in the function
+  /// @param N_junctions a vector of ints holding the numer of junctions in each larger basin
+  ///  is replaced in the function
+  /// @author SMM
+  /// @date 24/04/2017
+  void calculate_junction_angle_statistics_for_order(LSDFlowInfo& FlowInfo, int BasinOrder, 
+                             vector<int>& junction_list,
+                             vector<float>& junction_angle_averages,
+                             vector<float>& junction_angle_stderr,
+                             vector<int>& N_junctions);
+
+
+  /// @brief This prints the junction angles to a csv file
+  /// @param JunctionList The list of junctions to analyze. If this is an empty vector, 
+  ///  the code analyses all junctions in the DEM
+  /// @param FlowInfo The LSDFlowInfo object
+  /// @param csv_name The name of the file. Needs full path and csv extension
+  /// @author SMM
+  /// @date 23/04/2017
+  void print_junction_angles_to_csv(vector<int> JunctionList, LSDFlowInfo& FlowInfo, 
+                                                       string csv_name);
 
   /// @brief This gets the junction number of a given node.
   /// @param Node
@@ -1290,6 +1341,17 @@ void get_info_nearest_channel_to_node_main_stem(int& StartingNode, LSDFlowInfo& 
   /// @date 18/05/2016
   void print_junctions_to_csv(LSDFlowInfo& FlowInfo, vector<int> JunctionList, string fname);
 
+  /// @brief Prints all junctions, with their locations in both UTM and
+  ///  in lat long WGS1984 to file
+  /// @detail The format of the file is:
+  ///  junction,node,x,y,latitude,longitude
+  /// @param FlowInfo an LSDFlowInfo object
+  /// @param fname The filename of the csv file
+  /// @author SMM
+  /// @date 21/04/2017
+  void print_junctions_to_csv(LSDFlowInfo& FlowInfo, string fname);
+
+
   // Get functions
 
   /// @return Number of rows as an integer.
@@ -1375,7 +1437,8 @@ void get_info_nearest_channel_to_node_main_stem(int& StartingNode, LSDFlowInfo& 
   /// @return The number of junctions
   int get_NJunctions() const { return int(JunctionVector.size()); }
 
-  /// @return The Vector of Junctions.
+  /// @return The Vector of Junctions. Note that these are the node indices of the
+  ///  junctions. The junction numbers just go from 0 to NJunctions
   vector<int> get_JunctionVector() const { return JunctionVector; }
 
   /// @return Get the baselevel junstions

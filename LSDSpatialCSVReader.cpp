@@ -742,11 +742,13 @@ void LSDSpatialCSVReader::burn_raster_data_to_csv(LSDRaster& ThisRaster,string c
     int n_nodes = int(UTME.size());
     for(int i = 0; i<n_nodes; i++)
     {
+      stringstream s;
       this_UTME = UTME[i];
       this_UTMN = UTMN[i];
 
       this_value = ThisRaster.get_value_of_point(this_UTME, this_UTMN);
-      new_column_data.push_back(itoa(this_value));
+      s << this_value;
+      new_column_data.push_back(s.str());
     }
     data_map[column_name] = new_column_data;
   }
