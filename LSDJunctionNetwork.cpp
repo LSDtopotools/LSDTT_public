@@ -7063,5 +7063,28 @@ void LSDJunctionNetwork::get_overlapping_channels(LSDFlowInfo& FlowInfo,
   source_nodes = NewSources;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function takes in a point data object and finds the pixels
+// along the line defined by the points >= a threshold stream order
+// FJC 16/04/17
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDJunctionNetwork::get_channel_pixels_along_line(vector<int> line_rows, vector<int> line_cols, int threshold_SO, LSDFlowInfo& FlowInfo)
+{
+  vector<int> outlet_nodes;
+  int n_pixels = line_rows.size();
+
+  //for each pixel along the line, check if the SO is greater than the threshold
+  for (int i = 0; i < n_pixels; i++)
+  {
+    int NI = FlowInfo.retrieve_node_from_row_and_column(line_rows[i], line_cols[i]);
+    int this_SO = StreamOrderArray[line_rows[i]][line_cols[i]];
+    if (this_SO >= threshold_SO)
+    {
+      //push back the node to the outlet
+      outlet_nodes.push_back(NI);
+    }
+  }
+
+  return outlet_nodes;
+}
 
 #endif

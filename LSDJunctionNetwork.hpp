@@ -1468,6 +1468,15 @@ void get_info_nearest_channel_to_node_main_stem(int& StartingNode, LSDFlowInfo& 
                                 vector<int>& source_nodes, vector<int>& outlet_nodes,
                                 int n_nodes_to_visit);
 
+/// @detail This function gets all the pixels along a line defined by a series of points and finds the pixels greater than a specified stream order.
+/// @param Points PointData object with the points
+/// @param ElevationRaster raster of elevations
+/// @param threshold_SO threshold stream order
+/// @param FlowInfo LSDFlowInfo object
+/// @author FJC
+/// @date 17/04/17
+vector<int> get_channel_pixels_along_line(vector<int> line_rows, vector<int> line_cols, int threshold_SO, LSDFlowInfo& FlowInfo);
+
   protected:
 
   ///Number of rows.
