@@ -120,6 +120,7 @@ int main (int nNumberofArgs,char *argv[])
   cout << "starting the test run... here we go!" << endl;
 
 	LSDRaster RasterTemplate;
+	LSDRasterInfo RasterInfo;
 
 	if(this_bool_map["Filter topography"])
 	{
@@ -127,6 +128,8 @@ int main (int nNumberofArgs,char *argv[])
 		 cout << "Loading the DEM..." << endl;
 		 LSDRaster load_DEM((DATA_DIR+DEM_ID), DEM_extension);
 		 RasterTemplate = load_DEM;
+		 LSDRasterInfo get_RI((DATA_DIR+DEM_ID), DEM_extension);
+		 RasterInfo = get_RI;
 
 		 // filter using Perona Malik
 		 int timesteps = 50;
@@ -144,6 +147,8 @@ int main (int nNumberofArgs,char *argv[])
 		//previously done the filtering and filling, just load the filled DEM
 		LSDRaster load_DEM((DATA_DIR+DEM_ID+"_filtered"), DEM_extension);
 		RasterTemplate = load_DEM;
+		LSDRasterInfo get_RI((DATA_DIR+DEM_ID), DEM_extension);
+		RasterInfo = get_RI;
 	}
 
 	cout << "\t Flow routing..." << endl;
@@ -163,13 +168,14 @@ int main (int nNumberofArgs,char *argv[])
 
  	// reading in the shapefile with the points
 	PointData ProfilePoints = LoadShapefile(path_name+shapefile_name.c_str());
-	// get the point data from the shapefile
 
-	vector<double> UTME = ProfilePoints.X;
-	vector<double> UTMN = ProfilePoints.Y;
+	vector<int> outlet_nodes;
+	// get the utm information
+	vector<double> UTME = Points.X;
+	vector<double> UTMN = Points.Y;
 	int UTMZone = 0;
 	bool is_North = false;
-	RasterTemplate.get_UTM_information(UTMZone,is_North);
+	ElevationRaster.get_UTM_information(UTMZone,is_North);
 
 	// create the polyline
 	LSDPolyline Line(UTME,UTMN,UTMZone);
@@ -177,6 +183,9 @@ int main (int nNumberofArgs,char *argv[])
 	vector<int> line_rows;
 	vector<int> line_cols;
 	Line.get_affected_pixels_in_line(RasterInfo, line_rows, line_cols);
+
+	int Threshold_SO_outlets = 5;
+	vector<int> outlet_nodes = ChanNetwork.get_channel_pixels_along_line(line_rows, line_cols, Threshold_SO_outlets, FlowInfo);
 
 
 	// snap to nearest channel
