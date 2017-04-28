@@ -73,6 +73,7 @@ int main (int nNumberofArgs,char *argv[])
 	int_default_map["Min patch size"] = 1000;
 	int_default_map["search_radius"] = 10;
 	int_default_map["NormaliseToBaseline"] = 1;
+	int_default_map["SO_outlets"] = 5;
 
 	// set default float parameters
 	float_default_map["surface_fitting_window_radius"] = 6;
@@ -185,8 +186,7 @@ int main (int nNumberofArgs,char *argv[])
 	vector<int> line_cols;
 	Line.get_affected_pixels_in_line(RasterInfo, line_rows, line_cols);
 
-	int Threshold_SO_outlets = 5;
-	vector<int> outlet_nodes = ChanNetwork.get_channel_pixels_along_line(line_rows, line_cols, Threshold_SO_outlets, FlowInfo);
+	vector<int> outlet_nodes = ChanNetwork.get_channel_pixels_along_line(line_rows, line_cols, this_int_map["SO_outlets"], FlowInfo);
 
 	// print nodes to csv for checking
 	string outlet_ext = "_outlet";
