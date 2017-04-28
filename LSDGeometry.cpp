@@ -881,7 +881,7 @@ void LSDPolyline::get_affected_pixels_in_line_segment_brute_force(LSDRasterInfo&
   check_and_update_UTM();
 
   int n_nodes = int(UTMPoints_Easting.size());
-cout << n_nodes << endl;
+  //cout << n_nodes << endl;
   bool valid_nodes = true;
 
   // get the starting node location in UTM
@@ -950,7 +950,7 @@ cout << n_nodes << endl;
       else
       {
         Slope = numerator/denominator;
-        cout << "Slope is: " << Slope << endl;
+        //cout << "Slope is: " << Slope << endl;
 
         if (numerator*numerator > denominator*denominator)
         {

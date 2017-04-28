@@ -185,6 +185,9 @@ int main (int nNumberofArgs,char *argv[])
 	vector<int> line_rows;
 	vector<int> line_cols;
 	Line.get_affected_pixels_in_line(RasterInfo, line_rows, line_cols);
+	vector<int> line_nodes = Line.get_flowinfo_nodes_of_line(RasterInfo, FlowInfo);
+	string line_ext = "_line";
+	FlowInfo.print_vector_of_nodeindices_to_csv_file(line_nodes, (DATA_DIR+DEM_ID+line_ext));
 
 	vector<int> outlet_nodes = ChanNetwork.get_channel_pixels_along_line(line_rows, line_cols, this_int_map["SO_outlets"], FlowInfo);
 
