@@ -184,6 +184,11 @@ int main (int nNumberofArgs,char *argv[])
 	// get the longest channel for each basins
 	vector<int> basin_sources = ChanNetwork.get_basin_sources_from_outlet_vector(snapped_JNs, FlowInfo, DistanceFromOutlet);
 
+	//initialise empty raster for merging terraces together
+	int NDV = RasterTemplate.get_NoDataValue();
+	LSDIndexRaster TerraceLocations(RasterTemplate, NDV);
+	LSDRaster TerraceElevations = RasterTemplate.create_raster_nodata();
+
 	for (int i =0; i < n_basins; i++)
 	{
 		// assign info for this basin
@@ -236,11 +241,14 @@ int main (int nNumberofArgs,char *argv[])
 		cout << "Relief threshold: " << relief_threshold_from_qq << " Slope threshold: " << slope_threshold_from_qq << endl;
 
 		cout << "Removing pixels within " << this_float_map["Min terrace height"] << " m of the modern channel" << endl;
+
 		// get the terrace pixels
 		LSDTerrace Terraces(SwathRaster, Slope_new, ChanNetwork, FlowInfo, relief_threshold_from_qq, slope_threshold_from_qq, this_int_map["Min patch size"], this_int_map["Threshold_SO"], this_float_map["Min terrace height"]);
 		LSDIndexRaster ConnectedComponents = Terraces.print_ConnectedComponents_to_Raster();
-		string CC_ext = "_terrace_IDs";
-		ConnectedComponents.write_raster((DATA_DIR+DEM_ID+CC_ext+jn_name), DEM_extension);
+		//string CC_ext = "_terrace_IDs";
+		//ConnectedComponents.write_raster((DATA_DIR+DEM_ID+CC_ext+jn_name), DEM_extension);
+		// add to raster
+		TerraceLocations.MergeIndexRasters(ConnectedComponents);
 
 		cout << "\t Testing connected components" << endl;
 		vector <vector <float> > CC_vector = TestSwath.get_connected_components_along_swath(ConnectedComponents, RasterTemplate, this_int_map["NormaliseToBaseline"]);
@@ -257,9 +265,16 @@ int main (int nNumberofArgs,char *argv[])
 
 		// write raster of terrace elevations
 		LSDRaster ChannelRelief = Terraces.get_Terraces_RasterValues(SwathRaster);
-		string relief_ext = "_terrace_relief_final";
-		ChannelRelief.write_raster((DATA_DIR+DEM_ID+relief_ext+jn_name), DEM_extension);
+		TerraceElevations.OverwriteRaster(ChannelRelief);
+		// string relief_ext = "_terrace_relief_final";
+		// ChannelRelief.write_raster((DATA_DIR+DEM_ID+relief_ext+jn_name), DEM_extension);
 	}
+
+	string CC_ext = "_terrace_IDs";
+	TerraceLocations.write_raster((DATA_DIR+DEM_ID+CC_ext), DEM_extension);
+
+	string relief_ext = "_terrace_relief_final";
+	TerraceElevations.write_raster((DATA_DIR+DEM_ID+relief_ext), DEM_extension);
 
 	// Done, check how long it took
 	clock_t end = clock();
