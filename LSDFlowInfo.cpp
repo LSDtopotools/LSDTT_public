@@ -6197,6 +6197,7 @@ vector<int> LSDFlowInfo::basin_edge_extractor(int outlet_node, LSDRaster& Topogr
   Array2D<float> BasinData(NRows, NCols, NoDataValue);
 
   //create subset arrays for just the basin data - this should be rolled into its own method.
+  cout << "The number of nodes in this basin is: " <<  upslope_nodes.size() << endl;
   for (int q = 0; q < int(upslope_nodes.size()); ++q)
   {
     
@@ -6206,7 +6207,7 @@ vector<int> LSDFlowInfo::basin_edge_extractor(int outlet_node, LSDRaster& Topogr
 
   vector<int> perim;
   int NDVCount;
-  for (int q = 0; q < n_nodes; ++q)
+  for (int q = 0; q < int(upslope_nodes.size()); ++q)
   {
     
     retrieve_current_row_and_col(upslope_nodes[q], i, j);
@@ -6238,8 +6239,6 @@ vector<int> LSDFlowInfo::basin_edge_extractor(int outlet_node, LSDRaster& Topogr
   
   return perim;
 }
-
-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // This function makes a mask of all the pixels that recieve flow (d8)
