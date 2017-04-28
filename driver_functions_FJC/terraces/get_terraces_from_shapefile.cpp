@@ -22,6 +22,8 @@
 #include "../LSDTerrace.hpp"
 #include "../LSDParameterParser.hpp"
 #include "../LSDSpatialCSVReader.hpp"
+#include "../LSDGeometry.hpp"
+#include "../LSDRasterInfo.hpp"
 
 int main (int nNumberofArgs,char *argv[])
 {
@@ -84,7 +86,7 @@ int main (int nNumberofArgs,char *argv[])
 	bool_default_map["Filter topography"] = true;
 
 	// set default string parameters
-	string_default_map["coords_csv_file"] = "NULL";
+	string_default_map["input_shapefile"] = "NULL";
 
 	// Use the parameter parser to get the maps of the parameters required for the
 	// analysis
@@ -167,15 +169,14 @@ int main (int nNumberofArgs,char *argv[])
   cout << "\t Got the channel network" << endl;
 
  	// reading in the shapefile with the points
-	PointData ProfilePoints = LoadShapefile(path_name+shapefile_name.c_str());
+	PointData ProfilePoints = LoadShapefile(path_name+this_string_map["input_shapefile"].c_str());
 
-	vector<int> outlet_nodes;
 	// get the utm information
-	vector<double> UTME = Points.X;
-	vector<double> UTMN = Points.Y;
+	vector<double> UTME = ProfilePoints.X;
+	vector<double> UTMN = ProfilePoints.Y;
 	int UTMZone = 0;
 	bool is_North = false;
-	ElevationRaster.get_UTM_information(UTMZone,is_North);
+	RasterTemplate.get_UTM_information(UTMZone,is_North);
 
 	// create the polyline
 	LSDPolyline Line(UTME,UTMN,UTMZone);
@@ -187,25 +188,25 @@ int main (int nNumberofArgs,char *argv[])
 	int Threshold_SO_outlets = 5;
 	vector<int> outlet_nodes = ChanNetwork.get_channel_pixels_along_line(line_rows, line_cols, Threshold_SO_outlets, FlowInfo);
 
+	// print nodes to csv for checking
+	string outlet_ext = "_outlet";
+	FlowInfo.print_vector_of_nodeindices_to_csv_file(outlet_nodes, (DATA_DIR+DEM_ID+outlet_ext));
 
-	// snap to nearest channel
-	vector<int> valid_indices;
-	vector<int> snapped_nodes;
-	vector<int> snapped_JNs;
-	ChanNetwork.snap_point_locations_to_channels(UTME, UTMN, this_int_map["search_radius"], this_int_map["Threshold_SO"], FlowInfo, valid_indices, snapped_nodes, snapped_JNs);
-	int n_basins = snapped_nodes.size();
+	// get the nearest upslope junction from these nodes
+	vector<int> outlet_jns = ChanNetwork.extract_basin_junctions_from_nodes(outlet_nodes, FlowInfo);
+	int n_basins = outlet_jns.size();
 
 	cout << "The number of outlet nodes is: " << n_basins << endl;
 
 	// get the longest channel for each basins
-	vector<int> basin_sources = ChanNetwork.get_basin_sources_from_outlet_vector(snapped_JNs, FlowInfo, DistanceFromOutlet);
+	vector<int> basin_sources = ChanNetwork.get_basin_sources_from_outlet_vector(outlet_jns, FlowInfo, DistanceFromOutlet);
 
 	for (int i =0; i < n_basins; i++)
 	{
 		// assign info for this basin
 		int upstream_node = basin_sources[i];
-		int downstream_node = snapped_nodes[i];
-		string jn_name = itoa(snapped_JNs[i]);
+		int downstream_node = outlet_nodes[i];
+		string jn_name = itoa(outlet_jns[i]);
 		string uscore = "_";
 		jn_name = uscore+jn_name;
 
@@ -214,6 +215,9 @@ int main (int nNumberofArgs,char *argv[])
 		vector<double> X_coords;
 		vector<double> Y_coords;
 		BaselineChannel.get_coordinates_of_channel_nodes(X_coords, Y_coords);
+
+		// get the point data from the BaselineChannel
+		PointData BaselinePoints = get_point_data_from_coordinates(X_coords, Y_coords);
 
 	  cout << "\t Creating swath template" << endl;
 	  LSDSwath TestSwath(BaselinePoints, RasterTemplate, this_float_map["HalfWidth"]);
