@@ -119,13 +119,16 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_filled_raster"] = false;
   bool_default_map["print_basin_raster"] = false;
   bool_default_map["print_stream_order_raster"] = false;
-  bool_default_map["print_stream_order_csv"] = false;
   bool_default_map["get_basins_from_outlets"] = false;
-  bool_default_map["print_junction_csv"] = false;
+  bool_default_map["print_junctions_to_csv"] = false;
   bool_default_map["print_channels_to_csv"] = false;
+
+  // switches for basin spawning
   bool_default_map["spawn_basins_from_outlets"] = false;
   bool_default_map["spawn_csv_file_from_basin_spawn"] = false;
   bool_default_map["spawn_parameter_files_from_basin_spawn"] = false;
+
+  // simple plotting options
   bool_default_map["write hillshade"] = false;
   bool_default_map["convert_csv_to_geojson"] = false;
   
@@ -138,7 +141,6 @@ int main (int nNumberofArgs,char *argv[])
   
   // Use the parameter parser to get the maps of the parameters required for the 
   // analysis
-
   LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
   map<string,float> this_float_map = LSDPP.get_float_parameters();
   map<string,int> this_int_map = LSDPP.get_int_parameters();
@@ -251,6 +253,9 @@ int main (int nNumberofArgs,char *argv[])
   // Now create the network
   LSDJunctionNetwork JunctionNetwork(sources, FlowInfo);
 
+  //============================================================================
+  // Some functions for printing the network and the junctions before we
+  // do any selection of basins
   // Print the network if that is what the user wants
   if( this_bool_map["print_channels_to_csv"])
   {
@@ -267,6 +272,33 @@ int main (int nNumberofArgs,char *argv[])
     }
     
   }
+
+  // print stream order to file if wanted
+  if(this_bool_map["print_stream_order_raster"])
+  {
+    cout << "I am writing a stream order raster." << endl;
+    cout << "These rasters take up a lot of space. Have you considered printing to csv instead?" << endl;
+    cout << "Use the flag: " << endl;
+    cout << "print_junctions_to_csv: true" << endl;
+    LSDIndexRaster SO_array = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
+    string SOExt = "_SO";
+    SO_array.write_raster(OUT_DIR+OUT_ID+SOExt, raster_ext);
+  }
+
+  if( this_bool_map["print_junctions_to_csv"])
+  {
+    cout << "I am writing the junctions to csv." << endl;
+    string channel_csv_name = OUT_DIR+OUT_ID+"_JN.csv";
+    JunctionNetwork.print_junctions_to_csv(FlowInfo, channel_csv_name);
+    
+    if ( this_bool_map["convert_csv_to_geojson"])
+    {
+      string gjson_name = OUT_DIR+OUT_ID+"_JN.geojson";
+      LSDSpatialCSVReader thiscsv(channel_csv_name);
+      thiscsv.print_data_to_geojson(gjson_name);
+    }
+  }
+ //============================================================================
 
   // Now we are going to get the basins in question. The junctions of these
   // basins will go into the vector basin_junctions
@@ -321,15 +353,16 @@ int main (int nNumberofArgs,char *argv[])
     // Now get the basin rasters
     // HEY HEY| |LOOK HERE: I don't think we really need this since basins are
     // printed at a later stage with the flag "print_basin_raster"
-    string basin_raster_name = OUT_DIR+OUT_ID+"_AllBasins";
-    print_basins(basin_raster_name, FlowInfo, JunctionNetwork,
-                   snapped_junction_indices);
+    //string basin_raster_name = OUT_DIR+OUT_ID+"_AllBasins";
+    //print_basins(basin_raster_name, FlowInfo, JunctionNetwork,
+    //               snapped_junction_indices);
     basin_junctions = snapped_junction_indices;
   }
   else
   {
     cout << "I am getting the basins from all basins of order " << this_int_map["basin_order"] << endl;
     basin_junctions = JunctionNetwork.ExtractBasinJunctionOrder(this_int_map["basin_order"], FlowInfo);
+    cout << "The number of basin junctions are: " << basin_junctions.size() << endl;
   }
 
 
@@ -418,41 +451,18 @@ int main (int nNumberofArgs,char *argv[])
   // Print basins to file if wanted
   if(this_bool_map["print_basin_raster"])
   {
-    LSDIndexRaster Basin_Raster = JunctionNetwork.extract_basins_from_junction_vector(basin_junctions, FlowInfo);
     string BRExt = "_AllBasins";
     // This a good thing, not to be confused with Brexit, which is the most shit thing ever.
     
-    Basin_Raster.write_raster(OUT_DIR+OUT_ID+BRExt, raster_ext);
+    string basin_raster_name = OUT_DIR+OUT_ID+BRExt;
+    // NOTE: This creates nested basins so if a basin is a subbasin of another basin, 
+    // the smaller basin will overwrite the larger basin
+    print_basins(basin_raster_name, FlowInfo, JunctionNetwork,
+                   basin_junctions);
   }
-
-
-  // print stream order to file if wanted
-  if(this_bool_map["print_stream_order_raster"])
-  {
-    LSDIndexRaster SO_array = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
-    string SOExt = "_SO";
-    SO_array.write_raster(OUT_DIR+OUT_ID+SOExt, raster_ext);
-  }
-
-
-  
-  // print stream order CSV to file if wanted
-  if(this_bool_map["print_stream_order_csv"])
-  {
-    string CN_fname = OUT_DIR+OUT_ID+"_ChanNet";
-    JunctionNetwork.PrintChannelNetworkToCSV(FlowInfo, CN_fname);
-  }
-
-
-  if(this_bool_map["print_junction_csv"])
-  {
-    string JN_fname = OUT_DIR+OUT_ID+"_Junctions.csv";
-    vector<int> JunctionList;
-    JunctionNetwork.print_junctions_to_csv(FlowInfo, JunctionList,JN_fname);
-  }
-  
 
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 
@@ -466,7 +476,6 @@ void print_basins(string basin_raster_name, LSDFlowInfo& FlowInfo, LSDJunctionNe
 {
   int N_Juncs = Junctions.size();
   LSDCoordinateConverterLLandUTM Converter;
-
 
   // Get some data members for holding basins and the raster
   vector<LSDBasin> AllTheBasins;
@@ -505,7 +514,7 @@ void print_basins(string basin_raster_name, LSDFlowInfo& FlowInfo, LSDJunctionNe
   string raster_ext = "bil";
   // print the basin raster
   BasinMasterRaster.write_raster(basin_raster_name, raster_ext);
-  cout << "Finished with exporting basins!" << endl;
+  cout << "Finished writing the basins!" << endl;
 
 }
 

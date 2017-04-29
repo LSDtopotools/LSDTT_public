@@ -1356,7 +1356,28 @@ void LSDJunctionNetwork::print_junction_angles_to_csv(vector<int> JunctionList,
 
 
 
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function agregates junction level statistics for larger basins
+// Is primarily intended for use with junction angle code but could 
+// also be used to get statistics about the different slopes or other 
+// junction level statistics
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+/*
+int LSDJunctionNetwork::calculate_basin_averages_from_junction_list(vector<int>& BasinJunctions, LSDFlowInfo& FlowInfo)
+{
+  
+  // loop through the basins getting the basin statistics. 
+  int n_basin_junctions = int(BasinJunctions.size());
+  for (int jn = 0; jn<n_basin_junctions; j++)
+  {
+  
+  }
+
+
+}
+*/
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this function gets the junction index of a node.  If there is not a junction at this node
 // then it will give NoDataValue
