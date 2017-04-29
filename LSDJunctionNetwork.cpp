@@ -2376,8 +2376,13 @@ vector<int> LSDJunctionNetwork::ExtractBasinJunctionOrder(int BasinOrder, LSDFlo
     // Note that the nth order basins are defined as capturing the full
     // drainage area for the nth order stream.  An nth order stream terminates
     // at a junction an order greater than order n.
+
     if (StreamOrderVector[junctionID] == BasinOrder)
     {
+      cout << "Found a junction that is of the correct order." << endl;
+      cout << "Junction is: " << junctionID << endl;
+      cout << "This junction order is: " <<  StreamOrderVector[junctionID] << endl;
+      
       // Get info from ChanelNetwork object regarding position of junction
       current_junc = junctionID;//JunctionVector[junctionID];
       receiver_junc = ReceiverVector[current_junc];
@@ -2387,9 +2392,10 @@ vector<int> LSDJunctionNetwork::ExtractBasinJunctionOrder(int BasinOrder, LSDFlo
       if (receiver_junc_SO > BasinOrder)
       {
         //use the node tester to get rid of any basins that are beheaded
-        if (node_tester(FlowInfo, current_junc) == false){
+        //if (node_tester(FlowInfo, current_junc) == false)
+        //{
           Junctions.push_back(current_junc);
-        }
+        //}
       }
     }
   }
@@ -7245,6 +7251,7 @@ void LSDJunctionNetwork::print_junctions_to_csv(LSDFlowInfo& FlowInfo, string fn
   for (int i = 0; i<NJunctions; i++)
   {
     JunctionList.push_back(i);
+    //cout << "The stream order of junction " << i << " is " << StreamOrderVector[i] << endl;
   }
 
   // open the outfile
@@ -7252,7 +7259,7 @@ void LSDJunctionNetwork::print_junctions_to_csv(LSDFlowInfo& FlowInfo, string fn
   sources_out.open(fname.c_str());
   sources_out.precision(9);
 
-  sources_out << "junction,node,x,y,latitude,longitude" << endl;
+  sources_out << "junction,node,x,y,latitude,longitude, stream_order" << endl;
 
   // this is for latitude and longitude
   LSDCoordinateConverterLLandUTM Converter;
@@ -7272,7 +7279,7 @@ void LSDJunctionNetwork::print_junctions_to_csv(LSDFlowInfo& FlowInfo, string fn
 
     // print to file
     sources_out << JunctionList[i] << "," << this_node << "," << x_loc << ","
-                << y_loc << "," << latitude << "," << longitude << endl;
+                << y_loc << "," << latitude << "," << longitude << "," << StreamOrderVector[ JunctionList[i] ] << endl;
 
   }
   sources_out.close();
@@ -7308,7 +7315,7 @@ void LSDJunctionNetwork::print_junctions_to_csv(LSDFlowInfo& FlowInfo, vector<in
   sources_out.open(fname.c_str());
   sources_out.precision(9);
 
-  sources_out << "junction,node,x,y,latitude,longitude" << endl;
+  sources_out << "junction,node,x,y,latitude,longitude,stream_order" << endl;
 
   // this is for latitude and longitude
   LSDCoordinateConverterLLandUTM Converter;
@@ -7328,7 +7335,7 @@ void LSDJunctionNetwork::print_junctions_to_csv(LSDFlowInfo& FlowInfo, vector<in
 
     // print to file
     sources_out << JunctionList[i] << "," << this_node << "," << x_loc << ","
-                << y_loc << "," << latitude << "," << longitude << endl;
+                << y_loc << "," << latitude << "," << longitude << "," << StreamOrderVector[ JunctionList[i] ] << endl;
 
   }
 
