@@ -2392,10 +2392,52 @@ vector<int> LSDJunctionNetwork::ExtractBasinJunctionOrder(int BasinOrder, LSDFlo
       if (receiver_junc_SO > BasinOrder)
       {
         //use the node tester to get rid of any basins that are beheaded
-        //if (node_tester(FlowInfo, current_junc) == false)
-        //{
+        if (node_tester(FlowInfo, current_junc) == false)
+        {
           Junctions.push_back(current_junc);
-        //}
+        }
+      }
+    }
+  }
+
+  return Junctions;
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+// This function extracts the juctions of all non-beheaded drainage basins 
+// of a given order, n
+// It keeps basins that abut nodata values
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+vector<int> LSDJunctionNetwork::ExtractBasinJunctionOrderKeepEdgeBasins(int BasinOrder, LSDFlowInfo& FlowInfo)
+{
+  vector<int> Junctions;
+  // Loop through junction network until you reach nth order channel junction.
+
+  int current_junc,receiver_junc,receiver_junc_SO;
+  for (int junctionID=0; junctionID<NJunctions; ++junctionID)
+  {
+    // Loop through all stream junctions of the required basin order.
+    // Note that the nth order basins are defined as capturing the full
+    // drainage area for the nth order stream.  An nth order stream terminates
+    // at a junction an order greater than order n.
+
+    if (StreamOrderVector[junctionID] == BasinOrder)
+    {
+      //cout << "Found a junction that is of the correct order." << endl;
+      //cout << "Junction is: " << junctionID << endl;
+      //cout << "This junction order is: " <<  StreamOrderVector[junctionID] << endl;
+      
+      // Get info from ChanelNetwork object regarding position of junction
+      current_junc = junctionID;//JunctionVector[junctionID];
+      receiver_junc = ReceiverVector[current_junc];
+      receiver_junc_SO = StreamOrderVector[receiver_junc];
+      // Identify outlet of nth order basin using the condition that the
+      // receiver junction should be of higher order.
+      if (receiver_junc_SO > BasinOrder)
+      {
+        Junctions.push_back(current_junc);
       }
     }
   }

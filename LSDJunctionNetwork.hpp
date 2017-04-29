@@ -711,6 +711,15 @@ class LSDJunctionNetwork
   /// @date 24/10/2013
   vector<int> ExtractBasinJunctionOrder(int BasinOrder, LSDFlowInfo& FlowInfo);
 
+  /// @brief This function extracts the juctions of all non-beheaded drainage basins of a given order, n.
+  ///  Like the previous version but in this case includes basins at the edge (abutting nodata)
+  /// @param BasinOrder Integer basin order to extract.
+  /// @param FlowInfo LSDFlowInfo object.
+  /// @return Vector of junction indexes.
+  /// @author SMM
+  /// @date 29/04/2017
+  vector<int> ExtractBasinJunctionOrderKeepEdgeBasins(int BasinOrder, LSDFlowInfo& FlowInfo);
+
   /// @brief Get farthest upslope hilltops.
   ///
   /// @details This function looks at all the source junctions in a network
