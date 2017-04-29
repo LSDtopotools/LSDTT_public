@@ -1,13 +1,15 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// chi_mapping_tool
+// Basin Averager
 //
+// A program for looking at different aspects of drainage basins.
+// 
 // This program takes two arguments, the path name and the driver name
 // The driver file has a number of options that allow the user to calculate 
 // different kinds of chi analysis
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// Copyright (C) 2016 Simon M. Mudd 2016
+// Copyright (C) 2017 Simon M. Mudd 2017
 //
 // Developer can be contacted by simon.m.mudd _at_ ed.ac.uk
 //
@@ -55,57 +57,13 @@
 #include "../LSDParameterParser.hpp"
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// This function prints the basins and an additional file that has basin centroids
-// and labelling information for plotting
+// Declare the print basins function
+// Why don't we put this in junction network?
+// Because it uses the LSDBasin object which has a load of dependencies
+// so if we put it there we would need to change all the make files. 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void print_basins(string basin_raster_name, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork,
-                               vector<int> Junctions)
-{
-  int N_Juncs = Junctions.size();
-  LSDCoordinateConverterLLandUTM Converter;
-
-
-  // Get some data members for holding basins and the raster
-  vector<LSDBasin> AllTheBasins;
-  map<int,int> drainage_of_other_basins;
-  LSDIndexRaster BasinMasterRaster;
-
-  //cout << "I am trying to print basins, found " << N_BaseLevelJuncs << " base levels." << endl;
-  // Loop through the junctions
-  for(int BN = 0; BN<N_Juncs; BN++)
-  {
-    //cout << "Getting basin " << BN << " and the junction is: "  << BaseLevelJunctions[BN] << endl;
-    LSDBasin thisBasin(Junctions[BN],FlowInfo, JunctionNetwork);
-    //cout << "...got it!" << endl;
-    AllTheBasins.push_back(thisBasin);
-
-    // This is required if the basins are nested--test the code which numbers
-    // to be overwritten by a smaller basin
-    drainage_of_other_basins[Junctions[BN]] = thisBasin.get_NumberOfCells();
-  }
-
-  // now loop through everything again getting the raster
-  if (N_Juncs > 0)     // this gets the first raster
-  {
-    BasinMasterRaster = AllTheBasins[0].write_integer_data_to_LSDIndexRaster(Junctions[0], FlowInfo);
-  }
-
-  // now add on the subsequent basins
-  for(int BN = 1; BN<N_Juncs; BN++)
-  {
-    AllTheBasins[BN].add_basin_to_LSDIndexRaster(BasinMasterRaster, FlowInfo,
-                              drainage_of_other_basins, Junctions[BN]);
-  }
-
-
-  // We need to use bil format since there is georeferencing
-  string raster_ext = "bil";
-  // print the basin raster
-  BasinMasterRaster.write_raster(basin_raster_name, raster_ext);
-  cout << "Finished with exporting basins!" << endl;
-
-}
-
+                               vector<int> Junctions);
 
 
 int main (int nNumberofArgs,char *argv[])
@@ -129,10 +87,6 @@ int main (int nNumberofArgs,char *argv[])
     cout << "In linux:" << endl;
     cout << "./basin_averaging_tool.exe /LSDTopoTools/Topographic_projects/Test_data/ LSDTT_BasinAvg.param" << endl;
     cout << "=========================================================" << endl;
-    cout << "For more documentation on the parameter file, " << endl;
-    cout << " see readme and online documentation." << endl;
-    cout << " http://lsdtopotools.github.io/LSDTT_book/#_chi_analysis_part_3_getting_chi_gradients_for_the_entire_landscape" << endl;
-    cout << "=========================================================" << endl;
     exit(EXIT_SUCCESS);
   }
 
@@ -154,7 +108,8 @@ int main (int nNumberofArgs,char *argv[])
   // set default float parameters
   int_default_map["basin_order"] = 2;
   int_default_map["threshold_contributing_pixels"] = 2000;
-  int_default_map["search_radius_nodes"] = 10;
+  int_default_map["search_radius_nodes"] = 10;     
+  int_default_map["basin_spawn_padding_pixels"] = 100;
   
   // set default in parameter
   float_default_map["min_slope_for_fill"] = 0.0001;
@@ -172,6 +127,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["spawn_csv_file_from_basin_spawn"] = false;
   bool_default_map["spawn_parameter_files_from_basin_spawn"] = false;
   bool_default_map["write hillshade"] = false;
+  bool_default_map["convert_csv_to_geojson"] = false;
   
   // set default string method
   string_default_map["slope method"] = "polynomial";
@@ -295,24 +251,43 @@ int main (int nNumberofArgs,char *argv[])
   // Now create the network
   LSDJunctionNetwork JunctionNetwork(sources, FlowInfo);
 
+  // Print the network if that is what the user wants
   if( this_bool_map["print_channels_to_csv"])
   {
-    string channel_csv_name = OUT_DIR+OUT_ID+"_W_CN";
+    string channel_csv_name = OUT_DIR+OUT_ID+"_CN";
     JunctionNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+    
+    // convert to geojson if that is what the user wants 
+    // It is read more easily by GIS software but has bigger file size
+    if ( this_bool_map["convert_csv_to_geojson"])
+    {
+      string gjson_name = OUT_DIR+OUT_ID+"_CN.geojson";
+      LSDSpatialCSVReader thiscsv(OUT_DIR+OUT_ID+"_CN.csv");
+      thiscsv.print_data_to_geojson(gjson_name);
+    }
+    
   }
 
-
-  // now we check for basins (if you've ask for that)
+  // Now we are going to get the basins in question. The junctions of these
+  // basins will go into the vector basin_junctions
+  // There are several options for this
+  // 1) If this_bool_map["get_basins_from_outlets"] it gets basins from
+  //     a file containing locations of basin outlets (it snaps to these 
+  //     outlets)
+  // 2) If not true, it defaults to getting basins by basin order
+  // 3) There should be a few more options here, one idea is to have a raster filling
+  //     function that does some kind of heirarchical sorting to fill the raster. 
   vector<int> basin_junctions;
   vector<string> IDs;
   
+  // This uses a list lat-long coordinates and snaps these coordinates to the
+  // neares channel.
   if(this_bool_map["get_basins_from_outlets"])
   {
     cout << "I am getting your basins from a list of nodes. " << endl;
     
     // first we see if the nodes file exists
     string basin_outlet_fname = DATA_DIR+this_string_map["basin_outlet_csv"];
-    
     
     cout << "The basin file is: " << basin_outlet_fname << endl;
     LSDSpatialCSVReader Outlet_CSV_data(RI,basin_outlet_fname);
@@ -344,6 +319,8 @@ int main (int nNumberofArgs,char *argv[])
     cout << "The number of valid points is: " << int(valid_cosmo_points.size()) << endl;
       
     // Now get the basin rasters
+    // HEY HEY| |LOOK HERE: I don't think we really need this since basins are
+    // printed at a later stage with the flag "print_basin_raster"
     string basin_raster_name = OUT_DIR+OUT_ID+"_AllBasins";
     print_basins(basin_raster_name, FlowInfo, JunctionNetwork,
                    snapped_junction_indices);
@@ -356,11 +333,13 @@ int main (int nNumberofArgs,char *argv[])
   }
 
 
+  // This function is used to create new rasters that contain only the 
+  // basin, with a padding (set here to )
   if (this_bool_map["spawn_basins_from_outlets"])
   {
     // now loop through the valid points, spawning a basin each time 
     int n_valid_points =  int(basin_junctions.size());
-    int padding_pixels = 100;
+    int padding_pixels = this_int_map["basin_spawn_padding_pixels"];
     
     // check to see if there is a sample name vector, if not write one with junction indices
     if (IDs.size() != basin_junctions.size())
@@ -436,11 +415,13 @@ int main (int nNumberofArgs,char *argv[])
     }
   }
 
-  // print basins to file if wanted
+  // Print basins to file if wanted
   if(this_bool_map["print_basin_raster"])
   {
     LSDIndexRaster Basin_Raster = JunctionNetwork.extract_basins_from_junction_vector(basin_junctions, FlowInfo);
     string BRExt = "_AllBasins";
+    // This a good thing, not to be confused with Brexit, which is the most shit thing ever.
+    
     Basin_Raster.write_raster(OUT_DIR+OUT_ID+BRExt, raster_ext);
   }
 
@@ -472,3 +453,59 @@ int main (int nNumberofArgs,char *argv[])
   
 
 }
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function prints the basins and an additional file that has basin centroids
+// and labelling information for plotting
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void print_basins(string basin_raster_name, LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork,
+                               vector<int> Junctions)
+{
+  int N_Juncs = Junctions.size();
+  LSDCoordinateConverterLLandUTM Converter;
+
+
+  // Get some data members for holding basins and the raster
+  vector<LSDBasin> AllTheBasins;
+  map<int,int> drainage_of_other_basins;
+  LSDIndexRaster BasinMasterRaster;
+
+  //cout << "I am trying to print basins, found " << N_BaseLevelJuncs << " base levels." << endl;
+  // Loop through the junctions
+  for(int BN = 0; BN<N_Juncs; BN++)
+  {
+    //cout << "Getting basin " << BN << " and the junction is: "  << BaseLevelJunctions[BN] << endl;
+    LSDBasin thisBasin(Junctions[BN],FlowInfo, JunctionNetwork);
+    //cout << "...got it!" << endl;
+    AllTheBasins.push_back(thisBasin);
+
+    // This is required if the basins are nested--test the code which numbers
+    // to be overwritten by a smaller basin
+    drainage_of_other_basins[Junctions[BN]] = thisBasin.get_NumberOfCells();
+  }
+
+  // now loop through everything again getting the raster
+  if (N_Juncs > 0)     // this gets the first raster
+  {
+    BasinMasterRaster = AllTheBasins[0].write_integer_data_to_LSDIndexRaster(Junctions[0], FlowInfo);
+  }
+
+  // now add on the subsequent basins
+  for(int BN = 1; BN<N_Juncs; BN++)
+  {
+    AllTheBasins[BN].add_basin_to_LSDIndexRaster(BasinMasterRaster, FlowInfo,
+                              drainage_of_other_basins, Junctions[BN]);
+  }
+
+
+  // We need to use bil format since there is georeferencing
+  string raster_ext = "bil";
+  // print the basin raster
+  BasinMasterRaster.write_raster(basin_raster_name, raster_ext);
+  cout << "Finished with exporting basins!" << endl;
+
+}
+
