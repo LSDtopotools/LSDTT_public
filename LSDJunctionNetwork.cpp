@@ -2357,7 +2357,7 @@ LSDIndexRaster LSDJunctionNetwork::ExtractBasinsOrder(int BasinOrder, LSDFlowInf
   }
   // Return raster with all nth order drainage basins.
   LSDIndexRaster basin_raster(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,basins,GeoReferencingStrings);
-	return basin_raster;
+  return basin_raster;
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
@@ -2379,9 +2379,9 @@ vector<int> LSDJunctionNetwork::ExtractBasinJunctionOrder(int BasinOrder, LSDFlo
 
     if (StreamOrderVector[junctionID] == BasinOrder)
     {
-      cout << "Found a junction that is of the correct order." << endl;
-      cout << "Junction is: " << junctionID << endl;
-      cout << "This junction order is: " <<  StreamOrderVector[junctionID] << endl;
+      //cout << "Found a junction that is of the correct order." << endl;
+      //cout << "Junction is: " << junctionID << endl;
+      //cout << "This junction order is: " <<  StreamOrderVector[junctionID] << endl;
       
       // Get info from ChanelNetwork object regarding position of junction
       current_junc = junctionID;//JunctionVector[junctionID];
