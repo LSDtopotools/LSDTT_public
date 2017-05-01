@@ -2985,9 +2985,10 @@ LSDIndexRaster LSDIndexRaster::remove_checkerboard_pattern()
 // results are in a vector:
 // 0 - reliability
 // 1 - sensitvity
-// 2 - false positive rate
-// 3 - true negative rate
-// 4 - false negative rate
+// 2 - quality
+// 3 - false positive rate
+// 4 - true negative rate
+// 5 - false negative rate
 // FJC 29/06/16
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 vector<float> LSDIndexRaster::AnalysisOfQuality(LSDIndexRaster& ActualRaster)
@@ -3032,12 +3033,15 @@ vector<float> LSDIndexRaster::AnalysisOfQuality(LSDIndexRaster& ActualRaster)
   cout << "SumTP = " << SumTP << " SumFP = " << SumFP << " SumTN = " << SumTN << " SUM FN = " << SumFN << endl;
   float r = SumTP/(SumTP + SumFP);
   float s = SumTP/(SumTP + SumFN);
+  float q = SumTP/(SumTP + SumFP + SumFN);
 
   //now calculate the quality analyses
   //reliability
   quality_results[0] = SumTP/(SumTP + SumFP);
 	//sensitivity r_tp
 	quality_results[1] = SumTP/(SumTP + SumFN);
+  //quality
+  quality_results[2] = q;
 	// r_fp
 	quality_results[2] = SumFP/(SumFP + SumTN);
 	// r_tn
@@ -3045,7 +3049,7 @@ vector<float> LSDIndexRaster::AnalysisOfQuality(LSDIndexRaster& ActualRaster)
 	// r_fn
 	quality_results[4] = 1 - quality_results[1];
 
-  cout << "r: " << r << " s: " << s << endl;
+  cout << "r: " << r << " s: " << s << " q: " << q << endl;
 
   return quality_results;
 }
