@@ -127,6 +127,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["spawn_basins_from_outlets"] = false;
   bool_default_map["spawn_csv_file_from_basin_spawn"] = false;
   bool_default_map["spawn_parameter_files_from_basin_spawn"] = false;
+  bool_default_map["remove_edge_basins"] = false;
 
   // simple plotting options
   bool_default_map["write hillshade"] = false;
@@ -361,7 +362,14 @@ int main (int nNumberofArgs,char *argv[])
   else
   {
     cout << "I am getting the basins from all basins of order " << this_int_map["basin_order"] << endl;
-    basin_junctions = JunctionNetwork.ExtractBasinJunctionOrder(this_int_map["basin_order"], FlowInfo);
+    if(this_bool_map["remove_edge_basins"])
+    {
+      basin_junctions = JunctionNetwork.ExtractBasinJunctionOrder(this_int_map["basin_order"], FlowInfo);
+    }
+    else
+    {
+      basin_junctions = JunctionNetwork.ExtractBasinJunctionOrderKeepEdgeBasins(this_int_map["basin_order"], FlowInfo);
+    }
     cout << "The number of basin junctions are: " << basin_junctions.size() << endl;
   }
 
