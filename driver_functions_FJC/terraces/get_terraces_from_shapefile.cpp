@@ -147,8 +147,8 @@ int main (int nNumberofArgs,char *argv[])
 	}
 	else
 	{
-		//previously done the filtering and filling, just load the filled DEM
-		LSDRaster load_DEM((DATA_DIR+DEM_ID+"_filtered"), DEM_extension);
+		//don't do the filtering, just load the filled DEM
+		LSDRaster load_DEM((DATA_DIR+DEM_ID+"_Fill"), DEM_extension);
 		RasterTemplate = load_DEM;
 		LSDRasterInfo get_RI((DATA_DIR+DEM_ID), DEM_extension);
 		RasterInfo = get_RI;
