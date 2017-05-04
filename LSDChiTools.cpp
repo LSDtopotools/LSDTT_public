@@ -1388,6 +1388,69 @@ void LSDChiTools::calculate_segmented_elevation(LSDFlowInfo& FlowInfo)
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function test the collinearity of all segments compared to a reference
+// segment
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int reference_channel, int test_channel)
+{
+  // The way this works is that one of the segments (delineated by its source number)
+  // is taken as a reference, and then all other segments are compared to how
+  // closely they match this segment. If the chi value of the segment being tested
+  // is greater than the maximum chi of the reference segment or less than the
+  // minimum chi of the reference segment the data point is ignored. 
+  
+  float MLE = 1;
+  // first get the source node of the reference channel
+  if ( key_to_source_map.find(reference_channel) == key_to_source_map.end() ) 
+  {
+    cout << "LSDChiTools::test_segment_collinearity This source is not in the channel network. Source is: " << reference_channel << endl;
+  } 
+  else
+  {
+    int starting_node_sequence_index = get_starting_node_of_source(reference_channel);
+  }
+  return MLE;
+
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Given a source key, find the index of the starting node in the node sequence
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+int LSDChiTools::get_starting_node_of_source(int source_key)
+{
+  int this_starting_node; 
+  // first get the source node of the reference channel
+  if ( key_to_source_map.find(source_key) == key_to_source_map.end() ) 
+  {
+    cout << "LSDChiTools::test_segment_collinearity This source is not in the channel network. Source is: " << source_key << endl;
+  } 
+  else
+  {
+    int source_node = key_to_source_map[source_key];
+    
+    // Find the node sequence index of this node;
+    int this_ns_node = -1;
+    
+    bool not_starting_node = true;
+    while (not_starting_node)
+    {
+      this_ns_node++;
+      if(node_sequence[this_ns_node] == source_node)
+      {
+        not_starting_node = false;
+        this_starting_node = this_ns_node;
+      }
+      
+    }
+    cout << "The starting node in the sequence is: " << this_starting_node;
+  }
+  
+  return this_starting_node;  
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Print data maps to file
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string filename)

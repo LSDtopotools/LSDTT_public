@@ -224,7 +224,24 @@ class LSDChiTools
     /// @date 10/02/2017
     void calculate_segmented_elevation(LSDFlowInfo& FlowInfo);
 
-
+    /// @brief This returns an maximum liklihood estiamtor by comparing
+    ///  a channel (with a particular source number) against a reference channel
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param reference_channel the source key of the reference channel
+    /// @param test_channel the source key of the test channel
+    /// @float The maximum likelihood estimator
+    /// @author SMM
+    /// @date 04/05/2017
+    float test_segment_collinearity(LSDFlowInfo& FlowInfo, int reference_channel, int test_channel);
+    
+    /// @brief This gets the index into the node_sequence vector of the first
+    ///  node in a channel identified by its source key
+    /// @param source_key the source key of the reference channel
+    /// @return the index into the node_sequence vector of the source node of the channel with source_key
+    /// @author SMM
+    /// @date 04/05/2017
+    int get_starting_node_of_source(int source_key);
+    
     /// @brief This function maps out the chi steepness and other channel
     ///  metrics in chi space from all the sources supplied in the
     ///  source_nodes vector. The source and outlet nodes vector is
@@ -232,7 +249,7 @@ class LSDChiTools
     /// @detail Takes vector so source and outlet nodes and performs the segment
     ///  fitting routine on them
     /// @param FlowInfo an LSDFlowInfo object
-    /// @param source_nodes a vector continaing the sorted sorce nodes (by flow distance)
+    /// @param source_nodes a vector containing the sorted sorce nodes (by flow distance)
     /// @param outlet_nodes a vector continaing the outlet nodes
     /// @param Elevation an LSDRaster containing elevation info
     /// @param DistanceFromOutlet an LSDRaster with the flow distance
@@ -394,7 +411,7 @@ class LSDChiTools
     vector<int> node_sequence;
 
     /// vectors to hold the source nodes and the outlet nodes
-    /// The source keys are indecies into the source_to_key_map.
+    /// The source keys are indicies into the source_to_key_map.
     /// In big DEMs the node numbers become huge so for printing efficiency we
     /// run a key that starts at 0
     map<int,int> source_keys_map;
