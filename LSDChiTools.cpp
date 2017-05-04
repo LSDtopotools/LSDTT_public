@@ -1153,7 +1153,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
                 if(this_segment_counter_knickpoint_map[this_node] > max_knickpoint_value && this_segment_counter_knickpoint_map[this_node] < old_max_knickpoint_value && j!=knickpoint_id )
                   {
                     max_knickpoint_value = this_segment_counter_knickpoint_map[this_node];
-                  
+
                   }
               }
             }
@@ -1427,6 +1427,7 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
   if (have_segments)
   {
     chi_data_out << ",segment_number";
+    cout << "I added the segment number in the csv file"<< endl;
   }
   chi_data_out << endl;
 
