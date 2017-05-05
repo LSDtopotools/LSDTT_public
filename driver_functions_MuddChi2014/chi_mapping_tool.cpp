@@ -137,6 +137,8 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_channels_to_csv"] = false;
   
   // flags for printing chi analyses
+  bool_default_map["convert_csv_to_geojson"] = false;
+  bool_default_map["calculate_MLE_collinearity"] = false;
   bool_default_map["print_chi_coordinate_raster"] = false;
   bool_default_map["print_simple_chi_map_to_csv"] = false;
   bool_default_map["print_segmented_M_chi_map_to_csv"] = false;
@@ -508,9 +510,9 @@ int main (int nNumberofArgs,char *argv[])
     ChiTool.print_data_maps_to_file_full(FlowInfo, csv_full_fname);
     cout << "That is your file printed!" << endl;
 
-                                    
     if ( this_bool_map["convert_csv_to_geojson"])
     {
+      cout << "Now let me print your chi network to a geojson" << endl;
       string gjson_name = OUT_DIR+OUT_ID+"_MChiSegmented.geojson";
       LSDSpatialCSVReader thiscsv(csv_full_fname);
       thiscsv.print_data_to_geojson(gjson_name);
@@ -541,6 +543,23 @@ int main (int nNumberofArgs,char *argv[])
         LSDSpatialCSVReader thiscsv(baselevel_keys_name);
         thiscsv.print_data_to_geojson(gjson_name);
       }
+    }
+    
+    cout << "Shall I check collinearity????" << endl;
+    if (this_bool_map["calculate_MLE_collinearity"])
+    {
+      cout << "I am testing the collinearity for you. " << endl;
+      int n_channels = ChiTool.get_number_of_channels();
+      cout << "The number of channels are: " << n_channels << endl;
+      
+      // now get the sources of the first two channels
+      int chan0 = 0;
+      int chan1 = 1;
+      int source0 = ChiTool.get_starting_node_of_source(chan0);
+      int source1 = ChiTool.get_starting_node_of_source(chan1);
+      cout << "Source of channel 0 is: " << source0 << endl;
+      cout << "Source of channel 1 is: " << source1 << endl;
+    
     }
     
   }

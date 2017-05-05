@@ -1421,13 +1421,26 @@ int LSDChiTools::get_starting_node_of_source(int source_key)
 {
   int this_starting_node; 
   // first get the source node of the reference channel
-  if ( key_to_source_map.find(source_key) == key_to_source_map.end() ) 
+  int source_node = -9999;
+  for(map<int,int>::iterator iter = key_to_source_map.begin(); iter != key_to_source_map.end(); ++iter)
   {
-    cout << "LSDChiTools::test_segment_collinearity This source is not in the channel network. Source is: " << source_key << endl;
+    cout << "Key is: " << iter->first << " and value is: " << iter->second << endl;
+    if (iter->second == source_key)
+    {
+      
+      source_node = iter->first;
+      cout << "I found the source key AWESOME! The source key is: " << source_node << endl;
+    } 
+  }
+  
+  if ( source_node == -9999 ) 
+  {
+    cout << "LSDChiTools::get_starting_node_of_source This source is not in the channel network. Source is: " << source_key << endl;
   } 
   else
   {
-    int source_node = key_to_source_map[source_key];
+    cout << "LSDChiTools::get_starting_node_of_source, the starting node of the source is: " << source_node << endl;
+    
     
     // Find the node sequence index of this node;
     int this_ns_node = -1;
@@ -1447,6 +1460,15 @@ int LSDChiTools::get_starting_node_of_source(int source_key)
   }
   
   return this_starting_node;  
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Gets the number of channels
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+int LSDChiTools::get_number_of_channels()
+{
+  int n_channels = int(key_to_source_map.size());
+  return n_channels;  
 }
 
 

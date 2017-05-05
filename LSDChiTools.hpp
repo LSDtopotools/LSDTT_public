@@ -242,6 +242,13 @@ class LSDChiTools
     /// @date 04/05/2017
     int get_starting_node_of_source(int source_key);
     
+    /// @brief Gets the number of channels in the DEM
+    /// @return number of channels
+    /// @author SMM
+    /// @date 05/05/2017
+    int get_number_of_channels();
+    
+    
     /// @brief This function maps out the chi steepness and other channel
     ///  metrics in chi space from all the sources supplied in the
     ///  source_nodes vector. The source and outlet nodes vector is
@@ -418,6 +425,7 @@ class LSDChiTools
     /// This holds the baselevel key of each node. Again used for visualisation
     map<int,int> baselevel_keys_map;
     /// This is a map where the sources are linked to the source nodes.
+    /// The key is the node index and the value is the source number
     map<int,int> key_to_source_map;
     /// This is a map where the baselevel keys are linked to the baselelvel nodes.
     map<int,int> key_to_baselevel_map;
