@@ -54,6 +54,7 @@
 #include "../LSDBasin.hpp"
 #include "../LSDChiTools.hpp"
 #include "../LSDParameterParser.hpp"
+#include "../LSDSpatialCSVReader.hpp"
 #include "../LSDShapeTools.hpp"
 
 int main (int nNumberofArgs,char *argv[])
@@ -118,6 +119,10 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["m_over_n"] = 0.5;
   float_default_map["sigma"] = 20;
   
+  // For DEM preprocessing
+  float_default_map["minimum_elevation"] = 0.0;
+  float_default_map["maximum_elevation"] = 30000;
+  
   // set default methods
   bool_default_map["only_check_parameters"] = false;
   bool_default_map["print_stream_order_raster"] = false;
@@ -138,6 +143,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_simple_chi_map_with_basins_to_csv"] = false;
   bool_default_map["print_segments"] = false;
   bool_default_map["raster_is_filled"] = false;
+  bool_default_map["remove_seas"] = false;
   
   // set default string method
   string_default_map["CHeads_file"] = "NULL";
@@ -186,9 +192,27 @@ int main (int nNumberofArgs,char *argv[])
   bool test_drainage_boundaries = this_bool_map["test_drainage_boundaries"];
 
   // load the  DEM
-  LSDRaster topography_raster((DATA_DIR+DEM_ID), raster_ext);
+  LSDRaster topography_raster;
+  if (this_bool_map["remove_seas"])
+  {
+    cout << "I am removing high and low values to get rid of things that should be nodata." << endl;
+    LSDRaster start_raster((DATA_DIR+DEM_ID), raster_ext);
+    // now get rid of the low and high values
+    float lower_threshold = this_float_map["minimum_elevation"];
+    float upper_threshold = this_float_map["maximum_elevation"];
+    bool belowthresholdisnodata = true;
+    LSDRaster Flooded = start_raster.mask_to_nodata_using_threshold(lower_threshold,belowthresholdisnodata);
+    belowthresholdisnodata = false;
+    topography_raster = Flooded.mask_to_nodata_using_threshold(upper_threshold,belowthresholdisnodata);
+  }
+  else
+  {
+    LSDRaster start_raster((DATA_DIR+DEM_ID), raster_ext);
+    topography_raster = start_raster;
+  }
   cout << "Got the dem: " <<  DATA_DIR+DEM_ID << endl;
-  
+
+
   float Resolution = topography_raster.get_DataResolution();
   map<string,string> GRS = topography_raster.get_GeoReferencingStrings();
 
@@ -354,16 +378,24 @@ int main (int nNumberofArgs,char *argv[])
   LSDRaster chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,A_0,thresh_area_for_chi);
 
   if(this_bool_map["print_chi_coordinate_raster"])
-  {                                                                         
+  {
     string chi_coord_string = OUT_DIR+OUT_ID+"_chi_coord"; 
     chi_coordinate.write_raster(chi_coord_string,raster_ext);
-  }                                                                         
+  }
   
   if (this_bool_map["print_simple_chi_map_to_csv"])
   {
     cout <<"I am printing a simple chi map for you to csv." << endl;
     string chi_csv_fname = OUT_DIR+OUT_ID+"_chi_coord.csv";
     ChiTool.chi_map_to_csv(FlowInfo, chi_csv_fname, chi_coordinate);
+    
+    if ( this_bool_map["convert_csv_to_geojson"])
+    {
+      string gjson_name = OUT_DIR+OUT_ID+"_chi_coord.geojson";
+      LSDSpatialCSVReader thiscsv(chi_csv_fname);
+      thiscsv.print_data_to_geojson(gjson_name);
+    }
+    
   }
 
   if (this_bool_map["print_simple_chi_map_with_basins_to_csv"])
@@ -372,6 +404,13 @@ int main (int nNumberofArgs,char *argv[])
     LSDIndexRaster basin_raster = ChiTool.get_basin_raster(FlowInfo, JunctionNetwork, BaseLevelJunctions);
     string chi_csv_fname = OUT_DIR+DEM_ID+"_chi_coord_basins.csv";
     ChiTool.chi_map_to_csv(FlowInfo, chi_csv_fname, chi_coordinate,basin_raster);
+    
+    if ( this_bool_map["convert_csv_to_geojson"])
+    {
+      string gjson_name = OUT_DIR+DEM_ID+"_chi_coord_basins.geojson";
+      LSDSpatialCSVReader thiscsv(chi_csv_fname);
+      thiscsv.print_data_to_geojson(gjson_name);
+    }
   }
 
 
@@ -419,17 +458,40 @@ int main (int nNumberofArgs,char *argv[])
     cout << "Let me print all the data for you into a csv file called " << csv_full_fname << endl;
     ChiTool.print_data_maps_to_file_full(FlowInfo, csv_full_fname);
     cout << "That is your file printed!" << endl;
-    
+
+                                    
+    if ( this_bool_map["convert_csv_to_geojson"])
+    {
+      string gjson_name = OUT_DIR+OUT_ID+"_MChiSegmented.geojson";
+      LSDSpatialCSVReader thiscsv(csv_full_fname);
+      thiscsv.print_data_to_geojson(gjson_name);
+    }
+
     // These print the source and baselelvel keys if wanted
     if (this_bool_map["print_source_keys"])
     {
       string sources_keys_name = OUT_DIR+OUT_ID+"_SourceKeys.csv";
       ChiTool.print_source_keys(FlowInfo, sources_keys_name);
+      
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_SourceKeys.geojson";
+        LSDSpatialCSVReader thiscsv(sources_keys_name);
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+      
     }
     if (this_bool_map["print_baselevel_keys"])
     {
       string baselevel_keys_name = OUT_DIR+OUT_ID+"_BaselevelKeys.csv";
       ChiTool.print_baselevel_keys(FlowInfo, JunctionNetwork, baselevel_keys_name);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_BaselevelKeys.geojson";
+        LSDSpatialCSVReader thiscsv(baselevel_keys_name);
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
     }
     
   }
@@ -443,6 +505,13 @@ int main (int nNumberofArgs,char *argv[])
                                     chi_coordinate, basic_Mchi_regression_nodes);
     string csv_full_fname = OUT_DIR+OUT_ID+"_MChiBasic.csv";
     ChiTool2.print_data_maps_to_file_full(FlowInfo, csv_full_fname);
+    
+    if ( this_bool_map["convert_csv_to_geojson"])
+    {
+      string gjson_name = OUT_DIR+OUT_ID+"_MChiBasic.geojson";
+      LSDSpatialCSVReader thiscsv(csv_full_fname);
+      thiscsv.print_data_to_geojson(gjson_name);
+    }
   }
 
   if (this_bool_map["write hillshade"])
