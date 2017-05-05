@@ -125,10 +125,18 @@ int main (int nNumberofArgs,char *argv[])
   
   // set default methods
   bool_default_map["only_check_parameters"] = false;
+  
+  // flags for printing rasters
   bool_default_map["print_stream_order_raster"] = false;
   bool_default_map["print_junction_index_raster"] = false;
   bool_default_map["print_fill_raster"] = false;
   bool_default_map["print_DrainageArea_raster"] = false;
+  
+  // flags for printing channel networks, junctions and sources. 
+  bool_default_map["print_junctions_to_csv"] = false;
+  bool_default_map["print_channels_to_csv"] = false;
+  
+  // flags for printing chi analyses
   bool_default_map["print_chi_coordinate_raster"] = false;
   bool_default_map["print_simple_chi_map_to_csv"] = false;
   bool_default_map["print_segmented_M_chi_map_to_csv"] = false;
@@ -294,6 +302,39 @@ int main (int nNumberofArgs,char *argv[])
   // now get the junction network
   LSDJunctionNetwork JunctionNetwork(sources, FlowInfo);
 
+  // Print channels and junctions if you want them. 
+  if( this_bool_map["print_channels_to_csv"])
+  {
+    string channel_csv_name = OUT_DIR+OUT_ID+"_CN";
+    JunctionNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+    
+    // convert to geojson if that is what the user wants 
+    // It is read more easily by GIS software but has bigger file size
+    if ( this_bool_map["convert_csv_to_geojson"])
+    {
+      string gjson_name = OUT_DIR+OUT_ID+"_CN.geojson";
+      LSDSpatialCSVReader thiscsv(OUT_DIR+OUT_ID+"_CN.csv");
+      thiscsv.print_data_to_geojson(gjson_name);
+    }
+    
+  }
+
+  // print junctions
+  if( this_bool_map["print_junctions_to_csv"])
+  {
+    cout << "I am writing the junctions to csv." << endl;
+    string channel_csv_name = OUT_DIR+OUT_ID+"_JN.csv";
+    JunctionNetwork.print_junctions_to_csv(FlowInfo, channel_csv_name);
+    
+    if ( this_bool_map["convert_csv_to_geojson"])
+    {
+      string gjson_name = OUT_DIR+OUT_ID+"_JN.geojson";
+      LSDSpatialCSVReader thiscsv(channel_csv_name);
+      thiscsv.print_data_to_geojson(gjson_name);
+    }
+  }
+
+
   // Print sources
   if( this_bool_map["print_sources_to_csv"])
   {
@@ -301,6 +342,14 @@ int main (int nNumberofArgs,char *argv[])
       
     //write channel_heads to a csv file
     FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(sources, sources_csv_name);
+    
+    if ( this_bool_map["convert_csv_to_geojson"])
+    {
+      string gjson_name = OUT_DIR+OUT_ID+"_ATsources.geojson";
+      LSDSpatialCSVReader thiscsv(sources_csv_name);
+      thiscsv.print_data_to_geojson(gjson_name);
+    }
+    
   }
   if (this_bool_map["print_stream_order_raster"])
   { 
