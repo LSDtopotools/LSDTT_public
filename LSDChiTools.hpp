@@ -233,7 +233,15 @@ class LSDChiTools
     /// @author SMM
     /// @date 04/05/2017
     float test_segment_collinearity(LSDFlowInfo& FlowInfo, int reference_channel, int test_channel);
-    
+
+    /// @brief This gets the node index (the reference into LSDFlowInfo) of a source
+    ///  based on a source key
+    /// @param source_key the source key of the reference channel
+    /// @return the node index of the source node
+    /// @author SMM
+    /// @date 06/05/2017
+    int get_source_from_source_key(int source_key);
+
     /// @brief This gets the index into the node_sequence vector of the first
     ///  node in a channel identified by its source key
     /// @param source_key the source key of the reference channel
@@ -247,8 +255,20 @@ class LSDChiTools
     /// @author SMM
     /// @date 05/05/2017
     int get_number_of_channels();
-    
-    
+
+    /// @brief This takes a source key and a flow info object and overwrites vectors
+    ///  containing chi and elevation data from a channel tagged by a source
+    ///  key. The idea is to use this in the MLE comparison between two channels
+    ///  to check for collinearity
+    /// @param FlowInfo and LSDFlowInfo object
+    /// @param source_key The key of the source
+    /// @param chi_data A vector holding chi data of the channel. Will be overwritten
+    /// @param elevation_data A vector holding elevation data of the channel. Will be overwritten
+    /// @author SMM
+    /// @date 06/05/2017
+    void get_chi_elevation_data_of_channel(LSDFlowInfo& FlowInfo, int source_key, 
+                                vector<float>& chi_data, vector<float>& elevation_data);
+
     /// @brief This function maps out the chi steepness and other channel
     ///  metrics in chi space from all the sources supplied in the
     ///  source_nodes vector. The source and outlet nodes vector is

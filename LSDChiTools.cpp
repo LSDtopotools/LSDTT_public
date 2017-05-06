@@ -484,7 +484,7 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
   map<int,int> these_source_keys;
   map<int,int> these_baselevel_keys;
 
-  // These two maps link a keys, which are incrmented by one, to the
+  // These two maps link keys, which are incrmented by one, to the
   // junction or node of the baselevel or source
   map<int,int> this_key_to_source_map;
   map<int,int> this_key_to_baselevel_map;
@@ -1413,51 +1413,57 @@ float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int referenc
 
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This gets the source node of a given key
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+int LSDChiTools::get_source_from_source_key(int source_key)
+{
+  // first get the source node of the reference channel
+  int source_node = -9999;
+  map<int,int>::iterator iter = key_to_source_map.begin();
+  while(iter != key_to_source_map.end())
+  {
+    if (iter->second == source_key)
+    {
+      source_node = iter->first;
+      //cout << "I found the source key AWESOME! The source key is: " << source_node << endl;
+    }
+    iter++; 
+  }
+  
+  if ( source_node == -9999 ) 
+  {
+    cout << "LSDChiTools::get_starting_node_of_source " << endl;
+    cout << "FATAL ERROR: This source is not in the channel network. Source is: " << source_key << endl;
+    exit(EXIT_FAILURE);
+  } 
+  
+  return source_node;
+}  
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Given a source key, find the index of the starting node in the node sequence
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 int LSDChiTools::get_starting_node_of_source(int source_key)
 {
-  int this_starting_node; 
-  // first get the source node of the reference channel
-  int source_node = -9999;
-  for(map<int,int>::iterator iter = key_to_source_map.begin(); iter != key_to_source_map.end(); ++iter)
-  {
-    cout << "Key is: " << iter->first << " and value is: " << iter->second << endl;
-    if (iter->second == source_key)
-    {
-      
-      source_node = iter->first;
-      cout << "I found the source key AWESOME! The source key is: " << source_node << endl;
-    } 
-  }
+  int source_node = get_source_from_source_key(source_key); 
+  int this_starting_node = -9999;
+
+  // Find the node sequence index of this node;
+  int this_ns_node = -1;
   
-  if ( source_node == -9999 ) 
+  bool not_starting_node = true;
+  while (not_starting_node)
   {
-    cout << "LSDChiTools::get_starting_node_of_source This source is not in the channel network. Source is: " << source_key << endl;
-  } 
-  else
-  {
-    cout << "LSDChiTools::get_starting_node_of_source, the starting node of the source is: " << source_node << endl;
-    
-    
-    // Find the node sequence index of this node;
-    int this_ns_node = -1;
-    
-    bool not_starting_node = true;
-    while (not_starting_node)
+    this_ns_node++;
+    if(node_sequence[this_ns_node] == source_node)
     {
-      this_ns_node++;
-      if(node_sequence[this_ns_node] == source_node)
-      {
-        not_starting_node = false;
-        this_starting_node = this_ns_node;
-      }
-      
+      not_starting_node = false;
+      this_starting_node = this_ns_node;
     }
-    cout << "The starting node in the sequence is: " << this_starting_node;
   }
+  //cout << "The starting node in the sequence is: " << this_starting_node << endl;
   
   return this_starting_node;  
 }
@@ -1469,6 +1475,74 @@ int LSDChiTools::get_number_of_channels()
 {
   int n_channels = int(key_to_source_map.size());
   return n_channels;  
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Gets the number of channels
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::get_chi_elevation_data_of_channel(LSDFlowInfo& FlowInfo, int source_key, 
+                                vector<float>& chi_data, vector<float>& elevation_data)
+{
+  int n_channels = int(key_to_source_map.size());
+  if (source_key>=n_channels)
+  {
+    cout << "LSDChiTools::get_chi_elevation_data_of_channel FATAL ERROR" << endl;
+    cout << "THis source key is not in channel network" << endl;
+    exit(EXIT_FAILURE);
+  }
+  
+  // get source node
+  int starting_source = get_source_from_source_key(source_key);
+  
+  vector<float> this_chi;
+  vector<float> this_elevation;
+  
+  // add the source to the chi elevation vectors
+  this_chi.push_back(chi_data_map[starting_source]);
+  this_elevation.push_back(elev_data_map[starting_source]);
+  
+  // now work downstream until you get to a different source or
+  // a baselevel node
+  bool is_end = false;
+  int current_node = starting_source;
+  int receiver_node,receiver_row,receiver_col;
+  int this_source_key;
+  while(not is_end)
+  {
+    FlowInfo.retrieve_receiver_information(current_node,receiver_node, receiver_row,receiver_col);
+    
+    if(current_node == receiver_node)
+    {
+      // this is a baselelvel node, simply switch on the is_end boolean
+      is_end = true;
+    }
+    else
+    {
+      this_source_key = source_keys_map[receiver_node];
+      if (this_source_key != source_key)
+      {
+        cout << "I made it to the end of this channel" << endl;
+      }
+      else
+      {
+        this_chi.push_back(chi_data_map[receiver_node]);
+        this_elevation.push_back(elev_data_map[receiver_node]);
+      }
+    }
+    // increment the node downstream
+    current_node = receiver_node;
+    
+  }
+  
+  elevation_data = this_elevation;
+  chi_data = this_chi;
+  
+  // For debugging
+  int n_nodes = int(elevation_data.size());
+  for(int i= 0; i<n_nodes; i++)
+  {
+    cout << chi_data[i] << "," << elevation_data[i] << endl;
+  }
 }
 
 

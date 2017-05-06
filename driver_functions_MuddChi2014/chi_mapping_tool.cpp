@@ -555,10 +555,15 @@ int main (int nNumberofArgs,char *argv[])
       // now get the sources of the first two channels
       int chan0 = 0;
       int chan1 = 1;
-      int source0 = ChiTool.get_starting_node_of_source(chan0);
-      int source1 = ChiTool.get_starting_node_of_source(chan1);
-      cout << "Source of channel 0 is: " << source0 << endl;
-      cout << "Source of channel 1 is: " << source1 << endl;
+      //int source0 = ChiTool.get_starting_node_of_source(chan0);
+      //int source1 = ChiTool.get_starting_node_of_source(chan1);
+      //out << "Source of channel 0 is: " << source0 << endl;
+      //cout << "Source of channel 1 is: " << source1 << endl;
+      vector<float> elev_data;
+      vector<float> chi_data;
+      ChiTool.get_chi_elevation_data_of_channel(FlowInfo, chan0, chi_data, elev_data);
+      
+      
     
     }
     
