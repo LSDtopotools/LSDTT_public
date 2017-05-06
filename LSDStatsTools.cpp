@@ -1091,49 +1091,58 @@ vector<float> simple_linear_regression(vector<float>& x_data, vector<float>& y_d
   {
     cout << "WARNING simple_linear_regression Solution data is empty! Prepare for segmentation!" << endl;
     cout << "Dimensions are: n_x: " << n_x << " solution matrix: " << solution.dim1() << " " << solution.dim2() << endl;
-  }
-
-
-  vector<float> soln;
-  for(int i = 0; i<2; i++)
-  {
-    soln.push_back(solution[i][0]);
-  }
-
-  // get some statistics
-  float mean = get_mean(y_data);
-  float SST = get_SST(y_data, mean);
-  // now get the predictions
-  vector<float> predicted;
-  vector<float> temp_residuals;
-
-  // get predicted, residuals, etc
-  float SS_reg = 0;
-  float SS_err = 0;
-  //cout << endl;
-  for(int i = 0; i<n_rows; i++)
-  {
-    predicted.push_back(soln[0]*x_data[i] + soln[1]);
-    temp_residuals.push_back(predicted[i]-y_data[i]);
-    if (fabs(temp_residuals[i]) < rounding_cutoff)
+    cout << "EXPERIMENTAL: I am trying to identify the segmentation faults and to avoid it. It will result in nodata (-9999) in your mchi data. EXPERIMENTAL"<< endl;
+    vector<float> soln_nodata;
+    for(int i = 0; i<2; i++)
     {
-      temp_residuals[i] = 0;
+      soln_nodata.push_back(-9999);
     }
-    SS_reg+=(predicted[i]-mean)*(predicted[i]-mean);
-
-    SS_err+=temp_residuals[i]*temp_residuals[i];
-
-    //cout << "RESIDUAL, i: " << i << " pred: " << predicted[i] << " data: " << y_data[i] << " resid: " << temp_residuals[i] << endl;
+    return soln_nodata;
   }
 
-  // now get R^2
-  soln.push_back(1 - SS_err/SST);
+  else
+  {
+    vector<float> soln;
+    for(int i = 0; i<2; i++)
+    {
+      soln.push_back(solution[i][0]);
+    }
 
-  // now get the durbin_watson statistic
-  soln.push_back( get_durbin_watson_statistic(temp_residuals) );
+    // get some statistics
+    float mean = get_mean(y_data);
+    float SST = get_SST(y_data, mean);
+    // now get the predictions
+    vector<float> predicted;
+    vector<float> temp_residuals;
 
-  residuals = temp_residuals;
-  return soln;
+    // get predicted, residuals, etc
+    float SS_reg = 0;
+    float SS_err = 0;
+    //cout << endl;
+    for(int i = 0; i<n_rows; i++)
+    {
+      predicted.push_back(soln[0]*x_data[i] + soln[1]);
+      temp_residuals.push_back(predicted[i]-y_data[i]);
+      if (fabs(temp_residuals[i]) < rounding_cutoff)
+      {
+        temp_residuals[i] = 0;
+      }
+      SS_reg+=(predicted[i]-mean)*(predicted[i]-mean);
+
+      SS_err+=temp_residuals[i]*temp_residuals[i];
+
+      //cout << "RESIDUAL, i: " << i << " pred: " << predicted[i] << " data: " << y_data[i] << " resid: " << temp_residuals[i] << endl;
+    }
+
+    // now get R^2
+    soln.push_back(1 - SS_err/SST);
+
+    // now get the durbin_watson statistic
+    soln.push_back( get_durbin_watson_statistic(temp_residuals) );
+
+    residuals = temp_residuals;
+    return soln;
+  }
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1171,7 +1180,7 @@ void least_squares_linear_regression(vector<float> x_data,vector<float> y_data, 
 vector<float> orthogonal_linear_regression( vector<float>& x_data, vector<float>& y_data, float& intercept, float& gradient, float& R_squared)
 {
   vector<float> means(2,0.0);
-  
+
   float SS_xx=0;
   float SS_yy=0;
   float SS_xy=0;
@@ -1191,7 +1200,7 @@ vector<float> orthogonal_linear_regression( vector<float>& x_data, vector<float>
 
   gradient = (SS_yy-SS_xx+sqrt( (SS_yy-SS_xx)*(SS_yy-SS_xx)+ 4*SS_xy*SS_xy ))/(2*SS_xy);
   intercept = y_mean - gradient*x_mean;
-  
+
   means[0] = x_mean;
   means[1]= y_mean;
   R_squared = SS_xy*SS_xy/(SS_xx*SS_yy);
@@ -4887,7 +4896,7 @@ double deg(double radians)
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Get the angle between two vectors in radians
-// These vectors are mathematical vectors with a starting point at 0,0. 
+// These vectors are mathematical vectors with a starting point at 0,0.
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float angle_between_vectors(float x1, float y1, float x2, float y2)
 {
@@ -4901,8 +4910,8 @@ float angle_between_vectors(float x1, float y1, float x2, float y2)
 // Get the angle between two vectors in radians
 // We need to calculate the (x1,y1) and (x2,y2) coordinates by moving
 // the vectors to intercept (0,0)
-// the bool vectors_point_downstream is true if the vector's first element is the 
-// upstream node in a channel and false if the first node is downstream. 
+// the bool vectors_point_downstream is true if the vector's first element is the
+// upstream node in a channel and false if the first node is downstream.
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float angle_between_two_vector_datasets(vector<float>& x1_data, vector<float>& y1_data,
                                         vector<float>& x2_data, vector<float>& y2_data,
@@ -4912,7 +4921,7 @@ float angle_between_two_vector_datasets(vector<float>& x1_data, vector<float>& y
   vector<float> v2_floats = get_directional_vector_coords_from_dataset(x2_data, y2_data, vectors_point_downstream);
 
   float angle = angle_between_vectors(v1_floats[0], v1_floats[1], v2_floats[0], v2_floats[1]);
-  
+
   return angle;
 
 }
@@ -4920,14 +4929,14 @@ float angle_between_two_vector_datasets(vector<float>& x1_data, vector<float>& y
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function takes x and y data as vectors and returns a 2 element vector
-// where the 0 element is the x1 component of a directional vector 
+// where the 0 element is the x1 component of a directional vector
 // and the 1 element is the y1 component of a directional vector
-// vector vector vector, Victor. 
+// vector vector vector, Victor.
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-vector<float> get_directional_vector_coords_from_dataset(vector<float> x_data, vector<float>& y_data, 
+vector<float> get_directional_vector_coords_from_dataset(vector<float> x_data, vector<float>& y_data,
                       bool vectors_point_downstream)
 {
-  // if the vectors point downstream we need to reverse the order of the nodes. 
+  // if the vectors point downstream we need to reverse the order of the nodes.
   if (vectors_point_downstream)
   {
     reverse(x_data.begin(),x_data.end());
@@ -4948,7 +4957,7 @@ vector<float> get_directional_vector_coords_from_dataset(vector<float> x_data, v
   // 4 | 1
   // -----
   // 3 | 2
-  
+
   // now we go through a lot of tedious logic to figure out which direction
   // the vector is pointing
   if( vector_mean[0] > x_data[0] )
@@ -4960,12 +4969,12 @@ vector<float> get_directional_vector_coords_from_dataset(vector<float> x_data, v
       if(gradient > 0)
       {
         y1 = gradient;
-        
+
       }
       else
       {
         y1 = -gradient;
-        
+
       }
     }
     else
@@ -5009,7 +5018,7 @@ vector<float> get_directional_vector_coords_from_dataset(vector<float> x_data, v
       {
         y1 = gradient;
       }
-    }  
+    }
   }
   if (quadrant == -99)
   {
@@ -5018,7 +5027,7 @@ vector<float> get_directional_vector_coords_from_dataset(vector<float> x_data, v
   //cout << "quadrant is: " << quadrant << endl;
   //cout << "x,y are: " << x1 << " " << y1 << endl;
   //cout << "======================" << endl << endl;
-  
+
   // okay, print the results
   vector<float> vec_coords(2,0.0);
   vec_coords[0] = x1;
