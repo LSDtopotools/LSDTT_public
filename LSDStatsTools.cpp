@@ -2308,8 +2308,124 @@ vector< vector < vector<int> > > partition_driver_to_vecvecvec(int k, int minimu
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This returns combinations. It prints to screen.
+// The vector v is empty; it is used for storing data. 
+// We using n choose Maxk (so say, 10 integers in combos of three means n = 10, k =3)
+// Maxk is the maximum numer of integers you use.  
+// from
+// http://www.cs.utexas.edu/users/djimenez/utsa/cs3343/lecture25.html
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void combinations (vector<int> v, int start, int n, int k, int maxk) 
+{
+  int i;
+  if (int(v.size()) <= maxk)
+  {
+    cout << "FATAL ERROR your vector is too small for combinations (LSDStatsTools)" << endl;
+    exit(EXIT_FAILURE);
+  }
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+  // k here counts through positions in the maxk-element v.
+  //if k > maxk, then the v is complete and we can use it.
+  if (k > maxk) 
+  {
+    //insert code here to use combinations as you please */
+    //cout << "maxk is: " << maxk << endl;
+    for (i=1; i<=maxk; i++) 
+    {
+      cout << v[i] << " ";
+    }
+    cout << endl;
+    return;
+  }
+
+  // for this k'th element of the v, try all start..n
+  //elements in that position
+  for (i=start; i<=n; i++) 
+  {
+    v[k] = i;
+
+    // recursively generate combinations of integers
+    // from i+1..n
+    combinations (v, i+1, n, k+1, maxk);
+  }
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This returns combinations. It prints to screen.
+// The vector v is empty; it is used for storing data. 
+// We using n choose Maxk (so say, 10 integers in combos of three means n = 10, k =3)
+// Maxk is the maximum numer of integers you use.  
+// from
+// http://www.cs.utexas.edu/users/djimenez/utsa/cs3343/lecture25.html
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void combinations (vector<int> v, int start, int n, int k, int maxk, vector<vector <int> >& these_combinations) 
+{
+  
+  int i;
+  if (int(v.size()) <= maxk)
+  {
+    cout << "FATAL ERROR your vector is too small for combinations (LSDStatsTools)" << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  // k here counts through positions in the maxk-element v.
+  //if k > maxk, then the v is complete and we can use it.
+  if (k > maxk) 
+  {
+    //insert code here to use combinations as you please */
+    //cout << "maxk is: " << maxk << endl;
+    vector<int> this_combo;
+    for (i=1; i<=maxk; i++) 
+    {
+      this_combo.push_back( v[i]);
+    }
+    these_combinations.push_back(this_combo);
+    return;
+  }
+
+  // for this k'th element of the v, try all start..n
+  //elements in that position
+  for (i=start; i<=n; i++) 
+  {
+    v[k] = i;
+
+    // recursively generate combinations of integers
+    // from i+1..n
+    combinations (v, i+1, n, k+1, maxk,these_combinations);
+  }
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This just takes two inputs, the number of integers (starting from 1) and
+// the "choose" variable (k)
+void combinations(int n, int k) 
+{
+  
+  vector< vector<int> > combovecvec;
+  vector<int> v(n+1);
+  
+  combinations(v, 1, n, 1, k,combovecvec);
+  for(int i = 0; i< int(combovecvec.size()); i++)
+  {
+    for(int j = 0; j<k; j++)
+    {
+      cout << combovecvec[i][j] << " ";
+    }
+    cout << endl;
+  
+  }
+  
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // an integer partition algorithm
 // Algorithm and original Pascal implementation: Frank Ruskey, 1995.
 // Translation to C: Joe Sawada, 1997
@@ -2335,11 +2451,11 @@ void integer_partition(int n, int k, int t, vector<int>& p)
     integer_partition (n-k,j,t+1, p);
   }
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // an integer partition algorithm
 // Algorithm and original Pascal implementation: Frank Ruskey, 1995.
 // Translation to C: Joe Sawada, 1997
@@ -2351,7 +2467,7 @@ void integer_partition(int n, int k, int t, vector<int>& p)
 // Skiena, S. Implementing Discrete Mathematics: Combinatorics and Graph Theory with Mathematica. Reading, MA: Addison-Wesley, 1990.
 // this is a further adaptation that only presents solution to the partition
 // with segments of a minimum length
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void partitions_with_minimum_length(int n, int k, int t, int min_length, vector<int>& p)
 {
 

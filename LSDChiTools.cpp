@@ -1400,6 +1400,7 @@ float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int referenc
   // minimum chi of the reference segment the data point is ignored. 
   
   float MLE = 1;
+  float sigma = 100;
   // first get the source node of the reference channel
   if ( key_to_source_map.find(reference_channel) == key_to_source_map.end() ) 
   {
@@ -1407,7 +1408,18 @@ float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int referenc
   } 
   else
   {
-    int starting_node_sequence_index = get_starting_node_of_source(reference_channel);
+    vector<float> elev_data_chan0;
+    vector<float> chi_data_chan0;
+    get_chi_elevation_data_of_channel(FlowInfo, reference_channel, chi_data_chan0, elev_data_chan0);
+      
+    vector<float> elev_data_chan1;
+    vector<float> chi_data_chan1;
+    get_chi_elevation_data_of_channel(FlowInfo, test_channel, chi_data_chan1, elev_data_chan1);
+
+    vector<float> residuals = project_data_onto_reference_channel(chi_data_chan0, elev_data_chan0,
+                                 chi_data_chan1,elev_data_chan1);
+    MLE = calculate_MLE_from_residuals(residuals, sigma);
+    
   }
   return MLE;
 
@@ -1546,7 +1558,7 @@ void LSDChiTools::get_chi_elevation_data_of_channel(LSDFlowInfo& FlowInfo, int s
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Project data onto a reference chi-elevation prfile
+// Project data onto a reference chi-elevation profile
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& reference_chi,
                                  vector<float>& reference_elevation, vector<float>& trib_chi,
@@ -1556,7 +1568,6 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
   // determine the elevation on the reference at the same chi. This is done by
   // interpolating the elevation as a linear fit between the two adjacent chi
   // points on the reference channel. 
-  
   int n_trib_nodes = int(trib_chi.size());
   if (n_trib_nodes <= 1)
   {
@@ -1564,6 +1575,12 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
     cout << "The tributary channel has 1 or zero nodes." << endl;
     exit(EXIT_FAILURE);
   }
+
+  vector<float> joint_chi;
+  vector<float> trib_joint_elev;
+  vector<float> ref_joint_elev;
+  vector<float> residuals;
+
 
   float this_chi;
   
@@ -1576,7 +1593,7 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
   }
   
   float max_ref_chi = reference_chi[0];
-  float min_ref_chi = reference_chi[1];
+  //float min_ref_chi = reference_chi[1];
   
   // The reference chis monotonically decrease so we will keep track of what 
   // indices the bounding chi points are. 
@@ -1602,8 +1619,10 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
   
   cout << "The number of trib nodes is: " << n_trib_nodes << endl;
   // now ramp up the the start ref index and end ramp index 
+  bool found_joint_chi;
   for (int i = this_node; i<n_trib_nodes; i++)
   {
+    found_joint_chi = false;
     cout << "trib node: " << i << endl;
     // Get the chi for this node
     this_chi = trib_chi[i];
@@ -1613,6 +1632,7 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
     {
       // It is between these reference chi values!
       cout << "FOUND CHI This chi is: " << this_chi << " and bounds are: " << ref_chi_upstream << "," << ref_chi_downstream << endl;
+      found_joint_chi = true;
     }
     else
     {
@@ -1628,6 +1648,7 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
         if (this_chi < ref_chi_upstream && this_chi > ref_chi_downstream)
         {
           found_ref_nodes = true;
+          found_joint_chi = true;
           cout << "FOUND CHI This chi is: " << this_chi << " and bounds are: " << ref_chi_upstream << "," << ref_chi_downstream << endl;
         }
       }
@@ -1638,11 +1659,55 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
         i = n_trib_nodes-1;
       }
     }
+    
+    if(found_joint_chi)
+    {
+      // we need to calculate the eleavtion on the reference vector
+      float dist_ref = ref_chi_upstream-ref_chi_downstream;
+      float chi_frac = (this_chi-ref_chi_downstream)/dist_ref;
+      float joint_elev = chi_frac*(reference_elevation[start_ref_index]-reference_elevation[end_ref_index])
+                             +reference_elevation[end_ref_index];
+      joint_chi.push_back(this_chi);
+      trib_joint_elev.push_back(trib_elevation[i]);
+      ref_joint_elev.push_back(joint_elev);
+      residuals.push_back(trib_elevation[i]-joint_elev);
+    }
   
   }
   
+  for(int i = 0; i<int(joint_chi.size()); i++)
+  {
+    cout << "residual[" << i << "]: "<< residuals[i] << endl;
+  }
+
+  // this section is for debugging
+  bool print_for_debugging = false;
+  if (print_for_debugging)
+  {
+    ofstream chans_out;
+    chans_out.open("Test_project.csv");
+    chans_out << "chi,elev,channel_code" << endl;
+    for(int i = 0; i<n_ref_nodes; i++)
+    {
+      chans_out << reference_chi[i] << "," << reference_elevation[i] <<",0" <<endl;
+    }
+    for(int i = 0; i<n_trib_nodes; i++)
+    {
+      chans_out << trib_chi[i] << "," << trib_elevation[i] <<",1" <<endl;
+    }
+    for(int i = 0; i< int(joint_chi.size()); i++)
+    {
+      chans_out << joint_chi[i] << "," << trib_joint_elev[i] <<",2" <<endl;
+    }
+    for(int i = 0; i<int(joint_chi.size()); i++)
+    {
+      chans_out << joint_chi[i] << "," << ref_joint_elev[i] <<",3" <<endl;
+    }
+    chans_out.close();
+  }
 
 
+  return residuals;
 
 }
 

@@ -567,9 +567,31 @@ int main (int nNumberofArgs,char *argv[])
       vector<float> chi_data_chan1;
       ChiTool.get_chi_elevation_data_of_channel(FlowInfo, chan1, chi_data_chan1, elev_data_chan1);
 
-      ChiTool.project_data_onto_reference_channel(chi_data_chan0, elev_data_chan0,
+      vector<float> residuals;
+      residuals = ChiTool.project_data_onto_reference_channel(chi_data_chan0, elev_data_chan0,
                                  chi_data_chan1,elev_data_chan1);
-
+      
+      // 
+      cout << "=================================="  << endl;
+      cout << "Let me partition a vector for you" << endl;
+      int n = 5;
+      int k = 2;
+      vector<int> v(100);
+      combinations (v, 1, n, 1, k);
+      
+      cout << endl << endl << "==============" << endl << "combo2" << endl;
+      combinations(n, k); 
+      cout << "===================" << endl;
+      
+      cout << "===================================" << endl;
+      
+      
+      float sigma = 1000;
+      float MLE1 = calculate_MLE_from_residuals(residuals, sigma);
+      cout << "MLE1 is: " << MLE1 << endl;
+      
+      float MLE = ChiTool.test_segment_collinearity(FlowInfo, chan0, chan1);
+      cout << "The MLE is: " << MLE << endl;
     }
     
   }
