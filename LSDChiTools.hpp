@@ -269,6 +269,20 @@ class LSDChiTools
     void get_chi_elevation_data_of_channel(LSDFlowInfo& FlowInfo, int source_key, 
                                 vector<float>& chi_data, vector<float>& elevation_data);
 
+    /// @brief This takes the chi locations of a tributarry vector and then uses
+    ///  linear interpolation to determine the elevation on a reference channel
+    ///  at those chi values
+    /// @param reference_chi the chi coordiantes of the reference channel
+    /// @param reference_elevation the elevations on the reference channel
+    /// @param trib_chi the chi coordiantes of the tributary channel
+    /// @param trib_elevation the elevations on the tributary channel
+    /// @return A vector of the elevations on the chi locations of the tributary channel
+    /// @author SMM
+    /// @date 07/05/2017
+    vector<float> project_data_onto_reference_channel(vector<float>& reference_chi,
+                                 vector<float>& reference_elevation, vector<float>& trib_chi,
+                                 vector<float>& trib_elevation);
+
     /// @brief This function maps out the chi steepness and other channel
     ///  metrics in chi space from all the sources supplied in the
     ///  source_nodes vector. The source and outlet nodes vector is

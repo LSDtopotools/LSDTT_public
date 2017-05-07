@@ -1521,7 +1521,7 @@ void LSDChiTools::get_chi_elevation_data_of_channel(LSDFlowInfo& FlowInfo, int s
       this_source_key = source_keys_map[receiver_node];
       if (this_source_key != source_key)
       {
-        cout << "I made it to the end of this channel" << endl;
+        //cout << "I made it to the end of this channel" << endl;
       }
       else
       {
@@ -1538,12 +1538,114 @@ void LSDChiTools::get_chi_elevation_data_of_channel(LSDFlowInfo& FlowInfo, int s
   chi_data = this_chi;
   
   // For debugging
-  int n_nodes = int(elevation_data.size());
-  for(int i= 0; i<n_nodes; i++)
-  {
-    cout << chi_data[i] << "," << elevation_data[i] << endl;
-  }
+  //int n_nodes = int(elevation_data.size());
+  //for(int i= 0; i<n_nodes; i++)
+  //{
+  //  cout << chi_data[i] << "," << elevation_data[i] << endl;
+  //}
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Project data onto a reference chi-elevation prfile
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& reference_chi,
+                                 vector<float>& reference_elevation, vector<float>& trib_chi,
+                                 vector<float>& trib_elevation)
+{
+  // How this works is that you take the tributary elevations and then
+  // determine the elevation on the reference at the same chi. This is done by
+  // interpolating the elevation as a linear fit between the two adjacent chi
+  // points on the reference channel. 
+  
+  int n_trib_nodes = int(trib_chi.size());
+  if (n_trib_nodes <= 1)
+  {
+    cout << "LSDChiTools::project_data_onto_reference_channel FATAL ERROR" << endl;
+    cout << "The tributary channel has 1 or zero nodes." << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  float this_chi;
+  
+  int n_ref_nodes = int(reference_chi.size());
+  if (n_ref_nodes <= 1)
+  {
+    cout << "LSDChiTools::project_data_onto_reference_channel FATAL ERROR" << endl;
+    cout << "The reference channel has 1 or zero nodes." << endl;
+    exit(EXIT_FAILURE);
+  }
+  
+  float max_ref_chi = reference_chi[0];
+  float min_ref_chi = reference_chi[1];
+  
+  // The reference chis monotonically decrease so we will keep track of what 
+  // indices the bounding chi points are. 
+  int start_ref_index = 0;
+  int end_ref_index = 1;
+  
+  // begin by ramping up to the first node within the reference vector
+  float this_trib_chi = trib_chi[0];
+  int this_node=0;
+  if(this_trib_chi > max_ref_chi)
+  {
+    // the node in the trib is outside of the reference frame. Increment
+    // the index until it is.
+    while(this_node < n_trib_nodes && trib_chi[this_node] <= max_ref_chi)
+    {
+      this_node++;
+    }
+  }
+  
+  this_chi = trib_chi[this_node];
+  float ref_chi_upstream = reference_chi[start_ref_index];
+  float ref_chi_downstream =  reference_chi[end_ref_index];
+  
+  cout << "The number of trib nodes is: " << n_trib_nodes << endl;
+  // now ramp up the the start ref index and end ramp index 
+  for (int i = this_node; i<n_trib_nodes; i++)
+  {
+    cout << "trib node: " << i << endl;
+    // Get the chi for this node
+    this_chi = trib_chi[i];
+
+    // now test if it is between the upstream and downstream chi coordinates in the reference vector
+    if (this_chi < ref_chi_upstream && this_chi > ref_chi_downstream)
+    {
+      // It is between these reference chi values!
+      cout << "FOUND CHI This chi is: " << this_chi << " and bounds are: " << ref_chi_upstream << "," << ref_chi_downstream << endl;
+    }
+    else
+    {
+      // we didn't find the chi, we need to move through the reference vector to find 
+      // the chi value
+      bool found_ref_nodes = false;
+      while (end_ref_index < n_ref_nodes && not found_ref_nodes)
+      {
+        start_ref_index++;
+        end_ref_index++;
+        ref_chi_upstream = reference_chi[start_ref_index];
+        ref_chi_downstream =  reference_chi[end_ref_index];
+        if (this_chi < ref_chi_upstream && this_chi > ref_chi_downstream)
+        {
+          found_ref_nodes = true;
+          cout << "FOUND CHI This chi is: " << this_chi << " and bounds are: " << ref_chi_upstream << "," << ref_chi_downstream << endl;
+        }
+      }
+      // There is different logic if we reached the end of the reference vector
+      if (end_ref_index == n_ref_nodes-1)
+      {
+        cout << "I am at the end of the reference vector" << endl;
+        i = n_trib_nodes-1;
+      }
+    }
+  
+  }
+  
+
+
+
+}
+
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

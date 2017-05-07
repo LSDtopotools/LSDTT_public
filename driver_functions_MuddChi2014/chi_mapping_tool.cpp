@@ -559,12 +559,17 @@ int main (int nNumberofArgs,char *argv[])
       //int source1 = ChiTool.get_starting_node_of_source(chan1);
       //out << "Source of channel 0 is: " << source0 << endl;
       //cout << "Source of channel 1 is: " << source1 << endl;
-      vector<float> elev_data;
-      vector<float> chi_data;
-      ChiTool.get_chi_elevation_data_of_channel(FlowInfo, chan0, chi_data, elev_data);
+      vector<float> elev_data_chan0;
+      vector<float> chi_data_chan0;
+      ChiTool.get_chi_elevation_data_of_channel(FlowInfo, chan0, chi_data_chan0, elev_data_chan0);
       
-      
-    
+      vector<float> elev_data_chan1;
+      vector<float> chi_data_chan1;
+      ChiTool.get_chi_elevation_data_of_channel(FlowInfo, chan1, chi_data_chan1, elev_data_chan1);
+
+      ChiTool.project_data_onto_reference_channel(chi_data_chan0, elev_data_chan0,
+                                 chi_data_chan1,elev_data_chan1);
+
     }
     
   }
