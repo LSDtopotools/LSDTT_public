@@ -1091,7 +1091,7 @@ vector<float> simple_linear_regression(vector<float>& x_data, vector<float>& y_d
   {
     cout << "WARNING simple_linear_regression Solution data is empty! Prepare for segmentation!" << endl;
     cout << "Dimensions are: n_x: " << n_x << " solution matrix: " << solution.dim1() << " " << solution.dim2() << endl;
-    cout << "EXPERIMENTAL: I am trying to identify the segmentation faults and to avoid it. It will result in nodata (-9999) in your mchi data. EXPERIMENTAL"<< endl;
+    cout << "WARNING: There is an anomaly for this segment and I cannot proceed to the linear regression (Is it a dam ?), I am returning -9999 for m and b chi values"<< endl;
     vector<float> soln_nodata;
     for(int i = 0; i<2; i++)
     {
