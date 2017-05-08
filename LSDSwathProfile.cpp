@@ -1102,8 +1102,10 @@ LSDRaster LSDSwath::fill_in_channels_swath(LSDRaster& Raster)
 // second raster to the baseline value.
 // vector of vectors has the format:
 // 0 = patch ID
-// 1 = mean raster value for the patch id
-// 2 = mean distance along the baseline
+// 1 = mean distance along the baseline
+// 2 = mean raster value for the patch id
+// 3 = standard deviation of raster value for patch id
+// 4 = standard error of raster value for patch id
 // FJC
 // 23/01/17
 //
@@ -1113,6 +1115,8 @@ vector <vector <float> > LSDSwath::get_connected_components_along_swath(LSDIndex
   vector <vector <float> > MasterVector;
   vector<float> RasterValues;
   vector<float> DistAlongBaseline;
+  vector<float> RasterStDevs;
+  vector<float> RasterStErrs;
 
   float Resolution = RasterTemplate.get_DataResolution();
 	Array2D<float> RasterValues_temp = RasterTemplate.get_RasterData();
@@ -1175,8 +1179,12 @@ vector <vector <float> > LSDSwath::get_connected_components_along_swath(LSDIndex
       }
     }
     float mean_value = get_mean(raster_values);
+    float stdev = get_standard_deviation(raster_values, mean_value);
+    float sterr = get_standard_error(raster_values, stdev);
     float mean_dist = get_mean(DistAlongBaseline_temp);
     RasterValues.push_back(mean_value);
+    RasterStDevs.push_back(stdev);
+    RasterStErrs.push_back(sterr);
     DistAlongBaseline.push_back(mean_dist);
   }
 
@@ -1184,8 +1192,10 @@ vector <vector <float> > LSDSwath::get_connected_components_along_swath(LSDIndex
 
   // store in the MasterVector
   MasterVector.push_back(Unique_Patches_float);
-  MasterVector.push_back(RasterValues);
   MasterVector.push_back(DistAlongBaseline);
+  MasterVector.push_back(RasterValues);
+  MasterVector.push_back(RasterStDevs);
+  MasterVector.push_back(RasterStErrs);
 
   return MasterVector;
 }
