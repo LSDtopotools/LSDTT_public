@@ -229,10 +229,19 @@ class LSDChiTools
     /// @param FlowInfo an LSDFlowInfo object
     /// @param reference_channel the source key of the reference channel
     /// @param test_channel the source key of the test channel
-    /// @float The maximum likelihood estimator
+    /// @return The maximum likelihood estimator
     /// @author SMM
     /// @date 04/05/2017
     float test_segment_collinearity(LSDFlowInfo& FlowInfo, int reference_channel, int test_channel);
+
+
+    /// @brief This computes a collinearity metric for all combinations of 
+    ///  channels
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @author SMM
+    /// @date 08/05/2017
+    float test_all_segment_collinearity(LSDFlowInfo& FlowInfo);
+
 
     /// @brief This gets the node index (the reference into LSDFlowInfo) of a source
     ///  based on a source key

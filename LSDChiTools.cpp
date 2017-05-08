@@ -1400,11 +1400,11 @@ float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int referenc
   // minimum chi of the reference segment the data point is ignored. 
   
   float MLE = 1;
-  float sigma = 100;
+  float sigma = 1000;
   // first get the source node of the reference channel
-  if ( key_to_source_map.find(reference_channel) == key_to_source_map.end() ) 
+  if ( reference_channel >= int(key_to_source_map.size()) || test_channel >= int(key_to_source_map.size()) ) 
   {
-    cout << "LSDChiTools::test_segment_collinearity This source is not in the channel network. Source is: " << reference_channel << endl;
+    cout << "LSDChiTools::test_segment_collinearity Oune of the sources is not in the channel network. Source is: " << reference_channel << endl;
   } 
   else
   {
@@ -1424,6 +1424,21 @@ float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int referenc
   return MLE;
 
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function test the collinearity of all segments compared to a reference
+// segment
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDChiTools::test_all_segment_collinearity(LSDFlowInfo& FlowInfo)
+{
+  // first get the combinations of all channels
+  int n_channels = get_number_of_channels();
+  
+  // now get all the possible two pair combinations of these channels
+  
+}
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This gets the source node of a given key
@@ -1617,13 +1632,13 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
   float ref_chi_upstream = reference_chi[start_ref_index];
   float ref_chi_downstream =  reference_chi[end_ref_index];
   
-  cout << "The number of trib nodes is: " << n_trib_nodes << endl;
+  //cout << "The number of trib nodes is: " << n_trib_nodes << endl;
   // now ramp up the the start ref index and end ramp index 
   bool found_joint_chi;
   for (int i = this_node; i<n_trib_nodes; i++)
   {
     found_joint_chi = false;
-    cout << "trib node: " << i << endl;
+    //cout << "trib node: " << i << endl;
     // Get the chi for this node
     this_chi = trib_chi[i];
 
@@ -1631,7 +1646,7 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
     if (this_chi < ref_chi_upstream && this_chi > ref_chi_downstream)
     {
       // It is between these reference chi values!
-      cout << "FOUND CHI This chi is: " << this_chi << " and bounds are: " << ref_chi_upstream << "," << ref_chi_downstream << endl;
+      //cout << "FOUND CHI This chi is: " << this_chi << " and bounds are: " << ref_chi_upstream << "," << ref_chi_downstream << endl;
       found_joint_chi = true;
     }
     else
@@ -1649,13 +1664,13 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
         {
           found_ref_nodes = true;
           found_joint_chi = true;
-          cout << "FOUND CHI This chi is: " << this_chi << " and bounds are: " << ref_chi_upstream << "," << ref_chi_downstream << endl;
+          //cout << "FOUND CHI This chi is: " << this_chi << " and bounds are: " << ref_chi_upstream << "," << ref_chi_downstream << endl;
         }
       }
       // There is different logic if we reached the end of the reference vector
       if (end_ref_index == n_ref_nodes-1)
       {
-        cout << "I am at the end of the reference vector" << endl;
+        //cout << "I am at the end of the reference vector" << endl;
         i = n_trib_nodes-1;
       }
     }
@@ -1675,10 +1690,10 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
   
   }
   
-  for(int i = 0; i<int(joint_chi.size()); i++)
-  {
-    cout << "residual[" << i << "]: "<< residuals[i] << endl;
-  }
+  //for(int i = 0; i<int(joint_chi.size()); i++)
+  //{
+  //  cout << "residual[" << i << "]: "<< residuals[i] << endl;
+  //}
 
   // this section is for debugging
   bool print_for_debugging = false;

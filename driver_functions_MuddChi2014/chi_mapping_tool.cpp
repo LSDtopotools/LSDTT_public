@@ -576,11 +576,9 @@ int main (int nNumberofArgs,char *argv[])
       cout << "Let me partition a vector for you" << endl;
       int n = 5;
       int k = 2;
-      vector<int> v(100);
-      combinations (v, 1, n, 1, k);
-      
+      bool zero_indexed = true;
       cout << endl << endl << "==============" << endl << "combo2" << endl;
-      combinations(n, k); 
+      vector< vector<int> > combovecvec = combinations(n, k, zero_indexed); 
       cout << "===================" << endl;
       
       cout << "===================================" << endl;

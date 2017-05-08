@@ -2403,13 +2403,28 @@ void combinations (vector<int> v, int start, int n, int k, int maxk, vector<vect
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This just takes two inputs, the number of integers (starting from 1) and
 // the "choose" variable (k)
-void combinations(int n, int k) 
+vector< vector<int> > combinations(int n, int k, bool zero_indexed) 
 {
   
   vector< vector<int> > combovecvec;
   vector<int> v(n+1);
   
   combinations(v, 1, n, 1, k,combovecvec);
+  
+  // Flag for zero indexing. A stupid, brute force way to do it but it works
+  if (zero_indexed)
+  {
+    for(int i = 0; i< int(combovecvec.size()); i++)
+    {
+      for(int j = 0; j<k; j++)
+      {
+        combovecvec[i][j] = combovecvec[i][j]-1;
+      }
+    }
+  }
+
+
+  // print results for bug checking
   for(int i = 0; i< int(combovecvec.size()); i++)
   {
     for(int j = 0; j<k; j++)
@@ -2417,9 +2432,8 @@ void combinations(int n, int k)
       cout << combovecvec[i][j] << " ";
     }
     cout << endl;
-  
   }
-  
+  return combovecvec;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

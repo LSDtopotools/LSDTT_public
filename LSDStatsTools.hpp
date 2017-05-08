@@ -301,7 +301,8 @@ void find_linear_segments(vector<float>& all_x_data, vector<float>& all_y_data, 
 
 // functions for combinations
 void combinations(vector<int> v, int start, int n, int k, int maxk);
-void combinations (int n, int k);
+void combinations(vector<int> v, int start, int n, int k, int maxk, vector< vector<int> >& combovecvec);
+vector< vector<int> > combinations (int n, int k, bool zero_indexed);
 
 // functions for partitioning and permutation (to be used with linear segment finding
 int partitions_min( int x, int y);
