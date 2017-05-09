@@ -70,13 +70,14 @@ int main (int nNumberofArgs,char *argv[])
 	int_default_map["Min patch size"] = 1000;
 	int_default_map["search_radius"] = 10;
 	int_default_map["NormaliseToBaseline"] = 1;
+	int_default_map["Chan_area_threshold"] = 1000;
 
 	// set default float parameters
 	float_default_map["surface_fitting_window_radius"] = 6;
 	float_default_map["Min slope filling"] = 0.0001;
 	float_default_map["QQ threshold"] = 0.005;
 	float_default_map["HalfWidth"] = 500;
-	float_default_map["Min terrace height"] = 5;
+	float_default_map["Min terrace height"] = 2;
 	float_default_map["DrainageAreaThreshold"] = 10000;
 
 	// set default bool parameters
@@ -108,13 +109,6 @@ int main (int nNumberofArgs,char *argv[])
 	string DEM_extension =  LSDPP.get_dem_read_extension();
 	vector<string> boundary_conditions = LSDPP.get_boundary_conditions();
 	string CHeads_file = LSDPP.get_CHeads_file();
-
-	// some error checking
-	if (CHeads_file.empty())
-	{
-		cout << "FATAL ERROR: I can't find your channel heads file. Check your spelling!! \n The parameter key needs to be 'channel heads fname'" << endl;
-		exit(EXIT_SUCCESS);
-	}
 
   cout << "starting the test run... here we go!" << endl;
 
@@ -148,13 +142,25 @@ int main (int nNumberofArgs,char *argv[])
 	cout << "\t Flow routing..." << endl;
 	// get a flow info object
 	LSDFlowInfo FlowInfo(boundary_conditions, RasterTemplate);
+	vector<int> sources;
 
-	cout << "\t Loading the sources" << endl;
 	// calcualte the distance from outlet
 	LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
-	// load the sources
-	vector<int> sources = FlowInfo.Ingest_Channel_Heads((DATA_DIR+CHeads_file), "csv", 2);
-	cout << "\t Got sources!" << endl;
+
+	// some error checking
+	if (CHeads_file == "NULL")
+	{
+		cout << "I can't find your channel heads file so I'm going to use an area threshold to extract the sources" << endl;
+		LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+		sources = FlowInfo.get_sources_index_threshold(ContributingPixels, this_int_map["Chan_area_threshold"]);
+	}
+	else
+	{
+		cout << "\t Loading the sources" << endl;
+		// load the sources
+		vector<int> sources = FlowInfo.Ingest_Channel_Heads((DATA_DIR+CHeads_file), "csv", 2);
+		cout << "\t Got sources!" << endl;
+	}
 
 	// now get the junction network
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
@@ -255,11 +261,13 @@ int main (int nNumberofArgs,char *argv[])
 
 		// push back results to file for plotting
 		ofstream output_file_CC;
-		string output_fname = "_terrace_swath_plots"+jn_name+".txt";
+		string output_fname = "_terrace_swath_plots"+jn_name+".csv";
 		output_file_CC.open((DATA_DIR+DEM_ID+output_fname).c_str());
+		output_file_CC << "PatchID,DistAlongBaseline,ChannelRelief,Relief_st_dev,Relief_st_err" << endl;
 		for (int i = 0; i < int(CC_vector[0].size()); ++i)
 		{
-			output_file_CC << CC_vector[0][i] << " " << CC_vector[1][i] << " " << CC_vector[2][i] << endl;
+			output_file_CC << CC_vector[0][i] << "," << CC_vector[1][i] << "," << CC_vector[2][i] << ","
+			<< CC_vector[3][i] << "," << CC_vector[4][i] << endl;
 		}
 		output_file_CC.close();
 

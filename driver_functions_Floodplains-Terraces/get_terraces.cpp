@@ -73,6 +73,7 @@ int main (int nNumberofArgs,char *argv[])
 	int_default_map["search_radius"] = 10;
 	int_default_map["NormaliseToBaseline"] = 1;
 	int_default_map["Min terrace height"] = 2;
+	int_default_map["Chan area threshold"] = 1000;
 
 	// set default float parameters
 	float_default_map["surface_fitting_window_radius"] = 6;
@@ -110,12 +111,6 @@ int main (int nNumberofArgs,char *argv[])
 	vector<string> boundary_conditions = LSDPP.get_boundary_conditions();
 	string CHeads_file = LSDPP.get_CHeads_file();
 
-	// some error checking
-	if (CHeads_file.empty())
-	{
-		cout << "FATAL ERROR: I can't find your channel heads file. Check your spelling!! \n The parameter key needs to be 'channel heads fname'" << endl;
-		exit(EXIT_SUCCESS);
-	}
 	if (this_string_map["coords_csv_file"] == "NULL")
 	{
 		cout << "FATAL ERROR: I can't find your coordinates file. Check your spelling!! \n The parameter key needs to be 'coords_csv_file'" << endl;
@@ -154,13 +149,24 @@ int main (int nNumberofArgs,char *argv[])
 	cout << "\t Flow routing..." << endl;
 	// get a flow info object
 	LSDFlowInfo FlowInfo(boundary_conditions, RasterTemplate);
-
-	cout << "\t Loading the sources" << endl;
 	// calcualte the distance from outlet
 	LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
-	// load the sources
-	vector<int> sources = FlowInfo.Ingest_Channel_Heads((DATA_DIR+CHeads_file), 2);
-	cout << "\t Got sources!" << endl;
+
+	// some error checking
+	vector<int> sources;
+	if (CHeads_file == "NULL")
+	{
+		cout << "I can't find your channel heads file so I'm going to use an area threshold to extract the sources" << endl;
+		LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+		sources = FlowInfo.get_sources_index_threshold(ContributingPixels, this_int_map["Chan_area_threshold"]);
+	}
+	else
+	{
+		cout << "\t Loading the sources" << endl;
+		// load the sources
+		vector<int> sources = FlowInfo.Ingest_Channel_Heads((DATA_DIR+CHeads_file), "csv", 2);
+		cout << "\t Got sources!" << endl;
+	}
 
 	// now get the junction network
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
