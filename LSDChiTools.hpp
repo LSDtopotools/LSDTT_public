@@ -238,9 +238,10 @@ class LSDChiTools
     /// @brief This computes a collinearity metric for all combinations of 
     ///  channels
     /// @param FlowInfo an LSDFlowInfo object
+    /// @param only_use_mainstem_as_reference True if you only want to use the mainstem
     /// @author SMM
     /// @date 08/05/2017
-    float test_all_segment_collinearity(LSDFlowInfo& FlowInfo);
+    float test_all_segment_collinearity(LSDFlowInfo& FlowInfo, bool only_use_mainstem_as_reference);
 
 
     /// @brief This gets the node index (the reference into LSDFlowInfo) of a source

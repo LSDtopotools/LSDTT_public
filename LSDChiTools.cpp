@@ -1429,13 +1429,61 @@ float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int referenc
 // This function test the collinearity of all segments compared to a reference
 // segment
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-float LSDChiTools::test_all_segment_collinearity(LSDFlowInfo& FlowInfo)
+float LSDChiTools::test_all_segment_collinearity(LSDFlowInfo& FlowInfo, bool only_use_mainstem_as_reference)
 {
   // first get the combinations of all channels
   int n_channels = get_number_of_channels();
   
   // now get all the possible two pair combinations of these channels
+  bool zero_indexed = true;   // this is just because the channels are numbered from zero
+  int k = 2;                  // We want combinations of 2 channels
   
+  vector< vector<int> > combo_vecvev = combinations(n_channels, k, zero_indexed); 
+  vector<float> elev_data_chan0;
+  vector<float> chi_data_chan0;
+  vector<float> elev_data_chan1;
+  vector<float> chi_data_chan1;
+  vector<float> residuals;
+  
+  float sigma = 1000;
+  int last_ref_channel = -1;
+
+  int n_combinations = int(combo_vecvev.size());
+  vector<int> this_combo;
+  int chan0,chan1;
+  for (int combo = 0; combo < n_combinations; combo++)
+  {
+    this_combo = combo_vecvev[combo];
+    
+    chan0 = this_combo[0];
+    chan1 = this_combo[1];
+    
+    // !!!!!!!!
+    // WORKING HERE
+    // !!!!!!!!!
+    
+    if (only_use_mainstem_as_reference)
+    {
+      if (chan0 > 0)
+      {
+        // skip to the last node
+        combo = n_combinations;
+      }
+    }
+    
+    // only get the reference channel if the channel has changed. 
+    if (last_ref_channel != chan0)
+    {
+      get_chi_elevation_data_of_channel(FlowInfo, chan0, chi_data_chan0, elev_data_chan0);
+    }
+    get_chi_elevation_data_of_channel(FlowInfo, chan1, chi_data_chan1, elev_data_chan1);
+
+    residuals = project_data_onto_reference_channel(chi_data_chan0, elev_data_chan0,
+                                 chi_data_chan1,elev_data_chan1);
+
+    float MLE1 = calculate_MLE_from_residuals(residuals, sigma);
+    last_ref_channel = chan0;
+  }
 }
 
 
@@ -1608,7 +1656,17 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
   }
   
   float max_ref_chi = reference_chi[0];
-  //float min_ref_chi = reference_chi[1];
+  float min_ref_chi = reference_chi[n_ref_nodes-1];
+  
+  float max_trib_chi = trib_chi[0];
+  float min_trib_chi = trib_chi[n_trib_nodes-1];
+  
+  // test to see if there is overlap
+  if(min_trib_chi > max_ref_chi || max_trib_chi < min_ref_chi)
+  {
+    cout << "LSDChiTools::project_data_onto_reference_channel These channels do not overlap." << endl;
+    return residuals;
+  }
   
   // The reference chis monotonically decrease so we will keep track of what 
   // indices the bounding chi points are. 
