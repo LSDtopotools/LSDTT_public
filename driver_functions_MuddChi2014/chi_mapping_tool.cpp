@@ -570,26 +570,29 @@ int main (int nNumberofArgs,char *argv[])
       vector<float> residuals;
       residuals = ChiTool.project_data_onto_reference_channel(chi_data_chan0, elev_data_chan0,
                                  chi_data_chan1,elev_data_chan1);
-      
+                                 
       // 
-      cout << "=================================="  << endl;
-      cout << "Let me partition a vector for you" << endl;
-      int n = 5;
-      int k = 2;
-      bool zero_indexed = true;
-      cout << endl << endl << "==============" << endl << "combo2" << endl;
-      vector< vector<int> > combovecvec = combinations(n, k, zero_indexed); 
-      cout << "===================" << endl;
+      //cout << "=================================="  << endl;
+      //cout << "Let me partition a vector for you" << endl;
+      //int n = 5;
+      //int k = 2;
+      //bool zero_indexed = true;
+      //cout << endl << endl << "==============" << endl << "combo2" << endl;
+      //vector< vector<int> > combovecvec = combinations(n, k, zero_indexed); 
+      //cout << "===================" << endl;
+
+      //float sigma = 1000;
+      //float MLE1 = calculate_MLE_from_residuals(residuals, sigma);
+      //cout << "MLE1 is: " << MLE1 << endl;
       
-      cout << "===================================" << endl;
-      
-      
-      float sigma = 1000;
-      float MLE1 = calculate_MLE_from_residuals(residuals, sigma);
-      cout << "MLE1 is: " << MLE1 << endl;
       
       float MLE = ChiTool.test_segment_collinearity(FlowInfo, chan0, chan1);
-      cout << "The MLE is: " << MLE << endl;
+      cout << "Simple collinearity between channel 0 and 1; the MLE is: " << MLE << endl;
+      
+      // now test the whole collinearity routine
+      bool only_mainstem = false;
+      ChiTool.test_all_segment_collinearity(FlowInfo, only_mainstem);
+
     }
     
   }

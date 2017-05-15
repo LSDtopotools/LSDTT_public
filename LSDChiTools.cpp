@@ -1434,6 +1434,7 @@ float LSDChiTools::test_all_segment_collinearity(LSDFlowInfo& FlowInfo, bool onl
   // first get the combinations of all channels
   int n_channels = get_number_of_channels();
   
+  
   // now get all the possible two pair combinations of these channels
   bool zero_indexed = true;   // this is just because the channels are numbered from zero
   int k = 2;                  // We want combinations of 2 channels
@@ -1444,6 +1445,13 @@ float LSDChiTools::test_all_segment_collinearity(LSDFlowInfo& FlowInfo, bool onl
   vector<float> elev_data_chan1;
   vector<float> chi_data_chan1;
   vector<float> residuals;
+  
+  int n_residuals;
+      
+  
+  vector<float> MLEs;
+  vector<int> MLE_index;   // the index into the combo_vecvec that is used to 
+                           // tell which combinations have MLE values
   
   float sigma = 1000;
   int last_ref_channel = -1;
@@ -1462,14 +1470,7 @@ float LSDChiTools::test_all_segment_collinearity(LSDFlowInfo& FlowInfo, bool onl
     // WORKING HERE
     // !!!!!!!!!
     
-    if (only_use_mainstem_as_reference)
-    {
-      if (chan0 > 0)
-      {
-        // skip to the last node
-        combo = n_combinations;
-      }
-    }
+
     
     // only get the reference channel if the channel has changed. 
     if (last_ref_channel != chan0)
@@ -1480,10 +1481,46 @@ float LSDChiTools::test_all_segment_collinearity(LSDFlowInfo& FlowInfo, bool onl
 
     residuals = project_data_onto_reference_channel(chi_data_chan0, elev_data_chan0,
                                  chi_data_chan1,elev_data_chan1);
-
-    float MLE1 = calculate_MLE_from_residuals(residuals, sigma);
-    last_ref_channel = chan0;
+    n_residuals = int(residuals.size());
+    
+    if (n_residuals > 0)
+    {
+      float MLE1 = calculate_MLE_from_residuals(residuals, sigma);
+      last_ref_channel = chan0;
+    
+      if (only_use_mainstem_as_reference)
+      {
+        if (chan0 > 0)
+        {
+          // skip to the last node
+          combo = n_combinations;
+        }
+        else
+        {
+          MLEs.push_back(MLE1);
+          MLE_index.push_back(combo);
+        }
+      }
+      else
+      {
+        MLEs.push_back(MLE1);
+        MLE_index.push_back(combo);
+      }
+    }
   }
+  
+  // for debugging
+  bool print_results = true;
+  if(print_results)
+  {
+    for (int res = 0; res < int(MLEs.size()); res++)
+    {
+      cout << "idx: " << MLE_index[res] << " chans: " << combo_vecvev[res][0] 
+           << "," << combo_vecvev[res][1] << " MLE: " << MLEs[res] << endl;
+    }
+  }
+  
+  
 }
 
 

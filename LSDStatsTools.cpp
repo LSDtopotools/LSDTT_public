@@ -3722,6 +3722,24 @@ float calculate_MLE_from_residuals(vector<float>& residuals, float sigma)
   return MLE_tot;
 }
 
+// get the least squared maximum likelihood estimator based on residuals
+float calculate_RMSE_from_residuals(vector<float>& residuals)
+{
+  //cout << "sigma is: " << sigma << endl;
+
+  // get the number of samples
+  int n_samples = residuals.size();
+  float inv_samp = 1/float(n_samples);
+  float sum = 0;
+  for (int i = 0; i<n_samples; i++)
+  {
+    sum+=sqrt(residuals[i]*residuals[i]);
+  }
+  float RMSE = sum*inv_samp;
+  return RMSE;
+}
+
+
 string itoa(int num)
 {
     stringstream converter;

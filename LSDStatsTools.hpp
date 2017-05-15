@@ -330,6 +330,9 @@ float calculate_MLE(vector<float>& measured, vector<float>& modelled, vector<flo
 float calculate_MLE(vector<float>& measured, vector<float>& modelled, float sigma);
 float calculate_MLE_from_residuals(vector<float>& residuals, float sigma);
 
+// RMSE estimator
+float calculate_RMSE_from_residuals(vector<float>& residuals);
+
 // a random number generator
 float ran3( long *idum );
 // Randomly sample from a vector without replacement DTM 21/04/2014
