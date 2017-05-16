@@ -293,6 +293,25 @@ class LSDChiTools
                                  vector<float>& reference_elevation, vector<float>& trib_chi,
                                  vector<float>& trib_elevation);
 
+    /// @brief This function burns the chi coordinate (and area, flow distance and elevation)
+    ///  onto the data maps in the chitools object. It does not do any segmentation.
+    /// @detail The purpose of this function is to get the chi coordinate without
+    ///   calculating m_chi or segmenting, and is used for m/n calculations. Can
+    ///   also be used for maps of chi coordinate
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param source_nodes a vector containing the sorted sorce nodes (by flow distance)
+    /// @param outlet_nodes a vector continaing the outlet nodes
+    /// @param Elevation an LSDRaster containing elevation info
+    /// @param DistanceFromOutlet an LSDRaster with the flow distance
+    /// @param DrainageArea an LSDRaster with the drainage area
+    /// @author SMM
+    /// @date 16/05/2017
+    void chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
+                                    vector<int> source_nodes,
+                                    vector<int> outlet_nodes,
+                                    LSDRaster& Elevation, LSDRaster& FlowDistance,
+                                    LSDRaster& DrainageArea, LSDRaster& chi_coordinate);
+
     /// @brief This function maps out the chi steepness and other channel
     ///  metrics in chi space from all the sources supplied in the
     ///  source_nodes vector. The source and outlet nodes vector is

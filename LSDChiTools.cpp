@@ -432,6 +432,148 @@ void LSDChiTools::chi_map_to_csv(LSDFlowInfo& FlowInfo, string chi_map_fname,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function creates the data structures for keeping track of
+//  the channel network but only maps the chi coordinate.
+// Mainly used for calculating m/n ratio. 
+// DOES NOT segment the chi-elevation profiles
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
+                                    vector<int> source_nodes,
+                                    vector<int> outlet_nodes,
+                                    LSDRaster& Elevation, LSDRaster& FlowDistance,
+                                    LSDRaster& DrainageArea, LSDRaster& chi_coordinate)
+{
+  // These elements access the chi data
+  vector< vector<float> > chi_coordinates;
+  vector< vector<int> > chi_node_indices;
+
+  // these are for the individual channels
+  vector<float> these_chi_coordinates;
+  vector<int> these_chi_node_indices;
+
+  // these are maps that will store the data
+  map<int,float> chi_coord_map;
+  map<int,float> elev_map;
+  map<int,float> area_map;
+  map<int,float> flow_distance_map;
+  vector<int> node_sequence_vec;
+
+  // these are vectors that will store information about the individual nodes
+  // that allow us to map the nodes to specific channels during data visualisation
+
+  // These two maps have each node in the channel (the index)
+  // linked to a key (either the baselevel key or source key)
+  map<int,int> these_source_keys;
+  map<int,int> these_baselevel_keys;
+
+  // These two maps link keys, which are incrmented by one, to the
+  // junction or node of the baselevel or source
+  map<int,int> this_key_to_source_map;
+  map<int,int> this_key_to_baselevel_map;
+
+  // these are for working with the FlowInfo object
+  int this_node,row,col;
+  int this_base_level, this_source_node;
+
+  // get the number of channels
+  int source_node_tracker = -1;
+  int baselevel_tracker = -1;
+  int n_channels = int(source_nodes.size());
+  for(int chan = 0; chan<n_channels; chan++)
+  {
+    cout << "Sampling channel " << chan+1 << " of " << n_channels << endl;
+
+    // get the base level
+    this_base_level = FlowInfo.retrieve_base_level_node(source_nodes[chan]);
+    //cout << "Got the base level" << endl;
+
+    // If a key to this base level does not exist, add one.
+    if ( this_key_to_baselevel_map.find(this_base_level) == this_key_to_baselevel_map.end() )
+    {
+      baselevel_tracker++;
+      cout << "Found a new baselevel. The node is: " << this_base_level << " and key is: " << baselevel_tracker << endl;
+      this_key_to_baselevel_map[this_base_level] = baselevel_tracker;
+    }
+
+    // now add the source tracker
+    source_node_tracker++;
+    this_source_node = source_nodes[chan];
+    this_key_to_source_map[this_source_node] = source_node_tracker;
+
+    cout << "The source key is: " << source_node_tracker << " and basin key is: " << baselevel_tracker << endl;
+
+    // get this particular channel (it is a chi network with only one channel)
+    LSDChiNetwork ThisChiChannel(FlowInfo, source_nodes[chan], outlet_nodes[chan],
+                                Elevation, FlowDistance, DrainageArea,chi_coordinate);
+
+    // okay the ChiNetwork has all the data about the m vales at this stage.
+    // Get these vales and print them to a raster
+    chi_coordinates = ThisChiChannel.get_chis();
+    chi_node_indices = ThisChiChannel.get_node_indices();
+
+    // now get the number of channels. This should be 1!
+    int n_channels = int(chi_coordinates.size());
+    if (n_channels != 1)
+    {
+      cout << "Whoa there, I am trying to make a chi map but something seems to have gone wrong with the channel extraction."  << endl;
+      cout << "I should only have one channel per look but I have " << n_channels << " channels." << endl;
+    }
+
+    // now get chi coordantes
+    these_chi_coordinates = chi_coordinates[0];
+    these_chi_node_indices = chi_node_indices[0];
+
+    //cout << "I have " << these_chi_m_means.size() << " nodes." << endl;
+
+
+    int n_nodes_in_channel = int(these_chi_coordinates.size());
+    for (int node = 0; node< n_nodes_in_channel; node++)
+    {
+
+      this_node =  these_chi_node_indices[node];
+      //cout << "This node is " << this_node << endl;
+
+      // only take the nodes that have not been found
+      if (chi_coord_map.find(this_node) == chi_coord_map.end() )
+      {
+        FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+
+        //cout << "This is a new node; " << this_node << endl;
+        chi_coord_map[this_node] = these_chi_coordinates[node];
+        elev_map[this_node] = Elevation.get_data_element(row,col);
+        area_map[this_node] = DrainageArea.get_data_element(row,col);
+        flow_distance_map[this_node] = FlowDistance.get_data_element(row,col);
+        node_sequence_vec.push_back(this_node);
+
+        these_source_keys[this_node] = source_node_tracker;
+        these_baselevel_keys[this_node] = baselevel_tracker;
+      }
+      else
+      {
+        //cout << "I already have node: " << this_node << endl;
+      }
+    }
+  }
+
+  cout << "I am all finished segmenting the channels!" << endl;
+
+  // set the object data members
+  elev_data_map = elev_map;
+  chi_data_map = chi_coord_map;
+  flow_distance_data_map = flow_distance_map;
+  drainage_area_data_map = area_map;
+  node_sequence = node_sequence_vec;
+
+  source_keys_map = these_source_keys;
+  baselevel_keys_map = these_baselevel_keys;
+  key_to_source_map = this_key_to_source_map;
+  key_to_baselevel_map = this_key_to_baselevel_map;
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function is for calculating segments from all sources in a DEM
@@ -449,7 +591,7 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
                                     int minimum_segment_length, float sigma)
 {
 
-  // IMPORTANT THESE PARAMETERS ARE NOT USED BECAUSE CHI IS CALUCALTED SEPARATELY
+  // IMPORTANT THESE PARAMETERS ARE NOT USED BECAUSE CHI IS CALCULATED SEPARATELY
   // However we need to give something to pass to the Monte carlo functions
   // even through they are not used (they are inherited)
   float A_0 = 1;
@@ -614,7 +756,7 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function is a much more rudimentary version that mimics the
 // channel steepness caluclations.
-// chi needs tobe calculated outside of the function
+// chi needs to be calculated outside of the function
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo,
                                     vector<int> source_nodes,

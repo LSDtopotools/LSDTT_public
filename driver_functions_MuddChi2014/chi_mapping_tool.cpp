@@ -548,8 +548,15 @@ int main (int nNumberofArgs,char *argv[])
     cout << "Shall I check collinearity????" << endl;
     if (this_bool_map["calculate_MLE_collinearity"])
     {
+      // Lets make a new chi tool: this won't be segmented since we only
+      // need it for m/n
+      LSDChiTools ChiTool_movern(FlowInfo);
+      ChiTool_movern.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes,
+                            filled_topography, DistanceFromOutlet, 
+                            DrainageArea, chi_coordinate);
+
       cout << "I am testing the collinearity for you. " << endl;
-      int n_channels = ChiTool.get_number_of_channels();
+      int n_channels = ChiTool_movern.get_number_of_channels();
       cout << "The number of channels are: " << n_channels << endl;
       
       // now get the sources of the first two channels
@@ -561,14 +568,14 @@ int main (int nNumberofArgs,char *argv[])
       //cout << "Source of channel 1 is: " << source1 << endl;
       vector<float> elev_data_chan0;
       vector<float> chi_data_chan0;
-      ChiTool.get_chi_elevation_data_of_channel(FlowInfo, chan0, chi_data_chan0, elev_data_chan0);
+      ChiTool_movern.get_chi_elevation_data_of_channel(FlowInfo, chan0, chi_data_chan0, elev_data_chan0);
       
       vector<float> elev_data_chan1;
       vector<float> chi_data_chan1;
-      ChiTool.get_chi_elevation_data_of_channel(FlowInfo, chan1, chi_data_chan1, elev_data_chan1);
+      ChiTool_movern.get_chi_elevation_data_of_channel(FlowInfo, chan1, chi_data_chan1, elev_data_chan1);
 
       vector<float> residuals;
-      residuals = ChiTool.project_data_onto_reference_channel(chi_data_chan0, elev_data_chan0,
+      residuals = ChiTool_movern.project_data_onto_reference_channel(chi_data_chan0, elev_data_chan0,
                                  chi_data_chan1,elev_data_chan1);
                                  
       // 
@@ -586,12 +593,12 @@ int main (int nNumberofArgs,char *argv[])
       //cout << "MLE1 is: " << MLE1 << endl;
       
       
-      float MLE = ChiTool.test_segment_collinearity(FlowInfo, chan0, chan1);
+      float MLE = ChiTool_movern.test_segment_collinearity(FlowInfo, chan0, chan1);
       cout << "Simple collinearity between channel 0 and 1; the MLE is: " << MLE << endl;
       
       // now test the whole collinearity routine
       bool only_mainstem = false;
-      ChiTool.test_all_segment_collinearity(FlowInfo, only_mainstem);
+      ChiTool_movern.test_all_segment_collinearity(FlowInfo, only_mainstem);
 
     }
     
