@@ -237,10 +237,20 @@ class LSDChiTools
     /// @brief This wraps the collinearity tester, looping through different m over n
     ///  values and calculating goodness of fit statistics. 
     /// @param FlowInfo an LSDFlowInfo object
+    /// @param source_nodes a vector containing the sorted sorce nodes (by flow distance)
+    /// @param outlet_nodes a vector continaing the outlet nodes
+    /// @param Elevation an LSDRaster containing elevation info
+    /// @param DistanceFromOutlet an LSDRaster with the flow distance
+    /// @param DrainageArea an LSDRaster with the drainage area
+    /// @param start_movern the starting m/n ration
+    /// @param delta_movern the change in m/n 
+    /// @param n_novern the number of m/n values to use
+    /// @param only_use_mainstem_as_reference a boolean, if true only compare channels to mainstem .
     /// @author SMM
     /// @date 16/05/2017
     void calcualte_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo& FlowInfo, 
-                        LSDRaster& Topography, LSDRaster& FlowDistance, 
+                        vector<int> source_nodes, vector<int> outlet_nodes, 
+                        LSDRaster& Elevation, LSDRaster& DistanceFromOutlet, 
                         LSDRaster& DrainageArea, 
                         float start_movern, float delta_movern, int n_movern, 
                         bool only_use_mainstem_as_reference);

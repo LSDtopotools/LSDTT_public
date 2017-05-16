@@ -482,7 +482,7 @@ void LSDChiTools::chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
   int n_channels = int(source_nodes.size());
   for(int chan = 0; chan<n_channels; chan++)
   {
-    cout << "Sampling channel " << chan+1 << " of " << n_channels << endl;
+    //cout << "Sampling channel " << chan+1 << " of " << n_channels << endl;
 
     // get the base level
     this_base_level = FlowInfo.retrieve_base_level_node(source_nodes[chan]);
@@ -492,7 +492,7 @@ void LSDChiTools::chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
     if ( this_key_to_baselevel_map.find(this_base_level) == this_key_to_baselevel_map.end() )
     {
       baselevel_tracker++;
-      cout << "Found a new baselevel. The node is: " << this_base_level << " and key is: " << baselevel_tracker << endl;
+      //cout << "Found a new baselevel. The node is: " << this_base_level << " and key is: " << baselevel_tracker << endl;
       this_key_to_baselevel_map[this_base_level] = baselevel_tracker;
     }
 
@@ -501,7 +501,7 @@ void LSDChiTools::chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
     this_source_node = source_nodes[chan];
     this_key_to_source_map[this_source_node] = source_node_tracker;
 
-    cout << "The source key is: " << source_node_tracker << " and basin key is: " << baselevel_tracker << endl;
+    //cout << "The source key is: " << source_node_tracker << " and basin key is: " << baselevel_tracker << endl;
 
     // get this particular channel (it is a chi network with only one channel)
     LSDChiNetwork ThisChiChannel(FlowInfo, source_nodes[chan], outlet_nodes[chan],
@@ -556,7 +556,7 @@ void LSDChiTools::chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
     }
   }
 
-  cout << "I am all finished segmenting the channels!" << endl;
+  //cout << "I am all finished segmenting the channels!" << endl;
 
   // set the object data members
   elev_data_map = elev_map;
@@ -641,7 +641,7 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
   int n_channels = int(source_nodes.size());
   for(int chan = 0; chan<n_channels; chan++)
   {
-    cout << "Sampling channel " << chan+1 << " of " << n_channels << endl;
+    //cout << "Sampling channel " << chan+1 << " of " << n_channels << endl;
 
     // get the base level
     this_base_level = FlowInfo.retrieve_base_level_node(source_nodes[chan]);
@@ -651,7 +651,7 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
     if ( this_key_to_baselevel_map.find(this_base_level) == this_key_to_baselevel_map.end() )
     {
       baselevel_tracker++;
-      cout << "Found a new baselevel. The node is: " << this_base_level << " and key is: " << baselevel_tracker << endl;
+      //cout << "Found a new baselevel. The node is: " << this_base_level << " and key is: " << baselevel_tracker << endl;
       this_key_to_baselevel_map[this_base_level] = baselevel_tracker;
     }
 
@@ -660,7 +660,7 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
     this_source_node = source_nodes[chan];
     this_key_to_source_map[this_source_node] = source_node_tracker;
 
-    cout << "The source key is: " << source_node_tracker << " and basin key is: " << baselevel_tracker << endl;
+    //cout << "The source key is: " << source_node_tracker << " and basin key is: " << baselevel_tracker << endl;
 
     // get this particular channel (it is a chi network with only one channel)
     LSDChiNetwork ThisChiChannel(FlowInfo, source_nodes[chan], outlet_nodes[chan],
@@ -730,7 +730,7 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
     }
   }
 
-  cout << "I am all finished segmenting the channels!" << endl;
+  //cout << "I am all finished segmenting the channels!" << endl;
 
   // set the object data members
   M_chi_data_map =m_means_map;
@@ -1573,7 +1573,8 @@ float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int referenc
 // segment
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::calcualte_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo& FlowInfo, 
-                        LSDRaster& Topography, LSDRaster& FlowDistance, 
+                        vector<int> source_nodes, vector<int> outlet_nodes, 
+                        LSDRaster& Elevation, LSDRaster& FlowDistance, 
                         LSDRaster& DrainageArea, 
                         float start_movern, float delta_movern, int n_movern, 
                         bool only_use_mainstem_as_reference)
@@ -1586,22 +1587,20 @@ void LSDChiTools::calcualte_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
   for(int i = 0; i< n_movern; i++)
   {
     movern.push_back( float(i)*delta_movern+start_movern );
+    cout << endl << endl << "==========================" << endl;
     cout << "i: " << i << " and m over n: " << movern[i] << endl;
     
     // calculate chi
     LSDRaster this_chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern[i],A_0,thresh_area_for_chi);
 
     // rerun the chi automator to populate the vectors
-    //chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
-    //                                vector<int> source_nodes,
-    //                                vector<int> outlet_nodes,
-    //                                LSDRaster& Elevation, LSDRaster& FlowDistance,
-    //                                LSDRaster& DrainageArea, LSDRaster& chi_coordinate)
+    chi_map_automator_chi_only(FlowInfo,source_nodes,outlet_nodes,
+                               Elevation, FlowDistance,
+                               DrainageArea, this_chi_coordinate);
 
     // now run the collinearity test
-
+    test_all_segment_collinearity(FlowInfo, only_use_mainstem_as_reference);
   }
-
 }
 
 

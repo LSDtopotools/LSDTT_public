@@ -556,6 +556,17 @@ int main (int nNumberofArgs,char *argv[])
                             DrainageArea, chi_coordinate);
 
       cout << "I am testing the collinearity for you. " << endl;
+      float start_movern = 0.4;
+      float delta_movern = 0.1;
+      int n_movern = 3;
+      bool only_use_mainstem_as_reference = true;
+      ChiTool_movern.calcualte_goodness_of_fit_collinearity_fxn_movern(FlowInfo, source_nodes, outlet_nodes, 
+                      filled_topography, DistanceFromOutlet, 
+                      DrainageArea, start_movern, delta_movern, n_movern, 
+                      only_use_mainstem_as_reference);
+      
+      
+      /*
       int n_channels = ChiTool_movern.get_number_of_channels();
       cout << "The number of channels are: " << n_channels << endl;
       
@@ -599,7 +610,7 @@ int main (int nNumberofArgs,char *argv[])
       // now test the whole collinearity routine
       bool only_mainstem = false;
       ChiTool_movern.test_all_segment_collinearity(FlowInfo, only_mainstem);
-
+      */
     }
     
   }

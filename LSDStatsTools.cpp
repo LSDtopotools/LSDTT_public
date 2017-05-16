@@ -2425,14 +2425,14 @@ vector< vector<int> > combinations(int n, int k, bool zero_indexed)
 
 
   // print results for bug checking
-  for(int i = 0; i< int(combovecvec.size()); i++)
-  {
-    for(int j = 0; j<k; j++)
-    {
-      cout << combovecvec[i][j] << " ";
-    }
-    cout << endl;
-  }
+  //for(int i = 0; i< int(combovecvec.size()); i++)
+  //{
+  //  for(int j = 0; j<k; j++)
+  //  {
+  //    cout << combovecvec[i][j] << " ";
+  //  }
+  //  cout << endl;
+  //}
   return combovecvec;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
