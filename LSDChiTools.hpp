@@ -234,6 +234,16 @@ class LSDChiTools
     /// @date 04/05/2017
     float test_segment_collinearity(LSDFlowInfo& FlowInfo, int reference_channel, int test_channel);
 
+    /// @brief This wraps the collinearity tester, looping through different m over n
+    ///  values and calculating goodness of fit statistics. 
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @author SMM
+    /// @date 16/05/2017
+    void calcualte_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo& FlowInfo, 
+                        LSDRaster& Topography, LSDRaster& FlowDistance, 
+                        LSDRaster& DrainageArea, 
+                        float start_movern, float delta_movern, int n_movern, 
+                        bool only_use_mainstem_as_reference);
 
     /// @brief This computes a collinearity metric for all combinations of 
     ///  channels

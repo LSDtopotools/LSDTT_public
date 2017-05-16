@@ -1567,6 +1567,44 @@ float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int referenc
 
 }
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function test the collinearity of all segments compared to a reference
+// segment
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::calcualte_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo& FlowInfo, 
+                        LSDRaster& Topography, LSDRaster& FlowDistance, 
+                        LSDRaster& DrainageArea, 
+                        float start_movern, float delta_movern, int n_movern, 
+                        bool only_use_mainstem_as_reference)
+{
+  
+  
+  vector<float> movern;
+  float A_0 = 1;
+  float thresh_area_for_chi = 0;      // This just gets chi from all pixels.
+  for(int i = 0; i< n_movern; i++)
+  {
+    movern.push_back( float(i)*delta_movern+start_movern );
+    cout << "i: " << i << " and m over n: " << movern[i] << endl;
+    
+    // calculate chi
+    LSDRaster this_chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern[i],A_0,thresh_area_for_chi);
+
+    // rerun the chi automator to populate the vectors
+    //chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
+    //                                vector<int> source_nodes,
+    //                                vector<int> outlet_nodes,
+    //                                LSDRaster& Elevation, LSDRaster& FlowDistance,
+    //                                LSDRaster& DrainageArea, LSDRaster& chi_coordinate)
+
+    // now run the collinearity test
+
+  }
+
+}
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function test the collinearity of all segments compared to a reference
 // segment
