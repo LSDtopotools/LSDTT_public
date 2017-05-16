@@ -234,6 +234,22 @@ class LSDChiTools
     /// @date 04/05/2017
     float test_segment_collinearity(LSDFlowInfo& FlowInfo, int reference_channel, int test_channel);
 
+    /// @brief This computes a collinearity metric for all combinations of 
+    ///  channels
+    /// @detail It takes all the combinations of sources and gets the goodness of fit between each pair
+    ///  of sources. 
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param only_use_mainstem_as_reference True if you only want to use the mainstem
+    /// @param reference_source integer vector replaced in function that has the reference vector for each comparison 
+    /// @param test_source integer vector replaced in function that has the test vector for each comparison 
+    /// @param MLE_values the MLE for each comparison. Replaced in function.
+    /// @param RMSE_values the RMSE for each comparison (i.e. between source 0 1, 0 2, 0 3, etc.). Replaced in function. 
+    /// @author SMM
+    /// @date 08/05/2017
+    float test_all_segment_collinearity(LSDFlowInfo& FlowInfo, bool only_use_mainstem_as_reference, 
+                                        vector<int>& reference_source, vector<int>& test_source, 
+                                        vector<float>& MLE_values, vector<float> RMSE_values);
+
     /// @brief This wraps the collinearity tester, looping through different m over n
     ///  values and calculating goodness of fit statistics. 
     /// @param FlowInfo an LSDFlowInfo object
@@ -255,13 +271,7 @@ class LSDChiTools
                         float start_movern, float delta_movern, int n_movern, 
                         bool only_use_mainstem_as_reference);
 
-    /// @brief This computes a collinearity metric for all combinations of 
-    ///  channels
-    /// @param FlowInfo an LSDFlowInfo object
-    /// @param only_use_mainstem_as_reference True if you only want to use the mainstem
-    /// @author SMM
-    /// @date 08/05/2017
-    float test_all_segment_collinearity(LSDFlowInfo& FlowInfo, bool only_use_mainstem_as_reference);
+
 
 
     /// @brief This gets the node index (the reference into LSDFlowInfo) of a source

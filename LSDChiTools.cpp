@@ -1572,47 +1572,18 @@ float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int referenc
 // This function test the collinearity of all segments compared to a reference
 // segment
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiTools::calcualte_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo& FlowInfo, 
-                        vector<int> source_nodes, vector<int> outlet_nodes, 
-                        LSDRaster& Elevation, LSDRaster& FlowDistance, 
-                        LSDRaster& DrainageArea, 
-                        float start_movern, float delta_movern, int n_movern, 
-                        bool only_use_mainstem_as_reference)
-{
-  
-  
-  vector<float> movern;
-  float A_0 = 1;
-  float thresh_area_for_chi = 0;      // This just gets chi from all pixels.
-  for(int i = 0; i< n_movern; i++)
-  {
-    movern.push_back( float(i)*delta_movern+start_movern );
-    cout << endl << endl << "==========================" << endl;
-    cout << "i: " << i << " and m over n: " << movern[i] << endl;
-    
-    // calculate chi
-    LSDRaster this_chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern[i],A_0,thresh_area_for_chi);
-
-    // rerun the chi automator to populate the vectors
-    chi_map_automator_chi_only(FlowInfo,source_nodes,outlet_nodes,
-                               Elevation, FlowDistance,
-                               DrainageArea, this_chi_coordinate);
-
-    // now run the collinearity test
-    test_all_segment_collinearity(FlowInfo, only_use_mainstem_as_reference);
-  }
-}
-
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// This function test the collinearity of all segments compared to a reference
-// segment
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-float LSDChiTools::test_all_segment_collinearity(LSDFlowInfo& FlowInfo, bool only_use_mainstem_as_reference)
+float LSDChiTools::test_all_segment_collinearity(LSDFlowInfo& FlowInfo, bool only_use_mainstem_as_reference,
+                                                vector<int>& reference_source, vector<int>& test_source, 
+                                                vector<float>& MLE_values, vector<float> RMSE_values)
 {
   // first get the combinations of all channels
   int n_channels = get_number_of_channels();
   
+  // placeholder vectors: will replace the passed vectors
+  vector<int> this_reference_source;
+  vector<int> this_test_source;
+  vector<float> these_MLE_values;
+  vector<float> these_RMSE_values;
   
   // now get all the possible two pair combinations of these channels
   bool zero_indexed = true;   // this is just because the channels are numbered from zero
@@ -1645,12 +1616,6 @@ float LSDChiTools::test_all_segment_collinearity(LSDFlowInfo& FlowInfo, bool onl
     chan0 = this_combo[0];
     chan1 = this_combo[1];
     
-    // !!!!!!!!
-    // WORKING HERE
-    // !!!!!!!!!
-    
-
-    
     // only get the reference channel if the channel has changed. 
     if (last_ref_channel != chan0)
     {
@@ -1665,6 +1630,7 @@ float LSDChiTools::test_all_segment_collinearity(LSDFlowInfo& FlowInfo, bool onl
     if (n_residuals > 0)
     {
       float MLE1 = calculate_MLE_from_residuals(residuals, sigma);
+      float RMSE = calculate_RMSE_from_residuals(residuals);
       last_ref_channel = chan0;
     
       if (only_use_mainstem_as_reference)
@@ -1676,18 +1642,34 @@ float LSDChiTools::test_all_segment_collinearity(LSDFlowInfo& FlowInfo, bool onl
         }
         else
         {
-          MLEs.push_back(MLE1);
-          MLE_index.push_back(combo);
+          these_MLE_values.push_back(MLE1);
+          these_RMSE_values.push_back(RMSE);
+          this_reference_source.push_back(chan0);
+          this_test_source.push_back(chan1);
         }
       }
       else
       {
-        MLEs.push_back(MLE1);
-        MLE_index.push_back(combo);
+        these_MLE_values.push_back(MLE1);
+        these_RMSE_values.push_back(RMSE);
+        this_reference_source.push_back(chan0);
+        this_test_source.push_back(chan1);
       }
     }
   }
   
+  MLE_values = these_MLE_values;
+  RMSE_values = these_RMSE_values;
+  this_reference_source = this_reference_source;
+  this_test_source = this_test_source;
+  
+  float tot_MLE = 1;
+  for (int res = 0; res < int(these_MLE_values.size()); res++)
+  {
+    tot_MLE = tot_MLE*these_MLE_values[res];
+  }
+  
+
   // for debugging
   bool print_results = true;
   if(print_results)
@@ -1700,6 +1682,53 @@ float LSDChiTools::test_all_segment_collinearity(LSDFlowInfo& FlowInfo, bool onl
   }
   
   
+  return tot_MLE;
+}
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function test the collinearity of all segments compared to a reference
+// segment
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::calcualte_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo& FlowInfo, 
+                        vector<int> source_nodes, vector<int> outlet_nodes, 
+                        LSDRaster& Elevation, LSDRaster& FlowDistance, 
+                        LSDRaster& DrainageArea, 
+                        float start_movern, float delta_movern, int n_movern, 
+                        bool only_use_mainstem_as_reference)
+{
+  
+  
+  vector<float> movern;
+  float A_0 = 1;
+  float thresh_area_for_chi = 0;      // This just gets chi from all pixels.
+  for(int i = 0; i< n_movern; i++)
+  {
+    movern.push_back( float(i)*delta_movern+start_movern );
+    cout << endl << endl << "==========================" << endl;
+    cout << "i: " << i << " and m over n: " << movern[i] << endl;
+    
+    // calculate chi
+    LSDRaster this_chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern[i],A_0,thresh_area_for_chi);
+
+    // rerun the chi automator to populate the vectors
+    chi_map_automator_chi_only(FlowInfo,source_nodes,outlet_nodes,
+                               Elevation, FlowDistance,
+                               DrainageArea, this_chi_coordinate);
+
+    vector<int> reference_source;
+    vector<int> test_source; 
+    vector<float> MLE_values;
+    vector<float> RMSE_values;
+
+
+    // now run the collinearity test
+    float tot_MLE;
+    tot_MLE = test_all_segment_collinearity(FlowInfo, only_use_mainstem_as_reference,
+                                  reference_source, test_source, MLE_values, RMSE_values);
+    cout << "The total maximum liklihood estimator (MLE) is: " << tot_MLE << endl;
+  }
 }
 
 

@@ -112,12 +112,15 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["threshold_pixels_for_chi"] = 1000;
   int_default_map["minimum_basin_size_pixels"] = 1000;
   int_default_map["threshold_contributing_pixels"] = 1000;
+  int_default_map["n_movern"] = 8;
   
   // set default in parameter
   float_default_map["min_slope_for_fill"] = 0.0001;
   float_default_map["A_0"] = 1;
   float_default_map["m_over_n"] = 0.5;
   float_default_map["sigma"] = 20;
+  float_default_map["start_movern"] = 0.1;
+  float_default_map["delta_movern"] = 0.1;
   
   // For DEM preprocessing
   float_default_map["minimum_elevation"] = 0.0;
@@ -154,6 +157,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_segments"] = false;
   bool_default_map["raster_is_filled"] = false;
   bool_default_map["remove_seas"] = false;
+  bool_default_map["only_use_mainstem_as_reference"] = true;
   
   // set default string method
   string_default_map["CHeads_file"] = "NULL";
@@ -465,11 +469,10 @@ int main (int nNumberofArgs,char *argv[])
   }
 
 
-  // now calculate segmentation
+  // now source and outlet nodes for segmentation and other operations.
   vector<int> source_nodes;
   vector<int> outlet_nodes;
-  if (this_bool_map["print_segmented_M_chi_map_to_csv"] || this_bool_map["print_basic_M_chi_map_to_csv"])
-  // now get the overlapping channels from the junction network file
+  if (this_bool_map["print_segmented_M_chi_map_to_csv"] || this_bool_map["print_basic_M_chi_map_to_csv"] || this_bool_map["calculate_MLE_collinearity"])
   {
     cout << "I am getting the source and outlet nodes for the overlapping channels" << endl;
     cout << "The n_nodes to visit are: " << n_nodes_to_visit << endl;
@@ -544,76 +547,29 @@ int main (int nNumberofArgs,char *argv[])
         thiscsv.print_data_to_geojson(gjson_name);
       }
     }
+  }
+
+  if (this_bool_map["calculate_MLE_collinearity"])
+  {
     
-    cout << "Shall I check collinearity????" << endl;
-    if (this_bool_map["calculate_MLE_collinearity"])
-    {
-      // Lets make a new chi tool: this won't be segmented since we only
-      // need it for m/n
-      LSDChiTools ChiTool_movern(FlowInfo);
-      ChiTool_movern.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes,
+    cout << "I am testing the collinearity for you. " << endl;
+    // Lets make a new chi tool: this won't be segmented since we only
+    // need it for m/n
+    LSDChiTools ChiTool_movern(FlowInfo);
+    ChiTool_movern.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes,
                             filled_topography, DistanceFromOutlet, 
                             DrainageArea, chi_coordinate);
 
-      cout << "I am testing the collinearity for you. " << endl;
-      float start_movern = 0.4;
-      float delta_movern = 0.1;
-      int n_movern = 3;
-      bool only_use_mainstem_as_reference = true;
-      ChiTool_movern.calcualte_goodness_of_fit_collinearity_fxn_movern(FlowInfo, source_nodes, outlet_nodes, 
-                      filled_topography, DistanceFromOutlet, 
-                      DrainageArea, start_movern, delta_movern, n_movern, 
-                      only_use_mainstem_as_reference);
-      
-      
-      /*
-      int n_channels = ChiTool_movern.get_number_of_channels();
-      cout << "The number of channels are: " << n_channels << endl;
-      
-      // now get the sources of the first two channels
-      int chan0 = 0;
-      int chan1 = 1;
-      //int source0 = ChiTool.get_starting_node_of_source(chan0);
-      //int source1 = ChiTool.get_starting_node_of_source(chan1);
-      //out << "Source of channel 0 is: " << source0 << endl;
-      //cout << "Source of channel 1 is: " << source1 << endl;
-      vector<float> elev_data_chan0;
-      vector<float> chi_data_chan0;
-      ChiTool_movern.get_chi_elevation_data_of_channel(FlowInfo, chan0, chi_data_chan0, elev_data_chan0);
-      
-      vector<float> elev_data_chan1;
-      vector<float> chi_data_chan1;
-      ChiTool_movern.get_chi_elevation_data_of_channel(FlowInfo, chan1, chi_data_chan1, elev_data_chan1);
-
-      vector<float> residuals;
-      residuals = ChiTool_movern.project_data_onto_reference_channel(chi_data_chan0, elev_data_chan0,
-                                 chi_data_chan1,elev_data_chan1);
-                                 
-      // 
-      //cout << "=================================="  << endl;
-      //cout << "Let me partition a vector for you" << endl;
-      //int n = 5;
-      //int k = 2;
-      //bool zero_indexed = true;
-      //cout << endl << endl << "==============" << endl << "combo2" << endl;
-      //vector< vector<int> > combovecvec = combinations(n, k, zero_indexed); 
-      //cout << "===================" << endl;
-
-      //float sigma = 1000;
-      //float MLE1 = calculate_MLE_from_residuals(residuals, sigma);
-      //cout << "MLE1 is: " << MLE1 << endl;
-      
-      
-      float MLE = ChiTool_movern.test_segment_collinearity(FlowInfo, chan0, chan1);
-      cout << "Simple collinearity between channel 0 and 1; the MLE is: " << MLE << endl;
-      
-      // now test the whole collinearity routine
-      bool only_mainstem = false;
-      ChiTool_movern.test_all_segment_collinearity(FlowInfo, only_mainstem);
-      */
-    }
     
+    ChiTool_movern.calcualte_goodness_of_fit_collinearity_fxn_movern(FlowInfo, source_nodes, outlet_nodes, 
+                      filled_topography, DistanceFromOutlet, 
+                      DrainageArea, 
+                      this_float_map["start_movern"], this_float_map["delta_movern"], 
+                      this_int_map["n_movern"], 
+                      this_bool_map["only_use_mainstem_as_reference"]);
   }
+
+
 
   if (this_bool_map["print_basic_M_chi_map_to_csv"])
   {
