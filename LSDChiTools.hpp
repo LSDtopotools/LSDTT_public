@@ -164,6 +164,28 @@ class LSDChiTools
     /// @date 22/12/2014
     void get_UTM_information(int& UTM_zone, bool& is_North);
 
+    /// @brief This takes a chi raster and updates the chi data map.
+    /// @detail WARNING you must use a raster derived from the topography
+    ///  raster that was used to make the FlowInfo object. This function
+    ///  does not check the dimensions of the raster
+    /// @param FlowInfo An LSDFlowInfo object
+    /// @param Chi_coordinate LSDRaster of the chi coordinate
+    /// @author SMM
+    /// @date 17/05/2017
+    void update_chi_data_map(LSDFlowInfo& FlowInfo, LSDRaster& Chi_coord);
+
+    /// @brief This takes a chi raster and updates the chi data map.
+    ///  Overloaded from the previous function: this one calculates chi
+    ///  directly from the FlowInfo so you have no problems with raster size
+    /// @detail WARNING you must use a raster derived from the topography
+    ///  raster that was used to make the FlowInfo object. This function
+    ///  does not check the dimensions of the raster
+    /// @param FlowInfo An LSDFlowInfo object
+    /// @param A_0 the A_0 parameter: in metres^2 suggested value is 1
+    /// @param m_over_n the m/n ratio
+    /// @author SMM
+    /// @date 17/05/2017
+    void update_chi_data_map(LSDFlowInfo& FlowInfo, float A_0, float movern);
 
     /// @brief This function makes a chi map and prints to a csv file
     /// @detail the lat and long coordinates in the csv are in WGS84
@@ -272,7 +294,11 @@ class LSDChiTools
                         bool only_use_mainstem_as_reference);
 
 
-
+    /// @brief This prints a series of chi profiles as a function of mover
+    ///  for visualisation
+    /// @author SMM
+    /// @date 17/05/2017
+    void print_profiles_as_fxn_movern();
 
     /// @brief This gets the node index (the reference into LSDFlowInfo) of a source
     ///  based on a source key

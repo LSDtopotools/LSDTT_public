@@ -304,6 +304,61 @@ void LSDChiTools::get_UTM_information(int& UTM_zone, bool& is_North)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This updates the chi values using a new chi raster
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::update_chi_data_map(LSDFlowInfo& FlowInfo, LSDRaster& Chi_coord)
+{
+  if (chi_data_map.size() == 0)
+  {
+    cout << "Trying to update chi but you have not run the automator yet to" << endl;
+    cout << "organise the sources and channels. LSDChiTools::update_chi_data_map" << endl;
+  }
+  else
+  {
+    int n_nodes = int(node_sequence.size());
+    int this_node,row,col;
+    float updated_chi;
+    for(int node = 0; node<n_nodes; node++)
+    {
+      this_node = node_sequence[node];
+      FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+      updated_chi = Chi_coord.get_data_element(row,col);
+      chi_data_map[this_node] = updated_chi;
+    }
+  }
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This updates the chi values using a new chi raster
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::update_chi_data_map(LSDFlowInfo& FlowInfo, float A_0, float movern)
+{
+  if (chi_data_map.size() == 0)
+  {
+    cout << "Trying to update chi but you have not run the automator yet to" << endl;
+    cout << "organise the sources and channels. LSDChiTools::update_chi_data_map" << endl;
+  }
+  else
+  {
+    float thresh_area_for_chi = 0;  // this gets chi in all nodes. Not much slower and avoids errors
+    LSDRaster this_chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,A_0,thresh_area_for_chi);
+
+    int n_nodes = int(node_sequence.size());
+    int this_node,row,col;
+    float updated_chi;
+    for(int node = 0; node<n_nodes; node++)
+    {
+      this_node = node_sequence[node];
+      FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+      updated_chi = this_chi_coordinate.get_data_element(row,col);
+      chi_data_map[this_node] = updated_chi;
+    }
+  }
+
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This prints a chi map to csv with an area threshold in m^2
@@ -1732,6 +1787,15 @@ void LSDChiTools::calcualte_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
 }
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prints a series of simple profiles (chi-elevation) as a function of
+// movern
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::print_profiles_as_fxn_movern()
+{
+
+
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This gets the source node of a given key
