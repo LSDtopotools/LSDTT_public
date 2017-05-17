@@ -1791,17 +1791,63 @@ void LSDChiTools::calcualte_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
 // This prints a series of simple profiles (chi-elevation) as a function of
 // movern
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiTools::print_profiles_as_fxn_movern(LSDFlowInfo& FlowInfo, string file_prefix, float start_movern, float delta_movern, int n_movern)
+void LSDChiTools::print_profiles_as_fxn_movern(LSDFlowInfo& FlowInfo, string filename, float start_movern, float delta_movern, int n_movern)
 {
   float A_0 = 1;
-  float thresh_area_for_chi = 0;      // This just gets chi from all pixels.
   float this_movern;
+  
+  vector<float> movern_values;
+  vector< vector<float> > chi_vecvec;
+  vector<float> empty_vec;
+  vector<float> this_chi_vec;
+  int this_node;
+  int n_nodes = int(node_sequence.size());
+  
+  // loop through m over n values
   for(int i = 0; i< n_movern; i++)
   {
     this_movern =  float(i)*delta_movern+start_movern;
     update_chi_data_map(FlowInfo, A_0, this_movern);
+    
+    movern_values.push_back(this_movern);
+    this_chi_vec = empty_vec;
+    
+    // now get the chi values for each node and push them into the chi_vecvec
+    for (int n = 0; n< n_nodes; n++)
+    {
+      this_node = node_sequence[n];
+      this_chi_vec.push_back(chi_data_map[this_node]);
+    }
+    chi_vecvec.push_back(this_chi_vec);
   }
+  // okay, we are done getting all the chi values, now add these into the file
+  
+  ofstream chi_csv_out;
+  chi_csv_out.open(filename.c_str());
+  chi_csv_out << "source,base_level,elevation";
+  for (int i = 0; i< n_movern; i++)
+  {
+    chi_csv_out << ",m_over_n = " << movern_values[i];
+  }
+  chi_csv_out << endl;
+  
+  // now loop through all the nodes
+  chi_csv_out.precision(5);
+  for (int n = 0; n< n_nodes; n++)
+  {
+    this_node = node_sequence[n];
 
+    chi_csv_out << source_keys_map[this_node] << ","
+                 << baselevel_keys_map[this_node] << ","
+                 << elev_data_map[this_node];
+
+    for (int i = 0; i< n_movern; i++)
+    {
+      chi_csv_out << "," << chi_vecvec[n][i];
+    }
+    chi_csv_out << endl;
+  }
+  chi_csv_out.close();
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
