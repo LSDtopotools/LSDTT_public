@@ -1747,9 +1747,6 @@ float LSDChiTools::test_all_segment_collinearity(LSDFlowInfo& FlowInfo, bool onl
 // segment
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::calcualte_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo& FlowInfo, 
-                        vector<int> source_nodes, vector<int> outlet_nodes, 
-                        LSDRaster& Elevation, LSDRaster& FlowDistance, 
-                        LSDRaster& DrainageArea, 
                         float start_movern, float delta_movern, int n_movern, 
                         bool only_use_mainstem_as_reference)
 {
@@ -1758,19 +1755,22 @@ void LSDChiTools::calcualte_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
   vector<float> movern;
   float A_0 = 1;
   float thresh_area_for_chi = 0;      // This just gets chi from all pixels.
+  
+  cout << endl << endl << "==========================" << endl;
   for(int i = 0; i< n_movern; i++)
   {
     movern.push_back( float(i)*delta_movern+start_movern );
-    cout << endl << endl << "==========================" << endl;
-    cout << "i: " << i << " and m over n: " << movern[i] << endl;
+    
+    cout << "i: " << i << " and m over n: " << movern[i] << " ";
     
     // calculate chi
-    LSDRaster this_chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern[i],A_0,thresh_area_for_chi);
+    update_chi_data_map(FlowInfo, A_0, movern[i]);
+    //LSDRaster this_chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern[i],A_0,thresh_area_for_chi);
 
     // rerun the chi automator to populate the vectors
-    chi_map_automator_chi_only(FlowInfo,source_nodes,outlet_nodes,
-                               Elevation, FlowDistance,
-                               DrainageArea, this_chi_coordinate);
+    //chi_map_automator_chi_only(FlowInfo,source_nodes,outlet_nodes,
+    //                           Elevation, FlowDistance,
+    //                           DrainageArea, this_chi_coordinate);
 
     vector<int> reference_source;
     vector<int> test_source; 
@@ -1791,9 +1791,16 @@ void LSDChiTools::calcualte_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
 // This prints a series of simple profiles (chi-elevation) as a function of
 // movern
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiTools::print_profiles_as_fxn_movern()
+void LSDChiTools::print_profiles_as_fxn_movern(LSDFlowInfo& FlowInfo, string file_prefix, float start_movern, float delta_movern, int n_movern)
 {
-
+  float A_0 = 1;
+  float thresh_area_for_chi = 0;      // This just gets chi from all pixels.
+  float this_movern;
+  for(int i = 0; i< n_movern; i++)
+  {
+    this_movern =  float(i)*delta_movern+start_movern;
+    update_chi_data_map(FlowInfo, A_0, this_movern);
+  }
 
 }
 

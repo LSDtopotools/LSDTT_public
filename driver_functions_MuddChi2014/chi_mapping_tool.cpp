@@ -561,9 +561,7 @@ int main (int nNumberofArgs,char *argv[])
                             DrainageArea, chi_coordinate);
 
     
-    ChiTool_movern.calcualte_goodness_of_fit_collinearity_fxn_movern(FlowInfo, source_nodes, outlet_nodes, 
-                      filled_topography, DistanceFromOutlet, 
-                      DrainageArea, 
+    ChiTool_movern.calcualte_goodness_of_fit_collinearity_fxn_movern(FlowInfo, 
                       this_float_map["start_movern"], this_float_map["delta_movern"], 
                       this_int_map["n_movern"], 
                       this_bool_map["only_use_mainstem_as_reference"]);

@@ -280,25 +280,27 @@ class LSDChiTools
     /// @param Elevation an LSDRaster containing elevation info
     /// @param DistanceFromOutlet an LSDRaster with the flow distance
     /// @param DrainageArea an LSDRaster with the drainage area
-    /// @param start_movern the starting m/n ration
+    /// @param start_movern the starting m/n ratio
     /// @param delta_movern the change in m/n 
     /// @param n_novern the number of m/n values to use
     /// @param only_use_mainstem_as_reference a boolean, if true only compare channels to mainstem .
     /// @author SMM
     /// @date 16/05/2017
     void calcualte_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo& FlowInfo, 
-                        vector<int> source_nodes, vector<int> outlet_nodes, 
-                        LSDRaster& Elevation, LSDRaster& DistanceFromOutlet, 
-                        LSDRaster& DrainageArea, 
                         float start_movern, float delta_movern, int n_movern, 
                         bool only_use_mainstem_as_reference);
 
-
     /// @brief This prints a series of chi profiles as a function of mover
     ///  for visualisation
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param file_prefix THe path and name of file without extension
+    /// @param start_movern the starting m/n ratio
+    /// @param delta_movern the change in m/n 
+    /// @param n_novern the number of m/n values to use
     /// @author SMM
     /// @date 17/05/2017
-    void print_profiles_as_fxn_movern();
+    void print_profiles_as_fxn_movern(LSDFlowInfo& FlowInfo,string file_prefix, float start_movern, float delta_movern, int n_movern);
+
 
     /// @brief This gets the node index (the reference into LSDFlowInfo) of a source
     ///  based on a source key
