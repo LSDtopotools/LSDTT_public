@@ -142,6 +142,7 @@ int main (int nNumberofArgs,char *argv[])
   // flags for printing chi analyses
   bool_default_map["convert_csv_to_geojson"] = false;
   bool_default_map["calculate_MLE_collinearity"] = false;
+  bool_default_map["print_profiles_fxn_movern_csv"] = false;
   bool_default_map["print_chi_coordinate_raster"] = false;
   bool_default_map["print_simple_chi_map_to_csv"] = false;
   bool_default_map["print_segmented_M_chi_map_to_csv"] = false;
@@ -472,7 +473,10 @@ int main (int nNumberofArgs,char *argv[])
   // now source and outlet nodes for segmentation and other operations.
   vector<int> source_nodes;
   vector<int> outlet_nodes;
-  if (this_bool_map["print_segmented_M_chi_map_to_csv"] || this_bool_map["print_basic_M_chi_map_to_csv"] || this_bool_map["calculate_MLE_collinearity"])
+  if (this_bool_map["print_segmented_M_chi_map_to_csv"] 
+        || this_bool_map["print_basic_M_chi_map_to_csv"] 
+        || this_bool_map["calculate_MLE_collinearity"]
+        || this_bool_map["print_profiles_fxn_movern_csv"])
   {
     cout << "I am getting the source and outlet nodes for the overlapping channels" << endl;
     cout << "The n_nodes to visit are: " << n_nodes_to_visit << endl;
@@ -567,7 +571,26 @@ int main (int nNumberofArgs,char *argv[])
                       this_bool_map["only_use_mainstem_as_reference"]);
   }
 
+   if(this_bool_map["print_profiles_fxn_movern_csv"] )
+   {
+    cout << endl << "Let me loop through m/n values and print the profiles to a single csv." << endl;
+    // Lets make a new chi tool: this won't be segmented since we only
+    // need it for m/n
+    LSDChiTools ChiTool_movern(FlowInfo);
 
+    // we always need to run the automator first
+    ChiTool_movern.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes,
+                            filled_topography, DistanceFromOutlet, 
+                            DrainageArea, chi_coordinate);
+
+    // now loop through m/n values, printing them all to the csv file
+    string movern_name = OUT_DIR+OUT_ID+"_movern.csv";
+    ChiTool_movern.print_profiles_as_fxn_movern(FlowInfo, movern_name, 
+                                  this_float_map["start_movern"], 
+                                  this_float_map["delta_movern"], 
+                                  this_int_map["n_movern"]);
+   
+   }
 
   if (this_bool_map["print_basic_M_chi_map_to_csv"])
   {

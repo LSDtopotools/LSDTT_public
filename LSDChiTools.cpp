@@ -1806,8 +1806,11 @@ void LSDChiTools::print_profiles_as_fxn_movern(LSDFlowInfo& FlowInfo, string fil
   // loop through m over n values
   for(int i = 0; i< n_movern; i++)
   {
+    
     this_movern =  float(i)*delta_movern+start_movern;
     update_chi_data_map(FlowInfo, A_0, this_movern);
+    
+    cout << "m/n is: " << this_movern << endl;
     
     movern_values.push_back(this_movern);
     this_chi_vec = empty_vec;
@@ -1820,9 +1823,11 @@ void LSDChiTools::print_profiles_as_fxn_movern(LSDFlowInfo& FlowInfo, string fil
     }
     chi_vecvec.push_back(this_chi_vec);
   }
+  cout << "Okay, I've got all the chi values in the vecvec." << endl;
   // okay, we are done getting all the chi values, now add these into the file
   
   ofstream chi_csv_out;
+  cout << "Running the printing for movern. Filename is: " << filename << endl;
   chi_csv_out.open(filename.c_str());
   chi_csv_out << "source,base_level,elevation";
   for (int i = 0; i< n_movern; i++)
@@ -1843,7 +1848,7 @@ void LSDChiTools::print_profiles_as_fxn_movern(LSDFlowInfo& FlowInfo, string fil
 
     for (int i = 0; i< n_movern; i++)
     {
-      chi_csv_out << "," << chi_vecvec[n][i];
+      chi_csv_out << "," << chi_vecvec[i][n];
     }
     chi_csv_out << endl;
   }
