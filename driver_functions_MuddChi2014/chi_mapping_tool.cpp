@@ -163,6 +163,7 @@ int main (int nNumberofArgs,char *argv[])
   // set default string method
   string_default_map["CHeads_file"] = "NULL";
   string_default_map["averaging_raster_vector"] = "NULL";
+  string_default_map["precipitation_fname"] = "NULL";
   
   // Use the parameter parser to get the maps of the parameters required for the 
   // analysis
@@ -429,10 +430,39 @@ int main (int nNumberofArgs,char *argv[])
     ChiTool.print_basins(FlowInfo, JunctionNetwork, BaseLevelJunctions, basin_raster_prefix);
   }
 
+  //============================================================================
   // calculate chi for the entire DEM
   cout << "Calculating the chi coordinate for A_0: " << A_0 << " and m/n: " << movern << endl; 
-  LSDRaster chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,A_0,thresh_area_for_chi);
+  LSDRaster chi_coordinate;
+  if(this_bool_map["use_precipitation_raster_for_chi"])
+  {
+    
+    string Precip_f_name = DATA_DIR+this_string_map["precipitation_fname"];
+    cout << "I am loading a precipitation raster. " << Precip_f_name<<".bil" << endl;
+    cout << "Note this MUST be the same size as the base DEM or it will crash!" << endl;
+    
+    // calculate the discharge
+    // note: not discharge yet, need to multiply by cell area
+    LSDRaster VolumePrecipitation(Precip_f_name,raster_ext);
+    float dx = VolumePrecipitation.get_DataResolution();
+  
+    // volume precipitation per time precipitation times the cell areas
+    VolumePrecipitation.raster_multiplier(dx*dx);
+  
+    // discharge accumulates this precipitation
+    LSDRaster Discharge = FlowInfo.upslope_variable_accumulator(VolumePrecipitation);
+    chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,A_0,thresh_area_for_chi,Discharge);
+  
+  }
+  else
+  {
+    chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,A_0,thresh_area_for_chi);
+  }
 
+
+
+  //============================================================================
+  // Print the chi raster
   if(this_bool_map["print_chi_coordinate_raster"])
   {
     string chi_coord_string = OUT_DIR+OUT_ID+"_chi_coord"; 
@@ -454,6 +484,9 @@ int main (int nNumberofArgs,char *argv[])
     
   }
 
+
+  //============================================================================
+  // Print basins with chi to csv
   if (this_bool_map["print_simple_chi_map_with_basins_to_csv"])
   {
     cout <<"I am printing a simple chi map with basins for you to csv." << endl;

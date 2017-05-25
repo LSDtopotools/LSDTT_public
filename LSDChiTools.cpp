@@ -1585,6 +1585,16 @@ void LSDChiTools::calculate_segmented_elevation(LSDFlowInfo& FlowInfo)
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This renumbers sources by base level. Each base level node has 
+// a number of sources and these get an incremental value which is used 
+// for the combination vector. These serve as maps between the source keys 
+// and the MLE values
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// NEED TO THIS
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function test the collinearity of all segments compared to a reference
 // segment
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1601,7 +1611,7 @@ float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int referenc
   // first get the source node of the reference channel
   if ( reference_channel >= int(key_to_source_map.size()) || test_channel >= int(key_to_source_map.size()) ) 
   {
-    cout << "LSDChiTools::test_segment_collinearity Oune of the sources is not in the channel network. Source is: " << reference_channel << endl;
+    cout << "LSDChiTools::test_segment_collinearity One of the sources is not in the channel network. Source is: " << reference_channel << endl;
   } 
   else
   {
