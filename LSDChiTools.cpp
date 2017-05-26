@@ -1593,6 +1593,32 @@ void LSDChiTools::calculate_segmented_elevation(LSDFlowInfo& FlowInfo)
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // NEED TO THIS
+void LSDChiTools::baselevel_and_source_splitter()
+{
+  // 
+  map<int,int>::iterator iter = key_to_source_map.begin();
+  while(iter != key_to_source_map.end())
+  {
+    cout << "source is: " << iter->first << " and key is: " << iter->second << endl;
+    iter++;
+  }
+  
+  
+  
+  iter = key_to_baselevel_map.begin();
+  while(iter != key_to_baselevel_map.end())
+  {
+    cout << "baselevel is: " << iter->first << " and key is: " << iter->second << endl;
+    iter++;
+  }
+  
+  iter = baselevel_keys_map.begin();
+  while(iter != baselevel_keys_map.end())
+  {
+    cout << "baselevel is: " << iter->first << " and key is: " << iter->second << endl;
+    iter++;
+  }
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function test the collinearity of all segments compared to a reference

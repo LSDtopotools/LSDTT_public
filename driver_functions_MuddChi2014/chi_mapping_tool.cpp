@@ -597,11 +597,14 @@ int main (int nNumberofArgs,char *argv[])
                             filled_topography, DistanceFromOutlet, 
                             DrainageArea, chi_coordinate);
 
-    
-    ChiTool_movern.calcualte_goodness_of_fit_collinearity_fxn_movern(FlowInfo, 
-                      this_float_map["start_movern"], this_float_map["delta_movern"], 
-                      this_int_map["n_movern"], 
-                      this_bool_map["only_use_mainstem_as_reference"]);
+    ChiTool_movern.baselevel_and_source_splitter();
+
+
+    // commented out for testingthe source splitting
+    //ChiTool_movern.calcualte_goodness_of_fit_collinearity_fxn_movern(FlowInfo, 
+    //                  this_float_map["start_movern"], this_float_map["delta_movern"], 
+    //                  this_int_map["n_movern"], 
+    //                  this_bool_map["only_use_mainstem_as_reference"]);
   }
 
    if(this_bool_map["print_profiles_fxn_movern_csv"] )

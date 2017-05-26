@@ -245,6 +245,16 @@ class LSDChiTools
     /// @author BG
     /// @date 10/02/2017
     void calculate_segmented_elevation(LSDFlowInfo& FlowInfo);
+    
+    
+    /// @brief This splits all the sources from the baselevels so that
+    ///  individual baselevel catchemnts can be compared in sequence.
+    ///  It produces a map where the sources for each baselelvel are 
+    ///   split into incremetally numberered (0,1,2) channels. 
+    /// @author SMM
+    /// @date 26/05/2017 
+    void baselevel_and_source_splitter();
+
 
     /// @brief This returns an maximum liklihood estiamtor by comparing
     ///  a channel (with a particular source number) against a reference channel
@@ -542,13 +552,23 @@ class LSDChiTools
     /// The source keys are indicies into the source_to_key_map.
     /// In big DEMs the node numbers become huge so for printing efficiency we
     /// run a key that starts at 0
+    
+    /// This map contains all the nodes. The key is the node index and the value
+    ///  is the source key (sorry I know this is confusing). It means if you 
+    ///  have the node index you can look up the source key. Used for
+    ///  visualisation.
     map<int,int> source_keys_map;
-    /// This holds the baselevel key of each node. Again used for visualisation
+    
+    /// This has all the nodes. The key (in the map) is the node index, and the 
+    ///  value is the baselelvel key. Again used for visualisation
     map<int,int> baselevel_keys_map;
-    /// This is a map where the sources are linked to the source nodes.
-    /// The key is the node index and the value is the source number
+    
+    /// THis has as many elements as there are sources. The key in the map is the 
+    ///  node index of the source, and the value is the source key.
     map<int,int> key_to_source_map;
-    /// This is a map where the baselevel keys are linked to the baselelvel nodes.
+    
+    /// This has as many elements as there are baselelvels. The key is the 
+    /// node index and the value is the baselevel key. 
     map<int,int> key_to_baselevel_map;
 
   private:
