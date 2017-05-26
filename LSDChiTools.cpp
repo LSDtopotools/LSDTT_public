@@ -549,11 +549,13 @@ void LSDChiTools::chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
       baselevel_tracker++;
       //cout << "Found a new baselevel. The node is: " << this_base_level << " and key is: " << baselevel_tracker << endl;
       this_key_to_baselevel_map[this_base_level] = baselevel_tracker;
+      ordered_baselevel_nodes.push_back(this_base_level);
     }
 
     // now add the source tracker
     source_node_tracker++;
     this_source_node = source_nodes[chan];
+    ordered_source_nodes.push_back(this_source_node);
     this_key_to_source_map[this_source_node] = source_node_tracker;
 
     //cout << "The source key is: " << source_node_tracker << " and basin key is: " << baselevel_tracker << endl;
@@ -708,11 +710,13 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
       baselevel_tracker++;
       //cout << "Found a new baselevel. The node is: " << this_base_level << " and key is: " << baselevel_tracker << endl;
       this_key_to_baselevel_map[this_base_level] = baselevel_tracker;
+      ordered_baselevel_nodes.push_back(this_base_level);
     }
 
     // now add the source tracker
     source_node_tracker++;
     this_source_node = source_nodes[chan];
+    ordered_source_nodes.push_back(this_source_node);
     this_key_to_source_map[this_source_node] = source_node_tracker;
 
     //cout << "The source key is: " << source_node_tracker << " and basin key is: " << baselevel_tracker << endl;
@@ -1595,7 +1599,20 @@ void LSDChiTools::calculate_segmented_elevation(LSDFlowInfo& FlowInfo)
 // NEED TO THIS
 void LSDChiTools::baselevel_and_source_splitter()
 {
-  // 
+  vector<int> baselevel_of_each_source;
+  
+  // in this map the key is the source node
+  int n_sources = int(ordered_source_nodes.size());
+  for (int i = 0; i< n_sources; i++)
+  {
+    baselevel_of_each_source.push_back( baselevel_keys_map[ ordered_source_nodes[i] ]);
+    cout << "Source: " << ordered_source_nodes[i] << " and bl key: " << baselevel_keys_map[ ordered_source_nodes[i] ] << endl;
+  }
+  
+  
+  
+  
+  // Loop through all the source nodes, getting the base level node of each 
   map<int,int>::iterator iter = key_to_source_map.begin();
   while(iter != key_to_source_map.end())
   {
@@ -1612,12 +1629,7 @@ void LSDChiTools::baselevel_and_source_splitter()
     iter++;
   }
   
-  iter = baselevel_keys_map.begin();
-  while(iter != baselevel_keys_map.end())
-  {
-    cout << "baselevel is: " << iter->first << " and key is: " << iter->second << endl;
-    iter++;
-  }
+  
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

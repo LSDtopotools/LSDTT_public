@@ -570,6 +570,13 @@ class LSDChiTools
     /// This has as many elements as there are baselelvels. The key is the 
     /// node index and the value is the baselevel key. 
     map<int,int> key_to_baselevel_map;
+    
+    /// this is an ordered list of the source nodes (from first source to last)
+    vector<int> ordered_source_nodes;
+    
+    /// this is an ordered list of baselelvel nodes (from first source to last)
+    vector<int> ordered_baselevel_nodes;
+    
 
   private:
     void create(LSDRaster& Raster);
