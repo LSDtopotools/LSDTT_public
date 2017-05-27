@@ -267,18 +267,20 @@ class LSDChiTools
     float test_segment_collinearity(LSDFlowInfo& FlowInfo, int reference_channel, int test_channel);
 
     /// @brief This computes a collinearity metric for all combinations of 
-    ///  channels
+    ///  channels for a given basin
     /// @detail It takes all the combinations of sources and gets the goodness of fit between each pair
     ///  of sources. 
     /// @param FlowInfo an LSDFlowInfo object
     /// @param only_use_mainstem_as_reference True if you only want to use the mainstem
+    /// @param basin_key The key into the basin you want to test all collinearity of.
     /// @param reference_source integer vector replaced in function that has the reference vector for each comparison 
     /// @param test_source integer vector replaced in function that has the test vector for each comparison 
     /// @param MLE_values the MLE for each comparison. Replaced in function.
     /// @param RMSE_values the RMSE for each comparison (i.e. between source 0 1, 0 2, 0 3, etc.). Replaced in function. 
     /// @author SMM
     /// @date 08/05/2017
-    float test_all_segment_collinearity(LSDFlowInfo& FlowInfo, bool only_use_mainstem_as_reference, 
+    float test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo, bool only_use_mainstem_as_reference, 
+                                        int basin_key,
                                         vector<int>& reference_source, vector<int>& test_source, 
                                         vector<float>& MLE_values, vector<float> RMSE_values);
 
@@ -570,6 +572,13 @@ class LSDChiTools
     /// This has as many elements as there are baselelvels. The key is the 
     /// node index and the value is the baselevel key. 
     map<int,int> key_to_baselevel_map;
+    
+    vector<int> ordered_source_nodes;
+    
+    /// This vector contains the rank of each source node in each basin, so the
+    /// main stem in each basin is 0, the second is 1, the 3rd is 2, etc. Counting starts 
+    /// again when a new baselevel node starts. 
+    vector<int> source_nodes_ranked_by_basin;
 
   private:
     void create(LSDRaster& Raster);

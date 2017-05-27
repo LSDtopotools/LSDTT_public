@@ -534,6 +534,7 @@ void LSDChiTools::chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
   // get the number of channels
   int source_node_tracker = -1;
   int baselevel_tracker = -1;
+  int ranked_source_node_tracker = -1;
   int n_channels = int(source_nodes.size());
   for(int chan = 0; chan<n_channels; chan++)
   {
@@ -547,13 +548,27 @@ void LSDChiTools::chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
     if ( this_key_to_baselevel_map.find(this_base_level) == this_key_to_baselevel_map.end() )
     {
       baselevel_tracker++;
+      
+      // this resets the ranked source node tracker
+      ranked_source_node_tracker = -1;
+      
       //cout << "Found a new baselevel. The node is: " << this_base_level << " and key is: " << baselevel_tracker << endl;
       this_key_to_baselevel_map[this_base_level] = baselevel_tracker;
     }
 
     // now add the source tracker
-    source_node_tracker++;
+    source_node_tracker++; 
+    ranked_source_node_tracker++;
+    
+    // get the source node
     this_source_node = source_nodes[chan];
+    
+    // add the node to the trackers so that we can trace individual basin nodes
+    // for m over n calculations
+    ordered_source_nodes.push_back(this_source_node);
+    source_nodes_ranked_by_basin.push_back(ranked_source_node_tracker);
+    
+    // now add the source node to the data map
     this_key_to_source_map[this_source_node] = source_node_tracker;
 
     //cout << "The source key is: " << source_node_tracker << " and basin key is: " << baselevel_tracker << endl;
@@ -706,13 +721,25 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
     if ( this_key_to_baselevel_map.find(this_base_level) == this_key_to_baselevel_map.end() )
     {
       baselevel_tracker++;
+      // this resets the ranked source node tracker
+      ranked_source_node_tracker = -1;
       //cout << "Found a new baselevel. The node is: " << this_base_level << " and key is: " << baselevel_tracker << endl;
       this_key_to_baselevel_map[this_base_level] = baselevel_tracker;
     }
 
     // now add the source tracker
-    source_node_tracker++;
+    source_node_tracker++; 
+    ranked_source_node_tracker++;
+    
+    // get the source node
     this_source_node = source_nodes[chan];
+    
+    // add the node to the trackers so that we can trace individual basin nodes
+    // for m over n calculations
+    ordered_source_nodes.push_back(this_source_node);
+    source_nodes_ranked_by_basin.push_back(ranked_source_node_tracker);
+    
+    // now add the source node to the data map
     this_key_to_source_map[this_source_node] = source_node_tracker;
 
     //cout << "The source key is: " << source_node_tracker << " and basin key is: " << baselevel_tracker << endl;
@@ -1595,29 +1622,52 @@ void LSDChiTools::calculate_segmented_elevation(LSDFlowInfo& FlowInfo)
 // NEED TO THIS
 void LSDChiTools::baselevel_and_source_splitter()
 {
-  // 
+  // You need to loop through all the sources, for each baselevel you get all the number rankings
+  int n_sources = int(ordered_source_node.size());
+  int baselevel_node;
+  
+  // this vector contains the index into the ordered source node vector
+  // of the starting point for a given baselelvel node
+  vector<int> starting_index_of_source_for_baselevel_node;
+  vector<int> n_sources_each_baselevel;
+  
+  // loop through allsources, tracking where the baselevel nodes change. 
+  int this_baselevel_node = -1;
+  int n_sources_this_baselevel;
+  for (int i = 0; i< n_sources; i++)
+  {
+    // get the baselevel node of each of the sources
+    baselevel_node = baselevel_keys_map[ ordered_source_nodes[i] ];
+    
+    if(baselevel_node != this_baselevel_node)
+    {
+      if (this_baselevel_node != -1)
+      {
+        n_sources_each_baselevel.push_back(n_sources_this_baselevel);
+      }
+      
+      starting_index_of_source_for_baselevel_node.push_back(i);
+      this_baselevel_node = baselevel_node;
+      
+      
+      
+      n_sources_this_baselevel = 0;
+    }
+    
+    n_sources_this_baselevel++;
+  }
+  
+  
+  
+  
+  
   map<int,int>::iterator iter = key_to_source_map.begin();
   while(iter != key_to_source_map.end())
   {
     cout << "source is: " << iter->first << " and key is: " << iter->second << endl;
     iter++;
   }
-  
-  
-  
-  iter = key_to_baselevel_map.begin();
-  while(iter != key_to_baselevel_map.end())
-  {
-    cout << "baselevel is: " << iter->first << " and key is: " << iter->second << endl;
-    iter++;
-  }
-  
-  iter = baselevel_keys_map.begin();
-  while(iter != baselevel_keys_map.end())
-  {
-    cout << "baselevel is: " << iter->first << " and key is: " << iter->second << endl;
-    iter++;
-  }
+
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1663,9 +1713,10 @@ float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int referenc
 // This function test the collinearity of all segments compared to a reference
 // segment
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-float LSDChiTools::test_all_segment_collinearity(LSDFlowInfo& FlowInfo, bool only_use_mainstem_as_reference,
-                                                vector<int>& reference_source, vector<int>& test_source, 
-                                                vector<float>& MLE_values, vector<float> RMSE_values)
+float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo, bool only_use_mainstem_as_reference,
+                                                 int baselelvel_key,
+                                                 vector<int>& reference_source, vector<int>& test_source, 
+                                                 vector<float>& MLE_values, vector<float> RMSE_values)
 {
   // first get the combinations of all channels
   int n_channels = get_number_of_channels();
