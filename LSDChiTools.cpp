@@ -530,6 +530,11 @@ void LSDChiTools::chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
   // these are for working with the FlowInfo object
   int this_node,row,col;
   int this_base_level, this_source_node;
+  
+  vector<int> empty_vec;
+  ordered_baselevel_nodes = empty_vec;
+  ordered_source_nodes = empty_vec;
+  
 
   // get the number of channels
   int source_node_tracker = -1;
@@ -709,6 +714,7 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
   // get the number of channels
   int source_node_tracker = -1;
   int baselevel_tracker = -1;
+  int ranked_source_node_tracker = -1;
   int n_channels = int(source_nodes.size());
   for(int chan = 0; chan<n_channels; chan++)
   {
@@ -1625,7 +1631,7 @@ void LSDChiTools::calculate_segmented_elevation(LSDFlowInfo& FlowInfo)
 void LSDChiTools::baselevel_and_source_splitter()
 {
   // You need to loop through all the sources, for each baselevel you get all the number rankings
-  int n_sources = int(ordered_source_node.size());
+  int n_sources = int(ordered_source_nodes.size());
   int baselevel_node;
   
   // this vector contains the index into the ordered source node vector
@@ -1651,13 +1657,34 @@ void LSDChiTools::baselevel_and_source_splitter()
       starting_index_of_source_for_baselevel_node.push_back(i);
       this_baselevel_node = baselevel_node;
       
-      
-      
       n_sources_this_baselevel = 0;
     }
     
     n_sources_this_baselevel++;
   }
+  
+  // and now get the last number of baselelvel nodes
+  n_sources_each_baselevel.push_back(n_sources_this_baselevel);
+  
+  // now print out the results
+  cout << endl << endl << "============" << endl;
+  for(int i = 0; i< n_sources; i++)
+  {
+    cout << "Source number is: " << ordered_source_nodes[i] << " and baselelvel: " << baselevel_keys_map[ ordered_source_nodes[i] ] << endl;
+  }
+  
+  int n_bl = int(starting_index_of_source_for_baselevel_node.size());
+  cout << endl << endl << "============" << endl;
+  cout << "n_bl: " << n_bl << endl;
+  for(int i = 0; i< n_bl; i++)
+  {
+    cout << "Baselevel node is:" << ordered_baselevel_nodes[i] << " n sources: " 
+        << n_sources_each_baselevel[i] << " start_index: " 
+        << starting_index_of_source_for_baselevel_node[i] << endl;
+  }
+  
+  
+  
 
 }
 
@@ -1858,7 +1885,9 @@ void LSDChiTools::calcualte_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
 
     // now run the collinearity test
     float tot_MLE;
-    tot_MLE = test_all_segment_collinearity(FlowInfo, only_use_mainstem_as_reference,
+    int basin_key = 0;
+    tot_MLE = test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
+                                  basin_key,
                                   reference_source, test_source, MLE_values, RMSE_values);
     cout << "The total maximum liklihood estimator (MLE) is: " << tot_MLE << endl;
   }

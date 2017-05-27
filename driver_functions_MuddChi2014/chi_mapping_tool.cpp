@@ -614,11 +614,14 @@ int main (int nNumberofArgs,char *argv[])
     // need it for m/n
     LSDChiTools ChiTool_movern(FlowInfo);
 
+    cout << "Running automator" << endl;
     // we always need to run the automator first
     ChiTool_movern.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes,
                             filled_topography, DistanceFromOutlet, 
                             DrainageArea, chi_coordinate);
 
+
+    cout << "Looping m over n" << endl;
     // now loop through m/n values, printing them all to the csv file
     string movern_name = OUT_DIR+OUT_ID+"_movern.csv";
     ChiTool_movern.print_profiles_as_fxn_movern(FlowInfo, movern_name, 
