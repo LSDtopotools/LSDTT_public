@@ -573,8 +573,12 @@ class LSDChiTools
     /// node index and the value is the baselevel key. 
     map<int,int> key_to_baselevel_map;
     
+    /// this is an ordered list of the source nodes (from first source to last)
     vector<int> ordered_source_nodes;
-    
+
+    /// this is an ordered list of baselelvel nodes (from first source to last)
+    vector<int> ordered_baselevel_nodes;
+
     /// This vector contains the rank of each source node in each basin, so the
     /// main stem in each basin is 0, the second is 1, the 3rd is 2, etc. Counting starts 
     /// again when a new baselevel node starts. 

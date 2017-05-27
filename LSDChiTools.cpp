@@ -554,6 +554,7 @@ void LSDChiTools::chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
       
       //cout << "Found a new baselevel. The node is: " << this_base_level << " and key is: " << baselevel_tracker << endl;
       this_key_to_baselevel_map[this_base_level] = baselevel_tracker;
+      ordered_baselevel_nodes.push_back(this_base_level);
     }
 
     // now add the source tracker
@@ -725,6 +726,7 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
       ranked_source_node_tracker = -1;
       //cout << "Found a new baselevel. The node is: " << this_base_level << " and key is: " << baselevel_tracker << endl;
       this_key_to_baselevel_map[this_base_level] = baselevel_tracker;
+      ordered_baselevel_nodes.push_back(this_base_level);
     }
 
     // now add the source tracker
@@ -1655,17 +1657,6 @@ void LSDChiTools::baselevel_and_source_splitter()
     }
     
     n_sources_this_baselevel++;
-  }
-  
-  
-  
-  
-  
-  map<int,int>::iterator iter = key_to_source_map.begin();
-  while(iter != key_to_source_map.end())
-  {
-    cout << "source is: " << iter->first << " and key is: " << iter->second << endl;
-    iter++;
   }
 
 }
