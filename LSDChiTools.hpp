@@ -251,10 +251,14 @@ class LSDChiTools
     ///  individual baselevel catchemnts can be compared in sequence.
     ///  It produces a map where the sources for each baselelvel are 
     ///   split into incremetally numberered (0,1,2) channels. 
+    /// @param n_sources_for_baselevel The number of sources for each baselelvel node
+    ///   Replaced in function.
+    /// @param index_into_sources_vec The index into the ordered sources vector
+    ///   that is the starting index for each baselevel. Replaced in function.
     /// @author SMM
     /// @date 26/05/2017 
-    void baselevel_and_source_splitter();
-
+    void baselevel_and_source_splitter(vector<int>& n_sources_for_baselevel, 
+                                                vector<int>& index_into_sources_vec);
 
     /// @brief This returns an maximum liklihood estiamtor by comparing
     ///  a channel (with a particular source number) against a reference channel
@@ -282,7 +286,7 @@ class LSDChiTools
     float test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo, bool only_use_mainstem_as_reference, 
                                         int basin_key,
                                         vector<int>& reference_source, vector<int>& test_source, 
-                                        vector<float>& MLE_values, vector<float> RMSE_values);
+                                        vector<float>& MLE_values, vector<float>& RMSE_values);
 
     /// @brief This wraps the collinearity tester, looping through different m over n
     ///  values and calculating goodness of fit statistics. 

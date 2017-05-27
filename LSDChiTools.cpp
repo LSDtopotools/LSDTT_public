@@ -1627,9 +1627,10 @@ void LSDChiTools::calculate_segmented_elevation(LSDFlowInfo& FlowInfo)
 // and the MLE values
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// NEED TO THIS
-void LSDChiTools::baselevel_and_source_splitter()
+void LSDChiTools::baselevel_and_source_splitter(vector<int>& n_sources_for_baselevel, 
+                                                vector<int>& index_into_sources_vec)
 {
+
   // You need to loop through all the sources, for each baselevel you get all the number rankings
   int n_sources = int(ordered_source_nodes.size());
   int baselevel_node;
@@ -1654,6 +1655,7 @@ void LSDChiTools::baselevel_and_source_splitter()
         n_sources_each_baselevel.push_back(n_sources_this_baselevel);
       }
       
+      
       starting_index_of_source_for_baselevel_node.push_back(i);
       this_baselevel_node = baselevel_node;
       
@@ -1668,24 +1670,37 @@ void LSDChiTools::baselevel_and_source_splitter()
   
   // now print out the results
   cout << endl << endl << "============" << endl;
-  for(int i = 0; i< n_sources; i++)
+  bool print_for_debug = false;
+  if(print_for_debug)
   {
-    cout << "Source number is: " << ordered_source_nodes[i] << " and baselelvel: " << baselevel_keys_map[ ordered_source_nodes[i] ] << endl;
+    for(int i = 0; i< n_sources; i++)
+   {
+      cout << "Source number is: " << ordered_source_nodes[i] << " and baselelvel: " << baselevel_keys_map[ ordered_source_nodes[i] ] << endl;
+    }
+  
+    int n_bl = int(starting_index_of_source_for_baselevel_node.size());
+    cout << endl << endl << "============" << endl;
+    cout << "n_bl: " << n_bl << endl;
+    for(int i = 0; i< n_bl; i++)
+    {
+      cout << "Baselevel node is: " << ordered_baselevel_nodes[i] << " n sources: " 
+          << n_sources_each_baselevel[i] << " start_index: " 
+          << starting_index_of_source_for_baselevel_node[i] << endl;
+    }
+    
+    cout << endl << endl << "============" << endl;
+    cout << "Let me get the numbereing for you by basin" << endl;
+    for(int i = 0; i< n_sources; i++)
+    {
+      cout << "Renumbered source key is: " << source_nodes_ranked_by_basin[i] << endl;
+    }
+    
   }
-  
-  int n_bl = int(starting_index_of_source_for_baselevel_node.size());
-  cout << endl << endl << "============" << endl;
-  cout << "n_bl: " << n_bl << endl;
-  for(int i = 0; i< n_bl; i++)
-  {
-    cout << "Baselevel node is:" << ordered_baselevel_nodes[i] << " n sources: " 
-        << n_sources_each_baselevel[i] << " start_index: " 
-        << starting_index_of_source_for_baselevel_node[i] << endl;
-  }
-  
-  
-  
 
+  // replace the two vectors
+  n_sources_for_baselevel = n_sources_each_baselevel, 
+  index_into_sources_vec = starting_index_of_source_for_baselevel_node;
+  
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1732,13 +1747,32 @@ float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int referenc
 // segment
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo, bool only_use_mainstem_as_reference,
-                                                 int baselelvel_key,
+                                                 int baselevel_key,
                                                  vector<int>& reference_source, vector<int>& test_source, 
-                                                 vector<float>& MLE_values, vector<float> RMSE_values)
+                                                 vector<float>& MLE_values, vector<float>& RMSE_values)
 {
-  // first get the combinations of all channels
-  int n_channels = get_number_of_channels();
+  cout << "Testing the segment collinearity for basin key " << baselevel_key << endl;
+  // get some information about the number of basins
+  int n_basins = int(ordered_baselevel_nodes.size());
+  if (baselevel_key >= n_basins)
+  {
+    cout << "Fatal error LSDChiTools::test_all_segment_collinearity_by_basin" <<endl;
+    cout << "You have selected a basin that doesn't exist!" << endl;
+    exit(EXIT_FAILURE);
+  }
   
+  
+  // run the splitter
+  // this gets the starting index of the sources for each basin.
+  // It means that the channel numbers are linked to the channels in the basin
+  vector<int> start_node_for_baselelvel;
+  vector<int> n_sources_in_basin;
+  baselevel_and_source_splitter(start_node_for_baselelvel, n_sources_in_basin);
+  int channel_offset = start_node_for_baselelvel[baselevel_key];
+  int n_channels = n_sources_in_basin[baselevel_key];
+  cout << "This basin has " << n_channels << " sources and start node is "<< channel_offset <<endl;  
+
+
   // placeholder vectors: will replace the passed vectors
   vector<int> this_reference_source;
   vector<int> this_test_source;
@@ -1757,7 +1791,8 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
   vector<float> residuals;
   
   int n_residuals;
-      
+  
+
   
   vector<float> MLEs;
   vector<int> MLE_index;   // the index into the combo_vecvec that is used to 
@@ -1773,8 +1808,12 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
   {
     this_combo = combo_vecvev[combo];
     
-    chan0 = this_combo[0];
-    chan1 = this_combo[1];
+    // you need to map these combinations onto the particular channels of this basin
+    
+    chan0 = this_combo[0]+channel_offset;
+    chan1 = this_combo[1]+channel_offset;
+    
+    cout << "chan0 is: " << chan0 << "  and chan1 is: " << chan1 << endl;
     
     // only get the reference channel if the channel has changed. 
     if (last_ref_channel != chan0)

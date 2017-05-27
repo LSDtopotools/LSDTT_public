@@ -597,8 +597,21 @@ int main (int nNumberofArgs,char *argv[])
                             filled_topography, DistanceFromOutlet, 
                             DrainageArea, chi_coordinate);
 
-    ChiTool_movern.baselevel_and_source_splitter();
+    //cout << "Running the splitter" << endl;
+    //vector<int> test_vec = ChiTool_movern.baselevel_and_source_splitter();
 
+    // test the basin collinearity test
+    int baselevel_key = 1;
+    vector<int> reference_source; 
+    vector<int> test_source; 
+    vector<float> MLE_values;
+    vector<float> RMSE_values;
+    
+    bool only_use_mainstem_as_reference = true;
+    ChiTool_movern.test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
+                                           baselevel_key,
+                                           reference_source, test_source, 
+                                           MLE_values, RMSE_values);
 
     // commented out for testingthe source splitting
     //ChiTool_movern.calcualte_goodness_of_fit_collinearity_fxn_movern(FlowInfo, 
