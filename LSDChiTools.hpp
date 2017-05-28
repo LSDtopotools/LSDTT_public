@@ -260,6 +260,11 @@ class LSDChiTools
     void baselevel_and_source_splitter(vector<int>& n_sources_for_baselevel, 
                                                 vector<int>& index_into_sources_vec);
 
+    /// @brief This prints all the indexing and keys to screen for bug checking
+    /// @author SMM
+    /// @date 28/05/2017
+    void print_basin_and_source_indexing_to_screen();
+
     /// @brief This returns an maximum liklihood estiamtor by comparing
     ///  a channel (with a particular source number) against a reference channel
     /// @param FlowInfo an LSDFlowInfo object
@@ -302,7 +307,7 @@ class LSDChiTools
     /// @param only_use_mainstem_as_reference a boolean, if true only compare channels to mainstem .
     /// @author SMM
     /// @date 16/05/2017
-    void calcualte_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo& FlowInfo, 
+    void calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo& FlowInfo, 
                         float start_movern, float delta_movern, int n_movern, 
                         bool only_use_mainstem_as_reference);
 

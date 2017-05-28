@@ -109,7 +109,7 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["n_nodes_to_visit"] = 10;
   int_default_map["target_nodes"] = 80;
   int_default_map["skip"] = 2;
-  int_default_map["threshold_pixels_for_chi"] = 1000;
+  int_default_map["threshold_pixels_for_chi"] = 0;
   int_default_map["minimum_basin_size_pixels"] = 1000;
   int_default_map["threshold_contributing_pixels"] = 1000;
   int_default_map["n_movern"] = 8;
@@ -190,7 +190,15 @@ int main (int nNumberofArgs,char *argv[])
   cout << "Write filenae is: " << OUT_DIR+OUT_ID << endl;
   
     // check to see if the raster exists
-  LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);  
+  LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);
+  
+  // check the threshold pixels for chi
+  if (this_int_map["threshold_pixels_for_chi"] > this_int_map["threshold_contributing_pixels"])
+  {
+    cout << "WARNING: you have chosen a threshold pixels for chi which is greater" << endl;
+    cout << "   the threshold contributing pixels. Defaulting so these are equal." << endl;
+    this_int_map["threshold_pixels_for_chi"] = this_int_map["threshold_contributing_pixels"];
+  }  
 
   // initialise variables to be assigned from .driver file
   // These will all be assigned default values
@@ -606,6 +614,8 @@ int main (int nNumberofArgs,char *argv[])
     vector<int> test_source; 
     vector<float> MLE_values;
     vector<float> RMSE_values;
+    
+    //ChiTool_movern.print_basin_and_source_indexing_to_screen();
     
     bool only_use_mainstem_as_reference = true;
     ChiTool_movern.test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
