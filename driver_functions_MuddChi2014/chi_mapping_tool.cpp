@@ -625,7 +625,7 @@ int main (int nNumberofArgs,char *argv[])
 
     // commented out for testingthe source splitting
     
-    string movern_name = OUT_DIR+OUT_ID+"movernstats_";
+    string movern_name = OUT_DIR+OUT_ID+"_movernstats";
     ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern(FlowInfo, 
                       this_float_map["start_movern"], this_float_map["delta_movern"], 
                       this_int_map["n_movern"], 
