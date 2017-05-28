@@ -1897,6 +1897,7 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
     residuals = project_data_onto_reference_channel(chi_data_chan0, elev_data_chan0,
                                  chi_data_chan1,elev_data_chan1);
     n_residuals = int(residuals.size());
+    cout << "The number of residuals are: " << n_residuals << endl;
     
     // Now get the MLE and RMSE for this channel pair. It only runs if
     // there are residuals. Otherwise it means that the channels are non-overlapping
@@ -1905,6 +1906,7 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
       float MLE1 = calculate_MLE_from_residuals(residuals, sigma);
       float RMSE = calculate_RMSE_from_residuals(residuals);
       last_ref_channel = chan0;
+      cout << "MLE: " << MLE1 << " and RMSE: " << RMSE << endl;
     
       // If we are only using the mainstem channel, we only use the first channel
       // as a reference channel. The first channel is denoted by this_combo[0] == 0
@@ -1938,8 +1940,8 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
   
   MLE_values = these_MLE_values;
   RMSE_values = these_RMSE_values;
-  this_reference_source = this_reference_source;
-  this_test_source = this_test_source;
+  reference_source = this_reference_source;
+  test_source = this_test_source;
   
   float tot_MLE = 1;
   for (int res = 0; res < int(these_MLE_values.size()); res++)
@@ -1953,10 +1955,12 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
   bool print_results = true;
   if(print_results)
   {
-    for (int res = 0; res < int(MLEs.size()); res++)
+    for (int res = 0; res < int(MLE_values.size()); res++)
     {
-      cout << "idx: " << MLE_index[res] << " chans: " << combo_vecvev[res][0] 
-           << "," << combo_vecvev[res][1] << " MLE: " << MLEs[res] << endl;
+      cout << "reference_source: " << reference_source[res] << " "
+           << "test_source: " << test_source[res] << " "
+           << "MLE_values: " << MLE_values[res] << " "
+           << "RMSE_values: " << RMSE_values[res] << endl;
     }
   }
   
