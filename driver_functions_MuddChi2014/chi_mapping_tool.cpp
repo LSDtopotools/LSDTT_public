@@ -618,16 +618,19 @@ int main (int nNumberofArgs,char *argv[])
     //ChiTool_movern.print_basin_and_source_indexing_to_screen();
     
     bool only_use_mainstem_as_reference = true;
-    ChiTool_movern.test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
-                                           baselevel_key,
-                                           reference_source, test_source, 
-                                           MLE_values, RMSE_values);
+    //ChiTool_movern.test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
+    //                                       baselevel_key,
+    //                                       reference_source, test_source, 
+    //                                       MLE_values, RMSE_values);
 
     // commented out for testingthe source splitting
-    //ChiTool_movern.calcualte_goodness_of_fit_collinearity_fxn_movern(FlowInfo, 
-    //                  this_float_map["start_movern"], this_float_map["delta_movern"], 
-    //                  this_int_map["n_movern"], 
-    //                  this_bool_map["only_use_mainstem_as_reference"]);
+    
+    string movern_name = OUT_DIR+OUT_ID+"movernstats_";
+    ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern(FlowInfo, 
+                      this_float_map["start_movern"], this_float_map["delta_movern"], 
+                      this_int_map["n_movern"], 
+                      this_bool_map["only_use_mainstem_as_reference"],
+                      movern_name);
   }
 
    if(this_bool_map["print_profiles_fxn_movern_csv"] )

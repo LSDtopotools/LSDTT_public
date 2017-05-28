@@ -305,11 +305,13 @@ class LSDChiTools
     /// @param delta_movern the change in m/n 
     /// @param n_novern the number of m/n values to use
     /// @param only_use_mainstem_as_reference a boolean, if true only compare channels to mainstem .
+    /// @param The file prefix for the data files
     /// @author SMM
     /// @date 16/05/2017
     void calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo& FlowInfo, 
                         float start_movern, float delta_movern, int n_movern, 
-                        bool only_use_mainstem_as_reference);
+                        bool only_use_mainstem_as_reference, 
+                        string file_prefix);
 
     /// @brief This prints a series of chi profiles as a function of mover
     ///  for visualisation

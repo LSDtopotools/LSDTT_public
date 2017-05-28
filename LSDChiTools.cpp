@@ -1863,6 +1863,11 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
   vector<int> this_combo;
   int chan0,chan1;
   
+  if (only_use_mainstem_as_reference)
+  {
+    n_combinations = n_channels-1;
+  }
+  
   // we loop through the different combinations in the vecvec
   for (int combo = 0; combo < n_combinations; combo++)
   {
@@ -1872,7 +1877,7 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
     // These channels refere to the source keys
     chan0 = this_combo[0]+channel_offset;
     chan1 = this_combo[1]+channel_offset;
-    cout << "chan0 is: " << chan0 << "  and chan1 is: " << chan1 << endl;
+    cout << "chan0 is: " << chan0 << "  and chan1 is: " << chan1 << " and combo 0 is: " << this_combo[0] <<endl;
     
     
     // only get the reference channel if the channel has changed. 
@@ -1903,11 +1908,14 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
     
       // If we are only using the mainstem channel, we only use the first channel
       // as a reference channel. The first channel is denoted by this_combo[0] == 0
+      //cout << "The use only mainstem is: " << only_use_mainstem_as_reference << endl;
       if (only_use_mainstem_as_reference)
       {
+        //cout << "Checking the combination, combo 0 is: " << this_combo[0] << endl;
         if (this_combo[0] > 0)
         {
           // skip to the last node
+          //cout << "I am skipping to the LAST NODE in the combinations" << endl;
           combo = n_combinations;
         }
         else
@@ -1940,6 +1948,7 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
   }
   
 
+  cout << "Let me tell you all about the MLE values " << endl;
   // for debugging
   bool print_results = true;
   if(print_results)
@@ -1963,29 +1972,38 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo& FlowInfo, 
                         float start_movern, float delta_movern, int n_movern, 
-                        bool only_use_mainstem_as_reference)
+                        bool only_use_mainstem_as_reference, 
+                        string file_prefix)
 {
   
-  
+  cout << "LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern" << endl;
+  cout << "I am defaulting to A_0 = 1." << endl;
   vector<float> movern;
   float A_0 = 1;
   float thresh_area_for_chi = 0;      // This just gets chi from all pixels.
   
+  
+
+  
   cout << endl << endl << "==========================" << endl;
   for(int i = 0; i< n_movern; i++)
   {
+    // get the m over n value
     movern.push_back( float(i)*delta_movern+start_movern );
-    
     cout << "i: " << i << " and m over n: " << movern[i] << " ";
+    
+    // open the outfile
+    string filename_fullstats = file_prefix+"_"+dtoa(movern[i])+"_fullstats.csv";
+    ofstream movern_stats_out;
+    movern_stats_out.open(filename_fullstats.c_str());
+    
+    string filename_bstats = file_prefix+"_"+dtoa(movern[i])+"_basinstats.csv";
+    ofstream stats_by_basin_out;
+    stats_by_basin_out.open(filename_bstats.c_str());
+    
     
     // calculate chi
     update_chi_data_map(FlowInfo, A_0, movern[i]);
-    //LSDRaster this_chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern[i],A_0,thresh_area_for_chi);
-
-    // rerun the chi automator to populate the vectors
-    //chi_map_automator_chi_only(FlowInfo,source_nodes,outlet_nodes,
-    //                           Elevation, FlowDistance,
-    //                           DrainageArea, this_chi_coordinate);
 
     // these are the vectors that will hold the information about the 
     // comparison between channels. 
@@ -2018,6 +2036,26 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
       tot_MLE_vec.push_back(tot_MLE);
     }
     //cout << "The total maximum liklihood estimator (MLE) is: " << tot_MLE << endl;
+    
+    // print the basin stats
+    stats_by_basin_out << "basin_key,MLE_total" << endl;
+    for(int i = 0; i<n_basins; i++)
+    {
+      stats_by_basin_out << i << "," << tot_MLE_vec[i] << endl;
+    }
+    // now print the data to the file
+    movern_stats_out << "reference_source_key,test_source_key,MLE,RMSE" << endl;
+    int n_rmse_vals = int(all_RMSE_values.size());
+    for(int i = 0; i<n_rmse_vals; i++)
+    {
+      movern_stats_out << all_reference_source[i] << ","
+                       << all_test_source[i] << ","
+                       << all_MLE_values[i] << ","
+                       << all_RMSE_values[i] << endl;
+    }
+    
+    stats_by_basin_out.close();
+    movern_stats_out.close();
   }
 }
 
@@ -2170,7 +2208,7 @@ void LSDChiTools::get_chi_elevation_data_of_channel(LSDFlowInfo& FlowInfo, int s
   
   // get source node
   int starting_source = get_source_from_source_key(source_key);
-  cout << "LSDChiTools::get_chi_elevation_data_of_channel, Starting source is: " << starting_source << endl;
+  //cout << "LSDChiTools::get_chi_elevation_data_of_channel, Starting source is: " << starting_source << endl;
   
   vector<float> this_chi;
   vector<float> this_elevation;
@@ -2179,7 +2217,7 @@ void LSDChiTools::get_chi_elevation_data_of_channel(LSDFlowInfo& FlowInfo, int s
   this_chi.push_back(chi_data_map[starting_source]);
   this_elevation.push_back(elev_data_map[starting_source]);
   
-  cout << "Starting chi is: " << chi_data_map[starting_source] << endl;
+  //cout << "Starting chi is: " << chi_data_map[starting_source] << endl;
   
   // now work downstream until you get to a different source or
   // a baselevel node
@@ -2218,7 +2256,7 @@ void LSDChiTools::get_chi_elevation_data_of_channel(LSDFlowInfo& FlowInfo, int s
   chi_data = this_chi;
   
   int n_nodes = int(elevation_data.size());
-  cout << "Starting chi is: " << chi_data[0] << " and ending chi is: " << chi_data[n_nodes-1] << endl;
+  //cout << "Starting chi is: " << chi_data[0] << " and ending chi is: " << chi_data[n_nodes-1] << endl;
   
   // For debugging
   //int n_nodes = int(elevation_data.size());
