@@ -6130,10 +6130,17 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_Edge(vector<int>& BaseLevelJunct
 
       for(int i_donor = 0; i_donor < N_Donors; ++ i_donor)
       {
-        bool IsTruncated = node_tester(FlowInfo,DonorJunctions[i_donor]);
-        if(IsTruncated == true)
+        if (DonorJunctions[i_donor] == BaseLevelJunctions_Initial[i])
         {
-          keep_base_level_node = false;
+          //cout << "This is a baselevel junction." << endl;
+        }
+        else
+        {
+          bool IsTruncated = node_tester(FlowInfo,DonorJunctions[i_donor]);
+          if(IsTruncated == true)
+          {
+            keep_base_level_node = false;
+          }
         }
       }
     }
@@ -6150,6 +6157,72 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_Edge(vector<int>& BaseLevelJunct
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prunes a list of baselevel junctions by removing juntions that have
+// basins bouned by NoData.
+// It seeks to remove basins draining from the edge.
+// Similar to the previous function but this one ignores the outlet reach
+// because in DEMs draining to a cut edge it is common to have a nodata
+// node near the outlet. 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDJunctionNetwork::Prune_Junctions_Edge_Ignore_Outlet_Reach(vector<int>& BaseLevelJunctions_Initial,
+                                              LSDFlowInfo& FlowInfo, LSDRaster& TestRaster)
+{
+  vector<int> BL_Donor_junctions_pruned;
+  int N_BaseLevelJuncs = int(BaseLevelJunctions_Initial.size());
+  cout << endl << endl << "I am going to remove any basins draining to the edge, ignoring the outlet reach." << endl;
+
+  for(int i = 0; i < N_BaseLevelJuncs; ++i)
+  {
+    //cout << "I'm checking node " << i << " to see if it is truncated." << endl;
+    bool keep_base_level_node = true;
+
+    // get donor nodes to base level nodes node
+    vector<int> DonorJunctions = get_donor_nodes(BaseLevelJunctions_Initial[i]);
+    int N_Donors = int(DonorJunctions.size());
+    //cout << "Looking at baselevel junction: " << BaseLevelJunctions_Initial[i] << " It has " << N_Donors << " donor junctions." << endl;
+
+    if (N_Donors == 1)    // this is a tiny base level node with no donors, we won't keep it.
+    {
+      //cout << "This is a base level junction! Junction is: " << BaseLevelJunctions_Initial[i] << endl
+      //     << "and donor is: " << DonorJunctions[0] << endl;
+      keep_base_level_node = false;
+    }
+    else
+    {
+      // get the node indices of the donors
+      for (int i_donor = 0; i_donor<N_Donors; i_donor++)
+      {
+        //cout << "Donor " << i_donor << " of " << N_Donors << " and junction is: " << DonorJunctions[i_donor] << endl;
+        
+        // make sure you are not getting the baselevl node since it will certainly
+        // have nodata bounding it. 
+        if(DonorJunctions[i_donor] != BaseLevelJunctions_Initial[i])
+        {
+          int this_NI = JunctionVector[ DonorJunctions[i_donor] ];
+          bool is_influenced_by_nodata = FlowInfo.is_upstream_influenced_by_nodata(this_NI, TestRaster);
+          if (is_influenced_by_nodata)
+          {
+            //cout << "This node has a NoData influence upslope." << endl;
+            keep_base_level_node = false;
+          }
+        }
+      }
+    }
+    
+    // Keep this baselelvel node if it is true
+    if(keep_base_level_node == true)
+    {
+      BL_Donor_junctions_pruned.push_back(BaseLevelJunctions_Initial[i]);
+    }
+  }
+  cout << "I have removed the channels that are draining from the edge of the DEM." << endl;
+  cout << "I now have " << BL_Donor_junctions_pruned.size() << " base level junctions" << endl;
+  return BL_Donor_junctions_pruned;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This prunes a list of baselevel junctions by removing junctions whose
 // contributing pixels are less than a threshold
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -6159,7 +6232,8 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_Area(vector<int>& BaseLevelJunct
   vector<int> BL_Donor_junctions_pruned;
   int N_BaseLevelJuncs = int(BaseLevelJunctions_Initial.size());
   cout << endl << endl << "I am going to remove any basins smaller than " << Threshold << " pixels." << endl;
-
+  cout << "We are starting with: " << N_BaseLevelJuncs << " juntions." << endl;
+  
   int row,col, current_node;
 
   for(int i = 0; i < N_BaseLevelJuncs; ++i)

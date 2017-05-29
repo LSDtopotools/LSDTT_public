@@ -1025,6 +1025,16 @@ void get_nodeindices_from_csv(string csv_filename, vector<int>& NIs, vector<floa
   LSDIndexRaster find_cells_influenced_by_nodata(LSDIndexRaster& Bordered_mask,
                                  LSDRaster& Topography);
 
+  
+  /// @brief This function looks at all uplope nodes and sees if any are bordered
+  ///  by nodata.
+  /// @param nodeindex The node index of the node in question
+  /// @param test_raster and LSDRaster that is to be tested
+  /// @return true if the node is influenced by nodata
+  /// @author SMM
+  /// @date 29/05/2017
+  bool is_upstream_influenced_by_nodata(int nodeindex, LSDRaster& test_raster);
+
   /// @brief This function gets nodes that are possibly on basin edge by
   ///  removing those that do not border NoData. Intended to be passed
   ///  to function for finding concave hull of basin

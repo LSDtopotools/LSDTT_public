@@ -383,6 +383,21 @@ class LSDJunctionNetwork
   vector<int> Prune_Junctions_Edge(vector<int>& BaseLevelJunctions_Initial,LSDFlowInfo& FlowInfo);
 
   /// @brief This function takes a list of junctions and then prunes
+  ///  junctions based whether they drain from the edge. This attempts to
+  ///  remove junctions that are through-flowing and thus do not have the
+  ///  correct drainage area
+  /// @detail Only gets the donor of the baselelve donor to ignore the nodes
+  ///  near the outlet, which often intersect nodata in cut DEMs
+  /// @param BaseLevelJunctions_Initial a vector of integers containg an inital
+  ///  list of base level nodes
+  /// @param FlowInfo The LSDFlowInfo object
+  /// @return a pruned list of base level nodes
+  /// @author SMM
+  /// @date 29/05/17
+  vector<int> Prune_Junctions_Edge_Ignore_Outlet_Reach(vector<int>& BaseLevelJunctions_Initial,
+                                              LSDFlowInfo& FlowInfo, LSDRaster& TestRaster);
+
+  /// @brief This function takes a list of junctions and then prunes
   ///  junctions based on their number of contributing pixels
   /// @param BaseLevelJunctions_Initial a vector of integers containg an inital
   ///  list of base level nodes

@@ -388,26 +388,26 @@ int main (int nNumberofArgs,char *argv[])
   int N_BaseLevelJuncs = BaseLevelJunctions_Initial.size();
   cout << "The number of base level junctions is: " << N_BaseLevelJuncs << endl; 
 
+
+    // remove base level junctions for which catchment is too small
+  cout << "Removing basins with fewer than " << minimum_basin_size_pixels << " pixels" << endl;
+  BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Area(BaseLevelJunctions_Initial, 
+                                              FlowInfo, FlowAcc, minimum_basin_size_pixels);
+  cout << "Now I have " << BaseLevelJunctions.size() << " baselelvel junctions left. " << endl;
+
   // remove basins drainage from edge if that is what the user wants
-  
-  cout << "Right, let me check the drainage basins. " << endl;
   if (this_bool_map["test_drainage_boundaries"])
   {
-    cout << "Test_drainage_boundaries: " << test_drainage_boundaries << endl;
-  
-    cout << endl << endl << "I am going to remove any basins draining to the edge." << endl;
-    BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge(BaseLevelJunctions_Initial,FlowInfo); 
+    cout << endl << endl << "I am going to remove basins draining to the edge." << endl;
+    //BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions,FlowInfo, filled_topography); 
+    BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge(BaseLevelJunctions,FlowInfo);
   }
   else
   {
     cout << "I'm not going to remove any drainage basins drainage to the edge." << endl;
-    BaseLevelJunctions = BaseLevelJunctions_Initial;
   }
   
-  // remove base level junctions for which catchment is too small
-  cout << "Removing basins with fewer than " << minimum_basin_size_pixels << " pixels" << endl;
-  BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Area(BaseLevelJunctions, 
-                                              FlowInfo, FlowAcc, minimum_basin_size_pixels);
+
 
   if (this_bool_map["only_take_largest_basin"])
   {

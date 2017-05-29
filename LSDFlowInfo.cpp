@@ -6325,6 +6325,51 @@ LSDIndexRaster LSDFlowInfo::find_cells_influenced_by_nodata(LSDIndexRaster& Bord
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+bool LSDFlowInfo::is_upstream_influenced_by_nodata(int nodeindex, LSDRaster& test_raster)
+{
+  // get all the upslope nodes of this node. 
+  vector<int> upslope_node_list = get_upslope_nodes(nodeindex);
+  
+  int i,j;
+  
+  bool flag = false;
+  float raster_value;
+  float NDV = test_raster.get_NoDataValue();
+  
+  // now loop through all these nodes, seeing if any of them is bounded by nodata
+  for (int node = 0; node < int(upslope_node_list.size()); node++)
+  {
+    retrieve_current_row_and_col( upslope_node_list[node] ,i,j);
+
+    //check for edges of the file
+    if (i == 0 || i == (NRows - 1) || j == 0 || j == (NCols - 1))
+    {
+      flag = true;
+      return flag;
+    }
+    else
+    {
+      for(int ii = -1; ii<=1; ii++)
+      {
+        for(int jj = -1; jj<=1; jj++)
+        {
+          raster_value = test_raster.get_data_element(i+ii,j+jj);
+          if (raster_value == NDV)
+          {
+            flag = true;
+            return flag;
+          }
+          
+        }
+      }
+    }
+  }
+
+  return flag;
+}
+
+
 //----------------------------------------------------------------------------------------
 // get_raster_values_for_nodes
 //----------------------------------------------------------------------------------------
