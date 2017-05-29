@@ -399,8 +399,8 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["test_drainage_boundaries"])
   {
     cout << endl << endl << "I am going to remove basins draining to the edge." << endl;
-    //BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions,FlowInfo, filled_topography); 
-    BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge(BaseLevelJunctions,FlowInfo);
+    BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions,FlowInfo, filled_topography); 
+    //BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge(BaseLevelJunctions,FlowInfo);
   }
   else
   {

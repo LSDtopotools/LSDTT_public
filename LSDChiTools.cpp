@@ -1817,6 +1817,14 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
   int channel_offset = start_node_for_baselelvel[baselevel_key];
   int n_channels = n_sources_in_basin[baselevel_key];
   
+  // Drop out if there is only a single channel in the basin
+  if (n_channels == 1)
+  {
+    cout << "This basin only has one channel." << endl;
+    return 1.0;
+  }
+  
+  
   cout << "Let me check the basin indexing for you." << endl;
   int n_bl =  int(start_node_for_baselelvel.size());
   for(int i = 0; i< n_bl; i++)
@@ -1992,7 +2000,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
   cout << "I am defaulting to A_0 = 1." << endl;
   vector<float> movern;
   float A_0 = 1;
-  float thresh_area_for_chi = 0;      // This just gets chi from all pixels.
+  //float thresh_area_for_chi = 0;      // This just gets chi from all pixels.
 
   string filename_bstats = file_prefix+"_basinstats.csv";
   ofstream stats_by_basin_out;
@@ -2086,8 +2094,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
   }
   
   stats_by_basin_out.close();
-  
-  
+
 }
 
 
@@ -2133,7 +2140,7 @@ void LSDChiTools::print_profiles_as_fxn_movern(LSDFlowInfo& FlowInfo, string fil
   ofstream chi_csv_out;
   cout << "Running the printing for movern. Filename is: " << filename << endl;
   chi_csv_out.open(filename.c_str());
-  chi_csv_out << "source,base_level,elevation";
+  chi_csv_out << "source_key,basin_key,elevation";
   for (int i = 0; i< n_movern; i++)
   {
     chi_csv_out << ",m_over_n = " << movern_values[i];
