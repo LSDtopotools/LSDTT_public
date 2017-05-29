@@ -331,7 +331,7 @@ void LSDChiTools::update_chi_data_map(LSDFlowInfo& FlowInfo, LSDRaster& Chi_coor
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// This updates the chi values using a new chi raster
+// This updates the chi values by calculating them directly from the FlowInfo object
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::update_chi_data_map(LSDFlowInfo& FlowInfo, float A_0, float movern)
 {
@@ -2099,6 +2099,130 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function test the collinearity of all segments compared to a reference
+// segment
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge(LSDFlowInfo& FlowInfo, 
+                        float start_movern, float delta_movern, int n_movern, 
+                        bool only_use_mainstem_as_reference, 
+                        string file_prefix, 
+                        LSDRaster& Discharge)
+{
+  // these vectors store all the values which are then used for printing
+  vector< vector<float> > RMSE_vecvec;
+  vector< vector<float> > MLE_vecvec;
+  vector< vector<float> > total_MLE_vecvec;
+  vector<int> reference_keys;
+  vector<int> test_keys;
+  
+  
+  cout << "LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern" << endl;
+  cout << "I am defaulting to A_0 = 1." << endl;
+  vector<float> movern;
+  float A_0 = 1;
+  //float thresh_area_for_chi = 0;      // This just gets chi from all pixels.
+
+  string filename_bstats = file_prefix+"_basinstats.csv";
+  ofstream stats_by_basin_out;
+  stats_by_basin_out.open(filename_bstats.c_str());
+
+  int n_basins = int(ordered_baselevel_nodes.size());
+  cout << endl << endl << "==========================" << endl;
+  for(int i = 0; i< n_movern; i++)
+  {
+    // get the m over n value
+    movern.push_back( float(i)*delta_movern+start_movern );
+    cout << "i: " << i << " and m over n: " << movern[i] << " ";
+    
+    // open the outfile
+    string filename_fullstats = file_prefix+"_"+dtoa(movern[i])+"_fullstats.csv";
+    ofstream movern_stats_out;
+    movern_stats_out.open(filename_fullstats.c_str());
+
+    // calculate chi
+    float area_threshold = 0;
+    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(A_0, movern[i], 
+                                 area_threshold, Discharge);
+    update_chi_data_map(FlowInfo, this_chi);
+
+    // these are the vectors that will hold the information about the 
+    // comparison between channels. 
+    // the _all vectors are one of all the basins
+    // reference source is the source key of the reference channel
+    vector<int> reference_source, all_reference_source;
+    // test source is the source key of the test channel
+    vector<int> test_source, all_test_source; 
+    // MLE the maximum liklihood estimator
+    vector<float> MLE_values, all_MLE_values;
+    // RMSE is the root mean square error
+    vector<float> RMSE_values, all_RMSE_values;
+
+    vector<float> tot_MLE_vec;
+
+    // now run the collinearity test
+    float tot_MLE;
+    
+    for(int basin_key = 0; basin_key<n_basins; basin_key++)
+    {
+      tot_MLE = test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
+                                  basin_key,
+                                  reference_source, test_source, MLE_values, RMSE_values);
+      // concatenate the vectors to the "all" vectors
+      all_reference_source.insert(all_reference_source.end(), reference_source.begin(), reference_source.end() );
+      all_test_source.insert(all_test_source.end(), test_source.begin(), test_source.end() );
+      all_MLE_values.insert(all_MLE_values.end(), MLE_values.begin(), MLE_values.end() );
+      all_RMSE_values.insert(all_RMSE_values.end(), RMSE_values.begin(), RMSE_values.end() );
+
+      tot_MLE_vec.push_back(tot_MLE);
+      cout << "basin: " << basin_key << " and tot_MLE: " << tot_MLE << endl;
+    }
+    
+    // add the data to the vecvecs
+    MLE_vecvec.push_back(all_MLE_values);
+    RMSE_vecvec.push_back(all_RMSE_values);
+    total_MLE_vecvec.push_back(tot_MLE_vec);
+    reference_keys = all_reference_source;
+    test_keys = all_test_source;
+    
+    // now print the data to the file
+    movern_stats_out << "reference_source_key,test_source_key,MLE,RMSE" << endl;
+    int n_rmse_vals = int(all_RMSE_values.size());
+    for(int i = 0; i<n_rmse_vals; i++)
+    {
+      movern_stats_out << all_reference_source[i] << ","
+                       << all_test_source[i] << ","
+                       << all_MLE_values[i] << ","
+                       << all_RMSE_values[i] << endl;
+    }
+    movern_stats_out.close();
+
+  }
+  
+  stats_by_basin_out << "basin_key";
+  stats_by_basin_out.precision(4);
+  for(int i = 0; i< n_movern; i++)
+  {
+    stats_by_basin_out << ",m_over_n="<<movern[i];
+  }
+  stats_by_basin_out << endl;
+  stats_by_basin_out.precision(9);
+  for(int basin_key = 0; basin_key<n_basins; basin_key++)
+  {
+    stats_by_basin_out << basin_key;
+    for(int i = 0; i< n_movern; i++)
+    {
+      stats_by_basin_out << "," <<total_MLE_vecvec[i][basin_key];
+    }
+    stats_by_basin_out << endl;
+  }
+  
+  stats_by_basin_out.close();
+
+}
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This prints a series of simple profiles (chi-elevation) as a function of
 // movern
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2165,6 +2289,83 @@ void LSDChiTools::print_profiles_as_fxn_movern(LSDFlowInfo& FlowInfo, string fil
   }
   chi_csv_out.close();
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prints a series of simple profiles (chi-elevation) as a function of
+// movern
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::print_profiles_as_fxn_movern_with_discharge(LSDFlowInfo& FlowInfo, string filename, 
+           float start_movern, float delta_movern, int n_movern, LSDRaster& Discharge)
+{
+  float A_0 = 1;
+  float this_movern;
+  
+  vector<float> movern_values;
+  vector< vector<float> > chi_vecvec;
+  vector<float> empty_vec;
+  vector<float> this_chi_vec;
+  int this_node;
+  int n_nodes = int(node_sequence.size());
+  
+  // loop through m over n values
+  for(int i = 0; i< n_movern; i++)
+  {
+    
+    this_movern =  float(i)*delta_movern+start_movern;
+    
+    // calculate chi
+    float area_threshold = 0;
+    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(A_0, this_movern, 
+                                 area_threshold, Discharge);
+    update_chi_data_map(FlowInfo, this_chi);
+    
+    
+    cout << "m/n is: " << this_movern << endl;
+    
+    movern_values.push_back(this_movern);
+    this_chi_vec = empty_vec;
+    
+    // now get the chi values for each node and push them into the chi_vecvec
+    for (int n = 0; n< n_nodes; n++)
+    {
+      this_node = node_sequence[n];
+      this_chi_vec.push_back(chi_data_map[this_node]);
+    }
+    chi_vecvec.push_back(this_chi_vec);
+  }
+  cout << "Okay, I've got all the chi values in the vecvec." << endl;
+  // okay, we are done getting all the chi values, now add these into the file
+  
+  ofstream chi_csv_out;
+  cout << "Running the printing for movern. Filename is: " << filename << endl;
+  chi_csv_out.open(filename.c_str());
+  chi_csv_out << "source_key,basin_key,elevation";
+  for (int i = 0; i< n_movern; i++)
+  {
+    chi_csv_out << ",m_over_n = " << movern_values[i];
+  }
+  chi_csv_out << endl;
+  
+  // now loop through all the nodes
+  chi_csv_out.precision(5);
+  for (int n = 0; n< n_nodes; n++)
+  {
+    this_node = node_sequence[n];
+
+    chi_csv_out << source_keys_map[this_node] << ","
+                 << baselevel_keys_map[this_node] << ","
+                 << elev_data_map[this_node];
+
+    for (int i = 0; i< n_movern; i++)
+    {
+      chi_csv_out << "," << chi_vecvec[i][n];
+    }
+    chi_csv_out << endl;
+  }
+  chi_csv_out.close();
+}
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This gets the source node of a given key

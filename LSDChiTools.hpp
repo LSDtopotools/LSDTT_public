@@ -312,6 +312,29 @@ class LSDChiTools
                         float start_movern, float delta_movern, int n_movern, 
                         bool only_use_mainstem_as_reference, 
                         string file_prefix);
+                        
+    /// @brief This wraps the collinearity tester, looping through different m over n
+    ///  values and calculating goodness of fit statistics.
+    ///  Same as above but can use a discharge raster to calculate chi 
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param source_nodes a vector containing the sorted sorce nodes (by flow distance)
+    /// @param outlet_nodes a vector continaing the outlet nodes
+    /// @param Elevation an LSDRaster containing elevation info
+    /// @param DistanceFromOutlet an LSDRaster with the flow distance
+    /// @param DrainageArea an LSDRaster with the drainage area
+    /// @param start_movern the starting m/n ratio
+    /// @param delta_movern the change in m/n 
+    /// @param n_novern the number of m/n values to use
+    /// @param only_use_mainstem_as_reference a boolean, if true only compare channels to mainstem .
+    /// @param The file prefix for the data files
+    /// @param Discharge and LSDRaster of discharge
+    /// @author SMM
+    /// @date 16/05/2017
+    void calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge(LSDFlowInfo& FlowInfo, 
+                        float start_movern, float delta_movern, int n_movern, 
+                        bool only_use_mainstem_as_reference, 
+                        string file_prefix, 
+                        LSDRaster& Discharge);
 
     /// @brief This prints a series of chi profiles as a function of mover
     ///  for visualisation
@@ -323,6 +346,20 @@ class LSDChiTools
     /// @author SMM
     /// @date 17/05/2017
     void print_profiles_as_fxn_movern(LSDFlowInfo& FlowInfo,string file_prefix, float start_movern, float delta_movern, int n_movern);
+
+    /// @brief This prints a series of chi profiles as a function of mover
+    ///  for visualisation
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param file_prefix THe path and name of file without extension
+    /// @param start_movern the starting m/n ratio
+    /// @param delta_movern the change in m/n 
+    /// @param n_novern the number of m/n values to use
+    /// @param Discharge an LSDRaster of discharge
+    /// @author SMM
+    /// @date 17/05/2017
+    void print_profiles_as_fxn_movern_with_discharge(LSDFlowInfo& FlowInfo,string file_prefix,
+                                   float start_movern, float delta_movern, 
+                                   int n_movern, LSDRaster& Discharge);
 
 
     /// @brief This gets the node index (the reference into LSDFlowInfo) of a source
