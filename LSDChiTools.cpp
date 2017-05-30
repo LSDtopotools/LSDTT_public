@@ -2079,7 +2079,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
   stats_by_basin_out.precision(4);
   for(int i = 0; i< n_movern; i++)
   {
-    stats_by_basin_out << ",m_over_n="<<movern[i];
+    stats_by_basin_out << ",m_over_n = "<<movern[i];
   }
   stats_by_basin_out << endl;
   stats_by_basin_out.precision(9);
@@ -2202,7 +2202,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
   stats_by_basin_out.precision(4);
   for(int i = 0; i< n_movern; i++)
   {
-    stats_by_basin_out << ",m_over_n="<<movern[i];
+    stats_by_basin_out << ",m_over_n = "<<movern[i];
   }
   stats_by_basin_out << endl;
   stats_by_basin_out.precision(9);
