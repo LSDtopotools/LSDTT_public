@@ -670,7 +670,13 @@ int main (int nNumberofArgs,char *argv[])
 
     float vertical_interval = this_float_map["SA_vertical_interval"];
     string filename_SA = OUT_DIR+OUT_ID+"_SAvertical.csv";
-    ChiTool_SA.slope_area_analysis(FlowInfo, vertical_interval, filename_SA);
+    
+    vector<int> SA_midpoint_nodes;
+    vector<float> SA_slopes;
+    ChiTool_SA.get_slope_area_data(FlowInfo, vertical_interval, 
+                                   SA_midpoint_nodes,SA_slopes);
+    ChiTool_SA.print_slope_area_data_to_csv(FlowInfo, SA_midpoint_nodes, SA_slopes, filename_SA);
+
   }
 
   if (this_bool_map["print_basic_M_chi_map_to_csv"])

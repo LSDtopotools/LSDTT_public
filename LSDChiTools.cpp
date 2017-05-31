@@ -2674,7 +2674,8 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
 // pixels.
 // 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiTools::slope_area_analysis(LSDFlowInfo& FlowInfo, float vertical_interval, string filename)
+void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_interval, 
+                                  vector<int>& midpoint_nodes, vector<float>& slopes)
 {
   bool verbose = true;
 
@@ -2839,7 +2840,21 @@ void LSDChiTools::slope_area_analysis(LSDFlowInfo& FlowInfo, float vertical_inte
     }                 // check if this is the final node of the source trib
   }                   // end sources loop (at this point we go to the next source)
   
+  midpoint_nodes = SA_midpoint_node;
+  slopes = SA_slope;
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Print S-A data maps to file
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::print_slope_area_data_to_csv(LSDFlowInfo& FlowInfo, 
+                                          vector<int>& SA_midpoint_node, 
+                                          vector<float>& SA_slope, 
+                                          string filename)
+{
   // open the data file
+  int row,col;
   LSDCoordinateConverterLLandUTM Converter;
   int n_nodes = int(SA_midpoint_node.size());
   double latitude,longitude;
@@ -2879,7 +2894,6 @@ void LSDChiTools::slope_area_analysis(LSDFlowInfo& FlowInfo, float vertical_inte
   SA_out.close();
 
 }
-
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

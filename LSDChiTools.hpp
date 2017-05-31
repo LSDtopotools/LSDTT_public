@@ -415,8 +415,27 @@ class LSDChiTools
     /// @brief This performs slope area analysis. It goes down through each 
     ///  source node and collects S-A data along these channels. 
     ///  It uses the suggested appraoch of Wobus et al. 2006 in that it uses
-    ///  a drop interval to measure slope. 
-    void slope_area_analysis(LSDFlowInfo& FlowInfo, float vertical_interval, string filename);
+    ///  a drop interval to measure slope.
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param vertical_interval the mean intervale over which slope is measured
+    /// @param midpoint_nodes The node indices of the places where slopeis calculated
+    /// @param slopes the slopes. 
+    /// @author SMM
+    /// @date 31/05/2017 
+    void get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_interval, 
+                             vector<int>& midpoint_nodes, vector<float>& slopes);
+
+    /// @brief This takes the midpoint node and slope vectors produced by the slope_area_analysis
+    ///  and prints them to a csv
+    /// @param SA_midpoint_node the node index of the midpoints used in to caluclate slope
+    /// @param SA_slope The slope data
+    /// @param filename The name (including path and extension) of the file for printing
+    /// @author SMM
+    /// @date 31/05/2017
+    void print_slope_area_data_to_csv(LSDFlowInfo& FlowInfo, 
+                                              vector<int>& SA_midpoint_node, 
+                                              vector<float>& SA_slope, 
+                                              string filename);
 
     /// @brief This function burns the chi coordinate (and area, flow distance and elevation)
     ///  onto the data maps in the chitools object. It does not do any segmentation.
