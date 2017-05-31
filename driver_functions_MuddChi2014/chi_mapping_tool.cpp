@@ -121,6 +121,7 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["sigma"] = 20;
   float_default_map["start_movern"] = 0.1;
   float_default_map["delta_movern"] = 0.1;
+  float_default_map["SA_vertical_interval"] = 20;
   
   // For DEM preprocessing
   float_default_map["minimum_elevation"] = 0.0;
@@ -667,7 +668,7 @@ int main (int nNumberofArgs,char *argv[])
                             filled_topography, DistanceFromOutlet, 
                             DrainageArea, chi_coordinate);
 
-    float vertical_interval = 20;
+    float vertical_interval = this_float_map["SA_vertical_interval"];
     string filename_SA = OUT_DIR+OUT_ID+"_SAvertical.csv";
     ChiTool_SA.slope_area_analysis(FlowInfo, vertical_interval, filename_SA);
   }

@@ -2678,7 +2678,12 @@ void LSDChiTools::slope_area_analysis(LSDFlowInfo& FlowInfo, float vertical_inte
 {
   bool verbose = true;
 
-  
+  // these are the vectors that will hold all the data
+  // Note we don't need to keep track of all the area, elevation, location, etc.
+  // because these are all keyed to to the node index of the midpoint. 
+  // The only thing we need to retain is the slope.
+  vector<float> SA_slope;
+  vector<int> SA_midpoint_node;
   
   // used to calculate the S-A data
   float half_interval = vertical_interval*0.5;
@@ -2747,7 +2752,7 @@ void LSDChiTools::slope_area_analysis(LSDFlowInfo& FlowInfo, float vertical_inte
       // this gets the receiver (placed into the seach node)
       FlowInfo.retrieve_receiver_information(top_interval_node,
                      search_node, row, col);
-                     
+
       // check to see if this is the last element or in a tributary
       if (search_node == top_interval_node || this_source_key != source_keys_map[search_node])
       {
@@ -2768,11 +2773,16 @@ void LSDChiTools::slope_area_analysis(LSDFlowInfo& FlowInfo, float vertical_inte
           // see if search node is the midpoint node
           if ( elev_data_map[search_node] <= target_midpoint_interval_elevation && not is_midpoint_interval)
           {
-            midpoint_area = drainage_area_data_map[search_node];
+            //midpoint_area = drainage_area_data_map[search_node];
             midpoint_node = search_node;
 
             // set midpoint flag so it doens't collect downstream nodes
             is_midpoint_interval = true;
+            
+            if(verbose)
+            {
+              cout << endl << endl << "=========" << endl << "I found the midpoint!" << endl;
+            }
           }
 
           // see if the search node is the end node
@@ -2806,11 +2816,14 @@ void LSDChiTools::slope_area_analysis(LSDFlowInfo& FlowInfo, float vertical_inte
         {
           float slope = (upstream_elevation-downstream_elevation)/
                        (upstream_flow_distance-downstream_flow_distance);
+          
          
           // It the slope is zero or less than zero we ignore the data
-          if(slope < 0)
+          if(slope > 0)
           {
             // record the data
+            SA_midpoint_node.push_back(midpoint_node);
+            SA_slope.push_back(slope);
           }
         }             // if statement for recording data on S-A to data containers
       }               // end check if tributary only has one node
@@ -2826,6 +2839,44 @@ void LSDChiTools::slope_area_analysis(LSDFlowInfo& FlowInfo, float vertical_inte
     }                 // check if this is the final node of the source trib
   }                   // end sources loop (at this point we go to the next source)
   
+  // open the data file
+  LSDCoordinateConverterLLandUTM Converter;
+  int n_nodes = int(SA_midpoint_node.size());
+  double latitude,longitude;
+  ofstream  SA_out;
+  SA_out.open(filename.c_str());
+  cout << "Opening the data file: " << filename << endl;
+  SA_out << "latitude,longitude,chi,elevation,flow distance,drainage area,slope,source_key,basin_key" << endl;
+  int this_node;
+  if (n_nodes <= 0)
+  {
+    cout << "Trying to print SA data but there doesn't seem to be any." << endl;
+    cout << "Have you run the automator and gathered the sources yet?" << endl;
+  }
+  else
+  {
+    for (int n = 0; n< n_nodes; n++)
+    {
+      this_node = SA_midpoint_node[n];
+      FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+      get_lat_and_long_locations(row, col, latitude, longitude, Converter);
+
+      SA_out.precision(9);
+      SA_out << latitude << ","
+             << longitude << ",";
+      SA_out.precision(5);
+      SA_out << chi_data_map[this_node] << ","
+             << elev_data_map[this_node] << ","
+             << flow_distance_data_map[this_node] << ","
+             << drainage_area_data_map[this_node] << "," 
+             << SA_slope[n] << ","
+             << source_keys_map[this_node] << ","
+             << baselevel_keys_map[this_node];
+      SA_out << endl;
+    }
+  }
+
+  SA_out.close();
 
 }
 
