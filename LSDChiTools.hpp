@@ -411,6 +411,13 @@ class LSDChiTools
                                  vector<float>& reference_elevation, vector<float>& trib_chi,
                                  vector<float>& trib_elevation);
 
+
+    /// @brief This performs slope area analysis. It goes down through each 
+    ///  source node and collects S-A data along these channels. 
+    ///  It uses the suggested appraoch of Wobus et al. 2006 in that it uses
+    ///  a drop interval to measure slope. 
+    void slope_area_analysis(LSDFlowInfo& FlowInfo, float vertical_interval, string filename);
+
     /// @brief This function burns the chi coordinate (and area, flow distance and elevation)
     ///  onto the data maps in the chitools object. It does not do any segmentation.
     /// @detail The purpose of this function is to get the chi coordinate without

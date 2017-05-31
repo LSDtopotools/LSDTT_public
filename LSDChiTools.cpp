@@ -2432,7 +2432,7 @@ int LSDChiTools::get_number_of_channels()
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Gets the number of channels
+// Extract the elevation and chi data from a channel
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::get_chi_elevation_data_of_channel(LSDFlowInfo& FlowInfo, int source_key, 
                                 vector<float>& chi_data, vector<float>& elevation_data)
@@ -2663,6 +2663,138 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
 
 
   return residuals;
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This does slope-area analysis
+// The strategy is to loop through each source
+// progress down each but do not cross tributary junctions
+// The data is not at all the points since we are averaging across multiple
+// pixels.
+// 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::slope_area_analysis(LSDFlowInfo& FlowInfo, float vertical_interval, string filename)
+{
+  // used to calculate the S-A data
+  float half_interval = vertical_interval*0.5;
+  float midpoint_area;
+  float upstream_elevation;
+  float upstream_flow_distance;
+  float downstream_elevation;
+  float downstream_flow_distance;
+  float midpoint_node;
+  float target_end_interval_elevation;
+  float target_midpoint_interval_elevation;
+
+  // we loop through every source
+  int n_sources = int(ordered_source_nodes.size());
+  int top_interval_node;
+  int search_node;
+  int this_source_node;
+  int this_source_key;
+  int row,col;
+  for(int s = 0; s<n_sources; s++)
+  {
+    top_interval_node = ordered_source_nodes[s];
+    this_source_node = top_interval_node;
+    this_source_key = source_keys_map[this_source_node];
+    // now trace downstream until you first get to the midpoint, 
+    // and then to the final node. 
+    bool is_this_final_node = false;
+    bool is_end_interval;
+    bool is_midpoint_interval;
+    int last_node;
+
+    //cout << "n: " << n << " final_node_flag: " << final_node_flag << " nnodes: " << n_nodes_this_channel << endl;
+    // now, start at the top node of each channel and
+    // work down. The algorithm looks downstream until it hits
+    // the midpoint, and then continues until it hits
+    // the end point
+    // if it encounters the end of the channel before it hits
+    // the end point the loop exits
+    while (not is_this_final_node)
+    {
+      // get the upstream elevation and flow distance 
+      upstream_elevation = elev_data_map[top_interval_node];
+      upstream_flow_distance = flow_distance_data_map[top_interval_node];
+
+      target_end_interval_elevation = upstream_elevation-vertical_interval;
+      target_midpoint_interval_elevation = upstream_elevation-half_interval;
+
+      // this gets the receiver (placed into the seach node)
+      FlowInfo.retrieve_receiver_information(top_interval_node,
+                     search_node, row, col);
+                     
+      // check to see if this is the last element or in a tributary
+      if (search_node == top_interval_node || this_source_key != source_keys_map[search_node])
+      {
+        is_this_final_node = true;
+      }
+      else
+      {
+        // reset midpoint and end flags
+        is_end_interval = false;
+        is_midpoint_interval = false;
+        
+        // now work downstream
+        while (not is_this_final_node && not is_end_interval)
+        {
+          //cout << "search_node: " << search_node << " elev: " << elevations[chan][search_node]
+          //     << " and target mp, end: " << target_mp_interval_elevations << " " << target_end_interval_elevations << endl;
+
+          // see if search node is the midpoint node
+          if ( elev_data_map[search_node] <= target_midpoint_interval_elevation && not is_midpoint_interval)
+          {
+            midpoint_area = drainage_area_data_map[search_node];
+            midpoint_node = search_node;
+
+            // set midpoint flag so it doens't collect downstream nodes
+            is_midpoint_interval = true;
+          }
+
+          // see if the search node is the end node
+          if (elev_data_map[search_node] <= target_end_interval_elevation)
+          {
+            downstream_elevation = elev_data_map[search_node];
+            downstream_flow_distance = flow_distance_data_map[search_node];
+
+            // make sure the code knows this is the end, the only end, my friend.
+            is_end_interval = true;;
+          }
+          
+          // now move downstream
+          last_node = search_node;
+          FlowInfo.retrieve_receiver_information(last_node,
+                     search_node, row, col);
+          
+          // test is this is the end
+          if (search_node == last_node || this_source_key != source_keys_map[search_node])
+          {
+            is_this_final_node = true;
+          }
+          
+        }
+
+        // if is_end_interval is true, that means it found the end interval.
+        // record the information. If it didn't reach the end flag that means 
+        // the previous node hit the final node in the channel before finding the
+        // end interval.
+        if (is_end_interval)
+        {
+          float slope = (upstream_elevation-downstream_elevation)/
+                       (upstream_flow_distance-downstream_flow_distance);
+         
+          // It the slope is zero or less than zero we ignore the data
+          if(slope < 0)
+          {
+            // record the data
+          }
+        }             // if statement for recording data on S-A to data containers
+      }               // end check if tributary only has one node
+    }                 // check if this is the final node of the source trib
+  }                   // end sources loop (at this point we go to the next source)
+  
 
 }
 
