@@ -159,6 +159,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["raster_is_filled"] = false;
   bool_default_map["remove_seas"] = false;
   bool_default_map["only_use_mainstem_as_reference"] = true;
+  bool_default_map["print_slope_area_data"] = false;
   
   // set default string method
   string_default_map["CHeads_file"] = "NULL";
@@ -517,7 +518,8 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["print_segmented_M_chi_map_to_csv"] 
         || this_bool_map["print_basic_M_chi_map_to_csv"] 
         || this_bool_map["calculate_MLE_collinearity"]
-        || this_bool_map["print_profiles_fxn_movern_csv"])
+        || this_bool_map["print_profiles_fxn_movern_csv"]
+        || this_bool_map["print_slope_area_data"])
   {
     cout << "I am getting the source and outlet nodes for the overlapping channels" << endl;
     cout << "The n_nodes to visit are: " << n_nodes_to_visit << endl;
@@ -633,8 +635,8 @@ int main (int nNumberofArgs,char *argv[])
                       movern_name);
   }
 
-   if(this_bool_map["print_profiles_fxn_movern_csv"] )
-   {
+  if(this_bool_map["print_profiles_fxn_movern_csv"] )
+  {
     cout << endl << "Let me loop through m/n values and print the profiles to a single csv." << endl;
     // Lets make a new chi tool: this won't be segmented since we only
     // need it for m/n
@@ -655,7 +657,20 @@ int main (int nNumberofArgs,char *argv[])
                                   this_float_map["delta_movern"], 
                                   this_int_map["n_movern"]);
    
-   }
+  }
+
+  if (this_bool_map["print_slope_area_data"])
+  {
+    cout << "I am going to calculate slope-area data for you. " << endl;
+    LSDChiTools ChiTool_SA(FlowInfo);
+    ChiTool_SA.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes,
+                            filled_topography, DistanceFromOutlet, 
+                            DrainageArea, chi_coordinate);
+
+    float vertical_interval = 20;
+    string filename_SA = OUT_DIR+OUT_ID+"_SAvertical.csv";
+    ChiTool_SA.slope_area_analysis(FlowInfo, vertical_interval, filename_SA);
+  }
 
   if (this_bool_map["print_basic_M_chi_map_to_csv"])
   {
@@ -685,6 +700,8 @@ int main (int nNumberofArgs,char *argv[])
     string hs_fname = OUT_DIR+OUT_ID+"_hs";
     hs_raster.write_raster(hs_fname,raster_ext);
   }
+
+
 
 
 

@@ -2676,6 +2676,10 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::slope_area_analysis(LSDFlowInfo& FlowInfo, float vertical_interval, string filename)
 {
+  bool verbose = true;
+
+  
+  
   // used to calculate the S-A data
   float half_interval = vertical_interval*0.5;
   float midpoint_area;
@@ -2689,6 +2693,13 @@ void LSDChiTools::slope_area_analysis(LSDFlowInfo& FlowInfo, float vertical_inte
 
   // we loop through every source
   int n_sources = int(ordered_source_nodes.size());
+  if(verbose)
+  {
+    cout << "Super times, you are going to do a S-A analysis." << endl;
+    cout << "Number of sources is: " << n_sources << endl;
+  }
+  
+  
   int top_interval_node;
   int search_node;
   int this_source_node;
@@ -2706,7 +2717,12 @@ void LSDChiTools::slope_area_analysis(LSDFlowInfo& FlowInfo, float vertical_inte
     bool is_midpoint_interval;
     int last_node;
 
-    //cout << "n: " << n << " final_node_flag: " << final_node_flag << " nnodes: " << n_nodes_this_channel << endl;
+    if (verbose)
+    {
+      cout << "=====================" << endl;
+      cout << "I am starting on a channel with source node " << this_source_node << " and key: " << this_source_key << endl;
+    }
+
     // now, start at the top node of each channel and
     // work down. The algorithm looks downstream until it hits
     // the midpoint, and then continues until it hits
@@ -2721,6 +2737,12 @@ void LSDChiTools::slope_area_analysis(LSDFlowInfo& FlowInfo, float vertical_inte
 
       target_end_interval_elevation = upstream_elevation-vertical_interval;
       target_midpoint_interval_elevation = upstream_elevation-half_interval;
+
+      if(verbose)
+      {
+        cout << "Looking for a midpoint for top interval node: " << top_interval_node << endl;
+        cout << "Top z: " << upstream_elevation << " and top fd: " << upstream_flow_distance << endl;
+      }
 
       // this gets the receiver (placed into the seach node)
       FlowInfo.retrieve_receiver_information(top_interval_node,
@@ -2792,6 +2814,15 @@ void LSDChiTools::slope_area_analysis(LSDFlowInfo& FlowInfo, float vertical_inte
           }
         }             // if statement for recording data on S-A to data containers
       }               // end check if tributary only has one node
+      // now we need to update the top interval node
+      int old_top_interval = top_interval_node;
+      FlowInfo.retrieve_receiver_information(old_top_interval,
+                     top_interval_node, row, col);
+      if(verbose)
+      {
+        cout << "Resetting the top interval node, old:  " << old_top_interval << " and new: " << top_interval_node << endl;
+      }
+      
     }                 // check if this is the final node of the source trib
   }                   // end sources loop (at this point we go to the next source)
   
