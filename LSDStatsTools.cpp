@@ -4146,6 +4146,8 @@ void log_bin_data(vector<float>& InputVectorX, vector<float>& InputVectorY, floa
 // regular binning.
 // Modified by FC 13/01/13 to calculate the median of each bin and return the standard error.
 //
+// SMM comment: can this do negative values now??
+//  Also, do we need bin_lower_limit? 31/05/2017
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void bin_data(vector<float>& InputVectorX, vector<float>& InputVectorY, float bin_width,
                   vector<float>&  MeanX_output, vector<float>& MeanY_output,

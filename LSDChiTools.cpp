@@ -2845,6 +2845,83 @@ void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_inte
 
 }
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This bins the data
+// 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo, 
+                                          vector<int>& SA_midpoint_node, 
+                                          vector<float>& SA_slope, 
+                                          string filename)
+{
+
+  // we will store the data i
+  vector<float> empty_vec;
+  vector<float> slope;
+  vector<float> area;
+  vector<float> log_slope;
+  vector<float> log_area;
+  vector<int> SA_source_key;
+  vector<int> SA_basin_key;
+  
+  int this_node;
+
+  int n_nodes = int(SA_midpoint_node.size());
+  if (n_nodes <= 0)
+  {
+    cout << "Trying to print SA data but there doesn't seem to be any." << endl;
+    cout << "Have you run the automator and gathered the sources yet?" << endl;
+  }
+  else
+  {
+    // get the data vectors out
+    for (int n = 0; n< n_nodes; n++)
+    {
+      this_node = SA_midpoint_node[n];
+      area.push_back( drainage_area_data_map[this_node]);
+      log_area.push_back( log10(drainage_area_data_map[this_node])  );
+      log_slope.push_back(log10(SA_slope[n]));
+      SA_source_key.push_back(key_to_source_map[this_node]);
+      SA_basin_key.push_back(key_to_baselevel_map[this_node]);
+    }
+  }
+  
+  // lets do a brute force binning of all the data
+  float bin_width = 0.1;
+  vector<float>  MeanX_output;
+  vector<float> MeanY_output;
+  vector<float> midpoints_output;
+  vector<float> MedianY_output;
+  vector<float> StandardDeviationX_output;
+  vector<float> StandardDeviationY_output;
+  vector<float> StandardErrorX_output;
+  vector<float> StandardErrorY_output;
+  vector<int> number_observations_output;
+  float bin_lower_limit;
+  float NoDataValue = -9999;
+  bin_data(log_area, log_slope, bin_width,  MeanX_output, MeanY_output,
+            midpoints_output, MedianY_output,StandardDeviationX_output,
+            StandardDeviationY_output, StandardErrorX_output, StandardErrorY_output, 
+            number_observations_output, bin_lower_limit, NoDataValue);
+   
+   
+  int n_bins = int(midpoints_output.size());
+  ofstream  binned_out;
+  binned_out.open(filename.c_str());
+  binned_out << "midpoints_log_A,mean_X,mean_log_S,median_log_S" << endl;
+  for(int i = 0; i<n_bins; i++)
+  {
+    binned_out << midpoints_output[i] << ","
+               << MeanX_output[i] << ","
+               << MeanY_output[i] << ","
+               << MedianY_output[i] << endl;
+  }
+  binned_out.close();
+}
+
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Print S-A data maps to file
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

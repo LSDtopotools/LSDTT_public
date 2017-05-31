@@ -418,12 +418,26 @@ class LSDChiTools
     ///  a drop interval to measure slope.
     /// @param FlowInfo an LSDFlowInfo object
     /// @param vertical_interval the mean intervale over which slope is measured
-    /// @param midpoint_nodes The node indices of the places where slopeis calculated
-    /// @param slopes the slopes. 
+    /// @param midpoint_nodes The node indices of the places where slope is calculated.
+    ///  This is replaced in the function. 
+    /// @param Slopes the slopes. This is replaced in the function.
     /// @author SMM
     /// @date 31/05/2017 
     void get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_interval, 
                              vector<int>& midpoint_nodes, vector<float>& slopes);
+
+    /// @detail This takes slope area data and bins the data so that we can 
+    ///  pretend horrible, noisy S-A data is adequate for understanding 
+    ///  channel behaviour.
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param vertical_interval the mean intervale over which slope is measured
+    /// @param midpoint_nodes The node indices of the places where slope is calculated.
+    ///  This is replaced in the function. 
+    /// @param Slopes the slopes. This is replaced in the function.
+    /// @author SMM
+    /// @date 31/05/2017 
+    void bin_slope_area_data(LSDFlowInfo& FlowInfo, vector<int>& SA_midpoint_node, 
+                             vector<float>& SA_slope, string filename);
 
     /// @brief This takes the midpoint node and slope vectors produced by the slope_area_analysis
     ///  and prints them to a csv
