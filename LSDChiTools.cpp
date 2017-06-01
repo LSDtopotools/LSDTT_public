@@ -1170,7 +1170,7 @@ void LSDChiTools::segment_counter(LSDFlowInfo& FlowInfo)
 void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float threshold_knickpoint, float threshold_knickpoint_length)
 {
   // these are for extracting element-wise data from the channel profiles.
-  int abs_threshhold_knickpoint = abs (threshold_knickpoint);
+  //int abs_threshhold_knickpoint = abs (threshold_knickpoint);
   int this_node = 0;
   int segment_counter_knickpoint = 0; // count the number of knickpoints
   int segment_counter = 0; // count the number of segments
@@ -2689,7 +2689,7 @@ void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_inte
   
   // used to calculate the S-A data
   float half_interval = vertical_interval*0.5;
-  float midpoint_area;
+  //float midpoint_area;
   float upstream_elevation;
   float upstream_flow_distance;
   float downstream_elevation;
@@ -2853,20 +2853,23 @@ void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_inte
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo, 
                                           vector<int>& SA_midpoint_node, 
-                                          vector<float>& SA_slope, 
+                                          vector<float>& SA_slope,
+                                          float log_bin_width, 
                                           string filename)
 {
 
-  // we will store the data i
   vector<float> empty_vec;
-  vector<float> slope;
-  vector<float> area;
-  vector<float> log_slope;
-  vector<float> log_area;
-  vector<int> SA_source_key;
-  vector<int> SA_basin_key;
+  
+  // we will store the data in maps where the key is the source node
+  // This is because we will bin the data by source. 
+  //map< int, vector<float> > slope;
+  //map< int, vector<float> > area;
+  map< int, vector<float> > log_slope_map;
+  map< int, vector<float> > log_area_map;
+  map< int, int > basin_key_of_this_source_map;
   
   int this_node;
+  int this_source_key;
 
   int n_nodes = int(SA_midpoint_node.size());
   if (n_nodes <= 0)
@@ -2879,17 +2882,31 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
     // get the data vectors out
     for (int n = 0; n< n_nodes; n++)
     {
+      // get the source node
       this_node = SA_midpoint_node[n];
-      area.push_back( drainage_area_data_map[this_node]);
-      log_area.push_back( log10(drainage_area_data_map[this_node])  );
-      log_slope.push_back(log10(SA_slope[n]));
-      SA_source_key.push_back(key_to_source_map[this_node]);
-      SA_basin_key.push_back(key_to_baselevel_map[this_node]);
+      this_source_key = source_keys_map[this_node];
+      //cout << "This source key is: " << this_source_key << endl;
+      
+      // see if we have a vector for that source node
+      if( log_area_map.find(this_source_key) == log_area_map.end())
+      {
+        log_area_map[this_source_key] = empty_vec;
+        log_slope_map[this_source_key] = empty_vec;
+      }
+      // check if we have the basin of this source
+      if (basin_key_of_this_source_map.find(this_source_key) == basin_key_of_this_source_map.end() )
+      {
+        basin_key_of_this_source_map[this_source_key] = key_to_baselevel_map[this_node];
+      }
+    
+      // add to this source's log S, log A data. We will later use these to bin
+      log_area_map[this_source_key].push_back( log10(drainage_area_data_map[this_node]) );
+      log_slope_map[this_source_key].push_back( log10(SA_slope[n]) );
     }
   }
   
-  // lets do a brute force binning of all the data
-  float bin_width = 0.1;
+  // now we bin the data
+  //float bin_width = 0.1;
   vector<float>  MeanX_output;
   vector<float> MeanY_output;
   vector<float> midpoints_output;
@@ -2901,28 +2918,75 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
   vector<int> number_observations_output;
   float bin_lower_limit;
   float NoDataValue = -9999;
-  bin_data(log_area, log_slope, bin_width,  MeanX_output, MeanY_output,
+  
+  // these are the vectors holding all the compiled information
+  vector<int> binned_basin_keys;
+  vector<int> binned_source_keys;
+  vector<float> binned_logA_means;
+  vector<float> binned_logA_midpoints;
+  vector<float> binned_logS_means;
+  vector<float> binned_logS_medians;
+  vector<float> binned_logA_stdErr;
+  vector<float> binned_logS_stdErr;
+  vector<int> binnned_NObvs;
+  
+  // loop through all the source nodes
+  map<int, vector<float> >::iterator it;
+  for(it = log_area_map.begin(); it != log_area_map.end(); ++it)
+  {
+    this_source_key =  it->first;
+    cout << "The source key is : " << this_source_key << endl;
+    
+    // extract the log S-log A data for this source
+    vector<float> log_area = log_area_map[this_source_key];
+    vector<float> log_slope = log_slope_map[this_source_key];
+  
+    // this gets the binned data for this particular tributary
+    bin_data(log_area, log_slope, log_bin_width,  MeanX_output, MeanY_output,
             midpoints_output, MedianY_output,StandardDeviationX_output,
             StandardDeviationY_output, StandardErrorX_output, StandardErrorY_output, 
             number_observations_output, bin_lower_limit, NoDataValue);
-  
-  int n_median = MedianY_output.size();
-  for(int i = 0; i<n_median; i++)
-  {
-    cout << "Median["<<i<<"]:" << MedianY_output[i] << endl;
+            
+    // now we need to add this information to the master vectors
+    int n_bins = int(midpoints_output.size());
+    int n_Obvs;
+    for(int i = 0; i<n_bins; i++)
+    {
+      n_Obvs = number_observations_output[i];
+      
+      // only record data if there are enough observations
+      if(n_Obvs > 0)
+      {
+        binned_basin_keys.push_back(basin_key_of_this_source_map[this_source_key]);
+        binned_source_keys.push_back(this_source_key);
+        binned_logA_means.push_back(MeanX_output[i]);
+        binned_logA_midpoints.push_back(midpoints_output[i]);
+        binned_logS_means.push_back(MeanY_output[i]);
+        binned_logS_medians.push_back(MedianY_output[i]);
+        binned_logA_stdErr.push_back(StandardErrorX_output[i]);
+        binned_logS_stdErr.push_back(StandardErrorY_output[i]);
+        binnned_NObvs.push_back(n_Obvs);
+      }
+    }
   }
   
   
-  int n_bins = int(midpoints_output.size());
+  // now print to file
+  int n_data_points = int(binnned_NObvs.size());
   ofstream  binned_out;
   binned_out.open(filename.c_str());
-  binned_out << "midpoints_log_A,mean_X,mean_log_S,median_log_S" << endl;
-  for(int i = 0; i<n_bins; i++)
+  binned_out << "basin_key,source_key,midpoints_log_A,mean_log_A,mean_log_S,median_log_S,logA_stdErr,logS_stdErr,n_observations" << endl;
+  for(int i = 0; i<n_data_points; i++)
   {
-    binned_out << midpoints_output[i] << ","
-               << MeanX_output[i] << ","
-               << MeanY_output[i] << ","
-               << MedianY_output[i] << endl;
+    binned_out << binned_basin_keys[i] << ","
+               << binned_source_keys[i] << ","
+               << binned_logA_midpoints[i] << ","
+               << binned_logA_means[i] << ","
+               << binned_logS_means[i] << ","
+               << binned_logS_medians[i] << ","
+               << binned_logA_stdErr[i] << ","
+               << binned_logS_stdErr[i] << ","
+               << binnned_NObvs[i] << endl;
   }
   binned_out.close();
 }

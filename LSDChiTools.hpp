@@ -434,10 +434,12 @@ class LSDChiTools
     /// @param midpoint_nodes The node indices of the places where slope is calculated.
     ///  This is replaced in the function. 
     /// @param Slopes the slopes. This is replaced in the function.
+    /// @param log_bin_width The width of the bins (in log A)
+    /// @param filename The name of the output file (with path and extension)
     /// @author SMM
     /// @date 31/05/2017 
     void bin_slope_area_data(LSDFlowInfo& FlowInfo, vector<int>& SA_midpoint_node, 
-                             vector<float>& SA_slope, string filename);
+                             vector<float>& SA_slope, float log_bin_width, string filename);
 
     /// @brief This takes the midpoint node and slope vectors produced by the slope_area_analysis
     ///  and prints them to a csv

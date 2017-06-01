@@ -122,6 +122,7 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["start_movern"] = 0.1;
   float_default_map["delta_movern"] = 0.1;
   float_default_map["SA_vertical_interval"] = 20;
+  float_default_map["log_A_bin_width"] = 0.1;
   
   // For DEM preprocessing
   float_default_map["minimum_elevation"] = 0.0;
@@ -677,7 +678,7 @@ int main (int nNumberofArgs,char *argv[])
     ChiTool_SA.get_slope_area_data(FlowInfo, vertical_interval, 
                                    SA_midpoint_nodes,SA_slopes);
     ChiTool_SA.print_slope_area_data_to_csv(FlowInfo, SA_midpoint_nodes, SA_slopes, filename_SA);
-    ChiTool_SA.bin_slope_area_data(FlowInfo, SA_midpoint_nodes, SA_slopes, filename_binned);
+    ChiTool_SA.bin_slope_area_data(FlowInfo, SA_midpoint_nodes, SA_slopes, this_float_map["log_A_bin_width"],filename_binned);
   }
 
   if (this_bool_map["print_basic_M_chi_map_to_csv"])
