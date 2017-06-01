@@ -2677,7 +2677,8 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
 void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_interval, 
                                   vector<int>& midpoint_nodes, vector<float>& slopes)
 {
-  bool verbose = true;
+  // set verbose to true if you want to print the data as you go along
+  bool verbose = false;
 
   // these are the vectors that will hold all the data
   // Note we don't need to keep track of all the area, elevation, location, etc.
@@ -2904,8 +2905,14 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
             midpoints_output, MedianY_output,StandardDeviationX_output,
             StandardDeviationY_output, StandardErrorX_output, StandardErrorY_output, 
             number_observations_output, bin_lower_limit, NoDataValue);
-   
-   
+  
+  int n_median = MedianY_output.size();
+  for(int i = 0; i<n_median; i++)
+  {
+    cout << "Median["<<i<<"]:" << MedianY_output[i] << endl;
+  }
+  
+  
   int n_bins = int(midpoints_output.size());
   ofstream  binned_out;
   binned_out.open(filename.c_str());

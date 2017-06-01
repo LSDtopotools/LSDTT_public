@@ -4140,7 +4140,7 @@ void log_bin_data(vector<float>& InputVectorX, vector<float>& InputVectorY, floa
 //FC 13/11/12; modified by DM 04/12/12
 // WARNING - will not work on vectors with negative values (e.g. hilltop curvature). If using
 // vector of negative values take the absolute values before passing to function.
-//
+// UPDATE: Works on negative values
 // Modified by FC 30/09/13 to calculate the range of the 95th percentile for each bin -
 // used for channel head prediction through chi segment fitting.  Changed from log binning to
 // regular binning.
@@ -4297,7 +4297,11 @@ void bin_data(vector<float>& InputVectorX, vector<float>& InputVectorY, float bi
       //find the median of the dependent variable Y
       sort(YDataVector.begin(), YDataVector.end());
       int YDataSize = YDataVector.size();
-      MedianY.push_back(YDataVector[floor(YDataSize/2)]);
+      //cout << "Median calculation, Y size: " << YDataSize << endl;
+      //cout << "Element of median: " << floor(YDataSize/2) << endl;
+      //cout << "Median is: " << YDataVector[floor(YDataSize/2)] << endl;
+      MedianY[bin_id] = YDataVector[floor(YDataSize/2)];
+      
     }
   }
 
