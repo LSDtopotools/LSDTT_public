@@ -2885,7 +2885,7 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
       // get the source node
       this_node = SA_midpoint_node[n];
       this_source_key = source_keys_map[this_node];
-      //cout << "This source key is: " << this_source_key << endl;
+      cout << "This source key is: " << this_source_key << endl;
       
       // see if we have a vector for that source node
       if( log_area_map.find(this_source_key) == log_area_map.end())
@@ -2896,7 +2896,7 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
       // check if we have the basin of this source
       if (basin_key_of_this_source_map.find(this_source_key) == basin_key_of_this_source_map.end() )
       {
-        basin_key_of_this_source_map[this_source_key] = key_to_baselevel_map[this_node];
+        basin_key_of_this_source_map[this_source_key] = baselevel_keys_map[this_node];
       }
     
       // add to this source's log S, log A data. We will later use these to bin
