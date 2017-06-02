@@ -136,6 +136,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_junction_index_raster"] = false;
   bool_default_map["print_fill_raster"] = false;
   bool_default_map["print_DrainageArea_raster"] = false;
+  bool_default_map["use_precipitation_raster_for_chi"] = false;
   
   // flags for printing channel networks, junctions and sources. 
   bool_default_map["print_junctions_to_csv"] = false;
@@ -445,6 +446,7 @@ int main (int nNumberofArgs,char *argv[])
   // calculate chi for the entire DEM
   cout << "Calculating the chi coordinate for A_0: " << A_0 << " and m/n: " << movern << endl; 
   LSDRaster chi_coordinate;
+  LSDRaster Discharge;
   if(this_bool_map["use_precipitation_raster_for_chi"])
   {
     
@@ -461,7 +463,7 @@ int main (int nNumberofArgs,char *argv[])
     VolumePrecipitation.raster_multiplier(dx*dx);
   
     // discharge accumulates this precipitation
-    LSDRaster Discharge = FlowInfo.upslope_variable_accumulator(VolumePrecipitation);
+    Discharge = FlowInfo.upslope_variable_accumulator(VolumePrecipitation);
     chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,A_0,thresh_area_for_chi,Discharge);
   
   }
@@ -609,9 +611,6 @@ int main (int nNumberofArgs,char *argv[])
                             filled_topography, DistanceFromOutlet, 
                             DrainageArea, chi_coordinate);
 
-    //cout << "Running the splitter" << endl;
-    //vector<int> test_vec = ChiTool_movern.baselevel_and_source_splitter();
-
     // test the basin collinearity test
     int baselevel_key = 1;
     vector<int> reference_source; 
@@ -619,22 +618,26 @@ int main (int nNumberofArgs,char *argv[])
     vector<float> MLE_values;
     vector<float> RMSE_values;
     
-    //ChiTool_movern.print_basin_and_source_indexing_to_screen();
-    
     bool only_use_mainstem_as_reference = true;
-    //ChiTool_movern.test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
-    //                                       baselevel_key,
-    //                                       reference_source, test_source, 
-    //                                       MLE_values, RMSE_values);
-
-    // commented out for testingthe source splitting
     
-    string movern_name = OUT_DIR+OUT_ID+"_movernstats";
-    ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern(FlowInfo, 
+    if(this_bool_map["use_precipitation_raster_for_chi"])
+    {
+      string movern_name = OUT_DIR+OUT_ID+"_movernstatsQ";
+      ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge(FlowInfo, 
+                      this_float_map["start_movern"], this_float_map["delta_movern"], 
+                      this_int_map["n_movern"], 
+                      this_bool_map["only_use_mainstem_as_reference"],
+                      movern_name, Discharge);
+    }
+    else
+    {
+      string movern_name = OUT_DIR+OUT_ID+"_movernstats";
+      ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern(FlowInfo, 
                       this_float_map["start_movern"], this_float_map["delta_movern"], 
                       this_int_map["n_movern"], 
                       this_bool_map["only_use_mainstem_as_reference"],
                       movern_name);
+    }
   }
 
   if(this_bool_map["print_profiles_fxn_movern_csv"] )
@@ -653,12 +656,25 @@ int main (int nNumberofArgs,char *argv[])
 
     cout << "Looping m over n" << endl;
     // now loop through m/n values, printing them all to the csv file
-    string movern_name = OUT_DIR+OUT_ID+"_movern.csv";
-    ChiTool_movern.print_profiles_as_fxn_movern(FlowInfo, movern_name, 
+    
+    
+    if(this_bool_map["use_precipitation_raster_for_chi"])
+    {
+      string movern_name = OUT_DIR+OUT_ID+"_movernQ.csv";
+      ChiTool_movern.print_profiles_as_fxn_movern_with_discharge(FlowInfo, movern_name, 
+                                  this_float_map["start_movern"], 
+                                  this_float_map["delta_movern"], 
+                                  this_int_map["n_movern"],
+                                  Discharge);
+    }
+    else
+    {
+      string movern_name = OUT_DIR+OUT_ID+"_movern.csv";
+      ChiTool_movern.print_profiles_as_fxn_movern(FlowInfo, movern_name, 
                                   this_float_map["start_movern"], 
                                   this_float_map["delta_movern"], 
                                   this_int_map["n_movern"]);
-   
+    }
   }
 
   if (this_bool_map["print_slope_area_data"])
@@ -677,13 +693,18 @@ int main (int nNumberofArgs,char *argv[])
     vector<float> SA_slopes;
     ChiTool_SA.get_slope_area_data(FlowInfo, vertical_interval, 
                                    SA_midpoint_nodes,SA_slopes);
+                                   
+    cout << "Printing raw S-A data." << endl;
     ChiTool_SA.print_slope_area_data_to_csv(FlowInfo, SA_midpoint_nodes, SA_slopes, filename_SA);
+    
+    cout << "Printing binned S-A data." << endl;
     ChiTool_SA.bin_slope_area_data(FlowInfo, SA_midpoint_nodes, SA_slopes, this_float_map["log_A_bin_width"],filename_binned);
   }
 
   if (this_bool_map["print_basic_M_chi_map_to_csv"])
   {
-    
+    // Note that this uses the chi coordinate derived from early in this code
+    // and will use the discharge-based raster if that has been called. 
     LSDChiTools ChiTool2(FlowInfo);
     ChiTool2.chi_map_automator_rudimentary(FlowInfo, source_nodes,outlet_nodes,
                                     filled_topography, DistanceFromOutlet, DrainageArea, 
