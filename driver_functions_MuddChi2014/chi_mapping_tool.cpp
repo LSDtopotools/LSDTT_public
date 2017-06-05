@@ -137,6 +137,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_fill_raster"] = false;
   bool_default_map["print_DrainageArea_raster"] = false;
   bool_default_map["use_precipitation_raster_for_chi"] = false;
+  bool_default_map["print_discharge_raster"] = false;
   
   // flags for printing channel networks, junctions and sources. 
   bool_default_map["print_junctions_to_csv"] = false;
@@ -217,7 +218,6 @@ int main (int nNumberofArgs,char *argv[])
   int threshold_contributing_pixels = this_int_map["threshold_contributing_pixels"];
   int minimum_basin_size_pixels = this_int_map["minimum_basin_size_pixels"];
   int basic_Mchi_regression_nodes = this_int_map["basic_Mchi_regression_nodes"];
-  bool test_drainage_boundaries = this_bool_map["test_drainage_boundaries"];
 
   // load the  DEM
   LSDRaster topography_raster;
@@ -453,6 +453,15 @@ int main (int nNumberofArgs,char *argv[])
     string Precip_f_name = DATA_DIR+this_string_map["precipitation_fname"];
     cout << "I am loading a precipitation raster. " << Precip_f_name<<".bil" << endl;
     cout << "Note this MUST be the same size as the base DEM or it will crash!" << endl;
+
+    if(this_string_map["precipitation_fname"]=="NULL")
+    {
+      cout << "You have asked to use a precipitation raster but have not given a name." << endl;
+      cout << "Set the name of the raster with the keyword precipitation_fname" << endl;
+      exit(EXIT_FAILURE);
+    }
+    
+    
     
     // calculate the discharge
     // note: not discharge yet, need to multiply by cell area
@@ -465,6 +474,12 @@ int main (int nNumberofArgs,char *argv[])
     // discharge accumulates this precipitation
     Discharge = FlowInfo.upslope_variable_accumulator(VolumePrecipitation);
     chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,A_0,thresh_area_for_chi,Discharge);
+    
+    if(this_bool_map["print_discharge_raster"])
+    {
+      string Discharge_fname = OUT_DIR+OUT_ID+"_Q";
+      Discharge.write_raster(Discharge_fname, raster_ext);
+    }
   
   }
   else
@@ -612,16 +627,16 @@ int main (int nNumberofArgs,char *argv[])
                             DrainageArea, chi_coordinate);
 
     // test the basin collinearity test
-    int baselevel_key = 1;
+    //int baselevel_key = 1;
     vector<int> reference_source; 
     vector<int> test_source; 
     vector<float> MLE_values;
     vector<float> RMSE_values;
-    
-    bool only_use_mainstem_as_reference = true;
+    //bool only_use_mainstem_as_reference = true;
     
     if(this_bool_map["use_precipitation_raster_for_chi"])
     {
+      cout << "Using a discharge raster to check collinearity." << endl;
       string movern_name = OUT_DIR+OUT_ID+"_movernstatsQ";
       ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge(FlowInfo, 
                       this_float_map["start_movern"], this_float_map["delta_movern"], 
@@ -661,6 +676,7 @@ int main (int nNumberofArgs,char *argv[])
     if(this_bool_map["use_precipitation_raster_for_chi"])
     {
       string movern_name = OUT_DIR+OUT_ID+"_movernQ.csv";
+      cout << "Using a discharge raster to calculate m over n." << endl;
       ChiTool_movern.print_profiles_as_fxn_movern_with_discharge(FlowInfo, movern_name, 
                                   this_float_map["start_movern"], 
                                   this_float_map["delta_movern"], 
@@ -730,10 +746,5 @@ int main (int nNumberofArgs,char *argv[])
     string hs_fname = OUT_DIR+OUT_ID+"_hs";
     hs_raster.write_raster(hs_fname,raster_ext);
   }
-
-
-
-
-
 
 }

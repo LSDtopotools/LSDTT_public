@@ -1189,7 +1189,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
   float y1_temp =0;
   float x2_temp =0;
   float y2_temp =0;
-  bool same_channel = true;
+  bool same_channel;
   float max_knickpoint_value =0;
   int new_knickpoint_counter =0;
 
@@ -1231,14 +1231,22 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
           // first retrieving xy coordinates
         FlowInfo.get_x_and_y_from_current_node(last_node, x1_temp, y1_temp);
         FlowInfo.get_x_and_y_from_current_node(this_node, x2_temp, y2_temp);
-          // Then check if the distance betweenthe two is more than 2 nodes (distance between two points via pytagore or thing like this)
+        
+        // Then check if the distance betweenthe two is more than 2 nodes (distance between two points via pytagore or thing like this)
         if (sqrt((x2_temp - x1_temp)*(x2_temp - x1_temp)+(y2_temp - y1_temp)*(y2_temp - y1_temp)) > (2*FlowInfo.get_DataResolution()))
         {
           same_channel = false;
         }
-          // done
+        // done
+        
+        
+        
         // Check if the threshold is (over)reached
         //if(delta_m > abs_threshhold_knickpoint && same_channel) if we are are using the threshold value
+        
+        // SMM NOTE: WHAT IS GOING ON HERE?
+        // Is this supposed to be if(same_channel) ?
+        
         if(true) // useless thing
         {
           segment_counter_knickpoint++; // number of knickpoints
@@ -2723,6 +2731,8 @@ void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_inte
     bool is_end_interval;
     bool is_midpoint_interval;
     int last_node;
+    
+    midpoint_node = 0;    // this will be updated later
 
     if (verbose)
     {
@@ -2885,7 +2895,7 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
       // get the source node
       this_node = SA_midpoint_node[n];
       this_source_key = source_keys_map[this_node];
-      cout << "This source key is: " << this_source_key << endl;
+      //cout << "This source key is: " << this_source_key << endl;
       
       // see if we have a vector for that source node
       if( log_area_map.find(this_source_key) == log_area_map.end())
@@ -2935,7 +2945,7 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
   for(it = log_area_map.begin(); it != log_area_map.end(); ++it)
   {
     this_source_key =  it->first;
-    cout << "The source key is : " << this_source_key << endl;
+    //cout << "The source key is: " << this_source_key << endl;
     
     // extract the log S-log A data for this source
     vector<float> log_area = log_area_map[this_source_key];
