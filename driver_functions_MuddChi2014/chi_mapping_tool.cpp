@@ -138,6 +138,9 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_DrainageArea_raster"] = false;
   bool_default_map["use_precipitation_raster_for_chi"] = false;
   bool_default_map["print_discharge_raster"] = false;
+  bool_default_map["print_chi_no_discharge"] = false;   // this only is used if you also 
+                                                        // calculate chi with discharge so you can compare. 
+  bool_default_map["check_chi_maps"] = false;
   
   // flags for printing channel networks, junctions and sources. 
   bool_default_map["print_junctions_to_csv"] = false;
@@ -461,8 +464,6 @@ int main (int nNumberofArgs,char *argv[])
       exit(EXIT_FAILURE);
     }
     
-    
-    
     // calculate the discharge
     // note: not discharge yet, need to multiply by cell area
     LSDRaster VolumePrecipitation(Precip_f_name,raster_ext);
@@ -480,26 +481,41 @@ int main (int nNumberofArgs,char *argv[])
       string Discharge_fname = OUT_DIR+OUT_ID+"_Q";
       Discharge.write_raster(Discharge_fname, raster_ext);
     }
+    // Print the chi raster
+    if(this_bool_map["print_chi_coordinate_raster"])
+    {
+      string chi_coord_string = OUT_DIR+OUT_ID+"_chi_coordQ"; 
+      chi_coordinate.write_raster(chi_coord_string,raster_ext);
+    }
+    
   
   }
   else
   {
     chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,A_0,thresh_area_for_chi);
+    // Print the chi raster
+    if(this_bool_map["print_chi_coordinate_raster"])
+    {
+      string chi_coord_string = OUT_DIR+OUT_ID+"_chi_coord"; 
+      chi_coordinate.write_raster(chi_coord_string,raster_ext);
+    }
   }
 
-
-
-  //============================================================================
-  // Print the chi raster
-  if(this_bool_map["print_chi_coordinate_raster"])
+  // This bit prints a chi coordinate raster even if you are using precipitation
+  if(this_bool_map["print_chi_coordinate_raster"] && this_bool_map["use_precipitation_raster_for_chi"] && this_bool_map["print_chi_no_discharge"])
   {
+    LSDRaster NoDischargeChi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,A_0,thresh_area_for_chi);
     string chi_coord_string = OUT_DIR+OUT_ID+"_chi_coord"; 
-    chi_coordinate.write_raster(chi_coord_string,raster_ext);
+    NoDischargeChi.write_raster(chi_coord_string,raster_ext);
   }
+  //============================================================================
+  
+  
   
   if (this_bool_map["print_simple_chi_map_to_csv"])
   {
     cout <<"I am printing a simple chi map for you to csv." << endl;
+    
     string chi_csv_fname = OUT_DIR+OUT_ID+"_chi_coord.csv";
     ChiTool.chi_map_to_csv(FlowInfo, chi_csv_fname, chi_coordinate);
     
@@ -511,6 +527,7 @@ int main (int nNumberofArgs,char *argv[])
     }
     
   }
+  
 
 
   //============================================================================
@@ -614,6 +631,61 @@ int main (int nNumberofArgs,char *argv[])
       }
     }
   }
+
+  //============================================================================
+  // CHECK CHI IN THE CHITOOL OBJECT
+  // This is really only for debugging
+  //============================================================================
+  if(this_bool_map["check_chi_maps"])
+  {
+    float thresh_area_for_chi = 0;
+    LSDChiTools ChiTool_chi_checker(FlowInfo);
+    ChiTool_chi_checker.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes,
+                            filled_topography, DistanceFromOutlet, 
+                            DrainageArea, chi_coordinate);
+
+    // first the logic if you are using a precipitation raster
+    if(this_bool_map["use_precipitation_raster_for_chi"])
+    {
+      string chiQ_data_maps_string = OUT_DIR+OUT_ID+"_checkchiQ.csv";
+      ChiTool_chi_checker.print_chi_data_map_to_csv(FlowInfo, chiQ_data_maps_string);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_checkchiQ.geojson";
+        LSDSpatialCSVReader thiscsv(chiQ_data_maps_string);
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+      
+      // now get the chi coordinate without the discharge
+      LSDRaster chi_noQ = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,A_0,thresh_area_for_chi);
+      ChiTool_chi_checker.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes,
+                            filled_topography, DistanceFromOutlet, 
+                            DrainageArea, chi_noQ);
+      string chi_data_maps_string = OUT_DIR+OUT_ID+"_checkchi.csv";
+      ChiTool_chi_checker.print_chi_data_map_to_csv(FlowInfo, chi_data_maps_string);
+                            
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_checkchi.geojson";
+        LSDSpatialCSVReader thiscsv(chi_data_maps_string);
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+    }
+    else
+    {
+      string chi_data_maps_string = OUT_DIR+OUT_ID+"_checkchi.csv";
+      ChiTool_chi_checker.print_chi_data_map_to_csv(FlowInfo, chi_data_maps_string);
+      
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_checkchi.geojson";
+        LSDSpatialCSVReader thiscsv(chi_data_maps_string);
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+    }
+  }
+  //============================================================================
 
   if (this_bool_map["calculate_MLE_collinearity"])
   {
