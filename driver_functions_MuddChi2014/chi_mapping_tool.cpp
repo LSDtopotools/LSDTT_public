@@ -195,7 +195,7 @@ int main (int nNumberofArgs,char *argv[])
   string CHeads_file = LSDPP.get_CHeads_file();
   
   cout << "Read filename is: " <<  DATA_DIR+DEM_ID << endl;
-  cout << "Write filenae is: " << OUT_DIR+OUT_ID << endl;
+  cout << "Write filename is: " << OUT_DIR+OUT_ID << endl;
   
     // check to see if the raster exists
   LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);
