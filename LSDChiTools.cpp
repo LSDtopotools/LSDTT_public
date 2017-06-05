@@ -2149,7 +2149,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
 
     // calculate chi
     float area_threshold = 0;
-    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(A_0, movern[i], 
+    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern[i], A_0, 
                                  area_threshold, Discharge);
     update_chi_data_map(FlowInfo, this_chi);
 
@@ -2305,7 +2305,7 @@ void LSDChiTools::print_profiles_as_fxn_movern(LSDFlowInfo& FlowInfo, string fil
 void LSDChiTools::print_profiles_as_fxn_movern_with_discharge(LSDFlowInfo& FlowInfo, string filename, 
            float start_movern, float delta_movern, int n_movern, LSDRaster& Discharge)
 {
-  float A_0 = 1;
+  float A_0 = 1.0;
   float this_movern;
   
   vector<float> movern_values;
@@ -2323,10 +2323,9 @@ void LSDChiTools::print_profiles_as_fxn_movern_with_discharge(LSDFlowInfo& FlowI
     
     // calculate chi
     float area_threshold = 0;
-    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(A_0, this_movern, 
+    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(this_movern,A_0, 
                                  area_threshold, Discharge);
     update_chi_data_map(FlowInfo, this_chi);
-    
     
     cout << "m/n is: " << this_movern << endl;
     
