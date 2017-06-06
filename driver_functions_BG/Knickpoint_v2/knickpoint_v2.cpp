@@ -166,6 +166,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["remove_seas"] = false;
   bool_default_map["only_use_mainstem_as_reference"] = true;
   bool_default_map["print_slope_area_data"] = false;
+  bool_default_map["ksn_knickpoint_analysis"] = false;
 
   // set default string method
   string_default_map["CHeads_file"] = "NULL";
@@ -735,7 +736,19 @@ int main (int nNumberofArgs,char *argv[])
   }
 
 
-
+  if(this_bool_map["ksn_knickpoint_analysis"])
+  {
+    n_iterations = 1;
+    skip = 0;
+    ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes,
+                          filled_topography, DistanceFromOutlet,
+                          DrainageArea, chi_coordinate, target_nodes,
+                          n_iterations, skip, minimum_segment_length, sigma);
+    ChiTool.segment_counter(FlowInfo);
+    ChiTool.ksn_knickpoint_detection(FlowInfo);
+    string csv_full_fname_knockpoint = OUT_DIR+OUT_ID+"_KsnKn.csv";
+    ChiTool.print_knickpoint_to_csv(FlowInfo,csv_full_fname_knockpoint);
+  }
 
 
 
