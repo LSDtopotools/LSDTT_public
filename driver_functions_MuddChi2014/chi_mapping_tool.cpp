@@ -113,9 +113,8 @@ int main (int nNumberofArgs,char *argv[])
   string_default_map["CHeads_file"] = "NULL";
   
   // Selecting basins
-  int_default_map["threshold_pixels_for_chi"] = 0;
-  int_default_map["minimum_basin_size_pixels"] = 1000;
   int_default_map["threshold_contributing_pixels"] = 1000;
+  int_default_map["minimum_basin_size_pixels"] = 1000;
   bool_default_map["test_drainage_boundaries"] = false;  
   bool_default_map["only_take_largest_basin"] = false;  
 
@@ -123,23 +122,18 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["convert_csv_to_geojson"] = false;  // THis converts all cv files to geojson (for easier loading in a GIS)
 
   bool_default_map["print_stream_order_raster"] = false;
+  bool_default_map["print_channels_to_csv"] = false;
   bool_default_map["print_junction_index_raster"] = false;
+  bool_default_map["print_junctions_to_csv"] = false;
   bool_default_map["print_fill_raster"] = false;
   bool_default_map["print_DrainageArea_raster"] = false;
   bool_default_map["write hillshade"] = false;
-  bool_default_map["print_junctions_to_csv"] = false;
-  bool_default_map["print_channels_to_csv"] = false;
-  
-  // parameters for various chi calculations as well as slope-area
-  int_default_map["n_iterations"] = 20;
-  int_default_map["minimum_segment_length"] = 10;
-  int_default_map["n_nodes_to_visit"] = 10;
-  int_default_map["target_nodes"] = 80;
-  int_default_map["skip"] = 2;
+
+  // basic parameters for calculating chi
   float_default_map["A_0"] = 1;
   float_default_map["m_over_n"] = 0.5;
-  float_default_map["sigma"] = 20;
-  
+  int_default_map["threshold_pixels_for_chi"] = 0;
+
   // parameters if you want to explore m/n ratios or slope-area analysis
   int_default_map["n_movern"] = 8;
   float_default_map["start_movern"] = 0.1;
@@ -147,7 +141,20 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["SA_vertical_interval"] = 20;
   float_default_map["log_A_bin_width"] = 0.1;
   bool_default_map["print_slope_area_data"] = false;
-    
+  bool_default_map["only_use_mainstem_as_reference"] = true;
+  // these loop through m/n spitting out profies and calculating goodness of fit
+  // If you want to visualise the data you need to switch both of these to true
+  bool_default_map["calculate_MLE_collinearity"] = false;
+  bool_default_map["print_profiles_fxn_movern_csv"] = false;
+  
+  // parameters for various chi calculations as well as slope-area
+  int_default_map["n_iterations"] = 20;
+  int_default_map["minimum_segment_length"] = 10;
+  int_default_map["n_nodes_to_visit"] = 10;
+  int_default_map["target_nodes"] = 80;
+  int_default_map["skip"] = 2;
+  float_default_map["sigma"] = 20;
+
   // switches for chi analysis
   // These just print simple chi maps
   bool_default_map["print_simple_chi_map_with_basins_to_csv"] = false;
@@ -164,10 +171,8 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_baselevel_keys"] = false;
   bool_default_map["print_basin_raster"] = false;
   
-  // these loop through m/n spitting out profies and calculating goodness of fit
-  // If you want to visualise the data you need to switch both of these to true
-  bool_default_map["calculate_MLE_collinearity"] = false;
-  bool_default_map["print_profiles_fxn_movern_csv"] = false;
+
+
   
   
   // These enable calculation of chi based on discharge
@@ -180,17 +185,11 @@ int main (int nNumberofArgs,char *argv[])
 
   bool_default_map["print_segments"] = false;
 
-  bool_default_map["only_use_mainstem_as_reference"] = true;
 
-  
-  // set default string method
-
-  string_default_map["averaging_raster_vector"] = "NULL";
 
   
   // Use the parameter parser to get the maps of the parameters required for the 
   // analysis
-
   LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
   map<string,float> this_float_map = LSDPP.get_float_parameters();
   map<string,int> this_int_map = LSDPP.get_int_parameters();
