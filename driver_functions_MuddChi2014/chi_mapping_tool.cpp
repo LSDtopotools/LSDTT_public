@@ -103,39 +103,49 @@ int main (int nNumberofArgs,char *argv[])
   map<string,bool> bool_default_map;
   map<string,string> string_default_map;
 
-  // set default float parameters
+  // Basic DEM preprocessing
+  float_default_map["minimum_elevation"] = 0.0;
+  float_default_map["maximum_elevation"] = 30000;
+  float_default_map["min_slope_for_fill"] = 0.0001;
+  bool_default_map["raster_is_filled"] = false; // assume base raster is already filled
+  bool_default_map["remove_seas"] = false; // elevations above minimum and maximum will be changed to nodata
+  bool_default_map["only_check_parameters"] = false;
+  
+  // Selecting basins
+  int_default_map["threshold_pixels_for_chi"] = 0;
+  int_default_map["minimum_basin_size_pixels"] = 1000;
+  int_default_map["threshold_contributing_pixels"] = 1000;
+  bool_default_map["test_drainage_boundaries"] = false;  
+  bool_default_map["only_take_largest_basin"] = false;  
+
+  // printing of rasters and data before chi analysis
+  bool_default_map["print_stream_order_raster"] = false;
+  bool_default_map["print_junction_index_raster"] = false;
+  bool_default_map["print_fill_raster"] = false;
+  bool_default_map["print_DrainageArea_raster"] = false;
+  bool_default_map["write hillshade"] = false;
+  bool_default_map["print_junctions_to_csv"] = false;
+  bool_default_map["print_channels_to_csv"] = false;
+  
+  // parameters for various chi calculations as well as slope-area
   int_default_map["n_iterations"] = 20;
   int_default_map["minimum_segment_length"] = 10;
   int_default_map["n_nodes_to_visit"] = 10;
   int_default_map["target_nodes"] = 80;
   int_default_map["skip"] = 2;
-  int_default_map["threshold_pixels_for_chi"] = 0;
-  int_default_map["minimum_basin_size_pixels"] = 1000;
-  int_default_map["threshold_contributing_pixels"] = 1000;
-  int_default_map["n_movern"] = 8;
-  
-  // set default in parameter
-  float_default_map["min_slope_for_fill"] = 0.0001;
   float_default_map["A_0"] = 1;
   float_default_map["m_over_n"] = 0.5;
   float_default_map["sigma"] = 20;
+  
+  // parameters if you want to explore m/n ratios or slope-area analysis
+  int_default_map["n_movern"] = 8;
   float_default_map["start_movern"] = 0.1;
   float_default_map["delta_movern"] = 0.1;
   float_default_map["SA_vertical_interval"] = 20;
   float_default_map["log_A_bin_width"] = 0.1;
   
-  // For DEM preprocessing
-  float_default_map["minimum_elevation"] = 0.0;
-  float_default_map["maximum_elevation"] = 30000;
-  
-  // set default methods
-  bool_default_map["only_check_parameters"] = false;
-  
+
   // flags for printing rasters
-  bool_default_map["print_stream_order_raster"] = false;
-  bool_default_map["print_junction_index_raster"] = false;
-  bool_default_map["print_fill_raster"] = false;
-  bool_default_map["print_DrainageArea_raster"] = false;
   bool_default_map["use_precipitation_raster_for_chi"] = false;
   bool_default_map["print_discharge_raster"] = false;
   bool_default_map["print_chi_no_discharge"] = false;   // this only is used if you also 
@@ -143,8 +153,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["check_chi_maps"] = false;
   
   // flags for printing channel networks, junctions and sources. 
-  bool_default_map["print_junctions_to_csv"] = false;
-  bool_default_map["print_channels_to_csv"] = false;
+
   
   // flags for printing chi analyses
   bool_default_map["convert_csv_to_geojson"] = false;
@@ -154,17 +163,13 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_simple_chi_map_to_csv"] = false;
   bool_default_map["print_segmented_M_chi_map_to_csv"] = false;
   bool_default_map["print_basic_M_chi_map_to_csv"] = false;  
-  bool_default_map["test_drainage_boundaries"] = false;  
-  bool_default_map["only_take_largest_basin"] = false;  
   bool_default_map["print_source_keys"] = false;
   bool_default_map["print_sources_to_csv"] = false;
   bool_default_map["print_baselevel_keys"] = false;
   bool_default_map["print_basin_raster"] = false;
-  bool_default_map["write hillshade"] = false;
   bool_default_map["print_simple_chi_map_with_basins_to_csv"] = false;
   bool_default_map["print_segments"] = false;
-  bool_default_map["raster_is_filled"] = false;
-  bool_default_map["remove_seas"] = false;
+
   bool_default_map["only_use_mainstem_as_reference"] = true;
   bool_default_map["print_slope_area_data"] = false;
   
