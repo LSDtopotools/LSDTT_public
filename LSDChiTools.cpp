@@ -490,7 +490,7 @@ void LSDChiTools::chi_map_to_csv(LSDFlowInfo& FlowInfo, string chi_map_fname,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function creates the data structures for keeping track of
 //  the channel network but only maps the chi coordinate.
-// Mainly used for calculating m/n ratio. 
+// Mainly used for calculating m/n ratio.
 // DOES NOT segment the chi-elevation profiles
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
@@ -530,11 +530,11 @@ void LSDChiTools::chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
   // these are for working with the FlowInfo object
   int this_node,row,col;
   int this_base_level, this_source_node;
-  
+
   vector<int> empty_vec;
   ordered_baselevel_nodes = empty_vec;
   ordered_source_nodes = empty_vec;
-  
+
 
   // get the number of channels
   int source_node_tracker = -1;
@@ -553,27 +553,27 @@ void LSDChiTools::chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
     if ( this_key_to_baselevel_map.find(this_base_level) == this_key_to_baselevel_map.end() )
     {
       baselevel_tracker++;
-      
+
       // this resets the ranked source node tracker
       ranked_source_node_tracker = -1;
-      
+
       //cout << "Found a new baselevel. The node is: " << this_base_level << " and key is: " << baselevel_tracker << endl;
       this_key_to_baselevel_map[this_base_level] = baselevel_tracker;
       ordered_baselevel_nodes.push_back(this_base_level);
     }
 
     // now add the source tracker
-    source_node_tracker++; 
+    source_node_tracker++;
     ranked_source_node_tracker++;
-    
+
     // get the source node
     this_source_node = source_nodes[chan];
-    
+
     // add the node to the trackers so that we can trace individual basin nodes
     // for m over n calculations
     ordered_source_nodes.push_back(this_source_node);
     source_nodes_ranked_by_basin.push_back(ranked_source_node_tracker);
-    
+
     // now add the source node to the data map
     this_key_to_source_map[this_source_node] = source_node_tracker;
 
@@ -736,17 +736,17 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
     }
 
     // now add the source tracker
-    source_node_tracker++; 
+    source_node_tracker++;
     ranked_source_node_tracker++;
-    
+
     // get the source node
     this_source_node = source_nodes[chan];
-    
+
     // add the node to the trackers so that we can trace individual basin nodes
     // for m over n calculations
     ordered_source_nodes.push_back(this_source_node);
     source_nodes_ranked_by_basin.push_back(ranked_source_node_tracker);
-    
+
     // now add the source node to the data map
     this_key_to_source_map[this_source_node] = source_node_tracker;
 
@@ -1579,6 +1579,147 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// New function for the knickpoint detection
+// save the difference and ratio between m_chi values of each segments
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
+{
+  // these are for extracting element-wise data from the channel profiles.
+  //int abs_threshhold_knickpoint = abs (threshold_knickpoint);
+  int this_node = 0;
+  map<int,float> this_kickpoint_diff_map;
+  map<int,float> this_kickpoint_ratio_map;
+  map<int,int> this_knickpoint_sign_map;
+  float last_M_chi, this_M_chi;
+  float delta_mchi = 0; // difference between last and new m_chi
+  float ratio_mchi = 0; // ratio between last and new m_chi
+  int knickpoint_sign = 0; // sign of the knickpoint: + =1 and - = -1
+  float temp_delta_m = 0; // debugging stuff
+  float this_segment_length = 0;
+  int last_node = 0;
+  int n_nodes_segment = 0;
+  float x1_temp =0;
+  float y1_temp =0;
+  float x2_temp =0;
+  float y2_temp =0;
+  bool same_channel = true;
+
+
+
+  // find the number of nodes
+  int n_nodes = (node_sequence.size());
+  if (n_nodes <= 0)
+  {
+    cout << "Cannot calculate segments since you have not calculated channel properties yet." << endl;
+  }
+  else
+  {
+    this_node = node_sequence[0];
+    last_M_chi =  M_chi_data_map[this_node];
+
+    for (int n = 0; n< n_nodes; n++)
+    {
+
+      // set the nodes number and keep information about the previous one
+      if(n>0)
+      {
+        last_node = this_node;
+      }
+      this_node = node_sequence[n];
+      // Get the M_chi from the current node
+      this_M_chi = M_chi_data_map[this_node];
+
+      // If the M_chi has changed I increment the knickpoints
+      if (this_M_chi != last_M_chi && key_to_source_map[this_node] == key_to_source_map[last_node])
+      {
+        ratio_mchi = last_M_chi/this_M_chi; // Ratio between last and new chi steepness
+        delta_mchi = last_M_chi-this_M_chi; // diff between last and new chi steepness
+        if(ratio_mchi<1){knickpoint_sign = -1;} else {knickpoint_sign = 1;} // Assign the knickpoint sign value
+
+
+        this_kickpoint_diff_map[this_node] = delta_mchi;
+        this_kickpoint_ratio_map[this_node] = ratio_mchi;
+        this_knickpoint_sign_map[this_node] = knickpoint_sign;
+
+        // reinitialise the parameters for next loop turn
+        last_M_chi = this_M_chi;
+      }
+
+    }
+
+  }
+  // print everything in the public/protected variables
+  kns_ratio_knickpoint_map = this_kickpoint_ratio_map;
+  kns_diff_knickpoint_map = this_kickpoint_diff_map;
+  ksn_sign_knickpoint_map = this_knickpoint_sign_map;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Print data maps to file
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename)
+{
+
+  // these are for extracting element-wise data from the channel profiles.
+  cout << "I am now writing your ksn knickpoint file:" << endl;
+  int this_node, row,col;
+  double latitude,longitude;
+  LSDCoordinateConverterLLandUTM Converter;
+
+  // find the number of nodes
+  int n_nodes = (node_sequence.size());
+
+  // open the data file
+  ofstream  chi_data_out;
+  chi_data_out.open(filename.c_str());
+  chi_data_out << "latitude,longitude,elevation,flow distance,drainage area,diff,ratio,sign,source_key,basin_key,segment";
+
+  chi_data_out << endl;
+
+
+
+
+  if (n_nodes <= 0)
+  {
+    cout << "Cannot print since you have not calculated channel properties yet." << endl;
+  }
+  else
+  {
+    for (int n = 0; n< n_nodes; n++)
+    {
+        this_node = node_sequence[n];
+        FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+        get_lat_and_long_locations(row, col, latitude, longitude, Converter);
+        if(kns_diff_knickpoint_map.count(this_node) == 1)
+        {
+        chi_data_out.precision(9);
+        chi_data_out << latitude << ","
+                     << longitude << ",";
+        chi_data_out.precision(5);
+        chi_data_out << elev_data_map[this_node] << ","
+                     << flow_distance_data_map[this_node] << ","
+                     << drainage_area_data_map[this_node] << ","
+                     << kns_diff_knickpoint_map[this_node] << ","
+                     << kns_ratio_knickpoint_map[this_node] << ","
+                     << ksn_sign_knickpoint_map[this_node] << ","
+                     << source_keys_map[this_node] << ","
+                     << baselevel_keys_map[this_node] << ","
+                     << segment_counter_map[this_node];
+
+        chi_data_out << endl;
+      }
+    }
+  }
+
+  chi_data_out.close();
+  cout << "I am done, your file is:" << endl;
+  cout << filename << endl;
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function calculates the fitted elevations: It uses m_chi and b_chi
 // data to get the fitted elevation of the channel points.
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1621,53 +1762,53 @@ void LSDChiTools::calculate_segmented_elevation(LSDFlowInfo& FlowInfo)
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
-// This renumbers sources by base level. Each base level node has 
-// a number of sources and these get an incremental value which is used 
-// for the combination vector. These serve as maps between the source keys 
+// This renumbers sources by base level. Each base level node has
+// a number of sources and these get an incremental value which is used
+// for the combination vector. These serve as maps between the source keys
 // and the MLE values
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiTools::baselevel_and_source_splitter(vector<int>& n_sources_for_baselevel, 
+void LSDChiTools::baselevel_and_source_splitter(vector<int>& n_sources_for_baselevel,
                                                 vector<int>& index_into_sources_vec)
 {
 
   // You need to loop through all the sources, for each baselevel you get all the number rankings
   int n_sources = int(ordered_source_nodes.size());
   int baselevel_node;
-  
+
   // this vector contains the index into the ordered source node vector
   // of the starting point for a given baselelvel node
   vector<int> starting_index_of_source_for_baselevel_node;
   vector<int> n_sources_each_baselevel;
-  
-  // loop through allsources, tracking where the baselevel nodes change. 
+
+  // loop through allsources, tracking where the baselevel nodes change.
   int this_baselevel_node = -1;
   int n_sources_this_baselevel;
   for (int i = 0; i< n_sources; i++)
   {
     // get the baselevel node of each of the sources
     baselevel_node = baselevel_keys_map[ ordered_source_nodes[i] ];
-    
+
     if(baselevel_node != this_baselevel_node)
     {
       if (this_baselevel_node != -1)
       {
         n_sources_each_baselevel.push_back(n_sources_this_baselevel);
       }
-      
-      
+
+
       starting_index_of_source_for_baselevel_node.push_back(i);
       this_baselevel_node = baselevel_node;
-      
+
       n_sources_this_baselevel = 0;
     }
-    
+
     n_sources_this_baselevel++;
   }
-  
+
   // and now get the last number of baselelvel nodes
   n_sources_each_baselevel.push_back(n_sources_this_baselevel);
-  
+
   // now print out the results
   //cout << endl << endl << "============" << endl;
   bool print_for_debug = false;
@@ -1677,30 +1818,30 @@ void LSDChiTools::baselevel_and_source_splitter(vector<int>& n_sources_for_basel
    {
       cout << "Source number is: " << ordered_source_nodes[i] << " and baselelvel: " << baselevel_keys_map[ ordered_source_nodes[i] ] << endl;
     }
-  
+
     int n_bl = int(starting_index_of_source_for_baselevel_node.size());
     cout << endl << endl << "============" << endl;
     cout << "n_bl: " << n_bl << endl;
     for(int i = 0; i< n_bl; i++)
     {
-      cout << "Baselevel node is: " << ordered_baselevel_nodes[i] << " n sources: " 
-          << n_sources_each_baselevel[i] << " start_index: " 
+      cout << "Baselevel node is: " << ordered_baselevel_nodes[i] << " n sources: "
+          << n_sources_each_baselevel[i] << " start_index: "
           << starting_index_of_source_for_baselevel_node[i] << endl;
     }
-    
+
     cout << endl << endl << "============" << endl;
     cout << "Let me get the numbereing for you by basin" << endl;
     for(int i = 0; i< n_sources; i++)
     {
       cout << "Renumbered source key is: " << source_nodes_ranked_by_basin[i] << endl;
     }
-    
+
   }
 
   // replace the two vectors
-  n_sources_for_baselevel = n_sources_each_baselevel, 
+  n_sources_for_baselevel = n_sources_each_baselevel,
   index_into_sources_vec = starting_index_of_source_for_baselevel_node;
-  
+
 }
 
 
@@ -1724,11 +1865,11 @@ void LSDChiTools::print_basin_and_source_indexing_to_screen()
   cout << "n_bl: " << n_bl << endl;
   for(int i = 0; i< n_bl; i++)
   {
-    cout << "Baselevel node is: " << ordered_baselevel_nodes[i] << " n sources: " 
-        << n_sources_for_baselevel[i] << " start_index: " 
+    cout << "Baselevel node is: " << ordered_baselevel_nodes[i] << " n sources: "
+        << n_sources_for_baselevel[i] << " start_index: "
         << index_into_sources_vec[i] << endl;
   }
-    
+
   cout << endl << endl << "============" << endl;
   cout << "Let me get the numbering for you by basin" << endl;
   for(int i = 0; i< n_sources; i++)
@@ -1743,7 +1884,7 @@ void LSDChiTools::print_basin_and_source_indexing_to_screen()
   while(iter != key_to_source_map.end())
   {
     cout << "source is: " << iter->first << " and key is: " << iter->second << endl;
-    iter++; 
+    iter++;
   }
 
 }
@@ -1759,21 +1900,21 @@ float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int referenc
   // is taken as a reference, and then all other segments are compared to how
   // closely they match this segment. If the chi value of the segment being tested
   // is greater than the maximum chi of the reference segment or less than the
-  // minimum chi of the reference segment the data point is ignored. 
-  
+  // minimum chi of the reference segment the data point is ignored.
+
   float MLE = 1;
   float sigma = 1000;
   // first get the source node of the reference channel
-  if ( reference_channel >= int(key_to_source_map.size()) || test_channel >= int(key_to_source_map.size()) ) 
+  if ( reference_channel >= int(key_to_source_map.size()) || test_channel >= int(key_to_source_map.size()) )
   {
     cout << "LSDChiTools::test_segment_collinearity One of the sources is not in the channel network. Source is: " << reference_channel << endl;
-  } 
+  }
   else
   {
     vector<float> elev_data_chan0;
     vector<float> chi_data_chan0;
     get_chi_elevation_data_of_channel(FlowInfo, reference_channel, chi_data_chan0, elev_data_chan0);
-      
+
     vector<float> elev_data_chan1;
     vector<float> chi_data_chan1;
     get_chi_elevation_data_of_channel(FlowInfo, test_channel, chi_data_chan1, elev_data_chan1);
@@ -1781,7 +1922,7 @@ float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int referenc
     vector<float> residuals = project_data_onto_reference_channel(chi_data_chan0, elev_data_chan0,
                                  chi_data_chan1,elev_data_chan1);
     MLE = calculate_MLE_from_residuals(residuals, sigma);
-    
+
   }
   return MLE;
 
@@ -1794,7 +1935,7 @@ float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int referenc
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo, bool only_use_mainstem_as_reference,
                                                  int baselevel_key,
-                                                 vector<int>& reference_source, vector<int>& test_source, 
+                                                 vector<int>& reference_source, vector<int>& test_source,
                                                  vector<float>& MLE_values, vector<float>& RMSE_values)
 {
   cout << "Testing the segment collinearity for basin key " << baselevel_key << endl;
@@ -1806,8 +1947,8 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
     cout << "You have selected a basin that doesn't exist!" << endl;
     exit(EXIT_FAILURE);
   }
-  
-  
+
+
   // run the splitter
   // this gets the starting index of the sources for each basin.
   // It means that the channel numbers are linked to the channels in the basin
@@ -1816,25 +1957,25 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
   baselevel_and_source_splitter(n_sources_in_basin, start_node_for_baselelvel);
   int channel_offset = start_node_for_baselelvel[baselevel_key];
   int n_channels = n_sources_in_basin[baselevel_key];
-  
+
   // Drop out if there is only a single channel in the basin
   if (n_channels == 1)
   {
     cout << "This basin only has one channel." << endl;
     return 1.0;
   }
-  
-  
+
+
   cout << "Let me check the basin indexing for you." << endl;
   int n_bl =  int(start_node_for_baselelvel.size());
   for(int i = 0; i< n_bl; i++)
   {
-    cout << "Baselevel node is: " << ordered_baselevel_nodes[i] << " n sources: " 
-        << n_sources_in_basin[i] << " start_index: " 
+    cout << "Baselevel node is: " << ordered_baselevel_nodes[i] << " n sources: "
+        << n_sources_in_basin[i] << " start_index: "
         << start_node_for_baselelvel[i] << endl;
   }
-  
-  cout << "Basin key is: " << baselevel_key << " This basin has " << n_channels << " sources and start node is "<< channel_offset <<endl;  
+
+  cout << "Basin key is: " << baselevel_key << " This basin has " << n_channels << " sources and start node is "<< channel_offset <<endl;
 
 
   // placeholder vectors: will replace the passed vectors
@@ -1842,71 +1983,71 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
   vector<int> this_test_source;
   vector<float> these_MLE_values;
   vector<float> these_RMSE_values;
-  
+
   // now get all the possible two pair combinations of these channels
   bool zero_indexed = true;   // this is just because the channels are numbered from zero
   int k = 2;                  // We want combinations of 2 channels
-  
+
   // the vec vec holds a vector of each possible combination of channels
   // each vector has two elements in it: the first and second channel in the comibination
-  vector< vector<int> > combo_vecvev = combinations(n_channels, k, zero_indexed); 
+  vector< vector<int> > combo_vecvev = combinations(n_channels, k, zero_indexed);
   vector<float> elev_data_chan0;
   vector<float> chi_data_chan0;
   vector<float> elev_data_chan1;
   vector<float> chi_data_chan1;
   vector<float> residuals;
-  
-  int n_residuals;
-  
 
-  
+  int n_residuals;
+
+
+
   vector<float> MLEs;
-  vector<int> MLE_index;   // the index into the combo_vecvec that is used to 
+  vector<int> MLE_index;   // the index into the combo_vecvec that is used to
                            // tell which combinations have MLE values
-  
+
   float sigma = 1000;
   int last_ref_channel = -1;
 
   int n_combinations = int(combo_vecvev.size());
   vector<int> this_combo;
   int chan0,chan1;
-  
+
   if (only_use_mainstem_as_reference)
   {
     n_combinations = n_channels-1;
   }
-  
+
   // we loop through the different combinations in the vecvec
   for (int combo = 0; combo < n_combinations; combo++)
   {
     this_combo = combo_vecvev[combo];
-    
+
     // you need to map these combinations onto the particular channels of this basin
     // These channels refere to the source keys
     chan0 = this_combo[0]+channel_offset;
     chan1 = this_combo[1]+channel_offset;
     //cout << "chan0 is: " << chan0 << "  and chan1 is: " << chan1 << " and combo 0 is: " << this_combo[0] <<endl;
-    
-    
-    // only get the reference channel if the channel has changed. 
+
+
+    // only get the reference channel if the channel has changed.
     // This collects the chi-elevation data of the reference channel
     if (last_ref_channel != chan0)
     {
       get_chi_elevation_data_of_channel(FlowInfo, chan0, chi_data_chan0, elev_data_chan0);
     }
-    
+
     // This gets the chi-elevation data of the test channel. Again, the chan1
-    // parameter referes to the source key. 
+    // parameter referes to the source key.
     get_chi_elevation_data_of_channel(FlowInfo, chan1, chi_data_chan1, elev_data_chan1);
 
-    // Now return the residuals between the reference channel and test channel. 
-    // Each node in the test channel gets a residual, it is projected to a 
+    // Now return the residuals between the reference channel and test channel.
+    // Each node in the test channel gets a residual, it is projected to a
     // linear fit between nodes on the reference channel
     residuals = project_data_onto_reference_channel(chi_data_chan0, elev_data_chan0,
                                  chi_data_chan1,elev_data_chan1);
     n_residuals = int(residuals.size());
     //cout << "The number of residuals are: " << n_residuals << endl;
-    
+
     // Now get the MLE and RMSE for this channel pair. It only runs if
     // there are residuals. Otherwise it means that the channels are non-overlapping
     if (n_residuals > 0)
@@ -1915,7 +2056,7 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
       float RMSE = calculate_RMSE_from_residuals(residuals);
       last_ref_channel = chan0;
       //cout << "MLE: " << MLE1 << " and RMSE: " << RMSE << endl;
-    
+
       // If we are only using the mainstem channel, we only use the first channel
       // as a reference channel. The first channel is denoted by this_combo[0] == 0
       //cout << "The use only mainstem is: " << only_use_mainstem_as_reference << endl;
@@ -1945,18 +2086,18 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
       }
     }
   }
-  
+
   MLE_values = these_MLE_values;
   RMSE_values = these_RMSE_values;
   reference_source = this_reference_source;
   test_source = this_test_source;
-  
+
   float tot_MLE = 1;
   for (int res = 0; res < int(these_MLE_values.size()); res++)
   {
     tot_MLE = tot_MLE*these_MLE_values[res];
   }
-  
+
 
   cout << "Let me tell you all about the MLE values " << endl;
   // for debugging
@@ -1971,10 +2112,10 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
            << "RMSE_values: " << RMSE_values[res] << endl;
     }
   }
-  
+
   cout << "Total MLE is: " << tot_MLE << endl;
   return tot_MLE;
-  
+
 }
 
 
@@ -1983,9 +2124,9 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
 // This function test the collinearity of all segments compared to a reference
 // segment
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo& FlowInfo, 
-                        float start_movern, float delta_movern, int n_movern, 
-                        bool only_use_mainstem_as_reference, 
+void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo& FlowInfo,
+                        float start_movern, float delta_movern, int n_movern,
+                        bool only_use_mainstem_as_reference,
                         string file_prefix)
 {
   // these vectors store all the values which are then used for printing
@@ -1994,8 +2135,8 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
   vector< vector<float> > total_MLE_vecvec;
   vector<int> reference_keys;
   vector<int> test_keys;
-  
-  
+
+
   cout << "LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern" << endl;
   cout << "I am defaulting to A_0 = 1." << endl;
   vector<float> movern;
@@ -2013,7 +2154,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
     // get the m over n value
     movern.push_back( float(i)*delta_movern+start_movern );
     cout << "i: " << i << " and m over n: " << movern[i] << " ";
-    
+
     // open the outfile
     string filename_fullstats = file_prefix+"_"+dtoa(movern[i])+"_fullstats.csv";
     ofstream movern_stats_out;
@@ -2022,13 +2163,13 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
     // calculate chi
     update_chi_data_map(FlowInfo, A_0, movern[i]);
 
-    // these are the vectors that will hold the information about the 
-    // comparison between channels. 
+    // these are the vectors that will hold the information about the
+    // comparison between channels.
     // the _all vectors are one of all the basins
     // reference source is the source key of the reference channel
     vector<int> reference_source, all_reference_source;
     // test source is the source key of the test channel
-    vector<int> test_source, all_test_source; 
+    vector<int> test_source, all_test_source;
     // MLE the maximum liklihood estimator
     vector<float> MLE_values, all_MLE_values;
     // RMSE is the root mean square error
@@ -2038,7 +2179,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
 
     // now run the collinearity test
     float tot_MLE;
-    
+
     for(int basin_key = 0; basin_key<n_basins; basin_key++)
     {
       tot_MLE = test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
@@ -2053,14 +2194,14 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
       tot_MLE_vec.push_back(tot_MLE);
       cout << "basin: " << basin_key << " and tot_MLE: " << tot_MLE << endl;
     }
-    
+
     // add the data to the vecvecs
     MLE_vecvec.push_back(all_MLE_values);
     RMSE_vecvec.push_back(all_RMSE_values);
     total_MLE_vecvec.push_back(tot_MLE_vec);
     reference_keys = all_reference_source;
     test_keys = all_test_source;
-    
+
     // now print the data to the file
     movern_stats_out << "reference_source_key,test_source_key,MLE,RMSE" << endl;
     int n_rmse_vals = int(all_RMSE_values.size());
@@ -2074,7 +2215,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
     movern_stats_out.close();
 
   }
-  
+
   stats_by_basin_out << "basin_key";
   stats_by_basin_out.precision(4);
   for(int i = 0; i< n_movern; i++)
@@ -2092,7 +2233,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
     }
     stats_by_basin_out << endl;
   }
-  
+
   stats_by_basin_out.close();
 
 }
@@ -2102,10 +2243,10 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
 // This function test the collinearity of all segments compared to a reference
 // segment
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge(LSDFlowInfo& FlowInfo, 
-                        float start_movern, float delta_movern, int n_movern, 
-                        bool only_use_mainstem_as_reference, 
-                        string file_prefix, 
+void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge(LSDFlowInfo& FlowInfo,
+                        float start_movern, float delta_movern, int n_movern,
+                        bool only_use_mainstem_as_reference,
+                        string file_prefix,
                         LSDRaster& Discharge)
 {
   // these vectors store all the values which are then used for printing
@@ -2114,8 +2255,8 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
   vector< vector<float> > total_MLE_vecvec;
   vector<int> reference_keys;
   vector<int> test_keys;
-  
-  
+
+
   cout << "LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern" << endl;
   cout << "I am defaulting to A_0 = 1." << endl;
   vector<float> movern;
@@ -2133,7 +2274,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
     // get the m over n value
     movern.push_back( float(i)*delta_movern+start_movern );
     cout << "i: " << i << " and m over n: " << movern[i] << " ";
-    
+
     // open the outfile
     string filename_fullstats = file_prefix+"_"+dtoa(movern[i])+"_fullstats.csv";
     ofstream movern_stats_out;
@@ -2141,17 +2282,17 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
 
     // calculate chi
     float area_threshold = 0;
-    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(A_0, movern[i], 
+    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(A_0, movern[i],
                                  area_threshold, Discharge);
     update_chi_data_map(FlowInfo, this_chi);
 
-    // these are the vectors that will hold the information about the 
-    // comparison between channels. 
+    // these are the vectors that will hold the information about the
+    // comparison between channels.
     // the _all vectors are one of all the basins
     // reference source is the source key of the reference channel
     vector<int> reference_source, all_reference_source;
     // test source is the source key of the test channel
-    vector<int> test_source, all_test_source; 
+    vector<int> test_source, all_test_source;
     // MLE the maximum liklihood estimator
     vector<float> MLE_values, all_MLE_values;
     // RMSE is the root mean square error
@@ -2161,7 +2302,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
 
     // now run the collinearity test
     float tot_MLE;
-    
+
     for(int basin_key = 0; basin_key<n_basins; basin_key++)
     {
       tot_MLE = test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
@@ -2176,14 +2317,14 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
       tot_MLE_vec.push_back(tot_MLE);
       cout << "basin: " << basin_key << " and tot_MLE: " << tot_MLE << endl;
     }
-    
+
     // add the data to the vecvecs
     MLE_vecvec.push_back(all_MLE_values);
     RMSE_vecvec.push_back(all_RMSE_values);
     total_MLE_vecvec.push_back(tot_MLE_vec);
     reference_keys = all_reference_source;
     test_keys = all_test_source;
-    
+
     // now print the data to the file
     movern_stats_out << "reference_source_key,test_source_key,MLE,RMSE" << endl;
     int n_rmse_vals = int(all_RMSE_values.size());
@@ -2197,7 +2338,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
     movern_stats_out.close();
 
   }
-  
+
   stats_by_basin_out << "basin_key";
   stats_by_basin_out.precision(4);
   for(int i = 0; i< n_movern; i++)
@@ -2215,7 +2356,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
     }
     stats_by_basin_out << endl;
   }
-  
+
   stats_by_basin_out.close();
 
 }
@@ -2230,26 +2371,26 @@ void LSDChiTools::print_profiles_as_fxn_movern(LSDFlowInfo& FlowInfo, string fil
 {
   float A_0 = 1;
   float this_movern;
-  
+
   vector<float> movern_values;
   vector< vector<float> > chi_vecvec;
   vector<float> empty_vec;
   vector<float> this_chi_vec;
   int this_node;
   int n_nodes = int(node_sequence.size());
-  
+
   // loop through m over n values
   for(int i = 0; i< n_movern; i++)
   {
-    
+
     this_movern =  float(i)*delta_movern+start_movern;
     update_chi_data_map(FlowInfo, A_0, this_movern);
-    
+
     cout << "m/n is: " << this_movern << endl;
-    
+
     movern_values.push_back(this_movern);
     this_chi_vec = empty_vec;
-    
+
     // now get the chi values for each node and push them into the chi_vecvec
     for (int n = 0; n< n_nodes; n++)
     {
@@ -2260,7 +2401,7 @@ void LSDChiTools::print_profiles_as_fxn_movern(LSDFlowInfo& FlowInfo, string fil
   }
   cout << "Okay, I've got all the chi values in the vecvec." << endl;
   // okay, we are done getting all the chi values, now add these into the file
-  
+
   ofstream chi_csv_out;
   cout << "Running the printing for movern. Filename is: " << filename << endl;
   chi_csv_out.open(filename.c_str());
@@ -2270,7 +2411,7 @@ void LSDChiTools::print_profiles_as_fxn_movern(LSDFlowInfo& FlowInfo, string fil
     chi_csv_out << ",m_over_n = " << movern_values[i];
   }
   chi_csv_out << endl;
-  
+
   // now loop through all the nodes
   chi_csv_out.precision(5);
   for (int n = 0; n< n_nodes; n++)
@@ -2294,37 +2435,37 @@ void LSDChiTools::print_profiles_as_fxn_movern(LSDFlowInfo& FlowInfo, string fil
 // This prints a series of simple profiles (chi-elevation) as a function of
 // movern
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiTools::print_profiles_as_fxn_movern_with_discharge(LSDFlowInfo& FlowInfo, string filename, 
+void LSDChiTools::print_profiles_as_fxn_movern_with_discharge(LSDFlowInfo& FlowInfo, string filename,
            float start_movern, float delta_movern, int n_movern, LSDRaster& Discharge)
 {
   float A_0 = 1;
   float this_movern;
-  
+
   vector<float> movern_values;
   vector< vector<float> > chi_vecvec;
   vector<float> empty_vec;
   vector<float> this_chi_vec;
   int this_node;
   int n_nodes = int(node_sequence.size());
-  
+
   // loop through m over n values
   for(int i = 0; i< n_movern; i++)
   {
-    
+
     this_movern =  float(i)*delta_movern+start_movern;
-    
+
     // calculate chi
     float area_threshold = 0;
-    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(A_0, this_movern, 
+    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(A_0, this_movern,
                                  area_threshold, Discharge);
     update_chi_data_map(FlowInfo, this_chi);
-    
-    
+
+
     cout << "m/n is: " << this_movern << endl;
-    
+
     movern_values.push_back(this_movern);
     this_chi_vec = empty_vec;
-    
+
     // now get the chi values for each node and push them into the chi_vecvec
     for (int n = 0; n< n_nodes; n++)
     {
@@ -2335,7 +2476,7 @@ void LSDChiTools::print_profiles_as_fxn_movern_with_discharge(LSDFlowInfo& FlowI
   }
   cout << "Okay, I've got all the chi values in the vecvec." << endl;
   // okay, we are done getting all the chi values, now add these into the file
-  
+
   ofstream chi_csv_out;
   cout << "Running the printing for movern. Filename is: " << filename << endl;
   chi_csv_out.open(filename.c_str());
@@ -2345,7 +2486,7 @@ void LSDChiTools::print_profiles_as_fxn_movern_with_discharge(LSDFlowInfo& FlowI
     chi_csv_out << ",m_over_n = " << movern_values[i];
   }
   chi_csv_out << endl;
-  
+
   // now loop through all the nodes
   chi_csv_out.precision(5);
   for (int n = 0; n< n_nodes; n++)
@@ -2382,18 +2523,18 @@ int LSDChiTools::get_source_from_source_key(int source_key)
       source_node = iter->first;
       //cout << "I found the source key AWESOME! The source key is: " << source_node << endl;
     }
-    iter++; 
+    iter++;
   }
-  
-  if ( source_node == -9999 ) 
+
+  if ( source_node == -9999 )
   {
     cout << "LSDChiTools::get_starting_node_of_source " << endl;
     cout << "FATAL ERROR: This source is not in the channel network. Source is: " << source_key << endl;
     exit(EXIT_FAILURE);
-  } 
-  
+  }
+
   return source_node;
-}  
+}
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2401,12 +2542,12 @@ int LSDChiTools::get_source_from_source_key(int source_key)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 int LSDChiTools::get_starting_node_of_source(int source_key)
 {
-  int source_node = get_source_from_source_key(source_key); 
+  int source_node = get_source_from_source_key(source_key);
   int this_starting_node = -9999;
 
   // Find the node sequence index of this node;
   int this_ns_node = -1;
-  
+
   bool not_starting_node = true;
   while (not_starting_node)
   {
@@ -2418,8 +2559,8 @@ int LSDChiTools::get_starting_node_of_source(int source_key)
     }
   }
   //cout << "The starting node in the sequence is: " << this_starting_node << endl;
-  
-  return this_starting_node;  
+
+  return this_starting_node;
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2428,13 +2569,13 @@ int LSDChiTools::get_starting_node_of_source(int source_key)
 int LSDChiTools::get_number_of_channels()
 {
   int n_channels = int(key_to_source_map.size());
-  return n_channels;  
+  return n_channels;
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Extract the elevation and chi data from a channel
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiTools::get_chi_elevation_data_of_channel(LSDFlowInfo& FlowInfo, int source_key, 
+void LSDChiTools::get_chi_elevation_data_of_channel(LSDFlowInfo& FlowInfo, int source_key,
                                 vector<float>& chi_data, vector<float>& elevation_data)
 {
   int n_channels = int(key_to_source_map.size());
@@ -2444,20 +2585,20 @@ void LSDChiTools::get_chi_elevation_data_of_channel(LSDFlowInfo& FlowInfo, int s
     cout << "This source key is not in channel network" << endl;
     exit(EXIT_FAILURE);
   }
-  
+
   // get source node
   int starting_source = get_source_from_source_key(source_key);
   //cout << "LSDChiTools::get_chi_elevation_data_of_channel, Starting source is: " << starting_source << endl;
-  
+
   vector<float> this_chi;
   vector<float> this_elevation;
-  
+
   // add the source to the chi elevation vectors
   this_chi.push_back(chi_data_map[starting_source]);
   this_elevation.push_back(elev_data_map[starting_source]);
-  
+
   //cout << "Starting chi is: " << chi_data_map[starting_source] << endl;
-  
+
   // now work downstream until you get to a different source or
   // a baselevel node
   bool is_end = false;
@@ -2467,7 +2608,7 @@ void LSDChiTools::get_chi_elevation_data_of_channel(LSDFlowInfo& FlowInfo, int s
   while(not is_end)
   {
     FlowInfo.retrieve_receiver_information(current_node,receiver_node, receiver_row,receiver_col);
-    
+
     if(current_node == receiver_node)
     {
       // this is a baselelvel node, simply switch on the is_end boolean
@@ -2488,13 +2629,13 @@ void LSDChiTools::get_chi_elevation_data_of_channel(LSDFlowInfo& FlowInfo, int s
     }
     // increment the node downstream
     current_node = receiver_node;
-    
+
   }
-  
+
   elevation_data = this_elevation;
   chi_data = this_chi;
   //cout << "Starting chi is: " << chi_data[0] << " and ending chi is: " << chi_data[n_nodes-1] << endl;
-  
+
   // For debugging
   //int n_nodes = int(elevation_data.size());
   //for(int i= 0; i<n_nodes; i++)
@@ -2513,7 +2654,7 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
   // How this works is that you take the tributary elevations and then
   // determine the elevation on the reference at the same chi. This is done by
   // interpolating the elevation as a linear fit between the two adjacent chi
-  // points on the reference channel. 
+  // points on the reference channel.
   vector<float> joint_chi;
   vector<float> trib_joint_elev;
   vector<float> ref_joint_elev;
@@ -2525,7 +2666,7 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
   float min_ref_chi;
   float max_trib_chi;
   float min_trib_chi;
-  
+
   int n_ref_nodes = int(reference_chi.size());
   int n_trib_nodes = int(trib_chi.size());
   if (n_ref_nodes <= 1 || n_trib_nodes <= 1)
@@ -2538,23 +2679,23 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
   {
     max_ref_chi = reference_chi[0];
     min_ref_chi = reference_chi[n_ref_nodes-1];
-  
+
     max_trib_chi = trib_chi[0];
     min_trib_chi = trib_chi[n_trib_nodes-1];
   }
-  
+
   // test to see if there is overlap
   if(min_trib_chi > max_ref_chi || max_trib_chi < min_ref_chi)
   {
     cout << "LSDChiTools::project_data_onto_reference_channel These channels do not overlap." << endl;
     return residuals;
   }
-  
-  // The reference chis monotonically decrease so we will keep track of what 
-  // indices the bounding chi points are. 
+
+  // The reference chis monotonically decrease so we will keep track of what
+  // indices the bounding chi points are.
   int start_ref_index = 0;
   int end_ref_index = 1;
-  
+
   // begin by ramping up to the first node within the reference vector
   float this_trib_chi = trib_chi[0];
   int this_node=0;
@@ -2567,13 +2708,13 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
       this_node++;
     }
   }
-  
+
   this_chi = trib_chi[this_node];
   float ref_chi_upstream = reference_chi[start_ref_index];
   float ref_chi_downstream =  reference_chi[end_ref_index];
-  
+
   //cout << "The number of trib nodes is: " << n_trib_nodes << endl;
-  // now ramp up the the start ref index and end ramp index 
+  // now ramp up the the start ref index and end ramp index
   bool found_joint_chi;
   for (int i = this_node; i<n_trib_nodes; i++)
   {
@@ -2591,7 +2732,7 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
     }
     else
     {
-      // we didn't find the chi, we need to move through the reference vector to find 
+      // we didn't find the chi, we need to move through the reference vector to find
       // the chi value
       bool found_ref_nodes = false;
       while (end_ref_index < n_ref_nodes && not found_ref_nodes)
@@ -2614,7 +2755,7 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
         i = n_trib_nodes-1;
       }
     }
-    
+
     if(found_joint_chi)
     {
       // we need to calculate the eleavtion on the reference vector
@@ -2627,9 +2768,9 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
       ref_joint_elev.push_back(joint_elev);
       residuals.push_back(trib_elevation[i]-joint_elev);
     }
-  
+
   }
-  
+
   //for(int i = 0; i<int(joint_chi.size()); i++)
   //{
   //  cout << "residual[" << i << "]: "<< residuals[i] << endl;
@@ -2672,9 +2813,9 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
 // progress down each but do not cross tributary junctions
 // The data is not at all the points since we are averaging across multiple
 // pixels.
-// 
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_interval, 
+void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_interval,
                                   vector<int>& midpoint_nodes, vector<float>& slopes)
 {
   // set verbose to true if you want to print the data as you go along
@@ -2682,11 +2823,11 @@ void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_inte
 
   // these are the vectors that will hold all the data
   // Note we don't need to keep track of all the area, elevation, location, etc.
-  // because these are all keyed to to the node index of the midpoint. 
+  // because these are all keyed to to the node index of the midpoint.
   // The only thing we need to retain is the slope.
   vector<float> SA_slope;
   vector<int> SA_midpoint_node;
-  
+
   // used to calculate the S-A data
   float half_interval = vertical_interval*0.5;
   //float midpoint_area;
@@ -2705,8 +2846,8 @@ void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_inte
     cout << "Super times, you are going to do a S-A analysis." << endl;
     cout << "Number of sources is: " << n_sources << endl;
   }
-  
-  
+
+
   int top_interval_node;
   int search_node;
   int this_source_node;
@@ -2717,8 +2858,8 @@ void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_inte
     top_interval_node = ordered_source_nodes[s];
     this_source_node = top_interval_node;
     this_source_key = source_keys_map[this_source_node];
-    // now trace downstream until you first get to the midpoint, 
-    // and then to the final node. 
+    // now trace downstream until you first get to the midpoint,
+    // and then to the final node.
     bool is_this_final_node = false;
     bool is_end_interval;
     bool is_midpoint_interval;
@@ -2738,7 +2879,7 @@ void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_inte
     // the end point the loop exits
     while (not is_this_final_node)
     {
-      // get the upstream elevation and flow distance 
+      // get the upstream elevation and flow distance
       upstream_elevation = elev_data_map[top_interval_node];
       upstream_flow_distance = flow_distance_data_map[top_interval_node];
 
@@ -2765,7 +2906,7 @@ void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_inte
         // reset midpoint and end flags
         is_end_interval = false;
         is_midpoint_interval = false;
-        
+
         // now work downstream
         while (not is_this_final_node && not is_end_interval)
         {
@@ -2780,7 +2921,7 @@ void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_inte
 
             // set midpoint flag so it doens't collect downstream nodes
             is_midpoint_interval = true;
-            
+
             if(verbose)
             {
               cout << endl << endl << "=========" << endl << "I found the midpoint!" << endl;
@@ -2796,30 +2937,30 @@ void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_inte
             // make sure the code knows this is the end, the only end, my friend.
             is_end_interval = true;;
           }
-          
+
           // now move downstream
           last_node = search_node;
           FlowInfo.retrieve_receiver_information(last_node,
                      search_node, row, col);
-          
+
           // test is this is the end
           if (search_node == last_node || this_source_key != source_keys_map[search_node])
           {
             is_this_final_node = true;
           }
-          
+
         }
 
         // if is_end_interval is true, that means it found the end interval.
-        // record the information. If it didn't reach the end flag that means 
+        // record the information. If it didn't reach the end flag that means
         // the previous node hit the final node in the channel before finding the
         // end interval.
         if (is_end_interval)
         {
           float slope = (upstream_elevation-downstream_elevation)/
                        (upstream_flow_distance-downstream_flow_distance);
-          
-         
+
+
           // It the slope is zero or less than zero we ignore the data
           if(slope > 0)
           {
@@ -2837,10 +2978,10 @@ void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_inte
       {
         cout << "Resetting the top interval node, old:  " << old_top_interval << " and new: " << top_interval_node << endl;
       }
-      
+
     }                 // check if this is the final node of the source trib
   }                   // end sources loop (at this point we go to the next source)
-  
+
   midpoint_nodes = SA_midpoint_node;
   slopes = SA_slope;
 
@@ -2849,25 +2990,25 @@ void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_inte
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This bins the data
-// 
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo, 
-                                          vector<int>& SA_midpoint_node, 
+void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
+                                          vector<int>& SA_midpoint_node,
                                           vector<float>& SA_slope,
-                                          float log_bin_width, 
+                                          float log_bin_width,
                                           string filename)
 {
 
   vector<float> empty_vec;
-  
+
   // we will store the data in maps where the key is the source node
-  // This is because we will bin the data by source. 
+  // This is because we will bin the data by source.
   //map< int, vector<float> > slope;
   //map< int, vector<float> > area;
   map< int, vector<float> > log_slope_map;
   map< int, vector<float> > log_area_map;
   map< int, int > basin_key_of_this_source_map;
-  
+
   int this_node;
   int this_source_key;
 
@@ -2886,7 +3027,7 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
       this_node = SA_midpoint_node[n];
       this_source_key = source_keys_map[this_node];
       cout << "This source key is: " << this_source_key << endl;
-      
+
       // see if we have a vector for that source node
       if( log_area_map.find(this_source_key) == log_area_map.end())
       {
@@ -2898,13 +3039,13 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
       {
         basin_key_of_this_source_map[this_source_key] = baselevel_keys_map[this_node];
       }
-    
+
       // add to this source's log S, log A data. We will later use these to bin
       log_area_map[this_source_key].push_back( log10(drainage_area_data_map[this_node]) );
       log_slope_map[this_source_key].push_back( log10(SA_slope[n]) );
     }
   }
-  
+
   // now we bin the data
   //float bin_width = 0.1;
   vector<float>  MeanX_output;
@@ -2918,7 +3059,7 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
   vector<int> number_observations_output;
   float bin_lower_limit;
   float NoDataValue = -9999;
-  
+
   // these are the vectors holding all the compiled information
   vector<int> binned_basin_keys;
   vector<int> binned_source_keys;
@@ -2929,31 +3070,31 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
   vector<float> binned_logA_stdErr;
   vector<float> binned_logS_stdErr;
   vector<int> binnned_NObvs;
-  
+
   // loop through all the source nodes
   map<int, vector<float> >::iterator it;
   for(it = log_area_map.begin(); it != log_area_map.end(); ++it)
   {
     this_source_key =  it->first;
     cout << "The source key is : " << this_source_key << endl;
-    
+
     // extract the log S-log A data for this source
     vector<float> log_area = log_area_map[this_source_key];
     vector<float> log_slope = log_slope_map[this_source_key];
-  
+
     // this gets the binned data for this particular tributary
     bin_data(log_area, log_slope, log_bin_width,  MeanX_output, MeanY_output,
             midpoints_output, MedianY_output,StandardDeviationX_output,
-            StandardDeviationY_output, StandardErrorX_output, StandardErrorY_output, 
+            StandardDeviationY_output, StandardErrorX_output, StandardErrorY_output,
             number_observations_output, bin_lower_limit, NoDataValue);
-            
+
     // now we need to add this information to the master vectors
     int n_bins = int(midpoints_output.size());
     int n_Obvs;
     for(int i = 0; i<n_bins; i++)
     {
       n_Obvs = number_observations_output[i];
-      
+
       // only record data if there are enough observations
       if(n_Obvs > 0)
       {
@@ -2969,8 +3110,8 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
       }
     }
   }
-  
-  
+
+
   // now print to file
   int n_data_points = int(binnned_NObvs.size());
   ofstream  binned_out;
@@ -2996,9 +3137,9 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Print S-A data maps to file
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiTools::print_slope_area_data_to_csv(LSDFlowInfo& FlowInfo, 
-                                          vector<int>& SA_midpoint_node, 
-                                          vector<float>& SA_slope, 
+void LSDChiTools::print_slope_area_data_to_csv(LSDFlowInfo& FlowInfo,
+                                          vector<int>& SA_midpoint_node,
+                                          vector<float>& SA_slope,
                                           string filename)
 {
   // open the data file
@@ -3031,7 +3172,7 @@ void LSDChiTools::print_slope_area_data_to_csv(LSDFlowInfo& FlowInfo,
       SA_out << chi_data_map[this_node] << ","
              << elev_data_map[this_node] << ","
              << flow_distance_data_map[this_node] << ","
-             << drainage_area_data_map[this_node] << "," 
+             << drainage_area_data_map[this_node] << ","
              << SA_slope[n] << ","
              << source_keys_map[this_node] << ","
              << baselevel_keys_map[this_node];
