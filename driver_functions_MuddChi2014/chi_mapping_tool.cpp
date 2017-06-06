@@ -110,6 +110,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["raster_is_filled"] = false; // assume base raster is already filled
   bool_default_map["remove_seas"] = false; // elevations above minimum and maximum will be changed to nodata
   bool_default_map["only_check_parameters"] = false;
+  string_default_map["CHeads_file"] = "NULL";
   
   // Selecting basins
   int_default_map["threshold_pixels_for_chi"] = 0;
@@ -119,6 +120,8 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["only_take_largest_basin"] = false;  
 
   // printing of rasters and data before chi analysis
+  bool_default_map["convert_csv_to_geojson"] = false;  // THis converts all cv files to geojson (for easier loading in a GIS)
+
   bool_default_map["print_stream_order_raster"] = false;
   bool_default_map["print_junction_index_raster"] = false;
   bool_default_map["print_fill_raster"] = false;
@@ -143,40 +146,47 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["delta_movern"] = 0.1;
   float_default_map["SA_vertical_interval"] = 20;
   float_default_map["log_A_bin_width"] = 0.1;
+  bool_default_map["print_slope_area_data"] = false;
+    
+  // switches for chi analysis
+  // These just print simple chi maps
+  bool_default_map["print_simple_chi_map_with_basins_to_csv"] = false;
+  bool_default_map["print_chi_coordinate_raster"] = false;
+  bool_default_map["print_simple_chi_map_to_csv"] = false;
   
-
-  // flags for printing rasters
+  // these are routines that run segmentation
+  bool_default_map["print_segmented_M_chi_map_to_csv"] = false;
+  bool_default_map["print_basic_M_chi_map_to_csv"] = false;  
+  
+  // these print various basin and source data for visualisation
+  bool_default_map["print_source_keys"] = false;
+  bool_default_map["print_sources_to_csv"] = false;
+  bool_default_map["print_baselevel_keys"] = false;
+  bool_default_map["print_basin_raster"] = false;
+  
+  // these loop through m/n spitting out profies and calculating goodness of fit
+  // If you want to visualise the data you need to switch both of these to true
+  bool_default_map["calculate_MLE_collinearity"] = false;
+  bool_default_map["print_profiles_fxn_movern_csv"] = false;
+  
+  
+  // These enable calculation of chi based on discharge
   bool_default_map["use_precipitation_raster_for_chi"] = false;
   bool_default_map["print_discharge_raster"] = false;
   bool_default_map["print_chi_no_discharge"] = false;   // this only is used if you also 
                                                         // calculate chi with discharge so you can compare. 
   bool_default_map["check_chi_maps"] = false;
-  
-  // flags for printing channel networks, junctions and sources. 
+  string_default_map["precipitation_fname"] = "NULL";
 
-  
-  // flags for printing chi analyses
-  bool_default_map["convert_csv_to_geojson"] = false;
-  bool_default_map["calculate_MLE_collinearity"] = false;
-  bool_default_map["print_profiles_fxn_movern_csv"] = false;
-  bool_default_map["print_chi_coordinate_raster"] = false;
-  bool_default_map["print_simple_chi_map_to_csv"] = false;
-  bool_default_map["print_segmented_M_chi_map_to_csv"] = false;
-  bool_default_map["print_basic_M_chi_map_to_csv"] = false;  
-  bool_default_map["print_source_keys"] = false;
-  bool_default_map["print_sources_to_csv"] = false;
-  bool_default_map["print_baselevel_keys"] = false;
-  bool_default_map["print_basin_raster"] = false;
-  bool_default_map["print_simple_chi_map_with_basins_to_csv"] = false;
   bool_default_map["print_segments"] = false;
 
   bool_default_map["only_use_mainstem_as_reference"] = true;
-  bool_default_map["print_slope_area_data"] = false;
+
   
   // set default string method
-  string_default_map["CHeads_file"] = "NULL";
+
   string_default_map["averaging_raster_vector"] = "NULL";
-  string_default_map["precipitation_fname"] = "NULL";
+
   
   // Use the parameter parser to get the maps of the parameters required for the 
   // analysis
