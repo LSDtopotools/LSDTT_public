@@ -103,71 +103,90 @@ int main (int nNumberofArgs,char *argv[])
   map<string,bool> bool_default_map;
   map<string,string> string_default_map;
 
-  // set default float parameters
+  // Basic DEM preprocessing
+  float_default_map["minimum_elevation"] = 0.0;
+  float_default_map["maximum_elevation"] = 30000;
+  float_default_map["min_slope_for_fill"] = 0.0001;
+  bool_default_map["raster_is_filled"] = false; // assume base raster is already filled
+  bool_default_map["remove_seas"] = false; // elevations above minimum and maximum will be changed to nodata
+  bool_default_map["only_check_parameters"] = false;
+  string_default_map["CHeads_file"] = "NULL";
+  
+  // Selecting basins
+  int_default_map["threshold_pixels_for_chi"] = 0;
+  int_default_map["minimum_basin_size_pixels"] = 1000;
+  int_default_map["threshold_contributing_pixels"] = 1000;
+  bool_default_map["test_drainage_boundaries"] = false;  
+  bool_default_map["only_take_largest_basin"] = false;  
+
+  // printing of rasters and data before chi analysis
+  bool_default_map["convert_csv_to_geojson"] = false;  // THis converts all cv files to geojson (for easier loading in a GIS)
+
+  bool_default_map["print_stream_order_raster"] = false;
+  bool_default_map["print_junction_index_raster"] = false;
+  bool_default_map["print_fill_raster"] = false;
+  bool_default_map["print_DrainageArea_raster"] = false;
+  bool_default_map["write hillshade"] = false;
+  bool_default_map["print_junctions_to_csv"] = false;
+  bool_default_map["print_channels_to_csv"] = false;
+  
+  // parameters for various chi calculations as well as slope-area
   int_default_map["n_iterations"] = 20;
   int_default_map["minimum_segment_length"] = 10;
   int_default_map["n_nodes_to_visit"] = 10;
   int_default_map["target_nodes"] = 80;
   int_default_map["skip"] = 2;
-  int_default_map["threshold_pixels_for_chi"] = 0;
-  int_default_map["minimum_basin_size_pixels"] = 1000;
-  int_default_map["threshold_contributing_pixels"] = 1000;
-  int_default_map["n_movern"] = 8;
-  
-  // set default in parameter
-  float_default_map["min_slope_for_fill"] = 0.0001;
   float_default_map["A_0"] = 1;
   float_default_map["m_over_n"] = 0.5;
   float_default_map["sigma"] = 20;
+  
+  // parameters if you want to explore m/n ratios or slope-area analysis
+  int_default_map["n_movern"] = 8;
   float_default_map["start_movern"] = 0.1;
   float_default_map["delta_movern"] = 0.1;
   float_default_map["SA_vertical_interval"] = 20;
   float_default_map["log_A_bin_width"] = 0.1;
-  
-  // For DEM preprocessing
-  float_default_map["minimum_elevation"] = 0.0;
-  float_default_map["maximum_elevation"] = 30000;
-  
-  // set default methods
-  bool_default_map["only_check_parameters"] = false;
-  
-  // flags for printing rasters
-  bool_default_map["print_stream_order_raster"] = false;
-  bool_default_map["print_junction_index_raster"] = false;
-  bool_default_map["print_fill_raster"] = false;
-  bool_default_map["print_DrainageArea_raster"] = false;
-  bool_default_map["use_precipitation_raster_for_chi"] = false;
-  
-  // flags for printing channel networks, junctions and sources. 
-  bool_default_map["print_junctions_to_csv"] = false;
-  bool_default_map["print_channels_to_csv"] = false;
-  
-  // flags for printing chi analyses
-  bool_default_map["convert_csv_to_geojson"] = false;
-  bool_default_map["calculate_MLE_collinearity"] = false;
-  bool_default_map["print_profiles_fxn_movern_csv"] = false;
+  bool_default_map["print_slope_area_data"] = false;
+    
+  // switches for chi analysis
+  // These just print simple chi maps
+  bool_default_map["print_simple_chi_map_with_basins_to_csv"] = false;
   bool_default_map["print_chi_coordinate_raster"] = false;
   bool_default_map["print_simple_chi_map_to_csv"] = false;
+  
+  // these are routines that run segmentation
   bool_default_map["print_segmented_M_chi_map_to_csv"] = false;
   bool_default_map["print_basic_M_chi_map_to_csv"] = false;  
-  bool_default_map["test_drainage_boundaries"] = false;  
-  bool_default_map["only_take_largest_basin"] = false;  
+  
+  // these print various basin and source data for visualisation
   bool_default_map["print_source_keys"] = false;
   bool_default_map["print_sources_to_csv"] = false;
   bool_default_map["print_baselevel_keys"] = false;
   bool_default_map["print_basin_raster"] = false;
-  bool_default_map["write hillshade"] = false;
-  bool_default_map["print_simple_chi_map_with_basins_to_csv"] = false;
+  
+  // these loop through m/n spitting out profies and calculating goodness of fit
+  // If you want to visualise the data you need to switch both of these to true
+  bool_default_map["calculate_MLE_collinearity"] = false;
+  bool_default_map["print_profiles_fxn_movern_csv"] = false;
+  
+  
+  // These enable calculation of chi based on discharge
+  bool_default_map["use_precipitation_raster_for_chi"] = false;
+  bool_default_map["print_discharge_raster"] = false;
+  bool_default_map["print_chi_no_discharge"] = false;   // this only is used if you also 
+                                                        // calculate chi with discharge so you can compare. 
+  bool_default_map["check_chi_maps"] = false;
+  string_default_map["precipitation_fname"] = "NULL";
+
   bool_default_map["print_segments"] = false;
-  bool_default_map["raster_is_filled"] = false;
-  bool_default_map["remove_seas"] = false;
+
   bool_default_map["only_use_mainstem_as_reference"] = true;
-  bool_default_map["print_slope_area_data"] = false;
+
   
   // set default string method
-  string_default_map["CHeads_file"] = "NULL";
+
   string_default_map["averaging_raster_vector"] = "NULL";
-  string_default_map["precipitation_fname"] = "NULL";
+
   
   // Use the parameter parser to get the maps of the parameters required for the 
   // analysis
@@ -191,7 +210,7 @@ int main (int nNumberofArgs,char *argv[])
   string CHeads_file = LSDPP.get_CHeads_file();
   
   cout << "Read filename is: " <<  DATA_DIR+DEM_ID << endl;
-  cout << "Write filenae is: " << OUT_DIR+OUT_ID << endl;
+  cout << "Write filename is: " << OUT_DIR+OUT_ID << endl;
   
     // check to see if the raster exists
   LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);
@@ -217,7 +236,6 @@ int main (int nNumberofArgs,char *argv[])
   int threshold_contributing_pixels = this_int_map["threshold_contributing_pixels"];
   int minimum_basin_size_pixels = this_int_map["minimum_basin_size_pixels"];
   int basic_Mchi_regression_nodes = this_int_map["basic_Mchi_regression_nodes"];
-  bool test_drainage_boundaries = this_bool_map["test_drainage_boundaries"];
 
   // load the  DEM
   LSDRaster topography_raster;
@@ -453,6 +471,13 @@ int main (int nNumberofArgs,char *argv[])
     string Precip_f_name = DATA_DIR+this_string_map["precipitation_fname"];
     cout << "I am loading a precipitation raster. " << Precip_f_name<<".bil" << endl;
     cout << "Note this MUST be the same size as the base DEM or it will crash!" << endl;
+
+    if(this_string_map["precipitation_fname"]=="NULL")
+    {
+      cout << "You have asked to use a precipitation raster but have not given a name." << endl;
+      cout << "Set the name of the raster with the keyword precipitation_fname" << endl;
+      exit(EXIT_FAILURE);
+    }
     
     // calculate the discharge
     // note: not discharge yet, need to multiply by cell area
@@ -465,26 +490,47 @@ int main (int nNumberofArgs,char *argv[])
     // discharge accumulates this precipitation
     Discharge = FlowInfo.upslope_variable_accumulator(VolumePrecipitation);
     chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,A_0,thresh_area_for_chi,Discharge);
+    
+    if(this_bool_map["print_discharge_raster"])
+    {
+      string Discharge_fname = OUT_DIR+OUT_ID+"_Q";
+      Discharge.write_raster(Discharge_fname, raster_ext);
+    }
+    // Print the chi raster
+    if(this_bool_map["print_chi_coordinate_raster"])
+    {
+      string chi_coord_string = OUT_DIR+OUT_ID+"_chi_coordQ"; 
+      chi_coordinate.write_raster(chi_coord_string,raster_ext);
+    }
+    
   
   }
   else
   {
     chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,A_0,thresh_area_for_chi);
+    // Print the chi raster
+    if(this_bool_map["print_chi_coordinate_raster"])
+    {
+      string chi_coord_string = OUT_DIR+OUT_ID+"_chi_coord"; 
+      chi_coordinate.write_raster(chi_coord_string,raster_ext);
+    }
   }
 
-
-
-  //============================================================================
-  // Print the chi raster
-  if(this_bool_map["print_chi_coordinate_raster"])
+  // This bit prints a chi coordinate raster even if you are using precipitation
+  if(this_bool_map["print_chi_coordinate_raster"] && this_bool_map["use_precipitation_raster_for_chi"] && this_bool_map["print_chi_no_discharge"])
   {
+    LSDRaster NoDischargeChi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,A_0,thresh_area_for_chi);
     string chi_coord_string = OUT_DIR+OUT_ID+"_chi_coord"; 
-    chi_coordinate.write_raster(chi_coord_string,raster_ext);
+    NoDischargeChi.write_raster(chi_coord_string,raster_ext);
   }
+  //============================================================================
+  
+  
   
   if (this_bool_map["print_simple_chi_map_to_csv"])
   {
     cout <<"I am printing a simple chi map for you to csv." << endl;
+    
     string chi_csv_fname = OUT_DIR+OUT_ID+"_chi_coord.csv";
     ChiTool.chi_map_to_csv(FlowInfo, chi_csv_fname, chi_coordinate);
     
@@ -496,6 +542,7 @@ int main (int nNumberofArgs,char *argv[])
     }
     
   }
+  
 
 
   //============================================================================
@@ -600,6 +647,61 @@ int main (int nNumberofArgs,char *argv[])
     }
   }
 
+  //============================================================================
+  // CHECK CHI IN THE CHITOOL OBJECT
+  // This is really only for debugging
+  //============================================================================
+  if(this_bool_map["check_chi_maps"])
+  {
+    float thresh_area_for_chi = 0;
+    LSDChiTools ChiTool_chi_checker(FlowInfo);
+    ChiTool_chi_checker.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes,
+                            filled_topography, DistanceFromOutlet, 
+                            DrainageArea, chi_coordinate);
+
+    // first the logic if you are using a precipitation raster
+    if(this_bool_map["use_precipitation_raster_for_chi"])
+    {
+      string chiQ_data_maps_string = OUT_DIR+OUT_ID+"_checkchiQ.csv";
+      ChiTool_chi_checker.print_chi_data_map_to_csv(FlowInfo, chiQ_data_maps_string);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_checkchiQ.geojson";
+        LSDSpatialCSVReader thiscsv(chiQ_data_maps_string);
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+      
+      // now get the chi coordinate without the discharge
+      LSDRaster chi_noQ = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,A_0,thresh_area_for_chi);
+      ChiTool_chi_checker.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes,
+                            filled_topography, DistanceFromOutlet, 
+                            DrainageArea, chi_noQ);
+      string chi_data_maps_string = OUT_DIR+OUT_ID+"_checkchi.csv";
+      ChiTool_chi_checker.print_chi_data_map_to_csv(FlowInfo, chi_data_maps_string);
+                            
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_checkchi.geojson";
+        LSDSpatialCSVReader thiscsv(chi_data_maps_string);
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+    }
+    else
+    {
+      string chi_data_maps_string = OUT_DIR+OUT_ID+"_checkchi.csv";
+      ChiTool_chi_checker.print_chi_data_map_to_csv(FlowInfo, chi_data_maps_string);
+      
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_checkchi.geojson";
+        LSDSpatialCSVReader thiscsv(chi_data_maps_string);
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+    }
+  }
+  //============================================================================
+
   if (this_bool_map["calculate_MLE_collinearity"])
   {
     
@@ -612,16 +714,16 @@ int main (int nNumberofArgs,char *argv[])
                             DrainageArea, chi_coordinate);
 
     // test the basin collinearity test
-    int baselevel_key = 1;
+    //int baselevel_key = 1;
     vector<int> reference_source; 
     vector<int> test_source; 
     vector<float> MLE_values;
     vector<float> RMSE_values;
-    
-    bool only_use_mainstem_as_reference = true;
+    //bool only_use_mainstem_as_reference = true;
     
     if(this_bool_map["use_precipitation_raster_for_chi"])
     {
+      cout << "Using a discharge raster to check collinearity." << endl;
       string movern_name = OUT_DIR+OUT_ID+"_movernstatsQ";
       ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge(FlowInfo, 
                       this_float_map["start_movern"], this_float_map["delta_movern"], 
@@ -661,6 +763,7 @@ int main (int nNumberofArgs,char *argv[])
     if(this_bool_map["use_precipitation_raster_for_chi"])
     {
       string movern_name = OUT_DIR+OUT_ID+"_movernQ.csv";
+      cout << "Using a discharge raster to calculate m over n." << endl;
       ChiTool_movern.print_profiles_as_fxn_movern_with_discharge(FlowInfo, movern_name, 
                                   this_float_map["start_movern"], 
                                   this_float_map["delta_movern"], 
@@ -730,10 +833,5 @@ int main (int nNumberofArgs,char *argv[])
     string hs_fname = OUT_DIR+OUT_ID+"_hs";
     hs_raster.write_raster(hs_fname,raster_ext);
   }
-
-
-
-
-
 
 }

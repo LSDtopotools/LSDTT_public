@@ -1189,7 +1189,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
   float y1_temp =0;
   float x2_temp =0;
   float y2_temp =0;
-  bool same_channel = true;
+  bool same_channel;
   float max_knickpoint_value =0;
   int new_knickpoint_counter =0;
 
@@ -1231,14 +1231,22 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
           // first retrieving xy coordinates
         FlowInfo.get_x_and_y_from_current_node(last_node, x1_temp, y1_temp);
         FlowInfo.get_x_and_y_from_current_node(this_node, x2_temp, y2_temp);
-          // Then check if the distance betweenthe two is more than 2 nodes (distance between two points via pytagore or thing like this)
+
+        // Then check if the distance betweenthe two is more than 2 nodes (distance between two points via pytagore or thing like this)
         if (sqrt((x2_temp - x1_temp)*(x2_temp - x1_temp)+(y2_temp - y1_temp)*(y2_temp - y1_temp)) > (2*FlowInfo.get_DataResolution()))
         {
           same_channel = false;
         }
-          // done
+        // done
+
+
+
         // Check if the threshold is (over)reached
         //if(delta_m > abs_threshhold_knickpoint && same_channel) if we are are using the threshold value
+
+        // SMM NOTE: WHAT IS GOING ON HERE?
+        // Is this supposed to be if(same_channel) ?
+
         if(true) // useless thing
         {
           segment_counter_knickpoint++; // number of knickpoints
@@ -2282,7 +2290,8 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
 
     // calculate chi
     float area_threshold = 0;
-    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(A_0, movern[i],
+
+    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern[i], A_0,
                                  area_threshold, Discharge);
     update_chi_data_map(FlowInfo, this_chi);
 
@@ -2438,7 +2447,7 @@ void LSDChiTools::print_profiles_as_fxn_movern(LSDFlowInfo& FlowInfo, string fil
 void LSDChiTools::print_profiles_as_fxn_movern_with_discharge(LSDFlowInfo& FlowInfo, string filename,
            float start_movern, float delta_movern, int n_movern, LSDRaster& Discharge)
 {
-  float A_0 = 1;
+  float A_0 = 1.0;
   float this_movern;
 
   vector<float> movern_values;
@@ -2456,10 +2465,10 @@ void LSDChiTools::print_profiles_as_fxn_movern_with_discharge(LSDFlowInfo& FlowI
 
     // calculate chi
     float area_threshold = 0;
-    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(A_0, this_movern,
+
+    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(this_movern,A_0,
                                  area_threshold, Discharge);
     update_chi_data_map(FlowInfo, this_chi);
-
 
     cout << "m/n is: " << this_movern << endl;
 
@@ -2865,6 +2874,8 @@ void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_inte
     bool is_midpoint_interval;
     int last_node;
 
+    midpoint_node = 0;    // this will be updated later
+
     if (verbose)
     {
       cout << "=====================" << endl;
@@ -3026,7 +3037,7 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
       // get the source node
       this_node = SA_midpoint_node[n];
       this_source_key = source_keys_map[this_node];
-      cout << "This source key is: " << this_source_key << endl;
+      //cout << "This source key is: " << this_source_key << endl;
 
       // see if we have a vector for that source node
       if( log_area_map.find(this_source_key) == log_area_map.end())
@@ -3076,7 +3087,8 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
   for(it = log_area_map.begin(); it != log_area_map.end(); ++it)
   {
     this_source_key =  it->first;
-    cout << "The source key is : " << this_source_key << endl;
+
+    //cout << "The source key is: " << this_source_key << endl;
 
     // extract the log S-log A data for this source
     vector<float> log_area = log_area_map[this_source_key];
@@ -3183,6 +3195,58 @@ void LSDChiTools::print_slope_area_data_to_csv(LSDFlowInfo& FlowInfo,
   SA_out.close();
 
 }
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Print chi maps to file
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::print_chi_data_map_to_csv(LSDFlowInfo& FlowInfo, string filename)
+{
+
+  // these are for extracting element-wise data from the channel profiles.
+  int this_node, row,col;
+  double latitude,longitude;
+  LSDCoordinateConverterLLandUTM Converter;
+
+  // find the number of nodes
+  int n_nodes = (node_sequence.size());
+
+  // open the data file
+  ofstream  chi_data_out;
+  chi_data_out.open(filename.c_str());
+  chi_data_out << "latitude,longitude,chi,elevation,flow distance,drainage area,source_key,basin_key" << endl;
+  if (n_nodes <= 0)
+  {
+    cout << "Cannot print since you have not calculated channel properties yet." << endl;
+  }
+  else
+  {
+    for (int n = 0; n< n_nodes; n++)
+    {
+      this_node = node_sequence[n];
+      FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+      get_lat_and_long_locations(row, col, latitude, longitude, Converter);
+
+      chi_data_out.precision(9);
+      chi_data_out << latitude << ","
+                   << longitude << ",";
+      chi_data_out.precision(5);
+      chi_data_out << chi_data_map[this_node] << ","
+                   << elev_data_map[this_node] << ","
+                   << flow_distance_data_map[this_node] << ","
+                   << drainage_area_data_map[this_node] << ","
+                   << source_keys_map[this_node] << ","
+                   << baselevel_keys_map[this_node];
+
+      chi_data_out << endl;
+    }
+  }
+
+  chi_data_out.close();
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

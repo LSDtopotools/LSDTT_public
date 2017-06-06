@@ -4162,7 +4162,7 @@ void bin_data(vector<float>& InputVectorX, vector<float>& InputVectorY, float bi
   float max_X = InputVectorX[n_data-1];
   float min_X = InputVectorX[1];
 
-  cout << "LSDStatsTools line 1757, n_data_X: " << InputVectorX.size() << " and Y: " << InputVectorY.size() << endl;
+  //cout << "LSDStatsTools line 1757, n_data_X: " << InputVectorX.size() << " and Y: " << InputVectorY.size() << endl;
 
   for (int i = 0; i < n_data; ++i)
   {
@@ -4184,7 +4184,7 @@ void bin_data(vector<float>& InputVectorX, vector<float>& InputVectorY, float bi
     lower_limit = 0;
   }
   int NBins = int( (upper_limit - lower_limit)/bin_width )+1;
-  cout << "Upper limit: " << upper_limit << " Lower limit: " << lower_limit << " NBins: " << NBins << endl;
+  //cout << "Upper limit: " << upper_limit << " Lower limit: " << lower_limit << " NBins: " << NBins << endl;
 
   // Looping through all the rows and columns and calculating which bin the
   // contributing area is in, and putting the slope in this bin

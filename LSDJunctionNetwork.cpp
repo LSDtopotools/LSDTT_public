@@ -5763,10 +5763,6 @@ void LSDJunctionNetwork::PrintChannelNetworkToCSV(LSDFlowInfo& flowinfo, string 
 }
 
 
-
-
-
-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this sends the JunctionArray to a LSDIndexRaster
