@@ -1637,14 +1637,14 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
       // Get the M_chi from the current node
       this_M_chi = M_chi_data_map[this_node];
 
-      // If the M_chi has changed I increment the knickpoints
+      // If the M_chi has changed I increment the knickpoints, I also check if the two point are on the same channel to avoid stange unrelated knickpoints
       if (this_M_chi != last_M_chi && key_to_source_map[this_node] == key_to_source_map[last_node])
       {
         ratio_mchi = last_M_chi/this_M_chi; // Ratio between last and new chi steepness
         delta_mchi = last_M_chi-this_M_chi; // diff between last and new chi steepness
         if(ratio_mchi<1){knickpoint_sign = -1;} else {knickpoint_sign = 1;} // Assign the knickpoint sign value
 
-
+        // Allocate the values to local maps
         this_kickpoint_diff_map[this_node] = delta_mchi;
         this_kickpoint_ratio_map[this_node] = ratio_mchi;
         this_knickpoint_sign_map[this_node] = knickpoint_sign;
@@ -1656,7 +1656,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
     }
 
   }
-  // print everything in the public/protected variables
+  // print everything in the public/protected maps
   kns_ratio_knickpoint_map = this_kickpoint_ratio_map;
   kns_diff_knickpoint_map = this_kickpoint_diff_map;
   ksn_sign_knickpoint_map = this_knickpoint_sign_map;
@@ -1664,7 +1664,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Print data maps to file
+// Print data maps to file - knickpoint version
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename)
 {
@@ -1681,7 +1681,7 @@ void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "latitude,longitude,elevation,flow distance,drainage area,diff,ratio,sign,source_key,basin_key,segment";
+  chi_data_out << "latitude,longitude,elevation,flow distance,drainage area,diff,ratio,sign,source_key,basin_key";
 
   chi_data_out << endl;
 
@@ -1712,8 +1712,7 @@ void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename
                      << kns_ratio_knickpoint_map[this_node] << ","
                      << ksn_sign_knickpoint_map[this_node] << ","
                      << source_keys_map[this_node] << ","
-                     << baselevel_keys_map[this_node] << ","
-                     << segment_counter_map[this_node];
+                     << baselevel_keys_map[this_node];
 
         chi_data_out << endl;
       }
