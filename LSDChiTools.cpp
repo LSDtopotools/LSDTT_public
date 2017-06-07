@@ -1587,6 +1587,146 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// New function for the knickpoint detection
+// save the difference and ratio between m_chi values of each segments
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
+{
+  // these are for extracting element-wise data from the channel profiles.
+  //int abs_threshhold_knickpoint = abs (threshold_knickpoint);
+  int this_node = 0;
+  map<int,float> this_kickpoint_diff_map;
+  map<int,float> this_kickpoint_ratio_map;
+  map<int,int> this_knickpoint_sign_map;
+  float last_M_chi, this_M_chi;
+  float delta_mchi = 0; // difference between last and new m_chi
+  float ratio_mchi = 0; // ratio between last and new m_chi
+  int knickpoint_sign = 0; // sign of the knickpoint: + =1 and - = -1
+  float temp_delta_m = 0; // debugging stuff
+  float this_segment_length = 0;
+  int last_node = 0;
+  int n_nodes_segment = 0;
+  float x1_temp =0;
+  float y1_temp =0;
+  float x2_temp =0;
+  float y2_temp =0;
+  bool same_channel = true;
+
+
+
+  // find the number of nodes
+  int n_nodes = (node_sequence.size());
+  if (n_nodes <= 0)
+  {
+    cout << "Cannot calculate segments since you have not calculated channel properties yet." << endl;
+  }
+  else
+  {
+    this_node = node_sequence[0];
+    last_M_chi =  M_chi_data_map[this_node];
+
+    for (int n = 0; n< n_nodes; n++)
+    {
+
+      // set the nodes number and keep information about the previous one
+      if(n>0)
+      {
+        last_node = this_node;
+      }
+      this_node = node_sequence[n];
+      // Get the M_chi from the current node
+      this_M_chi = M_chi_data_map[this_node];
+
+      // If the M_chi has changed I increment the knickpoints, I also check if the two point are on the same channel to avoid stange unrelated knickpoints
+      if (this_M_chi != last_M_chi && key_to_source_map[this_node] == key_to_source_map[last_node])
+      {
+        ratio_mchi = last_M_chi/this_M_chi; // Ratio between last and new chi steepness
+        delta_mchi = last_M_chi-this_M_chi; // diff between last and new chi steepness
+        if(ratio_mchi<1){knickpoint_sign = -1;} else {knickpoint_sign = 1;} // Assign the knickpoint sign value
+
+        // Allocate the values to local maps
+        this_kickpoint_diff_map[this_node] = delta_mchi;
+        this_kickpoint_ratio_map[this_node] = ratio_mchi;
+        this_knickpoint_sign_map[this_node] = knickpoint_sign;
+
+        // reinitialise the parameters for next loop turn
+        last_M_chi = this_M_chi;
+      }
+
+    }
+
+  }
+  // print everything in the public/protected maps
+  kns_ratio_knickpoint_map = this_kickpoint_ratio_map;
+  kns_diff_knickpoint_map = this_kickpoint_diff_map;
+  ksn_sign_knickpoint_map = this_knickpoint_sign_map;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Print data maps to file - knickpoint version
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename)
+{
+
+  // these are for extracting element-wise data from the channel profiles.
+  cout << "I am now writing your ksn knickpoint file:" << endl;
+  int this_node, row,col;
+  double latitude,longitude;
+  LSDCoordinateConverterLLandUTM Converter;
+
+  // find the number of nodes
+  int n_nodes = (node_sequence.size());
+
+  // open the data file
+  ofstream  chi_data_out;
+  chi_data_out.open(filename.c_str());
+  chi_data_out << "latitude,longitude,elevation,flow distance,drainage area,diff,ratio,sign,source_key,basin_key";
+
+  chi_data_out << endl;
+
+
+
+
+  if (n_nodes <= 0)
+  {
+    cout << "Cannot print since you have not calculated channel properties yet." << endl;
+  }
+  else
+  {
+    for (int n = 0; n< n_nodes; n++)
+    {
+        this_node = node_sequence[n];
+        FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+        get_lat_and_long_locations(row, col, latitude, longitude, Converter);
+        if(kns_diff_knickpoint_map.count(this_node) == 1)
+        {
+        chi_data_out.precision(9);
+        chi_data_out << latitude << ","
+                     << longitude << ",";
+        chi_data_out.precision(5);
+        chi_data_out << elev_data_map[this_node] << ","
+                     << flow_distance_data_map[this_node] << ","
+                     << drainage_area_data_map[this_node] << ","
+                     << kns_diff_knickpoint_map[this_node] << ","
+                     << kns_ratio_knickpoint_map[this_node] << ","
+                     << ksn_sign_knickpoint_map[this_node] << ","
+                     << source_keys_map[this_node] << ","
+                     << baselevel_keys_map[this_node];
+
+        chi_data_out << endl;
+      }
+    }
+  }
+
+  chi_data_out.close();
+  cout << "I am done, your file is:" << endl;
+  cout << filename << endl;
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function calculates the fitted elevations: It uses m_chi and b_chi
 // data to get the fitted elevation of the channel points.
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2153,6 +2293,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
 
     // calculate chi
     float area_threshold = 0;
+
     LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern[i], A_0,
                                  area_threshold, Discharge);
     update_chi_data_map(FlowInfo, this_chi);
@@ -2327,6 +2468,7 @@ void LSDChiTools::print_profiles_as_fxn_movern_with_discharge(LSDFlowInfo& FlowI
 
     // calculate chi
     float area_threshold = 0;
+
     LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(this_movern,A_0,
                                  area_threshold, Discharge);
     update_chi_data_map(FlowInfo, this_chi);
@@ -2948,6 +3090,7 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
   for(it = log_area_map.begin(); it != log_area_map.end(); ++it)
   {
     this_source_key =  it->first;
+
     //cout << "The source key is: " << this_source_key << endl;
 
     // extract the log S-log A data for this source
