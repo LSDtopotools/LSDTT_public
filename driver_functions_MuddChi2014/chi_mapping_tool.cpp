@@ -117,6 +117,7 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["minimum_basin_size_pixels"] = 1000;
   bool_default_map["test_drainage_boundaries"] = false;  
   bool_default_map["only_take_largest_basin"] = false;  
+  bool_default_map["print_basin_raster"] = false;
 
   // printing of rasters and data before chi analysis
   bool_default_map["convert_csv_to_geojson"] = false;  // THis converts all cv files to geojson (for easier loading in a GIS)
@@ -133,6 +134,7 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["A_0"] = 1;
   float_default_map["m_over_n"] = 0.5;
   int_default_map["threshold_pixels_for_chi"] = 0;
+  int_default_map["basic_Mchi_regression_nodes"];
 
   // parameters if you want to explore m/n ratios or slope-area analysis
   int_default_map["n_movern"] = 8;
@@ -157,24 +159,23 @@ int main (int nNumberofArgs,char *argv[])
 
   // switches for chi analysis
   // These just print simple chi maps
-  bool_default_map["print_simple_chi_map_with_basins_to_csv"] = false;
+ 
   bool_default_map["print_chi_coordinate_raster"] = false;
   bool_default_map["print_simple_chi_map_to_csv"] = false;
+
   
   // these are routines that run segmentation
+  bool_default_map["print_simple_chi_map_with_basins_to_csv"] = false;
   bool_default_map["print_segmented_M_chi_map_to_csv"] = false;
-  bool_default_map["print_basic_M_chi_map_to_csv"] = false;  
+  bool_default_map["print_basic_M_chi_map_to_csv"] = false;
   
   // these print various basin and source data for visualisation
   bool_default_map["print_source_keys"] = false;
   bool_default_map["print_sources_to_csv"] = false;
   bool_default_map["print_baselevel_keys"] = false;
-  bool_default_map["print_basin_raster"] = false;
-  
-
 
   
-  
+
   // These enable calculation of chi based on discharge
   bool_default_map["use_precipitation_raster_for_chi"] = false;
   bool_default_map["print_discharge_raster"] = false;
