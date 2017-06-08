@@ -1602,15 +1602,8 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
   float delta_mchi = 0; // difference between last and new m_chi
   float ratio_mchi = 0; // ratio between last and new m_chi
   int knickpoint_sign = 0; // sign of the knickpoint: + =1 and - = -1
-  float temp_delta_m = 0; // debugging stuff
-  float this_segment_length = 0;
   int last_node = 0;
-  int n_nodes_segment = 0;
-  float x1_temp =0;
-  float y1_temp =0;
-  float x2_temp =0;
-  float y2_temp =0;
-  bool same_channel = true;
+
 
 
 
@@ -1636,8 +1629,8 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
       this_node = node_sequence[n];
       // Get the M_chi from the current node
       this_M_chi = M_chi_data_map[this_node];
-      if(this_M_chi < 0){this_M_chi = 0;} // getting rid of the negative values because we don't want it
 
+      if(this_M_chi < 0 && n>0){this_M_chi = 0;} // getting rid of the negative values because we don't want it, I don't want the n = 0 to avoid detecting fake knickpoint if the first value is actually negative
 
       // If the M_chi has changed I increment the knickpoints, I also check if the two point are on the same channel to avoid stange unrelated knickpoints
       if (this_M_chi != last_M_chi && key_to_source_map[this_node] == key_to_source_map[last_node])
@@ -1650,10 +1643,9 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         {
           ratio_mchi = last_M_chi/this_M_chi; // Ratio between last and new chi steepness
         }
-        ratio_mchi = last_M_chi/this_M_chi; // Ratio between last and new chi steepness
-        delta_mchi = abs(last_M_chi-this_M_chi); // diff between last and new chi steepness
-        if(ratio_mchi<1){knickpoint_sign = -1;} else {knickpoint_sign = 1;} // Assign the knickpoint sign value
-
+        delta_mchi = last_M_chi-this_M_chi; // diff between last and new chi steepness
+        if(delta_mchi<=0){knickpoint_sign = -1;} else {knickpoint_sign = 1;} // Assign the knickpoint sign value
+        delta_mchi = abs(delta_mchi); // we want the absolute mangitude of this, the sign being displayed in another column. it is just like nicer like this.
         // Allocate the values to local maps
         this_kickpoint_diff_map[this_node] = delta_mchi;
         this_kickpoint_ratio_map[this_node] = ratio_mchi;
