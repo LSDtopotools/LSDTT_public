@@ -1602,15 +1602,8 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
   float delta_mchi = 0; // difference between last and new m_chi
   float ratio_mchi = 0; // ratio between last and new m_chi
   int knickpoint_sign = 0; // sign of the knickpoint: + =1 and - = -1
-  float temp_delta_m = 0; // debugging stuff
-  float this_segment_length = 0;
   int last_node = 0;
-  int n_nodes_segment = 0;
-  float x1_temp =0;
-  float y1_temp =0;
-  float x2_temp =0;
-  float y2_temp =0;
-  bool same_channel = true;
+
 
 
 
@@ -1637,13 +1630,22 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
       // Get the M_chi from the current node
       this_M_chi = M_chi_data_map[this_node];
 
+      if(this_M_chi < 0 && n>0){this_M_chi = 0;} // getting rid of the negative values because we don't want it, I don't want the n = 0 to avoid detecting fake knickpoint if the first value is actually negative
+
       // If the M_chi has changed I increment the knickpoints, I also check if the two point are on the same channel to avoid stange unrelated knickpoints
       if (this_M_chi != last_M_chi && key_to_source_map[this_node] == key_to_source_map[last_node])
       {
-        ratio_mchi = last_M_chi/this_M_chi; // Ratio between last and new chi steepness
+        if(this_M_chi == 0)
+        {
+          ratio_mchi = -9999; // correspond to +infinite
+        }
+        else
+        {
+          ratio_mchi = last_M_chi/this_M_chi; // Ratio between last and new chi steepness
+        }
         delta_mchi = last_M_chi-this_M_chi; // diff between last and new chi steepness
-        if(ratio_mchi<1){knickpoint_sign = -1;} else {knickpoint_sign = 1;} // Assign the knickpoint sign value
-
+        if(delta_mchi<=0){knickpoint_sign = -1;} else {knickpoint_sign = 1;} // Assign the knickpoint sign value
+        delta_mchi = abs(delta_mchi); // we want the absolute mangitude of this, the sign being displayed in another column. it is just like nicer like this.
         // Allocate the values to local maps
         this_kickpoint_diff_map[this_node] = delta_mchi;
         this_kickpoint_ratio_map[this_node] = ratio_mchi;
@@ -2183,8 +2185,6 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
     vector<float> RMSE_values, all_RMSE_values;
 
     vector<float> tot_MLE_vec;
-    // basin keys
-    vector<int> all_basin_keys;
 
     // now run the collinearity test
     float tot_MLE;
@@ -2199,7 +2199,6 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
       all_test_source.insert(all_test_source.end(), test_source.begin(), test_source.end() );
       all_MLE_values.insert(all_MLE_values.end(), MLE_values.begin(), MLE_values.end() );
       all_RMSE_values.insert(all_RMSE_values.end(), RMSE_values.begin(), RMSE_values.end() );
-      all_basin_keys.insert(all_basin_keys.end(), reference_source.size(), basin_key);
 
       tot_MLE_vec.push_back(tot_MLE);
       cout << "basin: " << basin_key << " and tot_MLE: " << tot_MLE << endl;
@@ -2213,12 +2212,11 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
     test_keys = all_test_source;
 
     // now print the data to the file
-    movern_stats_out << "basin_key,reference_source_key,test_source_key,MLE,RMSE" << endl;
+    movern_stats_out << "reference_source_key,test_source_key,MLE,RMSE" << endl;
     int n_rmse_vals = int(all_RMSE_values.size());
     for(int i = 0; i<n_rmse_vals; i++)
     {
-      movern_stats_out << all_basin_keys[i] << ","
-                       << all_reference_source[i] << ","
+      movern_stats_out << all_reference_source[i] << ","
                        << all_test_source[i] << ","
                        << all_MLE_values[i] << ","
                        << all_RMSE_values[i] << endl;
