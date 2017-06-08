@@ -2302,7 +2302,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
     // comparison between channels.
     // the _all vectors are one of all the basins
     // reference source is the source key of the reference channel
-    vector<int> reference_source, all_reference_source;
+    vector<int> reference_source, all_reference_source,all_basin_keys;
     // test source is the source key of the test channel
     vector<int> test_source, all_test_source;
     // MLE the maximum liklihood estimator
@@ -2325,6 +2325,13 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
       all_test_source.insert(all_test_source.end(), test_source.begin(), test_source.end() );
       all_MLE_values.insert(all_MLE_values.end(), MLE_values.begin(), MLE_values.end() );
       all_RMSE_values.insert(all_RMSE_values.end(), RMSE_values.begin(), RMSE_values.end() );
+      
+      // figure out how many basin keys to insert
+      int n_nodes = int(reference_source.size());
+      vector<int> new_basin_key_vec(n_nodes,basin_key);
+      all_basin_keys.insert(all_basin_keys.end(), new_basin_key_vec.begin(), new_basin_key_vec.end() );
+      
+      
 
       tot_MLE_vec.push_back(tot_MLE);
       cout << "basin: " << basin_key << " and tot_MLE: " << tot_MLE << endl;
@@ -2338,11 +2345,12 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
     test_keys = all_test_source;
 
     // now print the data to the file
-    movern_stats_out << "reference_source_key,test_source_key,MLE,RMSE" << endl;
+    movern_stats_out << "baselevel_key,reference_source_key,test_source_key,MLE,RMSE" << endl;
     int n_rmse_vals = int(all_RMSE_values.size());
     for(int i = 0; i<n_rmse_vals; i++)
     {
-      movern_stats_out << all_reference_source[i] << ","
+      movern_stats_out << all_basin_keys[i] << ","
+                       << all_reference_source[i] << ","
                        << all_test_source[i] << ","
                        << all_MLE_values[i] << ","
                        << all_RMSE_values[i] << endl;
