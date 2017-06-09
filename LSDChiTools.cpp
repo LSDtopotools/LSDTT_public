@@ -1603,6 +1603,8 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
   float ratio_mchi = 0; // ratio between last and new m_chi
   int knickpoint_sign = 0; // sign of the knickpoint: + =1 and - = -1
   int last_node = 0;
+  int number_of_0 = 0;
+  int n_knp = 0;
 
 
 
@@ -1638,6 +1640,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         if(this_M_chi == 0)
         {
           ratio_mchi = -9999; // correspond to +infinite
+          number_of_0++;
         }
         else
         {
@@ -1650,6 +1653,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         this_kickpoint_diff_map[this_node] = delta_mchi;
         this_kickpoint_ratio_map[this_node] = ratio_mchi;
         this_knickpoint_sign_map[this_node] = knickpoint_sign;
+        n_knp ++;
 
         // reinitialise the parameters for next loop turn
         last_M_chi = this_M_chi;
@@ -1662,6 +1666,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
   kns_ratio_knickpoint_map = this_kickpoint_ratio_map;
   kns_diff_knickpoint_map = this_kickpoint_diff_map;
   ksn_sign_knickpoint_map = this_knickpoint_sign_map;
+  cout << "I finished to detect the knickpoints, you have " << n_knp << " knickpoints, thus " << number_of_0 << " ratios are switched to -9999 due to 0 divisions." << endl;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -2300,7 +2305,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
     // comparison between channels.
     // the _all vectors are one of all the basins
     // reference source is the source key of the reference channel
-    vector<int> reference_source, all_reference_source,all_basin_keys;
+    vector<int> reference_source, all_reference_source;
     // test source is the source key of the test channel
     vector<int> test_source, all_test_source;
     // MLE the maximum liklihood estimator
@@ -2323,13 +2328,6 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
       all_test_source.insert(all_test_source.end(), test_source.begin(), test_source.end() );
       all_MLE_values.insert(all_MLE_values.end(), MLE_values.begin(), MLE_values.end() );
       all_RMSE_values.insert(all_RMSE_values.end(), RMSE_values.begin(), RMSE_values.end() );
-      
-      // figure out how many basin keys to insert
-      int n_nodes = int(reference_source.size());
-      vector<int> new_basin_key_vec(n_nodes,basin_key);
-      all_basin_keys.insert(all_basin_keys.end(), new_basin_key_vec.begin(), new_basin_key_vec.end() );
-      
-      
 
       tot_MLE_vec.push_back(tot_MLE);
       cout << "basin: " << basin_key << " and tot_MLE: " << tot_MLE << endl;
@@ -2343,12 +2341,11 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
     test_keys = all_test_source;
 
     // now print the data to the file
-    movern_stats_out << "baselevel_key,reference_source_key,test_source_key,MLE,RMSE" << endl;
+    movern_stats_out << "reference_source_key,test_source_key,MLE,RMSE" << endl;
     int n_rmse_vals = int(all_RMSE_values.size());
     for(int i = 0; i<n_rmse_vals; i++)
     {
-      movern_stats_out << all_basin_keys[i] << ","
-                       << all_reference_source[i] << ","
+      movern_stats_out << all_reference_source[i] << ","
                        << all_test_source[i] << ","
                        << all_MLE_values[i] << ","
                        << all_RMSE_values[i] << endl;
