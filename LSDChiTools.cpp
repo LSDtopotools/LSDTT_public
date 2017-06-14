@@ -3320,7 +3320,7 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
 
       chi_data_out << this_node << ","
                    << row << ","
-                   << col ",";
+                   << col << ",";
       chi_data_out.precision(9);
       chi_data_out << latitude << ","
                    << longitude << ",";
