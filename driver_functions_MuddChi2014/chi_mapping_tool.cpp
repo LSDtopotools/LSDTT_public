@@ -175,8 +175,6 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_sources_to_csv"] = false;
   bool_default_map["print_baselevel_keys"] = false;
 
-
-
   // These enable calculation of chi based on discharge
   bool_default_map["use_precipitation_raster_for_chi"] = false;
   bool_default_map["print_discharge_raster"] = false;
@@ -188,8 +186,6 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_segments"] = false;
 
 
-
-
   // Use the parameter parser to get the maps of the parameters required for the
   // analysis
   LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
@@ -199,6 +195,7 @@ int main (int nNumberofArgs,char *argv[])
   map<string,string> this_string_map = LSDPP.get_string_parameters();
 
   // Now print the parameters for bug checking
+  cout << "PRINT THE PARAMETERS..." << endl;
   LSDPP.print_parameters();
 
   // location of the files
@@ -319,6 +316,8 @@ int main (int nNumberofArgs,char *argv[])
   LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
 
   cout << "\t Loading Sources..." << endl;
+  cout << "\t Source file is... " << CHeads_file << endl;
+  
   // load the sources
   vector<int> sources;
   if (CHeads_file == "NULL" || CHeads_file == "Null" || CHeads_file == "null")
