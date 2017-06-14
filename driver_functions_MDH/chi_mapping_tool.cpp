@@ -424,9 +424,7 @@ int main (int nNumberofArgs,char *argv[])
 	  {
 		  cout << "Junctions File " << JunctionsFile << " exists" << endl;;
 		  int n;
-		  //while (infile >> n) BaseLevelJunctions_Initial.push_back(n);
-		  infile >> n;
-		  BaseLevelJunctions_Initial.push_back(n);
+		  while (infile >> n) BaseLevelJunctions_Initial.push_back(n);
 	  }
 	  else 
 	  {
