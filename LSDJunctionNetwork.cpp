@@ -30,7 +30,7 @@
 //    Edinburgh, EH8 9XP
 //    Scotland
 //    United Kingdom
-//                                                                              
+//
 // This program is free software;
 // you can redistribute it and/or modify it under the terms of the
 // GNU General Public License as published by the Free Software Foundation;
@@ -1359,19 +1359,19 @@ void LSDJunctionNetwork::print_junction_angles_to_csv(vector<int> JunctionList,
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function agregates junction level statistics for larger basins
-// Is primarily intended for use with junction angle code but could 
-// also be used to get statistics about the different slopes or other 
+// Is primarily intended for use with junction angle code but could
+// also be used to get statistics about the different slopes or other
 // junction level statistics
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 /*
 int LSDJunctionNetwork::calculate_basin_averages_from_junction_list(vector<int>& BasinJunctions, LSDFlowInfo& FlowInfo)
 {
-  
-  // loop through the basins getting the basin statistics. 
+
+  // loop through the basins getting the basin statistics.
   int n_basin_junctions = int(BasinJunctions.size());
   for (int jn = 0; jn<n_basin_junctions; j++)
   {
-  
+
   }
 
 
@@ -2382,7 +2382,7 @@ vector<int> LSDJunctionNetwork::ExtractBasinJunctionOrder(int BasinOrder, LSDFlo
       //cout << "Found a junction that is of the correct order." << endl;
       //cout << "Junction is: " << junctionID << endl;
       //cout << "This junction order is: " <<  StreamOrderVector[junctionID] << endl;
-      
+
       // Get info from ChanelNetwork object regarding position of junction
       current_junc = junctionID;//JunctionVector[junctionID];
       receiver_junc = ReceiverVector[current_junc];
@@ -2405,7 +2405,7 @@ vector<int> LSDJunctionNetwork::ExtractBasinJunctionOrder(int BasinOrder, LSDFlo
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
-// This function extracts the juctions of all non-beheaded drainage basins 
+// This function extracts the juctions of all non-beheaded drainage basins
 // of a given order, n
 // It keeps basins that abut nodata values
 
@@ -2428,7 +2428,7 @@ vector<int> LSDJunctionNetwork::ExtractBasinJunctionOrderKeepEdgeBasins(int Basi
       //cout << "Found a junction that is of the correct order." << endl;
       //cout << "Junction is: " << junctionID << endl;
       //cout << "This junction order is: " <<  StreamOrderVector[junctionID] << endl;
-      
+
       // Get info from ChanelNetwork object regarding position of junction
       current_junc = junctionID;//JunctionVector[junctionID];
       receiver_junc = ReceiverVector[current_junc];
@@ -4739,6 +4739,7 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
       if (node_test == 1)
       {
         //assign the catchID and hydrocode of this source
+        cout << "Catch ID: " << CatchIDs[j] << " Hydro code: " << HydroCodes[j] << endl;
         CatchID = CatchIDs[j];
         HydroCode = HydroCodes[j];
       }
@@ -6158,7 +6159,7 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_Edge(vector<int>& BaseLevelJunct
 // It seeks to remove basins draining from the edge.
 // Similar to the previous function but this one ignores the outlet reach
 // because in DEMs draining to a cut edge it is common to have a nodata
-// node near the outlet. 
+// node near the outlet.
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 vector<int> LSDJunctionNetwork::Prune_Junctions_Edge_Ignore_Outlet_Reach(vector<int>& BaseLevelJunctions_Initial,
                                               LSDFlowInfo& FlowInfo, LSDRaster& TestRaster)
@@ -6189,9 +6190,9 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_Edge_Ignore_Outlet_Reach(vector<
       for (int i_donor = 0; i_donor<N_Donors; i_donor++)
       {
         //cout << "Donor " << i_donor << " of " << N_Donors << " and junction is: " << DonorJunctions[i_donor] << endl;
-        
+
         // make sure you are not getting the baselevl node since it will certainly
-        // have nodata bounding it. 
+        // have nodata bounding it.
         if(DonorJunctions[i_donor] != BaseLevelJunctions_Initial[i])
         {
           int this_NI = JunctionVector[ DonorJunctions[i_donor] ];
@@ -6204,7 +6205,7 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_Edge_Ignore_Outlet_Reach(vector<
         }
       }
     }
-    
+
     // Keep this baselelvel node if it is true
     if(keep_base_level_node == true)
     {
@@ -6229,7 +6230,7 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_Area(vector<int>& BaseLevelJunct
   int N_BaseLevelJuncs = int(BaseLevelJunctions_Initial.size());
   cout << endl << endl << "I am going to remove any basins smaller than " << Threshold << " pixels." << endl;
   cout << "We are starting with: " << N_BaseLevelJuncs << " juntions." << endl;
-  
+
   int row,col, current_node;
 
   for(int i = 0; i < N_BaseLevelJuncs; ++i)
