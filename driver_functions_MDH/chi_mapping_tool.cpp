@@ -111,6 +111,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["remove_seas"] = false; // elevations above minimum and maximum will be changed to nodata
   bool_default_map["only_check_parameters"] = false;
   string_default_map["CHeads_file"] = "NULL";
+  string_default_map["BaselevelJunctions_file"] = "NULL";
 
   // Selecting basins
   int_default_map["threshold_contributing_pixels"] = 1000;
@@ -206,6 +207,7 @@ int main (int nNumberofArgs,char *argv[])
   string raster_ext =  LSDPP.get_dem_read_extension();
   vector<string> boundary_conditions = LSDPP.get_boundary_conditions();
   string CHeads_file = LSDPP.get_CHeads_file();
+  string BaselevelJunctions_file = LSDPP.get_BaselevelJunctions_file();
 
   cout << "Read filename is: " <<  DATA_DIR+DEM_ID << endl;
   cout << "Write filename is: " << OUT_DIR+OUT_ID << endl;
@@ -286,13 +288,11 @@ int main (int nNumberofArgs,char *argv[])
     filled_topography = topography_raster.fill(this_float_map["min_slope_for_fill"]);
   }
 
-
   if (this_bool_map["print_fill_raster"])
   {
     string filled_raster_name = OUT_DIR+OUT_ID+"_Fill";
     filled_topography.write_raster(filled_raster_name,raster_ext);
   }
-
 
   cout << "\t Flow routing..." << endl;
   // get a flow info object
@@ -372,7 +372,6 @@ int main (int nNumberofArgs,char *argv[])
     }
   }
 
-
   // Print sources
   if( this_bool_map["print_sources_to_csv"])
   {
@@ -387,8 +386,8 @@ int main (int nNumberofArgs,char *argv[])
       LSDSpatialCSVReader thiscsv(sources_csv_name);
       thiscsv.print_data_to_geojson(gjson_name);
     }
-
   }
+  
   if (this_bool_map["print_stream_order_raster"])
   {
     LSDIndexRaster SOArray = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
@@ -405,13 +404,41 @@ int main (int nNumberofArgs,char *argv[])
   //Array2D<float> ChiGradientArray(NRows,NCols,NoData);
 
   // need to get base-level nodes , otherwise these catchments will be missed!
-  vector< int > BaseLevelJunctions_Initial = JunctionNetwork.get_BaseLevelJunctions();
+  vector< int > BaseLevelJunctions_Initial;
   vector< int > BaseLevelJunctions;
+  
+  //Check to see if a list of junctions for extraction exists
+  if (BaselevelJunctions_file == "NULL" || BaselevelJunctions_file == "Null" || BaselevelJunctions_file == "null")
+  {
+    //Get baselevel junction nodes from the whole network
+    BaseLevelJunctions_Initial = JunctionNetwork.get_BaseLevelJunctions();
+  }
+  else
+  {
+    //specify junctions to work on from a list file
+    string JunctionsFile = DATA_DIR+DEM_ID+"_junctions.list";
+	  
+	  vector<int> JunctionsList;
+	  ifstream infile(JunctionsFile.c_str());
+	  if (infile)
+	  {
+		  cout << "Junctions File " << JunctionsFile << " exists" << endl;;
+		  int n;
+		  //while (infile >> n) BaseLevelJunctions_Initial.push_back(n);
+		  infile >> n;
+		  BaseLevelJunctions_Initial.push_back(n);
+	  }
+	  else 
+	  {
+		  cout << "Fatal Error: Junctions File " << JunctionsFile << " does not exist" << endl;;
+	  }  
+  }
+	
+	// count the number of baselevel junctions to work with
   int N_BaseLevelJuncs = BaseLevelJunctions_Initial.size();
   cout << "The number of base level junctions is: " << N_BaseLevelJuncs << endl;
-
-
-    // remove base level junctions for which catchment is too small
+  
+  // remove base level junctions for which catchment is too small
   cout << "Removing basins with fewer than " << minimum_basin_size_pixels << " pixels" << endl;
   BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Area(BaseLevelJunctions_Initial,
                                               FlowInfo, FlowAcc, minimum_basin_size_pixels);
