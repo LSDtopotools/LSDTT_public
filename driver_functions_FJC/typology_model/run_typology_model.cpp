@@ -111,8 +111,8 @@ int main (int nNumberofArgs,char *argv[])
 	//output_rasters[1].write_raster((path_name+DEM_name+slope_output), DEM_extension);
 
 	// write smoothed hillshade
-	LSDRaster HS = output_rasters[0].hillshade(45, 315, 1);
-	HS.write_raster((path_name+DEM_name+elev_output+HS_output), DEM_extension);
+	//LSDRaster HS = output_rasters[0].hillshade(45, 315, 1);
+	//HS.write_raster((path_name+DEM_name+elev_output+HS_output), DEM_extension);
 
 	cout << "\t Filling the DEM..." << endl;
 	// fill

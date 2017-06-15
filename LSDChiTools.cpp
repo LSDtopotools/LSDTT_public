@@ -3291,7 +3291,7 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "latitude,longitude,chi,elevation,flow distance,drainage area,m_chi,b_chi,source_key,basin_key";
+  chi_data_out << "node,row,col,latitude,longitude,chi,elevation,flow distance,drainage area,m_chi,b_chi,source_key,basin_key";
   if(have_segmented_elevation)
   {
     chi_data_out << ",segmented_elevation";
@@ -3318,6 +3318,9 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
       FlowInfo.retrieve_current_row_and_col(this_node,row,col);
       get_lat_and_long_locations(row, col, latitude, longitude, Converter);
 
+      chi_data_out << this_node << ","
+                   << row << ","
+                   << col << ",";
       chi_data_out.precision(9);
       chi_data_out << latitude << ","
                    << longitude << ",";
@@ -3329,8 +3332,8 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
                    << M_chi_data_map[this_node] << ","
                    << b_chi_data_map[this_node] << ","
                    << source_keys_map[this_node] << ","
-                   << baselevel_keys_map[this_node];
-
+                   << baselevel_keys_map[this_node] << ",";
+                   
       if(have_segmented_elevation)
       {
         chi_data_out << "," << segmented_elevation_map[this_node];
