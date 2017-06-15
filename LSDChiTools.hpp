@@ -230,6 +230,19 @@ class LSDChiTools
     /// @date 4/02/2017
     void segment_counter(LSDFlowInfo& FlowInfo);
 
+    /// @brief This function is used to tag channels with a segment number
+    ///  It decides on segments if the M_Chi value has changed so should only be used
+    ///  with chi networks that have used a skip of 0 and a monte carlo itertions of 1
+    ///  This data is used by other routines to look at the spatial distribution of
+    ///  hillslope-channel coupling.
+    /// @detail WARNING: ONLY use if you have segmented with skip 0 and iterations 1. Otherwise
+    ///  you will get a new segment for every channel pixel
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @return LSDIndexRaster showing stream network indexed by segment ID
+    /// @author MDH
+    /// @date 15/06/2017
+    LSDIndexRaster segment_mapping(LSDFlowInfo& FlowInfo);
+    
     /// @brief This function calculates the fitted elevations: It uses m_chi and b_chi
     ///  data to get the fitted elevation of the channel points.
     /// @param FlowInfo an LSDFlowInfo object

@@ -1158,6 +1158,65 @@ void LSDChiTools::segment_counter(LSDFlowInfo& FlowInfo)
   }
   segment_counter_map = this_segment_counter_map;
 }
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function is used to tag channels with a segment number
+// It decides on segments if the M_Chi value has changed so should only be used
+// with chi networks that have used a skip of 0 and a monte carlo itertions of 1
+// This data is used by other routines to look at the spatial distribution of
+// hillslope-channel coupling. Generates an LSDIndexRaster of the channel network
+// indexed by segment numbers for feeding to the hilltop flow routing analysis.
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LSDIndexRaster LSDChiTools::segment_mapping(LSDFlowInfo& FlowInfo)
+{
+  // these are for extracting element-wise data from the channel profiles.
+  int this_node, row, col;
+  int segment_counter = 0;
+  map<int,int> this_segment_counter_map;
+  float last_M_chi, this_M_chi;
+  
+  //declare empty array for raster generation
+  Array2D<int> SegmentedStreamNetworkArray(NRows,NCols,-9999);
+  
+  // find the number of nodes
+  int n_nodes = (node_sequence.size());
+  if (n_nodes <= 0)
+  {
+    cout << "Cannot calculate segments since you have not calculated channel properties yet." << endl;
+  }
+  else
+  {
+    //get the node
+    this_node = node_sequence[0];
+    FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+    
+    last_M_chi =  M_chi_data_map[this_node];
+
+    for (int n = 0; n< n_nodes; n++)
+    {
+
+      // Get the M_chi from the current node
+      this_node = node_sequence[n];
+      this_M_chi = M_chi_data_map[this_node];
+
+      // If the M_chi has changed, increment the segment counter
+      if (this_M_chi != last_M_chi)
+      {
+        segment_counter++;
+        last_M_chi = this_M_chi;
+      }
+
+      // Print the segment counter to the data map and raster
+      this_segment_counter_map[this_node]  = segment_counter;
+      SegmentedStreamNetworkArray[row][col] = segment_counter;
+    }
+  }
+  segment_counter_map = this_segment_counter_map;
+
+  return LSDIndexRaster(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,SegmentedStreamNetworkArray,GeoReferencingStrings);
+}
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -3266,7 +3325,7 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
 {
 
   // these are for extracting element-wise data from the channel profiles.
-  int this_node, row,col;
+  int this_node, row, col;
   double latitude,longitude;
   LSDCoordinateConverterLLandUTM Converter;
 

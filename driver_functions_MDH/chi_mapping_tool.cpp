@@ -185,7 +185,7 @@ int main (int nNumberofArgs,char *argv[])
   string_default_map["precipitation_fname"] = "NULL";
 
   bool_default_map["print_segments"] = false;
-
+  bool_default_map["print_segments_raster"] = false;
 
   // Use the parameter parser to get the maps of the parameters required for the
   // analysis
@@ -621,7 +621,12 @@ int main (int nNumberofArgs,char *argv[])
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_coordinate, target_nodes,
                             n_iterations, skip, minimum_segment_length, sigma);
-      ChiTool.segment_counter(FlowInfo);
+      LSDIndexRaster SegmentedStNet = ChiTool.segment_mapping(FlowInfo);
+      if(this_bool_map["print_segments_raster"])
+      {
+        string SegmentedStNet_fname = OUT_DIR+OUT_ID+"_StNetSegs";
+        SegmentedStNet.write_raster(SegmentedStNet_fname, raster_ext);
+      }      
     }
     else
     {
