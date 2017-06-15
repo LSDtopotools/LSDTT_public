@@ -306,7 +306,6 @@ void LSDParameterParser::parse_file_IO()
     BaselevelJunctions_file = parameter_map["baselevel junctions fname"];
     // get rid of any control characters from the end (if param file was made in DOS)
     BaselevelJunctions_file = RemoveControlCharactersFromEndOfString(BaselevelJunctions_file);
-    //cout << "Got the channel heads name, it is: " << BaselevelJunctions_file << endl;
   }
 }
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
