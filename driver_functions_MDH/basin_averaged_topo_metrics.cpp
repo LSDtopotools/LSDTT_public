@@ -1,10 +1,9 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// basin_averaged_metrics.cpp
+// channel_patch_averaged_metrics.cpp
 // A driver function for use with the Land Surace Dynamics Topo Toolbox
-// This program gets the drainage density and topographic metricsof all catchments in the
-// "DEM_name_junctions.txt" file to compare drainage density with mean hilltop
-// curvature (used as a proxy for erosion rate). It gets drainage density based on a channel
-// network methodology described by Pelletier (2013) and implemented by Clubb et al. (2014). 
+// This program gets the topographic metrics of all hillslopes in the 
+// "*.txt" file to compare channel steepness (M_Chi) with hillslope metrics
+// of hilltop curvature, hillslope gradient and hillslope length in a distributed fashion
 //
 // Outputs a txt file for the data cloud with the format
 // catchment_ID drainage_density drainage_area mean_hilltop_curvature mean_hillslope_length mean_hillslope_gradient 
