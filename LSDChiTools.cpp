@@ -2039,17 +2039,15 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
   }
 
 
-  cout << "Let me check the basin indexing for you." << endl;
-  int n_bl =  int(start_node_for_baselelvel.size());
-  for(int i = 0; i< n_bl; i++)
-  {
-    cout << "Baselevel node is: " << ordered_baselevel_nodes[i] << " n sources: "
-        << n_sources_in_basin[i] << " start_index: "
-        << start_node_for_baselelvel[i] << endl;
-  }
-
-  cout << "Basin key is: " << baselevel_key << " This basin has " << n_channels << " sources and start node is "<< channel_offset <<endl;
-
+  //cout << "Let me check the basin indexing for you." << endl;
+  //int n_bl =  int(start_node_for_baselelvel.size());
+  //for(int i = 0; i< n_bl; i++)
+  //{
+  //  cout << "Baselevel node is: " << ordered_baselevel_nodes[i] << " n sources: "
+  //      << n_sources_in_basin[i] << " start_index: "
+  //      << start_node_for_baselelvel[i] << endl;
+  //}
+  //cout << "Basin key is: " << baselevel_key << " This basin has " << n_channels << " sources and start node is "<< channel_offset <<endl;
 
   // placeholder vectors: will replace the passed vectors
   vector<int> this_reference_source;
@@ -2119,7 +2117,7 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
     residuals = project_data_onto_reference_channel(chi_data_chan0, elev_data_chan0,
                                  chi_data_chan1,elev_data_chan1);
     n_residuals = int(residuals.size());
-    //cout << "The number of residuals are: " << n_residuals << endl;
+    //cout << "Basin: " << baselevel_key << " The number of residuals are: " << n_residuals << endl;
 
     // Now get the MLE and RMSE for this channel pair. It only runs if
     // there are residuals. Otherwise it means that the channels are non-overlapping
@@ -2158,6 +2156,13 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
         this_test_source.push_back(chan1);
       }
     }
+    else
+    {
+        these_MLE_values.push_back(1.0);
+        these_RMSE_values.push_back(0.0);
+        this_reference_source.push_back(chan0);
+        this_test_source.push_back(chan1);
+    }
   }
 
   MLE_values = these_MLE_values;
@@ -2172,9 +2177,9 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
   }
 
 
-  cout << "Let me tell you all about the MLE values " << endl;
+  //cout << "Let me tell you all about the MLE values " << endl;
   // for debugging
-  bool print_results = true;
+  bool print_results = false;
   if(print_results)
   {
     for (int res = 0; res < int(MLE_values.size()); res++)
@@ -2186,7 +2191,9 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
     }
   }
 
-  cout << "Total MLE is: " << tot_MLE << endl;
+  //cout << "N_residuals: " << MLE_values.size() << endl << endl;
+
+  //cout << "Total MLE is: " << tot_MLE << endl;
   return tot_MLE;
 
 }

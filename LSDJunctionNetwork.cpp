@@ -7484,11 +7484,11 @@ void LSDJunctionNetwork::get_overlapping_channels(LSDFlowInfo& FlowInfo,
   for (int BL = 0; BL < N_baselevel_nodes; BL++)
   {
     int outlet_node = JunctionVector[BaseLevel_Junctions[BL] ];
-    cout << "The outlet node is: " << outlet_node << endl;
+    //cout << "The outlet node is: " << outlet_node << endl;
 
     // get all the source nodes of the base level
     vector<int> source_nodes = get_all_source_nodes_of_an_outlet_junction(BaseLevel_Junctions[BL]);
-    cout << "The number of sources is: " << source_nodes.size() << endl;
+    //cout << "The number of sources is: " << source_nodes.size() << endl;
 
 
     // sort the nodes by flow distance in ascending order
@@ -7506,8 +7506,8 @@ void LSDJunctionNetwork::get_overlapping_channels(LSDFlowInfo& FlowInfo,
       thisOutlet = FlowInfo.get_downslope_node_after_fixed_visited_nodes(SortedSources[s],
                   outlet_node, n_nodes_to_visit, VisitedRaster);
 
-      cout << "Source number " << s << " source node is: " << SortedSources[s] << " BL node: " << outlet_node
-           << " and new outlet: " << thisOutlet << endl;
+      //cout << "Source number " << s << " source node is: " << SortedSources[s] << " BL node: " << outlet_node
+      //     << " and new outlet: " << thisOutlet << endl;
 
 
       NewSources.push_back(SortedSources[s]);
