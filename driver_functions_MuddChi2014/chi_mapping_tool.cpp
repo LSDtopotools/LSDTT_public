@@ -751,7 +751,7 @@ int main (int nNumberofArgs,char *argv[])
       cout << "Using a discharge raster to check collinearity." << endl;
       string movern_name = OUT_DIR+OUT_ID+"_movernstatsQ";
       ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge(FlowInfo,
-                      this_float_map["start_movern"], this_float_map["delta_movern"],
+                      JunctionNetwork, this_float_map["start_movern"], this_float_map["delta_movern"],
                       this_int_map["n_movern"],
                       this_bool_map["only_use_mainstem_as_reference"],
                       movern_name, Discharge);
@@ -759,7 +759,7 @@ int main (int nNumberofArgs,char *argv[])
     else
     {
       string movern_name = OUT_DIR+OUT_ID+"_movernstats";
-      ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern(FlowInfo,
+      ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern(FlowInfo, JunctionNetwork,
                       this_float_map["start_movern"], this_float_map["delta_movern"],
                       this_int_map["n_movern"],
                       this_bool_map["only_use_mainstem_as_reference"],

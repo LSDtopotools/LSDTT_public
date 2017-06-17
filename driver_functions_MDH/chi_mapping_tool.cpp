@@ -317,7 +317,7 @@ int main (int nNumberofArgs,char *argv[])
 
   cout << "\t Loading Sources..." << endl;
   cout << "\t Source file is... " << CHeads_file << endl;
-  
+
   // load the sources
   vector<int> sources;
   if (CHeads_file == "NULL" || CHeads_file == "Null" || CHeads_file == "null")
@@ -387,7 +387,7 @@ int main (int nNumberofArgs,char *argv[])
       thiscsv.print_data_to_geojson(gjson_name);
     }
   }
-  
+
   if (this_bool_map["print_stream_order_raster"])
   {
     LSDIndexRaster SOArray = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
@@ -406,7 +406,7 @@ int main (int nNumberofArgs,char *argv[])
   // need to get base-level nodes , otherwise these catchments will be missed!
   vector< int > BaseLevelJunctions_Initial;
   vector< int > BaseLevelJunctions;
-  
+
   //Check to see if a list of junctions for extraction exists
   if (BaselevelJunctions_file == "NULL" || BaselevelJunctions_file == "Null" || BaselevelJunctions_file == "null")
   {
@@ -417,7 +417,7 @@ int main (int nNumberofArgs,char *argv[])
   {
     //specify junctions to work on from a list file
     string JunctionsFile = DATA_DIR+DEM_ID+"_junctions.list";
-	  
+
 	  vector<int> JunctionsList;
 	  ifstream infile(JunctionsFile.c_str());
 	  if (infile)
@@ -426,16 +426,16 @@ int main (int nNumberofArgs,char *argv[])
 		  int n;
 		  while (infile >> n) BaseLevelJunctions_Initial.push_back(n);
 	  }
-	  else 
+	  else
 	  {
 		  cout << "Fatal Error: Junctions File " << JunctionsFile << " does not exist" << endl;;
-	  }  
+	  }
   }
-	
+
 	// count the number of baselevel junctions to work with
   int N_BaseLevelJuncs = BaseLevelJunctions_Initial.size();
   cout << "The number of base level junctions is: " << N_BaseLevelJuncs << endl;
-  
+
   // remove base level junctions for which catchment is too small
   cout << "Removing basins with fewer than " << minimum_basin_size_pixels << " pixels" << endl;
   BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Area(BaseLevelJunctions_Initial,
@@ -626,7 +626,7 @@ int main (int nNumberofArgs,char *argv[])
       {
         string SegmentedStNet_fname = OUT_DIR+OUT_ID+"_StNetSegs";
         SegmentedStNet.write_raster(SegmentedStNet_fname, raster_ext);
-      }      
+      }
     }
     else
     {
@@ -755,7 +755,7 @@ int main (int nNumberofArgs,char *argv[])
     {
       cout << "Using a discharge raster to check collinearity." << endl;
       string movern_name = OUT_DIR+OUT_ID+"_movernstatsQ";
-      ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge(FlowInfo,
+      ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge(FlowInfo, JunctionNetwork,
                       this_float_map["start_movern"], this_float_map["delta_movern"],
                       this_int_map["n_movern"],
                       this_bool_map["only_use_mainstem_as_reference"],
@@ -764,7 +764,7 @@ int main (int nNumberofArgs,char *argv[])
     else
     {
       string movern_name = OUT_DIR+OUT_ID+"_movernstats";
-      ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern(FlowInfo,
+      ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern(FlowInfo, JunctionNetwork,
                       this_float_map["start_movern"], this_float_map["delta_movern"],
                       this_int_map["n_movern"],
                       this_bool_map["only_use_mainstem_as_reference"],
