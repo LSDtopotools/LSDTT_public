@@ -599,8 +599,18 @@ int main (int nNumberofArgs,char *argv[])
   {
     cout << "I am getting the source and outlet nodes for the overlapping channels" << endl;
     cout << "The n_nodes to visit are: " << n_nodes_to_visit << endl;
-    JunctionNetwork.get_overlapping_channels(FlowInfo, BaseLevelJunctions, DistanceFromOutlet,
+    
+    //Check to see if working with a specified list of baselevel junctions
+    if (BaselevelJunctions_file == "NULL" || BaselevelJunctions_file == "Null" || BaselevelJunctions_file == "null")
+    {
+      JunctionNetwork.get_overlapping_channels(FlowInfo, BaseLevelJunctions, DistanceFromOutlet,
                                     source_nodes,outlet_nodes,n_nodes_to_visit);
+    }
+    else
+    {
+      JunctionNetwork.get_overlapping_channels_to_downstream_outlets(FlowInfo, BaseLevelJunctions, DistanceFromOutlet,
+                                    source_nodes,outlet_nodes,n_nodes_to_visit);
+    }
   }
 
   if (this_bool_map["print_segmented_M_chi_map_to_csv"])
