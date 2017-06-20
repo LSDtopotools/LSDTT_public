@@ -1158,6 +1158,65 @@ void LSDChiTools::segment_counter(LSDFlowInfo& FlowInfo)
   }
   segment_counter_map = this_segment_counter_map;
 }
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function is used to tag channels with a segment number
+// It decides on segments if the M_Chi value has changed so should only be used
+// with chi networks that have used a skip of 0 and a monte carlo itertions of 1
+// This data is used by other routines to look at the spatial distribution of
+// hillslope-channel coupling. Generates an LSDIndexRaster of the channel network
+// indexed by segment numbers for feeding to the hilltop flow routing analysis.
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+LSDIndexRaster LSDChiTools::segment_mapping(LSDFlowInfo& FlowInfo)
+{
+  // these are for extracting element-wise data from the channel profiles.
+  int this_node, row, col;
+  int segment_counter = 0;
+  map<int,int> this_segment_counter_map;
+  float last_M_chi, this_M_chi;
+
+  //declare empty array for raster generation
+  Array2D<int> SegmentedStreamNetworkArray(NRows,NCols,-9999);
+
+  // find the number of nodes
+  int n_nodes = (node_sequence.size());
+  if (n_nodes <= 0)
+  {
+    cout << "Cannot calculate segments since you have not calculated channel properties yet." << endl;
+  }
+  else
+  {
+    //get the node
+    this_node = node_sequence[0];
+    FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+
+    last_M_chi =  M_chi_data_map[this_node];
+
+    for (int n = 0; n< n_nodes; n++)
+    {
+
+      // Get the M_chi from the current node
+      this_node = node_sequence[n];
+      this_M_chi = M_chi_data_map[this_node];
+
+      // If the M_chi has changed, increment the segment counter
+      if (this_M_chi != last_M_chi)
+      {
+        segment_counter++;
+        last_M_chi = this_M_chi;
+      }
+
+      // Print the segment counter to the data map and raster
+      this_segment_counter_map[this_node]  = segment_counter;
+      SegmentedStreamNetworkArray[row][col] = segment_counter;
+    }
+  }
+  segment_counter_map = this_segment_counter_map;
+
+  return LSDIndexRaster(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,SegmentedStreamNetworkArray,GeoReferencingStrings);
+}
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1980,17 +2039,15 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
   }
 
 
-  cout << "Let me check the basin indexing for you." << endl;
-  int n_bl =  int(start_node_for_baselelvel.size());
-  for(int i = 0; i< n_bl; i++)
-  {
-    cout << "Baselevel node is: " << ordered_baselevel_nodes[i] << " n sources: "
-        << n_sources_in_basin[i] << " start_index: "
-        << start_node_for_baselelvel[i] << endl;
-  }
-
-  cout << "Basin key is: " << baselevel_key << " This basin has " << n_channels << " sources and start node is "<< channel_offset <<endl;
-
+  //cout << "Let me check the basin indexing for you." << endl;
+  //int n_bl =  int(start_node_for_baselelvel.size());
+  //for(int i = 0; i< n_bl; i++)
+  //{
+  //  cout << "Baselevel node is: " << ordered_baselevel_nodes[i] << " n sources: "
+  //      << n_sources_in_basin[i] << " start_index: "
+  //      << start_node_for_baselelvel[i] << endl;
+  //}
+  //cout << "Basin key is: " << baselevel_key << " This basin has " << n_channels << " sources and start node is "<< channel_offset <<endl;
 
   // placeholder vectors: will replace the passed vectors
   vector<int> this_reference_source;
@@ -2060,7 +2117,7 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
     residuals = project_data_onto_reference_channel(chi_data_chan0, elev_data_chan0,
                                  chi_data_chan1,elev_data_chan1);
     n_residuals = int(residuals.size());
-    //cout << "The number of residuals are: " << n_residuals << endl;
+    //cout << "Basin: " << baselevel_key << " The number of residuals are: " << n_residuals << endl;
 
     // Now get the MLE and RMSE for this channel pair. It only runs if
     // there are residuals. Otherwise it means that the channels are non-overlapping
@@ -2099,6 +2156,13 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
         this_test_source.push_back(chan1);
       }
     }
+    else
+    {
+        these_MLE_values.push_back(1.0);
+        these_RMSE_values.push_back(0.0);
+        this_reference_source.push_back(chan0);
+        this_test_source.push_back(chan1);
+    }
   }
 
   MLE_values = these_MLE_values;
@@ -2113,9 +2177,9 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
   }
 
 
-  cout << "Let me tell you all about the MLE values " << endl;
+  //cout << "Let me tell you all about the MLE values " << endl;
   // for debugging
-  bool print_results = true;
+  bool print_results = false;
   if(print_results)
   {
     for (int res = 0; res < int(MLE_values.size()); res++)
@@ -2127,7 +2191,9 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
     }
   }
 
-  cout << "Total MLE is: " << tot_MLE << endl;
+  //cout << "N_residuals: " << MLE_values.size() << endl << endl;
+
+  //cout << "Total MLE is: " << tot_MLE << endl;
   return tot_MLE;
 
 }
@@ -2138,7 +2204,7 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
 // This function test the collinearity of all segments compared to a reference
 // segment
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo& FlowInfo,
+void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JN,
                         float start_movern, float delta_movern, int n_movern,
                         bool only_use_mainstem_as_reference,
                         string file_prefix)
@@ -2149,7 +2215,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
   vector< vector<float> > total_MLE_vecvec;
   vector<int> reference_keys;
   vector<int> test_keys;
-
+  vector<int> outlet_jns;
 
   cout << "LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern" << endl;
   cout << "I am defaulting to A_0 = 1." << endl;
@@ -2162,6 +2228,15 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
   stats_by_basin_out.open(filename_bstats.c_str());
 
   int n_basins = int(ordered_baselevel_nodes.size());
+
+  // get the outlet junction of each basin key
+  for (int basin_key = 0; basin_key < n_basins; basin_key++)
+  {
+    int outlet_node = ordered_baselevel_nodes[basin_key];
+    int outlet_jn = JN.get_Junction_of_Node(outlet_node, FlowInfo);
+    outlet_jns.push_back(outlet_jn);
+  }
+
   cout << endl << endl << "==========================" << endl;
   for(int i = 0; i< n_movern; i++)
   {
@@ -2234,7 +2309,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
 
   }
 
-  stats_by_basin_out << "basin_key";
+  stats_by_basin_out << "basin_key,outlet_jn";
   stats_by_basin_out.precision(4);
   for(int i = 0; i< n_movern; i++)
   {
@@ -2244,7 +2319,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
   stats_by_basin_out.precision(9);
   for(int basin_key = 0; basin_key<n_basins; basin_key++)
   {
-    stats_by_basin_out << basin_key;
+    stats_by_basin_out << basin_key << "," << outlet_jns[basin_key];
     for(int i = 0; i< n_movern; i++)
     {
       stats_by_basin_out << "," <<total_MLE_vecvec[i][basin_key];
@@ -2262,7 +2337,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
 // segment
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge(LSDFlowInfo& FlowInfo,
-                        float start_movern, float delta_movern, int n_movern,
+                        LSDJunctionNetwork& JN, float start_movern, float delta_movern, int n_movern,
                         bool only_use_mainstem_as_reference,
                         string file_prefix,
                         LSDRaster& Discharge)
@@ -2273,6 +2348,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
   vector< vector<float> > total_MLE_vecvec;
   vector<int> reference_keys;
   vector<int> test_keys;
+  vector<int> outlet_jns;
 
 
   cout << "LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern" << endl;
@@ -2286,6 +2362,15 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
   stats_by_basin_out.open(filename_bstats.c_str());
 
   int n_basins = int(ordered_baselevel_nodes.size());
+
+  // get the outlet junction of each basin key
+  for (int basin_key = 0; basin_key < n_basins; basin_key++)
+  {
+    int outlet_node = ordered_baselevel_nodes[basin_key];
+    int outlet_jn = JN.get_Junction_of_Node(outlet_node, FlowInfo);
+    outlet_jns.push_back(outlet_jn);
+  }
+
   cout << endl << endl << "==========================" << endl;
   for(int i = 0; i< n_movern; i++)
   {
@@ -2358,7 +2443,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
 
   }
 
-  stats_by_basin_out << "basin_key";
+  stats_by_basin_out << "basin_key,outlet_jn";
   stats_by_basin_out.precision(4);
   for(int i = 0; i< n_movern; i++)
   {
@@ -2368,7 +2453,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
   stats_by_basin_out.precision(9);
   for(int basin_key = 0; basin_key<n_basins; basin_key++)
   {
-    stats_by_basin_out << basin_key;
+    stats_by_basin_out << basin_key << "," << outlet_jns[basin_key];
     for(int i = 0; i< n_movern; i++)
     {
       stats_by_basin_out << "," <<total_MLE_vecvec[i][basin_key];
@@ -3266,7 +3351,7 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
 {
 
   // these are for extracting element-wise data from the channel profiles.
-  int this_node, row,col;
+  int this_node, row, col;
   double latitude,longitude;
   LSDCoordinateConverterLLandUTM Converter;
 
@@ -3291,7 +3376,7 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "latitude,longitude,chi,elevation,flow distance,drainage area,m_chi,b_chi,source_key,basin_key";
+  chi_data_out << "node,row,col,latitude,longitude,chi,elevation,flow distance,drainage area,m_chi,b_chi,source_key,basin_key";
   if(have_segmented_elevation)
   {
     chi_data_out << ",segmented_elevation";
@@ -3318,6 +3403,9 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
       FlowInfo.retrieve_current_row_and_col(this_node,row,col);
       get_lat_and_long_locations(row, col, latitude, longitude, Converter);
 
+      chi_data_out << this_node << ","
+                   << row << ","
+                   << col << ",";
       chi_data_out.precision(9);
       chi_data_out << latitude << ","
                    << longitude << ",";
@@ -3329,7 +3417,7 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
                    << M_chi_data_map[this_node] << ","
                    << b_chi_data_map[this_node] << ","
                    << source_keys_map[this_node] << ","
-                   << baselevel_keys_map[this_node];
+                   << baselevel_keys_map[this_node] << ",";
 
       if(have_segmented_elevation)
       {

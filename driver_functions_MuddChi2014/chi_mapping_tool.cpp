@@ -111,6 +111,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["remove_seas"] = false; // elevations above minimum and maximum will be changed to nodata
   bool_default_map["only_check_parameters"] = false;
   string_default_map["CHeads_file"] = "NULL";
+  string_default_map["BaselevelJunctions_file"] = "NULL";
 
   // Selecting basins
   int_default_map["threshold_contributing_pixels"] = 1000;
@@ -175,8 +176,6 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_sources_to_csv"] = false;
   bool_default_map["print_baselevel_keys"] = false;
 
-
-
   // These enable calculation of chi based on discharge
   bool_default_map["use_precipitation_raster_for_chi"] = false;
   bool_default_map["print_discharge_raster"] = false;
@@ -188,8 +187,6 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_segments"] = false;
 
 
-
-
   // Use the parameter parser to get the maps of the parameters required for the
   // analysis
   LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
@@ -199,6 +196,7 @@ int main (int nNumberofArgs,char *argv[])
   map<string,string> this_string_map = LSDPP.get_string_parameters();
 
   // Now print the parameters for bug checking
+  cout << "PRINT THE PARAMETERS..." << endl;
   LSDPP.print_parameters();
 
   // location of the files
@@ -209,6 +207,7 @@ int main (int nNumberofArgs,char *argv[])
   string raster_ext =  LSDPP.get_dem_read_extension();
   vector<string> boundary_conditions = LSDPP.get_boundary_conditions();
   string CHeads_file = LSDPP.get_CHeads_file();
+  string BaselevelJunctions_file = LSDPP.get_BaselevelJunctions_file();
 
   cout << "Read filename is: " <<  DATA_DIR+DEM_ID << endl;
   cout << "Write filename is: " << OUT_DIR+OUT_ID << endl;
@@ -289,13 +288,11 @@ int main (int nNumberofArgs,char *argv[])
     filled_topography = topography_raster.fill(this_float_map["min_slope_for_fill"]);
   }
 
-
   if (this_bool_map["print_fill_raster"])
   {
     string filled_raster_name = OUT_DIR+OUT_ID+"_Fill";
     filled_topography.write_raster(filled_raster_name,raster_ext);
   }
-
 
   cout << "\t Flow routing..." << endl;
   // get a flow info object
@@ -319,6 +316,8 @@ int main (int nNumberofArgs,char *argv[])
   LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
 
   cout << "\t Loading Sources..." << endl;
+  cout << "\t Source file is... " << CHeads_file << endl;
+
   // load the sources
   vector<int> sources;
   if (CHeads_file == "NULL" || CHeads_file == "Null" || CHeads_file == "null")
@@ -373,7 +372,6 @@ int main (int nNumberofArgs,char *argv[])
     }
   }
 
-
   // Print sources
   if( this_bool_map["print_sources_to_csv"])
   {
@@ -388,8 +386,8 @@ int main (int nNumberofArgs,char *argv[])
       LSDSpatialCSVReader thiscsv(sources_csv_name);
       thiscsv.print_data_to_geojson(gjson_name);
     }
-
   }
+
   if (this_bool_map["print_stream_order_raster"])
   {
     LSDIndexRaster SOArray = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
@@ -406,13 +404,39 @@ int main (int nNumberofArgs,char *argv[])
   //Array2D<float> ChiGradientArray(NRows,NCols,NoData);
 
   // need to get base-level nodes , otherwise these catchments will be missed!
-  vector< int > BaseLevelJunctions_Initial = JunctionNetwork.get_BaseLevelJunctions();
+  vector< int > BaseLevelJunctions_Initial;
   vector< int > BaseLevelJunctions;
+
+  //Check to see if a list of junctions for extraction exists
+  if (BaselevelJunctions_file == "NULL" || BaselevelJunctions_file == "Null" || BaselevelJunctions_file == "null" || BaselevelJunctions_file.empty() == true)
+  {
+    //Get baselevel junction nodes from the whole network
+    BaseLevelJunctions_Initial = JunctionNetwork.get_BaseLevelJunctions();
+  }
+  else
+  {
+    //specify junctions to work on from a list file
+    string JunctionsFile = DATA_DIR+DEM_ID+"_junctions.list";
+
+	  vector<int> JunctionsList;
+	  ifstream infile(JunctionsFile.c_str());
+	  if (infile)
+	  {
+		  cout << "Junctions File " << JunctionsFile << " exists" << endl;;
+		  int n;
+		  while (infile >> n) BaseLevelJunctions_Initial.push_back(n);
+	  }
+	  else
+	  {
+		  cout << "Fatal Error: Junctions File " << JunctionsFile << " does not exist" << endl;;
+	  }
+  }
+
+	// count the number of baselevel junctions to work with
   int N_BaseLevelJuncs = BaseLevelJunctions_Initial.size();
   cout << "The number of base level junctions is: " << N_BaseLevelJuncs << endl;
 
-
-    // remove base level junctions for which catchment is too small
+  // remove base level junctions for which catchment is too small
   cout << "Removing basins with fewer than " << minimum_basin_size_pixels << " pixels" << endl;
   BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Area(BaseLevelJunctions_Initial,
                                               FlowInfo, FlowAcc, minimum_basin_size_pixels);
@@ -575,8 +599,18 @@ int main (int nNumberofArgs,char *argv[])
   {
     cout << "I am getting the source and outlet nodes for the overlapping channels" << endl;
     cout << "The n_nodes to visit are: " << n_nodes_to_visit << endl;
-    JunctionNetwork.get_overlapping_channels(FlowInfo, BaseLevelJunctions, DistanceFromOutlet,
+    
+    //Check to see if working with a specified list of baselevel junctions
+    if (BaselevelJunctions_file == "NULL" || BaselevelJunctions_file == "Null" || BaselevelJunctions_file == "null")
+    {
+      JunctionNetwork.get_overlapping_channels(FlowInfo, BaseLevelJunctions, DistanceFromOutlet,
                                     source_nodes,outlet_nodes,n_nodes_to_visit);
+    }
+    else
+    {
+      JunctionNetwork.get_overlapping_channels_to_downstream_outlets(FlowInfo, BaseLevelJunctions, DistanceFromOutlet,
+                                    source_nodes,outlet_nodes,n_nodes_to_visit);
+    }
   }
 
   if (this_bool_map["print_segmented_M_chi_map_to_csv"])
@@ -727,7 +761,7 @@ int main (int nNumberofArgs,char *argv[])
       cout << "Using a discharge raster to check collinearity." << endl;
       string movern_name = OUT_DIR+OUT_ID+"_movernstatsQ";
       ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge(FlowInfo,
-                      this_float_map["start_movern"], this_float_map["delta_movern"],
+                      JunctionNetwork, this_float_map["start_movern"], this_float_map["delta_movern"],
                       this_int_map["n_movern"],
                       this_bool_map["only_use_mainstem_as_reference"],
                       movern_name, Discharge);
@@ -735,7 +769,7 @@ int main (int nNumberofArgs,char *argv[])
     else
     {
       string movern_name = OUT_DIR+OUT_ID+"_movernstats";
-      ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern(FlowInfo,
+      ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern(FlowInfo, JunctionNetwork,
                       this_float_map["start_movern"], this_float_map["delta_movern"],
                       this_int_map["n_movern"],
                       this_bool_map["only_use_mainstem_as_reference"],

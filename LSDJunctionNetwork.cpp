@@ -4739,6 +4739,7 @@ void LSDJunctionNetwork::TypologyModel(LSDFlowInfo& FlowInfo, vector<int> Source
       if (node_test == 1)
       {
         //assign the catchID and hydrocode of this source
+        cout << "Catch ID: " << CatchIDs[j] << " Hydro code: " << HydroCodes[j] << endl;
         CatchID = CatchIDs[j];
         HydroCode = HydroCodes[j];
       }
@@ -7483,6 +7484,70 @@ void LSDJunctionNetwork::get_overlapping_channels(LSDFlowInfo& FlowInfo,
   for (int BL = 0; BL < N_baselevel_nodes; BL++)
   {
     int outlet_node = JunctionVector[BaseLevel_Junctions[BL] ];
+    //cout << "The outlet node is: " << outlet_node << endl;
+
+    // get all the source nodes of the base level
+    vector<int> source_nodes = get_all_source_nodes_of_an_outlet_junction(BaseLevel_Junctions[BL]);
+    //cout << "The number of sources is: " << source_nodes.size() << endl;
+
+
+    // sort the nodes by flow distance in ascending order
+    vector<int> SortedSources = FlowInfo.sort_node_list_based_on_raster(source_nodes, DistanceFromOutlet);
+
+    // get them in descending order
+    reverse(SortedSources.begin(),SortedSources.end());
+
+    // now loop through the sorted sources
+    int n_sources = int(SortedSources.size());
+
+    for(int s = 0; s<n_sources; s++)
+    {
+      // get the channel from this source and mark up the covered raster
+      thisOutlet = FlowInfo.get_downslope_node_after_fixed_visited_nodes(SortedSources[s],
+                  outlet_node, n_nodes_to_visit, VisitedRaster);
+
+      //cout << "Source number " << s << " source node is: " << SortedSources[s] << " BL node: " << outlet_node
+      //     << " and new outlet: " << thisOutlet << endl;
+
+
+      NewSources.push_back(SortedSources[s]);
+      NewOutlets.push_back(thisOutlet);
+    }
+
+  }
+
+  outlet_nodes = NewOutlets;
+  source_nodes = NewSources;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function is for calculating a bonehead version of the chi slope
+// and the chi intercept and is written for the condition that baselevel junctions
+// have been specified by the user
+// MDH 19/6/17
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDJunctionNetwork::get_overlapping_channels_to_downstream_outlets(LSDFlowInfo& FlowInfo,
+                                    vector<int> BaseLevel_Junctions,
+                                    LSDRaster& DistanceFromOutlet,
+                                    vector<int>& source_nodes,
+                                    vector<int>& outlet_nodes,
+                                    int n_nodes_to_visit)
+{
+  // Get the number of baselevel nodes
+  int N_baselevel_nodes = int(BaseLevel_Junctions.size());
+
+  // create the visited array
+  int not_visited = 0;
+  LSDIndexRaster VisitedRaster(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, GeoReferencingStrings,not_visited);
+
+  vector<int> NewSources;
+  vector<int> NewOutlets;
+  int thisOutlet;
+
+  // loop through these nodes
+  for (int BL = 0; BL < N_baselevel_nodes; BL++)
+  {
+    int outlet_node = get_penultimate_node_from_stream_link(BaseLevel_Junctions[BL],FlowInfo);
     cout << "The outlet node is: " << outlet_node << endl;
 
     // get all the source nodes of the base level
@@ -7518,6 +7583,7 @@ void LSDJunctionNetwork::get_overlapping_channels(LSDFlowInfo& FlowInfo,
   outlet_nodes = NewOutlets;
   source_nodes = NewSources;
 }
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function takes in two vectors with the rows and cols of a line and finds
 //the pixels along the line >= a threshold stream order

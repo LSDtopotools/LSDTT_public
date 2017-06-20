@@ -230,6 +230,19 @@ class LSDChiTools
     /// @date 4/02/2017
     void segment_counter(LSDFlowInfo& FlowInfo);
 
+    /// @brief This function is used to tag channels with a segment number
+    ///  It decides on segments if the M_Chi value has changed so should only be used
+    ///  with chi networks that have used a skip of 0 and a monte carlo itertions of 1
+    ///  This data is used by other routines to look at the spatial distribution of
+    ///  hillslope-channel coupling.
+    /// @detail WARNING: ONLY use if you have segmented with skip 0 and iterations 1. Otherwise
+    ///  you will get a new segment for every channel pixel
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @return LSDIndexRaster showing stream network indexed by segment ID
+    /// @author MDH
+    /// @date 15/06/2017
+    LSDIndexRaster segment_mapping(LSDFlowInfo& FlowInfo);
+
     /// @brief This function calculates the fitted elevations: It uses m_chi and b_chi
     ///  data to get the fitted elevation of the channel points.
     /// @param FlowInfo an LSDFlowInfo object
@@ -314,7 +327,9 @@ class LSDChiTools
     /// @param The file prefix for the data files
     /// @author SMM
     /// @date 16/05/2017
-    void calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo& FlowInfo,
+    /// MODIFIED FJC 17/06/17 to take a junction network as an argument - need to print out the outlet
+    /// junction of each basin to match to the basin key for visualisation
+    void calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JN,
                         float start_movern, float delta_movern, int n_movern,
                         bool only_use_mainstem_as_reference,
                         string file_prefix);
@@ -337,7 +352,7 @@ class LSDChiTools
     /// @author SMM
     /// @date 16/05/2017
     void calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge(LSDFlowInfo& FlowInfo,
-                        float start_movern, float delta_movern, int n_movern,
+                        LSDJunctionNetwork& JN, float start_movern, float delta_movern, int n_movern,
                         bool only_use_mainstem_as_reference,
                         string file_prefix,
                         LSDRaster& Discharge);
