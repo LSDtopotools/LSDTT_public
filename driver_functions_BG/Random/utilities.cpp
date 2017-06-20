@@ -198,6 +198,12 @@ int main (int nNumberofArgs,char *argv[])
     FillRaster.write_raster(fill_fname,raster_ext);
   }
 
+  if (this_bool_map["raster_trimmer"])
+  {
+    string LR_name = OUT_DIR+OUT_ID+"_lt";
+    LSDRaster LightRaster = topography_raster.RasterTrimmerPadded(50);
+    LightRaster.write_raster(LR_name,raster_ext);
+  }
 
 
   /*
