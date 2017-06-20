@@ -266,7 +266,7 @@ class LSDJunctionNetwork
   ///  is replaced in the function
   /// @author SMM
   /// @date 24/04/2017
-  void calculate_junction_angle_statistics_for_order(LSDFlowInfo& FlowInfo, int BasinOrder, 
+  void calculate_junction_angle_statistics_for_order(LSDFlowInfo& FlowInfo, int BasinOrder,
                              vector<int>& junction_list,
                              vector<float>& junction_angle_averages,
                              vector<float>& junction_angle_stderr,
@@ -274,13 +274,13 @@ class LSDJunctionNetwork
 
 
   /// @brief This prints the junction angles to a csv file
-  /// @param JunctionList The list of junctions to analyze. If this is an empty vector, 
+  /// @param JunctionList The list of junctions to analyze. If this is an empty vector,
   ///  the code analyses all junctions in the DEM
   /// @param FlowInfo The LSDFlowInfo object
   /// @param csv_name The name of the file. Needs full path and csv extension
   /// @author SMM
   /// @date 23/04/2017
-  void print_junction_angles_to_csv(vector<int> JunctionList, LSDFlowInfo& FlowInfo, 
+  void print_junction_angles_to_csv(vector<int> JunctionList, LSDFlowInfo& FlowInfo,
                                                        string csv_name);
 
   /// @brief This gets the junction number of a given node.
