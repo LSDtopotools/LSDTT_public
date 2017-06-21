@@ -496,6 +496,7 @@ void LSDChiTools::chi_map_to_csv(LSDFlowInfo& FlowInfo, string chi_map_fname,
 void LSDChiTools::chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
                                     vector<int> source_nodes,
                                     vector<int> outlet_nodes,
+                                    vector<int> baselevel_node_of_each_basin,
                                     LSDRaster& Elevation, LSDRaster& FlowDistance,
                                     LSDRaster& DrainageArea, LSDRaster& chi_coordinate)
 {
@@ -546,7 +547,7 @@ void LSDChiTools::chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
     //cout << "Sampling channel " << chan+1 << " of " << n_channels << endl;
 
     // get the base level
-    this_base_level = FlowInfo.retrieve_base_level_node(source_nodes[chan]);
+    this_base_level = baselevel_node_of_each_basin[chan];
     //cout << "Got the base level" << endl;
 
     // If a key to this base level does not exist, add one.
@@ -660,6 +661,7 @@ void LSDChiTools::chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
 void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
                                     vector<int> source_nodes,
                                     vector<int> outlet_nodes,
+                                    vector<int> baselevel_node_of_each_basin,
                                     LSDRaster& Elevation, LSDRaster& FlowDistance,
                                     LSDRaster& DrainageArea, LSDRaster& chi_coordinate,
                                     int target_nodes,
@@ -721,7 +723,7 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
     //cout << "Sampling channel " << chan+1 << " of " << n_channels << endl;
 
     // get the base level
-    this_base_level = FlowInfo.retrieve_base_level_node(source_nodes[chan]);
+    this_base_level = baselevel_node_of_each_basin[chan];
     //cout << "Got the base level" << endl;
 
     // If a key to this base level does not exist, add one.
@@ -851,6 +853,7 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
 void LSDChiTools::chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo,
                                     vector<int> source_nodes,
                                     vector<int> outlet_nodes,
+                                    vector<int> baselevel_node_of_each_basin,
                                     LSDRaster& Elevation, LSDRaster& FlowDistance,
                                     LSDRaster& DrainageArea, LSDRaster& chi_coordinate,
                                     int regression_nodes)

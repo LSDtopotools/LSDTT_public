@@ -482,6 +482,7 @@ class LSDChiTools
     /// @param FlowInfo an LSDFlowInfo object
     /// @param source_nodes a vector containing the sorted sorce nodes (by flow distance)
     /// @param outlet_nodes a vector continaing the outlet nodes
+    /// @param baselevel_node_of_each_basin a vector continaing the baselelve node of the basin for each channel
     /// @param Elevation an LSDRaster containing elevation info
     /// @param DistanceFromOutlet an LSDRaster with the flow distance
     /// @param DrainageArea an LSDRaster with the drainage area
@@ -490,6 +491,7 @@ class LSDChiTools
     void chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
                                     vector<int> source_nodes,
                                     vector<int> outlet_nodes,
+                                    vector<int> baselevel_node_of_each_basin,
                                     LSDRaster& Elevation, LSDRaster& FlowDistance,
                                     LSDRaster& DrainageArea, LSDRaster& chi_coordinate);
 
@@ -502,6 +504,7 @@ class LSDChiTools
     /// @param FlowInfo an LSDFlowInfo object
     /// @param source_nodes a vector containing the sorted sorce nodes (by flow distance)
     /// @param outlet_nodes a vector continaing the outlet nodes
+    /// @param baselevel_node_of_each_basin a vector continaing the baselelve node of the basin for each channel
     /// @param Elevation an LSDRaster containing elevation info
     /// @param DistanceFromOutlet an LSDRaster with the flow distance
     /// @param DrainageArea an LSDRaster with the drainage area
@@ -513,7 +516,8 @@ class LSDChiTools
     /// @author SMM
     /// @date 23/05/2016
     void chi_map_automator(LSDFlowInfo& FlowInfo, vector<int> source_nodes,
-                           vector<int> outlet_nodes, LSDRaster& Elevation, LSDRaster& FlowDistance,
+                           vector<int> outlet_nodes, vector<int> baselevel_node_of_each_basin,
+                           LSDRaster& Elevation, LSDRaster& FlowDistance,
                            LSDRaster& DrainageArea, LSDRaster& chi_coordinate,
                            int target_nodes, int n_iterations, int skip,
                            int minimum_segment_length, float sigma);
@@ -528,6 +532,7 @@ class LSDChiTools
     /// @param FlowInfo an LSDFlowInfo object
     /// @param source_nodes a vector continaing the sorted sorce nodes (by flow distance)
     /// @param outlet_nodes a vector continaing the outlet nodes
+    /// @param baselevel_node_of_each_basin a vector continaing the baselelve node of the basin for each channel
     /// @param Elevation an LSDRaster containing elevation info
     /// @param DistanceFromOutlet an LSDRaster with the flow distance
     /// @param DrainageArea an LSDRaster with the drainage area
@@ -537,6 +542,7 @@ class LSDChiTools
     /// @author SMM
     /// @date 02/06/2016
     void chi_map_automator_rudimentary(LSDFlowInfo& FlowInfo, vector<int> source_nodes, vector<int> outlet_nodes,
+                                    vector<int> baselevel_node_of_each_basin,
                                     LSDRaster& Elevation, LSDRaster& FlowDistance,
                                     LSDRaster& DrainageArea, LSDRaster& chi_coordinate,
                                     int regression_nodes);

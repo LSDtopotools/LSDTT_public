@@ -482,6 +482,8 @@ int main (int nNumberofArgs,char *argv[])
   //  cout << "Pixels for that node are: " << UPSN.size() << endl;
   //}
 
+  //============================================================================
+  // THE CHI STUFF STARTS HERE
   // now use a ChiTool object to print the chi tree to csv
   LSDChiTools ChiTool(FlowInfo);
 
@@ -493,7 +495,9 @@ int main (int nNumberofArgs,char *argv[])
     ChiTool.print_basins(FlowInfo, JunctionNetwork, BaseLevelJunctions, basin_raster_prefix);
   }
 
-  //============================================================================
+
+
+
   // calculate chi for the entire DEM
   cout << "Calculating the chi coordinate for A_0: " << A_0 << " and m/n: " << movern << endl;
   LSDRaster chi_coordinate;
@@ -599,6 +603,7 @@ int main (int nNumberofArgs,char *argv[])
   // now source and outlet nodes for segmentation and other operations.
   vector<int> source_nodes;
   vector<int> outlet_nodes;
+  vector<int> baselevel_node_of_each_basin;
   if (this_bool_map["print_segmented_M_chi_map_to_csv"]
         || this_bool_map["print_basic_M_chi_map_to_csv"]
         || this_bool_map["calculate_MLE_collinearity"]
@@ -609,15 +614,18 @@ int main (int nNumberofArgs,char *argv[])
     cout << "The n_nodes to visit are: " << n_nodes_to_visit << endl;
     
     //Check to see if working with a specified list of baselevel junctions
-    if (BaselevelJunctions_file == "NULL" || BaselevelJunctions_file == "Null" || BaselevelJunctions_file == "null")
+    if (this_string_map["BaselevelJunctions_file"] == "NULL" 
+        || this_string_map["BaselevelJunctions_file"] == "Null" 
+        || this_string_map["BaselevelJunctions_file"] == "null")
     {
+      cout << "I am not working with a BaselevelJunctions_file." << endl;
       JunctionNetwork.get_overlapping_channels(FlowInfo, BaseLevelJunctions, DistanceFromOutlet,
-                                    source_nodes,outlet_nodes,n_nodes_to_visit);
+                                    source_nodes,outlet_nodes,baselevel_node_of_each_basin,n_nodes_to_visit);
     }
     else
     {
       JunctionNetwork.get_overlapping_channels_to_downstream_outlets(FlowInfo, BaseLevelJunctions, DistanceFromOutlet,
-                                    source_nodes,outlet_nodes,n_nodes_to_visit);
+                                    source_nodes,outlet_nodes,baselevel_node_of_each_basin,n_nodes_to_visit);
     }
   }
 
@@ -635,7 +643,7 @@ int main (int nNumberofArgs,char *argv[])
     {
       n_iterations = 1;
       skip = 0;
-      ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes,
+      ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_coordinate, target_nodes,
                             n_iterations, skip, minimum_segment_length, sigma);
@@ -643,7 +651,7 @@ int main (int nNumberofArgs,char *argv[])
     }
     else
     {
-      ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes,
+      ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_coordinate, target_nodes,
                             n_iterations, skip, minimum_segment_length, sigma);
@@ -661,33 +669,6 @@ int main (int nNumberofArgs,char *argv[])
       LSDSpatialCSVReader thiscsv(csv_full_fname);
       thiscsv.print_data_to_geojson(gjson_name);
     }
-
-    // These print the source and baselelvel keys if wanted
-    if (this_bool_map["print_source_keys"])
-    {
-      string sources_keys_name = OUT_DIR+OUT_ID+"_SourceKeys.csv";
-      ChiTool.print_source_keys(FlowInfo, sources_keys_name);
-
-      if ( this_bool_map["convert_csv_to_geojson"])
-      {
-        string gjson_name = OUT_DIR+OUT_ID+"_SourceKeys.geojson";
-        LSDSpatialCSVReader thiscsv(sources_keys_name);
-        thiscsv.print_data_to_geojson(gjson_name);
-      }
-
-    }
-    if (this_bool_map["print_baselevel_keys"])
-    {
-      string baselevel_keys_name = OUT_DIR+OUT_ID+"_BaselevelKeys.csv";
-      ChiTool.print_baselevel_keys(FlowInfo, JunctionNetwork, baselevel_keys_name);
-
-      if ( this_bool_map["convert_csv_to_geojson"])
-      {
-        string gjson_name = OUT_DIR+OUT_ID+"_BaselevelKeys.geojson";
-        LSDSpatialCSVReader thiscsv(baselevel_keys_name);
-        thiscsv.print_data_to_geojson(gjson_name);
-      }
-    }
   }
 
   //============================================================================
@@ -698,7 +679,7 @@ int main (int nNumberofArgs,char *argv[])
   {
     float thresh_area_for_chi = 0;
     LSDChiTools ChiTool_chi_checker(FlowInfo);
-    ChiTool_chi_checker.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes,
+    ChiTool_chi_checker.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_coordinate);
 
@@ -717,7 +698,7 @@ int main (int nNumberofArgs,char *argv[])
 
       // now get the chi coordinate without the discharge
       LSDRaster chi_noQ = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,A_0,thresh_area_for_chi);
-      ChiTool_chi_checker.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes,
+      ChiTool_chi_checker.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_noQ);
       string chi_data_maps_string = OUT_DIR+OUT_ID+"_checkchi.csv";
@@ -752,7 +733,7 @@ int main (int nNumberofArgs,char *argv[])
     // Lets make a new chi tool: this won't be segmented since we only
     // need it for m/n
     LSDChiTools ChiTool_movern(FlowInfo);
-    ChiTool_movern.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes,
+    ChiTool_movern.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_coordinate);
 
@@ -794,7 +775,7 @@ int main (int nNumberofArgs,char *argv[])
 
     cout << "Running automator" << endl;
     // we always need to run the automator first
-    ChiTool_movern.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes,
+    ChiTool_movern.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_coordinate);
 
@@ -827,7 +808,7 @@ int main (int nNumberofArgs,char *argv[])
   {
     cout << "I am going to calculate slope-area data for you. " << endl;
     LSDChiTools ChiTool_SA(FlowInfo);
-    ChiTool_SA.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes,
+    ChiTool_SA.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_coordinate);
 
@@ -852,7 +833,7 @@ int main (int nNumberofArgs,char *argv[])
     // Note that this uses the chi coordinate derived from early in this code
     // and will use the discharge-based raster if that has been called.
     LSDChiTools ChiTool2(FlowInfo);
-    ChiTool2.chi_map_automator_rudimentary(FlowInfo, source_nodes,outlet_nodes,
+    ChiTool2.chi_map_automator_rudimentary(FlowInfo, source_nodes,outlet_nodes, baselevel_node_of_each_basin,
                                     filled_topography, DistanceFromOutlet, DrainageArea,
                                     chi_coordinate, basic_Mchi_regression_nodes);
     string csv_full_fname = OUT_DIR+OUT_ID+"_MChiBasic.csv";
@@ -865,6 +846,49 @@ int main (int nNumberofArgs,char *argv[])
       thiscsv.print_data_to_geojson(gjson_name);
     }
   }
+
+
+  if (this_bool_map["print_segmented_M_chi_map_to_csv"]
+        || this_bool_map["print_basic_M_chi_map_to_csv"]
+        || this_bool_map["calculate_MLE_collinearity"]
+        || this_bool_map["print_profiles_fxn_movern_csv"]
+        || this_bool_map["print_slope_area_data"])
+  {
+    cout << "I am going to calculate slope-area data for you. " << endl;
+    LSDChiTools ChiTool_keys(FlowInfo);
+    ChiTool_keys.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
+                            filled_topography, DistanceFromOutlet,
+                            DrainageArea, chi_coordinate);
+
+    // These print the source and baselelvel keys if wanted
+    if (this_bool_map["print_source_keys"])
+    {
+      string sources_keys_name = OUT_DIR+OUT_ID+"_SourceKeys.csv";
+      ChiTool_keys.print_source_keys(FlowInfo, sources_keys_name);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_SourceKeys.geojson";
+        LSDSpatialCSVReader thiscsv(sources_keys_name);
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+
+    }
+    if (this_bool_map["print_baselevel_keys"])
+    {
+      string baselevel_keys_name = OUT_DIR+OUT_ID+"_BaselevelKeys.csv";
+      ChiTool_keys.print_baselevel_keys(FlowInfo, JunctionNetwork, baselevel_keys_name);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_BaselevelKeys.geojson";
+        LSDSpatialCSVReader thiscsv(baselevel_keys_name);
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+    }
+  }
+
+
 
   if (this_bool_map["write hillshade"])
   {
@@ -881,7 +905,7 @@ int main (int nNumberofArgs,char *argv[])
   {
     n_iterations = 1;
     skip = 0;
-    ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes,
+    ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
                           filled_topography, DistanceFromOutlet,
                           DrainageArea, chi_coordinate, target_nodes,
                           n_iterations, skip, minimum_segment_length, sigma);

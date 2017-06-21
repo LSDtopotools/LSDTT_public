@@ -1586,6 +1586,25 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
                                 vector<int>& source_nodes, vector<int>& outlet_nodes,
                                 int n_nodes_to_visit);
 
+  /// @detail This overwrites two vecotrs that give all of the starting and
+  ///  finishing nodes of channels in a basin
+  /// @param FlowInfo an LSDFlowInfo object
+  /// @param BaseLevel_Junctions an integer vector that contains the base level junctions
+  /// @param DistanceFromOutlet an LSDRaster with the flow distance
+  /// @param source_nodes a vector continaing the sorted sorce nodes (by flow distance)
+  ///  THIS GETS OVERWRITTEN
+  /// @param outlet_nodes a vector continaing the outlet nodes
+  ///  THIS GETS OVERWRITTEN
+  /// @param baselevel_nodes a vector continaing the baselevel nodes (i.e. the node of the outlet of the basin)
+  ///  THIS GETS OVERWRITTEN
+  /// @author SMM
+  /// @date 21/06/2017
+  void get_overlapping_channels(LSDFlowInfo& FlowInfo, vector<int> BaseLevel_Junctions,
+                                LSDRaster& DistanceFromOutlet,
+                                vector<int>& source_nodes, vector<int>& outlet_nodes,
+                                vector<int>& baselevel_nodes, 
+                                int n_nodes_to_visit);
+
   /// @detail This overwrites two vectors that give all of the starting and
   ///  finishing nodes of channels in a basin continuing downstream from the selected junction to its outlet
   /// @param FlowInfo an LSDFlowInfo object
@@ -1604,6 +1623,28 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
                                     vector<int>& outlet_nodes,
                                     int n_nodes_to_visit);
                                     
+  /// @detail This overwrites two vectors that give all of the starting and
+  ///  finishing nodes of channels in a basin continuing downstream from the selected junction to its outlet
+  /// @brief I THINK THIS MIGHT CAUSE A SEG FAULT: NEED TO UPDATE!!!!!
+  /// @param FlowInfo an LSDFlowInfo object
+  /// @param BaseLevel_Junctions an integer vector that contains the base level junctions
+  /// @param DistanceFromOutlet an LSDRaster with the flow distance
+  /// @param source_nodes a vector continaing the sorted sorce nodes (by flow distance)
+  ///  THIS GETS OVERWRITTEN
+  /// @param outlet_nodes a vector continaing the outlet nodes
+  ///  THIS GETS OVERWRITTEN
+  /// @param baselevel_nodes a vector continaing the baselevel nodes (i.e. the node of the outlet of the basin)
+  ///  THIS GETS OVERWRITTEN
+  /// @author SMM
+  /// @date 21/6/2017
+  void get_overlapping_channels_to_downstream_outlets(LSDFlowInfo& FlowInfo,
+                                    vector<int> BaseLevel_Junctions,
+                                    LSDRaster& DistanceFromOutlet,
+                                    vector<int>& source_nodes,
+                                    vector<int>& outlet_nodes,
+                                    vector<int>& baselevel_nodes, 
+                                    int n_nodes_to_visit);
+
 /// @detail This function gets all the pixels along a line defined by a series of points and finds the pixels greater than a specified stream order.
 /// @param Points PointData object with the points
 /// @param ElevationRaster raster of elevations
