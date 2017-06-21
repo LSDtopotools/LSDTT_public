@@ -6220,6 +6220,69 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_Edge_Ignore_Outlet_Reach(vector<
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function loops through all basins and takes the largest basin
+// in each baselevel basin that is not influenced by nodata
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDJunctionNetwork::Prune_To_Largest_Complete_Basins(vector<int>& BaseLevelJunctions_Initial,
+                                              LSDFlowInfo& FlowInfo, LSDRaster& TestRaster, LSDIndexRaster& FlowAcc)
+{
+  // We will loop through each basin. We get all the junctions in the basin
+  // we then test if each is influenced by nodata: we then keep the largest one
+  // influence by nodata
+  vector<int> pruned_basin_list;
+  int this_pruned_basin;
+  int N_BL_Nodes = int(BaseLevelJunctions_Initial.size());
+  for(int BLJ = 0; BLJ<N_BL_Nodes; BLJ++)
+  {
+    // get all the donor junctions. We need to have the baselevel junction
+    // first so we have to append the upslope junctions after that
+    vector<int> upslope_juncs;
+    upslope_juncs.push_back(BaseLevelJunctions_Initial[BLJ]);
+    vector<int> new_upslope_juncs = get_upslope_junctions( BaseLevelJunctions_Initial[BLJ] );
+    upslope_juncs.insert(upslope_juncs.end(), new_upslope_juncs.begin(), new_upslope_juncs.end());
+    
+    // get the flow accumulation from each of these basins
+    vector<int> contributing_pixels_junctions = get_contributing_pixels_from_specified_junctions(upslope_juncs,
+                                                     FlowInfo, FlowAcc);
+    
+    int NDValue = -99;
+    this_pruned_basin = NDValue;
+    
+    int N_total_juncs = int(upslope_juncs.size());
+    int max_contributing_pixels = 0;
+    
+    // loop thyrough all the upslope junctions, testing if they are 
+    // influenced by the edge and how many contributing pixels they have
+    for(int this_junc_index = 0; this_junc_index< N_total_juncs; this_junc_index++)
+    {
+      // get the current node index
+      int this_NI = JunctionVector[ upslope_juncs[this_junc_index] ];
+      bool is_influenced_by_nodata = FlowInfo.is_upstream_influenced_by_nodata(this_NI, TestRaster);
+      
+      // only record data if it is not influenced by nodata
+      if (not is_influenced_by_nodata)
+      {
+        // only record data if it is bigger than the previous biggest node
+        if( contributing_pixels_junctions[this_junc_index] > max_contributing_pixels)
+        {
+          max_contributing_pixels =  contributing_pixels_junctions[this_junc_index];
+          this_pruned_basin = upslope_juncs[this_junc_index];
+        }
+      }
+    }
+    
+    // only keep the basin if it has a sensible junction number
+    if(this_pruned_basin != NDValue)
+    {
+      pruned_basin_list.push_back(this_pruned_basin);
+    }
+  }
+
+  return pruned_basin_list;
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This prunes a list of baselevel junctions by removing junctions whose
 // contributing pixels are less than a threshold
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -6295,6 +6358,36 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_Largest(vector<int>& BaseLevelJu
   return BL_Donor_junctions_pruned;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function returns a vector of the contributing pixels from a list
+// of junctions
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDJunctionNetwork::get_contributing_pixels_from_specified_junctions(vector<int>& JunctionList,
+                                              LSDFlowInfo& FlowInfo, LSDIndexRaster& FlowAcc)
+{
+  int N_Juncs = int(JunctionList.size());
+  int row,col, current_node;
+  vector<int> N_contributing_pixels;
+  if(JunctionList.size() <= 0)
+  {
+    cout << "I am afraid you have no junctions in your junction list. Exiting." << endl;
+  }
+  else
+  {
+    for(int i = 0; i < N_Juncs; ++i)
+    {
+      current_node = JunctionVector[JunctionList[i]];
+      FlowInfo.retrieve_current_row_and_col(current_node,row,col);
+    
+      // get the flow accumulation
+      N_contributing_pixels.push_back(FlowAcc.get_data_element(row,col));
+    }
+  }
+  
+  return N_contributing_pixels;
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
