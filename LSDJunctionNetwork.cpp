@@ -7775,11 +7775,13 @@ void LSDJunctionNetwork::get_overlapping_channels_to_downstream_outlets(LSDFlowI
   vector<int> NewOutlets;
   vector<int> NewBaselevelNodes;
   int thisOutlet;
+  int outlet_junction;
 
   // loop through these nodes
   for (int BL = 0; BL < N_baselevel_nodes; BL++)
   {
     int outlet_node = get_penultimate_node_from_stream_link(BaseLevel_Junctions[BL],FlowInfo);
+    int outlet_junction_node = JunctionVector[BaseLevel_Junctions[BL] ];
     cout << "The outlet node is: " << outlet_node << endl;
 
     // get all the source nodes of the base level
@@ -7810,8 +7812,8 @@ void LSDJunctionNetwork::get_overlapping_channels_to_downstream_outlets(LSDFlowI
       NewOutlets.push_back(thisOutlet);
       
       
-      cout << "Search for Heybubba: This will probably cause a segfault. It needs to be a junction!" << endl;
-      NewBaselevelNodes.push_back(outlet_node);
+      //cout << "Search for Heybubba: This will probably cause a segfault. It needs to be a junction!" << endl;
+      NewBaselevelNodes.push_back(outlet_junction_node);
       
     }
 
