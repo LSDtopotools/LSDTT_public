@@ -3420,7 +3420,7 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
                    << M_chi_data_map[this_node] << ","
                    << b_chi_data_map[this_node] << ","
                    << source_keys_map[this_node] << ","
-                   << baselevel_keys_map[this_node] << ",";
+                   << baselevel_keys_map[this_node];
 
       if(have_segmented_elevation)
       {
