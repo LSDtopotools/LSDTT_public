@@ -138,4 +138,8 @@ int main (int nNumberofArgs,char *argv[])
     // check to see if the raster exists
   LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);
 
+  // now load the CRNCosmoData object
+  LSDCosmoData CosmoData(DATA_DIR,DEM_ID);
+
+
 }

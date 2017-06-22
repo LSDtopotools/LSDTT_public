@@ -118,9 +118,11 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["minimum_basin_size_pixels"] = 1000;
   bool_default_map["test_drainage_boundaries"] = false;
   bool_default_map["only_take_largest_basin"] = false;
-  bool_default_map["find_largest_complete_basins"] = false;
+  
+  // IMPORTANT: S-A analysis and chi analysis wont work if you have a truncated
+  // basin. For this reason the default is to test for edge effects
+  bool_default_map["find_largest_complete_basins"] = true;
   bool_default_map["print_basin_raster"] = false;
-
 
   // printing of rasters and data before chi analysis
   bool_default_map["convert_csv_to_geojson"] = false;  // THis converts all cv files to geojson (for easier loading in a GIS)
