@@ -610,7 +610,9 @@ int main (int nNumberofArgs,char *argv[])
         || this_bool_map["print_basic_M_chi_map_to_csv"]
         || this_bool_map["calculate_MLE_collinearity"]
         || this_bool_map["print_profiles_fxn_movern_csv"]
-        || this_bool_map["print_slope_area_data"])
+        || this_bool_map["print_slope_area_data"]
+        || this_bool_map["print_source_keys"]
+        || this_bool_map["print_baselevel_keys"])
   {
     cout << "I am getting the source and outlet nodes for the overlapping channels" << endl;
     cout << "The n_nodes to visit are: " << n_nodes_to_visit << endl;
@@ -850,13 +852,10 @@ int main (int nNumberofArgs,char *argv[])
   }
 
 
-  if (this_bool_map["print_segmented_M_chi_map_to_csv"]
-        || this_bool_map["print_basic_M_chi_map_to_csv"]
-        || this_bool_map["calculate_MLE_collinearity"]
-        || this_bool_map["print_profiles_fxn_movern_csv"]
-        || this_bool_map["print_slope_area_data"])
+  if (this_bool_map["print_source_keys"]
+        || this_bool_map["print_baselevel_keys"])
   {
-    cout << "I am going to calculate slope-area data for you. " << endl;
+    cout << "I am going to print the source and baselevel keys for you. " << endl;
     LSDChiTools ChiTool_keys(FlowInfo);
     ChiTool_keys.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
                             filled_topography, DistanceFromOutlet,
