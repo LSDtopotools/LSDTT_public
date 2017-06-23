@@ -705,7 +705,7 @@ class LSDChiTools
     map<int,int> source_keys_map;
 
     /// This has all the nodes. The key (in the map) is the node index, and the
-    ///  value is the baselelvel key. Again used for visualisation
+    ///  value is the baselevel key. Again used for visualisation
     map<int,int> baselevel_keys_map;
 
     /// THis has as many elements as there are sources. The key in the map is the

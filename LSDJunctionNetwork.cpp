@@ -2141,6 +2141,33 @@ int LSDJunctionNetwork::get_Next_StreamOrder_Junction(int junction)
   return next_junc;
 }
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+// This function checks whether a junction is upsream of another junction
+// SMM
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+bool LSDJunctionNetwork::is_junction_upstream(int current_junction, int test_junction)
+{
+  bool i = false;
+
+  int start_SVector_junction = SVectorIndex[current_junction];
+  int end_SVector_junction = start_SVector_junction+NContributingJunctions[current_junction];
+
+  int SVector_test_junction = SVectorIndex[test_junction];
+
+  for(int junction = start_SVector_junction; junction < end_SVector_junction; junction++)
+  {
+    if (junction == SVector_test_junction)
+    {
+      i = true;
+    }
+  }
+
+  return i;
+}
+
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 // This function checks whether a junction is at base level
 // FJC 11/01/2017
@@ -7753,7 +7780,8 @@ void LSDJunctionNetwork::get_overlapping_channels_to_downstream_outlets(LSDFlowI
 // Overloaded version that spits out the baselevel nodes as well. 
 // This is a bit screwy as the baslevel node will be the next junction down
 // 
-// NEEDS WORK TO MAKE SURE THE NODE IS A JUNCTION!!!!
+// This is working now but need to check if going upstream on junction leads 
+// to funny basin shapes
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDJunctionNetwork::get_overlapping_channels_to_downstream_outlets(LSDFlowInfo& FlowInfo,
@@ -7775,7 +7803,7 @@ void LSDJunctionNetwork::get_overlapping_channels_to_downstream_outlets(LSDFlowI
   vector<int> NewOutlets;
   vector<int> NewBaselevelNodes;
   int thisOutlet;
-  int outlet_junction;
+  //int outlet_junction;
 
   // loop through these nodes
   for (int BL = 0; BL < N_baselevel_nodes; BL++)

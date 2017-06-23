@@ -1481,13 +1481,22 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @date 26/10/2014
   int get_Next_StreamOrder_Junction(int junction);
 
-	/// @details Returns an integer to check whether junction
-	/// is at base level.
-	/// @param junction the junction of interest
-	/// @ return int  1 = base level, 0 = not base level
-	/// @author FJC
-	/// @date 11/01/2017
-	int is_Junction_BaseLevel(int junction);
+  /// @details Returns an bool to check whether junction
+  ///  is upstream of another base level
+  /// @param current_junction the junction of interest
+  /// @param test_junction the junction to see if it is upstream
+  /// @ return true or false
+  /// @author SMM
+  /// @date 23/06/2017
+  bool is_junction_upstream(int current_junction, int test_junction);
+
+  /// @details Returns an integer to check whether junction
+  /// is at base level.
+  /// @param junction the junction of interest
+  /// @ return int  1 = base level, 0 = not base level
+  /// @author FJC
+  /// @date 11/01/2017
+  int is_Junction_BaseLevel(int junction);
 
   /// @return The number of junctions
   int get_NJunctions() const { return int(JunctionVector.size()); }

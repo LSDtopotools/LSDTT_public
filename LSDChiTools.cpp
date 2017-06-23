@@ -3625,7 +3625,7 @@ void LSDChiTools::print_basins(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& Juncti
 
   ofstream basin_info_out;
   basin_info_out.open(basin_info_name.c_str());
-  basin_info_out << "latitude,longitude,outlet_latitude,outlet_longitude,outlet_junction" << endl;
+  basin_info_out << "latitude,longitude,outlet_latitude,outlet_longitude,outlet_junction,basin_key" << endl;
 
   // Make sure the full lat-long information is printed
   basin_info_out.precision(9);
@@ -3639,7 +3639,7 @@ void LSDChiTools::print_basins(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& Juncti
   // Loop through the junctions
   for(int BN = 0; BN<N_Juncs; BN++)
   {
-    //cout << "Getting basin " << BN << " and the junction is: "  << BaseLevelJunctions[BN] << endl;
+    //cout << "Getting basin " << BN << " and the junction is: "  << Junctions[BN] << endl;
     LSDBasin thisBasin(Junctions[BN],FlowInfo, JunctionNetwork);
     //cout << "...got it!" << endl;
     AllTheBasins.push_back(thisBasin);
@@ -3648,6 +3648,16 @@ void LSDChiTools::print_basins(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& Juncti
     // to be overwritten by a smaller basin
     drainage_of_other_basins[Junctions[BN]] = thisBasin.get_NumberOfCells();
 
+
+    // We need to see if we can find the basin key
+    int basin_key = -9999;
+    
+    // need to node index of this junction
+    int node_of_junction =  JunctionNetwork.get_Node_of_Junction( Junctions[BN] );
+    if ( key_to_baselevel_map.find( node_of_junction) != key_to_baselevel_map.end() )
+    {
+      basin_key = key_to_baselevel_map[node_of_junction];
+    }
 
     // get the centroid and outlet locations
     centroid_i = thisBasin.get_Centroid_i();
@@ -3660,7 +3670,7 @@ void LSDChiTools::print_basins(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& Juncti
     get_lat_and_long_locations(centroid_i, centroid_j, cen_lat, cen_long, Converter);
     get_lat_and_long_locations(outlet_i, outlet_j, out_lat, out_long, Converter);
 
-    basin_info_out << cen_lat << "," << cen_long << "," << out_lat << "," << out_long << "," << Junctions[BN] << endl;
+    basin_info_out << cen_lat << "," << cen_long << "," << out_lat << "," << out_long << "," << Junctions[BN] << "," << basin_key << endl;
   }
   basin_info_out.close();
 
