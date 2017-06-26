@@ -6396,7 +6396,7 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_By_Contributing_Pixel_Window_Rem
       second_pruning.push_back( first_pruning[this_junc_index] );
     }
   }
-  cout << "I now have " << second_pruning.size() << "Junctions left." << endl;
+  cout << "I now have " << second_pruning.size() << " Junctions left." << endl;
   
   // Now prune based on nesting
   cout << "Now I'm pruning out any nested junctions." << endl;
@@ -6415,6 +6415,7 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_If_Nested(vector<int>& Junctions
 {
   // Find out how many junctions there are
   int N_Juncs = int(Junctions_Initial.size());
+  //cout << "There are " << N_Juncs << " Junctions, from which I'll compare" << endl;
   
   // get the contributing pixels of these junctions
   // get the flow accumulation (in pixels) from each of these basins
@@ -6430,28 +6431,39 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_If_Nested(vector<int>& Junctions
   // each vector has two elements in it: the first and second channel in the comibination
   vector< vector<int> > combo_vecvec = combinations(N_Juncs, k, zero_indexed);
   
-  vector<int> combo_first = combo_vecvec[0];
-  vector<int> combo_second = combo_vecvec[1];
+  //cout << "The combo vecvec has: " << combo_vecvec.size() << " elements" << endl;
+  
+  //vector<int> combo_first = combo_vecvec[0];
+  //vector<int> combo_second = combo_vecvec[1];
+  //cout << "Running through combinations, of which there are: " << combo_first.size() << endl;
+  
   
   // get the number of combinations
-  int N_combinations = int(combo_vecvec[0].size());
+  int N_combinations = int(combo_vecvec.size());
   
   // loop through all the combinations. There is always a bigger and smaller junction 
   // in the combination. We store these in bigger smaller 
   vector<int> bigger;
   vector<int> smaller;
   
+  int first_index; 
+  int second_index;
+  
   for (int i = 0; i<N_combinations; i++)
   {
-    if (combo_first[i] > combo_second[i])
+    
+    // get the indices into the junction vector of all the combinations
+    first_index = combo_vecvec[i][0];
+    second_index = combo_vecvec[i][1];
+    if ( contributing_pixels_junctions[ first_index ] > contributing_pixels_junctions[ second_index ])
     {
-      bigger.push_back(combo_first[i]);
-      smaller.push_back(combo_second[i]);
+      bigger.push_back(first_index);
+      smaller.push_back(second_index);
     }
     else
     {
-      bigger.push_back(combo_second[i]);
-      smaller.push_back(combo_first[i]);
+      bigger.push_back(second_index);
+      smaller.push_back(first_index);
     }
   }
   
@@ -6461,11 +6473,11 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_If_Nested(vector<int>& Junctions
   for (int i = 0; i<N_combinations; i++)
   {
     // Only check if the junction has not already been found to be nested
-    if ( Nested_Junctions.find( smaller[i]) == Nested_Junctions.end() ) 
+    if ( Nested_Junctions.find( smaller[i] ) == Nested_Junctions.end() ) 
     {
       
       // If it is upstream, add it to the nested map
-      is_upstream = is_junction_upstream(bigger[i], smaller[i]);
+      is_upstream = is_junction_upstream(Junctions_Initial[ bigger[i] ], Junctions_Initial[ smaller[i] ]);
       if(is_upstream)
       {
         Nested_Junctions[ smaller[i] ] = 1;
@@ -6478,7 +6490,7 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_If_Nested(vector<int>& Junctions
   for (int i = 0; i<N_Juncs; i++)
   {
     // keep the junctions that are not in the nested junctions map
-    if ( Nested_Junctions.find( Junctions_Initial[i]) == Nested_Junctions.end() )
+    if ( Nested_Junctions.find( i ) == Nested_Junctions.end() )
     {
       non_nested_junctions.push_back( Junctions_Initial[i]);
     } 
