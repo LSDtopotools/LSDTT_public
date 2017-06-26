@@ -415,6 +415,54 @@ class LSDJunctionNetwork
                                               LSDFlowInfo& FlowInfo, LSDRaster& TestRaster,
                                               LSDIndexRaster& FlowAcc);
 
+
+    /// @brief This function removes basins that fall outside a contributing pixel
+    ///  Window
+    /// @param Junctions_Initial a vector of integers containg an inital
+    ///  list of junctions
+    /// @param FlowInfo The LSDFlowInfo object
+    /// @param FlowAcc an LSDIndexRaster with the number of pixels for flow accumulation
+    /// @param lower_limit The minimum number of contributing pixels
+    /// @param upper_limit The maximum number of contributing pixels
+    /// @return a pruned list of base level nodes
+    /// @author SMM
+    /// @date 26/06/17
+    vector<int> Prune_Junctions_By_Contributing_Pixel_Window(vector<int>& Junctions_Initial,
+                                              LSDFlowInfo& FlowInfo, LSDIndexRaster& FlowAcc, 
+                                              int lower_limit, int upper_limit);
+
+
+    /// @brief This function removes basins that fall outside a contributing pixel
+    ///  Window, those that are bounded by nodata, and those that
+    ///  are nested. A rather intensive pruning process that hopeuflly results
+    ///  in a number of basins that are a similar size
+    /// @detail This doesn't just look for baselevel junctions: it goes through
+    ///  all junctions in the DEM. Warning: computationally expensive!
+    /// @param FlowInfo The LSDFlowInfo object
+    /// @param TestRaster A raster that is just used to look for nodata
+    /// @param FlowAcc an LSDIndexRaster with the number of pixels for flow accumulation
+    /// @param lower_limit The minimum number of contributing pixels
+    /// @param upper_limit The maximum number of contributing pixels
+    /// @return a pruned list of base level nodes
+    /// @author SMM
+    /// @date 26/06/17
+    vector<int>  Prune_Junctions_By_Contributing_Pixel_Window_Remove_Nested_And_Nodata(LSDFlowInfo& FlowInfo, 
+                                              LSDRaster& TestRaster, LSDIndexRaster& FlowAcc, 
+                                              int lower_limit, int upper_limit);
+
+    /// @brief This function removes basins that are nested within any other 
+    ///  basin in the list
+    /// @param Junctions_Initial a vector of integers containg an inital
+    ///  list of junctions
+    /// @param FlowInfo The LSDFlowInfo object
+    /// @param TestRaster A raster that is just used to look for nodata
+    /// @param FlowAcc an LSDIndexRaster with the number of pixels for flow accumulation
+    /// @return a pruned list of base level nodes
+    /// @author SMM
+    /// @date 26/06/17
+    vector<int> Prune_Junctions_If_Nested(vector<int>& Junctions_Initial,
+                                      LSDFlowInfo& FlowInfo, LSDIndexRaster& FlowAcc);
+
   /// @brief This function takes a list of junctions and then prunes
   ///  junctions based on their number of contributing pixels
   /// @param BaseLevelJunctions_Initial a vector of integers containg an inital

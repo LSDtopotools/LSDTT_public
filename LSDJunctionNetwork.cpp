@@ -6309,6 +6309,186 @@ vector<int> LSDJunctionNetwork::Prune_To_Largest_Complete_Basins(vector<int>& Ba
 
 }
 
+
+
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function loops through all basins and takes the largest basin
+// in each baselevel basin that is not influenced by nodata
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDJunctionNetwork::Prune_Junctions_By_Contributing_Pixel_Window(vector<int>& Junctions_Initial,
+                                              LSDFlowInfo& FlowInfo, LSDIndexRaster& FlowAcc, 
+                                              int lower_limit, int upper_limit)
+{
+
+  // get the flow accumulation (in pixels) from each of these basins
+  vector<int> contributing_pixels_junctions = get_contributing_pixels_from_specified_junctions(Junctions_Initial,
+                                                     FlowInfo, FlowAcc);
+
+  // We will loop through each basin. We get all the junctions in the basin
+  // we then test if each is influenced by nodata: we then keep the largest one
+  // influence by nodata
+  vector<int> pruned_basin_list;
+  int this_CP;
+  int N_J = int(contributing_pixels_junctions.size());
+  
+  // loop through all the basins getting the ones in the size window
+  for(int J = 0; J<N_J; J++)
+  {
+    this_CP = contributing_pixels_junctions[J];
+    
+    // if the junction is within the contributing pixel window, keep it. 
+    if( this_CP >= lower_limit && this_CP < upper_limit)
+    {
+      pruned_basin_list.push_back( Junctions_Initial[J] );
+    }
+  }
+
+  return pruned_basin_list;
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function loops through all basins and takes the largest basin
+// in each baselevel basin that is not influenced by nodata
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDJunctionNetwork::Prune_Junctions_By_Contributing_Pixel_Window_Remove_Nested_And_Nodata(LSDFlowInfo& FlowInfo, 
+                                              LSDRaster& TestRaster, LSDIndexRaster& FlowAcc, 
+                                              int lower_limit, int upper_limit)
+{
+
+  // We use ALL the junctions for this operation
+  vector<int> Junctions_Initial;
+  for (int i = 0; i< NJunctions; i++)
+  {
+    Junctions_Initial.push_back(i);
+  }
+  
+  // get the flow accumulation (in pixels) from each of these basins
+  cout << "First let me prune within the contributing area window." << endl;
+  cout << " I'm starting with " << Junctions_Initial.size() << " junctions." << endl;
+  vector<int> first_pruning = Prune_Junctions_By_Contributing_Pixel_Window(Junctions_Initial,FlowInfo, 
+                                              FlowAcc, lower_limit, upper_limit);
+  cout << "Right, I've pruned those and have " << first_pruning.size() << " junctions left." << endl;
+
+  // So now we need to prune the basins bounded by nodata, and prune the nested
+  // basins. Which to do first? The nodata pruning is computationally expensive:
+  // it requires a search of all the pixels in a basin. But the problem is
+  // that if we prune by nesting we might remove a load of basins in a large
+  // basin that are nested, only for that large basin to be removed later by the 
+  // nodata pruning. So even though it will be slow we need to prune by
+  // nodata first.
+  cout << "Now I am going to see if any are draining to the edge. " << endl;
+  int N_total_juncs = int(first_pruning.size());
+  vector<int> second_pruning;
+  for(int this_junc_index = 0; this_junc_index< N_total_juncs; this_junc_index++)
+  {
+    // get the current node index
+    int this_NI = JunctionVector[ first_pruning[this_junc_index] ];
+    bool is_influenced_by_nodata = FlowInfo.is_upstream_influenced_by_nodata(this_NI, TestRaster);
+      
+    // only record data if it is not influenced by nodata
+    if (not is_influenced_by_nodata)
+    {
+      second_pruning.push_back( first_pruning[this_junc_index] );
+    }
+  }
+  cout << "I now have " << second_pruning.size() << "Junctions left." << endl;
+  
+  // Now prune based on nesting
+  cout << "Now I'm pruning out any nested junctions." << endl;
+  vector<int> third_pruning = Prune_Junctions_If_Nested(second_pruning,FlowInfo, FlowAcc);
+  cout << "Finished with pruning, I have " << third_pruning.size() << " junctions left." << endl;
+  return third_pruning;
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function takes a list of junctions and then prunes them on the basis
+// of whether they are nested. Nested junctions are eliminated. 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDJunctionNetwork::Prune_Junctions_If_Nested(vector<int>& Junctions_Initial,
+                                      LSDFlowInfo& FlowInfo, LSDIndexRaster& FlowAcc)
+{
+  // Find out how many junctions there are
+  int N_Juncs = int(Junctions_Initial.size());
+  
+  // get the contributing pixels of these junctions
+  // get the flow accumulation (in pixels) from each of these basins
+  vector<int> contributing_pixels_junctions = get_contributing_pixels_from_specified_junctions(Junctions_Initial,
+                                                     FlowInfo, FlowAcc);
+
+
+  // now get all the possible two pair combinations of these junctions
+  bool zero_indexed = true;   // this is just because the junction indices are numbered from zero
+  int k = 2;                  // We want combinations of 2 junctions
+
+  // the vec vec holds a vector of each possible combination of channels
+  // each vector has two elements in it: the first and second channel in the comibination
+  vector< vector<int> > combo_vecvec = combinations(N_Juncs, k, zero_indexed);
+  
+  vector<int> combo_first = combo_vecvec[0];
+  vector<int> combo_second = combo_vecvec[1];
+  
+  // get the number of combinations
+  int N_combinations = int(combo_vecvec[0].size());
+  
+  // loop through all the combinations. There is always a bigger and smaller junction 
+  // in the combination. We store these in bigger smaller 
+  vector<int> bigger;
+  vector<int> smaller;
+  
+  for (int i = 0; i<N_combinations; i++)
+  {
+    if (combo_first[i] > combo_second[i])
+    {
+      bigger.push_back(combo_first[i]);
+      smaller.push_back(combo_second[i]);
+    }
+    else
+    {
+      bigger.push_back(combo_second[i]);
+      smaller.push_back(combo_first[i]);
+    }
+  }
+  
+  map<int,int> Nested_Junctions;
+  bool is_upstream;
+  // now we loop through all combos, looking for  nested basins
+  for (int i = 0; i<N_combinations; i++)
+  {
+    // Only check if the junction has not already been found to be nested
+    if ( Nested_Junctions.find( smaller[i]) == Nested_Junctions.end() ) 
+    {
+      
+      // If it is upstream, add it to the nested map
+      is_upstream = is_junction_upstream(bigger[i], smaller[i]);
+      if(is_upstream)
+      {
+        Nested_Junctions[ smaller[i] ] = 1;
+      }
+    }
+  }
+  
+  // Now loop thrugh all the junctions, checking to see if they are nested
+  vector<int> non_nested_junctions;
+  for (int i = 0; i<N_Juncs; i++)
+  {
+    // keep the junctions that are not in the nested junctions map
+    if ( Nested_Junctions.find( Junctions_Initial[i]) == Nested_Junctions.end() )
+    {
+      non_nested_junctions.push_back( Junctions_Initial[i]);
+    } 
+  }
+  return non_nested_junctions;
+}
+
+
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This prunes a list of baselevel junctions by removing junctions whose
 // contributing pixels are less than a threshold

@@ -115,12 +115,14 @@ int main (int nNumberofArgs,char *argv[])
 
   // Selecting basins
   int_default_map["threshold_contributing_pixels"] = 1000;
-  int_default_map["minimum_basin_size_pixels"] = 1000;
+  int_default_map["minimum_basin_size_pixels"] = 5000;
+  int_default_map["maximum_basin_size_pixels"] = 500000;
   bool_default_map["test_drainage_boundaries"] = false;
   bool_default_map["only_take_largest_basin"] = false;
   
   // IMPORTANT: S-A analysis and chi analysis wont work if you have a truncated
   // basin. For this reason the default is to test for edge effects
+  bool_default_map["find_complete_basins_in_window"] = false;
   bool_default_map["find_largest_complete_basins"] = true;
   bool_default_map["print_basin_raster"] = false;
 
@@ -447,7 +449,16 @@ int main (int nNumberofArgs,char *argv[])
   cout << "Now I have " << BaseLevelJunctions.size() << " baselelvel junctions left. " << endl;
 
   // remove basins drainage from edge if that is what the user wants
-  if (this_bool_map["find_largest_complete_basins"])
+  if (this_bool_map["find_complete_basins_in_window"])
+  {
+    cout << "I am going to look for basins in a pixel window that are not influended by nodata." << endl;
+    cout << "I am also going to remove any nested basins." << endl;
+    BaseLevelJunctions = JunctionNetwork.Prune_Junctions_By_Contributing_Pixel_Window_Remove_Nested_And_Nodata(FlowInfo, filled_topography, FlowAcc, 
+                                              this_int_map["minimum_basin_size_pixels"],this_int_map["maximum_basin_size_pixels"]);
+    
+    
+  }
+  else if (this_bool_map["find_largest_complete_basins"])
   {
     cout << "I am looking for the largest basin not influenced by nodata within all baselevel nodes." << endl;
     BaseLevelJunctions = JunctionNetwork.Prune_To_Largest_Complete_Basins(BaseLevelJunctions,FlowInfo, filled_topography, FlowAcc);
