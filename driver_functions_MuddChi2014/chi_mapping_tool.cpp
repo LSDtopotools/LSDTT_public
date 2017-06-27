@@ -111,19 +111,20 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["remove_seas"] = false; // elevations above minimum and maximum will be changed to nodata
   bool_default_map["only_check_parameters"] = false;
   string_default_map["CHeads_file"] = "NULL";
-  string_default_map["BaselevelJunctions_file"] = "NULL";
+  
 
   // Selecting basins
   int_default_map["threshold_contributing_pixels"] = 1000;
   int_default_map["minimum_basin_size_pixels"] = 5000;
   int_default_map["maximum_basin_size_pixels"] = 500000;
-  bool_default_map["test_drainage_boundaries"] = false;
+  bool_default_map["test_drainage_boundaries"] = true;
   bool_default_map["only_take_largest_basin"] = false;
+  string_default_map["BaselevelJunctions_file"] = "NULL";
   
   // IMPORTANT: S-A analysis and chi analysis wont work if you have a truncated
   // basin. For this reason the default is to test for edge effects
   bool_default_map["find_complete_basins_in_window"] = false;
-  bool_default_map["find_largest_complete_basins"] = true;
+  bool_default_map["find_largest_complete_basins"] = false;
   bool_default_map["print_basin_raster"] = false;
 
   // printing of rasters and data before chi analysis
