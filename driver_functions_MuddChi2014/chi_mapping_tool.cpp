@@ -264,7 +264,6 @@ int main (int nNumberofArgs,char *argv[])
   }
   cout << "Got the dem: " <<  DATA_DIR+DEM_ID << endl;
 
-
   float Resolution = topography_raster.get_DataResolution();
   map<string,string> GRS = topography_raster.get_GeoReferencingStrings();
 
@@ -296,9 +295,23 @@ int main (int nNumberofArgs,char *argv[])
 
   if (this_bool_map["print_fill_raster"])
   {
+    cout << "Let me print the fill raster for you."  << endl;
     string filled_raster_name = OUT_DIR+OUT_ID+"_Fill";
     filled_topography.write_raster(filled_raster_name,raster_ext);
   }
+
+  if (this_bool_map["write hillshade"])
+  {
+    cout << "Let me print the hillshade for you. " << endl;
+    float hs_azimuth = 315;
+    float hs_altitude = 45;
+    float hs_z_factor = 1;
+    LSDRaster hs_raster = topography_raster.hillshade(hs_altitude,hs_azimuth,hs_z_factor);
+
+    string hs_fname = OUT_DIR+OUT_ID+"_hs";
+    hs_raster.write_raster(hs_fname,raster_ext);
+  }
+
 
   cout << "\t Flow routing..." << endl;
   // get a flow info object
@@ -334,7 +347,6 @@ int main (int nNumberofArgs,char *argv[])
     sources = FlowInfo.get_sources_index_threshold(FlowAcc, threshold_contributing_pixels);
 
     cout << "The number of sources is: " << sources.size() << endl;
-
   }
   else
   {
@@ -360,7 +372,6 @@ int main (int nNumberofArgs,char *argv[])
       LSDSpatialCSVReader thiscsv(OUT_DIR+OUT_ID+"_CN.csv");
       thiscsv.print_data_to_geojson(gjson_name);
     }
-
   }
 
   // print junctions
@@ -407,20 +418,52 @@ int main (int nNumberofArgs,char *argv[])
     JIArray.write_raster(JI_raster_name,raster_ext);
   }
 
-  //Array2D<float> ChiGradientArray(NRows,NCols,NoData);
-
   // need to get base-level nodes , otherwise these catchments will be missed!
-  vector< int > BaseLevelJunctions_Initial;
   vector< int > BaseLevelJunctions;
-
+  vector< int > BaseLevelJunctions_Initial;
+  
   //Check to see if a list of junctions for extraction exists
   if (BaselevelJunctions_file == "NULL" || BaselevelJunctions_file == "Null" || BaselevelJunctions_file == "null" || BaselevelJunctions_file.empty() == true)
   {
-    //Get baselevel junction nodes from the whole network
-    BaseLevelJunctions_Initial = JunctionNetwork.get_BaseLevelJunctions();
+    cout << "No junction file. I am going to select basins for you using an algorithm. " << endl;
+    // remove basins drainage from edge if that is what the user wants
+    if (this_bool_map["find_complete_basins_in_window"])
+    {
+      cout << "I am going to look for basins in a pixel window that are not influended by nodata." << endl;
+      cout << "I am also going to remove any nested basins." << endl;
+      BaseLevelJunctions = JunctionNetwork.Prune_Junctions_By_Contributing_Pixel_Window_Remove_Nested_And_Nodata(FlowInfo, filled_topography, FlowAcc, 
+                                              this_int_map["minimum_basin_size_pixels"],this_int_map["maximum_basin_size_pixels"]);
+    }
+    else
+    {
+      //Get baselevel junction nodes from the whole network
+      BaseLevelJunctions_Initial = JunctionNetwork.get_BaseLevelJunctions();
+      
+      // now prune these by drainage area
+      cout << "Removing basins with fewer than " << minimum_basin_size_pixels << " pixels" << endl;
+      BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Area(BaseLevelJunctions_Initial,
+                                              FlowInfo, FlowAcc, minimum_basin_size_pixels);
+      cout << "Now I have " << BaseLevelJunctions.size() << " baselelvel junctions left. " << endl;
+      
+      if (this_bool_map["find_largest_complete_basins"])
+      {
+        cout << "I am looking for the largest basin not influenced by nodata within all baselevel nodes." << endl;
+        BaseLevelJunctions = JunctionNetwork.Prune_To_Largest_Complete_Basins(BaseLevelJunctions,FlowInfo, filled_topography, FlowAcc);
+      }
+      else
+      {
+        if (this_bool_map["test_drainage_boundaries"])     // now check for edge effects
+        {
+          cout << endl << endl << "I am going to remove basins draining to the edge." << endl;
+          BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions,FlowInfo, filled_topography);
+          //BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge(BaseLevelJunctions,FlowInfo);
+        }
+      }
+    }
   }
   else
   {
+    cout << "I am attempting to read junctions from a junction list." << endl;
     //specify junctions to work on from a list file
     string JunctionsFile = DATA_DIR+DEM_ID+"_junctions.list";
 
@@ -434,49 +477,12 @@ int main (int nNumberofArgs,char *argv[])
     }
     else
     {
-      cout << "Fatal Error: Junctions File " << JunctionsFile << " does not exist" << endl;;
+      cout << "Fatal Error: Junctions File " << JunctionsFile << " does not exist" << endl;
+      exit(EXIT_FAILURE);
     }
   }
 
-	// count the number of baselevel junctions to work with
-  int N_BaseLevelJuncs = BaseLevelJunctions_Initial.size();
-  cout << "The number of base level junctions is: " << N_BaseLevelJuncs << endl;
-
-  // remove base level junctions for which catchment is too small
-  cout << "Removing basins with fewer than " << minimum_basin_size_pixels << " pixels" << endl;
-  BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Area(BaseLevelJunctions_Initial,
-                                              FlowInfo, FlowAcc, minimum_basin_size_pixels);
-  cout << "Now I have " << BaseLevelJunctions.size() << " baselelvel junctions left. " << endl;
-
-  // remove basins drainage from edge if that is what the user wants
-  if (this_bool_map["find_complete_basins_in_window"])
-  {
-    cout << "I am going to look for basins in a pixel window that are not influended by nodata." << endl;
-    cout << "I am also going to remove any nested basins." << endl;
-    BaseLevelJunctions = JunctionNetwork.Prune_Junctions_By_Contributing_Pixel_Window_Remove_Nested_And_Nodata(FlowInfo, filled_topography, FlowAcc, 
-                                              this_int_map["minimum_basin_size_pixels"],this_int_map["maximum_basin_size_pixels"]);
-    
-    
-  }
-  else if (this_bool_map["find_largest_complete_basins"])
-  {
-    cout << "I am looking for the largest basin not influenced by nodata within all baselevel nodes." << endl;
-    BaseLevelJunctions = JunctionNetwork.Prune_To_Largest_Complete_Basins(BaseLevelJunctions,FlowInfo, filled_topography, FlowAcc);
-  }
-  else
-  {
-    if (this_bool_map["test_drainage_boundaries"])
-    {
-      cout << endl << endl << "I am going to remove basins draining to the edge." << endl;
-      BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions,FlowInfo, filled_topography);
-      //BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge(BaseLevelJunctions,FlowInfo);
-    }
-    else
-    {
-      cout << "I'm not going to remove any drainage basins drainage to the edge." << endl;
-    }
-  }
-
+  // Now check for larges basin, if that is what you want. 
   if (this_bool_map["only_take_largest_basin"])
   {
     cout << "I am only going to take the largest basin." << endl;
@@ -484,8 +490,13 @@ int main (int nNumberofArgs,char *argv[])
   }
 
   // Correct number of base level junctions
-  N_BaseLevelJuncs = BaseLevelJunctions.size();
+  int N_BaseLevelJuncs = BaseLevelJunctions.size();
   cout << "The number of basins I will analyse is: " << N_BaseLevelJuncs << endl;
+  if (N_BaseLevelJuncs == 0)
+  {
+    cout << "I am stopping here since I don't have any basins to analyse." << endl;
+    exit(EXIT_FAILURE);
+  }
 
   // This is for debugging
   //for (int BN = 0; BN< N_BaseLevelJuncs; BN++)
@@ -906,16 +917,7 @@ int main (int nNumberofArgs,char *argv[])
 
 
 
-  if (this_bool_map["write hillshade"])
-  {
-    float hs_azimuth = 315;
-    float hs_altitude = 45;
-    float hs_z_factor = 1;
-    LSDRaster hs_raster = topography_raster.hillshade(hs_altitude,hs_azimuth,hs_z_factor);
 
-    string hs_fname = OUT_DIR+OUT_ID+"_hs";
-    hs_raster.write_raster(hs_fname,raster_ext);
-  }
 
   if(this_bool_map["ksn_knickpoint_analysis"])
   {
