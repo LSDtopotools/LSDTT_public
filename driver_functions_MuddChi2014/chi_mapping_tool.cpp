@@ -110,7 +110,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["remove_seas"] = false; // elevations above minimum and maximum will be changed to nodata
   bool_default_map["only_check_parameters"] = false;
   string_default_map["CHeads_file"] = "NULL";
-  
+
 
   // Selecting basins
   int_default_map["threshold_contributing_pixels"] = 1000;
@@ -119,7 +119,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["test_drainage_boundaries"] = true;
   bool_default_map["only_take_largest_basin"] = false;
   string_default_map["BaselevelJunctions_file"] = "NULL";
-  
+
   // IMPORTANT: S-A analysis and chi analysis wont work if you have a truncated
   // basin. For this reason the default is to test for edge effects
   bool_default_map["find_complete_basins_in_window"] = false;
@@ -137,6 +137,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_DrainageArea_raster"] = false;
   bool_default_map["write hillshade"] = false;
   bool_default_map["print_basic_M_chi_map_to_csv"] = false;
+  bool_default_map["ksn_knickpoint_analysis"] = false;
 
   // basic parameters for calculating chi
   float_default_map["A_0"] = 1;
@@ -421,7 +422,7 @@ int main (int nNumberofArgs,char *argv[])
   // need to get base-level nodes , otherwise these catchments will be missed!
   vector< int > BaseLevelJunctions;
   vector< int > BaseLevelJunctions_Initial;
-  
+
   //Check to see if a list of junctions for extraction exists
   if (BaselevelJunctions_file == "NULL" || BaselevelJunctions_file == "Null" || BaselevelJunctions_file == "null" || BaselevelJunctions_file.empty() == true)
   {
@@ -431,20 +432,20 @@ int main (int nNumberofArgs,char *argv[])
     {
       cout << "I am going to look for basins in a pixel window that are not influended by nodata." << endl;
       cout << "I am also going to remove any nested basins." << endl;
-      BaseLevelJunctions = JunctionNetwork.Prune_Junctions_By_Contributing_Pixel_Window_Remove_Nested_And_Nodata(FlowInfo, filled_topography, FlowAcc, 
+      BaseLevelJunctions = JunctionNetwork.Prune_Junctions_By_Contributing_Pixel_Window_Remove_Nested_And_Nodata(FlowInfo, filled_topography, FlowAcc,
                                               this_int_map["minimum_basin_size_pixels"],this_int_map["maximum_basin_size_pixels"]);
     }
     else
     {
       //Get baselevel junction nodes from the whole network
       BaseLevelJunctions_Initial = JunctionNetwork.get_BaseLevelJunctions();
-      
+
       // now prune these by drainage area
       cout << "Removing basins with fewer than " << minimum_basin_size_pixels << " pixels" << endl;
       BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Area(BaseLevelJunctions_Initial,
                                               FlowInfo, FlowAcc, minimum_basin_size_pixels);
       cout << "Now I have " << BaseLevelJunctions.size() << " baselelvel junctions left. " << endl;
-      
+
       if (this_bool_map["find_largest_complete_basins"])
       {
         cout << "I am looking for the largest basin not influenced by nodata within all baselevel nodes." << endl;
@@ -482,7 +483,7 @@ int main (int nNumberofArgs,char *argv[])
     }
   }
 
-  // Now check for larges basin, if that is what you want. 
+  // Now check for larges basin, if that is what you want.
   if (this_bool_map["only_take_largest_basin"])
   {
     cout << "I am only going to take the largest basin." << endl;
@@ -628,10 +629,10 @@ int main (int nNumberofArgs,char *argv[])
   {
     cout << "I am getting the source and outlet nodes for the overlapping channels" << endl;
     cout << "The n_nodes to visit are: " << n_nodes_to_visit << endl;
-    
+
     //Check to see if working with a specified list of baselevel junctions
-    if (this_string_map["BaselevelJunctions_file"] == "NULL" 
-        || this_string_map["BaselevelJunctions_file"] == "Null" 
+    if (this_string_map["BaselevelJunctions_file"] == "NULL"
+        || this_string_map["BaselevelJunctions_file"] == "Null"
         || this_string_map["BaselevelJunctions_file"] == "null")
     {
       cout << "I am not working with a BaselevelJunctions_file." << endl;
