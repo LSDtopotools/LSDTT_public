@@ -288,11 +288,13 @@ class LSDChiTools
     ///  a channel (with a particular source number) against a reference channel
     /// @param FlowInfo an LSDFlowInfo object
     /// @param reference_channel the source key of the reference channel
-    /// @param test_channel the source key of the test channel
+    /// @param test_channel the source key of the test channel    
+    /// @param sigma The uncertainty for the MLE calculation. In practice this simply scales MLE
+    ///     If you have many nodes this number needs to be large
     /// @return The maximum likelihood estimator
     /// @author SMM
     /// @date 04/05/2017
-    float test_segment_collinearity(LSDFlowInfo& FlowInfo, int reference_channel, int test_channel);
+    float test_segment_collinearity(LSDFlowInfo& FlowInfo, int reference_channel, int test_channel, float sigma);
 
     /// @brief This computes a collinearity metric for all combinations of
     ///  channels for a given basin
@@ -305,12 +307,15 @@ class LSDChiTools
     /// @param test_source integer vector replaced in function that has the test vector for each comparison
     /// @param MLE_values the MLE for each comparison. Replaced in function.
     /// @param RMSE_values the RMSE for each comparison (i.e. between source 0 1, 0 2, 0 3, etc.). Replaced in function.
+    /// @param sigma The uncertainty for the MLE calculation. In practice this simply scales MLE
+    ///     If you have many nodes this number needs to be large
     /// @author SMM
     /// @date 08/05/2017
     float test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo, bool only_use_mainstem_as_reference,
                                         int basin_key,
                                         vector<int>& reference_source, vector<int>& test_source,
-                                        vector<float>& MLE_values, vector<float>& RMSE_values);
+                                        vector<float>& MLE_values, vector<float>& RMSE_values, 
+                                        float sigma);
 
     /// @brief This wraps the collinearity tester, looping through different m over n
     ///  values and calculating goodness of fit statistics.
@@ -325,6 +330,8 @@ class LSDChiTools
     /// @param n_novern the number of m/n values to use
     /// @param only_use_mainstem_as_reference a boolean, if true only compare channels to mainstem .
     /// @param The file prefix for the data files
+    /// @param sigma The uncertainty for the MLE calculation. In practice this simply scales MLE
+    ///     If you have many nodes this number needs to be large
     /// @author SMM
     /// @date 16/05/2017
     /// MODIFIED FJC 17/06/17 to take a junction network as an argument - need to print out the outlet
@@ -332,7 +339,7 @@ class LSDChiTools
     void calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JN,
                         float start_movern, float delta_movern, int n_movern,
                         bool only_use_mainstem_as_reference,
-                        string file_prefix);
+                        string file_prefix, float sigma);
 
     /// @brief This wraps the collinearity tester, looping through different m over n
     ///  values and calculating goodness of fit statistics.
@@ -349,13 +356,15 @@ class LSDChiTools
     /// @param only_use_mainstem_as_reference a boolean, if true only compare channels to mainstem .
     /// @param The file prefix for the data files
     /// @param Discharge and LSDRaster of discharge
+    /// @param sigma The uncertainty for the MLE calculation. In practice this simply scales MLE
+    ///     If you have many nodes this number needs to be large
     /// @author SMM
     /// @date 16/05/2017
     void calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge(LSDFlowInfo& FlowInfo,
                         LSDJunctionNetwork& JN, float start_movern, float delta_movern, int n_movern,
                         bool only_use_mainstem_as_reference,
                         string file_prefix,
-                        LSDRaster& Discharge);
+                        LSDRaster& Discharge, float sigma);
 
     /// @brief This prints a series of chi profiles as a function of mover
     ///  for visualisation

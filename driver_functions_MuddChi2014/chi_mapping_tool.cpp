@@ -149,6 +149,7 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["n_movern"] = 8;
   float_default_map["start_movern"] = 0.1;
   float_default_map["delta_movern"] = 0.1;
+  float_default_map["collinearity_MLE_sigma"] = 1000;
   float_default_map["SA_vertical_interval"] = 20;
   float_default_map["log_A_bin_width"] = 0.1;
   bool_default_map["print_slope_area_data"] = false;
@@ -770,7 +771,7 @@ int main (int nNumberofArgs,char *argv[])
                       JunctionNetwork, this_float_map["start_movern"], this_float_map["delta_movern"],
                       this_int_map["n_movern"],
                       this_bool_map["only_use_mainstem_as_reference"],
-                      movern_name, Discharge);
+                      movern_name, Discharge, this_float_map["collinearity_MLE_sigma"]);
     }
     else
     {
@@ -779,7 +780,7 @@ int main (int nNumberofArgs,char *argv[])
                       this_float_map["start_movern"], this_float_map["delta_movern"],
                       this_int_map["n_movern"],
                       this_bool_map["only_use_mainstem_as_reference"],
-                      movern_name);
+                      movern_name, this_float_map["collinearity_MLE_sigma"]);
     }
   }
 

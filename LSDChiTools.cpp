@@ -1970,7 +1970,8 @@ void LSDChiTools::print_basin_and_source_indexing_to_screen()
 // This function test the collinearity of all segments compared to a reference
 // segment
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int reference_channel, int test_channel)
+float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int reference_channel, int test_channel, 
+                                             float sigma)
 {
   // The way this works is that one of the segments (delineated by its source number)
   // is taken as a reference, and then all other segments are compared to how
@@ -1979,7 +1980,6 @@ float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int referenc
   // minimum chi of the reference segment the data point is ignored.
 
   float MLE = 1;
-  float sigma = 1000;
   // first get the source node of the reference channel
   if ( reference_channel >= int(key_to_source_map.size()) || test_channel >= int(key_to_source_map.size()) )
   {
@@ -2012,7 +2012,8 @@ float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int referenc
 float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo, bool only_use_mainstem_as_reference,
                                                  int baselevel_key,
                                                  vector<int>& reference_source, vector<int>& test_source,
-                                                 vector<float>& MLE_values, vector<float>& RMSE_values)
+                                                 vector<float>& MLE_values, vector<float>& RMSE_values, 
+                                                 float sigma)
 {
   cout << "Testing the segment collinearity for basin key " << baselevel_key << endl;
   // get some information about the number of basins
@@ -2079,7 +2080,6 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
   vector<int> MLE_index;   // the index into the combo_vecvec that is used to
                            // tell which combinations have MLE values
 
-  float sigma = 1000;
   int last_ref_channel = -1;
 
   int n_combinations = int(combo_vecvev.size());
@@ -2210,7 +2210,7 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
 void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JN,
                         float start_movern, float delta_movern, int n_movern,
                         bool only_use_mainstem_as_reference,
-                        string file_prefix)
+                        string file_prefix, float sigma)
 {
   // these vectors store all the values which are then used for printing
   vector< vector<float> > RMSE_vecvec;
@@ -2278,7 +2278,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern(LSDFlowInfo&
     {
       tot_MLE = test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
                                   basin_key,
-                                  reference_source, test_source, MLE_values, RMSE_values);
+                                  reference_source, test_source, MLE_values, RMSE_values, sigma);
       // concatenate the vectors to the "all" vectors
       all_reference_source.insert(all_reference_source.end(), reference_source.begin(), reference_source.end() );
       all_test_source.insert(all_test_source.end(), test_source.begin(), test_source.end() );
@@ -2343,7 +2343,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
                         LSDJunctionNetwork& JN, float start_movern, float delta_movern, int n_movern,
                         bool only_use_mainstem_as_reference,
                         string file_prefix,
-                        LSDRaster& Discharge)
+                        LSDRaster& Discharge, float sigma)
 {
   // these vectors store all the values which are then used for printing
   vector< vector<float> > RMSE_vecvec;
@@ -2414,7 +2414,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
     {
       tot_MLE = test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
                                   basin_key,
-                                  reference_source, test_source, MLE_values, RMSE_values);
+                                  reference_source, test_source, MLE_values, RMSE_values, sigma);
       // concatenate the vectors to the "all" vectors
       all_reference_source.insert(all_reference_source.end(), reference_source.begin(), reference_source.end() );
       all_test_source.insert(all_test_source.end(), test_source.begin(), test_source.end() );
