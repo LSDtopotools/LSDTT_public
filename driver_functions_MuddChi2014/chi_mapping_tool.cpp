@@ -482,6 +482,11 @@ int main (int nNumberofArgs,char *argv[])
       cout << "Fatal Error: Junctions File " << JunctionsFile << " does not exist" << endl;
       exit(EXIT_FAILURE);
     }
+    
+    // Now make sure none of the basins drain to the edge
+    cout << "I am pruning junctions that are influenced by the edge of the DEM!" << endl;
+    BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions_Initial, FlowInfo, filled_topography);
+    
   }
 
   // Now check for larges basin, if that is what you want.
