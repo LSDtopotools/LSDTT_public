@@ -113,6 +113,7 @@ int main (int nNumberofArgs,char *argv[])
 
 	// reading in the csv file with the lat long points
 	cout << "Reading in the csv file" << endl;
+	cout << "CSV File is: " << this_string_map["csv_file"] << endl; 
 	LSDSpatialCSVReader SwathPoints(FilledRaster, DATA_DIR+this_string_map["csv_file"]);
 	vector<float> UTME;
 	vector<float> UTMN;
