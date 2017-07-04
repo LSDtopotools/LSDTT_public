@@ -471,6 +471,27 @@ class LSDChiTools
     void bin_slope_area_data(LSDFlowInfo& FlowInfo, vector<int>& SA_midpoint_node,
                              vector<float>& SA_slope, float log_bin_width, string filename);
 
+
+    /// @detail This takes slope area data and bins the data so that we can
+    ///  pretend horrible, noisy S-A data is adequate for understanding
+    ///  channel behaviour. It then segments these horrible data using the 
+    /// segmentation algorithm.
+    /// @detail Happy 4th of July everyone!
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param vertical_interval the mean intervale over which slope is measured
+    /// @param midpoint_nodes The node indices of the places where slope is calculated.
+    ///  This is replaced in the function.
+    /// @param Slopes the slopes. This is replaced in the function.
+    /// @param log_bin_width The width of the bins (in log A)
+    /// @param filename The name of the output file (with path and extension)
+    /// @author SMM
+    /// @date 04/07/2017
+    void segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
+                                          vector<int>& SA_midpoint_node,
+                                          vector<float>& SA_slope,
+                                          float log_bin_width,
+                                          string filename);
+
     /// @brief This takes the midpoint node and slope vectors produced by the slope_area_analysis
     ///  and prints them to a csv
     /// @param SA_midpoint_node the node index of the midpoints used in to caluclate slope
