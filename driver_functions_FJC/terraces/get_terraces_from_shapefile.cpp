@@ -272,11 +272,13 @@ int main (int nNumberofArgs,char *argv[])
 
 		// push back results to file for plotting
 		ofstream output_file_CC;
-		string output_fname = "_terrace_swath_plots"+jn_name+".txt";
+		string output_fname = "_terrace_swath_plots"+jn_name+".csv";
 		output_file_CC.open((DATA_DIR+DEM_ID+output_fname).c_str());
+		output_file_CC << "PatchID,DistAlongBaseline,ChannelRelief,Relief_st_dev,Relief_st_err" << endl;
 		for (int i = 0; i < int(CC_vector[0].size()); ++i)
 		{
-			output_file_CC << CC_vector[0][i] << " " << CC_vector[1][i] << " " << CC_vector[2][i] << endl;
+			output_file_CC << CC_vector[0][i] << "," << CC_vector[1][i] << "," << CC_vector[2][i] << ","
+			<< CC_vector[3][i] << "," << CC_vector[4][i] << endl;
 		}
 		output_file_CC.close();
 
