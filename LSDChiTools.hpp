@@ -483,6 +483,7 @@ class LSDChiTools
     ///  This is replaced in the function.
     /// @param Slopes the slopes. This is replaced in the function.
     /// @param log_bin_width The width of the bins (in log A)
+    /// @param minimum_segment_length Minimum segment length for segmentation algorithm
     /// @param filename The name of the output file (with path and extension)
     /// @author SMM
     /// @date 04/07/2017
@@ -490,6 +491,7 @@ class LSDChiTools
                                           vector<int>& SA_midpoint_node,
                                           vector<float>& SA_slope,
                                           float log_bin_width,
+                                          int minimum_segment_length,
                                           string filename);
 
     /// @brief This takes the midpoint node and slope vectors produced by the slope_area_analysis

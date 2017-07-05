@@ -153,6 +153,8 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["SA_vertical_interval"] = 20;
   float_default_map["log_A_bin_width"] = 0.1;
   bool_default_map["print_slope_area_data"] = false;
+  bool_default_map["segment_slope_area_data"] = false;
+  int_default_map["slope_area_minimum_segment_length"] = 3;
   bool_default_map["only_use_mainstem_as_reference"] = true;
   // these loop through m/n spitting out profies and calculating goodness of fit
   // If you want to visualise the data you need to switch both of these to true
@@ -849,6 +851,16 @@ int main (int nNumberofArgs,char *argv[])
 
     cout << "Printing binned S-A data." << endl;
     ChiTool_SA.bin_slope_area_data(FlowInfo, SA_midpoint_nodes, SA_slopes, this_float_map["log_A_bin_width"],filename_binned);
+    
+    if (this_bool_map["segment_slope_area_data"])
+    {
+      cout << "I am going to segment the S-A data from the main stem channel for you." << endl;
+      string filename_SAseg = OUT_DIR+OUT_ID+"_SAsegmented.csv";
+      ChiTool_SA.segment_binned_slope_area_data(FlowInfo, SA_midpoint_nodes, SA_slopes, 
+                                  this_float_map["log_A_bin_width"],
+                                  this_int_map["slope_area_minimum_segment_length"],
+                                  filename_SAseg);
+    }
   }
 
   if (this_bool_map["print_basic_M_chi_map_to_csv"])

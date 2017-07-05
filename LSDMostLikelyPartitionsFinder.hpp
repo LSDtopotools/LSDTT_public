@@ -224,7 +224,7 @@ class LSDMostLikelyPartitionsFinder
 
     // these functions populate the arrays used for calcualting the best fit segments
 
-    /// @brief This function is used to calcualte the slope, intercept, and likelihood of all possible linear segments along a series of data points.
+    /// @brief This function is used to calculate the slope, intercept, and likelihood of all possible linear segments along a series of data points.
     ///
     /// @details The function requires the data in x and y vectors, the maximum segment length
     /// and sigma, the standard deviation of the measured data. This will be approxamately

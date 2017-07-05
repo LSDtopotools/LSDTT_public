@@ -3255,9 +3255,16 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
                                           vector<int>& SA_midpoint_node,
                                           vector<float>& SA_slope,
                                           float log_bin_width,
+                                          int minimum_segment_length,
                                           string filename)
 {
 
+  // open the file
+  ofstream outfile;
+  outfile.open(filename.c_str());
+  outfile << "basin,log_A_mean,log_S_median,log_S_segmented,stdErr_logS" << endl;
+  
+  
   vector<float> empty_vec;
 
   // we will store the data in maps where the key is the source node
@@ -3376,13 +3383,17 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
         binned_logS_stdErr.push_back(StandardErrorY_output[i]);
         binnned_NObvs.push_back(n_Obvs);
         
+        // we need to collect a list of basins. This is rather inefficient but 
+        // in grand scheme of things this is far from the rate limiting step
         if (basins_with_data.size() == 0)
         {
+          // This is for the first basin. 
           basins_with_data.push_back(basin_key_of_this_source_map[this_source_key]);
           last_basin = basin_key_of_this_source_map[this_source_key];
         }
         else
         {
+          // After the first basin, we just check to see if the basin has changed
           if (basin_key_of_this_source_map[this_source_key] !=  last_basin)
           {
             basins_with_data.push_back(basin_key_of_this_source_map[this_source_key]);
@@ -3407,12 +3418,18 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
     // is a prototype. 
     vector<float> area_data;
     vector<float> slope_data;
+    vector<float> std_err_data;
+    
     int mainstem_source = -9999;
     
+    // loop through all the nodes collecting only nodes that are in the correct
+    // basin and with the main stem (later versions will include tribs)
     for (int n = 0; n< n_tot_SA_nodes; n++)
     {
       if (binned_basin_keys[n] == this_basin)
       {
+        
+        // This looks for the first trib in basin, which is the mainstem
         if (mainstem_source == -9999)
         {
           mainstem_source = binned_source_keys[n];
@@ -3422,15 +3439,51 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
         {
           area_data.push_back(binned_logA_means[n]);
           slope_data.push_back(binned_logS_medians[n]);
+          std_err_data.push_back(binned_logS_stdErr[n]);
         }
-        
-        
-      
-      
       }
+    }
     
+    // Okay, now we partition the data
+    // For now 
+    LSDMostLikelyPartitionsFinder Partitioner(minimum_segment_length,area_data, slope_data);
+    
+    // Partition the data
+    //float sigma = 10;  // this is a placeholder. Later we can use slope uncertainties. NOW USING MEASURED ERROR 
+    // We use the standard error of the S values as the sigma in partitioner. 
+    Partitioner.best_fit_driver_AIC_for_linear_segments(std_err_data);
+    
+    // Now we extract all the data from the partitions
+    vector<float> sigma_values;
+    sigma_values.push_back(1);
+    int node = 0;
+    vector<float> b_values; 
+    vector<float> m_values;
+    vector<float> r2_values; 
+    vector<float> DW_values;
+    vector<float> fitted_y;
+    vector<int> seg_lengths;
+    float this_MLE;
+    int this_n_segments;
+    int this_n_nodes;
+    float this_AIC;
+    float this_AICc;
+    
+    
+    
+    Partitioner.get_data_from_best_fit_lines(node, sigma_values,
+                      b_values, m_values,r2_values, DW_values, fitted_y,seg_lengths,
+                      this_MLE,  this_n_segments,  this_n_nodes,
+                      this_AIC,  this_AICc);
+                      
+    // spit out the data
+    for (int sn = 0; sn < int(area_data.size()); sn++)
+    {
+      outfile << this_basin << "," << area_data[sn] << "," << slope_data[sn] <<  "," << fitted_y[sn] <<  "," << std_err_data[sn] <<endl;
     }
   }
+  
+  outfile.close();
   
   
 
