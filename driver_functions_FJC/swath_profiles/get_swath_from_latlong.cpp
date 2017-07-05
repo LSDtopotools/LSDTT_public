@@ -65,7 +65,7 @@ int main (int nNumberofArgs,char *argv[])
 	int_default_map["NormaliseToBaseline"] = 0;
 
 	// set default string parameters
-	string_default_map["csv_file"] = "NULL";
+	string_default_map["csv_file"] = "Merapi_swath_points.csv";
 	string_default_map["CHeads_format"] = "csv";
 
 	// set default float parameters
@@ -113,7 +113,6 @@ int main (int nNumberofArgs,char *argv[])
 
 	// reading in the csv file with the lat long points
 	cout << "Reading in the csv file" << endl;
-	cout << "CSV File is: " << this_string_map["csv_file"] << endl; 
 	LSDSpatialCSVReader SwathPoints(FilledRaster, DATA_DIR+this_string_map["csv_file"]);
 	vector<float> UTME;
 	vector<float> UTMN;
