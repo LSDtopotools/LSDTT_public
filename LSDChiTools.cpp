@@ -3259,12 +3259,7 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
                                           string filename)
 {
 
-  // open the file
-  ofstream outfile;
-  outfile.open(filename.c_str());
-  outfile << "basin,log_A_mean,log_S_median,log_S_segmented,stdErr_logS" << endl;
-  
-  
+
   vector<float> empty_vec;
 
   // we will store the data in maps where the key is the source node
@@ -3404,6 +3399,15 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
     }
   }
   
+  
+  
+  // open the file
+  ofstream outfile;
+  outfile.open(filename.c_str());
+  outfile << "basin,log_A_mean,log_S_median,stdErr_logS,segment_number,log_S_segmented,segment_slope,segment_intercept,segement_R2,segment_Durbin_Watson" << endl;
+  
+  
+  
   // we neeed to get the data for individual basins
   // please forgive me but this will be an extremely rudimentary and slow algoritms since
   // I want to finish soon to get beer.
@@ -3449,8 +3453,9 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
     LSDMostLikelyPartitionsFinder Partitioner(minimum_segment_length,area_data, slope_data);
     
     // Partition the data
-    //float sigma = 10;  // this is a placeholder. Later we can use slope uncertainties. NOW USING MEASURED ERROR 
+    //float sigma = 0.0005;  // this is a placeholder. Later we can use slope uncertainties. NOW USING MEASURED ERROR 
     // We use the standard error of the S values as the sigma in partitioner. 
+    cout << "This basin is: " << this_basin << endl;
     Partitioner.best_fit_driver_AIC_for_linear_segments(std_err_data);
     
     // Now we extract all the data from the partitions
@@ -3470,17 +3475,41 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
     float this_AICc;
     
     // These are some functions that I am using to figure out what the most likeley partitioner is doing
-    Partitioner.print_to_screen_most_likeley_segment_lengths()
+    //Partitioner.print_to_screen_most_likeley_segment_lengths();
     
     Partitioner.get_data_from_best_fit_lines(node, sigma_values,
                       b_values, m_values,r2_values, DW_values, fitted_y,seg_lengths,
                       this_MLE,  this_n_segments,  this_n_nodes,
                       this_AIC,  this_AICc);
                       
-    // spit out the data
+
+    
+    // We need to make some new vectors for storing the relevant segment number
+    vector<int> seg_number;
+    vector<float> seg_m;
+    vector<float> seg_b;
+    vector<float> seg_r2;
+    vector<float> seg_DW;
+    for (int seg = 0; seg< this_n_segments; seg++)
+    {
+      for(int seg_node =0; seg_node< seg_lengths[seg]; seg_node++)
+      {
+        seg_number.push_back(seg);
+        seg_m.push_back( m_values[seg]);
+        seg_b.push_back( b_values[seg]);
+        seg_r2.push_back( r2_values[seg]);
+        seg_DW.push_back( DW_values[seg]);
+      }
+    }
+    
+    
+    // Now we print the data
     for (int sn = 0; sn < int(area_data.size()); sn++)
     {
-      outfile << this_basin << "," << area_data[sn] << "," << slope_data[sn] <<  "," << fitted_y[sn] <<  "," << std_err_data[sn] <<endl;
+      outfile << this_basin << "," << area_data[sn] << "," << slope_data[sn] <<  ","
+              << std_err_data[sn] << "," << seg_number[sn] << "," << fitted_y[sn] << "," 
+              << seg_m[sn] << "," << seg_b[sn] << "," << seg_r2[sn] << "," 
+              << seg_DW[sn] << endl;
     }
   }
   

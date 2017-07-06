@@ -190,19 +190,25 @@ class LSDMostLikelyPartitionsFinder
     ///
     /// @details this_MLE, this_n_segments and this_n_nodes are all returned
     /// so the user can combine two or more segments and get an AIC or AICc.
-    /// @param node index into the sigma vector.
+    /// @param node index into the sigma vector. This requires a bit of explantion:
+    ///   because sigma can be extracted from the product that calculates MLE as a constant
+    ///   we can have multiple values of sigma and recalculate MLE for any given sigma
+    ///   When this code was written we added a function to modify the sigma values. 
+    ///   In this case there are no normalisation values applied so if you use 
+    ///   a random sigma here you will get the base sigma (supplied to the main
+    ///   computation function)
     /// @param sigma_values
-    /// @param b_values
-    /// @param m_values
-    /// @param r2_values
-    /// @param DW_values
-    /// @param fitted_y
-    /// @param seg_lengths
-    /// @param this_MLE
-    /// @param this_n_segments
-    /// @param this_n_nodes
-    /// @param this_AIC
-    /// @param this_AICc
+    /// @param b_values A vector containing the b value (intercept) of each segment
+    /// @param m_values A vector containing the m value (slope) of each segment
+    /// @param r2_values A vector containing the r^2 value of each segment
+    /// @param DW_values A vector containing the durbin-watson value of each segment
+    /// @param fitted_y A vector containing the y value of each segment
+    /// @param seg_lengths A vector with the lengths of each segment
+    /// @param this_MLE The MLE of the best fit. 
+    /// @param this_n_segments The number of segments
+    /// @param this_n_nodes The number of total nodes
+    /// @param this_AIC The Aikake information criterion
+    /// @param this_AICc The corrected Aikake information criterion (needed for finite sample size)
     /// @author SMM
     /// @date 01/03/13
     void get_data_from_best_fit_lines(int node, vector<float> sigma_values,
