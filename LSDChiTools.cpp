@@ -3404,7 +3404,7 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
   // open the file
   ofstream outfile;
   outfile.open(filename.c_str());
-  outfile << "basin,log_A_mean,log_S_median,stdErr_logS,segment_number,log_S_segmented,segment_slope,segment_intercept,segement_R2,segment_Durbin_Watson" << endl;
+  outfile << "basin_key,mean_log_A,median_log_S,logS_stdErr,segment_number,segmented_log_S,segment_slope,segment_intercept,segement_R2,segment_Durbin_Watson" << endl;
   
   
   
@@ -3455,7 +3455,7 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
     // Partition the data
     //float sigma = 0.0005;  // this is a placeholder. Later we can use slope uncertainties. NOW USING MEASURED ERROR 
     // We use the standard error of the S values as the sigma in partitioner. 
-    cout << "This basin is: " << this_basin << endl;
+    //cout << "This basin is: " << this_basin << endl;
     Partitioner.best_fit_driver_AIC_for_linear_segments(std_err_data);
     
     // Now we extract all the data from the partitions
