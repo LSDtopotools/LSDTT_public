@@ -768,16 +768,16 @@ void LSDMostLikelyPartitionsFinder::get_data_from_best_fit_lines(int node, vecto
   float AICc_value = AICc_values[ best_fit_AICc[n_sigma_for_printing] ];
 
   // now print this data
-  cout << endl << endl << endl << "The data from the best fit: " << endl;
-  cout << "sigma is: " << sigma_values[n_sigma_for_printing]
-     << " MLE: " << new_sig_MLE [ best_fit_AICc[n_sigma_for_printing] ]
-     << " and the number of segments is: " << best_fit_AICc[n_sigma_for_printing]+1
-     << " AICc: " << AICc_value << endl;
-  for (int i = 0; i< best_fit_AICc[n_sigma_for_printing]+1; i++)
-  {
-    cout << "seg_length: " << segment_length[i] << " " << m_values[i] << " " << b_values[i] << " "
-         << r2_values[i] << " " << DW_values[i] << endl;
-  }
+  //cout << endl << endl << endl << "The data from the best fit: " << endl;
+  //cout << "sigma is: " << sigma_values[n_sigma_for_printing]
+  //   << " MLE: " << new_sig_MLE [ best_fit_AICc[n_sigma_for_printing] ]
+  //   << " and the number of segments is: " << best_fit_AICc[n_sigma_for_printing]+1
+  //   << " AICc: " << AICc_value << endl;
+  //for (int i = 0; i< best_fit_AICc[n_sigma_for_printing]+1; i++)
+  //{
+  //  cout << "seg_length: " << segment_length[i] << " " << m_values[i] << " " << b_values[i] << " "
+  //       << r2_values[i] << " " << DW_values[i] << endl;
+  //}
 
 
   // create a vector of y values from the best fit segments
