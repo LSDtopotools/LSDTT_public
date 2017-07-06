@@ -3469,7 +3469,8 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
     float this_AIC;
     float this_AICc;
     
-    
+    // These are some functions that I am using to figure out what the most likeley partitioner is doing
+    Partitioner.print_to_screen_most_likeley_segment_lengths()
     
     Partitioner.get_data_from_best_fit_lines(node, sigma_values,
                       b_values, m_values,r2_values, DW_values, fitted_y,seg_lengths,

@@ -341,7 +341,7 @@ class LSDMostLikelyPartitionsFinder
     /// @date 01/03/13
     vector<float> change_normalized_like_vector_to_new_sigma(float sigma, vector<float> sig1_like_vector);
 
-    /// @brief Takes a normalize likelihood vector and updates the values to a new sigma value.
+    /// @brief Takes a normalized likelihood vector and updates the values to a new sigma value.
     /// @param sigma1 Standard deviation of error.
     /// @param sig1_like_vector
     /// @param sigma2 Standard deviation of error.
