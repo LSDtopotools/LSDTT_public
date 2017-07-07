@@ -81,6 +81,9 @@ vector<float> simple_linear_regression(vector<float>& x_data, vector<float>& y_d
 float get_mean(vector<float>& y_data);
 float get_mean_ignore_ndv(vector<float>& y_data, float ndv);
 float get_mean_ignore_ndv(Array2D<float>& data, float ndv);
+float get_median(vector<float> y_data);
+float get_median_sorted(vector<float> sorted_y_data);
+vector<float> get_IQR_and_median(vector<float> y_data);
 float get_SST(vector<float>& y_data, float mean);
 float get_variance_ignore_ndv(Array2D<float>& data, float ndv, float mean);
 float get_range_ignore_ndv(Array2D<float>& data, float ndv);
@@ -91,6 +94,7 @@ float get_durbin_watson_statistic(vector<float> residuals);
 float get_standard_deviation(vector<float>& y_data, float mean);
 float get_standard_error(vector<float>& y_data, float standard_deviation);
 vector<float> get_common_statistics(vector<float>& y_data);
+void calculate_descriptive_stats(vector<float>& data);
 float get_percentile(vector<float>& data, float percentile);
 
 // orthogonal regression

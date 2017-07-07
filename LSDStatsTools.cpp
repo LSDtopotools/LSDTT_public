@@ -402,6 +402,85 @@ float get_mean(vector<float>& y_data)
   return mean;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// gets the median
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+float get_median(vector<float> y_data)
+{
+  int n_data_points = y_data.size();
+
+  sort(y_data.begin(),y_data.end());
+
+  float dMedian = 0.0;
+  if ( (n_data_points % 2) == 0)
+  {
+    dMedian = ( (y_data[n_data_points/2] + (y_data[(n_data_points/2) - 1]))/2.0 );
+  } 
+  else 
+  {
+    dMedian = (y_data[n_data_points/2]);
+  }
+
+  return dMedian;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// gets the median: uses a pre-sorted vector
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+float get_median_sorted(vector<float> sorted_y_data)
+{
+  int n_data_points = sorted_y_data.size();
+
+  float dMedian = 0.0;
+  if ((n_data_points % 2) == 0)
+  {
+    dMedian = ((sorted_y_data[n_data_points/2] + (sorted_y_data[(n_data_points/2) - 1]))/2.0 );
+  } 
+  else 
+  {
+    dMedian = (sorted_y_data[n_data_points/2]);
+  }
+
+  return dMedian;
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// gets interquartile    NOT FINISHED
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+vector<float> get_IQR_and_median(vector<float> y_data)
+{
+  vector<float> all_the_stats;
+  int n_data_points = y_data.size();
+
+  sort(y_data.begin(),y_data.end());
+  
+  float Min = y_data[0];
+  float Max = y_data[n_data_points];
+
+  float dMedian = 0.0;
+  float dLQ = 0.0;            // upper quartile
+  float dUQ = 0.0;            // lower quartile
+  if ((n_data_points % 2) == 0)
+  {
+    // the data is even so we get the average of the two middle values.
+    dMedian = ((y_data[n_data_points/2] + (y_data[(n_data_points/2) - 1]))/2.0);
+    
+    // each half space contains this many nodes. We need the median of this half space
+    int half_space = n_data_points/2;
+    
+    
+    
+    
+    
+  } 
+  else 
+  {
+    dMedian = (y_data[n_data_points/2]);
+  }
+
+  return all_the_stats;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // gets the mean from a population of y_data and ignores no data values
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -896,6 +975,33 @@ void quantile_quantile_analysis_defined_percentiles(vector<float>& data, vector<
   mn_values = mn_vals;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+// This function gets all the descriptive stats from a vector of data
+void calculate_descriptive_stats(vector<float>& data)
+{
+  // get the number of data points
+  int n_data = int(data.size());
+
+  // first sort the data
+  sort(data.begin(), data.end());
+  
+  float mean = get_mean(data);
+  float std_dev = get_standard_deviation(data, mean);
+  float std_err = get_standard_error(data, std_dev);
+  
+  // get the mean and standard deviation
+  float data_sum = 0;
+  for (int i = 0; i<n_data; i++)
+  {
+    data_sum+= data[i];
+  }
+
+
+}
+
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // this function tests for autocorrelation between residuals
