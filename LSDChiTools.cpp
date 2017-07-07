@@ -3157,28 +3157,40 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
   }
 
   // now we bin the data
-  //float bin_width = 0.1;
-  vector<float>  MeanX_output;
-  vector<float> MeanY_output;
   vector<float> midpoints_output;
-  vector<float> MedianY_output;
+  vector<float> MeanX_output;
+  vector<float> MedianX_output;
   vector<float> StandardDeviationX_output;
-  vector<float> StandardDeviationY_output;
   vector<float> StandardErrorX_output;
+  vector<float> MADX_output; 
+              
+  vector<float> MeanY_output;
+  vector<float> MinimumY_output;
+  vector<float> FirstQuartileY_output;
+  vector<float> MedianY_output;
+  vector<float> ThirdQuartileY_output;
+  vector<float> MaximumY_output;
+  vector<float> StandardDeviationY_output;
   vector<float> StandardErrorY_output;
-  vector<int> number_observations_output;
-  float bin_lower_limit;
-  float NoDataValue = -9999;
+  vector<float> MADY_output;
+  vector<int> number_observations_output; 
+  float NoDataValue = -9999; 
+
 
   // these are the vectors holding all the compiled information
   vector<int> binned_basin_keys;
   vector<int> binned_source_keys;
   vector<float> binned_logA_means;
   vector<float> binned_logA_midpoints;
+  vector<float> binned_logA_medians;
+  vector<float> binned_logA_stdErr;
+  vector<float> binned_logA_MAD;
+  
   vector<float> binned_logS_means;
   vector<float> binned_logS_medians;
-  vector<float> binned_logA_stdErr;
-  vector<float> binned_logS_stdErr;
+  vector<float> binned_logS_FirstQuartile;
+  vector<float> binned_logS_ThirdQuartile;
+  vector<float> binned_logS_StandardDeviation;
   vector<int> binnned_NObvs;
 
   // loop through all the source nodes
@@ -3194,10 +3206,12 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
     vector<float> log_slope = log_slope_map[this_source_key];
 
     // this gets the binned data for this particular tributary
-    bin_data(log_area, log_slope, log_bin_width,  MeanX_output, MeanY_output,
-            midpoints_output, MedianY_output,StandardDeviationX_output,
-            StandardDeviationY_output, StandardErrorX_output, StandardErrorY_output,
-            number_observations_output, bin_lower_limit, NoDataValue);
+    bin_data(log_area, log_slope, log_bin_width, midpoints_output, MeanX_output, 
+             MedianX_output, StandardDeviationX_output, StandardErrorX_output,
+             MADX_output, MeanY_output, MinimumY_output,FirstQuartileY_output, 
+             MedianY_output, ThirdQuartileY_output, MaximumY_output,
+             StandardDeviationY_output, StandardErrorY_output, MADY_output, 
+             number_observations_output, NoDataValue); 
 
     // now we need to add this information to the master vectors
     int n_bins = int(midpoints_output.size());
@@ -3213,10 +3227,15 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
         binned_source_keys.push_back(this_source_key);
         binned_logA_means.push_back(MeanX_output[i]);
         binned_logA_midpoints.push_back(midpoints_output[i]);
+        binned_logA_medians.push_back(MedianX_output[i]);
+        binned_logA_stdErr.push_back(StandardErrorX_output[i]);
+        binned_logA_MAD.push_back(MADX_output[i]);
+        
         binned_logS_means.push_back(MeanY_output[i]);
         binned_logS_medians.push_back(MedianY_output[i]);
-        binned_logA_stdErr.push_back(StandardErrorX_output[i]);
-        binned_logS_stdErr.push_back(StandardErrorY_output[i]);
+        binned_logS_FirstQuartile.push_back(FirstQuartileY_output[i]);
+        binned_logS_ThirdQuartile.push_back(ThirdQuartileY_output[i]);
+        binned_logS_StandardDeviation.push_back(StandardDeviationY_output[i]);
         binnned_NObvs.push_back(n_Obvs);
       }
     }
@@ -3227,17 +3246,21 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
   int n_data_points = int(binnned_NObvs.size());
   ofstream  binned_out;
   binned_out.open(filename.c_str());
-  binned_out << "basin_key,source_key,midpoints_log_A,mean_log_A,mean_log_S,median_log_S,logA_stdErr,logS_stdErr,n_observations" << endl;
+  binned_out << "basin_key,source_key,midpoints_log_A,mean_log_A,median_logA, logA_stdErr,logA_MAD,mean_log_S,median_log_S,logS_FirstQuartile, logS_FirstQuartile, logS_stdDev,n_observations" << endl;
   for(int i = 0; i<n_data_points; i++)
   {
     binned_out << binned_basin_keys[i] << ","
                << binned_source_keys[i] << ","
                << binned_logA_midpoints[i] << ","
                << binned_logA_means[i] << ","
+               << binned_logA_medians[i] << ","
+               << binned_logA_stdErr[i] << ","
+               << binned_logA_MAD[i] << ","
                << binned_logS_means[i] << ","
                << binned_logS_medians[i] << ","
-               << binned_logA_stdErr[i] << ","
-               << binned_logS_stdErr[i] << ","
+               << binned_logS_FirstQuartile[i] << ","
+               << binned_logS_ThirdQuartile[i] << ","
+               << binned_logS_StandardDeviation[i] << ","
                << binnned_NObvs[i] << endl;
   }
   binned_out.close();
@@ -3308,37 +3331,46 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
   }
 
   // now we bin the data
-  //float bin_width = 0.1;
-  vector<float>  MeanX_output;
-  vector<float> MeanY_output;
   vector<float> midpoints_output;
-  vector<float> MedianY_output;
+  vector<float> MeanX_output;
+  vector<float> MedianX_output;
   vector<float> StandardDeviationX_output;
-  vector<float> StandardDeviationY_output;
   vector<float> StandardErrorX_output;
+  vector<float> MADX_output; 
+              
+  vector<float> MeanY_output;
+  vector<float> MinimumY_output;
+  vector<float> FirstQuartileY_output;
+  vector<float> MedianY_output;
+  vector<float> ThirdQuartileY_output;
+  vector<float> MaximumY_output;
+  vector<float> StandardDeviationY_output;
   vector<float> StandardErrorY_output;
-  vector<int> number_observations_output;
-  float bin_lower_limit;
-  float NoDataValue = -9999;
+  vector<float> MADY_output;
+  vector<int> number_observations_output; 
+  float NoDataValue = -9999; 
+
 
   // these are the vectors holding all the compiled information
   vector<int> binned_basin_keys;
   vector<int> binned_source_keys;
   vector<float> binned_logA_means;
   vector<float> binned_logA_midpoints;
+  vector<float> binned_logA_medians;
+  vector<float> binned_logA_stdErr;
+  vector<float> binned_logA_MAD;
+  
   vector<float> binned_logS_means;
   vector<float> binned_logS_medians;
-  vector<float> binned_logA_stdErr;
-  vector<float> binned_logS_stdErr;
+  vector<float> binned_logS_FirstQuartile;
+  vector<float> binned_logS_ThirdQuartile;
+  vector<float> binned_logS_StandardDeviation;
   vector<int> binnned_NObvs;
   
   // this holds the source numbers for each basin
   vector<int> basins_with_data;
   int last_basin;
   map<int, vector<int> > basin_and_sources_map;
-  
-  
-  
 
   // loop through all the source nodes
   map<int, vector<float> >::iterator it;
@@ -3353,10 +3385,12 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
     vector<float> log_slope = log_slope_map[this_source_key];
 
     // this gets the binned data for this particular tributary
-    bin_data(log_area, log_slope, log_bin_width,  MeanX_output, MeanY_output,
-            midpoints_output, MedianY_output,StandardDeviationX_output,
-            StandardDeviationY_output, StandardErrorX_output, StandardErrorY_output,
-            number_observations_output, bin_lower_limit, NoDataValue);
+    bin_data(log_area, log_slope, log_bin_width, midpoints_output, MeanX_output, 
+             MedianX_output, StandardDeviationX_output, StandardErrorX_output,
+             MADX_output, MeanY_output, MinimumY_output,FirstQuartileY_output, 
+             MedianY_output, ThirdQuartileY_output, MaximumY_output,
+             StandardDeviationY_output, StandardErrorY_output, MADY_output, 
+             number_observations_output, NoDataValue); 
 
     // now we need to add this information to the master vectors
     int n_bins = int(midpoints_output.size());
@@ -3372,12 +3406,17 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
         binned_source_keys.push_back(this_source_key);
         binned_logA_means.push_back(MeanX_output[i]);
         binned_logA_midpoints.push_back(midpoints_output[i]);
+        binned_logA_medians.push_back(MedianX_output[i]);
+        binned_logA_stdErr.push_back(StandardErrorX_output[i]);
+        binned_logA_MAD.push_back(MADX_output[i]);
+        
         binned_logS_means.push_back(MeanY_output[i]);
         binned_logS_medians.push_back(MedianY_output[i]);
-        binned_logA_stdErr.push_back(StandardErrorX_output[i]);
-        binned_logS_stdErr.push_back(StandardErrorY_output[i]);
+        binned_logS_FirstQuartile.push_back(FirstQuartileY_output[i]);
+        binned_logS_ThirdQuartile.push_back(ThirdQuartileY_output[i]);
+        binned_logS_StandardDeviation.push_back(StandardDeviationY_output[i]);
         binnned_NObvs.push_back(n_Obvs);
-        
+
         // we need to collect a list of basins. This is rather inefficient but 
         // in grand scheme of things this is far from the rate limiting step
         if (basins_with_data.size() == 0)
@@ -3404,7 +3443,7 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
   // open the file
   ofstream outfile;
   outfile.open(filename.c_str());
-  outfile << "basin_key,mean_log_A,median_log_S,logS_stdErr,segment_number,segmented_log_S,segment_slope,segment_intercept,segement_R2,segment_Durbin_Watson" << endl;
+  outfile << "basin_key,mean_log_A,median_log_S,logS_FirstQuartile, logS_ThirdQuartile,segment_number,segmented_log_S,segment_slope,segment_intercept,segement_R2,segment_Durbin_Watson" << endl;
   
   
   
@@ -3422,7 +3461,9 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
     // is a prototype. 
     vector<float> area_data;
     vector<float> slope_data;
-    vector<float> std_err_data;
+    vector<float> std_dev_data;
+    vector<float> FirstQuartile_data;
+    vector<float> ThirdQuartile_data;
     
     int mainstem_source = -9999;
     
@@ -3441,9 +3482,11 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
         
         if (binned_source_keys[n] == mainstem_source)
         {
-          area_data.push_back(binned_logA_means[n]);
+          area_data.push_back(binned_logA_medians[n]);
           slope_data.push_back(binned_logS_medians[n]);
-          std_err_data.push_back(binned_logS_stdErr[n]);
+          std_dev_data.push_back(binned_logS_StandardDeviation[n]);
+          FirstQuartile_data.push_back(binned_logS_FirstQuartile[n]);
+          ThirdQuartile_data.push_back(binned_logS_ThirdQuartile[n]);
         }
       }
     }
@@ -3456,7 +3499,7 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
     //float sigma = 0.0005;  // this is a placeholder. Later we can use slope uncertainties. NOW USING MEASURED ERROR 
     // We use the standard error of the S values as the sigma in partitioner. 
     //cout << "This basin is: " << this_basin << endl;
-    Partitioner.best_fit_driver_AIC_for_linear_segments(std_err_data);
+    Partitioner.best_fit_driver_AIC_for_linear_segments(std_dev_data);
     
     // Now we extract all the data from the partitions
     vector<float> sigma_values;
@@ -3507,7 +3550,8 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
     for (int sn = 0; sn < int(area_data.size()); sn++)
     {
       outfile << this_basin << "," << area_data[sn] << "," << slope_data[sn] <<  ","
-              << std_err_data[sn] << "," << seg_number[sn] << "," << fitted_y[sn] << "," 
+              << FirstQuartile_data[sn] << "," << ThirdQuartile_data[sn] << "," 
+              << seg_number[sn] << "," << fitted_y[sn] << "," 
               << seg_m[sn] << "," << seg_b[sn] << "," << seg_r2[sn] << "," 
               << seg_DW[sn] << endl;
     }
