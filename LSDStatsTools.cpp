@@ -454,7 +454,7 @@ vector<float> get_IQR_and_median(vector<float> y_data)
   sort(y_data.begin(),y_data.end());
   
   float Min = y_data[0];
-  float Max = y_data[n_data_points];
+  float Max = y_data[n_data_points-1];
 
   float dMedian = 0.0;
   float dLQ = 0.0;            // upper quartile
@@ -467,16 +467,33 @@ vector<float> get_IQR_and_median(vector<float> y_data)
     // each half space contains this many nodes. We need the median of this half space
     int half_space = n_data_points/2;
     
+    // slice the vector in two
+    vector<float>::iterator first = y_data.begin() + half_space;
+    //vector<float>::iterator last = y_data.begin() + half_space+1;
+    vector<float> First_Slice(y_data.begin(), first);
+    vector<float> Second_Slice(first, y_data.end());
     
-    
-    
-    
+    dLQ = get_median_sorted(First_Slice);
+    dUQ = get_median_sorted(Second_Slice);
   } 
   else 
   {
     dMedian = (y_data[n_data_points/2]);
+    int half_space = n_data_points/2;
+    vector<float>::iterator first = y_data.begin() + half_space;
+    vector<float> First_Slice(y_data.begin(), first+1);
+    vector<float> Second_Slice(first, y_data.end());
+    
+    dLQ = get_median_sorted(First_Slice);
+    dUQ = get_median_sorted(Second_Slice);
   }
 
+  all_the_stats.push_back(Min);
+  all_the_stats.push_back(dLQ);
+  all_the_stats.push_back(dMedian);
+  all_the_stats.push_back(dUQ);
+  all_the_stats.push_back(Max);
+  
   return all_the_stats;
 }
 

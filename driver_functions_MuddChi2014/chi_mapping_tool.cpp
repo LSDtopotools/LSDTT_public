@@ -62,6 +62,7 @@
 
 int main (int nNumberofArgs,char *argv[])
 {
+
   //Test for correct input arguments
   if (nNumberofArgs!=3)
   {
