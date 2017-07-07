@@ -3443,7 +3443,7 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
   // open the file
   ofstream outfile;
   outfile.open(filename.c_str());
-  outfile << "basin_key,mean_log_A,median_log_S,logS_FirstQuartile, logS_ThirdQuartile,segment_number,segmented_log_S,segment_slope,segment_intercept,segement_R2,segment_Durbin_Watson" << endl;
+  outfile << "basin_key,median_log_A,median_log_S,logS_FirstQuartile,logS_ThirdQuartile,segment_number,segmented_log_S,segment_slope,segment_intercept,segement_R2,segment_Durbin_Watson" << endl;
   
   
   
