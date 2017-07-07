@@ -135,7 +135,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_junctions_to_csv"] = false;
   bool_default_map["print_fill_raster"] = false;
   bool_default_map["print_DrainageArea_raster"] = false;
-  bool_default_map["write hillshade"] = false;
+  bool_default_map["write_hillshade"] = false;
   bool_default_map["print_basic_M_chi_map_to_csv"] = false;
   bool_default_map["ksn_knickpoint_analysis"] = false;
 
@@ -304,7 +304,7 @@ int main (int nNumberofArgs,char *argv[])
     filled_topography.write_raster(filled_raster_name,raster_ext);
   }
 
-  if (this_bool_map["write hillshade"])
+  if (this_bool_map["write_hillshade"])
   {
     cout << "Let me print the hillshade for you. " << endl;
     float hs_azimuth = 315;
