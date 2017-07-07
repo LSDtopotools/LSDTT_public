@@ -390,6 +390,19 @@ void bin_data(vector<float>& InputVectorX, vector<float>& InputVectorY, float bi
                       vector<float>& StandardErrorX_output, vector<float>& StandardErrorY_output,
                       vector<int>& number_observations_output, float& bin_lower_limit, float NoDataValue);
 
+// Regular binning algoritm for data stored in a 1D vector Similar to above but spits out more stats
+void bin_data(vector<float>& InputVectorX, vector<float>& InputVectorY, float bin_width,
+              vector<float>& midpoints_output, vector<float>&  MeanX_output, 
+              vector<float>&  MedianX_output, vector<float>&  StandardDeviationX_output,
+              vector<float>& StandardErrorX_output, vector<float>& MADX_output, 
+              vector<float>& MeanY_output, vector<float>& MinimumY_output,
+              vector<float>& FirstQuartileY_output, vector<float>& MedianY_output,
+              vector<float>& ThirdQuartileY_output, vector<float>& MaximumY_output,
+              vector<float>&  StandardDeviationY_output, vector<float>& StandardErrorY_output, 
+              vector<float>& MADY_output, vector<int>& number_observations_output,
+              float NoDataValue); 
+
+
 //look for empty bins output from the log binning function and removes them to avoid
 //plotting several empty bins at 0,0 in some cases. SWDG 6/11/13
 void RemoveSmallBins(vector<float>&  MeanX_output, vector<float>& MeanY_output,
