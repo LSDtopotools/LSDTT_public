@@ -441,7 +441,23 @@ float get_median_sorted(vector<float> sorted_y_data)
 
   return dMedian;
 }
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// gets the median absolute deviation (MAD)
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+float get_median_absolute_deviation(vector<float> y_data, float median)
+{
+  int n_data_points = y_data.size();
+  sort(y_data.begin(),y_data.end());
+  
+  vector<float> deviations;
+  
+  for (int i = 0; i<n_data_points; i++)
+  {
+    deviations.push_back( fabs(median-y_data[i]) );
+  }
+  float MAD = get_median(deviations);
+  return MAD;
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // gets interquartile    NOT FINISHED
@@ -991,11 +1007,22 @@ void quantile_quantile_analysis_defined_percentiles(vector<float>& data, vector<
   values = vals;
   mn_values = mn_vals;
 }
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function gets all the descriptive stats from a vector of data
-void calculate_descriptive_stats(vector<float>& data)
+// The data is returned in a vector with elements
+// [0] minimum
+// [1] first quartile (median of first half of data)
+// [2] median
+// [3] third quartile (median of first half of data)
+// [4] maximum
+// [5] mean
+// [6] standard deviation
+// [7] standard error
+// [8] median absolute deviation (MAD)
+vector<float> calculate_descriptive_stats(vector<float>& data)
 {
   // get the number of data points
   int n_data = int(data.size());
@@ -1013,8 +1040,23 @@ void calculate_descriptive_stats(vector<float>& data)
   {
     data_sum+= data[i];
   }
-
-
+  
+  vector<float> IQR = get_IQR_and_median(data);
+  float MAD = get_median_absolute_deviation(data, IQR[2]);
+  
+  vector<float> descriptive_stats;
+  descriptive_stats.push_back(IQR[0]);
+  descriptive_stats.push_back(IQR[1]);
+  descriptive_stats.push_back(IQR[2]);
+  descriptive_stats.push_back(IQR[3]);
+  descriptive_stats.push_back(IQR[4]);
+  descriptive_stats.push_back(mean);
+  descriptive_stats.push_back(std_dev);
+  descriptive_stats.push_back(std_err);
+  descriptive_stats.push_back(MAD);
+  
+  return descriptive_stats;
+  
 }
 
 
