@@ -3246,7 +3246,7 @@ void LSDChiTools::bin_slope_area_data(LSDFlowInfo& FlowInfo,
   int n_data_points = int(binnned_NObvs.size());
   ofstream  binned_out;
   binned_out.open(filename.c_str());
-  binned_out << "basin_key,source_key,midpoints_log_A,mean_log_A,median_log_A, logA_stdErr,logA_MAD,mean_log_S,median_log_S,logS_FirstQuartile, logS_ThirdQuartile, logS_stdDev,n_observations" << endl;
+  binned_out << "basin_key,source_key,midpoints_log_A,mean_log_A,median_log_A,logA_stdErr,logA_MAD,mean_log_S,median_log_S,logS_FirstQuartile,logS_ThirdQuartile,logS_stdDev,n_observations" << endl;
   for(int i = 0; i<n_data_points; i++)
   {
     binned_out << binned_basin_keys[i] << ","
