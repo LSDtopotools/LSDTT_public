@@ -85,6 +85,7 @@
 #include <iomanip>
 #include <vector>
 #include <list>
+#include <map>
 #include <string>
 #include <cstring>
 #include <algorithm>
@@ -2801,7 +2802,7 @@ vector<float> LSDFlowInfo::get_upslope_chi(vector<int>& upslope_pixel_list,
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function is called from the the get_upslope_chi that only has an integer
-// it returns the acutal chi values in a vector
+// it returns the actual chi values in a vector
 // same as above but uses a discharge raster
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 vector<float> LSDFlowInfo::get_upslope_chi(vector<int>& upslope_pixel_list,
@@ -2859,8 +2860,181 @@ vector<float> LSDFlowInfo::get_upslope_chi(vector<int>& upslope_pixel_list,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// This function takes a list of starting nodes and calucaltes chi
+// This function is called from the the get_upslope_chi that only has an integer
+// it returns the acutal chi values in a map where the key is the node and
+// the value is chi
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+map<int,float> LSDFlowInfo::get_upslope_chi_return_map(vector<int>& upslope_pixel_list,
+                                           float m_over_n, float A_0)
+{
+
+  map<int,float> map_of_chi;
+
+
+  int receiver_node;
+  int IndexOfReceiverInUplsopePList;
+  float root2 = 1.41421356;
+  float diag_length = root2*DataResolution;
+  float dx;
+  float pixel_area = DataResolution*DataResolution;
+  int node,row,col;
+  // get the number of nodes upslope
+  int n_nodes_upslope = upslope_pixel_list.size();
+  //vector<float> chi_vec(n_nodes_upslope,0.0);
+
+  if(n_nodes_upslope != NContributingNodes[ upslope_pixel_list[0] ])
+  {
+    cout << "LSDFlowInfo::get_upslope_chi, the contributing pixels don't agree" << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  int start_SVector_node = SVectorIndex[ upslope_pixel_list[0] ];
+  map_of_chi[ upslope_pixel_list[0] ] = 0.0;
+
+  for (int n_index = 1; n_index<n_nodes_upslope; n_index++)
+  {
+    node = upslope_pixel_list[n_index];
+    receiver_node = ReceiverVector[ node ];
+    IndexOfReceiverInUplsopePList = SVectorIndex[receiver_node]-start_SVector_node;
+    row = RowIndex[node];
+    col = ColIndex[node];
+
+    if (FlowLengthCode[row][col] == 2)
+    {
+      dx = diag_length;
+    }
+    else
+    {
+      dx = DataResolution;
+    }
+
+
+    map_of_chi[ node ] = dx*(pow( (A_0/ (float(NContributingNodes[node])*pixel_area) ),m_over_n))
+                          + map_of_chi[ receiver_node ];
+
+
+  }
+  return map_of_chi;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function is called from the the get_upslope_chi that only has an integer
+// it returns the actual chi values in a map where the key is the node and
+// the value is chi
+// same as above but uses a discharge raster
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+map<int,float> LSDFlowInfo::get_upslope_chi_return_map(vector<int>& upslope_pixel_list,
+                                           float m_over_n, float A_0,
+                                           LSDRaster& Discharge)
+{
+
+  map<int,float> map_of_chi;
+
+
+  int receiver_node;
+  int IndexOfReceiverInUplsopePList;
+  float root2 = 1.41421356;
+  float diag_length = root2*DataResolution;
+  float dx;
+  int node,row,col;
+  // get the number of nodes upslope
+  int n_nodes_upslope = upslope_pixel_list.size();
+  //vector<float> chi_vec(n_nodes_upslope,0.0);
+
+  if(n_nodes_upslope != NContributingNodes[ upslope_pixel_list[0] ])
+  {
+    cout << "LSDFlowInfo::get_upslope_chi, the contributing pixels don't agree" << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  int start_SVector_node = SVectorIndex[ upslope_pixel_list[0] ];
+  map_of_chi[ upslope_pixel_list[0] ] = 0.0;
+
+
+
+  for (int n_index = 1; n_index<n_nodes_upslope; n_index++)
+  {
+    node = upslope_pixel_list[n_index];
+    receiver_node = ReceiverVector[ node ];
+    IndexOfReceiverInUplsopePList = SVectorIndex[receiver_node]-start_SVector_node;
+    row = RowIndex[node];
+    col = ColIndex[node];
+
+    if (FlowLengthCode[row][col] == 2)
+    {
+      dx = diag_length;
+    }
+    else
+    {
+      dx = DataResolution;
+    }
+
+
+    map_of_chi[node] = dx*(pow( (A_0/ ( Discharge.get_data_element(row, col) ) ),m_over_n))
+                          + map_of_chi[ receiver_node ];
+
+  }
+  return map_of_chi;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+
+
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function calculates chi upslope of a given starting node
+// It returns a map with the node index as the key and the chi value as
+// the value
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+map<int,float> LSDFlowInfo::get_upslope_chi_from_single_starting_node(int starting_node, float m_over_n, float A_0)
+{
+  // get the pixel list
+  vector<int> upslope_pixel_list = get_upslope_nodes(starting_node);
+  
+  // Now get the upslope chi
+  map<int,float> upslope_chi_map = get_upslope_chi_return_map(upslope_pixel_list,
+                                                         m_over_n, A_0);
+  
+  return upslope_chi_map;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// This function calculates chi upslope of a given starting node
+// It returns a map with the node index as the key and the chi value as
+// the value
+// Same as above but uses discharge
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+map<int,float> LSDFlowInfo::get_upslope_chi_from_single_starting_node(int starting_node, 
+                                 float m_over_n, float A_0, LSDRaster& Discharge)
+{
+  // get the pixel list
+  vector<int> upslope_pixel_list = get_upslope_nodes(starting_node);
+  
+  // Now get the upslope chi
+  map<int,float> upslope_chi_map = get_upslope_chi_return_map(upslope_pixel_list,
+                                                         m_over_n, A_0, Discharge);
+  
+  return upslope_chi_map;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function takes a list of starting nodes and calculates chi
 // it assumes each chi value has the same base level.
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 LSDRaster LSDFlowInfo::get_upslope_chi_from_multiple_starting_nodes(vector<int>& starting_nodes,
@@ -2915,7 +3089,7 @@ LSDRaster LSDFlowInfo::get_upslope_chi_from_multiple_starting_nodes(vector<int>&
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// This function takes a list of starting nodes and calucaltes chi
+// This function takes a list of starting nodes and calculates chi
 // it assumes each chi value has the same base level.
 // Same as above but calculates using discharge
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

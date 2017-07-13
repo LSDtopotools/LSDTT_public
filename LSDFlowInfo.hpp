@@ -78,6 +78,7 @@ It is the object that is used to generate contributing area, etc.
 
 #include <string>
 #include <vector>
+#include <map>
 #include <algorithm>
 #include "TNT/tnt.h"
 #include "LSDRaster.hpp"
@@ -625,6 +626,38 @@ class LSDFlowInfo
   /// @date 16/10/15
   vector<float> get_upslope_chi(vector<int>& upslope_pixel_list, float m_over_n, float A_0, LSDRaster& Discharge);
 
+
+
+
+  /// @brief This function calculates the chi function for a list of nodes
+  /// it isn't really a standalone modules, but is only called from get_upslope_chi
+  /// above. It returns a map, which is used to speed up computation
+  /// @param upslope_pixel_list Vector of nodes to analyse.
+  /// @param m_over_n
+  /// @param A_0
+  /// @return A map where the key is the node index and the value is chi
+  /// @author SMM
+  /// @date 13/07/17
+  map<int,float> get_upslope_chi_return_map(vector<int>& upslope_pixel_list, float m_over_n, float A_0);
+
+  /// @brief This function calculates the chi function for a list of nodes
+  /// it isn't really a standalone modules, but is only called from get_upslope_chi
+  /// above. It returns a map, which is used to speed up computation
+  /// @detail this version uses discharge rather than area
+  /// @param upslope_pixel_list Vector of nodes to analyse.
+  /// @param m_over_n
+  /// @param A_0
+  /// @param Discharge and LSDRaster of the discharge
+  /// @return A map where the key is the node index and the value is chi
+  /// @author SMM
+  /// @date 13/07/17
+  map<int,float> get_upslope_chi_return_map(vector<int>& upslope_pixel_list, float m_over_n, float A_0, LSDRaster& Discharge);
+
+
+
+
+
+
   /// @brief this function takes a vector that contains the node indices of
   /// starting nodes, and then calculates chi upslope of these nodes
   /// to produce a chi map. A threshold drainage area can be used
@@ -670,6 +703,33 @@ class LSDFlowInfo
   /// @date 16/10/2015
   LSDRaster get_upslope_chi_from_multiple_starting_nodes(vector<int>& starting_nodes,
    float m_over_n, float A_0, float area_threshold, LSDRaster& Discharge);
+
+  /// @brief This funtion gets all the upslope chi of a starting node (assuming
+  ///  chi at starting node is 0) and returns a map
+  /// @param starting_nodes an integer containing the node index
+  /// of the node from which you want to start the chi analysis. 
+  /// @param m_over_n the m/n ratio. Chi is quite sensitive to this
+  /// @param A_0 the reference discharge. 
+  /// @return Returns a map where the key is the node index and the value is chi
+  /// @author SMM
+  /// @date 13/07/2017
+    map<int,float> get_upslope_chi_from_single_starting_node(int starting_node, 
+                                 float m_over_n, float A_0);
+
+
+  /// @brief This funtion gets all the upslope chi of a starting node (assuming
+  ///  chi at starting node is 0) and returns a map
+  /// @details This version allows computation with discharge
+  /// @param starting_nodes an integer containing the node index
+  /// of the node from which you want to start the chi analysis. 
+  /// @param m_over_n the m/n ratio. Chi is quite sensitive to this
+  /// @param A_0 the reference discharge.
+  /// @param Discharge The discharge raster
+  /// @return Returns a map where the key is the node index and the value is chi
+  /// @author SMM
+  /// @date 13/07/2017
+    map<int,float> get_upslope_chi_from_single_starting_node(int starting_node, 
+                                 float m_over_n, float A_0, LSDRaster& Discharge);
 
 
   /// @brief This function gets the chi upslope of every base level node
