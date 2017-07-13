@@ -366,6 +366,29 @@ class LSDChiTools
                         string file_prefix,
                         LSDRaster& Discharge, float sigma);
 
+
+    /// @brief This function drives a Monte Carlo-Markov chain model for getting
+    ///  the confidence intervals on the m/n value. 
+    /// @detail You can turn the chain file printing off at first to tune the
+    ///  dmovern_sigma so that it arrices at a 25% acceptance rate
+    /// @param ChainFname The name of the chain file (with path)
+    /// @param printChan  If true, the chain file is printed
+    /// @param FlowInfo An LSDFlowInfo object
+    /// @param NIterations The number of iterations in the chain you want
+    /// @param sigma The sigma value for checking the MLE of chi
+    /// @param dmovernstddev The standard deviation in the change in m/n test values.
+    ///    This needs to be tuned so the acceptance rate is ~25%
+    /// @param movern_minimum The minimum movern value to be tested
+    /// @param movern_maximum The maximum movern value to be tested
+    /// @param basin key The key of the basin to be tested
+    /// @return acceptanc probability. 
+    /// @author SMM
+    /// @date 13/07/2017
+    float MCMC_for_movern(string ChainFname, bool printChain, LSDFlowInfo& FlowInfo, 
+                          int NIterations, float sigma, float dmovern_stddev,
+                          float movern_minimum, float movern_maximum, int basin_key);
+
+
     /// @brief This prints a series of chi profiles as a function of mover
     ///  for visualisation
     /// @param FlowInfo an LSDFlowInfo object

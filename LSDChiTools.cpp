@@ -2470,6 +2470,128 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
 }
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This runs an MCMC chain on the goodness of fit for a basin
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDChiTools::MCMC_for_movern(string ChainFname, bool printChain, LSDFlowInfo& FlowInfo, 
+                                 int NIterations, float sigma, float dmovern_stddev,
+                                 float movern_minimum, float movern_maximum, 
+                                 int basin_key)
+{
+
+  //Declarations
+  float LastLikelihood;               //Last accepted likelihood
+  float NewLikelihood;                //New likelihood
+  float LikelihoodRatio;              //Ratio between last and new likelihoods
+  float AcceptanceProbability;        //New iteration is accepted if likelihood ratio exceeds
+  
+  int NAccepted = 0;      //count accepted parameters
+  int NRejected = 0;      //count rejected parameters
+
+  // these are the vectors that will hold the information about the
+  // comparison between channels.
+  // the _all vectors are one of all the basins
+  // reference source is the source key of the reference channel
+  vector<int> reference_source, all_reference_source;
+  // test source is the source key of the test channel
+  vector<int> test_source, all_test_source;
+  // MLE the maximum liklihood estimator
+  vector<float> MLE_values, all_MLE_values;
+  // RMSE is the root mean square error
+  vector<float> RMSE_values, all_RMSE_values;
+
+  // you need a seed for the random number generator
+  long seed = time(NULL);
+  
+  // these are numbers for the change in   chi
+  float gauss_mean = 0;
+  float std_dev = dmovern_stddev;
+  float gauss_minimum = -3.0*std_dev;   // the gaussian function implemented in statstools truncates at 3 standard deviations
+  bool allowNegative = true;
+
+  ofstream ChainFileOut(ChainFname.c_str());
+  if(printChain)
+  {
+    ChainFileOut  << "i,movern_New,movern_Old,NewLikelihood,LastLikelihood,NAccepted,NRejected" << endl;
+  }
+  
+  
+  // Caluclate initial chi
+  float A_0 = 1;
+  float dmovern, movern_old, movern_new, reflect;
+  movern_old = 0.5;
+  movern_new = 0.5;
+  update_chi_data_map(FlowInfo, A_0, movern_new);
+
+  // get the initial MLE
+  bool only_use_mainstem_as_reference = true;
+  LastLikelihood = test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
+                                  basin_key,reference_source, test_source, MLE_values, RMSE_values, sigma);
+                                  
+  // Now do the metropolis hastings algorithm
+  for (int j = 0; j<NIterations; j++)
+  {
+    // Vary the movern value
+    dmovern = getGaussianRandom(gauss_minimum, gauss_mean, allowNegative);
+    movern_new = movern_old + dmovern;
+    
+    // reflect the data if necessary
+    if ( movern_new < movern_minimum)
+    {
+      reflect = movern_minimum - movern_new;
+      movern_new = reflect+movern_minimum;
+    }
+    if ( movern_new > movern_maximum)
+    {
+      reflect = movern_new- movern_maximum;
+      movern_new = movern_maximum - reflect;
+    }
+
+    // run the model with the new parameters
+    update_chi_data_map(FlowInfo, A_0, movern_new);
+    NewLikelihood = test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
+                                  basin_key,reference_source, test_source, MLE_values, RMSE_values, sigma);
+
+    // get the likelihood ratio
+    LikelihoodRatio = NewLikelihood/LastLikelihood;
+
+    // get the acceptance probability (this is set up so that occasional
+    // guesses that are worse than the lst one get accepted so that
+    // the chain can visit all of parameter space)
+    AcceptanceProbability = ran3(&seed);
+
+    // if accepted
+    if (LikelihoodRatio > AcceptanceProbability)
+    {
+      LastLikelihood = NewLikelihood;
+      NAccepted++;
+      movern_old = movern_new;
+    }
+    else
+    {
+      NRejected++;
+    }
+    
+    // Now print to the chain file
+    if(printChain)
+    {
+      ChainFileOut  << j << "," << movern_new << "," << movern_old << "," 
+                    << NewLikelihood << "," << LastLikelihood << "," 
+                    << NAccepted << "," << NRejected << endl;
+    }
+  }
+  
+  ChainFileOut.close();
+  
+  
+  float accept_percent = float(NAccepted)/ float(NAccepted+NRejected);
+  return accept_percent;
+  
+
+
+}
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This prints a series of simple profiles (chi-elevation) as a function of
