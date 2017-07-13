@@ -2484,7 +2484,7 @@ float LSDChiTools::MCMC_for_movern_tune_dmovern(LSDFlowInfo& FlowInfo, float sig
   
   string ChainFname = "NULL";
   bool printChain = false;
-  int NIterations = 50;
+  int NIterations = 20;
   
   float this_dmovern_stddev = 0.2;
   while( this_acceptance_rate > max_acceptance_rate || this_acceptance_rate < min_acceptance_rate )
@@ -2570,7 +2570,7 @@ float LSDChiTools::MCMC_for_movern(string ChainFname, bool printChain, LSDFlowIn
   LastLikelihood = test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
                                   basin_key,reference_source, test_source, MLE_values, RMSE_values, sigma);
   
-  int print_interval = 10;
+  int print_interval = 5;
                                   
   // Now do the metropolis hastings algorithm
   for (int j = 0; j<NIterations; j++)
@@ -2600,14 +2600,14 @@ float LSDChiTools::MCMC_for_movern(string ChainFname, bool printChain, LSDFlowIn
 
     // run the model with the new parameters
     update_chi_data_map(FlowInfo, A_0, movern_new);
-    cout << "Got chi " << endl;
+    //cout << "Got chi " << endl;
     NewLikelihood = test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
                                   basin_key,reference_source, test_source, MLE_values, RMSE_values, sigma);
 
     // get the likelihood ratio
     LikelihoodRatio = NewLikelihood/LastLikelihood;
     
-    cout << "Ratio: " << LikelihoodRatio << "New MLE: " << NewLikelihood << " and old MLE: " << LastLikelihood << endl;
+    //cout << "Ratio: " << LikelihoodRatio << "New MLE: " << NewLikelihood << " and old MLE: " << LastLikelihood << endl;
 
     // get the acceptance probability (this is set up so that occasional
     // guesses that are worse than the lst one get accepted so that

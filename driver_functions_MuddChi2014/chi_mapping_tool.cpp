@@ -770,8 +770,19 @@ int main (int nNumberofArgs,char *argv[])
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_coordinate);
     
-    int this_basin_key = 0;
-    float tuned_dmovern_stddev = ChiTool_MCMC.MCMC_for_movern_tune_dmovern(FlowInfo, this_float_map["collinearity_MLE_sigma"],
+    int this_basin_key = 10;
+    //float tuned_dmovern_stddev = ChiTool_MCMC.MCMC_for_movern_tune_dmovern(FlowInfo, this_float_map["collinearity_MLE_sigma"],
+    //                             this_float_map["MCMC_movern_minimum"],
+    //                             this_float_map["MCMC_movern_maximum"],
+    //                             this_basin_key);
+    float tuned_dmovern_stddev = 0.4;
+                                 
+    // Now run MCMC
+    string chain_file = OUT_DIR+OUT_ID+"_Basin10_chain.csv";
+    int NIterations = 5000;
+    bool printChain = true;
+    float accept = ChiTool_MCMC.MCMC_for_movern(chain_file, printChain, FlowInfo, 
+                                 NIterations, this_float_map["collinearity_MLE_sigma"], tuned_dmovern_stddev,
                                  this_float_map["MCMC_movern_minimum"],
                                  this_float_map["MCMC_movern_maximum"],
                                  this_basin_key);
