@@ -360,7 +360,6 @@ void LSDChiTools::update_chi_data_map(LSDFlowInfo& FlowInfo, float A_0, float mo
 
 }
 
-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This prints a chi map to csv with an area threshold in m^2
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2016,7 +2015,7 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
                                                  vector<float>& MLE_values, vector<float>& RMSE_values, 
                                                  float sigma)
 {
-  cout << "Testing the segment collinearity for basin key " << baselevel_key << endl;
+  //cout << "Testing the segment collinearity for basin key " << baselevel_key << endl;
   // get some information about the number of basins
   int n_basins = int(ordered_baselevel_nodes.size());
   if (baselevel_key >= n_basins)
@@ -2485,11 +2484,12 @@ float LSDChiTools::MCMC_for_movern_tune_dmovern(LSDFlowInfo& FlowInfo, float sig
   
   string ChainFname = "NULL";
   bool printChain = false;
-  int NIterations = 500;
+  int NIterations = 50;
   
-  float this_dmovern_stddev = 0.1;
+  float this_dmovern_stddev = 0.2;
   while( this_acceptance_rate > max_acceptance_rate || this_acceptance_rate < min_acceptance_rate )
   {
+    cout << "Looking at the acceptance rate. The current dmovern_stddev is: " << this_dmovern_stddev << endl;
     this_acceptance_rate = MCMC_for_movern(ChainFname, printChain, FlowInfo, NIterations, sigma, this_dmovern_stddev,
                      movern_minimum, movern_maximum, basin_key);
                      
@@ -2570,7 +2570,7 @@ float LSDChiTools::MCMC_for_movern(string ChainFname, bool printChain, LSDFlowIn
   LastLikelihood = test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
                                   basin_key,reference_source, test_source, MLE_values, RMSE_values, sigma);
   
-  int print_interval = 200;
+  int print_interval = 10;
                                   
   // Now do the metropolis hastings algorithm
   for (int j = 0; j<NIterations; j++)
@@ -2583,7 +2583,7 @@ float LSDChiTools::MCMC_for_movern(string ChainFname, bool printChain, LSDFlowIn
     // Vary the movern value
     dmovern = getGaussianRandom(gauss_minimum, gauss_mean, allowNegative);
     movern_new = movern_old + dmovern;
-    
+    //cout << "dmovern is: " << dmovern << " and New m over n is: " <<  movern_new << endl;
     // reflect the data if necessary
     if ( movern_new < movern_minimum)
     {
@@ -2596,13 +2596,18 @@ float LSDChiTools::MCMC_for_movern(string ChainFname, bool printChain, LSDFlowIn
       movern_new = movern_maximum - reflect;
     }
 
+    //cout << "After reflect New m over n is: " <<  movern_new << endl;
+
     // run the model with the new parameters
     update_chi_data_map(FlowInfo, A_0, movern_new);
+    cout << "Got chi " << endl;
     NewLikelihood = test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
                                   basin_key,reference_source, test_source, MLE_values, RMSE_values, sigma);
 
     // get the likelihood ratio
     LikelihoodRatio = NewLikelihood/LastLikelihood;
+    
+    cout << "Ratio: " << LikelihoodRatio << "New MLE: " << NewLikelihood << " and old MLE: " << LastLikelihood << endl;
 
     // get the acceptance probability (this is set up so that occasional
     // guesses that are worse than the lst one get accepted so that

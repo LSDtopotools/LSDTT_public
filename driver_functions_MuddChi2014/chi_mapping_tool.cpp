@@ -161,7 +161,11 @@ int main (int nNumberofArgs,char *argv[])
   // If you want to visualise the data you need to switch both of these to true
   bool_default_map["calculate_MLE_collinearity"] = false;
   bool_default_map["print_profiles_fxn_movern_csv"] = false;
+  
   bool_default_map["MCMC_movern_analysis"] = false;
+  float_default_map["MCMC_movern_minimum"] = 0.05;
+  float_default_map["MCMC_movern_maximum"] = 1.2;
+  
 
   // parameters for various chi calculations as well as slope-area
   int_default_map["n_iterations"] = 20;
@@ -765,9 +769,12 @@ int main (int nNumberofArgs,char *argv[])
     ChiTool_MCMC.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_coordinate);
-                            
     
-                
+    int this_basin_key = 0;
+    float tuned_dmovern_stddev = ChiTool_MCMC.MCMC_for_movern_tune_dmovern(FlowInfo, this_float_map["collinearity_MLE_sigma"],
+                                 this_float_map["MCMC_movern_minimum"],
+                                 this_float_map["MCMC_movern_maximum"],
+                                 this_basin_key);
   }
 
 
