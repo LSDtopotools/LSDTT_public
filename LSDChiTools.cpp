@@ -2470,6 +2470,48 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
 }
 
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This will tune the dmovern_stddev until the acceptance rate is ~0.25
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDChiTools::MCMC_for_movern_tune_dmovern(LSDFlowInfo& FlowInfo, float sigma,
+                                 float movern_minimum, float movern_maximum, 
+                                 int basin_key)
+{
+  
+  float min_acceptance_rate = 0.2;
+  float max_acceptance_rate = 0.33;
+  float this_acceptance_rate = 1.0;
+  
+  string ChainFname = "NULL";
+  bool printChain = false;
+  int NIterations = 500;
+  
+  float this_dmovern_stddev = 0.1;
+  while( this_acceptance_rate > max_acceptance_rate || this_acceptance_rate < min_acceptance_rate )
+  {
+    this_acceptance_rate = MCMC_for_movern(ChainFname, printChain, FlowInfo, NIterations, sigma, this_dmovern_stddev,
+                     movern_minimum, movern_maximum, basin_key);
+                     
+    cout << "The acceptance rate is: " << this_acceptance_rate << " and the m/n stddev is: " << this_dmovern_stddev << endl;
+    
+    if (this_acceptance_rate > max_acceptance_rate)
+    {
+      this_dmovern_stddev = this_dmovern_stddev*2;
+    }
+    if (this_acceptance_rate < min_acceptance_rate)
+    {
+      this_dmovern_stddev = this_dmovern_stddev*0.6;
+    }
+  }
+  
+  return this_dmovern_stddev;
+
+}
+
+
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This runs an MCMC chain on the goodness of fit for a basin
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2527,10 +2569,17 @@ float LSDChiTools::MCMC_for_movern(string ChainFname, bool printChain, LSDFlowIn
   bool only_use_mainstem_as_reference = true;
   LastLikelihood = test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
                                   basin_key,reference_source, test_source, MLE_values, RMSE_values, sigma);
+  
+  int print_interval = 200;
                                   
   // Now do the metropolis hastings algorithm
   for (int j = 0; j<NIterations; j++)
   {
+    if (j%print_interval == 0)
+    {
+      cout << "Iteration " << j << " of " << NIterations << endl;
+    }
+    
     // Vary the movern value
     dmovern = getGaussianRandom(gauss_minimum, gauss_mean, allowNegative);
     movern_new = movern_old + dmovern;

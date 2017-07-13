@@ -161,6 +161,7 @@ int main (int nNumberofArgs,char *argv[])
   // If you want to visualise the data you need to switch both of these to true
   bool_default_map["calculate_MLE_collinearity"] = false;
   bool_default_map["print_profiles_fxn_movern_csv"] = false;
+  bool_default_map["MCMC_movern_analysis"] = false;
 
   // parameters for various chi calculations as well as slope-area
   int_default_map["n_iterations"] = 20;
@@ -634,7 +635,8 @@ int main (int nNumberofArgs,char *argv[])
         || this_bool_map["print_slope_area_data"]
         || this_bool_map["print_source_keys"]
         || this_bool_map["print_baselevel_keys"]
-        || this_bool_map["print_basin_raster"])
+        || this_bool_map["print_basin_raster"]
+        || this_bool_map["MCMC_movern_analysis"])
   {
     cout << "I am getting the source and outlet nodes for the overlapping channels" << endl;
     cout << "The n_nodes to visit are: " << n_nodes_to_visit << endl;
@@ -751,6 +753,24 @@ int main (int nNumberofArgs,char *argv[])
     }
   }
   //============================================================================
+
+
+
+  if (this_bool_map["MCMC_movern_analysis"])
+  {
+    cout << "I am going to explore m/n using the MCMC method" << endl;
+    // Lets make a new chi tool: this won't be segmented since we only
+    // need it for m/n
+    LSDChiTools ChiTool_MCMC(FlowInfo);
+    ChiTool_MCMC.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
+                            filled_topography, DistanceFromOutlet,
+                            DrainageArea, chi_coordinate);
+                            
+    
+                
+  }
+
+
 
   if (this_bool_map["calculate_MLE_collinearity"])
   {
