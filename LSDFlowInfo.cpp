@@ -3008,7 +3008,7 @@ map<int,float> LSDFlowInfo::get_upslope_chi_from_single_starting_node(int starti
   // get the pixel list
   vector<int> upslope_pixel_list = get_upslope_nodes(starting_node);
   
-  cout << "Number of upslope nodes is: " << upslope_pixel_list.size() << endl;
+  //cout << "Number of upslope nodes is: " << upslope_pixel_list.size() << endl;
   
   // Now get the upslope chi
   map<int,float> upslope_chi_map = get_upslope_chi_return_map(upslope_pixel_list,

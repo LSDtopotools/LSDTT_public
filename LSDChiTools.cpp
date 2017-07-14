@@ -393,7 +393,7 @@ void LSDChiTools::update_chi_data_map_for_single_basin(LSDFlowInfo& FlowInfo, fl
     }
     
     // now get the chi coordinate updated for this basin only
-    cout << "Outlet node index is: " << outlet_node_index << endl;
+    //cout << "Outlet node index is: " << outlet_node_index << endl;
     map<int,float> new_chi_map = FlowInfo.get_upslope_chi_from_single_starting_node(outlet_node_index , movern, A_0, minimum_contributing_pixels);
 
     map<int,float>::iterator iter = new_chi_map.begin();
