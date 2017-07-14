@@ -187,6 +187,45 @@ class LSDChiTools
     /// @date 17/05/2017
     void update_chi_data_map(LSDFlowInfo& FlowInfo, float A_0, float movern);
 
+
+
+
+    /// @brief This recalcualtes chi for a single basin. Built for speed
+    ///   and is used by the MCMC routines. 
+    /// @param FlowInfo An LSDFlowInfo object
+    /// @param A_0 the A_0 parameter: in metres^2 suggested value is 1
+    /// @param m_over_n the m/n ratio
+    /// @param mimum_contributing_pixels This minimum number of contributing pixels needed before chi is calculated
+    /// @param basin_key the key to the basin you want
+    /// @param outlet_node_from_basin_key_map a map where the key is the basin key and the value is the node index of the outlet.
+    ///   you generate this map by calling get_outlet_node_from_basin_key_map()
+    /// @return No return, but the chi values FOR THIS BASIN ONLY are updated.
+    /// @author SMM
+    /// @date 14/07/2017
+    void update_chi_data_map_for_single_basin(LSDFlowInfo& FlowInfo, float A_0, float movern, 
+                                     int minimum_contributing_pixels, int basin_key,
+                                     map<int,int> outlet_node_from_basin_key_map);
+
+
+    /// @brief This recalcualtes chi for a single basin. Built for speed
+    ///   and is used by the MCMC routines. 
+    /// @detail This version uses a discharge raster
+    /// @param FlowInfo An LSDFlowInfo object
+    /// @param A_0 the A_0 parameter: in metres^2 suggested value is 1
+    /// @param m_over_n the m/n ratio
+    /// @param mimum_contributing_pixels This minimum number of contributing pixels needed before chi is calculated
+    /// @param basin_key the key to the basin you want
+    /// @param outlet_node_from_basin_key_map a map where the key is the basin key and the value is the node index of the outlet.
+    ///   you generate this map by calling get_outlet_node_from_basin_key_map()
+    /// @param Discharge an LSDRaster of discharge
+    /// @return No return, but the chi values FOR THIS BASIN ONLY are updated.
+    /// @author SMM
+    /// @date 14/07/2017
+    void update_chi_data_map_for_single_basin(LSDFlowInfo& FlowInfo, float A_0, float movern, 
+                                     int minimum_contributing_pixels, int basin_key,
+                                     map<int,int> outlet_node_from_basin_key_map, LSDRaster& Discharge);
+
+
     /// @brief This function makes a chi map and prints to a csv file
     /// @detail the lat and long coordinates in the csv are in WGS84
     /// @param FlowInfo an LSDFlowInfo object
