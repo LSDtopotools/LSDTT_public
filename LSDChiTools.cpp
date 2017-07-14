@@ -2564,7 +2564,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This will tune the dmovern_stddev until the acceptance rate is ~0.25
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-float LSDChiTools::MCMC_for_movern_tune_dmovern(LSDFlowInfo& FlowInfo, float sigma,
+float LSDChiTools::MCMC_for_movern_tune_dmovern(LSDFlowInfo& FlowInfo, int minimum_contributing_pixels, float sigma,
                                  float movern_minimum, float movern_maximum, 
                                  int basin_key)
 {
@@ -2575,24 +2575,24 @@ float LSDChiTools::MCMC_for_movern_tune_dmovern(LSDFlowInfo& FlowInfo, float sig
   
   string ChainFname = "NULL";
   bool printChain = false;
-  int NIterations = 20;
+  int NIterations = 500;
   
   float this_dmovern_stddev = 0.2;
   while( this_acceptance_rate > max_acceptance_rate || this_acceptance_rate < min_acceptance_rate )
   {
     cout << "Looking at the acceptance rate. The current dmovern_stddev is: " << this_dmovern_stddev << endl;
-    this_acceptance_rate = MCMC_for_movern(ChainFname, printChain, FlowInfo, NIterations, sigma, this_dmovern_stddev,
+    this_acceptance_rate = MCMC_for_movern(ChainFname, printChain, FlowInfo, minimum_contributing_pixels, NIterations, sigma, this_dmovern_stddev,
                      movern_minimum, movern_maximum, basin_key);
                      
     cout << "The acceptance rate is: " << this_acceptance_rate << " and the m/n stddev is: " << this_dmovern_stddev << endl;
     
     if (this_acceptance_rate > max_acceptance_rate)
     {
-      this_dmovern_stddev = this_dmovern_stddev*2;
+      this_dmovern_stddev = this_dmovern_stddev*1.45;
     }
     if (this_acceptance_rate < min_acceptance_rate)
     {
-      this_dmovern_stddev = this_dmovern_stddev*0.6;
+      this_dmovern_stddev = this_dmovern_stddev*0.77;
     }
   }
   
@@ -2607,10 +2607,13 @@ float LSDChiTools::MCMC_for_movern_tune_dmovern(LSDFlowInfo& FlowInfo, float sig
 // This runs an MCMC chain on the goodness of fit for a basin
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float LSDChiTools::MCMC_for_movern(string ChainFname, bool printChain, LSDFlowInfo& FlowInfo, 
-                                 int NIterations, float sigma, float dmovern_stddev,
+                                 int minimum_contributing_pixels, int NIterations, 
+                                 float sigma, float dmovern_stddev,
                                  float movern_minimum, float movern_maximum, 
                                  int basin_key)
 {
+
+  map<int,int> outlet_node_from_basin_key_map = get_outlet_node_from_basin_key_map();
 
   //Declarations
   float LastLikelihood;               //Last accepted likelihood
@@ -2661,7 +2664,7 @@ float LSDChiTools::MCMC_for_movern(string ChainFname, bool printChain, LSDFlowIn
   LastLikelihood = test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
                                   basin_key,reference_source, test_source, MLE_values, RMSE_values, sigma);
   
-  int print_interval = 5;
+  int print_interval = 25;
                                   
   // Now do the metropolis hastings algorithm
   for (int j = 0; j<NIterations; j++)
@@ -2690,7 +2693,9 @@ float LSDChiTools::MCMC_for_movern(string ChainFname, bool printChain, LSDFlowIn
     //cout << "After reflect New m over n is: " <<  movern_new << endl;
 
     // run the model with the new parameters
-    update_chi_data_map(FlowInfo, A_0, movern_new);
+    update_chi_data_map_for_single_basin(FlowInfo, A_0, movern_new, 
+                                     minimum_contributing_pixels, basin_key,
+                                     outlet_node_from_basin_key_map);
     //cout << "Got chi " << endl;
     NewLikelihood = test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
                                   basin_key,reference_source, test_source, MLE_values, RMSE_values, sigma);
@@ -2708,9 +2713,7 @@ float LSDChiTools::MCMC_for_movern(string ChainFname, bool printChain, LSDFlowIn
     // if accepted
     if (LikelihoodRatio > AcceptanceProbability)
     {
-      LastLikelihood = NewLikelihood;
       NAccepted++;
-      movern_old = movern_new;
     }
     else
     {
@@ -2723,8 +2726,16 @@ float LSDChiTools::MCMC_for_movern(string ChainFname, bool printChain, LSDFlowIn
       ChainFileOut  << j << "," << movern_new << "," << movern_old << "," 
                     << NewLikelihood << "," << LastLikelihood << "," 
                     << NAccepted << "," << NRejected << endl;
+                    
+    // reset m over n old
+    if (LikelihoodRatio > AcceptanceProbability)
+    {
+      LastLikelihood = NewLikelihood;
+      movern_old = movern_new;
+    }
     }
   }
+
   
   ChainFileOut.close();
   

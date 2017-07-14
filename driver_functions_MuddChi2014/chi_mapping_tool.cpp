@@ -166,7 +166,7 @@ int main (int nNumberofArgs,char *argv[])
   
   bool_default_map["MCMC_movern_analysis"] = false;
   float_default_map["MCMC_movern_minimum"] = 0.05;
-  float_default_map["MCMC_movern_maximum"] = 1.2;
+  float_default_map["MCMC_movern_maximum"] = 1.5;
   
 
   // parameters for various chi calculations as well as slope-area
@@ -781,58 +781,26 @@ int main (int nNumberofArgs,char *argv[])
     // you get all the nodes in the basin
     int pixel_thresh_for_this_example = this_int_map["threshold_contributing_pixels"] -1;
     
-    // test the timing of the two methods
-    float A_0 = 1;
-    float movern = 0.5;
-
-
-    struct timeval t1, t2;
-    int milliSeconds;
-    gettimeofday(&t1, NULL);
-    ChiTool_MCMC.update_chi_data_map(FlowInfo, A_0, movern);
-    gettimeofday(&t2, NULL);
-    milliSeconds = (t2.tv_sec - t1.tv_sec) * 1000 + (t2.tv_usec - t1.tv_usec)/1000;
-    cout << "Old way: " << milliSeconds<< " milliseconds." << endl;
-    
-    // print to file
-    ChiTool_MCMC.print_chi_data_map_to_csv_for_single_basin(FlowInfo, chi_oldway_file, this_basin_key);
-    
-    
-    // switch the mover n, we will switch it back in a second buyt I want to update the values
-    movern = 0.8;
-    ChiTool_MCMC.update_chi_data_map(FlowInfo, A_0, movern);
-    
-    map<int,int> outlet_node_from_basin_key_map = ChiTool_MCMC.get_outlet_node_from_basin_key_map();
-    
-    
-    gettimeofday(&t1, NULL);
-    movern = 0.5;
-    ChiTool_MCMC.update_chi_data_map_for_single_basin(FlowInfo, A_0, movern, 
-                                     pixel_thresh_for_this_example, this_basin_key,
-                                     outlet_node_from_basin_key_map);
-    gettimeofday(&t2, NULL);
-    milliSeconds = (t2.tv_sec - t1.tv_sec) * 1000 + (t2.tv_usec - t1.tv_usec)/1000;
-    cout << "New way: " << milliSeconds<< " milliseconds." << endl;
-    
-    // print to file
-    ChiTool_MCMC.print_chi_data_map_to_csv_for_single_basin(FlowInfo, chi_newway_file, this_basin_key);
-    
-    
-    //float tuned_dmovern_stddev = ChiTool_MCMC.MCMC_for_movern_tune_dmovern(FlowInfo, this_float_map["collinearity_MLE_sigma"],
-    //                             this_float_map["MCMC_movern_minimum"],
-    //                             this_float_map["MCMC_movern_maximum"],
-    //                             this_basin_key);
+    float tuned_dmovern_stddev;
+    tuned_dmovern_stddev = ChiTool_MCMC.MCMC_for_movern_tune_dmovern(FlowInfo,
+                                 pixel_thresh_for_this_example,
+                                 this_float_map["collinearity_MLE_sigma"],
+                                 this_float_map["MCMC_movern_minimum"],
+                                 this_float_map["MCMC_movern_maximum"],
+                                 this_basin_key);
     //float tuned_dmovern_stddev = 0.4;
                                  
     // Now run MCMC
-    //string chain_file = OUT_DIR+OUT_ID+"_Basin10_chain.csv";
-    //int NIterations = 5000;
-    //bool printChain = true;
-    //float accept = ChiTool_MCMC.MCMC_for_movern(chain_file, printChain, FlowInfo, 
-    //                             NIterations, this_float_map["collinearity_MLE_sigma"], tuned_dmovern_stddev,
-    //                             this_float_map["MCMC_movern_minimum"],
-    //                             this_float_map["MCMC_movern_maximum"],
-    //                             this_basin_key);
+    string chain_file = OUT_DIR+OUT_ID+"_Basin10_chain.csv";
+    int NIterations = 500;
+    bool printChain = true;
+    //tuned_dmovern_stddev = 0.4;
+    float accept = ChiTool_MCMC.MCMC_for_movern(chain_file, printChain, FlowInfo, 
+                                 pixel_thresh_for_this_example,
+                                 NIterations, this_float_map["collinearity_MLE_sigma"], tuned_dmovern_stddev,
+                                 this_float_map["MCMC_movern_minimum"],
+                                 this_float_map["MCMC_movern_maximum"],
+                                 this_basin_key);
   }
 
 

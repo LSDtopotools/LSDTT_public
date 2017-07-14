@@ -410,6 +410,7 @@ class LSDChiTools
     /// @brief This function drives a Monte Carlo-Markov chain model and tries to tune
     ///  the dmovern_stddev value to get between 20-30% acceptance rate
     /// @param FlowInfo An LSDFlowInfo object
+    /// @param minimum_contributing_pixel chi is only calculated if the contributing pixels are bigger than this
     /// @param NIterations The number of iterations in the chain you want
     /// @param sigma The sigma value for checking the MLE of chi
     /// @param dmovernstddev The standard deviation in the change in m/n test values.
@@ -420,7 +421,7 @@ class LSDChiTools
     /// @return The tuned dmovern_stddev. 
     /// @author SMM
     /// @date 13/07/2017
-    float MCMC_for_movern_tune_dmovern(LSDFlowInfo& FlowInfo, float sigma,
+    float MCMC_for_movern_tune_dmovern(LSDFlowInfo& FlowInfo, int minimum_contributing_pixels, float sigma,
                                  float movern_minimum, float movern_maximum, 
                                  int basin_key);
 
@@ -431,6 +432,7 @@ class LSDChiTools
     /// @param ChainFname The name of the chain file (with path)
     /// @param printChain  If true, the chain file is printed
     /// @param FlowInfo An LSDFlowInfo object
+    /// @param minimum_contributing_pixel chi is only calculated if the contributing pixels are bigger than this
     /// @param NIterations The number of iterations in the chain you want
     /// @param sigma The sigma value for checking the MLE of chi
     /// @param dmovernstddev The standard deviation in the change in m/n test values.
@@ -442,7 +444,7 @@ class LSDChiTools
     /// @author SMM
     /// @date 13/07/2017
     float MCMC_for_movern(string ChainFname, bool printChain, LSDFlowInfo& FlowInfo, 
-                          int NIterations, float sigma, float dmovern_stddev,
+                          int minimum_contributing_pixels, int NIterations, float sigma, float dmovern_stddev,
                           float movern_minimum, float movern_maximum, int basin_key);
 
 
