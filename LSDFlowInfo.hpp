@@ -635,10 +635,11 @@ class LSDFlowInfo
   /// @param upslope_pixel_list Vector of nodes to analyse.
   /// @param m_over_n
   /// @param A_0
+  /// @param mimum_pixels This minimum number of contributing pixels needed before chi is calculated
   /// @return A map where the key is the node index and the value is chi
   /// @author SMM
   /// @date 13/07/17
-  map<int,float> get_upslope_chi_return_map(vector<int>& upslope_pixel_list, float m_over_n, float A_0);
+  map<int,float> get_upslope_chi_return_map(vector<int>& upslope_pixel_list, float m_over_n, float A_0, int minimum_pixels);
 
   /// @brief This function calculates the chi function for a list of nodes
   /// it isn't really a standalone modules, but is only called from get_upslope_chi
@@ -647,11 +648,12 @@ class LSDFlowInfo
   /// @param upslope_pixel_list Vector of nodes to analyse.
   /// @param m_over_n
   /// @param A_0
+  /// @param mimum_pixels This minimum number of contributing pixels needed before chi is calculated
   /// @param Discharge and LSDRaster of the discharge
   /// @return A map where the key is the node index and the value is chi
   /// @author SMM
   /// @date 13/07/17
-  map<int,float> get_upslope_chi_return_map(vector<int>& upslope_pixel_list, float m_over_n, float A_0, LSDRaster& Discharge);
+  map<int,float> get_upslope_chi_return_map(vector<int>& upslope_pixel_list, float m_over_n, float A_0, int minimum_pixels, LSDRaster& Discharge);
 
 
 
@@ -710,11 +712,12 @@ class LSDFlowInfo
   /// of the node from which you want to start the chi analysis. 
   /// @param m_over_n the m/n ratio. Chi is quite sensitive to this
   /// @param A_0 the reference discharge. 
+  /// @param mimum_pixels This minimum number of contributing pixels needed before chi is calculated
   /// @return Returns a map where the key is the node index and the value is chi
   /// @author SMM
   /// @date 13/07/2017
     map<int,float> get_upslope_chi_from_single_starting_node(int starting_node, 
-                                 float m_over_n, float A_0);
+                                 float m_over_n, float A_0, int minimum_pixels);
 
 
   /// @brief This funtion gets all the upslope chi of a starting node (assuming
@@ -724,12 +727,13 @@ class LSDFlowInfo
   /// of the node from which you want to start the chi analysis. 
   /// @param m_over_n the m/n ratio. Chi is quite sensitive to this
   /// @param A_0 the reference discharge.
+  /// @param mimum_pixels This minimum number of contributing pixels needed before chi is calculated
   /// @param Discharge The discharge raster
   /// @return Returns a map where the key is the node index and the value is chi
   /// @author SMM
   /// @date 13/07/2017
     map<int,float> get_upslope_chi_from_single_starting_node(int starting_node, 
-                                 float m_over_n, float A_0, LSDRaster& Discharge);
+                                 float m_over_n, float A_0, int minimum_pixels, LSDRaster& Discharge);
 
 
   /// @brief This function gets the chi upslope of every base level node

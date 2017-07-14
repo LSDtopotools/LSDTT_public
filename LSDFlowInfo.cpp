@@ -2869,7 +2869,7 @@ vector<float> LSDFlowInfo::get_upslope_chi(vector<int>& upslope_pixel_list,
 // the value is chi
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 map<int,float> LSDFlowInfo::get_upslope_chi_return_map(vector<int>& upslope_pixel_list,
-                                           float m_over_n, float A_0)
+                                           float m_over_n, float A_0, int minimum_pixels)
 {
 
   map<int,float> map_of_chi;
@@ -2895,28 +2895,30 @@ map<int,float> LSDFlowInfo::get_upslope_chi_return_map(vector<int>& upslope_pixe
   int start_SVector_node = SVectorIndex[ upslope_pixel_list[0] ];
   map_of_chi[ upslope_pixel_list[0] ] = 0.0;
 
+
   for (int n_index = 1; n_index<n_nodes_upslope; n_index++)
   {
-    node = upslope_pixel_list[n_index];
-    receiver_node = ReceiverVector[ node ];
-    IndexOfReceiverInUplsopePList = SVectorIndex[receiver_node]-start_SVector_node;
-    row = RowIndex[node];
-    col = ColIndex[node];
-
-    if (FlowLengthCode[row][col] == 2)
+    // We only get the data if the number of contributing pixels is greater than
+    // the minimum pixels
+    if (NContributingNodes[node] >= minimum_pixels)
     {
-      dx = diag_length;
-    }
-    else
-    {
-      dx = DataResolution;
-    }
+      node = upslope_pixel_list[n_index];
+      receiver_node = ReceiverVector[ node ];
+      IndexOfReceiverInUplsopePList = SVectorIndex[receiver_node]-start_SVector_node;
+      row = RowIndex[node];
+      col = ColIndex[node];
 
-
-    map_of_chi[ node ] = dx*(pow( (A_0/ (float(NContributingNodes[node])*pixel_area) ),m_over_n))
+      if (FlowLengthCode[row][col] == 2)
+      {
+        dx = diag_length;
+      }
+      else
+      {
+        dx = DataResolution;
+      }
+      map_of_chi[ node ] = dx*(pow( (A_0/ (float(NContributingNodes[node])*pixel_area) ),m_over_n))
                           + map_of_chi[ receiver_node ];
-
-
+    }
   }
   return map_of_chi;
 }
@@ -2929,7 +2931,7 @@ map<int,float> LSDFlowInfo::get_upslope_chi_return_map(vector<int>& upslope_pixe
 // same as above but uses a discharge raster
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 map<int,float> LSDFlowInfo::get_upslope_chi_return_map(vector<int>& upslope_pixel_list,
-                                           float m_over_n, float A_0,
+                                           float m_over_n, float A_0, int minimum_pixels,
                                            LSDRaster& Discharge)
 {
 
@@ -2959,24 +2961,27 @@ map<int,float> LSDFlowInfo::get_upslope_chi_return_map(vector<int>& upslope_pixe
 
   for (int n_index = 1; n_index<n_nodes_upslope; n_index++)
   {
-    node = upslope_pixel_list[n_index];
-    receiver_node = ReceiverVector[ node ];
-    IndexOfReceiverInUplsopePList = SVectorIndex[receiver_node]-start_SVector_node;
-    row = RowIndex[node];
-    col = ColIndex[node];
-
-    if (FlowLengthCode[row][col] == 2)
+    // We only get the data if the number of contributing pixels is greater than
+    // the minimum pixels
+    if (NContributingNodes[node] >= minimum_pixels)
     {
-      dx = diag_length;
-    }
-    else
-    {
-      dx = DataResolution;
-    }
+      node = upslope_pixel_list[n_index];
+      receiver_node = ReceiverVector[ node ];
+      IndexOfReceiverInUplsopePList = SVectorIndex[receiver_node]-start_SVector_node;
+      row = RowIndex[node];
+      col = ColIndex[node];
 
-
-    map_of_chi[node] = dx*(pow( (A_0/ ( Discharge.get_data_element(row, col) ) ),m_over_n))
+      if (FlowLengthCode[row][col] == 2)
+      {
+        dx = diag_length;
+      }
+      else
+      {
+        dx = DataResolution;
+      }
+      map_of_chi[node] = dx*(pow( (A_0/ ( Discharge.get_data_element(row, col) ) ),m_over_n))
                           + map_of_chi[ receiver_node ];
+    }
 
   }
   return map_of_chi;
@@ -2997,14 +3002,14 @@ map<int,float> LSDFlowInfo::get_upslope_chi_return_map(vector<int>& upslope_pixe
 // It returns a map with the node index as the key and the chi value as
 // the value
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-map<int,float> LSDFlowInfo::get_upslope_chi_from_single_starting_node(int starting_node, float m_over_n, float A_0)
+map<int,float> LSDFlowInfo::get_upslope_chi_from_single_starting_node(int starting_node, float m_over_n, float A_0, int minimum_pixels)
 {
   // get the pixel list
   vector<int> upslope_pixel_list = get_upslope_nodes(starting_node);
   
   // Now get the upslope chi
   map<int,float> upslope_chi_map = get_upslope_chi_return_map(upslope_pixel_list,
-                                                         m_over_n, A_0);
+                                                         m_over_n, A_0. minimum_pixels);
   
   return upslope_chi_map;
 }
@@ -3018,14 +3023,14 @@ map<int,float> LSDFlowInfo::get_upslope_chi_from_single_starting_node(int starti
 // Same as above but uses discharge
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 map<int,float> LSDFlowInfo::get_upslope_chi_from_single_starting_node(int starting_node, 
-                                 float m_over_n, float A_0, LSDRaster& Discharge)
+                                 float m_over_n, float A_0, int minimum_pixels, LSDRaster& Discharge)
 {
   // get the pixel list
   vector<int> upslope_pixel_list = get_upslope_nodes(starting_node);
   
   // Now get the upslope chi
   map<int,float> upslope_chi_map = get_upslope_chi_return_map(upslope_pixel_list,
-                                                         m_over_n, A_0, Discharge);
+                                                         m_over_n, A_0, minimum_pixels, Discharge);
   
   return upslope_chi_map;
 }
