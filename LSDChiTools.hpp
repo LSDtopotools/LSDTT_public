@@ -718,6 +718,19 @@ class LSDChiTools
     /// @date 05/06/2017
     void print_chi_data_map_to_csv(LSDFlowInfo& FlowInfo, string filename);
 
+
+    /// @brief This prints a csv file with chi data from the data maps for a specific basin
+    ///  the columns are:
+    ///  latitude,longitude,chi,elevation,flow distance,drainage area,
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param filename The name of the filename to print to (should have full
+    ///   path and the extension .csv
+    /// @param basin_key the basin key.
+    /// @author SMM
+    /// @date 14/07/2017
+    void print_chi_data_map_to_csv_for_single_basin(LSDFlowInfo& FlowInfo, string filename, int basin_key);
+
+
     /// @brief This prints a csv file with all the data from the data maps
     ///  the columns are:
     ///  latitude,longitude,chi,elevation,flow distance,drainage area,m_chi,b_chi
