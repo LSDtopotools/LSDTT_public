@@ -3009,7 +3009,7 @@ map<int,float> LSDFlowInfo::get_upslope_chi_from_single_starting_node(int starti
   
   // Now get the upslope chi
   map<int,float> upslope_chi_map = get_upslope_chi_return_map(upslope_pixel_list,
-                                                         m_over_n, A_0. minimum_pixels);
+                                                         m_over_n, A_0, minimum_pixels);
   
   return upslope_chi_map;
 }

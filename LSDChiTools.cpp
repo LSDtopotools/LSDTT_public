@@ -357,8 +357,39 @@ void LSDChiTools::update_chi_data_map(LSDFlowInfo& FlowInfo, float A_0, float mo
       chi_data_map[this_node] = updated_chi;
     }
   }
-
 }
+
+
+/*
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This updates the chi values by calculating them directly from the FlowInfo object
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::update_chi_data_map_for_single_basin(LSDFlowInfo& FlowInfo, float A_0, float movern. int minimum_contributing_pixels, int basin_key)
+{
+  if (chi_data_map.size() == 0)
+  {
+    cout << "Trying to update chi but you have not run the automator yet to" << endl;
+    cout << "organise the sources and channels. LSDChiTools::update_chi_data_map" << endl;
+  }
+  else
+  {
+    float thresh_area_for_chi = 0;  // this gets chi in all nodes. Not much slower and avoids errors
+    LSDRaster this_chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,A_0,thresh_area_for_chi);
+
+    int n_nodes = int(node_sequence.size());
+    int this_node,row,col;
+    float updated_chi;
+    for(int node = 0; node<n_nodes; node++)
+    {
+      this_node = node_sequence[node];
+      FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+      updated_chi = this_chi_coordinate.get_data_element(row,col);
+      chi_data_map[this_node] = updated_chi;
+    }
+  }
+}
+*/
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This prints a chi map to csv with an area threshold in m^2
@@ -2789,6 +2820,29 @@ void LSDChiTools::print_profiles_as_fxn_movern_with_discharge(LSDFlowInfo& FlowI
   }
   chi_csv_out.close();
 }
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This gets the source node of a given key
+// Returns a map were the key is the basin key and the value is the 
+// node index of the outlet node
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+map<int,int> LSDChiTools::get_outlet_node_from_basin_key_map()
+{
+  map<int,int> outlet_node_from_basin_key;
+  map<int,int>::iterator iter = key_to_baselevel_map.begin();
+  
+  while(iter != key_to_baselevel_map.end())
+  {
+    int outlet_node  = iter->first;
+    int basin_key = iter->second;
+    
+    outlet_node_from_basin_key[basin_key] = outlet_node;
+    iter++;
+  }
+  return outlet_node_from_basin_key;
+}
+
 
 
 

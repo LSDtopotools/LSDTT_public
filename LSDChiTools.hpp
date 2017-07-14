@@ -433,6 +433,13 @@ class LSDChiTools
                                    int n_movern, LSDRaster& Discharge);
 
 
+    /// @brief This inverst the key_to_baselevel map
+    ///  so that the key is the baselevel key and the value is the node index of the outlet node
+    /// @return An <int,int> map where key is baselevel key and value is node index of outlet node
+    /// @author SMM
+    /// @date 14/07/2017
+    map<int,int> get_outlet_node_from_basin_key_map();
+
     /// @brief This gets the node index (the reference into LSDFlowInfo) of a source
     ///  based on a source key
     /// @param source_key the source key of the reference channel
