@@ -2884,6 +2884,7 @@ map<int,float> LSDFlowInfo::get_upslope_chi_return_map(vector<int>& upslope_pixe
   int node,row,col;
   // get the number of nodes upslope
   int n_nodes_upslope = upslope_pixel_list.size();
+  //cout << "n_nodes upslope are: " << n_nodes_upslope << endl;
   //vector<float> chi_vec(n_nodes_upslope,0.0);
 
   if(n_nodes_upslope != NContributingNodes[ upslope_pixel_list[0] ])
@@ -2900,9 +2901,9 @@ map<int,float> LSDFlowInfo::get_upslope_chi_return_map(vector<int>& upslope_pixe
   {
     // We only get the data if the number of contributing pixels is greater than
     // the minimum pixels
+    node = upslope_pixel_list[n_index];
     if (NContributingNodes[node] >= minimum_pixels)
     {
-      node = upslope_pixel_list[n_index];
       receiver_node = ReceiverVector[ node ];
       IndexOfReceiverInUplsopePList = SVectorIndex[receiver_node]-start_SVector_node;
       row = RowIndex[node];
@@ -2963,9 +2964,9 @@ map<int,float> LSDFlowInfo::get_upslope_chi_return_map(vector<int>& upslope_pixe
   {
     // We only get the data if the number of contributing pixels is greater than
     // the minimum pixels
+    node = upslope_pixel_list[n_index];
     if (NContributingNodes[node] >= minimum_pixels)
     {
-      node = upslope_pixel_list[n_index];
       receiver_node = ReceiverVector[ node ];
       IndexOfReceiverInUplsopePList = SVectorIndex[receiver_node]-start_SVector_node;
       row = RowIndex[node];
@@ -3006,6 +3007,8 @@ map<int,float> LSDFlowInfo::get_upslope_chi_from_single_starting_node(int starti
 {
   // get the pixel list
   vector<int> upslope_pixel_list = get_upslope_nodes(starting_node);
+  
+  cout << "Number of upslope nodes is: " << upslope_pixel_list.size() << endl;
   
   // Now get the upslope chi
   map<int,float> upslope_chi_map = get_upslope_chi_return_map(upslope_pixel_list,

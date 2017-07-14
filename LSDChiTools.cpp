@@ -343,6 +343,9 @@ void LSDChiTools::update_chi_data_map(LSDFlowInfo& FlowInfo, float A_0, float mo
   }
   else
   {
+    cout << "WARNING: update_chi_data_map" << endl;
+    cout<< "Chi is being calculated from outlet nodes, so interior basins may have different starting chi values." << endl;
+    
     float thresh_area_for_chi = 0;  // this gets chi in all nodes. Not much slower and avoids errors
     LSDRaster this_chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,A_0,thresh_area_for_chi);
 
@@ -390,12 +393,15 @@ void LSDChiTools::update_chi_data_map_for_single_basin(LSDFlowInfo& FlowInfo, fl
     }
     
     // now get the chi coordinate updated for this basin only
+    cout << "Outlet node index is: " << outlet_node_index << endl;
     map<int,float> new_chi_map = FlowInfo.get_upslope_chi_from_single_starting_node(outlet_node_index , movern, A_0, minimum_contributing_pixels);
 
     map<int,float>::iterator iter = new_chi_map.begin();
     while(iter != new_chi_map.end())
     {
+      //cout << "node is: " << iter->first << endl;
       chi_data_map[iter->first] = iter->second;
+      iter++;
     }
   }
 }
@@ -436,6 +442,7 @@ void LSDChiTools::update_chi_data_map_for_single_basin(LSDFlowInfo& FlowInfo, fl
     while(iter != new_chi_map.end())
     {
       chi_data_map[iter->first] = iter->second;
+      iter++;
     }
   }
 }
