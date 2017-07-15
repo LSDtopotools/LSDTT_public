@@ -1205,13 +1205,54 @@ float getGaussianRandom(float minimum, float mean, bool allowNegative){
   return mean; // if all else fails return the mean.
 }
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// A bootstrapping method to get the linear regression coefficients
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void bootstrap_linear_regression(vector<float>& x_data, vector<float>& y_data, int N_iterations, float acceptance_prob)
+{
+  vector<float> residuals;
+  long seed1 = time(NULL);
+  int N_nodes = int(x_data.size());
+  
+  vector<float> regress_slope;
+  vector<float> regress_intercept;
+  
+  for(int i = 0; i<N_iterations; i++)
+  {
+    vector<float> this_x;
+    vector<float> this_y;
+    for(int node = 0; node<N_nodes; node++)
+    {
+      float this_prob = ran3(&seed1);
+      if (this_prob > acceptance_prob)
+      {
+        this_x.push_back( x_data[node]);
+        this_y.push_back( y_data[node]);
+      }
+      // get the regression
+      vector<float> regress_coeff = simple_linear_regression(this_x, this_y, residuals);
+      regress_slope.push_back(regress_coeff[0]);
+      regress_intercept.push_back(regress_coeff[1]);
+    }
+  }
+  // Now the slope and intercept will be contained in regress_slope and regress_intercept
+  // vectors. These can be used to get median and confidence interval numbers. 
+}
+
+
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this gets a simple linear regression where the regression model is y = mx+b
 // it returns a vector with the best fit values for m, b, r^2 and the durban_watson
 // statistic (which is used to test if the residuals are autocorrelated
 // it also replaces the residuals vector with the actual residuals from the
 // best fit
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 vector<float> simple_linear_regression(vector<float>& x_data, vector<float>& y_data, vector<float>& residuals)
 {
 
