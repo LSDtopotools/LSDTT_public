@@ -2578,19 +2578,26 @@ void LSDChiTools::MCMC_driver(LSDFlowInfo& FlowInfo, int minimum_contributing_pi
                                  string OUT_DIR, string OUT_ID)
 {
   // so we loop through the basins
+  float this_dmovern_stddev = 0.1;
   int n_basins = int(key_to_baselevel_map.size());
   for (int basin_key = 0; basin_key < n_basins; basin_key++)
   {
     cout << "Running MCMC on basin: " << basin_key << endl;
-    float this_dmovern_sigma = MCMC_for_movern_tune_dmovern(FlowInfo, minimum_contributing_pixels, sigma,
-                                 movern_minimum, movern_maximum, basin_key);
-                                 
+    
+    float this_sigma = MCMC_for_movern_tune_sigma(FlowInfo, minimum_contributing_pixels, 
+                               this_dmovern_stddev, 
+                               movern_minimum, movern_maximum, 
+                               basin_key);
+    
+    //float this_dmovern_sigma = MCMC_for_movern_tune_dmovern(FlowInfo, minimum_contributing_pixels, sigma,
+    //                             movern_minimum, movern_maximum, basin_key);
+    //
     // now run the chain
     string chain_file = OUT_DIR+OUT_ID+"_Basin"+itoa(basin_key)+"_chain.csv";
     bool printChain = true;
     float accept = MCMC_for_movern(chain_file, printChain, FlowInfo, 
                                  minimum_contributing_pixels,
-                                 N_chain_links, sigma, this_dmovern_sigma,
+                                 N_chain_links, this_sigma, this_dmovern_stddev,
                                  movern_minimum,movern_maximum,basin_key);
   }
 
@@ -2661,6 +2668,65 @@ float LSDChiTools::MCMC_for_movern_tune_dmovern(LSDFlowInfo& FlowInfo, int minim
 
 }
 
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This will tune the dmovern_stddev until the acceptance rate is ~0.25
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDChiTools::MCMC_for_movern_tune_sigma(LSDFlowInfo& FlowInfo, int minimum_contributing_pixels, 
+                                              float dmovern_stddev,
+                                              float movern_minimum, float movern_maximum, 
+                                              int basin_key)
+{
+  // This tries to get the correct acceptance rate by tuning sigma. 
+  // You give it a stddev
+  // Remember: increasing sigma makes all the MLE values go up so increases
+  // the acceptance rate. 
+  
+  
+  
+  float min_acceptance_rate = 0.2;
+  float max_acceptance_rate = 0.33;
+  float this_acceptance_rate = 1.0;
+  
+  string ChainFname = "NULL";
+  bool printChain = false;
+  int NIterations = 1000;
+  float this_sigma = 200; 
+  int n_steps = 0;
+
+  while( n_steps < 10)
+  {
+    
+    // NOTE: It would probably make more sense to use Newton-Raphson to get the
+    // correct dmovern but we will use this stupid method for now. 
+    
+    cout << "Looking at the acceptance rate. I've changed sigma to: " << this_sigma << endl;
+    this_acceptance_rate = MCMC_for_movern(ChainFname, printChain, FlowInfo, minimum_contributing_pixels, NIterations, this_sigma, dmovern_stddev,
+                     movern_minimum, movern_maximum, basin_key);
+                     
+    cout << "The acceptance rate is: " << this_acceptance_rate << " and the m/n stddev is: " << this_sigma << endl;
+    
+    if (this_acceptance_rate > max_acceptance_rate)
+    {
+      this_sigma = this_sigma*0.77;    // these factors are arbitray: they just need to increase or decrease the acceptance rate. 
+    }
+    else if (this_acceptance_rate < min_acceptance_rate)
+    {
+      this_sigma = this_sigma*1.45;
+    }
+    else
+    {
+      n_steps = 10;
+    }
+
+    // we don't want this to go on forever. 
+    n_steps++;
+  }
+  
+  return this_sigma;
+
+}
 
 
 

@@ -430,8 +430,6 @@ class LSDChiTools
     /// @param minimum_contributing_pixel chi is only calculated if the contributing pixels are bigger than this
     /// @param NIterations The number of iterations in the chain you want
     /// @param sigma The sigma value for checking the MLE of chi
-    /// @param dmovernstddev The standard deviation in the change in m/n test values.
-    ///    This needs to be tuned so the acceptance rate is ~25%
     /// @param movern_minimum The minimum movern value to be tested
     /// @param movern_maximum The maximum movern value to be tested
     /// @param basin key The key of the basin to be tested
@@ -441,6 +439,23 @@ class LSDChiTools
     float MCMC_for_movern_tune_dmovern(LSDFlowInfo& FlowInfo, int minimum_contributing_pixels, float sigma,
                                  float movern_minimum, float movern_maximum, 
                                  int basin_key);
+
+    /// @brief This function drives a Monte Carlo-Markov chain model and tries to tune
+    ///  the sigma value to get between 20-30% acceptance rate
+    /// @param FlowInfo An LSDFlowInfo object
+    /// @param minimum_contributing_pixel chi is only calculated if the contributing pixels are bigger than this
+    /// @param dmovernstddev The desired stddev of m/n changes
+    /// @param movern_minimum The minimum movern value to be tested
+    /// @param movern_maximum The maximum movern value to be tested
+    /// @param basin key The key of the basin to be tested
+    /// @return sigma The tuned sigma value for checking the MLE of chi
+    /// @author SMM
+    /// @date 17/07/2017
+    float MCMC_for_movern_tune_sigma(LSDFlowInfo& FlowInfo, int minimum_contributing_pixels, 
+                                     float dmovernstddev,
+                                     float movern_minimum, float movern_maximum, 
+                                     int basin_key);
+
 
     /// @brief This function drives a Monte Carlo-Markov chain model for getting
     ///  the confidence intervals on the m/n value. 
