@@ -2691,7 +2691,7 @@ float LSDChiTools::MCMC_for_movern_tune_sigma(LSDFlowInfo& FlowInfo, int minimum
   
   string ChainFname = "NULL";
   bool printChain = false;
-  int NIterations = 1000;
+  int NIterations = 2500;
   float this_sigma = 2000; 
   int n_steps = 0;
 
