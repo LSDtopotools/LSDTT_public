@@ -2692,10 +2692,10 @@ float LSDChiTools::MCMC_for_movern_tune_sigma(LSDFlowInfo& FlowInfo, int minimum
   string ChainFname = "NULL";
   bool printChain = false;
   int NIterations = 1000;
-  float this_sigma = 200; 
+  float this_sigma = 2000; 
   int n_steps = 0;
 
-  while( n_steps < 10)
+  while( n_steps < 20)
   {
     
     // NOTE: It would probably make more sense to use Newton-Raphson to get the
@@ -2717,7 +2717,7 @@ float LSDChiTools::MCMC_for_movern_tune_sigma(LSDFlowInfo& FlowInfo, int minimum
     }
     else
     {
-      n_steps = 10;
+      n_steps = 20;
     }
 
     // we don't want this to go on forever. 
