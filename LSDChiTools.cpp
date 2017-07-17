@@ -652,6 +652,10 @@ void LSDChiTools::chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
       //cout << "Found a new baselevel. The node is: " << this_base_level << " and key is: " << baselevel_tracker << endl;
       this_key_to_baselevel_map[this_base_level] = baselevel_tracker;
       ordered_baselevel_nodes.push_back(this_base_level);
+      
+      // Get the node of the source to the mainstem. This works because the
+      // mainstem is always the first channel listed in a basin. 
+      source_node_of_mainstem_map[baselevel_tracker] = source_nodes[chan];
     }
 
     // now add the source tracker
@@ -826,6 +830,10 @@ void LSDChiTools::chi_map_automator(LSDFlowInfo& FlowInfo,
       //cout << "Found a new baselevel. The node is: " << this_base_level << " and key is: " << baselevel_tracker << endl;
       this_key_to_baselevel_map[this_base_level] = baselevel_tracker;
       ordered_baselevel_nodes.push_back(this_base_level);
+      
+      // Get the node of the source to the mainstem. This works because the
+      // mainstem is always the first channel listed in a basin. 
+      source_node_of_mainstem_map[baselevel_tracker] = source_nodes[chan];
     }
 
     // now add the source tracker
@@ -3397,6 +3405,74 @@ void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_inte
   slopes = SA_slope;
 
 }
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function bootstraps the S-A data to get confidence intervals on the 
+// best fit m/n ratio
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::bootstrap_slope_area_data(LSDFlowInfo& FlowInfo,
+                                          vector<int>& SA_midpoint_node,
+                                          vector<float>& SA_slope)
+{
+
+  // we will store the data in maps where the key is the source node
+  // This is because we will bin the data by source.
+  vector<float> empty_vec;
+  map< int, vector<float> > log_slope_map;
+  map< int, vector<float> > log_area_map;
+  map< int, int > basin_key_of_this_source_map;
+
+  int this_node;
+  int this_source_key;
+
+  int n_nodes = int(SA_midpoint_node.size());
+  if (n_nodes <= 0)
+  {
+    cout << "Trying to print SA data but there doesn't seem to be any." << endl;
+    cout << "Have you run the automator and gathered the sources yet?" << endl;
+  }
+  else
+  {
+    // get the data vectors out
+    for (int n = 0; n< n_nodes; n++)
+    {
+      // get the source node
+      this_node = SA_midpoint_node[n];
+      this_source_key = source_keys_map[this_node];
+      //cout << "This source key is: " << this_source_key << endl;
+
+      // see if we have a vector for that source node
+      if( log_area_map.find(this_source_key) == log_area_map.end())
+      {
+        log_area_map[this_source_key] = empty_vec;
+        log_slope_map[this_source_key] = empty_vec;
+      }
+      // check if we have the basin of this source
+      if (basin_key_of_this_source_map.find(this_source_key) == basin_key_of_this_source_map.end() )
+      {
+        basin_key_of_this_source_map[this_source_key] = baselevel_keys_map[this_node];
+      }
+
+      // add to this source's log S, log A data. We will later use these to bin
+      log_area_map[this_source_key].push_back( log10(drainage_area_data_map[this_node]) );
+      log_slope_map[this_source_key].push_back( log10(SA_slope[n]) );
+    }
+  }
+  // Okay, so at this point we have data maps that have the slope and areas in maps
+  // with the key as the source, and a "basin_key_of_this_source" where
+  // the key is this source number and the value is the basin. 
+  // We can loop through the basins or all sources to get at the 
+  // basin-based data
+  
+  int N_sources =  int(basin_key_of_this_source_map.size());
+  map<int, vector<float> > log_area_mainstem;
+  map<int, vector<float> > log_slope_mainstem;
+}
+
+
+
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
