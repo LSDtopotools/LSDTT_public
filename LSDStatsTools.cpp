@@ -1226,19 +1226,44 @@ void bootstrap_linear_regression(vector<float>& x_data, vector<float>& y_data, i
     for(int node = 0; node<N_nodes; node++)
     {
       float this_prob = ran3(&seed1);
+      //cout << "node: " << node << " ap:" << acceptance_prob << " thisProb = " << this_prob << endl;
+      
       if (this_prob > acceptance_prob)
       {
         this_x.push_back( x_data[node]);
         this_y.push_back( y_data[node]);
+        
+        //cout << "x: " << x_data[node] << " y: " << y_data[node] << endl;
       }
-      // get the regression
-      vector<float> regress_coeff = simple_linear_regression(this_x, this_y, residuals);
-      regress_slope.push_back(regress_coeff[0]);
-      regress_intercept.push_back(regress_coeff[1]);
+
+      
+      
     }
+    // get the regression
+    vector<float> regress_coeff = simple_linear_regression(this_x, this_y, residuals);
+    regress_slope.push_back(regress_coeff[0]);
+    regress_intercept.push_back(regress_coeff[1]);
+    
+    //cout << "RS: " << regress_coeff[0] << " RI: " << regress_coeff[1] << endl;
+    
+    
   }
   // Now the slope and intercept will be contained in regress_slope and regress_intercept
   // vectors. These can be used to get median and confidence interval numbers. 
+  vector<float> descriptive_stats_slope =  calculate_descriptive_stats(regress_slope);
+  
+  cout << "Got the descriptive stats from the bootstrap: " << endl;
+  cout << "[0] minimum: " << descriptive_stats_slope[0] << endl;
+  cout << "[1] first quartile: " << descriptive_stats_slope[1] << endl;
+  cout << "[2] median: " << descriptive_stats_slope[2] << endl;
+  cout << "[3] third quartile: " << descriptive_stats_slope[3] << endl;
+  cout << "[4] maximum : " << descriptive_stats_slope[4] << endl;
+  cout << "[5] mean: " << descriptive_stats_slope[5] << endl;
+  cout << "[6] standard deviation: " << descriptive_stats_slope[6] << endl;
+  cout << "[7] standard error: " << descriptive_stats_slope[7] << endl;
+  cout << "[8] median absolute deviation (MAD): " << descriptive_stats_slope[8] << endl;
+  
+  
 }
 
 

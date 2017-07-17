@@ -168,6 +168,8 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["MCMC_movern_minimum"] = 0.05;
   float_default_map["MCMC_movern_maximum"] = 1.5;
   
+  bool_default_map["bootstrap_SA_data"] = false;
+  
 
   // parameters for various chi calculations as well as slope-area
   int_default_map["n_iterations"] = 20;
@@ -890,6 +892,7 @@ int main (int nNumberofArgs,char *argv[])
     ChiTool_SA.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_coordinate);
+    cout << "Got the data into the data maps." << endl;
 
     float vertical_interval = this_float_map["SA_vertical_interval"];
     string filename_SA = OUT_DIR+OUT_ID+"_SAvertical.csv";
@@ -905,6 +908,13 @@ int main (int nNumberofArgs,char *argv[])
 
     cout << "Printing binned S-A data." << endl;
     ChiTool_SA.bin_slope_area_data(FlowInfo, SA_midpoint_nodes, SA_slopes, this_float_map["log_A_bin_width"],filename_binned);
+    
+    if (this_bool_map["bootstrap_SA_data"])
+    {
+      cout << "I am going to bootstrap the S-A data for you." << endl;
+      ChiTool_SA.bootstrap_slope_area_data(FlowInfo, SA_midpoint_nodes, SA_slopes);
+    }
+    
     
     if (this_bool_map["segment_slope_area_data"])
     {
