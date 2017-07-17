@@ -133,7 +133,8 @@ void quantile_quantile_analysis_defined_percentiles(vector<float>& data, vector<
 // N_iterations is the number of bootstrap iterations
 // acceptance probablility is the probability that you will accept any given data point
 // in an iteration. This runs without replacement
-void bootstrap_linear_regression(vector<float>& x_data, vector<float>& y_data, int N_iterations, float acceptance_prob);
+// Returns summary statistics (see cpp code for details)
+vector<float> bootstrap_linear_regression(vector<float>& x_data, vector<float>& y_data, int N_iterations, float acceptance_prob);
 
 
 // calculates least squares linear regression for two datasets, returning

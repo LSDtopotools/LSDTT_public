@@ -169,6 +169,8 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["MCMC_movern_maximum"] = 1.5;
   
   bool_default_map["bootstrap_SA_data"] = false;
+  int_default_map["N_SA_bootstrap_iterations"] = 1000;
+  float_default_map["SA_bootstrap_retain_node_prbability"] = 0.5;
   
 
   // parameters for various chi calculations as well as slope-area
@@ -912,7 +914,11 @@ int main (int nNumberofArgs,char *argv[])
     if (this_bool_map["bootstrap_SA_data"])
     {
       cout << "I am going to bootstrap the S-A data for you." << endl;
-      ChiTool_SA.bootstrap_slope_area_data(FlowInfo, SA_midpoint_nodes, SA_slopes);
+      string filename_SAbootstrap = OUT_DIR+OUT_ID+"_SABootstrap.csv";
+      ChiTool_SA.bootstrap_slope_area_data(FlowInfo, SA_midpoint_nodes, SA_slopes,
+                                           this_int_map["N_SA_bootstrap_iterations"],
+                                           this_float_map["SA_bootstrap_retain_node_prbability"], 
+                                           filename_SAbootstrap);
     }
     
     

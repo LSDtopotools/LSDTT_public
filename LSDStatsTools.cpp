@@ -1209,8 +1209,18 @@ float getGaussianRandom(float minimum, float mean, bool allowNegative){
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // A bootstrapping method to get the linear regression coefficients
+// Returns a vector with summary statistics
+// [0] minimum
+// [1] first quartile (median of first half of data)
+// [2] median
+// [3] third quartile (median of first half of data)
+// [4] maximum
+// [5] mean
+// [6] standard deviation
+// [7] standard error
+// [8] median absolute deviation (MAD)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void bootstrap_linear_regression(vector<float>& x_data, vector<float>& y_data, int N_iterations, float acceptance_prob)
+vector<float> bootstrap_linear_regression(vector<float>& x_data, vector<float>& y_data, int N_iterations, float acceptance_prob)
 {
   vector<float> residuals;
   long seed1 = time(NULL);
@@ -1252,17 +1262,18 @@ void bootstrap_linear_regression(vector<float>& x_data, vector<float>& y_data, i
   // vectors. These can be used to get median and confidence interval numbers. 
   vector<float> descriptive_stats_slope =  calculate_descriptive_stats(regress_slope);
   
-  cout << "Got the descriptive stats from the bootstrap: " << endl;
-  cout << "[0] minimum: " << descriptive_stats_slope[0] << endl;
-  cout << "[1] first quartile: " << descriptive_stats_slope[1] << endl;
-  cout << "[2] median: " << descriptive_stats_slope[2] << endl;
-  cout << "[3] third quartile: " << descriptive_stats_slope[3] << endl;
-  cout << "[4] maximum : " << descriptive_stats_slope[4] << endl;
-  cout << "[5] mean: " << descriptive_stats_slope[5] << endl;
-  cout << "[6] standard deviation: " << descriptive_stats_slope[6] << endl;
-  cout << "[7] standard error: " << descriptive_stats_slope[7] << endl;
-  cout << "[8] median absolute deviation (MAD): " << descriptive_stats_slope[8] << endl;
+  //cout << "Got the descriptive stats from the bootstrap: " << endl;
+  //cout << "[0] minimum: " << descriptive_stats_slope[0] << endl;
+  //cout << "[1] first quartile: " << descriptive_stats_slope[1] << endl;
+  //cout << "[2] median: " << descriptive_stats_slope[2] << endl;
+  //cout << "[3] third quartile: " << descriptive_stats_slope[3] << endl;
+  //cout << "[4] maximum : " << descriptive_stats_slope[4] << endl;
+  //cout << "[5] mean: " << descriptive_stats_slope[5] << endl;
+  //cout << "[6] standard deviation: " << descriptive_stats_slope[6] << endl;
+  //cout << "[7] standard error: " << descriptive_stats_slope[7] << endl;
+  //cout << "[8] median absolute deviation (MAD): " << descriptive_stats_slope[8] << endl;
   
+  return descriptive_stats_slope;
   
 }
 

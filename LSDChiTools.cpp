@@ -3416,8 +3416,15 @@ void LSDChiTools::bootstrap_slope_area_data(LSDFlowInfo& FlowInfo,
                                           vector<int>& SA_midpoint_node,
                                           vector<float>& SA_slope, 
                                           int N_iterations, 
-                                          float bootstrap_keep_data_prob)
+                                          float bootstrap_keep_data_prob, 
+                                          string filename)
 {
+
+  // open the file
+  ofstream bootstrap_out;
+  bootstrap_out.open(filename.c_str());
+  bootstrap_out << "basin_key,MS_minimum,MS_first_quartile,MS_median,MS_third_quartile,MS_maximum,MS_MAD,All_minimum,All_first_quartile,All_median,All_third_quartile,All_maximum,All_MAD" << endl;
+
 
   // we will store the data in maps where the key is the source node
   // This is because we will bin the data by source.
@@ -3425,9 +3432,15 @@ void LSDChiTools::bootstrap_slope_area_data(LSDFlowInfo& FlowInfo,
   map< int, vector<float> > log_slope_map;
   map< int, vector<float> > log_area_map;
   map< int, int > basin_key_of_this_source_map;
+  
+  map< int, vector<float> > log_slope_map_by_basin;
+  map< int, vector<float> > log_area_map_by_basin;
 
   int this_node;
   int this_source_key;
+  int this_basin_key;
+  
+  float l10_DA, l10_S;
 
   int n_nodes = int(SA_midpoint_node.size());
   if (n_nodes <= 0)
@@ -3443,6 +3456,7 @@ void LSDChiTools::bootstrap_slope_area_data(LSDFlowInfo& FlowInfo,
       // get the source node
       this_node = SA_midpoint_node[n];
       this_source_key = source_keys_map[this_node];
+      this_basin_key = baselevel_keys_map[this_node];
       //cout << "This source key is: " << this_source_key << endl;
 
       // see if we have a vector for that source node
@@ -3450,6 +3464,12 @@ void LSDChiTools::bootstrap_slope_area_data(LSDFlowInfo& FlowInfo,
       {
         log_area_map[this_source_key] = empty_vec;
         log_slope_map[this_source_key] = empty_vec;
+      }
+      // see if we have a vector for that source node
+      if( log_area_map_by_basin.find(this_basin_key) == log_area_map_by_basin.end())
+      {
+        log_area_map_by_basin[this_basin_key] = empty_vec;
+        log_slope_map_by_basin[this_basin_key] = empty_vec;
       }
       // check if we have the basin of this source
       if (basin_key_of_this_source_map.find(this_source_key) == basin_key_of_this_source_map.end() )
@@ -3460,8 +3480,14 @@ void LSDChiTools::bootstrap_slope_area_data(LSDFlowInfo& FlowInfo,
       // add to this source's log S, log A data. We will later use these to bin
       if(drainage_area_data_map[this_node] > 0 && SA_slope[n] > 0)
       {
-        log_area_map[this_source_key].push_back( log10(drainage_area_data_map[this_node]) );
-        log_slope_map[this_source_key].push_back( log10(SA_slope[n]) );
+        l10_DA =  log10(drainage_area_data_map[this_node]);
+        l10_S = log10(SA_slope[n]);
+        
+        log_area_map[this_source_key].push_back( l10_DA );
+        log_slope_map[this_source_key].push_back( l10_S );
+        
+        log_area_map_by_basin[this_basin_key].push_back( l10_DA );
+        log_slope_map_by_basin[this_basin_key].push_back( l10_S );
       }
       //log_area_map[this_source_key].push_back( drainage_area_data_map[this_node] );
       //log_slope_map[this_source_key].push_back( SA_slope[n] );
@@ -3473,9 +3499,12 @@ void LSDChiTools::bootstrap_slope_area_data(LSDFlowInfo& FlowInfo,
   // We can loop through the basins or all sources to get at the 
   // basin-based data
   
-  int N_sources =  int(basin_key_of_this_source_map.size());
+
   map<int, vector<float> > log_area_mainstem;
   map<int, vector<float> > log_slope_mainstem;
+  
+  //map<int, vector<float> > mainstem_summary_stats_by_basin;
+  //map<int, vector<float> > all_summary_stats_by_basin;
   
   // This loops through the basin keys, getting out the mainstem sources
   map<int,int>::iterator iter = source_node_of_mainstem_map.begin();
@@ -3487,59 +3516,32 @@ void LSDChiTools::bootstrap_slope_area_data(LSDFlowInfo& FlowInfo,
     int mainstem_source_node = iter->second;
     int this_source_key =  source_keys_map[mainstem_source_node];
     
-    cout << "basin_key is: " << basin_key << " and source key is: " << this_source_key << " and source node is: " << mainstem_source_node << endl;
+    cout << "Bootstrapping, basin_key is: " << basin_key << endl;
+    
+    // bootstrap the main stem
     vector<float> this_log_area_mainstem = log_area_map[this_source_key];
     vector<float> this_log_slope_mainstem = log_slope_map[this_source_key];
+    vector<float> MS_summary = bootstrap_linear_regression(this_log_area_mainstem, this_log_slope_mainstem, N_iterations,bootstrap_keep_data_prob);
     
-    int n_nodes = int(this_log_area_mainstem.size());
-    for(int i = 0; i< n_nodes; i++)
-    {
-      cout << this_log_area_mainstem[i] << "," << this_log_slope_mainstem[i] << endl;
-    
-    }
-    
-    
-    // now do the bootstrap
+
+    vector<float> this_log_area_all = log_area_map_by_basin[basin_key];
+    vector<float> this_log_slope_all = log_slope_map_by_basin[basin_key];
+    vector<float> All_summary = bootstrap_linear_regression(this_log_area_all, this_log_slope_all, N_iterations,bootstrap_keep_data_prob);
     
     
-    int N_iterations = 100;
-    float acceptance_prob = 0.5;
-    cout << endl << endl << "N iter: " << N_iterations << " accept_prob: " << acceptance_prob << endl;
-    bootstrap_linear_regression(this_log_area_mainstem, this_log_slope_mainstem, N_iterations,acceptance_prob);
+    // print results to file
+    bootstrap_out << basin_key << "," << MS_summary[0] << "," << MS_summary[1] << ","
+                  << MS_summary[2] << "," << MS_summary[3] << "," << MS_summary[4]
+                  << "," << MS_summary[8] << ","
+                  << All_summary[0] << "," << All_summary[1] <<"," 
+                  << All_summary[2] << "," << All_summary[3] << "," << All_summary[4]
+                  << "," << All_summary[8] << endl;
     
-    
-    N_iterations = 1000;
-    acceptance_prob = 0.5;
-    cout << endl << endl << "N iter: " << N_iterations << " accept_prob: " << acceptance_prob << endl;
-    bootstrap_linear_regression(this_log_area_mainstem, this_log_slope_mainstem, N_iterations,acceptance_prob);
-    
-    N_iterations = 5000;
-    acceptance_prob = 0.5;
-    cout << endl << endl << "N iter: " << N_iterations << " accept_prob: " << acceptance_prob << endl;
-    bootstrap_linear_regression(this_log_area_mainstem, this_log_slope_mainstem, N_iterations,acceptance_prob);
-    
-    N_iterations = 100;
-    acceptance_prob = 0.25;
-    cout << endl << endl << "N iter: " << N_iterations << " accept_prob: " << acceptance_prob << endl;
-    bootstrap_linear_regression(this_log_area_mainstem, this_log_slope_mainstem, N_iterations,acceptance_prob);
-    
-    N_iterations = 1000;
-    acceptance_prob = 0.25;
-    cout << endl << endl << "N iter: " << N_iterations << " accept_prob: " << acceptance_prob << endl;
-    bootstrap_linear_regression(this_log_area_mainstem, this_log_slope_mainstem, N_iterations,acceptance_prob);
-    
-    N_iterations = 5000;
-    acceptance_prob = 0.25;
-    cout << endl << endl << "N iter: " << N_iterations << " accept_prob: " << acceptance_prob << endl;
-    bootstrap_linear_regression(this_log_area_mainstem, this_log_slope_mainstem, N_iterations,acceptance_prob);
-    
-    
-    
-    //iter++;
-    // jump to end for testing
-    iter = source_node_of_mainstem_map.end();
-  
+    iter++;
   }
+  
+  // Now go through all the data, collating data for each basin
+  
   
   
   

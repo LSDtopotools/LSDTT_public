@@ -554,11 +554,17 @@ class LSDChiTools
     /// @param SA_midpoint_node The node index of the midpoints of all the data 
     /// @param SA_slope: The slope of the data at the midpoints (the slope is)
     ///  averaged over several pixels
+    /// @param N_iterations: The number of bootstrap iterations. 
+    /// @param keep_data_prob The probability that you will keep any given data point in the data set. 
+    /// @param filename The name of file (with extension and directory) for printing
     /// @author SMM
     /// @date 17/07/2017
     void bootstrap_slope_area_data(LSDFlowInfo& FlowInfo,
                                           vector<int>& SA_midpoint_node,
-                                          vector<float>& SA_slope);
+                                          vector<float>& SA_slope, 
+                                          int N_iterations, 
+                                          float bootstrap_keep_data_prob, 
+                                          string filename);
                                           
     /// @detail This takes slope area data and bins the data so that we can
     ///  pretend horrible, noisy S-A data is adequate for understanding
@@ -858,7 +864,7 @@ class LSDChiTools
     ///  value is the baselevel key. Again used for visualisation
     map<int,int> baselevel_keys_map;
 
-    /// THis has as many elements as there are sources. The key in the map is the
+    /// This has as many elements as there are sources. The key in the map is the
     ///  node index of the source, and the value is the source key.
     map<int,int> key_to_source_map;
 
