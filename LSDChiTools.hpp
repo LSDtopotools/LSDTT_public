@@ -406,6 +406,23 @@ class LSDChiTools
                         LSDRaster& Discharge, float sigma);
 
 
+    /// @brief This function drives a Monte Carlo-Markov chain model It wraps 
+    /// the dmovern tuning and the main chain. 
+    /// @param FlowInfo An LSDFlowInfo object
+    /// @param minimum_contributing_pixel chi is only calculated if the contributing pixels are bigger than this
+    /// @param sigma The sigma value for checking the MLE of chi
+    /// @param movern_minimum The minimum movern value to be tested
+    /// @param movern_maximum The maximum movern value to be tested
+    /// @param N_chain_links The number of iterations in the chain you want
+    /// @param OUT_DIR the output directory where you want the file
+    /// @param OUT_ID prefix of the output file
+    /// @return No return but makes chaing files with extension _chain.csv 
+    /// @author SMM
+    /// @date 17/07/2017
+    void MCMC_driver(LSDFlowInfo& FlowInfo, int minimum_contributing_pixels, float sigma,
+                                 float movern_minimum, float movern_maximum,
+                                 int N_chain_links, 
+                                 string OUT_DIR, string OUT_ID);
 
     /// @brief This function drives a Monte Carlo-Markov chain model and tries to tune
     ///  the dmovern_stddev value to get between 20-30% acceptance rate

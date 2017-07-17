@@ -167,6 +167,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["MCMC_movern_analysis"] = false;
   float_default_map["MCMC_movern_minimum"] = 0.05;
   float_default_map["MCMC_movern_maximum"] = 1.5;
+  float_default_map["MCMC_chain_links"] = 5000;
   
   bool_default_map["bootstrap_SA_data"] = false;
   int_default_map["N_SA_bootstrap_iterations"] = 1000;
@@ -769,6 +770,7 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["MCMC_movern_analysis"])
   {
     cout << "I am going to explore m/n using the MCMC method" << endl;
+    cout << "WARNING!!! This could take a while." << endl;
     // Lets make a new chi tool: this won't be segmented since we only
     // need it for m/n
     LSDChiTools ChiTool_MCMC(FlowInfo);
@@ -776,35 +778,19 @@ int main (int nNumberofArgs,char *argv[])
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_coordinate);
     
-    int this_basin_key = 10;
-    
-    string chi_oldway_file = OUT_DIR+OUT_ID+"_Basin10_chi_oldway_file.csv";
-    string chi_newway_file = OUT_DIR+OUT_ID+"_Basin10_chi_newway_file.csv";
-    
+  
     // Get the pixel threshold. Make it one less than the previous threshold to ensure
     // you get all the nodes in the basin
     int pixel_thresh_for_this_example = this_int_map["threshold_contributing_pixels"] -1;
     
-    float tuned_dmovern_stddev;
-    tuned_dmovern_stddev = ChiTool_MCMC.MCMC_for_movern_tune_dmovern(FlowInfo,
-                                 pixel_thresh_for_this_example,
-                                 this_float_map["collinearity_MLE_sigma"],
-                                 this_float_map["MCMC_movern_minimum"],
-                                 this_float_map["MCMC_movern_maximum"],
-                                 this_basin_key);
-    //float tuned_dmovern_stddev = 0.4;
-                                 
-    // Now run MCMC
-    string chain_file = OUT_DIR+OUT_ID+"_Basin10_chain.csv";
-    int NIterations = 500;
-    bool printChain = true;
-    //tuned_dmovern_stddev = 0.4;
-    float accept = ChiTool_MCMC.MCMC_for_movern(chain_file, printChain, FlowInfo, 
-                                 pixel_thresh_for_this_example,
-                                 NIterations, this_float_map["collinearity_MLE_sigma"], tuned_dmovern_stddev,
-                                 this_float_map["MCMC_movern_minimum"],
-                                 this_float_map["MCMC_movern_maximum"],
-                                 this_basin_key);
+    
+    ChiTool_MCMC.MCMC_driver(FlowInfo, pixel_thresh_for_this_example, 
+                             this_float_map["collinearity_MLE_sigma"],
+                             this_float_map["MCMC_movern_minimum"],
+                             this_float_map["MCMC_movern_maximum"],
+                             this_float_map["MCMC_chain_links"], 
+                             OUT_DIR, OUT_ID);
+
   }
 
 
