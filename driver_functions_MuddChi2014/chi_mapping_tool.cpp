@@ -113,6 +113,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["remove_seas"] = true; // elevations above minimum and maximum will be changed to nodata
   bool_default_map["only_check_parameters"] = false;
   string_default_map["CHeads_file"] = "NULL";
+  bool_default_map["print_raster_without_seas"] = false;
 
 
   // Selecting basins
@@ -273,6 +274,13 @@ int main (int nNumberofArgs,char *argv[])
     LSDRaster Flooded = start_raster.mask_to_nodata_using_threshold(lower_threshold,belowthresholdisnodata);
     belowthresholdisnodata = false;
     topography_raster = Flooded.mask_to_nodata_using_threshold(upper_threshold,belowthresholdisnodata);
+    
+    if (this_bool_map["print_raster_without_seas"])
+    {
+      cout << "I'm replacing your raster with a raster without seas." << endl;
+      string this_raster_name = OUT_DIR+OUT_ID;
+      topography_raster.write_raster(this_raster_name,raster_ext);
+    }
   }
   else
   {
