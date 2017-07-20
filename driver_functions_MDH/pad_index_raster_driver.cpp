@@ -55,16 +55,15 @@ int main (int nNumberofArgs,char *argv[])
 	//load input arguments
 	string path = argv[1];
 	
-  ChannelSegments_file = "";
-  string RasterExt = ".bil";
-  cout << "\n\tGetting stream network from Channel segments file..." << path+ChannelSegments_file;
-  LSDIndexRaster StreamNetwork(ChannelSegments_file, RasterExt);
+  string ChannelSegments_file = "bolinas_Segments";
+  string RasterExt = "bil";
+  LSDIndexRaster StreamNetwork(path+ChannelSegments_file, RasterExt);
   cout << " done.";
-  
-  cout << "\n\tPadding the stream network by" << this_int_map["StreamNetworkPadding"] << "pixels";
-  int NPixels = 2;
-  StreamNetwork = StreamNetwork.PadRaster(NPixels);
-  padded_raster_name = path+"padded";
+
+  int NPixels = 2;  
+  cout << "\n\tPadding the stream network by " << NPixels << " pixels" << endl;
+  StreamNetwork.PadRaster(NPixels);
+  string padded_raster_name = path+"padded";
   StreamNetwork.write_raster(padded_raster_name,RasterExt);
   cout << " done.";
 }

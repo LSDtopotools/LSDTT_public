@@ -2,7 +2,7 @@ CC=g++
 CFLAGS=-c -Wall -O3 -pg -g
 OFLAGS = -Wall -O3 -pg -g
 LDFLAGS= -Wall
-SOURCES= padded_index_raster_driver.cpp \
+SOURCES= pad_index_raster_driver.cpp \
         ../LSDMostLikelyPartitionsFinder.cpp \
         ../LSDIndexRaster.cpp \
         ../LSDRaster.cpp \
