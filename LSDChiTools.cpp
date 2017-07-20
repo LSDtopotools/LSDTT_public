@@ -2404,7 +2404,7 @@ float LSDChiTools::test_all_segment_collinearity_by_basin_using_points(LSDFlowIn
   
   int n_MS_nodes = int(MS_chi.size());
   float MS_length = MS_chi[0]-MS_chi[n_MS_nodes-1];
-  cout << "LSDChiTools::test_all_segment_collinearity_by_basin_using_points The mainstem has a length of: " << MS_length << endl;
+  //cout << "LSDChiTools::test_all_segment_collinearity_by_basin_using_points The mainstem has a length of: " << MS_length << endl;
   vector<float> chi_test_distances;
   int n_frac = int(chi_fractions_for_testing.size());
   float this_distance;
@@ -2412,7 +2412,7 @@ float LSDChiTools::test_all_segment_collinearity_by_basin_using_points(LSDFlowIn
   {
     this_distance = chi_fractions_for_testing[f]*MS_length;
     chi_test_distances.push_back(this_distance);
-    cout << "The frac is: " << chi_fractions_for_testing[f] << " and distance: " << chi_test_distances[f] << endl;
+    //cout << "The frac is: " << chi_fractions_for_testing[f] << " and distance: " << chi_test_distances[f] << endl;
   } 
 
 
@@ -2465,7 +2465,7 @@ float LSDChiTools::test_all_segment_collinearity_by_basin_using_points(LSDFlowIn
   }
 
   // we loop through the different combinations in the vecvec
-  cout << "LSDChiTools::test_all_segment_collinearity_by_basin_using_points This basin has " << n_combinations << " combinations." << endl;
+  //cout << "LSDChiTools::test_all_segment_collinearity_by_basin_using_points This basin has " << n_combinations << " combinations." << endl;
   for (int combo = 0; combo < n_combinations; combo++)
   {
     this_combo = combo_vecvev[combo];
@@ -2494,11 +2494,11 @@ float LSDChiTools::test_all_segment_collinearity_by_basin_using_points(LSDFlowIn
     residuals = project_points_onto_reference_channel(chi_data_chan0, elev_data_chan0,
                                  chi_data_chan1,elev_data_chan1, chi_test_distances);
     n_residuals = int(residuals.size());
-    cout << "LSDChiTools::test_all_segment_collinearity_by_basin_using_points Basin: " << baselevel_key << " The number of residuals are: " << n_residuals << endl;
-    for (int i = 0; i< n_residuals; i++)
-    {
-      cout << "residual[" << i<<"]: " << residuals[i] << endl;
-    }
+    //cout << "LSDChiTools::test_all_segment_collinearity_by_basin_using_points Basin: " << baselevel_key << " The number of residuals are: " << n_residuals << endl;
+    //for (int i = 0; i< n_residuals; i++)
+    //{
+    //  cout << "residual[" << i<<"]: " << residuals[i] << endl;
+    //}
 
 
     // Now get the MLE and RMSE for this channel pair. It only runs if
@@ -3166,7 +3166,8 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
 void LSDChiTools::MCMC_driver(LSDFlowInfo& FlowInfo, int minimum_contributing_pixels, float sigma,
                                  float movern_minimum, float movern_maximum,
                                  int N_chain_links, 
-                                 string OUT_DIR, string OUT_ID)
+                                 string OUT_DIR, string OUT_ID, 
+                                 bool use_points)
 {
   // so we loop through the basins
   float this_dmovern_stddev = 0.1;
@@ -3178,7 +3179,7 @@ void LSDChiTools::MCMC_driver(LSDFlowInfo& FlowInfo, int minimum_contributing_pi
     float this_sigma = MCMC_for_movern_tune_sigma(FlowInfo, minimum_contributing_pixels, 
                                this_dmovern_stddev, 
                                movern_minimum, movern_maximum, 
-                               basin_key);
+                               basin_key, use_points);
     
     //float this_dmovern_sigma = MCMC_for_movern_tune_dmovern(FlowInfo, minimum_contributing_pixels, sigma,
     //                             movern_minimum, movern_maximum, basin_key);
@@ -3189,7 +3190,7 @@ void LSDChiTools::MCMC_driver(LSDFlowInfo& FlowInfo, int minimum_contributing_pi
     float accept = MCMC_for_movern(chain_file, printChain, FlowInfo, 
                                  minimum_contributing_pixels,
                                  N_chain_links, this_sigma, this_dmovern_stddev,
-                                 movern_minimum,movern_maximum,basin_key);
+                                 movern_minimum,movern_maximum,basin_key, use_points);
   }
 
 
@@ -3204,7 +3205,7 @@ void LSDChiTools::MCMC_driver(LSDFlowInfo& FlowInfo, int minimum_contributing_pi
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 float LSDChiTools::MCMC_for_movern_tune_dmovern(LSDFlowInfo& FlowInfo, int minimum_contributing_pixels, float sigma,
                                  float movern_minimum, float movern_maximum, 
-                                 int basin_key)
+                                 int basin_key, bool use_points)
 {
   
   float min_acceptance_rate = 0.2;
@@ -3228,7 +3229,7 @@ float LSDChiTools::MCMC_for_movern_tune_dmovern(LSDFlowInfo& FlowInfo, int minim
     
     cout << "Looking at the acceptance rate. The current dmovern_stddev is: " << this_dmovern_stddev << endl;
     this_acceptance_rate = MCMC_for_movern(ChainFname, printChain, FlowInfo, minimum_contributing_pixels, NIterations, sigma, this_dmovern_stddev,
-                     movern_minimum, movern_maximum, basin_key);
+                     movern_minimum, movern_maximum, basin_key, use_points);
                      
     cout << "The acceptance rate is: " << this_acceptance_rate << " and the m/n stddev is: " << this_dmovern_stddev << endl;
     
@@ -3267,7 +3268,7 @@ float LSDChiTools::MCMC_for_movern_tune_dmovern(LSDFlowInfo& FlowInfo, int minim
 float LSDChiTools::MCMC_for_movern_tune_sigma(LSDFlowInfo& FlowInfo, int minimum_contributing_pixels, 
                                               float dmovern_stddev,
                                               float movern_minimum, float movern_maximum, 
-                                              int basin_key)
+                                              int basin_key, bool use_points)
 {
   // This tries to get the correct acceptance rate by tuning sigma. 
   // You give it a stddev
@@ -3284,6 +3285,12 @@ float LSDChiTools::MCMC_for_movern_tune_sigma(LSDFlowInfo& FlowInfo, int minimum
   bool printChain = false;
   int NIterations = 2500;
   float this_sigma = 2000; 
+  
+  if (use_points)
+  {
+    this_sigma = 100;
+  }
+  
   int n_steps = 0;
 
   while( n_steps < 20)
@@ -3294,7 +3301,7 @@ float LSDChiTools::MCMC_for_movern_tune_sigma(LSDFlowInfo& FlowInfo, int minimum
     
     cout << "Looking at the acceptance rate. I've changed sigma to: " << this_sigma << endl;
     this_acceptance_rate = MCMC_for_movern(ChainFname, printChain, FlowInfo, minimum_contributing_pixels, NIterations, this_sigma, dmovern_stddev,
-                     movern_minimum, movern_maximum, basin_key);
+                     movern_minimum, movern_maximum, basin_key, use_points);
                      
     cout << "The acceptance rate is: " << this_acceptance_rate << " and the m/n stddev is: " << this_sigma << endl;
     
@@ -3328,10 +3335,19 @@ float LSDChiTools::MCMC_for_movern(string ChainFname, bool printChain, LSDFlowIn
                                  int minimum_contributing_pixels, int NIterations, 
                                  float sigma, float dmovern_stddev,
                                  float movern_minimum, float movern_maximum, 
-                                 int basin_key)
+                                 int basin_key, bool use_points)
 {
 
   map<int,int> outlet_node_from_basin_key_map = get_outlet_node_from_basin_key_map();
+  
+  vector<float> chi_upslope_fracs;
+  float start_frac = 0.4;
+  float dfrac = 0.025;
+  for(int i = 0; i< 11; i++)
+  {
+    chi_upslope_fracs.push_back(start_frac - float(i)*dfrac);
+  }
+  
 
   //Declarations
   float LastLikelihood;               //Last accepted likelihood
@@ -3379,8 +3395,17 @@ float LSDChiTools::MCMC_for_movern(string ChainFname, bool printChain, LSDFlowIn
 
   // get the initial MLE
   bool only_use_mainstem_as_reference = true;
-  LastLikelihood = test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
+  if (use_points)
+  {
+    LastLikelihood = test_all_segment_collinearity_by_basin_using_points(FlowInfo, only_use_mainstem_as_reference,
+                                  basin_key,reference_source, test_source, MLE_values, RMSE_values, sigma, 
+                                  chi_upslope_fracs);
+  }
+  else
+  {
+    LastLikelihood = test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
                                   basin_key,reference_source, test_source, MLE_values, RMSE_values, sigma);
+  }
   
   int print_interval = 100;
                                   
@@ -3415,9 +3440,17 @@ float LSDChiTools::MCMC_for_movern(string ChainFname, bool printChain, LSDFlowIn
                                      minimum_contributing_pixels, basin_key,
                                      outlet_node_from_basin_key_map);
     //cout << "Got chi " << endl;
-    NewLikelihood = test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
-                                  basin_key,reference_source, test_source, MLE_values, RMSE_values, sigma);
-
+    if (use_points)
+    {
+      NewLikelihood = test_all_segment_collinearity_by_basin_using_points(FlowInfo, only_use_mainstem_as_reference,
+                                    basin_key,reference_source, test_source, MLE_values, RMSE_values, sigma, 
+                                    chi_upslope_fracs);
+    }
+    else
+    {
+      NewLikelihood = test_all_segment_collinearity_by_basin(FlowInfo, only_use_mainstem_as_reference,
+                                    basin_key,reference_source, test_source, MLE_values, RMSE_values, sigma);
+    }
     // get the likelihood ratio
     LikelihoodRatio = NewLikelihood/LastLikelihood;
     
@@ -3968,8 +4001,8 @@ vector<float> LSDChiTools::project_points_onto_reference_channel(vector<float>& 
   int n_trib_nodes = int(trib_chi.size());
   if (n_ref_nodes <= 1 || n_trib_nodes <= 1)
   {
-    cout << "LSDChiTools::project_points_onto_reference_channel WARNING" << endl;
-    cout << "The reference channel has 1 or zero nodes." << endl;
+    //cout << "LSDChiTools::project_points_onto_reference_channel WARNING" << endl;
+    //cout << "The reference channel has 1 or zero nodes." << endl;
     return residuals;
   }
   else
@@ -3988,7 +4021,7 @@ vector<float> LSDChiTools::project_points_onto_reference_channel(vector<float>& 
   // test to see if there is overlap
   if(min_trib_chi > max_ref_chi || max_trib_chi < min_ref_chi)
   {
-    cout << "LSDChiTools::project_points_onto_reference_channel These channels do not overlap." << endl;
+    //cout << "LSDChiTools::project_points_onto_reference_channel These channels do not overlap." << endl;
     return residuals;
   }
   

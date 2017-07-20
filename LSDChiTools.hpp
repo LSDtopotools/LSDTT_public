@@ -521,13 +521,14 @@ class LSDChiTools
     /// @param N_chain_links The number of iterations in the chain you want
     /// @param OUT_DIR the output directory where you want the file
     /// @param OUT_ID prefix of the output file
+    /// @param use_points a bool that if true means you use the point version of the collinearity test
     /// @return No return but makes chaing files with extension _chain.csv 
     /// @author SMM
     /// @date 17/07/2017
     void MCMC_driver(LSDFlowInfo& FlowInfo, int minimum_contributing_pixels, float sigma,
                                  float movern_minimum, float movern_maximum,
                                  int N_chain_links, 
-                                 string OUT_DIR, string OUT_ID);
+                                 string OUT_DIR, string OUT_ID, bool use_points);
 
     /// @brief This function drives a Monte Carlo-Markov chain model and tries to tune
     ///  the dmovern_stddev value to get between 20-30% acceptance rate
@@ -538,12 +539,13 @@ class LSDChiTools
     /// @param movern_minimum The minimum movern value to be tested
     /// @param movern_maximum The maximum movern value to be tested
     /// @param basin key The key of the basin to be tested
+    /// @param use_points a bool that if true means you use the point version of the collinearity test
     /// @return The tuned dmovern_stddev. 
     /// @author SMM
     /// @date 13/07/2017
     float MCMC_for_movern_tune_dmovern(LSDFlowInfo& FlowInfo, int minimum_contributing_pixels, float sigma,
                                  float movern_minimum, float movern_maximum, 
-                                 int basin_key);
+                                 int basin_key, bool use_points);
 
     /// @brief This function drives a Monte Carlo-Markov chain model and tries to tune
     ///  the sigma value to get between 20-30% acceptance rate
@@ -553,13 +555,14 @@ class LSDChiTools
     /// @param movern_minimum The minimum movern value to be tested
     /// @param movern_maximum The maximum movern value to be tested
     /// @param basin key The key of the basin to be tested
+    /// @param use_points a bool that if true means you use the point version of the collinearity test
     /// @return sigma The tuned sigma value for checking the MLE of chi
     /// @author SMM
     /// @date 17/07/2017
     float MCMC_for_movern_tune_sigma(LSDFlowInfo& FlowInfo, int minimum_contributing_pixels, 
                                      float dmovernstddev,
                                      float movern_minimum, float movern_maximum, 
-                                     int basin_key);
+                                     int basin_key, bool use_points);
 
 
     /// @brief This function drives a Monte Carlo-Markov chain model for getting
@@ -577,12 +580,13 @@ class LSDChiTools
     /// @param movern_minimum The minimum movern value to be tested
     /// @param movern_maximum The maximum movern value to be tested
     /// @param basin key The key of the basin to be tested
+    /// @param use_points a bool that if true means you use the point version of the collinearity test
     /// @return acceptanc probability. 
     /// @author SMM
     /// @date 13/07/2017
     float MCMC_for_movern(string ChainFname, bool printChain, LSDFlowInfo& FlowInfo, 
                           int minimum_contributing_pixels, int NIterations, float sigma, float dmovern_stddev,
-                          float movern_minimum, float movern_maximum, int basin_key);
+                          float movern_minimum, float movern_maximum, int basin_key, bool use_points);
 
 
     /// @brief This prints a series of chi profiles as a function of mover

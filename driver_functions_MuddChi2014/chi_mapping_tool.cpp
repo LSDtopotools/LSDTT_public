@@ -840,13 +840,13 @@ int main (int nNumberofArgs,char *argv[])
     // you get all the nodes in the basin
     int pixel_thresh_for_this_example = this_int_map["threshold_contributing_pixels"] -1;
     
-    
+    bool use_points = true;
     ChiTool_MCMC.MCMC_driver(FlowInfo, pixel_thresh_for_this_example, 
                              this_float_map["collinearity_MLE_sigma"],
                              this_float_map["MCMC_movern_minimum"],
                              this_float_map["MCMC_movern_maximum"],
                              this_float_map["MCMC_chain_links"], 
-                             OUT_DIR, OUT_ID);
+                             OUT_DIR, OUT_ID, use_points);
 
   }
 
