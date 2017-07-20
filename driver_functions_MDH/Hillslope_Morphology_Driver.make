@@ -17,7 +17,7 @@ SOURCES= Hillslope_Morphology_Driver.cpp \
         ../LSDCRNParameters.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 
-EXECUTABLE= LH_Driver.out
+EXECUTABLE= Hillslope_Morphology_Tool
 
 all: $(SOURCES) $(EXECUTABLE)
 
