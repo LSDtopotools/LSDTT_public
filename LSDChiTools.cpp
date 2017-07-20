@@ -1300,6 +1300,7 @@ LSDIndexRaster LSDChiTools::segment_mapping(LSDFlowInfo& FlowInfo)
 
       // Get the M_chi from the current node
       this_node = node_sequence[n];
+      FlowInfo.retrieve_current_row_and_col(this_node,row,col);
       this_M_chi = M_chi_data_map[this_node];
 
       // If the M_chi has changed, increment the segment counter

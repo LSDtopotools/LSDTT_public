@@ -3109,5 +3109,42 @@ void LSDIndexRaster::MergeIndexRasters(LSDIndexRaster& RasterToAdd)
 	}
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Method to pad values in an LSDIndexRaster by a certain number of pixels, within the extent
+// of the original raster. Values taken from nearest pixel with precedence from bottom right
+// to top left. Diagonals given equal preference to orthogonals for now.
+// MDH 20/07/17
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDIndexRaster::PadRaster(int NPixels)
+{
+  // Arrays of indexes of neighbour cells with respect to target cell
+  int dX[] = {1, 1, 1, 0, -1, -1, -1, 0};
+  int dY[] = {-1, 0, 1, 1, 1, 0, -1, -1};
+  
+  // Loop through pad size (quick and dirty!)
+  for (int n = 0; n<NPixels; ++n)
+  {
+    //loop across the whole raster array
+	  for (int row = 0; row < NRows; row++)
+	  {
+		  for (int col = 0; col < NCols; col++)
+		  {
+			  // if there is a raster value, pad the cells around it with it's own value 
+			  if (RasterData[row][col] != NoDataValue)
+			  {
+				  //loop through the 8 neighbours of the target cell
+          for (int c = 0; c < 8; ++c)
+          {
+            //handle edges here
+            if ((row +dY[c] > NRows-1) || (col + dX[c] > NCols-1) || (row+dY[c]<0) || (col+dY[c]<0)) continue;
+            
+            //otherwise update values
+            RasterData[row+dY[c]][col+dX[c]] = RasterData[row][col];
+          }
+			  }
+		  }
+	  }
+	}
+}
 
 #endif
