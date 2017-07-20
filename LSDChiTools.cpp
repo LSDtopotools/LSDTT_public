@@ -2097,11 +2097,68 @@ float LSDChiTools::test_segment_collinearity(LSDFlowInfo& FlowInfo, int referenc
     vector<float> residuals = project_data_onto_reference_channel(chi_data_chan0, elev_data_chan0,
                                  chi_data_chan1,elev_data_chan1);
     MLE = calculate_MLE_from_residuals(residuals, sigma);
+                                                                                
+  }
+  return MLE;
+
+}
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function test the collinearity of all segments compared to a reference
+// segment
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDChiTools::test_segment_collinearity_using_points(LSDFlowInfo& FlowInfo, int reference_channel, int test_channel, 
+                                             float sigma, vector<float> chi_distances_to_test)
+{
+  // The way this works is that one of the segments (delineated by its source number)
+  // is taken as a reference, and then all other segments are compared to how
+  // closely they match this segment. If the chi value of the segment being tested
+  // is greater than the maximum chi of the reference segment or less than the
+  // minimum chi of the reference segment the data point is ignored.
+
+  float MLE = 1;
+  // first get the source node of the reference channel
+  if ( reference_channel >= int(key_to_source_map.size()) || test_channel >= int(key_to_source_map.size()) )
+  {
+    cout << "LSDChiTools::test_segment_collinearity One of the sources is not in the channel network. Source is: " << reference_channel << endl;
+  }
+  else
+  {
+    vector<float> elev_data_chan0;
+    vector<float> chi_data_chan0;
+    get_chi_elevation_data_of_channel(FlowInfo, reference_channel, chi_data_chan0, elev_data_chan0);
+
+    vector<float> elev_data_chan1;
+    vector<float> chi_data_chan1;
+    get_chi_elevation_data_of_channel(FlowInfo, test_channel, chi_data_chan1, elev_data_chan1);
+
+    vector<float> residuals = project_points_onto_reference_channel(chi_data_chan0, elev_data_chan0,
+                                 chi_data_chan1,elev_data_chan1, chi_distances_to_test);
+                                 
+    // look through the residuals and remove any that are nodata
+    int n_resid = int(residuals.size());
+    vector<float> valid_residuals;
+    for(int i = 0; i<n_resid; i++)
+    {
+      if (residuals[i] != -9999)
+      {
+        valid_residuals.push_back(residuals[i]);
+      }
+    }
+    if (valid_residuals.size() != 0)
+    {
+      // only update MLE if there are residuals. 
+      MLE = calculate_MLE_from_residuals(residuals, sigma);
+    }
 
   }
   return MLE;
 
 }
+
+
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2299,6 +2356,233 @@ float LSDChiTools::test_all_segment_collinearity_by_basin(LSDFlowInfo& FlowInfo,
   return tot_MLE;
 
 }
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function test the collinearity of all segments compared to a reference
+// segment
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDChiTools::test_all_segment_collinearity_by_basin_using_points(LSDFlowInfo& FlowInfo, bool only_use_mainstem_as_reference,
+                                                 int baselevel_key,
+                                                 vector<int>& reference_source, vector<int>& test_source,
+                                                 vector<float>& MLE_values, vector<float>& RMSE_values, 
+                                                 float sigma, vector<float> chi_fractions_for_testing)
+{
+  //cout << "Testing the segment collinearity for basin key " << baselevel_key << endl;
+  // get some information about the number of basins
+  int n_basins = int(ordered_baselevel_nodes.size());
+  if (baselevel_key >= n_basins)
+  {
+    cout << "Fatal error LSDChiTools::test_all_segment_collinearity_by_basin" <<endl;
+    cout << "You have selected a basin that doesn't exist!" << endl;
+    exit(EXIT_FAILURE);
+  }
+
+
+  // run the splitter
+  // this gets the starting index of the sources for each basin.
+  // It means that the channel numbers are linked to the channels in the basin
+  vector<int> start_node_for_baselelvel;
+  vector<int> n_sources_in_basin;
+  baselevel_and_source_splitter(n_sources_in_basin, start_node_for_baselelvel);
+  int channel_offset = start_node_for_baselelvel[baselevel_key];
+  int n_channels = n_sources_in_basin[baselevel_key];
+
+  // Drop out if there is only a single channel in the basin
+  if (n_channels == 1)
+  {
+    cout << "This basin only has one channel." << endl;
+    return 1.0;
+  }
+
+  // we need to know the length of the mainstem.
+  int MS_channel = channel_offset; 
+  vector<float> MS_chi;
+  vector<float> MS_elev;
+  get_chi_elevation_data_of_channel(FlowInfo, MS_channel, MS_chi, MS_elev);
+  
+  int n_MS_nodes = int(MS_chi.size());
+  float MS_length = MS_chi[0]-MS_chi[n_MS_nodes-1];
+  cout << "LSDChiTools::test_all_segment_collinearity_by_basin_using_points The mainstem has a length of: " << MS_length << endl;
+  vector<float> chi_test_distances;
+  int n_frac = int(chi_fractions_for_testing.size());
+  float this_distance;
+  for(int f = 0; f<n_frac; f++)
+  {
+    this_distance = chi_fractions_for_testing[f]*MS_length;
+    chi_test_distances.push_back(this_distance);
+    cout << "The frac is: " << chi_fractions_for_testing[f] << " and distance: " << chi_test_distances[f] << endl;
+  } 
+
+
+
+
+  //cout << "Let me check the basin indexing for you." << endl;
+  //int n_bl =  int(start_node_for_baselelvel.size());
+  //for(int i = 0; i< n_bl; i++)
+  //{
+  //  cout << "Baselevel node is: " << ordered_baselevel_nodes[i] << " n sources: "
+  //      << n_sources_in_basin[i] << " start_index: "
+  //      << start_node_for_baselelvel[i] << endl;
+  //}
+  //cout << "Basin key is: " << baselevel_key << " This basin has " << n_channels << " sources and start node is "<< channel_offset <<endl;
+
+  // placeholder vectors: will replace the passed vectors
+  vector<int> this_reference_source;
+  vector<int> this_test_source;
+  vector<float> these_MLE_values;
+  vector<float> these_RMSE_values;
+
+  // now get all the possible two pair combinations of these channels
+  bool zero_indexed = true;   // this is just because the channels are numbered from zero
+  int k = 2;                  // We want combinations of 2 channels
+
+  // the vec vec holds a vector of each possible combination of channels
+  // each vector has two elements in it: the first and second channel in the comibination
+  vector< vector<int> > combo_vecvev = combinations(n_channels, k, zero_indexed);
+  vector<float> elev_data_chan0;
+  vector<float> chi_data_chan0;
+  vector<float> elev_data_chan1;
+  vector<float> chi_data_chan1;
+  vector<float> residuals;
+
+  int n_residuals;
+
+  vector<float> MLEs;
+  vector<int> MLE_index;   // the index into the combo_vecvec that is used to
+                           // tell which combinations have MLE values
+
+  int last_ref_channel = -1;
+
+  int n_combinations = int(combo_vecvev.size());
+  vector<int> this_combo;
+  int chan0,chan1;
+
+  if (only_use_mainstem_as_reference)
+  {
+    n_combinations = n_channels-1;
+  }
+
+  // we loop through the different combinations in the vecvec
+  cout << "LSDChiTools::test_all_segment_collinearity_by_basin_using_points This basin has " << n_combinations << " combinations." << endl;
+  for (int combo = 0; combo < n_combinations; combo++)
+  {
+    this_combo = combo_vecvev[combo];
+
+    // you need to map these combinations onto the particular channels of this basin
+    // These channels refere to the source keys
+    chan0 = this_combo[0]+channel_offset;
+    chan1 = this_combo[1]+channel_offset;
+    //cout << "chan0 is: " << chan0 << "  and chan1 is: " << chan1 << " and combo 0 is: " << this_combo[0] <<endl;
+
+
+    // only get the reference channel if the channel has changed.
+    // This collects the chi-elevation data of the reference channel
+    if (last_ref_channel != chan0)
+    {
+      get_chi_elevation_data_of_channel(FlowInfo, chan0, chi_data_chan0, elev_data_chan0);
+    }
+
+    // This gets the chi-elevation data of the test channel. Again, the chan1
+    // parameter referes to the source key.
+    get_chi_elevation_data_of_channel(FlowInfo, chan1, chi_data_chan1, elev_data_chan1);
+
+    // Now return the residuals between the reference channel and test channel.
+    // Each node in the test channel gets a residual, it is projected to a
+    // linear fit between nodes on the reference channel
+    residuals = project_points_onto_reference_channel(chi_data_chan0, elev_data_chan0,
+                                 chi_data_chan1,elev_data_chan1, chi_test_distances);
+    n_residuals = int(residuals.size());
+    cout << "LSDChiTools::test_all_segment_collinearity_by_basin_using_points Basin: " << baselevel_key << " The number of residuals are: " << n_residuals << endl;
+    for (int i = 0; i< n_residuals; i++)
+    {
+      cout << "residual[" << i<<"]: " << residuals[i] << endl;
+    }
+
+
+    // Now get the MLE and RMSE for this channel pair. It only runs if
+    // there are residuals. Otherwise it means that the channels are non-overlapping
+    if (n_residuals > 0)
+    {
+      float MLE1 = calculate_MLE_from_residuals(residuals, sigma);
+      float RMSE = calculate_RMSE_from_residuals(residuals);
+      last_ref_channel = chan0;
+      //cout << "MLE: " << MLE1 << " and RMSE: " << RMSE << endl;
+
+      // If we are only using the mainstem channel, we only use the first channel
+      // as a reference channel. The first channel is denoted by this_combo[0] == 0
+      //cout << "The use only mainstem is: " << only_use_mainstem_as_reference << endl;
+      if (only_use_mainstem_as_reference)
+      {
+        //cout << "Checking the combination, combo 0 is: " << this_combo[0] << endl;
+        if (this_combo[0] > 0)
+        {
+          // skip to the last node
+          //cout << "I am skipping to the LAST NODE in the combinations" << endl;
+          combo = n_combinations;
+        }
+        else
+        {
+          these_MLE_values.push_back(MLE1);
+          these_RMSE_values.push_back(RMSE);
+          this_reference_source.push_back(chan0);
+          this_test_source.push_back(chan1);
+        }
+      }
+      else
+      {
+        these_MLE_values.push_back(MLE1);
+        these_RMSE_values.push_back(RMSE);
+        this_reference_source.push_back(chan0);
+        this_test_source.push_back(chan1);
+      }
+    }
+    else
+    {
+        these_MLE_values.push_back(1.0);
+        these_RMSE_values.push_back(0.0);
+        this_reference_source.push_back(chan0);
+        this_test_source.push_back(chan1);
+    }
+  }
+
+  MLE_values = these_MLE_values;
+  RMSE_values = these_RMSE_values;
+  reference_source = this_reference_source;
+  test_source = this_test_source;
+
+  float tot_MLE = 1;
+  for (int res = 0; res < int(these_MLE_values.size()); res++)
+  {
+    tot_MLE = tot_MLE*these_MLE_values[res];
+  }
+
+
+  //cout << "Let me tell you all about the MLE values " << endl;
+  // for debugging
+  bool print_results = false;
+  if(print_results)
+  {
+    for (int res = 0; res < int(MLE_values.size()); res++)
+    {
+      cout << "reference_source: " << reference_source[res] << " "
+           << "test_source: " << test_source[res] << " "
+           << "MLE_values: " << MLE_values[res] << " "
+           << "RMSE_values: " << RMSE_values[res] << endl;
+    }
+  }
+
+  //cout << "N_residuals: " << MLE_values.size() << endl << endl;
+
+  //cout << "Total MLE is: " << tot_MLE << endl;
+  return tot_MLE;
+
+}
+
+
+
+
 
 
 
@@ -2566,6 +2850,313 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
   stats_by_basin_out.close();
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function test the collinearity of all segments compared to a reference
+// segment
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_points(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JN,
+                        float start_movern, float delta_movern, int n_movern,
+                        bool only_use_mainstem_as_reference,
+                        string file_prefix, float sigma, 
+                        vector<float> chi_fractions_vector)
+{
+  // these vectors store all the values which are then used for printing
+  vector< vector<float> > RMSE_vecvec;
+  vector< vector<float> > MLE_vecvec;
+  vector< vector<float> > total_MLE_vecvec;
+  vector<int> reference_keys;
+  vector<int> test_keys;
+  vector<int> outlet_jns;
+
+  cout << "LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern" << endl;
+  cout << "I am defaulting to A_0 = 1." << endl;
+  vector<float> movern;
+  float A_0 = 1;
+  //float thresh_area_for_chi = 0;      // This just gets chi from all pixels.
+
+  string filename_bstats = file_prefix+"_basinstats.csv";
+  ofstream stats_by_basin_out;
+  stats_by_basin_out.open(filename_bstats.c_str());
+
+  int n_basins = int(ordered_baselevel_nodes.size());
+
+  // get the outlet junction of each basin key
+  for (int basin_key = 0; basin_key < n_basins; basin_key++)
+  {
+    int outlet_node = ordered_baselevel_nodes[basin_key];
+    int outlet_jn = JN.get_Junction_of_Node(outlet_node, FlowInfo);
+    outlet_jns.push_back(outlet_jn);
+  }
+
+  cout << endl << endl << "==========================" << endl;
+  for(int i = 0; i< n_movern; i++)
+  {
+    // get the m over n value
+    movern.push_back( float(i)*delta_movern+start_movern );
+    cout << "i: " << i << " and m over n: " << movern[i] << " ";
+
+    // open the outfile
+    string filename_fullstats = file_prefix+"_"+dtoa(movern[i])+"_fullstats.csv";
+    ofstream movern_stats_out;
+    movern_stats_out.open(filename_fullstats.c_str());
+
+    // calculate chi
+    update_chi_data_map(FlowInfo, A_0, movern[i]);
+
+    // these are the vectors that will hold the information about the
+    // comparison between channels.
+    // the _all vectors are one of all the basins
+    // reference source is the source key of the reference channel
+    vector<int> reference_source, all_reference_source;
+    // test source is the source key of the test channel
+    vector<int> test_source, all_test_source;
+    // MLE the maximum liklihood estimator
+    vector<float> MLE_values, all_MLE_values;
+    // RMSE is the root mean square error
+    vector<float> RMSE_values, all_RMSE_values;
+
+    vector<float> tot_MLE_vec;
+    // basin keys
+    vector<int> all_basin_keys;
+
+    // now run the collinearity test
+    float tot_MLE;
+
+    for(int basin_key = 0; basin_key<n_basins; basin_key++)
+    {
+      tot_MLE = test_all_segment_collinearity_by_basin_using_points(FlowInfo, only_use_mainstem_as_reference,
+                                  basin_key,
+                                  reference_source, test_source, MLE_values, RMSE_values, sigma, 
+                                  chi_fractions_vector);
+      // concatenate the vectors to the "all" vectors
+      all_reference_source.insert(all_reference_source.end(), reference_source.begin(), reference_source.end() );
+      all_test_source.insert(all_test_source.end(), test_source.begin(), test_source.end() );
+      all_MLE_values.insert(all_MLE_values.end(), MLE_values.begin(), MLE_values.end() );
+      all_RMSE_values.insert(all_RMSE_values.end(), RMSE_values.begin(), RMSE_values.end() );
+      all_basin_keys.insert(all_basin_keys.end(), reference_source.size(), basin_key);
+
+      tot_MLE_vec.push_back(tot_MLE);
+      cout << "basin: " << basin_key << " and tot_MLE: " << tot_MLE << endl;
+    }
+
+    // add the data to the vecvecs
+    MLE_vecvec.push_back(all_MLE_values);
+    RMSE_vecvec.push_back(all_RMSE_values);
+    total_MLE_vecvec.push_back(tot_MLE_vec);
+    reference_keys = all_reference_source;
+    test_keys = all_test_source;
+
+    // now print the data to the file
+    movern_stats_out << "basin_key,reference_source_key,test_source_key,MLE,RMSE" << endl;
+    int n_rmse_vals = int(all_RMSE_values.size());
+    for(int i = 0; i<n_rmse_vals; i++)
+    {
+      movern_stats_out << all_basin_keys[i] << ","
+                       << all_reference_source[i] << ","
+                       << all_test_source[i] << ","
+                       << all_MLE_values[i] << ","
+                       << all_RMSE_values[i] << endl;
+    }
+    movern_stats_out.close();
+
+  }
+
+  stats_by_basin_out << "basin_key,outlet_jn";
+  stats_by_basin_out.precision(4);
+  for(int i = 0; i< n_movern; i++)
+  {
+    stats_by_basin_out << ",m_over_n = "<<movern[i];
+  }
+  stats_by_basin_out << endl;
+  stats_by_basin_out.precision(9);
+  for(int basin_key = 0; basin_key<n_basins; basin_key++)
+  {
+    stats_by_basin_out << basin_key << "," << outlet_jns[basin_key];
+    for(int i = 0; i< n_movern; i++)
+    {
+      stats_by_basin_out << "," <<total_MLE_vecvec[i][basin_key];
+    }
+    stats_by_basin_out << endl;
+  }
+
+  stats_by_basin_out.close();
+
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function test the collinearity of all segments compared to a reference
+// segment
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge_using_points(LSDFlowInfo& FlowInfo,
+                        LSDJunctionNetwork& JN, float start_movern, float delta_movern, int n_movern,
+                        bool only_use_mainstem_as_reference,
+                        string file_prefix,
+                        LSDRaster& Discharge, float sigma,
+                        vector<float> chi_fractions_vector)
+{
+  // these vectors store all the values which are then used for printing
+  vector< vector<float> > RMSE_vecvec;
+  vector< vector<float> > MLE_vecvec;
+  vector< vector<float> > total_MLE_vecvec;
+  vector<int> reference_keys;
+  vector<int> test_keys;
+  vector<int> outlet_jns;
+
+
+  cout << "LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern" << endl;
+  cout << "I am defaulting to A_0 = 1." << endl;
+  vector<float> movern;
+  float A_0 = 1;
+  //float thresh_area_for_chi = 0;      // This just gets chi from all pixels.
+
+  string filename_bstats = file_prefix+"_basinstats.csv";
+  ofstream stats_by_basin_out;
+  stats_by_basin_out.open(filename_bstats.c_str());
+
+  int n_basins = int(ordered_baselevel_nodes.size());
+
+  // get the outlet junction of each basin key
+  for (int basin_key = 0; basin_key < n_basins; basin_key++)
+  {
+    int outlet_node = ordered_baselevel_nodes[basin_key];
+    int outlet_jn = JN.get_Junction_of_Node(outlet_node, FlowInfo);
+    outlet_jns.push_back(outlet_jn);
+  }
+
+  cout << endl << endl << "==========================" << endl;
+  for(int i = 0; i< n_movern; i++)
+  {
+    // get the m over n value
+    movern.push_back( float(i)*delta_movern+start_movern );
+    cout << "i: " << i << " and m over n: " << movern[i] << " ";
+
+    // open the outfile
+    string filename_fullstats = file_prefix+"_"+dtoa(movern[i])+"_fullstats.csv";
+    ofstream movern_stats_out;
+    movern_stats_out.open(filename_fullstats.c_str());
+
+    // calculate chi
+    float area_threshold = 0;
+
+    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern[i], A_0,
+                                 area_threshold, Discharge);
+    update_chi_data_map(FlowInfo, this_chi);
+
+    // these are the vectors that will hold the information about the
+    // comparison between channels.
+    // the _all vectors are one of all the basins
+    // reference source is the source key of the reference channel
+    vector<int> reference_source, all_reference_source;
+    // test source is the source key of the test channel
+    vector<int> test_source, all_test_source;
+    // MLE the maximum liklihood estimator
+    vector<float> MLE_values, all_MLE_values;
+    // RMSE is the root mean square error
+    vector<float> RMSE_values, all_RMSE_values;
+
+    vector<float> tot_MLE_vec;
+
+    // now run the collinearity test
+    float tot_MLE;
+
+    for(int basin_key = 0; basin_key<n_basins; basin_key++)
+    {
+      tot_MLE = test_all_segment_collinearity_by_basin_using_points(FlowInfo, only_use_mainstem_as_reference,
+                                  basin_key,
+                                  reference_source, test_source, MLE_values, RMSE_values, sigma,
+                                  chi_fractions_vector);
+      // concatenate the vectors to the "all" vectors
+      all_reference_source.insert(all_reference_source.end(), reference_source.begin(), reference_source.end() );
+      all_test_source.insert(all_test_source.end(), test_source.begin(), test_source.end() );
+      all_MLE_values.insert(all_MLE_values.end(), MLE_values.begin(), MLE_values.end() );
+      all_RMSE_values.insert(all_RMSE_values.end(), RMSE_values.begin(), RMSE_values.end() );
+
+      tot_MLE_vec.push_back(tot_MLE);
+      cout << "basin: " << basin_key << " and tot_MLE: " << tot_MLE << endl;
+    }
+
+    // add the data to the vecvecs
+    MLE_vecvec.push_back(all_MLE_values);
+    RMSE_vecvec.push_back(all_RMSE_values);
+    total_MLE_vecvec.push_back(tot_MLE_vec);
+    reference_keys = all_reference_source;
+    test_keys = all_test_source;
+
+    // now print the data to the file
+    movern_stats_out << "reference_source_key,test_source_key,MLE,RMSE" << endl;
+    int n_rmse_vals = int(all_RMSE_values.size());
+    for(int i = 0; i<n_rmse_vals; i++)
+    {
+      movern_stats_out << all_reference_source[i] << ","
+                       << all_test_source[i] << ","
+                       << all_MLE_values[i] << ","
+                       << all_RMSE_values[i] << endl;
+    }
+    movern_stats_out.close();
+
+  }
+
+  stats_by_basin_out << "basin_key,outlet_jn";
+  stats_by_basin_out.precision(4);
+  for(int i = 0; i< n_movern; i++)
+  {
+    stats_by_basin_out << ",m_over_n = "<<movern[i];
+  }
+  stats_by_basin_out << endl;
+  stats_by_basin_out.precision(9);
+  for(int basin_key = 0; basin_key<n_basins; basin_key++)
+  {
+    stats_by_basin_out << basin_key << "," << outlet_jns[basin_key];
+    for(int i = 0; i< n_movern; i++)
+    {
+      stats_by_basin_out << "," <<total_MLE_vecvec[i][basin_key];
+    }
+    stats_by_basin_out << endl;
+  }
+
+  stats_by_basin_out.close();
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3342,6 +3933,232 @@ vector<float> LSDChiTools::project_data_onto_reference_channel(vector<float>& re
   return residuals;
 
 }
+
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Project data onto a reference chi-elevation profile
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<float> LSDChiTools::project_points_onto_reference_channel(vector<float>& reference_chi,
+                                 vector<float>& reference_elevation, vector<float>& trib_chi,
+                                 vector<float>& trib_elevation, 
+                                 vector<float> chi_distances_to_test)
+{
+  //cout << endl << endl << "=========="  << endl << "projecting points" << endl;
+  
+  // How this works is that you take the tributary elevations and then
+  // determine the elevation on the reference at the same chi. This is done by
+  // interpolating the elevation as a linear fit between the two adjacent chi
+  // points on the reference channel.
+  vector<float> joint_chi;
+  vector<float> trib_joint_elev;
+  vector<float> ref_joint_elev;
+  vector<float> residuals;
+
+
+  //float this_chi;
+  float max_ref_chi;
+  float min_ref_chi;
+  float max_trib_chi;
+  float min_trib_chi;
+
+  int n_ref_nodes = int(reference_chi.size());
+  int n_trib_nodes = int(trib_chi.size());
+  if (n_ref_nodes <= 1 || n_trib_nodes <= 1)
+  {
+    cout << "LSDChiTools::project_points_onto_reference_channel WARNING" << endl;
+    cout << "The reference channel has 1 or zero nodes." << endl;
+    return residuals;
+  }
+  else
+  {
+    max_ref_chi = reference_chi[0];
+    min_ref_chi = reference_chi[n_ref_nodes-1];
+
+    max_trib_chi = trib_chi[0];
+    min_trib_chi = trib_chi[n_trib_nodes-1];
+  }
+
+  //cout << "Max ref:  " << max_ref_chi << " min ref:  " << min_ref_chi << endl;
+  //cout << "Max test: " << max_trib_chi << " min test:  " << min_trib_chi << endl;
+
+
+  // test to see if there is overlap
+  if(min_trib_chi > max_ref_chi || max_trib_chi < min_ref_chi)
+  {
+    cout << "LSDChiTools::project_points_onto_reference_channel These channels do not overlap." << endl;
+    return residuals;
+  }
+  
+  // get the length of the trib
+  float length_of_trib = max_trib_chi-min_trib_chi;
+  
+  // get the distances upstream of the base of the tributary. 
+  vector<float> chi_upstream;
+  for(int i = 0; i<n_trib_nodes; i++)
+  {
+    chi_upstream.push_back(trib_chi[i]-min_trib_chi);
+  }
+  
+  int n_points = int(chi_distances_to_test.size());
+  // now we search down the chi_distances vector to get the distances along
+  // the main stem corresponding to the correct place on the reference channel
+  // The reference chis monotonically decrease so we will keep track of what
+  // indices the bounding chi points are.
+
+  for(int i = 0; i<n_points; i++ )
+  {
+    if (chi_distances_to_test[i] > length_of_trib)
+    {
+      residuals.push_back(-9999);
+    }
+    else
+    {
+      // need to get to the node in the trib that is less than the chi to test
+      bool got_there_yet = false;
+      int this_trib_node = 0;
+      while ( (not got_there_yet)  && this_trib_node!= n_trib_nodes)
+      {
+        //cout << "chi distance: " << chi_upstream[this_trib_node] << endl;
+        if(chi_distances_to_test[i] > chi_upstream[this_trib_node])
+        {
+          //cout << "The distance is greater than the distance of this node!" << endl;
+          got_there_yet = true;
+        }
+        else
+        {
+          this_trib_node++;
+        }
+      }
+      //cout << "The distance needed is: " << chi_distances_to_test[i] << endl;
+      //cout << "Found the distance: " <<  chi_upstream[this_trib_node] << endl;
+      //cout << "The chi location for testing on the tributary is: " << trib_chi[this_trib_node] << endl;
+      
+      // we have either got the node or reached the end of the tributary
+      if (this_trib_node == n_trib_nodes)
+      {
+        // we got to the end without finding the correct node. Return nodata 
+        residuals.push_back(-9999);
+      }
+      else
+      {
+        // now you need to find the bounding nodes on the mainstem
+        bool found_joint_chi;
+        int start_ref_index = 0;
+        int end_ref_index = 1;
+        float ref_chi_upstream = reference_chi[start_ref_index];
+        float ref_chi_downstream =  reference_chi[end_ref_index];
+        float this_chi = trib_chi[this_trib_node];
+
+        // now test if it is between the upstream and downstream chi coordinates in the reference vector
+        if (this_chi  < ref_chi_upstream && this_chi > ref_chi_downstream)
+        {
+          // It is between these reference chi values!
+          //cout << "FOUND CHI This chi is: " << this_chi << " and bounds are: " << ref_chi_upstream << "," << ref_chi_downstream << endl;
+          found_joint_chi = true;
+        }
+        else
+        {
+          // we didn't find the chi, we need to move through the reference vector to find
+          // the chi value
+          bool found_ref_nodes = false;
+          while (end_ref_index < n_ref_nodes && not found_ref_nodes)
+          {
+            start_ref_index++;
+            end_ref_index++;
+            ref_chi_upstream = reference_chi[start_ref_index];
+            ref_chi_downstream =  reference_chi[end_ref_index];
+           if (this_chi  < ref_chi_upstream && this_chi > ref_chi_downstream)
+           {
+             
+             found_ref_nodes = true;
+             found_joint_chi = true;
+             //cout << "FOUND CHI This chi is: " <<this_chi  << " and bounds are: " << ref_chi_upstream << "," << ref_chi_downstream << endl;
+           }
+          }
+          // There is different logic if we reached the end of the reference vector
+          if (end_ref_index == n_ref_nodes-1)
+          {
+            //cout << "I am at the end of the reference vector" << endl;
+            i = n_trib_nodes-1;
+          }
+        }
+        
+        if(found_joint_chi)
+        {
+          // we need to calculate the eleavtion on the reference vector
+          float dist_ref = ref_chi_upstream-ref_chi_downstream;
+          float chi_frac = (this_chi-ref_chi_downstream)/dist_ref;
+          float joint_elev = chi_frac*(reference_elevation[start_ref_index]-reference_elevation[end_ref_index])
+                             +reference_elevation[end_ref_index];
+          joint_chi.push_back(this_chi);
+          trib_joint_elev.push_back(trib_elevation[this_trib_node]);
+          ref_joint_elev.push_back(joint_elev);
+          residuals.push_back(trib_elevation[this_trib_node]-joint_elev);
+          
+          //cout << "trib chi: " << this_chi << " elev trib: " << trib_elevation[this_trib_node] << " test elev: " << joint_elev << endl;
+          
+        }
+        else
+        {
+          residuals.push_back(-9999);
+        }
+      }
+    }
+  }
+  
+  // get rid of nodata residuals
+  int n_residuals = int(residuals.size());
+  vector<float> thinned_residuals;
+  for(int i = 0; i<n_residuals; i++)
+  {
+    if (residuals[i] != -9999)
+    {
+      thinned_residuals.push_back(residuals[i]);
+    }
+  }
+  residuals = thinned_residuals;
+  
+  
+  
+  // this section is for debugging
+  bool print_for_debugging = false;
+  if (print_for_debugging)
+  {
+    ofstream chans_out;
+    chans_out.open("Test_project.csv");
+    chans_out << "chi,elev,channel_code" << endl;
+    for(int i = 0; i<n_ref_nodes; i++)
+    {
+      chans_out << reference_chi[i] << "," << reference_elevation[i] <<",0" <<endl;
+    }
+    for(int i = 0; i<n_trib_nodes; i++)
+    {
+      chans_out << trib_chi[i] << "," << trib_elevation[i] <<",1" <<endl;
+    }
+    for(int i = 0; i< int(joint_chi.size()); i++)
+    {
+      chans_out << joint_chi[i] << "," << trib_joint_elev[i] <<",2" <<endl;
+    }
+    for(int i = 0; i<int(joint_chi.size()); i++)
+    {
+      chans_out << joint_chi[i] << "," << ref_joint_elev[i] <<",3" <<endl;
+    }
+    chans_out.close();
+  }
+
+
+  return residuals;
+
+}
+
+
+
+
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This does slope-area analysis

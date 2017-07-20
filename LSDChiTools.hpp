@@ -335,6 +335,21 @@ class LSDChiTools
     /// @date 04/05/2017
     float test_segment_collinearity(LSDFlowInfo& FlowInfo, int reference_channel, int test_channel, float sigma);
 
+    /// @brief This returns an maximum liklihood estiamtor by comparing
+    ///  a channel (with a particular source number) against a reference channel, using specific points 
+    ///  on the test channel
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param reference_channel the source key of the reference channel
+    /// @param test_channel the source key of the test channel    
+    /// @param sigma The uncertainty for the MLE calculation. In practice this simply scales MLE
+    ///     If you have many nodes this number needs to be large
+    /// @param chi_distances_to_test The distances in chi space to test 
+    /// @return The maximum likelihood estimator
+    /// @author SMM
+    /// @date 20/07/2017
+    float test_segment_collinearity_using_points(LSDFlowInfo& FlowInfo, int reference_channel, int test_channel, 
+                                             float sigma, vector<float> chi_distances_to_test);
+
     /// @brief This computes a collinearity metric for all combinations of
     ///  channels for a given basin
     /// @detail It takes all the combinations of sources and gets the goodness of fit between each pair
@@ -355,6 +370,30 @@ class LSDChiTools
                                         vector<int>& reference_source, vector<int>& test_source,
                                         vector<float>& MLE_values, vector<float>& RMSE_values, 
                                         float sigma);
+
+    /// @brief This computes a collinearity metric for all combinations of
+    ///  channels for a given basin. This version uses specified points in chi space
+    ///  to compare against other channels rather than the entire channel
+    /// @detail It takes all the combinations of sources and gets the goodness of fit between each pair
+    ///  of sources.
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param only_use_mainstem_as_reference True if you only want to use the mainstem
+    /// @param basin_key The key into the basin you want to test all collinearity of.
+    /// @param reference_source integer vector replaced in function that has the reference vector for each comparison
+    /// @param test_source integer vector replaced in function that has the test vector for each comparison
+    /// @param MLE_values the MLE for each comparison. Replaced in function.
+    /// @param RMSE_values the RMSE for each comparison (i.e. between source 0 1, 0 2, 0 3, etc.). Replaced in function.
+    /// @param sigma The uncertainty for the MLE calculation. In practice this simply scales MLE
+    /// @param chi_distances_to_test The distances in chi space to test 
+    /// @author SMM
+    /// @date 20/07/2017
+    float test_all_segment_collinearity_by_basin_using_points(LSDFlowInfo& FlowInfo, bool only_use_mainstem_as_reference,
+                                        int basin_key,
+                                        vector<int>& reference_source, vector<int>& test_source,
+                                        vector<float>& MLE_values, vector<float>& RMSE_values, 
+                                        float sigma, vector<float> chi_distances_to_test);
+
+
 
     /// @brief This wraps the collinearity tester, looping through different m over n
     ///  values and calculating goodness of fit statistics.
@@ -404,6 +443,72 @@ class LSDChiTools
                         bool only_use_mainstem_as_reference,
                         string file_prefix,
                         LSDRaster& Discharge, float sigma);
+
+
+
+
+
+    /// @brief This wraps the collinearity tester, looping through different m over n
+    ///  values and calculating goodness of fit statistics.
+    /// @detail Uses discrete points rather than all the tributary data
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param source_nodes a vector containing the sorted sorce nodes (by flow distance)
+    /// @param outlet_nodes a vector continaing the outlet nodes
+    /// @param Elevation an LSDRaster containing elevation info
+    /// @param DistanceFromOutlet an LSDRaster with the flow distance
+    /// @param DrainageArea an LSDRaster with the drainage area
+    /// @param start_movern the starting m/n ratio
+    /// @param delta_movern the change in m/n
+    /// @param n_novern the number of m/n values to use
+    /// @param only_use_mainstem_as_reference a boolean, if true only compare channels to mainstem .
+    /// @param The file prefix for the data files
+    /// @param sigma The uncertainty for the MLE calculation. In practice this simply scales MLE.
+    /// @param chi_distance_fractions These are a vector of fractions of distance of the
+    ///   length of the mainstem that you want to sample the tributaries. For example if the
+    ///   mainstem is 10 m long in chi space and you have {0.1,0.2,0.3} as the fraction you
+    ///   sample the tributaries 1, 2 and 3 metres upstream of their confluence. 
+    /// @author SMM
+    /// @date 20/07/2017
+    void calculate_goodness_of_fit_collinearity_fxn_movern_using_points(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JN,
+                        float start_movern, float delta_movern, int n_movern,
+                        bool only_use_mainstem_as_reference,
+                        string file_prefix, float sigma, 
+                        vector<float> chi_distance_fractions);
+
+    /// @brief This wraps the collinearity tester, looping through different m over n
+    ///  values and calculating goodness of fit statistics.
+    ///  Same as above but can use a discharge raster to calculate chi
+    /// @detail Uses discrete points rather than all the tributary data
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param source_nodes a vector containing the sorted sorce nodes (by flow distance)
+    /// @param outlet_nodes a vector continaing the outlet nodes
+    /// @param Elevation an LSDRaster containing elevation info
+    /// @param DistanceFromOutlet an LSDRaster with the flow distance
+    /// @param DrainageArea an LSDRaster with the drainage area
+    /// @param start_movern the starting m/n ratio
+    /// @param delta_movern the change in m/n
+    /// @param n_novern the number of m/n values to use
+    /// @param only_use_mainstem_as_reference a boolean, if true only compare channels to mainstem .
+    /// @param The file prefix for the data files
+    /// @param Discharge and LSDRaster of discharge
+    /// @param sigma The uncertainty for the MLE calculation. In practice this simply scales MLE.
+    /// @param chi_distance_fractions These are a vector of fractions of distance of the
+    ///   length of the mainstem that you want to sample the tributaries. For example if the
+    ///   mainstem is 10 m long in chi space and you have {0.1,0.2,0.3} as the fraction you
+    ///   sample the tributaries 1, 2 and 3 metres upstream of their confluence. 
+    /// @author SMM
+    /// @date 20/07/2017
+    void calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge_using_points(LSDFlowInfo& FlowInfo,
+                        LSDJunctionNetwork& JN, float start_movern, float delta_movern, int n_movern,
+                        bool only_use_mainstem_as_reference,
+                        string file_prefix,
+                        LSDRaster& Discharge, float sigma, 
+                        vector<float> chi_distance_fractions);
+
+
+
+
+
 
 
     /// @brief This function drives a Monte Carlo-Markov chain model It wraps 
@@ -561,6 +666,24 @@ class LSDChiTools
     vector<float> project_data_onto_reference_channel(vector<float>& reference_chi,
                                  vector<float>& reference_elevation, vector<float>& trib_chi,
                                  vector<float>& trib_elevation);
+
+
+    /// @brief This takes the chi locations of a tributarry vector and then uses
+    ///  linear interpolation to determine the elevation on a reference channel
+    ///  of points at a vector of fixed distances upstream the tributary channel
+    /// @param reference_chi the chi coordiantes of the reference channel
+    /// @param reference_elevation the elevations on the reference channel
+    /// @param trib_chi the chi coordiantes of the tributary channel
+    /// @param trib_elevation the elevations on the tributary channel
+    /// @param chi_distances_to_test the distances upstream of the confluence on the tributary channel to test the residuals
+    /// @return A vector of the elevations on the chi locations of the tributary channel
+    /// @author SMM
+    /// @date 20/07/2017
+    vector<float> project_points_onto_reference_channel(vector<float>& reference_chi,
+                                 vector<float>& reference_elevation, vector<float>& trib_chi,
+                                 vector<float>& trib_elevation, vector<float> chi_distances_to_test);
+
+
 
 
     /// @brief This performs slope area analysis. It goes down through each
