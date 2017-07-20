@@ -3120,6 +3120,7 @@ void LSDIndexRaster::PadRaster(int NPixels)
   // Arrays of indexes of neighbour cells with respect to target cell
   int dX[] = {1, 1, 1, 0, -1, -1, -1, 0};
   int dY[] = {-1, 0, 1, 1, 1, 0, -1, -1};
+  Array2D<int> NewRasterData = RasterData.copy();
   
   // Loop through pad size (quick and dirty!)
   for (int n = 0; n<NPixels; ++n)
@@ -3139,12 +3140,13 @@ void LSDIndexRaster::PadRaster(int NPixels)
             if ((row +dY[c] > NRows-1) || (col + dX[c] > NCols-1) || (row+dY[c]<0) || (col+dY[c]<0)) continue;
             
             //otherwise update values
-            RasterData[row+dY[c]][col+dX[c]] = RasterData[row][col];
+            else if (RasterData[row+dY[c]][col+dX[c]] == NoDataValue) NewRasterData[row+dY[c]][col+dX[c]] = RasterData[row][col];
           }
 			  }
 		  }
 	  }
 	}
+	RasterData = NewRasterData.copy();
 }
 
 #endif

@@ -1,6 +1,6 @@
 CC=g++
-CFLAGS=-c -Wall -O3 -pg -g
-OFLAGS = -Wall -O3 -pg -g
+CFLAGS=-c -Wall -pg -g
+OFLAGS = -Wall -pg -g
 LDFLAGS= -Wall
 SOURCES= pad_index_raster_driver.cpp \
         ../LSDMostLikelyPartitionsFinder.cpp \
@@ -17,7 +17,7 @@ SOURCES= pad_index_raster_driver.cpp \
         ../LSDCRNParameters.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 
-EXECUTABLE= LH_Driver.out
+EXECUTABLE= Pad_Driver.out
 
 all: $(SOURCES) $(EXECUTABLE)
 
