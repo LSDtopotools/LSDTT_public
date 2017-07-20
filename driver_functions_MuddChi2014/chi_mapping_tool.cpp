@@ -165,6 +165,10 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["calculate_MLE_collinearity"] = false;
   bool_default_map["print_profiles_fxn_movern_csv"] = false;
   
+  bool_default_map["calculate_MLE_collinearity_with_points"] = false;
+  
+  
+  
   bool_default_map["MCMC_movern_analysis"] = false;
   float_default_map["MCMC_movern_minimum"] = 0.05;
   float_default_map["MCMC_movern_maximum"] = 1.5;
@@ -199,6 +203,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_source_keys"] = false;
   bool_default_map["print_sources_to_csv"] = false;
   bool_default_map["print_baselevel_keys"] = false;
+  bool_default_map["print_chi_data_maps"] = false;
 
   // These enable calculation of chi based on discharge
   bool_default_map["use_precipitation_raster_for_chi"] = false;
@@ -655,7 +660,8 @@ int main (int nNumberofArgs,char *argv[])
         || this_bool_map["print_source_keys"]
         || this_bool_map["print_baselevel_keys"]
         || this_bool_map["print_basin_raster"]
-        || this_bool_map["MCMC_movern_analysis"])
+        || this_bool_map["MCMC_movern_analysis"]
+        || this_bool_map["print_chi_data_maps"])
   {
     cout << "I am getting the source and outlet nodes for the overlapping channels" << endl;
     cout << "The n_nodes to visit are: " << n_nodes_to_visit << endl;
@@ -775,6 +781,49 @@ int main (int nNumberofArgs,char *argv[])
 
 
 
+  //============================================================================
+  // This is for visualisation of the basins
+  //============================================================================
+  if(this_bool_map["print_chi_data_maps"])
+  {
+    cout << "I am going to print some simple chi data maps for visualisation." << endl;
+    LSDChiTools ChiTool_chi_checker(FlowInfo);
+    ChiTool_chi_checker.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
+                            filled_topography, DistanceFromOutlet,
+                            DrainageArea, chi_coordinate);
+
+    // first the logic if you are using a precipitation raster
+    if(this_bool_map["use_precipitation_raster_for_chi"])
+    {
+      string chiQ_data_maps_string = OUT_DIR+OUT_ID+"_chi_data_mapQ.csv";
+      ChiTool_chi_checker.print_chi_data_map_to_csv(FlowInfo, chiQ_data_maps_string);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_chi_data_mapQ.geojson";
+        LSDSpatialCSVReader thiscsv(chiQ_data_maps_string);
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+
+    }
+    else
+    {
+      string chi_data_maps_string = OUT_DIR+OUT_ID+"_chi_data_map.csv";
+      ChiTool_chi_checker.print_chi_data_map_to_csv(FlowInfo, chi_data_maps_string);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_chi_data_map.geojson";
+        LSDSpatialCSVReader thiscsv(chi_data_maps_string);
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+    }
+  }
+  //============================================================================
+
+
+
+
   if (this_bool_map["MCMC_movern_analysis"])
   {
     cout << "I am going to explore m/n using the MCMC method" << endl;
@@ -842,6 +891,62 @@ int main (int nNumberofArgs,char *argv[])
                       movern_name, this_float_map["collinearity_MLE_sigma"]);
     }
   }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  if(this_bool_map["calculate_MLE_collinearity_with_points"])
+  {
+    cout << "I am going to test the experimental MLE collinearity functions" << endl;
+    cout << "I am testing the collinearity for you. " << endl;
+    // Lets make a new chi tool: this won't be segmented since we only
+    // need it for m/n
+    LSDChiTools ChiTool_movern(FlowInfo);
+    ChiTool_movern.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
+                            filled_topography, DistanceFromOutlet,
+                            DrainageArea, chi_coordinate);
+
+    float A_0 = 1;
+    float this_movern = 0.5;
+    ChiTool_movern.update_chi_data_map(FlowInfo, A_0, this_movern);
+    
+    int baselevel_key = 1;
+
+    // these are the vectors that will hold the information about the
+    // comparison between channels.
+    // the _all vectors are one of all the basins
+    // reference source is the source key of the reference channel
+    vector<int> reference_source, all_reference_source;
+    // test source is the source key of the test channel
+    vector<int> test_source, all_test_source;
+    // MLE the maximum liklihood estimator
+    vector<float> MLE_values, all_MLE_values;
+    // RMSE is the root mean square error
+    vector<float> RMSE_values, all_RMSE_values;
+
+    vector<float> chi_fracs_to_test;
+    chi_fracs_to_test.push_back(0.1);
+    chi_fracs_to_test.push_back(0.05);
+
+
+
+    float sigma = 10;
+    bool only_use_mainstem_as_reference = true; 
+    ChiTool_movern.test_all_segment_collinearity_by_basin_using_points(FlowInfo, only_use_mainstem_as_reference,
+                                                 baselevel_key,reference_source, test_source,
+                                                 MLE_values, RMSE_values, 
+                                                 sigma,chi_fracs_to_test);
+  
+  }
+  
+  
+  
+  
 
   if(this_bool_map["print_profiles_fxn_movern_csv"] )
   {
