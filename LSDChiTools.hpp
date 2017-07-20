@@ -445,6 +445,72 @@ class LSDChiTools
                         LSDRaster& Discharge, float sigma);
 
 
+
+
+
+    /// @brief This wraps the collinearity tester, looping through different m over n
+    ///  values and calculating goodness of fit statistics.
+    /// @detail Uses discrete points rather than all the tributary data
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param source_nodes a vector containing the sorted sorce nodes (by flow distance)
+    /// @param outlet_nodes a vector continaing the outlet nodes
+    /// @param Elevation an LSDRaster containing elevation info
+    /// @param DistanceFromOutlet an LSDRaster with the flow distance
+    /// @param DrainageArea an LSDRaster with the drainage area
+    /// @param start_movern the starting m/n ratio
+    /// @param delta_movern the change in m/n
+    /// @param n_novern the number of m/n values to use
+    /// @param only_use_mainstem_as_reference a boolean, if true only compare channels to mainstem .
+    /// @param The file prefix for the data files
+    /// @param sigma The uncertainty for the MLE calculation. In practice this simply scales MLE.
+    /// @param chi_distance_fractions These are a vector of fractions of distance of the
+    ///   length of the mainstem that you want to sample the tributaries. For example if the
+    ///   mainstem is 10 m long in chi space and you have {0.1,0.2,0.3} as the fraction you
+    ///   sample the tributaries 1, 2 and 3 metres upstream of their confluence. 
+    /// @author SMM
+    /// @date 20/07/2017
+    void calculate_goodness_of_fit_collinearity_fxn_movern_using_points(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JN,
+                        float start_movern, float delta_movern, int n_movern,
+                        bool only_use_mainstem_as_reference,
+                        string file_prefix, float sigma, 
+                        vector<float> chi_distance_fractions);
+
+    /// @brief This wraps the collinearity tester, looping through different m over n
+    ///  values and calculating goodness of fit statistics.
+    ///  Same as above but can use a discharge raster to calculate chi
+    /// @detail Uses discrete points rather than all the tributary data
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param source_nodes a vector containing the sorted sorce nodes (by flow distance)
+    /// @param outlet_nodes a vector continaing the outlet nodes
+    /// @param Elevation an LSDRaster containing elevation info
+    /// @param DistanceFromOutlet an LSDRaster with the flow distance
+    /// @param DrainageArea an LSDRaster with the drainage area
+    /// @param start_movern the starting m/n ratio
+    /// @param delta_movern the change in m/n
+    /// @param n_novern the number of m/n values to use
+    /// @param only_use_mainstem_as_reference a boolean, if true only compare channels to mainstem .
+    /// @param The file prefix for the data files
+    /// @param Discharge and LSDRaster of discharge
+    /// @param sigma The uncertainty for the MLE calculation. In practice this simply scales MLE.
+    /// @param chi_distance_fractions These are a vector of fractions of distance of the
+    ///   length of the mainstem that you want to sample the tributaries. For example if the
+    ///   mainstem is 10 m long in chi space and you have {0.1,0.2,0.3} as the fraction you
+    ///   sample the tributaries 1, 2 and 3 metres upstream of their confluence. 
+    /// @author SMM
+    /// @date 20/07/2017
+    void calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge_using_points(LSDFlowInfo& FlowInfo,
+                        LSDJunctionNetwork& JN, float start_movern, float delta_movern, int n_movern,
+                        bool only_use_mainstem_as_reference,
+                        string file_prefix,
+                        LSDRaster& Discharge, float sigma, 
+                        vector<float> chi_distance_fractions);
+
+
+
+
+
+
+
     /// @brief This function drives a Monte Carlo-Markov chain model It wraps 
     /// the dmovern tuning and the main chain. 
     /// @param FlowInfo An LSDFlowInfo object
