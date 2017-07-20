@@ -927,7 +927,7 @@ int main (int nNumberofArgs,char *argv[])
     //bool only_use_mainstem_as_reference = true;
     
     float this_sigma = this_float_map["collinearity_MLE_sigma"];
-    this_sigma = 1000;        // just for debugging
+    this_sigma = 10;        // just for debugging
     
 
     if(this_bool_map["use_precipitation_raster_for_chi"])
