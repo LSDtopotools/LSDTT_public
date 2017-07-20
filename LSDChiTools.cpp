@@ -2495,6 +2495,11 @@ float LSDChiTools::test_all_segment_collinearity_by_basin_using_points(LSDFlowIn
                                  chi_data_chan1,elev_data_chan1, chi_test_distances);
     n_residuals = int(residuals.size());
     cout << "LSDChiTools::test_all_segment_collinearity_by_basin_using_points Basin: " << baselevel_key << " The number of residuals are: " << n_residuals << endl;
+    for (int i = 0; i< n_residuals; i++)
+    {
+      cout << "residual[" << i<<"]: " << residuals[i] << endl;
+    }
+
 
     // Now get the MLE and RMSE for this channel pair. It only runs if
     // there are residuals. Otherwise it means that the channels are non-overlapping
@@ -3941,6 +3946,8 @@ vector<float> LSDChiTools::project_points_onto_reference_channel(vector<float>& 
                                  vector<float>& trib_elevation, 
                                  vector<float> chi_distances_to_test)
 {
+  //cout << endl << endl << "=========="  << endl << "projecting points" << endl;
+  
   // How this works is that you take the tributary elevations and then
   // determine the elevation on the reference at the same chi. This is done by
   // interpolating the elevation as a linear fit between the two adjacent chi
@@ -3951,7 +3958,7 @@ vector<float> LSDChiTools::project_points_onto_reference_channel(vector<float>& 
   vector<float> residuals;
 
 
-  float this_chi;
+  //float this_chi;
   float max_ref_chi;
   float min_ref_chi;
   float max_trib_chi;
@@ -4027,7 +4034,7 @@ vector<float> LSDChiTools::project_points_onto_reference_channel(vector<float>& 
       }
       //cout << "The distance needed is: " << chi_distances_to_test[i] << endl;
       //cout << "Found the distance: " <<  chi_upstream[this_trib_node] << endl;
-      //cout << "The chi location is: " << trib_chi[this_trib_node] << endl;
+      //cout << "The chi location for testing on the tributary is: " << trib_chi[this_trib_node] << endl;
       
       // we have either got the node or reached the end of the tributary
       if (this_trib_node == n_trib_nodes)
@@ -4087,11 +4094,11 @@ vector<float> LSDChiTools::project_points_onto_reference_channel(vector<float>& 
           float joint_elev = chi_frac*(reference_elevation[start_ref_index]-reference_elevation[end_ref_index])
                              +reference_elevation[end_ref_index];
           joint_chi.push_back(this_chi);
-          trib_joint_elev.push_back(trib_elevation[i]);
+          trib_joint_elev.push_back(trib_elevation[this_trib_node]);
           ref_joint_elev.push_back(joint_elev);
-          residuals.push_back(trib_elevation[i]-joint_elev);
+          residuals.push_back(trib_elevation[this_trib_node]-joint_elev);
           
-          //cout << "trib chi: " << this_chi << " elev trib: " << trib_elevation[i] << " test elev: " << joint_elev << endl;
+          //cout << "trib chi: " << this_chi << " elev trib: " << trib_elevation[this_trib_node] << " test elev: " << joint_elev << endl;
           
         }
         else
@@ -4101,6 +4108,20 @@ vector<float> LSDChiTools::project_points_onto_reference_channel(vector<float>& 
       }
     }
   }
+  
+  // get rid of nodata residuals
+  int n_residuals = int(residuals.size());
+  vector<float> thinned_residuals;
+  for(int i = 0; i<n_residuals; i++)
+  {
+    if (residuals[i] != -9999)
+    {
+      thinned_residuals.push_back(residuals[i]);
+    }
+  }
+  residuals = thinned_residuals;
+  
+  
   
   // this section is for debugging
   bool print_for_debugging = false;

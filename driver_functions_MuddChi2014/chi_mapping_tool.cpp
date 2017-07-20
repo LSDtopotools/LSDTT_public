@@ -911,36 +911,46 @@ int main (int nNumberofArgs,char *argv[])
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_coordinate);
 
-    float A_0 = 1;
-    float this_movern = 0.5;
-    ChiTool_movern.update_chi_data_map(FlowInfo, A_0, this_movern);
-    
-    int baselevel_key = 1;
-
-    // these are the vectors that will hold the information about the
-    // comparison between channels.
-    // the _all vectors are one of all the basins
-    // reference source is the source key of the reference channel
-    vector<int> reference_source, all_reference_source;
-    // test source is the source key of the test channel
-    vector<int> test_source, all_test_source;
-    // MLE the maximum liklihood estimator
-    vector<float> MLE_values, all_MLE_values;
-    // RMSE is the root mean square error
-    vector<float> RMSE_values, all_RMSE_values;
-
     vector<float> chi_fracs_to_test;
+    chi_fracs_to_test.push_back(0.25);
+    chi_fracs_to_test.push_back(0.2);
+    chi_fracs_to_test.push_back(0.15);
     chi_fracs_to_test.push_back(0.1);
     chi_fracs_to_test.push_back(0.05);
+    
+    // test the basin collinearity test
+    //int baselevel_key = 1;
+    vector<int> reference_source;
+    vector<int> test_source;
+    vector<float> MLE_values;
+    vector<float> RMSE_values;
+    //bool only_use_mainstem_as_reference = true;
+    
+    float this_sigma = this_float_map["collinearity_MLE_sigma"];
+    this_sigma = 1000;        // just for debugging
+    
 
-
-
-    float sigma = 10;
-    bool only_use_mainstem_as_reference = true; 
-    ChiTool_movern.test_all_segment_collinearity_by_basin_using_points(FlowInfo, only_use_mainstem_as_reference,
-                                                 baselevel_key,reference_source, test_source,
-                                                 MLE_values, RMSE_values, 
-                                                 sigma,chi_fracs_to_test);
+    if(this_bool_map["use_precipitation_raster_for_chi"])
+    {
+      cout << "Using a discharge raster to check collinearity." << endl;
+      string movern_name = OUT_DIR+OUT_ID+"_point_movernstatsQ";
+      ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge_using_points(FlowInfo,
+                      JunctionNetwork, this_float_map["start_movern"], this_float_map["delta_movern"],
+                      this_int_map["n_movern"],
+                      this_bool_map["only_use_mainstem_as_reference"],
+                      movern_name, Discharge, this_sigma, 
+                      chi_fracs_to_test);
+    }
+    else
+    {
+      string movern_name = OUT_DIR+OUT_ID+"_point_movernstats";
+      ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern_using_points(FlowInfo, JunctionNetwork,
+                      this_float_map["start_movern"], this_float_map["delta_movern"],
+                      this_int_map["n_movern"],
+                      this_bool_map["only_use_mainstem_as_reference"],
+                      movern_name, this_sigma, 
+                      chi_fracs_to_test);
+    }
   
   }
   
