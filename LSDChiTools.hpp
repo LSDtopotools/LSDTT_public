@@ -350,6 +350,21 @@ class LSDChiTools
     float test_segment_collinearity_using_points(LSDFlowInfo& FlowInfo, int reference_channel, int test_channel, 
                                              float sigma, vector<float> chi_distances_to_test);
 
+    /// @brief This takes a basin key and returns all the residuals of the
+    ///  channels. 
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param only_use_mainstem_as_reference If true, only use the mainstem as a reference channel
+    /// @param test_channel the source key of the test channel    
+    /// @param sigma The uncertainty for the MLE calculation. In practice this simply scales MLE
+    ///     If you have many nodes this number needs to be large
+    /// @param baselevel_key The key to the basin you want
+    /// @return A vector containing all the residuals
+    /// @author SMM
+    /// @date 21/07/2017
+    vector<float> retrieve_all_residuals_by_basin(LSDFlowInfo& FlowInfo, bool only_use_mainstem_as_reference,
+                                                 int baselevel_key);
+
+
     /// @brief This computes a collinearity metric for all combinations of
     ///  channels for a given basin
     /// @detail It takes all the combinations of sources and gets the goodness of fit between each pair
@@ -395,14 +410,33 @@ class LSDChiTools
 
 
 
+
+
+
+    /// @brief This wraps the collinearity tester, looping through different m over n
+    ///  values and calculating goodness of fit statistics.
+    /// @detail This gets the median residual. The best fit will have a median residual
+    ///  closest to zero
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param JN an LSDJunctionNetwork object
+    /// @param start_movern the starting m/n ratio
+    /// @param delta_movern the change in m/n
+    /// @param n_novern the number of m/n values to use
+    /// @param only_use_mainstem_as_reference a boolean, if true only compare channels to mainstem .
+    /// @param The file prefix for the data files
+    /// @author SMM
+    /// @date 21/07/2017
+     void calculate_goodness_of_fit_collinearity_fxn_movern_using_median_residuals(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JN,
+                        float start_movern, float delta_movern, int n_movern,
+                        bool only_use_mainstem_as_reference,
+                        string file_prefix);
+
+
+
     /// @brief This wraps the collinearity tester, looping through different m over n
     ///  values and calculating goodness of fit statistics.
     /// @param FlowInfo an LSDFlowInfo object
-    /// @param source_nodes a vector containing the sorted sorce nodes (by flow distance)
-    /// @param outlet_nodes a vector continaing the outlet nodes
-    /// @param Elevation an LSDRaster containing elevation info
-    /// @param DistanceFromOutlet an LSDRaster with the flow distance
-    /// @param DrainageArea an LSDRaster with the drainage area
+    /// @param JN an LSDJunctionNetwork object
     /// @param start_movern the starting m/n ratio
     /// @param delta_movern the change in m/n
     /// @param n_novern the number of m/n values to use
@@ -419,15 +453,14 @@ class LSDChiTools
                         bool only_use_mainstem_as_reference,
                         string file_prefix, float sigma);
 
+
+
+
     /// @brief This wraps the collinearity tester, looping through different m over n
     ///  values and calculating goodness of fit statistics.
     ///  Same as above but can use a discharge raster to calculate chi
     /// @param FlowInfo an LSDFlowInfo object
-    /// @param source_nodes a vector containing the sorted sorce nodes (by flow distance)
-    /// @param outlet_nodes a vector continaing the outlet nodes
-    /// @param Elevation an LSDRaster containing elevation info
-    /// @param DistanceFromOutlet an LSDRaster with the flow distance
-    /// @param DrainageArea an LSDRaster with the drainage area
+    /// @param JN an LSDJunctionNetwork object
     /// @param start_movern the starting m/n ratio
     /// @param delta_movern the change in m/n
     /// @param n_novern the number of m/n values to use
@@ -452,11 +485,7 @@ class LSDChiTools
     ///  values and calculating goodness of fit statistics.
     /// @detail Uses discrete points rather than all the tributary data
     /// @param FlowInfo an LSDFlowInfo object
-    /// @param source_nodes a vector containing the sorted sorce nodes (by flow distance)
-    /// @param outlet_nodes a vector continaing the outlet nodes
-    /// @param Elevation an LSDRaster containing elevation info
-    /// @param DistanceFromOutlet an LSDRaster with the flow distance
-    /// @param DrainageArea an LSDRaster with the drainage area
+    /// @param JN an LSDJunctionNetwork object
     /// @param start_movern the starting m/n ratio
     /// @param delta_movern the change in m/n
     /// @param n_novern the number of m/n values to use
@@ -480,11 +509,7 @@ class LSDChiTools
     ///  Same as above but can use a discharge raster to calculate chi
     /// @detail Uses discrete points rather than all the tributary data
     /// @param FlowInfo an LSDFlowInfo object
-    /// @param source_nodes a vector containing the sorted sorce nodes (by flow distance)
-    /// @param outlet_nodes a vector continaing the outlet nodes
-    /// @param Elevation an LSDRaster containing elevation info
-    /// @param DistanceFromOutlet an LSDRaster with the flow distance
-    /// @param DrainageArea an LSDRaster with the drainage area
+    /// @param JN an LSDJunctionNetwork object
     /// @param start_movern the starting m/n ratio
     /// @param delta_movern the change in m/n
     /// @param n_novern the number of m/n values to use

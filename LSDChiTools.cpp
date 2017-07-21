@@ -2160,6 +2160,111 @@ float LSDChiTools::test_segment_collinearity_using_points(LSDFlowInfo& FlowInfo,
 }
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function test the collinearity of all segments compared to a reference
+// segment
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<float> LSDChiTools::retrieve_all_residuals_by_basin(LSDFlowInfo& FlowInfo, bool only_use_mainstem_as_reference,
+                                                 int baselevel_key)
+{
+  //cout << "Testing the segment collinearity for basin key " << baselevel_key << endl;
+  // get some information about the number of basins
+  int n_basins = int(ordered_baselevel_nodes.size());
+  if (baselevel_key >= n_basins)
+  {
+    cout << "Fatal error LSDChiTools::test_all_segment_collinearity_by_basin" <<endl;
+    cout << "You have selected a basin that doesn't exist!" << endl;
+    exit(EXIT_FAILURE);
+  }
+
+
+  // run the splitter
+  // this gets the starting index of the sources for each basin.
+  // It means that the channel numbers are linked to the channels in the basin
+  vector<int> start_node_for_baselelvel;
+  vector<int> n_sources_in_basin;
+  baselevel_and_source_splitter(n_sources_in_basin, start_node_for_baselelvel);
+  int channel_offset = start_node_for_baselelvel[baselevel_key];
+  int n_channels = n_sources_in_basin[baselevel_key];
+
+
+
+  // now get all the possible two pair combinations of these channels
+  bool zero_indexed = true;   // this is just because the channels are numbered from zero
+  int k = 2;                  // We want combinations of 2 channels
+
+  // the vec vec holds a vector of each possible combination of channels
+  // each vector has two elements in it: the first and second channel in the comibination
+  vector< vector<int> > combo_vecvev = combinations(n_channels, k, zero_indexed);
+  vector<float> elev_data_chan0;
+  vector<float> chi_data_chan0;
+  vector<float> elev_data_chan1;
+  vector<float> chi_data_chan1;
+  vector<float> residuals;
+  vector<float> cumulative_residuals;
+
+  // Drop out if there is only a single channel in the basin
+  if (n_channels == 1)
+  {
+    cout << "This basin only has one channel." << endl;
+    residuals.push_back(0.0);
+    return residuals;
+  }
+
+
+  vector<float> MLEs;
+  vector<int> MLE_index;   // the index into the combo_vecvec that is used to
+                           // tell which combinations have MLE values
+
+  int last_ref_channel = -1;
+
+  int n_combinations = int(combo_vecvev.size());
+  vector<int> this_combo;
+  int chan0,chan1;
+
+  if (only_use_mainstem_as_reference)
+  {
+    n_combinations = n_channels-1;
+  }
+
+  // we loop through the different combinations in the vecvec
+  for (int combo = 0; combo < n_combinations; combo++)
+  {
+    this_combo = combo_vecvev[combo];
+
+    // you need to map these combinations onto the particular channels of this basin
+    // These channels refere to the source keys
+    chan0 = this_combo[0]+channel_offset;
+    chan1 = this_combo[1]+channel_offset;
+    //cout << "chan0 is: " << chan0 << "  and chan1 is: " << chan1 << " and combo 0 is: " << this_combo[0] <<endl;
+
+
+    // only get the reference channel if the channel has changed.
+    // This collects the chi-elevation data of the reference channel
+    if (last_ref_channel != chan0)
+    {
+      get_chi_elevation_data_of_channel(FlowInfo, chan0, chi_data_chan0, elev_data_chan0);
+    }
+
+    // This gets the chi-elevation data of the test channel. Again, the chan1
+    // parameter referes to the source key.
+    get_chi_elevation_data_of_channel(FlowInfo, chan1, chi_data_chan1, elev_data_chan1);
+
+    // Now return the residuals between the reference channel and test channel.
+    // Each node in the test channel gets a residual, it is projected to a
+    // linear fit between nodes on the reference channel
+    residuals = project_data_onto_reference_channel(chi_data_chan0, elev_data_chan0,
+                                 chi_data_chan1,elev_data_chan1);
+    
+    // append the residual vector
+    cumulative_residuals.insert(cumulative_residuals.end(), residuals.begin(), residuals.end());
+
+  }
+  
+  return cumulative_residuals;
+}
+
+
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2580,6 +2685,158 @@ float LSDChiTools::test_all_segment_collinearity_by_basin_using_points(LSDFlowIn
   return tot_MLE;
 
 }
+
+
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function test the collinearity of all segments compared to a reference
+// segment
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_median_residuals(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JN,
+                        float start_movern, float delta_movern, int n_movern,
+                        bool only_use_mainstem_as_reference,
+                        string file_prefix)
+{
+  vector< vector<float> > median_vecvec;
+  vector< vector<float> > Q1_vecvec;
+  vector< vector<float> > Q3_vecvec;
+  vector<int> outlet_jns;
+  
+  cout << "LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_median_residuals" << endl;
+  cout << "I am defaulting to A_0 = 1." << endl;
+  vector<float> movern;
+  float A_0 = 1;
+  //float thresh_area_for_chi = 0;      // This just gets chi from all pixels.
+
+  string filename_bstats = file_prefix+"_movern_residuals_median.csv";
+  ofstream stats_by_basin_out;
+  stats_by_basin_out.open(filename_bstats.c_str());
+  
+  string filename_bstats_Q1 = file_prefix+"_movern_residuals_Q1.csv";
+  ofstream stats_by_basin_out_Q1;
+  stats_by_basin_out_Q1.open(filename_bstats_Q1.c_str());
+  
+  string filename_bstats_Q3 = file_prefix+"_movern_residuals_Q3.csv";
+  ofstream stats_by_basin_out_Q3;
+  stats_by_basin_out_Q3.open(filename_bstats_Q3.c_str());
+
+  int n_basins = int(ordered_baselevel_nodes.size());
+
+  // get the outlet junction of each basin key
+  for (int basin_key = 0; basin_key < n_basins; basin_key++)
+  {
+    int outlet_node = ordered_baselevel_nodes[basin_key];
+    int outlet_jn = JN.get_Junction_of_Node(outlet_node, FlowInfo);
+    outlet_jns.push_back(outlet_jn);
+  }
+
+  cout << endl << endl << "==========================" << endl;
+  for(int i = 0; i< n_movern; i++)
+  {
+    // get the m over n value
+    movern.push_back( float(i)*delta_movern+start_movern );
+    cout << "i: " << i << " and m over n: " << movern[i] << " ";
+
+    // calculate chi
+    update_chi_data_map(FlowInfo, A_0, movern[i]);
+
+    // The stats for the residuals
+    vector<float> median_values, Q1_values, Q3_values;
+
+    vector<int> all_basin_keys;
+
+    // now run the collinearity test
+    vector<float> these_residuals;
+    for(int basin_key = 0; basin_key<n_basins; basin_key++)
+    {
+      these_residuals = retrieve_all_residuals_by_basin(FlowInfo, only_use_mainstem_as_reference,
+                                                        basin_key);
+                                                        
+      vector<float> these_stats = calculate_descriptive_stats(these_residuals);
+      Q1_values.push_back(these_stats[1]);
+      median_values.push_back(these_stats[2]);
+      Q3_values.push_back(these_stats[3]);
+
+      cout << "basin: " << basin_key << " and median residual is: " << these_stats[2] << endl;
+    }
+
+    // add the data to the vecvecs
+    median_vecvec.push_back(median_values);
+    Q1_vecvec.push_back(Q1_values);
+    Q3_vecvec.push_back(Q3_values);
+  }
+  
+  
+  // Print the median data
+  stats_by_basin_out << "basin_key,outlet_jn";
+  stats_by_basin_out.precision(4);
+  for(int i = 0; i< n_movern; i++)
+  {
+    stats_by_basin_out << ",m_over_n = "<<movern[i];
+  }
+  stats_by_basin_out << endl;
+  stats_by_basin_out.precision(9);
+  for(int basin_key = 0; basin_key<n_basins; basin_key++)
+  {
+    stats_by_basin_out << basin_key << "," << outlet_jns[basin_key];
+    for(int i = 0; i< n_movern; i++)
+    {
+      stats_by_basin_out << "," <<median_vecvec[i][basin_key];
+    }
+    stats_by_basin_out << endl;
+  }
+  stats_by_basin_out.close();
+  
+  
+  // Print the Q1 data
+  stats_by_basin_out_Q1 << "basin_key,outlet_jn";
+  stats_by_basin_out_Q1.precision(4);
+  for(int i = 0; i< n_movern; i++)
+  {
+    stats_by_basin_out_Q1 << ",m_over_n = "<<movern[i];
+  }
+  stats_by_basin_out_Q1 << endl;
+  stats_by_basin_out_Q1.precision(9);
+  for(int basin_key = 0; basin_key<n_basins; basin_key++)
+  {
+    stats_by_basin_out_Q1 << basin_key << "," << outlet_jns[basin_key];
+    for(int i = 0; i< n_movern; i++)
+    {
+      stats_by_basin_out_Q1 << "," <<Q1_vecvec[i][basin_key];
+    }
+    stats_by_basin_out_Q1 << endl;
+  }
+  stats_by_basin_out_Q1.close();
+  
+  
+  // Print the Q3 data
+  stats_by_basin_out_Q3 << "basin_key,outlet_jn";
+  stats_by_basin_out_Q3.precision(4);
+  for(int i = 0; i< n_movern; i++)
+  {
+    stats_by_basin_out_Q3 << ",m_over_n = "<<movern[i];
+  }
+  stats_by_basin_out_Q3 << endl;
+  stats_by_basin_out_Q3.precision(9);
+  for(int basin_key = 0; basin_key<n_basins; basin_key++)
+  {
+    stats_by_basin_out_Q3 << basin_key << "," << outlet_jns[basin_key];
+    for(int i = 0; i< n_movern; i++)
+    {
+      stats_by_basin_out_Q3 << "," <<Q3_vecvec[i][basin_key];
+    }
+    stats_by_basin_out_Q3 << endl;
+  }
+  stats_by_basin_out_Q3.close();
+  
+}
+
+
+
+
 
 
 
