@@ -166,6 +166,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_profiles_fxn_movern_csv"] = false;
   
   bool_default_map["calculate_MLE_collinearity_with_points"] = false;
+  bool_default_map["movern_residuals_test"] = false;
   
   
   
@@ -855,6 +856,42 @@ int main (int nNumberofArgs,char *argv[])
                              OUT_DIR, OUT_ID, use_points);
 
   }
+
+
+
+
+
+
+
+
+
+  if (this_bool_map["movern_residuals_test"])
+  {
+    cout << "I am going to explore m/n using the residuals method" << endl;
+    // Lets make a new chi tool: this won't be segmented since we only
+    // need it for m/n
+    LSDChiTools ChiTool_residuals(FlowInfo);
+    ChiTool_residuals.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
+                            filled_topography, DistanceFromOutlet,
+                            DrainageArea, chi_coordinate);
+    
+    // Calculate and print results
+    string residuals_name = OUT_DIR+OUT_ID+"_residual_movernstats";
+    ChiTool_residuals.calculate_goodness_of_fit_collinearity_fxn_movern_using_median_residuals(FlowInfo, JunctionNetwork,
+                      this_float_map["start_movern"], this_float_map["delta_movern"],
+                      this_int_map["n_movern"],
+                      this_bool_map["only_use_mainstem_as_reference"],
+                      residuals_name);
+
+
+  }
+
+
+
+
+
+
+
 
 
 
