@@ -3443,8 +3443,8 @@ vector<LSDRaster> LSDRaster::calculate_polyfit_surface_metrics(float window_radi
 
   // Move window over DEM, fitting 2nd order polynomial surface to the
   // elevations within the window.
-  cout << "\n\tRunning 2nd order polynomial fitting" << endl;
-  cout << "\t\tDEM size = " << NRows << " x " << NCols << endl;
+  //cout << "\n\tRunning 2nd order polynomial fitting" << endl;
+  //cout << "\t\tDEM size = " << NRows << " x " << NCols << endl;
   int ndv_present = 0;
 
   for(int i=0;i<NRows;++i)
@@ -4895,6 +4895,29 @@ LSDRaster LSDRaster::remove_positive_hilltop_curvature(LSDRaster& hilltop_curvat
 
   return CHT;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// REMOVE POSITIVE VALUES FROM RASTER
+// This function removes positive values from a raster, for use with hilltop curvature values
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDRaster::remove_positive_values()
+{
+  for (int row = 0; row < NRows; row++)
+  {
+    for (int col = 0; col < NCols; col++)
+    {
+      if (RasterData[row][col] >= 0)
+      {
+        RasterData[row][col] = NoDataValue;
+      }
+    }
+  }
+}
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

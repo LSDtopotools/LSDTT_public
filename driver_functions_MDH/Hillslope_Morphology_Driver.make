@@ -14,10 +14,11 @@ SOURCES= Hillslope_Morphology_Driver.cpp \
         ../LSDBasin.cpp \
         ../LSDShapeTools.cpp \
         ../LSDParticle.cpp \
+        ../LSDParameterParser.cpp \
         ../LSDCRNParameters.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 
-EXECUTABLE= Hillslope_Morphology_Tool
+EXECUTABLE= Hillslope_Morphology_Tool.exe
 
 all: $(SOURCES) $(EXECUTABLE)
 
@@ -26,3 +27,6 @@ $(EXECUTABLE): $(OBJECTS)
 
 .cpp.o:
 	$(CC) $(CFLAGS) $< -o $@
+	
+clean:
+	rm -f ../*.o *.o *.out *.exe

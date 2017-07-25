@@ -1052,6 +1052,13 @@ class LSDRaster
   /// @date 24/03/14
   LSDRaster remove_positive_hilltop_curvature(LSDRaster& hilltop_curvature);
 
+  /// @brief Removes positive values from a raster
+  /// @details Modifies araster to remove pixels with
+  /// positive values
+  /// @author MDH
+  /// @date 25/07/17
+  void remove_positive_values();
+
   /// @brief Gets the percentage of bedrock ridges
   /// @details Uses the hilltop curvature raster and the roughness raster. If the
   /// roughness value is greater than the threshold (set to 0.015) then the pixel
