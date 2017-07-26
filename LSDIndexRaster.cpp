@@ -294,7 +294,7 @@ void LSDIndexRaster::read_raster(string filename, string extension)
   string string_filename;
   string dot = ".";
   string_filename = filename+dot+extension;
-  cout << "The filename is " << string_filename << endl;
+  //cout << "The filename is " << string_filename << endl;
   int DataType = 2;
 
   if (extension == "asc")
@@ -311,10 +311,10 @@ void LSDIndexRaster::read_raster(string filename, string extension)
            >> str >> DataResolution
           >> str >> NoDataValue;
 
-    cout << "Loading asc file; NCols: " << NCols << " NRows: " << NRows << endl
-         << "X minimum: " << XMinimum << " YMinimum: " << YMinimum << endl
-         << "Data Resolution: " << DataResolution << " and No Data Value: "
-         << NoDataValue << endl;
+    //cout << "Loading asc file; NCols: " << NCols << " NRows: " << NRows << endl
+    //     << "X minimum: " << XMinimum << " YMinimum: " << YMinimum << endl
+    //     << "Data Resolution: " << DataResolution << " and No Data Value: "
+    //     << NoDataValue << endl;
 
     // this is the array into which data is fed
     Array2D<int> data(NRows,NCols,NoDataValue);
@@ -357,10 +357,10 @@ void LSDIndexRaster::read_raster(string filename, string extension)
     }
     ifs.close();
 
-    cout << "Loading asc file; NCols: " << NCols << " NRows: " << NRows << endl
-       << "X minimum: " << XMinimum << " YMinimum: " << YMinimum << endl
-         << "Data Resolution: " << DataResolution << " and No Data Value: "
-         << NoDataValue << endl;
+    //cout << "Loading flt file; NCols: " << NCols << " NRows: " << NRows << endl
+    //   << "X minimum: " << XMinimum << " YMinimum: " << YMinimum << endl
+    //     << "Data Resolution: " << DataResolution << " and No Data Value: "
+    //     << NoDataValue << endl;
 
     // this is the array into which data is fed
     Array2D<int> data(NRows,NCols,NoDataValue);
@@ -471,7 +471,7 @@ void LSDIndexRaster::read_raster(string filename, string extension)
             istringstream iss(lines[counter]);
             iss >> str >> str >> str >> str >> str;
             DataType = atoi(str.c_str());
-            cout << "Data Type = " << DataType << endl;
+            //cout << "Data Type = " << DataType << endl;
 
             // advance to the end so you move on to the new loop
             counter = lines.size();
@@ -727,10 +727,10 @@ void LSDIndexRaster::read_raster(string filename, string extension)
     }
     ifs_data.close();
 
-    cout << "Loading ENVI bil file; NCols: " << NCols << " NRows: " << NRows << endl
-         << "X minimum: " << XMinimum << " YMinimum: " << YMinimum << endl
-         << "Data Resolution: " << DataResolution << " and No Data Value: "
-         << NoDataValue << endl;
+    //cout << "Loading ENVI bil file; NCols: " << NCols << " NRows: " << NRows << endl
+    //     << "X minimum: " << XMinimum << " YMinimum: " << YMinimum << endl
+    //     << "Data Resolution: " << DataResolution << " and No Data Value: "
+    //     << NoDataValue << endl;
 
     // now update the objects raster data
     RasterData = data.copy();
