@@ -98,14 +98,17 @@ int main (int nNumberofArgs,char *argv[])
 	
 	// surface metrics 
 	float_default_map["MinSlopeForFill"] = 0.0001;
+	bool_default_map["raster_is_filled"] = false;
 	float_default_map["WindowRadius"] = 12.;
 
    //Defining hilltops
 	int_default_map["StreamNetworkPadding"] = 0;
-	int_default_map["stream_order_to_extract_basins"] = 2;
+	int_default_map["min_stream_order_to_extract_basins"] = 0;
+	int_default_map["max_stream_order_to_extract_basins"] = 100;
 	bool_default_map["RemovePositiveHilltops"] = true;
 	bool_default_map["RemoveSteepHilltops"] = true;
 	float_default_map["Threshold_Hilltop_Gradient"] = 0.4;
+	bool_default_map["MaskHilltopstoBasins"] = true;
 	
 	// Selecting basins
   int_default_map["threshold_contributing_pixels"] = 1000;
@@ -131,6 +134,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["write_stream_network"] = false;
   bool_default_map["write_basins"] = false;
   bool_default_map["write_hilltops"] = false;
+  bool_default_map["write_hilltop_curvature"] = false;
   bool_default_map["write_hillslope_length"] = false;
   bool_default_map["write_hillslope_gradient"] = false;
   bool_default_map["write_hillslope_relief"] = false;
@@ -149,11 +153,8 @@ int main (int nNumberofArgs,char *argv[])
   map<string,string> this_string_map = LSDPP.get_string_parameters();
   
 	// Now print the parameters for bug checking
-  cout << "PRINT THE PARAMETERS..." << endl;
   LSDPP.print_parameters();
   
-  cout <<"CHeads_file is" << this_string_map["CHeads_file"] << endl;
-    
   // location of the files
   string DATA_DIR =  LSDPP.get_read_path();
   string DEM_ID =  LSDPP.get_read_fname();
@@ -166,51 +167,48 @@ int main (int nNumberofArgs,char *argv[])
   string ChannelSegments_file = LSDPP.get_ChannelSegments_file();
   string Floodplain_file = LSDPP.get_Floodplain_file();
   
-  cout <<"CHeads_file is" << CHeads_file << endl;
-  
-	//load the DEM
-	cout << "\n\tLoading the DEM...";
+  //load the DEM
+	cout << "\tLoading the DEM..." << endl;
 	LSDRaster DEM((DATA_DIR+DEM_ID), RasterExt);	
-	cout << " done.";
 		
 	//Fill the DEM
-	cout << "\n\tFilling DEM...";
-	LSDRaster FilledDEM = DEM.fill(this_float_map["MinSlopeForFill"]);
-	cout << " done.";
+	LSDRaster FilledDEM;
+	if ( this_bool_map["raster_is_filled"] )
+  {
+    cout << "\tDEM already filled." << endl;
+    FilledDEM = DEM;
+  }
+  else
+  {
+    cout << "\tFilling DEM..." << endl;
+	  FilledDEM = DEM.fill(this_float_map["MinSlopeForFill"]);
+	}
 	
 	//Surface fitting to get slope, aspect, curvature and planform curvature
 	static const int Arr[] = {0,1,1,1,1,0,0,0};
 	vector<int> RasterSelection (Arr, Arr + sizeof(Arr) / sizeof(Arr[0]));
-	cout << "\n\tCalculating surface metrics...";
+	cout << "\tCalculating surface metrics..." << endl;
 	vector<LSDRaster> Surfaces = FilledDEM.calculate_polyfit_surface_metrics(this_float_map["WindowRadius"], RasterSelection);
-	cout << " done.";
-	
-	//LSDRaster slope = Surfaces[1];
-	//LSDRaster aspect = Surfaces[2];	 
 
 	// get a flow info object	
-	cout << "\n\tExtracting the drainage network...";
+	cout << "\tExtracting the drainage network..." << endl;
 	LSDFlowInfo FlowInfo(BoundaryConditions,FilledDEM);
-	cout << " done.";
 	
 	// calculate the flow accumulation
-  cout << "\n\tCalculating flow accumulation (in pixels)...";
+  cout << "\tCalculating flow accumulation (in pixels)..." << endl;
   LSDIndexRaster FlowAcc = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
-  cout << " done.";
   
 	// get the channel heads either from file or from a threshold drainage area
   vector<int> sources;
   if (CHeads_file == "NULL" || CHeads_file == "Null" || CHeads_file == "null")
   {
-    cout << "\n\tGetting sources from a threshold of "<< this_int_map["threshold_contributing_pixels"] << " pixels...";
+    cout << "\tGetting sources from a threshold of "<< this_int_map["threshold_contributing_pixels"] << " pixels..." << endl;
     sources = FlowInfo.get_sources_index_threshold(FlowAcc, this_int_map["threshold_contributing_pixels"]);
-    cout << " done.";  
   }
   else
   {
-    cout << "\n\tLoading channel heads from the file: " << DATA_DIR+CHeads_file << endl;
+    cout << "\tLoading channel heads from the file: " << DATA_DIR+CHeads_file << endl;
     sources = FlowInfo.Ingest_Channel_Heads((DATA_DIR+CHeads_file), "csv",2);
-    cout << " done.";  
   }
   
 	//set up the stream network to get index raster for channel mapping
@@ -219,23 +217,20 @@ int main (int nNumberofArgs,char *argv[])
 	
 	if (ChannelSegments_file == "NULL" || ChannelSegments_file == "Null" || ChannelSegments_file == "null")
   {
-    cout << "\n\tGetting stream network from source nodes...";
+    cout << "\tGetting stream network from source nodes..." << endl;
 	  StreamNetwork = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
-    cout << " done.";
   }
   else
   {
-    cout << "\n\tGetting stream network from Channel segments file..." << DATA_DIR+ChannelSegments_file;
+    cout << "\tGetting stream network from Channel segments file... " << DATA_DIR+ChannelSegments_file << endl;
     StreamNetwork = LSDIndexRaster((DATA_DIR+ChannelSegments_file), RasterExt);
-    cout << " done.";
   }
 
   //pad the stream network by a number of pixels
   if (this_int_map["StreamNetworkPadding"] > 0)
   {
-    cout << "\n\tPadding the stream network by" << this_int_map["StreamNetworkPadding"] << "pixels";
+    cout << "\tPadding the stream network by " << this_int_map["StreamNetworkPadding"] << " pixels..." << endl;
     StreamNetwork.PadRaster(this_int_map["StreamNetworkPadding"]);
-    cout << " done.";
   }
 
   //load floodplain and merge with the channel network if required, otherwise the 
@@ -243,11 +238,9 @@ int main (int nNumberofArgs,char *argv[])
   if (Floodplain_file == "NULL" || Floodplain_file == "Null" || Floodplain_file == "null") {}
   else
   {
-    cout << "\n\t" << Floodplain_file << endl;
-    cout << "\n\tCombining the channelnetwork and floodplain masks...";
+    cout << "\tCombining the channelnetwork and floodplain masks..." << endl;
 		LSDIndexRaster Floodplains((Floodplain_file), RasterExt);
 		StreamNetwork.MergeIndexRasters(Floodplains);
-		cout << " done.";
 	}
 	
   //Check to see if a list of junctions for extraction exists
@@ -256,12 +249,11 @@ int main (int nNumberofArgs,char *argv[])
   vector< int > BaseLevelJunctions_Initial;
   if (BaselevelJunctions_file == "NULL" || BaselevelJunctions_file == "Null" || BaselevelJunctions_file == "null" || BaselevelJunctions_file.empty() == true)
   {
-    cout << "No junction file. I am going to select basins for you using an algorithm. " << endl;
+    cout << "\tSelecting basins..." << endl;
     // remove basins drainage from edge if that is what the user wants
     if (this_bool_map["find_complete_basins_in_window"])
     {
-      cout << "I am going to look for basins in a pixel window that are not influended by nodata." << endl;
-      cout << "I am also going to remove any nested basins." << endl;
+      cout << "\tFinding basins not influended by nodata and removing nested basins..." << endl;
       BaseLevelJunctions = JunctionNetwork.Prune_Junctions_By_Contributing_Pixel_Window_Remove_Nested_And_Nodata(FlowInfo, FilledDEM, FlowAcc,
                                               this_int_map["minimum_basin_size_pixels"],this_int_map["maximum_basin_size_pixels"]);
     }
@@ -271,21 +263,21 @@ int main (int nNumberofArgs,char *argv[])
       BaseLevelJunctions_Initial = JunctionNetwork.get_BaseLevelJunctions();
 
       // now prune these by drainage area
-      cout << "Removing basins with fewer than " << this_int_map["minimum_basin_size_pixels"] << " pixels" << endl;
+      cout << "\tRemoving basins with fewer than " << this_int_map["minimum_basin_size_pixels"] << " pixels" << endl;
       BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Area(BaseLevelJunctions_Initial,
                                               FlowInfo, FlowAcc, this_int_map["minimum_basin_size_pixels"]);
-      cout << "Now I have " << BaseLevelJunctions.size() << " baselelvel junctions left. " << endl;
+      cout << "\tNow I have " << BaseLevelJunctions.size() << " baselelvel junctions." << endl;
 
       if (this_bool_map["find_largest_complete_basins"])
       {
-        cout << "I am looking for the largest basin not influenced by nodata within all baselevel nodes." << endl;
+        cout << "\tFinding largest basin not influenced by nodata..." << endl;
         BaseLevelJunctions = JunctionNetwork.Prune_To_Largest_Complete_Basins(BaseLevelJunctions,FlowInfo, FilledDEM, FlowAcc);
       }
       else
       {
         if (this_bool_map["test_drainage_boundaries"])     // now check for edge effects
         {
-          cout << endl << endl << "I am going to remove basins draining to the edge." << endl;
+          cout << endl << endl << "\tRemoving basins draining to the edge." << endl;
           BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions,FlowInfo, FilledDEM);
           //BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge(BaseLevelJunctions,FlowInfo);
         }
@@ -295,20 +287,21 @@ int main (int nNumberofArgs,char *argv[])
   else if (this_bool_map["extract_basins_by_stream_order"])
   {
     //Or just use a list of basins?
-  	cout << "\n\tExtracting baselevel nodes for a strahler stream order of " << this_int_map["stream_order_to_extract_basins"] << "...";BaseLevelJunctions = JunctionNetwork.ExtractBasinJunctionOrder(this_int_map["stream_order_to_extract_basins"], FlowInfo);
-  	cout << " done.";
+  	cout << "\tExtracting baselevel nodes for a strahler stream order of " << this_int_map["stream_order_to_extract_basins"] << "..." << endl;
+  	BaseLevelJunctions = JunctionNetwork.ExtractBasinJunctionOrder(this_int_map["stream_order_to_extract_basins"], FlowInfo);
+
   }
   else
   {
-    cout << "I am attempting to read junctions from a junction list." << endl;
     //specify junctions to work on from a list file
     string JunctionsFile = DATA_DIR+DEM_ID+"_junctions.list";
+
+    cout << "\tReading junctions from a junction list... " << JunctionsFile << endl;
 
     vector<int> JunctionsList;
     ifstream infile(JunctionsFile.c_str());
     if (infile)
     {
-      cout << "Junctions File " << JunctionsFile << " exists" << endl;;
       int n;
       while (infile >> n) BaseLevelJunctions_Initial.push_back(n);
     }
@@ -319,45 +312,87 @@ int main (int nNumberofArgs,char *argv[])
     }
     
     // Now make sure none of the basins drain to the edge
-    cout << "I am pruning junctions that are influenced by the edge of the DEM!" << endl;
+    cout << "\tPruning junctions that drain to the edge of the DEM..." << endl;
     BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions_Initial, FlowInfo, FilledDEM);
   }
 		
 	//get the basins
-	cout << "\n\tExtracting basins...";
+	cout << "\tExtracting basins..." << endl;
 	LSDIndexRaster BasinsRaster = JunctionNetwork.extract_basins_from_junction_vector(BaseLevelJunctions, FlowInfo);
-	cout << " done.";
 
 	// Extract hilltops
-	cout << "\n\tExtracting hilltop network...";
-	LSDRaster Hilltops = JunctionNetwork.ExtractRidges(FlowInfo); 
-  cout << " done.";
+	cout << "\tExtracting hilltop network..." << endl;
+	LSDRaster Hilltops = JunctionNetwork.ExtractRidges(FlowInfo, this_int_map["min_stream_order_to_extract_basins"], this_int_map["max_stream_order_to_extract_basins"]); 
   
-  //get hilltop curvature using filters to remove positive curvatures and steep slopes			 
-  cout << "\n\tGetting hilltop curvature...";
-	LSDRaster CHT = FilledDEM.get_hilltop_curvature(Surfaces[3], Hilltops);
-	cout << " done.";
-	
-	if (this_bool_map["RemovePositiveHilltops"])
-	{
-    cout << "\n\tFiltering out positive hilltop curvature...";	
-	  CHT.remove_positive_values();
-	  cout << " done.";
-	}
-	
-	if (this_bool_map["RemoveSteepHilltops"])
-	{
-	  cout << "\n\tFiltering out hilltops with slopes greater than" << this_float_map["Threshold_Hilltop_Gradient"] << "...";	
-    LSDRaster TempCHT = JunctionNetwork.ExtractHilltops(CHT, Surfaces[1], this_float_map["Threshold_Hilltop_Gradient"]);
-    CHT = TempCHT;
-    cout << " done.";
+  //hilltops
+  if (this_bool_map["write_hilltops"])
+  {
+    string hilltops_raster_name = OUT_DIR+OUT_ID+"_Hilltops1";
+    cout << "\tWriting hilltops to " << hilltops_raster_name << RasterExt << "..." << endl;
+    Hilltops.write_raster(hilltops_raster_name, RasterExt);
+    cout << "done.";
   }
   
+  // Mask to only use hilltops inside basins being analysed
+  if (this_bool_map["MaskHilltopstoBasins"])
+  {
+    cout << "\tMasking hilltops to basins being analysed..." << endl;
+    Hilltops.MaskRaster(BasinsRaster);
+  }
+  
+  //hilltops
+  if (this_bool_map["write_hilltops"])
+  {
+    string hilltops_raster_name = OUT_DIR+OUT_ID+"_Hilltops2";
+    cout << "\tWriting hilltops to " << hilltops_raster_name << RasterExt << "..." << endl;
+    Hilltops.write_raster(hilltops_raster_name, RasterExt);
+    cout << "done.";
+  }
+  
+	if (this_bool_map["RemoveSteepHilltops"])
+	{
+	  cout << "\tFiltering out hilltops with slopes greater than " << this_float_map["Threshold_Hilltop_Gradient"] << "..." << endl;	
+	  string Condition = "<";
+    LSDIndexRaster SteepHilltopsMask = Surfaces[1].Create_Mask(Condition,this_float_map["Threshold_Hilltop_Gradient"]);
+    Hilltops.MaskRaster(SteepHilltopsMask);
+  }
+
+  //hilltops
+  if (this_bool_map["write_hilltops"])
+  {
+    string hilltops_raster_name = OUT_DIR+OUT_ID+"_Hilltops3";
+    cout << "\tWriting hilltops to " << hilltops_raster_name << RasterExt << "..." << endl;
+    Hilltops.write_raster(hilltops_raster_name, RasterExt);
+    cout << "done.";
+  }
+  
+  if (this_bool_map["RemovePositiveHilltops"])
+	{
+	  cout << "\tFiltering out hilltops with positive curvature..." << endl;	
+	  float Zero = 0;
+	  string Condition = "<";
+    LSDIndexRaster NegativeCurvatureMask = Surfaces[3].Create_Mask(Condition,Zero);
+    Hilltops.MaskRaster(NegativeCurvatureMask);
+	}
+	
+	//hilltops
+  if (this_bool_map["write_hilltops"])
+  {
+    string hilltops_raster_name = OUT_DIR+OUT_ID+"_Hilltops4";
+    cout << "\tWriting hilltops to " << hilltops_raster_name << RasterExt << "..." << endl;
+    Hilltops.write_raster(hilltops_raster_name, RasterExt);
+    cout << "done.";
+  }
+	
+  //get hilltop curvature using filters to remove positive curvatures and steep slopes			 
+  cout << "\tGetting hilltop curvature..." << endl;
+	LSDRaster CHT = FilledDEM.get_hilltop_curvature(Surfaces[3], Hilltops);
+		
 	// Run hilltop flow routing 
 	vector<int> Target_Basin_Vector;
-	cout << "\n\tRunning hillslope flow routing...";	
+	cout << "\tRunning hillslope flow routing..." << endl;	
  	vector< Array2D<float> > HFR_Arrays = FlowInfo.HilltopFlowRouting(FilledDEM, Hilltops, Surfaces[1], StreamNetwork, Surfaces[2], (DATA_DIR+DEM_ID), BasinsRaster, Surfaces[4], this_bool_map["print_hillslope_traces"], this_int_map["hillslope_trace_thinning"], this_string_map["hillslope_traces_file"], this_bool_map["hillslope_traces_basin_filter"], Target_Basin_Vector);
- 	cout << "done.";
+ 	cout << "\tDone" << endl;
 
   // Write rasters to file
 
@@ -365,7 +400,7 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["print_fill_raster"])
   {
     string filled_raster_name = OUT_DIR+OUT_ID+"_Fill";
-    cout << "\n\tWriting filled topography to "  << filled_raster_name <<RasterExt;
+    cout << "\tWriting filled topography to "  << filled_raster_name <<RasterExt << endl;
     FilledDEM.write_raster(filled_raster_name,RasterExt);
   }
 
@@ -373,7 +408,7 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["write_hillshade"])
   {
     string hillshade_raster_name = OUT_DIR+OUT_ID+"_Hillshade";
-    cout << "Writing hillshade to " << hillshade_raster_name << RasterExt;
+    cout << "Writing hillshade to " << hillshade_raster_name << RasterExt << endl;
     float hs_azimuth = 315;
     float hs_altitude = 45;
     float hs_z_factor = 1;
@@ -385,7 +420,7 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["write_slope"])
   {
     string slope_raster_name = OUT_DIR+OUT_ID+"_Slope";
-    cout << "\n\tWriting slope to " << slope_raster_name << RasterExt << "...";
+    cout << "\tWriting slope to " << slope_raster_name << RasterExt << "..." << endl;
     Surfaces[1].write_raster((OUT_DIR+OUT_ID+"_Slope"),RasterExt);
     cout << "done.";
   }
@@ -393,7 +428,7 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["write_aspect"])
   {
     string aspect_raster_name = OUT_DIR+OUT_ID+"_Aspect";
-    cout << "\n\tWriting aspect to " << aspect_raster_name << RasterExt << "...";
+    cout << "\tWriting aspect to " << aspect_raster_name << RasterExt << "..." << endl;
     Surfaces[2].write_raster(aspect_raster_name,RasterExt);
     cout << "done.";
   }
@@ -401,7 +436,7 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["write_curvature"])
   {
     string curvature_raster_name = OUT_DIR+OUT_ID+"_Curvature";
-    cout << "\n\tWriting curvature to " << curvature_raster_name << RasterExt << "...";
+    cout << "\tWriting curvature to " << curvature_raster_name << RasterExt << "..." << endl;
     Surfaces[3].write_raster(curvature_raster_name,RasterExt);
     cout << "done.";
   }
@@ -409,7 +444,7 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["write_planform_curvature"])
   {
     string plancurv_raster_name = OUT_DIR+OUT_ID+"_PlanCurv";
-    cout << "\n\tWriting planform curvature to " << plancurv_raster_name << RasterExt << "...";
+    cout << "\tWriting planform curvature to " << plancurv_raster_name << RasterExt << "..." << endl;
     Surfaces[4].write_raster(plancurv_raster_name, RasterExt);
     cout << "done.";
   }
@@ -417,7 +452,7 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["write_stream_network"])
   {
     string stnet_raster_name = OUT_DIR+OUT_ID+"_MaskedStreamNetwork";
-    cout << "\n\tWriting stream newtork mask to " << stnet_raster_name << RasterExt << "...";
+    cout << "\tWriting stream newtork mask to " << stnet_raster_name << RasterExt << "..." << endl;
     StreamNetwork.write_raster(stnet_raster_name, RasterExt);
     cout << "done.";
   }
@@ -425,7 +460,7 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["write_basins"])
   {
     string basins_raster_name = OUT_DIR+OUT_ID+"_Basins";
-    cout << "\n\tWriting basins mask to " << basins_raster_name << RasterExt << "...";
+    cout << "\tWriting basins mask to " << basins_raster_name << RasterExt << "..." << endl;
     BasinsRaster.write_raster(basins_raster_name, RasterExt);
     cout << "done.";
   }
@@ -433,15 +468,23 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["write_hilltops"])
   {
     string hilltops_raster_name = OUT_DIR+OUT_ID+"_Hilltops";
-    cout << "\n\tWriting hilltops to " << hilltops_raster_name << RasterExt << "...";
-    CHT.write_raster(hilltops_raster_name, RasterExt);
+    cout << "\tWriting hilltops to " << hilltops_raster_name << RasterExt << "..." << endl;
+    Hilltops.write_raster(hilltops_raster_name, RasterExt);
+    cout << "done.";
+  }
+  //hilltop curvature
+  if (this_bool_map["write_hilltop_curvature"])
+  {
+    string hilltop_curvature_raster_name = OUT_DIR+OUT_ID+"_HFR_CHT";
+    cout << "\tWriting hilltop curvature to " << hilltop_curvature_raster_name << RasterExt << "..." << endl;
+    Hilltops.write_raster(hilltop_curvature_raster_name, RasterExt);
     cout << "done.";
   }
   //hillslope length raster
   if (this_bool_map["write_hillslope_length"])
   {
     string hillslope_length_raster_name = OUT_DIR+OUT_ID+"_HFR_LH";
-    cout << "\n\tWriting hillslope_lengths to " << hillslope_length_raster_name << RasterExt << "...";
+    cout << "\tWriting hillslope_lengths to " << hillslope_length_raster_name << RasterExt << "..." << endl;
     LSDRaster HFR_LH = CHT.LSDRasterTemplate(HFR_Arrays[1]);
     HFR_LH.write_raster(hillslope_length_raster_name,RasterExt); 
     cout << "done.";
@@ -450,7 +493,7 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["write_hillslope_gradient"])
   {
     string hillslope_gradient_raster_name = OUT_DIR+OUT_ID+"_HFR_SLP";
-    cout << "\n\tWriting hillslope gradients to " << hillslope_gradient_raster_name << RasterExt << "...";
+    cout << "\tWriting hillslope gradients to " << hillslope_gradient_raster_name << RasterExt << "..." << endl;
     LSDRaster HFR_Slope = CHT.LSDRasterTemplate(HFR_Arrays[2]);
     HFR_Slope.write_raster(hillslope_gradient_raster_name,RasterExt);
     cout << "done.";
@@ -459,7 +502,7 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["write_hillslope_relief"])
   {
     string hillslope_relief_raster_name = OUT_DIR+OUT_ID+"_HFR_Relief";
-    cout << "\n\tWriting hillslope relief to " << hillslope_relief_raster_name << RasterExt << "...";
+    cout << "\tWriting hillslope relief to " << hillslope_relief_raster_name << RasterExt << "..." << endl;
     LSDRaster relief = CHT.LSDRasterTemplate(HFR_Arrays[3]);
     relief.write_raster(hillslope_relief_raster_name,RasterExt);
     cout << "done.";
