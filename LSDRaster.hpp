@@ -2089,6 +2089,12 @@ class LSDRaster
   /// @date 27/08/2014
   LSDRaster ExtractByMask(LSDIndexRaster Mask);
 
+  /// @brief Function to update an LSDRaster based on a LSDIndexRaster mask
+  /// @param LSDIndexRaster TheMask
+  /// @author MDH
+  /// @date 26/07/2017
+  void MaskRaster(LSDIndexRaster Mask);
+  
   /// @brief method to locate channel pixels outlined by Lashermes.
   ///
   /// @detail picks departure from gaussian behaviour, then uses this as a threshold to create a binary dataset.

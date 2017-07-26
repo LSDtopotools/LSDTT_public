@@ -10750,7 +10750,7 @@ LSDIndexRaster LSDRaster::Create_Mask(string Condition, float TestValue)
   //declare mask array
   Array2D<int> Mask(NRows,NCols,NoDataValue);
 
-  cout << "Creating Mask: Condition is " << Condition << endl;
+  //cout << "Creating Mask: Condition is " << Condition << endl;
   for (int i=0; i<NRows; ++i)
   {
     for (int j=0; j<NCols; ++j)
@@ -10795,7 +10795,7 @@ LSDRaster LSDRaster::ExtractByMask(LSDIndexRaster Mask)
   {
     for (int j=0; j<NCols; ++j)
     {
-      if (MaskArray[i][j] == 1)
+      if (MaskArray[i][j] > 0)
       {
         MaskedArray[i][j] = RasterData[i][j];
       }
@@ -10803,6 +10803,32 @@ LSDRaster LSDRaster::ExtractByMask(LSDIndexRaster Mask)
   }
   LSDRaster MaskedRaster(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,MaskedArray,GeoReferencingStrings);
   return MaskedRaster;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Extract values by mask and update existing LSDRaster object
+//
+// MDH, 26/7/17
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+void LSDRaster::MaskRaster(LSDIndexRaster Mask)
+{
+  // declare new array
+  Array2D<float> MaskedArray(NRows,NCols,NoDataValue);
+  Array2D<int> MaskArray = Mask.get_RasterData();
+  int NDV = Mask.get_NoDataValue();
+  
+  for (int i=0; i<NRows; ++i)
+  {
+    for (int j=0; j<NCols; ++j)
+    {
+      if (MaskArray[i][j] == NDV)
+      {
+        RasterData[i][j] = NoDataValue;
+      }
+    }
+  }
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
