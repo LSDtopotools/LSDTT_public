@@ -4596,8 +4596,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
   ofs << "X,Y,i,j,hilltop_id,S,R,Lh,BasinID,a,b,StreamID,HilltopSlope,DivergentCount,PlanarCountFlag,E_Star,R_Star,EucDist\n";
 
   //calculate northing and easting
-  for (i=0;i<NRows;++i) northing.push_back(ymax - i*DataResolution - 0.5);
-  for (j=0;j<NCols;++j) easting.push_back(XMinimum + j*DataResolution + 0.5);
+  for (i=0;i<NRows;++i) northing.push_back(ymax - DataResolution*(i - 0.5));
+  for (j=0;j<NCols;++j) easting.push_back(XMinimum + DataResolution*(j + 0.5));
 
   //convert aspects to radians with east as theta = 0/2*pi
   for (i=0; i<NRows; ++i) 
@@ -4659,7 +4659,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
           xi = 0, yi = yo;
           dir = 1;
           east_vec.push_back(easting[b] + 0.5*DataResolution);
-          north_vec.push_back(northing[a] + yo - 0.5*DataResolution);
+          north_vec.push_back(northing[a] + (yo - 0.5)*DataResolution);
           ++b;
           if (yi == 0) yi = 0.00001;
           else if (yi == 1) yi = 1 - 0.00001;
@@ -4672,7 +4672,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
           d = abs(1/(2*cos((PI/2)-theta)));
           xi = xo, yi = 1;
           dir = 2;
-          east_vec.push_back(easting[b] + xo - 0.5*DataResolution);
+          east_vec.push_back(easting[b] + (xo - 0.5)*DataResolution);
           north_vec.push_back(northing[a] - 0.5*DataResolution);
           ++a;
           if (xi == 0) xi = 0.00001;
@@ -4686,7 +4686,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
           xi = 1,  yi = yo;
           dir = 3;
           east_vec.push_back(easting[b] -0.5*DataResolution);
-          north_vec.push_back(northing[a] + yo - 0.5*DataResolution);
+          north_vec.push_back(northing[a] + (yo - 0.5)*DataResolution);
           --b;
           if (yi == 0) yi = 0.00001;
           else if (yi == 1) yi = 1 - 0.00001;
@@ -4698,7 +4698,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
           d = abs(1/(2*cos((PI/2) - theta)));
           xi = xo, yi = 0;
           dir = 4;
-          east_vec.push_back(easting[b] + xo - 0.5*DataResolution);
+          east_vec.push_back(easting[b] + (xo - 0.5)*DataResolution);
           north_vec.push_back(northing[a] + 0.5*DataResolution);
           --a;
           if (xi == 0) xi = 0.00001;
@@ -4757,7 +4757,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
               xi = 0, yi = yo,
               dir = 1;
               east_vec.push_back(easting[b] + 0.5*DataResolution);
-              north_vec.push_back(northing[a] + yo - 0.5*DataResolution);
+              north_vec.push_back(northing[a] + (yo - 0.5)*DataResolution);
               ++b;
               if (xi== 0 && yi == 0) yi = 0.00001;
               else if (xi== 0 && yi == 1) yi = 1 - 0.00001;
@@ -4768,7 +4768,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
               d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
               xi = xo, yi = 1,
               dir = 2;
-              east_vec.push_back(easting[b] + xo - 0.5*DataResolution);
+              east_vec.push_back(easting[b] + (xo - 0.5)*DataResolution);
               north_vec.push_back(northing[a] - 0.5*DataResolution);
               ++a;
               if (xi== 0 && yi == 1) xi = 0.00001;
@@ -4781,7 +4781,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
               xi = 1, yi = yo,
               dir = 3;
               east_vec.push_back(easting[b] -0.5*DataResolution);
-              north_vec.push_back(northing[a] + yo - 0.5*DataResolution);
+              north_vec.push_back(northing[a] + (yo - 0.5)*DataResolution);
               --b;
               if (xi== 1 && yi == 0) yi = 0.00001;
               else if (xi== 1 && yi == 1) yi = 1 - 0.00001;
@@ -4792,7 +4792,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
               d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
               xi = xo, yi = 0,
               dir = 4;
-              east_vec.push_back(easting[b] + xo - 0.5*DataResolution);
+              east_vec.push_back(easting[b] + (xo - 0.5)*DataResolution);
               north_vec.push_back(northing[a] + 0.5*DataResolution);
               --a;
               if (xi == 0 && yi == 0) xi = 0.00001;
@@ -4812,7 +4812,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
                 d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
                 xi = xo, yi = 1-yo;
                 dir = 4;
-                east_vec.push_back(easting[b] + xo - 0.5*DataResolution);
+                east_vec.push_back(easting[b] + (xo - 0.5)*DataResolution);
                 north_vec.push_back(northing[a] + 0.5*DataResolution);
                 --a;
               }
@@ -4822,7 +4822,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
                 d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
                 xi = xo, yi = 1-yo;
                 dir = 2;
-                east_vec.push_back(easting[b] + xo - 0.5*DataResolution);
+                east_vec.push_back(easting[b] + (xo - 0.5)*DataResolution);
                 north_vec.push_back(northing[a] - 0.5*DataResolution);
                 ++a;
               }
@@ -4845,7 +4845,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
                 xi = 1-xo, yi = yo;
                 dir = 1;
                 east_vec.push_back(easting[b] + 0.5*DataResolution);
-                north_vec.push_back(northing[a] + yo - 0.5*DataResolution);
+                north_vec.push_back(northing[a] + (yo - 0.5)*DataResolution);
                 ++b;
               }
               else if (degs_new > 180 && degs_new <= 360) 
@@ -4857,7 +4857,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
                 xi = 1-xo, yi = yo;
                 dir = 3;
                 east_vec.push_back(easting[b] -0.5*DataResolution);
-                north_vec.push_back(northing[a] + yo - 0.5*DataResolution);
+                north_vec.push_back(northing[a] + (yo - 0.5)*DataResolution);
                 --b;
               }
               else 
@@ -4878,7 +4878,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
                 d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
                 xi = xo, yi = 1-yo;
                 dir = 2;
-                east_vec.push_back(easting[b] + xo - 0.5*DataResolution);
+                east_vec.push_back(easting[b] + (xo - 0.5)*DataResolution);
                 north_vec.push_back(northing[a] - 0.5*DataResolution);
                 ++a;
               }
@@ -4890,7 +4890,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
                 d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
                 xi = xo, yi = 1- yo;
                 dir = 4;
-                east_vec.push_back(easting[b] + xo - 0.5*DataResolution);
+                east_vec.push_back(easting[b] + (xo - 0.5)*DataResolution);
                 north_vec.push_back(northing[a] + 0.5*DataResolution);
                 --a;
               }
@@ -4913,7 +4913,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
                 xi = 1-xo, yi = yo;
                 dir = 3;
                 east_vec.push_back(easting[b] -0.5*DataResolution);
-                north_vec.push_back(northing[a] + yo - 0.5*DataResolution);
+                north_vec.push_back(northing[a] + (yo - 0.5)*DataResolution);
                 --b;
               }
               else if (degs_new >= 0 && degs_new < 180)
@@ -4925,7 +4925,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
                 xi = 1-xo, yi = yo;
                 dir = 1;
                 east_vec.push_back(easting[b] + 0.5*DataResolution);
-                north_vec.push_back(northing[a] + yo - 0.5*DataResolution);
+                north_vec.push_back(northing[a] + (yo - 0.5)*DataResolution);
                 ++b;
               }
               else 
@@ -5048,7 +5048,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 	            {
 		            WriteTracesFile.open(OutputFileName.c_str());
                 //write headers to allow pandas dataframe reading
-                if (WriteTracesFile.is_open()) WriteTracesFile << "HilltopID Easting Northing Latitude Longitude Distance Elevation" << endl;
+                if (WriteTracesFile.is_open()) WriteTracesFile << "HilltopID,Easting,Northing,Latitude,Longitude,Distance,Elevation" << endl;
 	            }
 	            WriteTracesFile.close();
               
@@ -5061,15 +5061,15 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 		            for (int v = 0; v < count+1; ++v)
 		            {
                   //get lat long for printing to file
-                  get_lat_and_long_locations(north_vec[v], east_vec[v], latitude, longitude, Converter);
+                  get_lat_and_long_locations(east_vec[v], north_vec[v], latitude, longitude, Converter);
                   
                   if (basin_filter_switch == false)
                   {
-                    WriteTracesFile << ht_count << " " << setiosflags(ios::fixed) << setprecision(10) << east_vec[v] << " " << north_vec[v] << " " << latitude << " " << longitude << " " << length_vec[v] << " " << zeta_vec[v] << endl;
+                    WriteTracesFile << ht_count << "," << setiosflags(ios::fixed) << setprecision(10) << east_vec[v] << "," << north_vec[v] << "," << latitude << "," << longitude << "," << length_vec[v] << "," << zeta_vec[v] << endl;
                   }
                   else if (basin_filter_switch == true && find(Target_Basin_Vector.begin(), Target_Basin_Vector.end(), basin[a][b]) != Target_Basin_Vector.end() && find(Target_Basin_Vector.begin(), Target_Basin_Vector.end(), basin[i][j]) != Target_Basin_Vector.end())
                   {  //is this correct? evaulating to not equal one past the end of the vector should equal that the value is found
-                    WriteTracesFile << ht_count << " " << setiosflags(ios::fixed) << setprecision(10) << east_vec[v] << " " << north_vec[v] << " " << latitude << " " << longitude << " " << length_vec[v] << " " << zeta_vec[v] << endl;
+                    WriteTracesFile << ht_count << "," << setiosflags(ios::fixed) << setprecision(10) << east_vec[v] << "," << north_vec[v] << "," << latitude << "," << longitude << "," << length_vec[v] << "," << zeta_vec[v] << endl;
                   }
                 }
               }
