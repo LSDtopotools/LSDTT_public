@@ -100,7 +100,8 @@ int main (int nNumberofArgs,char *argv[])
 	float_default_map["MinSlopeForFill"] = 0.0001;
 	bool_default_map["raster_is_filled"] = false;
 	float_default_map["WindowRadius"] = 12.;
-
+  bool_default_map["use_Dinf_flow"] = false;
+  
    //Defining hilltops
 	int_default_map["StreamNetworkPadding"] = 0;
 	int_default_map["min_stream_order_to_extract_basins"] = 0;
@@ -189,10 +190,19 @@ int main (int nNumberofArgs,char *argv[])
 	vector<int> RasterSelection (Arr, Arr + sizeof(Arr) / sizeof(Arr[0]));
 	cout << "\tCalculating surface metrics..." << endl;
 	vector<LSDRaster> Surfaces = FilledDEM.calculate_polyfit_surface_metrics(this_float_map["WindowRadius"], RasterSelection);
-
+  LSDRaster Aspect = Surfaces[2];
+  
 	// get a flow info object	
 	cout << "\tExtracting the drainage network..." << endl;
 	LSDFlowInfo FlowInfo(BoundaryConditions,FilledDEM);
+	
+	if (this_bool_map["use_Dinf_flow"])
+	{
+	  //get d infinity flowdirection
+    cout << "\tGetting Dinf flow directions" << endl;
+    Array2D<float> dinf = FilledDEM.D_inf_FlowDir();
+    Aspect = FilledDEM.LSDRasterTemplate(dinf);
+	}
 	
 	// calculate the flow accumulation
   cout << "\tCalculating flow accumulation (in pixels)..." << endl;
@@ -324,31 +334,13 @@ int main (int nNumberofArgs,char *argv[])
 	cout << "\tExtracting hilltop network..." << endl;
 	LSDRaster Hilltops = JunctionNetwork.ExtractRidges(FlowInfo, this_int_map["min_stream_order_to_extract_basins"], this_int_map["max_stream_order_to_extract_basins"]); 
   
-  //hilltops
-  if (this_bool_map["write_hilltops"])
-  {
-    string hilltops_raster_name = OUT_DIR+OUT_ID+"_Hilltops1";
-    cout << "\tWriting hilltops to " << hilltops_raster_name << RasterExt << "..." << endl;
-    Hilltops.write_raster(hilltops_raster_name, RasterExt);
-    cout << "done.";
-  }
-  
   // Mask to only use hilltops inside basins being analysed
   if (this_bool_map["MaskHilltopstoBasins"])
   {
     cout << "\tMasking hilltops to basins being analysed..." << endl;
     Hilltops.MaskRaster(BasinsRaster);
   }
-  
-  //hilltops
-  if (this_bool_map["write_hilltops"])
-  {
-    string hilltops_raster_name = OUT_DIR+OUT_ID+"_Hilltops2";
-    cout << "\tWriting hilltops to " << hilltops_raster_name << RasterExt << "..." << endl;
-    Hilltops.write_raster(hilltops_raster_name, RasterExt);
-    cout << "done.";
-  }
-  
+   
 	if (this_bool_map["RemoveSteepHilltops"])
 	{
 	  cout << "\tFiltering out hilltops with slopes greater than " << this_float_map["Threshold_Hilltop_Gradient"] << "..." << endl;	
@@ -357,15 +349,6 @@ int main (int nNumberofArgs,char *argv[])
     Hilltops.MaskRaster(SteepHilltopsMask);
   }
 
-  //hilltops
-  if (this_bool_map["write_hilltops"])
-  {
-    string hilltops_raster_name = OUT_DIR+OUT_ID+"_Hilltops3";
-    cout << "\tWriting hilltops to " << hilltops_raster_name << RasterExt << "..." << endl;
-    Hilltops.write_raster(hilltops_raster_name, RasterExt);
-    cout << "done.";
-  }
-  
   if (this_bool_map["RemovePositiveHilltops"])
 	{
 	  cout << "\tFiltering out hilltops with positive curvature..." << endl;	
@@ -374,15 +357,6 @@ int main (int nNumberofArgs,char *argv[])
     LSDIndexRaster NegativeCurvatureMask = Surfaces[3].Create_Mask(Condition,Zero);
     Hilltops.MaskRaster(NegativeCurvatureMask);
 	}
-	
-	//hilltops
-  if (this_bool_map["write_hilltops"])
-  {
-    string hilltops_raster_name = OUT_DIR+OUT_ID+"_Hilltops4";
-    cout << "\tWriting hilltops to " << hilltops_raster_name << RasterExt << "..." << endl;
-    Hilltops.write_raster(hilltops_raster_name, RasterExt);
-    cout << "done.";
-  }
 	
   //get hilltop curvature using filters to remove positive curvatures and steep slopes			 
   cout << "\tGetting hilltop curvature..." << endl;
