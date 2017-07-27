@@ -692,6 +692,43 @@ void  LSDFlowInfo::get_lat_and_long_locations(int row, int col, double& lat,
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
+// Function to convert X and Y data to a lat and long coordinate
+// For use with hillslope traces where X and Y may not coincide with nodes
+// MDH 27/7/17
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void  LSDFlowInfo::get_lat_and_long_locations(double X, double Y, double& lat,
+                   double& longitude, LSDCoordinateConverterLLandUTM Converter)
+{
+  // get the UTM zone of the node
+  int UTM_zone;
+  bool is_North;
+  get_UTM_information(UTM_zone, is_North);
+  //cout << endl << endl << "Line 1034, UTM zone is: " << UTM_zone << endl;
+
+
+  if(UTM_zone == NoDataValue)
+  {
+    lat = NoDataValue;
+    longitude = NoDataValue;
+  }
+  else
+  {
+    // set the default ellipsoid to WGS84
+    int eId = 22;
+
+    // use the converter to convert to lat and long
+    double Lat,Long;
+    Converter.UTMtoLL(eId, Y, X, UTM_zone, is_North, Lat, Long);
+
+    lat = Lat;
+    longitude = Long;
+  }
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -4541,13 +4578,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 
   //vector to store the output data arrays in one vector that can be returned
   vector< Array2D<float> > OutputArrays;
-
-  int vec_size = 1000000;
-
-  Array1D<double> easting(NCols);
-  Array1D<double> northing(NRows);
-  Array1D<double> east_vec(vec_size);
-  Array1D<double> north_vec(vec_size);
+  vector<double> easting, northing, east_vec, north_vec, zeta_vec, length_vec, empty_vec;
 
   ofstream ofs;
 
@@ -4565,14 +4596,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
   ofs << "X,Y,i,j,hilltop_id,S,R,Lh,BasinID,a,b,StreamID,HilltopSlope,DivergentCount,PlanarCountFlag,E_Star,R_Star,EucDist\n";
 
   //calculate northing and easting
-  for (i=0;i<NRows;++i)
-  {
-    northing[i] = ymax - i*DataResolution - 0.5;
-  }
-  for (j=0;j<NCols;++j)
-  {
-    easting[j] = XMinimum + j*DataResolution + 0.5;
-  }
+  for (i=0;i<NRows;++i) northing.push_back(ymax - i*DataResolution - 0.5);
+  for (j=0;j<NCols;++j) easting.push_back(XMinimum + j*DataResolution + 0.5);
 
   //convert aspects to radians with east as theta = 0/2*pi
   for (i=0; i<NRows; ++i) 
@@ -4615,8 +4640,13 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
         a = i;
         b = j;
         path[a][b] += 1;
-        east_vec[0] = easting[b];
-        north_vec[0] = northing[a];
+        east_vec = empty_vec;
+        north_vec = empty_vec;
+        east_vec.push_back(easting[b]);
+        north_vec.push_back(northing[a]);
+        zeta_vec.push_back(zeta[a][b]);
+        length_vec.push_back(length);
+        
         s_local = slope[a][b];
 
         //test direction, calculate outlet coordinates and update indicies
@@ -4628,8 +4658,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
           d = abs(1/(2*cos(theta)));
           xi = 0, yi = yo;
           dir = 1;
-          east_vec[count] = easting[b] + 0.5*DataResolution;
-          north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+          east_vec.push_back(easting[b] + 0.5*DataResolution);
+          north_vec.push_back(northing[a] + yo - 0.5*DataResolution);
           ++b;
           if (yi == 0) yi = 0.00001;
           else if (yi == 1) yi = 1 - 0.00001;
@@ -4642,8 +4672,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
           d = abs(1/(2*cos((PI/2)-theta)));
           xi = xo, yi = 1;
           dir = 2;
-          east_vec[count] = easting[b] + xo - 0.5*DataResolution;
-          north_vec[count] = northing[a] - 0.5*DataResolution;
+          east_vec.push_back(easting[b] + xo - 0.5*DataResolution);
+          north_vec.push_back(northing[a] - 0.5*DataResolution);
           ++a;
           if (xi == 0) xi = 0.00001;
           else if (xi == 1) xi = 1 - 0.00001;
@@ -4655,8 +4685,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
           d = abs(1/(2*cos(theta)));
           xi = 1,  yi = yo;
           dir = 3;
-          east_vec[count] = easting[b] -0.5*DataResolution;
-          north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+          east_vec.push_back(easting[b] -0.5*DataResolution);
+          north_vec.push_back(northing[a] + yo - 0.5*DataResolution);
           --b;
           if (yi == 0) yi = 0.00001;
           else if (yi == 1) yi = 1 - 0.00001;
@@ -4668,8 +4698,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
           d = abs(1/(2*cos((PI/2) - theta)));
           xi = xo, yi = 0;
           dir = 4;
-          east_vec[count] = easting[b] + xo - 0.5*DataResolution;
-          north_vec[count] = northing[a] + 0.5*DataResolution;
+          east_vec.push_back(easting[b] + xo - 0.5*DataResolution);
+          north_vec.push_back(northing[a] + 0.5*DataResolution);
           --a;
           if (xi == 0) xi = 0.00001;
           else if (xi == 1) xi = 1 - 0.00001;
@@ -4679,11 +4709,15 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
           cout << "FATAL ERROR, Kinematic routing algorithm enountered null aspect value" << endl;
           exit(EXIT_FAILURE);
         }
-
+        
         //collect slopes and totals weighted by path length
         length += d;
         s_local = slope[a][b];
-
+        
+        //update elevation length vectors
+        zeta_vec.push_back(zeta[a][b]);
+        length_vec.push_back(length*DataResolution);
+        
         //continue trace until a stream node is encountered
         while (flag == true && a > 0 && a < NRows-1 && b > 0 && b < NCols-1)
         {   //added boudary checking to catch cells which flow off the  edge of the DEM tile.
@@ -4722,8 +4756,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
               d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
               xi = 0, yi = yo,
               dir = 1;
-              east_vec[count] = easting[b] + 0.5*DataResolution;
-              north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+              east_vec.push_back(easting[b] + 0.5*DataResolution);
+              north_vec.push_back(northing[a] + yo - 0.5*DataResolution);
               ++b;
               if (xi== 0 && yi == 0) yi = 0.00001;
               else if (xi== 0 && yi == 1) yi = 1 - 0.00001;
@@ -4734,8 +4768,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
               d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
               xi = xo, yi = 1,
               dir = 2;
-              east_vec[count] = easting[b] + xo - 0.5*DataResolution;
-              north_vec[count] = northing[a] - 0.5*DataResolution;
+              east_vec.push_back(easting[b] + xo - 0.5*DataResolution);
+              north_vec.push_back(northing[a] - 0.5*DataResolution);
               ++a;
               if (xi== 0 && yi == 1) xi = 0.00001;
               else if (xi== 1 && yi == 1) xi = 1 - 0.00001;
@@ -4746,8 +4780,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
               d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
               xi = 1, yi = yo,
               dir = 3;
-              east_vec[count] = easting[b] -0.5*DataResolution;
-              north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+              east_vec.push_back(easting[b] -0.5*DataResolution);
+              north_vec.push_back(northing[a] + yo - 0.5*DataResolution);
               --b;
               if (xi== 1 && yi == 0) yi = 0.00001;
               else if (xi== 1 && yi == 1) yi = 1 - 0.00001;
@@ -4758,8 +4792,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
               d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
               xi = xo, yi = 0,
               dir = 4;
-              east_vec[count] = easting[b] + xo - 0.5*DataResolution;
-              north_vec[count] = northing[a] + 0.5*DataResolution;
+              east_vec.push_back(easting[b] + xo - 0.5*DataResolution);
+              north_vec.push_back(northing[a] + 0.5*DataResolution);
               --a;
               if (xi == 0 && yi == 0) xi = 0.00001;
               else if (xi== 1 && yi == 0) xi = 1 - 0.00001;
@@ -4778,8 +4812,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
                 d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
                 xi = xo, yi = 1-yo;
                 dir = 4;
-                east_vec[count] = easting[b] + xo - 0.5*DataResolution;
-                north_vec[count] = northing[a] + 0.5*DataResolution;
+                east_vec.push_back(easting[b] + xo - 0.5*DataResolution);
+                north_vec.push_back(northing[a] + 0.5*DataResolution);
                 --a;
               }
               else if (degs_new > 90 && degs_new < 270) {  //secondary component is south
@@ -4788,8 +4822,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
                 d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
                 xi = xo, yi = 1-yo;
                 dir = 2;
-                east_vec[count] = easting[b] + xo - 0.5*DataResolution;
-                north_vec[count] = northing[a] - 0.5*DataResolution;
+                east_vec.push_back(easting[b] + xo - 0.5*DataResolution);
+                north_vec.push_back(northing[a] - 0.5*DataResolution);
                 ++a;
               }
               else
@@ -4810,8 +4844,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
                 d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
                 xi = 1-xo, yi = yo;
                 dir = 1;
-                east_vec[count] = easting[b] + 0.5*DataResolution;
-                north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+                east_vec.push_back(easting[b] + 0.5*DataResolution);
+                north_vec.push_back(northing[a] + yo - 0.5*DataResolution);
                 ++b;
               }
               else if (degs_new > 180 && degs_new <= 360) 
@@ -4822,8 +4856,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
                 d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
                 xi = 1-xo, yi = yo;
                 dir = 3;
-                east_vec[count] = easting[b] -0.5*DataResolution;
-                north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+                east_vec.push_back(easting[b] -0.5*DataResolution);
+                north_vec.push_back(northing[a] + yo - 0.5*DataResolution);
                 --b;
               }
               else 
@@ -4844,8 +4878,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
                 d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
                 xi = xo, yi = 1-yo;
                 dir = 2;
-                east_vec[count] = easting[b] + xo - 0.5*DataResolution;
-                north_vec[count] = northing[a] - 0.5*DataResolution;
+                east_vec.push_back(easting[b] + xo - 0.5*DataResolution);
+                north_vec.push_back(northing[a] - 0.5*DataResolution);
                 ++a;
               }
               else if (degs_new > 270 || degs_new < 90) 
@@ -4856,8 +4890,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
                 d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
                 xi = xo, yi = 1- yo;
                 dir = 4;
-                east_vec[count] = easting[b] + xo - 0.5*DataResolution;
-                north_vec[count] = northing[a] + 0.5*DataResolution;
+                east_vec.push_back(easting[b] + xo - 0.5*DataResolution);
+                north_vec.push_back(northing[a] + 0.5*DataResolution);
                 --a;
               }
               else
@@ -4878,8 +4912,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
                 d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
                 xi = 1-xo, yi = yo;
                 dir = 3;
-                east_vec[count] = easting[b] -0.5*DataResolution;
-                north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+                east_vec.push_back(easting[b] -0.5*DataResolution);
+                north_vec.push_back(northing[a] + yo - 0.5*DataResolution);
                 --b;
               }
               else if (degs_new >= 0 && degs_new < 180)
@@ -4890,8 +4924,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
                 d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
                 xi = 1-xo, yi = yo;
                 dir = 1;
-                east_vec[count] = easting[b] + 0.5*DataResolution;
-                north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+                east_vec.push_back(easting[b] + 0.5*DataResolution);
+                north_vec.push_back(northing[a] + yo - 0.5*DataResolution);
                 ++b;
               }
               else 
@@ -4914,6 +4948,9 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
           }
           degs = degs_new;
 
+          zeta_vec.push_back(zeta[a][b]);
+          length_vec.push_back(length*DataResolution);
+          
           // test for plan curvature here and set a flag if flow is divergent or convergent but continue trace regardless
           // The larger the counter the more convergent or divergent the trace is
           if (abs(PlanCurvature.get_data_element(a,b)) > (0.001))
@@ -4992,7 +5029,11 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
           {
             if (hilltops[i][j] != NoDataValue) // && skip_trace == false)
             { //check that the current i,j tuple corresponds to a hilltop, ie there is actually a trace to write to file, and check that the trace was valid.
-
+              
+              //declare some params for lat long conversion
+              double latitude,longitude;
+              LSDCoordinateConverterLLandUTM Converter;
+              
 	            //create the output filename from the user supplied path
               ofstream pathwriter;
               string OutputFileName = Prefix+"_hillslope_traces.csv";
@@ -5007,7 +5048,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 	            {
 		            WriteTracesFile.open(OutputFileName.c_str());
                 //write headers to allow pandas dataframe reading
-                if (WriteTracesFile.is_open()) WriteTracesFile << "HilltopID Easting Northing DivergentCountFlag Length PlanarCountFlag E_Star R_Star Euclidean" << endl;
+                if (WriteTracesFile.is_open()) WriteTracesFile << "HilltopID Easting Northing Latitude Longitude Distance Elevation" << endl;
 	            }
 	            WriteTracesFile.close();
               
@@ -5018,14 +5059,17 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 	            if (WriteTracesFile.is_open())
 	            {
 		            for (int v = 0; v < count+1; ++v)
-                {
+		            {
+                  //get lat long for printing to file
+                  get_lat_and_long_locations(north_vec[v], east_vec[v], latitude, longitude, Converter);
+                  
                   if (basin_filter_switch == false)
                   {
-                    WriteTracesFile << ht_count << " " << setiosflags(ios::fixed) << setprecision(7) << east_vec[v] << " " << north_vec[v] << " " << DivergentCountFlag << " " << length << " " << PlanarCountFlag << " " << E_Star << " " << R_Star << " " << EucDist << endl;
+                    WriteTracesFile << ht_count << " " << setiosflags(ios::fixed) << setprecision(10) << east_vec[v] << " " << north_vec[v] << " " << latitude << " " << longitude << " " << length_vec[v] << " " << zeta_vec[v] << endl;
                   }
                   else if (basin_filter_switch == true && find(Target_Basin_Vector.begin(), Target_Basin_Vector.end(), basin[a][b]) != Target_Basin_Vector.end() && find(Target_Basin_Vector.begin(), Target_Basin_Vector.end(), basin[i][j]) != Target_Basin_Vector.end())
                   {  //is this correct? evaulating to not equal one past the end of the vector should equal that the value is found
-                    WriteTracesFile << ht_count << " " << setiosflags(ios::fixed) << setprecision(7) << east_vec[v] << " " << north_vec[v] << " " << DivergentCountFlag << " " << length << " " << PlanarCountFlag << " " << E_Star << " " << R_Star << " " << EucDist << endl;
+                    WriteTracesFile << ht_count << " " << setiosflags(ios::fixed) << setprecision(10) << east_vec[v] << " " << north_vec[v] << " " << latitude << " " << longitude << " " << length_vec[v] << " " << zeta_vec[v] << endl;
                   }
                 }
               }

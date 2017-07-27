@@ -168,6 +168,22 @@ class LSDFlowInfo
   void get_lat_and_long_locations(int row, int col, double& lat,
                   double& longitude, LSDCoordinateConverterLLandUTM Converter);
 
+  /// @brief a function to get the lat and long of a location provided as northing and easting
+  /// @detail Assumes WGS84 ellipsiod
+  /// @param X the Easting of the location
+  /// @param Y the Northing of the location
+  /// @param lat the latitude of the node (in decimal degrees, replaced by function)
+  ///  Note: this is a double, because a float does not have sufficient precision
+  ///  relative to a UTM location (which is in metres)
+  /// @param long the longitude of the node (in decimal degrees, replaced by function)
+  ///  Note: this is a double, because a float does not have sufficient precision
+  ///  relative to a UTM location (which is in metres)
+  /// @param Converter a converter object (from LSDShapeTools)
+  /// @author MDH
+  /// @date 27/7/2017
+  void  get_lat_and_long_locations(double X, double Y, double& lat,
+                   double& longitude, LSDCoordinateConverterLLandUTM Converter);
+                   
   /// @brief this check to see if a point is within the raster
   /// @param X_coordinate the x location of the point
   /// @param Y_coordinate the y location of the point
