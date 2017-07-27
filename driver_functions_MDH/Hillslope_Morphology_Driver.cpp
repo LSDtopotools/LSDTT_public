@@ -391,7 +391,8 @@ int main (int nNumberofArgs,char *argv[])
 	// Run hilltop flow routing 
 	vector<int> Target_Basin_Vector;
 	cout << "\tRunning hillslope flow routing..." << endl;	
- 	vector< Array2D<float> > HFR_Arrays = FlowInfo.HilltopFlowRouting(FilledDEM, Hilltops, Surfaces[1], StreamNetwork, Surfaces[2], (DATA_DIR+DEM_ID), BasinsRaster, Surfaces[4], this_bool_map["print_hillslope_traces"], this_int_map["hillslope_trace_thinning"], this_string_map["hillslope_traces_file"], this_bool_map["hillslope_traces_basin_filter"], Target_Basin_Vector);
+	string HillslopeTracesFolder = DATA_DIR;
+ 	vector< Array2D<float> > HFR_Arrays = FlowInfo.HilltopFlowRouting(FilledDEM, Hilltops, Surfaces[1], StreamNetwork, Surfaces[2], (DATA_DIR+DEM_ID), BasinsRaster, Surfaces[4], this_bool_map["print_hillslope_traces"], this_int_map["hillslope_trace_thinning"], HillslopeTracesFolder, this_bool_map["hillslope_traces_basin_filter"], Target_Basin_Vector);
  	cout << "\tDone" << endl;
 
   // Write rasters to file

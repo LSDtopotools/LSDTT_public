@@ -4765,260 +4765,276 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
               else if (xi== 1 && yi == 0) xi = 1 - 0.00001;
             }
           }
+          else
+          {
+            // ROUTE ALONG EDGES
+            if (dir  == 1) 
+            {
+              if (degs_new <= 90 || degs_new >= 270)
+              { 
+                //secondary compenent of flow is north
+                xo = 0.00001, yo = 1;
+                s_edge = abs(s_local*sin(theta));
+                d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+                xi = xo, yi = 1-yo;
+                dir = 4;
+                east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+                north_vec[count] = northing[a] + 0.5*DataResolution;
+                --a;
+              }
+              else if (degs_new > 90 && degs_new < 270) {  //secondary component is south
+                xo = 0.00001, yo = 0;
+                s_edge = abs(s_local*sin((PI/2)-theta));
+                d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+                xi = xo, yi = 1-yo;
+                dir = 2;
+                east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+                north_vec[count] = northing[a] - 0.5*DataResolution;
+                ++a;
+              }
+              else
+              {
+                cout << "Flow unable to route N or S " << endl; //something has gone very wrong...
+                cout << "Trace skipped.\n" << endl;
+                skip_trace = true;
+                //exit(EXIT_FAILURE);
+              }
+            }
+            else if (dir == 2) 
+            {
+              if (degs_new >= 0 && degs_new <= 180) 
+              { 
+                //secondary component is East
+                xo = 1, yo = 1-0.00001;
+                s_edge = abs(s_local*sin((2/PI)-theta));
+                d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+                xi = 1-xo, yi = yo;
+                dir = 1;
+                east_vec[count] = easting[b] + 0.5*DataResolution;
+                north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+                ++b;
+              }
+              else if (degs_new > 180 && degs_new <= 360) 
+              {
+                //secondary component is West
+                xo = 0, yo = 1-0.00001;
+                s_edge = abs(s_local*sin(theta));
+                d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+                xi = 1-xo, yi = yo;
+                dir = 3;
+                east_vec[count] = easting[b] -0.5*DataResolution;
+                north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+                --b;
+              }
+              else 
+              {
+                cout << "Flow unable to route E or W" << endl; //something has gone very wrong...
+                cout << "Trace skipped.\n" << endl;
+                skip_trace = true;
+                            //exit(EXIT_FAILURE);
+              }
+            }
+            else if (dir == 3) 
+            {
+              if   (degs_new >= 90 && degs_new <= 270) 
+              {
+                //secondary component is South
+                xo = 1-0.00001, yo = 0;
+                s_edge = abs(s_local*sin(theta));
+                d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+                xi = xo, yi = 1-yo;
+                dir = 2;
+                east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+                north_vec[count] = northing[a] - 0.5*DataResolution;
+                ++a;
+              }
+              else if (degs_new > 270 || degs_new < 90) 
+              {
+                //secondary component is North
+                xo = 1-0.00001, yo = 1;
+                s_edge = abs(s_local*sin((2/PI) - theta));
+                d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+                xi = xo, yi = 1- yo;
+                dir = 4;
+                east_vec[count] = easting[b] + xo - 0.5*DataResolution;
+                north_vec[count] = northing[a] + 0.5*DataResolution;
+                --a;
+              }
+              else
+              {
+                cout << "Flow unable to route N or S" << endl;  //something has gone very wrong...
+                cout << "Trace skipped.\n" << endl;
+                skip_trace = true;
+                          //exit(EXIT_FAILURE);
+              }
+            }
+            else if (dir == 4) 
+            {
+              if   (degs_new >= 180 && degs_new <= 360)
+              {
+                //secondary component is West
+                xo = 0, yo = 0.00001;
+                s_edge = abs(s_local*sin((PI/2) - theta));
+                d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+                xi = 1-xo, yi = yo;
+                dir = 3;
+                east_vec[count] = easting[b] -0.5*DataResolution;
+                north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+                --b;
+              }
+              else if (degs_new >= 0 && degs_new < 180)
+              {
+                //secondary component is East
+                xo = 1, yo = 0.00001;
+                s_edge = abs(s_local*sin(theta));
+                d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
+                xi = 1-xo, yi = yo;
+                dir = 1;
+                east_vec[count] = easting[b] + 0.5*DataResolution;
+                north_vec[count] = northing[a] + yo - 0.5*DataResolution;
+                ++b;
+              }
+              else 
+              {
+                cout << "Flow unable to route E or W" << endl; //something has gone very wrong...
+                cout << "Trace skipped.\n" << endl;
+                skip_trace = true;
+                            //exit(EXIT_FAILURE);
+              }
+            }
+          }
+
+          if (path[a][b] < 1)
+          {  // only update length on 'first slosh'
+            length += d;
+          }
+          else if (path[a][b] >= 3)
+          { //update the skip trace flag so we can categorise each trace
+             skip_trace = true;
+          }
+          degs = degs_new;
+
+          // test for plan curvature here and set a flag if flow is divergent or convergent but continue trace regardless
+          // The larger the counter the more convergent or divergent the trace is
+          if (abs(PlanCurvature.get_data_element(a,b)) > (0.001))
+          {
+            ++DivergentCountFlag;
+          }
+          else 
+          {
+            ++PlanarCountFlag;
+          }
+
+          if (a == 0 || b == 0 ||  a == NRows-1 || b == NCols-1 || stnet[a][b] != NoDataValue || stnet[a-1][b-1] != NoDataValue || stnet[a][b-1] != NoDataValue || stnet[a+1][b-1] != NoDataValue || stnet[a+1][b] != NoDataValue || stnet[a+1][b+1] != NoDataValue || stnet[a][b+1] != NoDataValue || stnet[a-1][b+1] != NoDataValue || stnet[a-1][b] != NoDataValue || path[a][b] >= 3 || skip_trace == true) flag = false;
+        }
+  
+        if (a == 0 || b == 0 ||  a == NRows-1 || b == NCols-1 )
+        {
+          // avoid going out of bounds.
+
+          // this is caused by having a hilltop on the first row or col away from the border
+          // eg i or j == 1 or nrows/ncols - 2 and flowing towards the edge.
+          // can fix with a test here for if streamnet[a][b] != NDV otherwise trace will fail *correctly*
+
+          ++edge_count;
+
+        }
         else
         {
-          // ROUTE ALONG EDGES
-          if (dir  == 1) 
+        //if trace finished at a stream, print hillslope info.
+          if (stnet[a][b] != NoDataValue || stnet[a-1][b-1] != NoDataValue || stnet[a][b-1] != NoDataValue || stnet[a+1][b-1] != NoDataValue || stnet[a+1][b] != NoDataValue || stnet[a+1][b+1] != NoDataValue || stnet[a][b+1] != NoDataValue || stnet[a-1][b+1] != NoDataValue || stnet[a-1][b] != NoDataValue)
           {
-            if (degs_new <= 90 || degs_new >= 270)
-            { 
-              //secondary compenent of flow is north
-              xo = 0.00001, yo = 1;
-              s_edge = abs(s_local*sin(theta));
-              d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
-              xi = xo, yi = 1-yo;
-              dir = 4;
-              east_vec[count] = easting[b] + xo - 0.5*DataResolution;
-              north_vec[count] = northing[a] + 0.5*DataResolution;
-              --a;
-            }
-            else if (degs_new > 90 && degs_new < 270) {  //secondary component is south
-              xo = 0.00001, yo = 0;
-              s_edge = abs(s_local*sin((PI/2)-theta));
-              d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
-              xi = xo, yi = 1-yo;
-              dir = 2;
-              east_vec[count] = easting[b] + xo - 0.5*DataResolution;
-              north_vec[count] = northing[a] - 0.5*DataResolution;
-              ++a;
-            }
-            else
+            path[a][b] = 1;
+
+            ++s_count;
+
+            X = XMinimum + j*DataResolution;
+            Y = YMinimum - (NRows-i)*DataResolution;
+            relief = zeta[i][j] - zeta[a][b];
+            mean_slope = relief/(length * DataResolution);
+
+            // update arrays with the current metrics
+            RoutedHilltops[i][j] = 1;
+            HillslopeLength_Array[i][j] = (length * DataResolution);
+            Slope_Array[i][j] = mean_slope;
+            Relief_Array[i][j] = relief;
+
+            //calculate an E* and R* Value assuming S_c of 0.8
+            E_Star = (2.0 * abs(hilltops[i][j])*(length*DataResolution))/0.8;
+            R_Star = relief/((length*DataResolution)*0.8);
+
+            //calulate the Euclidean distance between the start and end points of the trace
+            EucDist = sqrt((pow(((i+0.5)-(a+yo)),2) + pow(((j+0.5)-(b+xo)),2))) * DataResolution;
+
+    
+            if (relief > 0)
             {
-              cout << "Flow unable to route N or S " << endl; //something has gone very wrong...
-              cout << "Trace skipped.\n" << endl;
-              skip_trace = true;
-              //exit(EXIT_FAILURE);
-            }
-          }
-          else if (dir == 2) 
-          {
-            if (degs_new >= 0 && degs_new <= 180) 
-            { 
-              //secondary component is East
-              xo = 1, yo = 1-0.00001;
-              s_edge = abs(s_local*sin((2/PI)-theta));
-              d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
-              xi = 1-xo, yi = yo;
-              dir = 1;
-              east_vec[count] = easting[b] + 0.5*DataResolution;
-              north_vec[count] = northing[a] + yo - 0.5*DataResolution;
-              ++b;
-            }
-            else if (degs_new > 180 && degs_new <= 360) 
-            {
-              //secondary component is West
-              xo = 0, yo = 1-0.00001;
-              s_edge = abs(s_local*sin(theta));
-              d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
-              xi = 1-xo, yi = yo;
-              dir = 3;
-              east_vec[count] = easting[b] -0.5*DataResolution;
-              north_vec[count] = northing[a] + yo - 0.5*DataResolution;
-              --b;
+              ofs << X << "," << Y << "," << i << "," << j << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "," << a << "," << b << "," << stnet[a][b] << "," << slope[i][j] << "," << DivergentCountFlag << "," << PlanarCountFlag << "," << E_Star << "," << R_Star << "," << EucDist << "\n";
             }
             else 
             {
-              cout << "Flow unable to route E or W" << endl; //something has gone very wrong...
-              cout << "Trace skipped.\n" << endl;
-              skip_trace = true;
-                          //exit(EXIT_FAILURE);
+              ++neg_count;
             }
           }
-          else if (dir == 3) 
+          else
+          {  
+            //unable to route using aspects
+            //this will encompass skipped traces
+            ofs << "fail: " << a << " " << b << " " << i << " " << j << endl;
+            ++ns_count;
+          }
+        }
+
+        //This block checks the various path printing options and writes the data out accordingly
+        if (print_paths_switch == true)
+        {
+          if (ht_count % thinning == 0)
           {
-            if   (degs_new >= 90 && degs_new <= 270) 
-            {
-              //secondary component is South
-              xo = 1-0.00001, yo = 0;
-              s_edge = abs(s_local*sin(theta));
-              d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
-              xi = xo, yi = 1-yo;
-              dir = 2;
-              east_vec[count] = easting[b] + xo - 0.5*DataResolution;
-              north_vec[count] = northing[a] - 0.5*DataResolution;
-              ++a;
-            }
-            else if (degs_new > 270 || degs_new < 90) 
-            {
-              //secondary component is North
-              xo = 1-0.00001, yo = 1;
-              s_edge = abs(s_local*sin((2/PI) - theta));
-              d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
-              xi = xo, yi = 1- yo;
-              dir = 4;
-              east_vec[count] = easting[b] + xo - 0.5*DataResolution;
-              north_vec[count] = northing[a] + 0.5*DataResolution;
-              --a;
-            }
-            else
-            {
-              cout << "Flow unable to route N or S" << endl;  //something has gone very wrong...
-              cout << "Trace skipped.\n" << endl;
-              skip_trace = true;
-                        //exit(EXIT_FAILURE);
-            }
-          }
-          else if (dir == 4) 
-          {
-            if   (degs_new >= 180 && degs_new <= 360)
-            {
-              //secondary component is West
-              xo = 0, yo = 0.00001;
-              s_edge = abs(s_local*sin((PI/2) - theta));
-              d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
-              xi = 1-xo, yi = yo;
-              dir = 3;
-              east_vec[count] = easting[b] -0.5*DataResolution;
-              north_vec[count] = northing[a] + yo - 0.5*DataResolution;
-              --b;
-            }
-            else if (degs_new >= 0 && degs_new < 180)
-            {
-              //secondary component is East
-              xo = 1, yo = 0.00001;
-              s_edge = abs(s_local*sin(theta));
-              d = sqrt((pow((xo-xi),2) + pow((yo-yi),2)));
-              xi = 1-xo, yi = yo;
-              dir = 1;
-              east_vec[count] = easting[b] + 0.5*DataResolution;
-              north_vec[count] = northing[a] + yo - 0.5*DataResolution;
-              ++b;
-            }
-            else 
-            {
-              cout << "Flow unable to route E or W" << endl; //something has gone very wrong...
-              cout << "Trace skipped.\n" << endl;
-              skip_trace = true;
-                          //exit(EXIT_FAILURE);
+            if (hilltops[i][j] != NoDataValue) // && skip_trace == false)
+            { //check that the current i,j tuple corresponds to a hilltop, ie there is actually a trace to write to file, and check that the trace was valid.
+
+	            //create the output filename from the user supplied path
+              ofstream pathwriter;
+              string OutputFileName = Prefix+"_hillslope_traces.csv";
+	            ifstream oftest(OutputFileName.c_str());
+	            bool FileExists = false;
+	            if (oftest) FileExists = true;
+	            oftest.close();
+	            
+	            //open the output filestream and write headers
+	            ofstream WriteTracesFile;
+	            if (FileExists == 0)
+	            {
+		            WriteTracesFile.open(OutputFileName.c_str());
+                //write headers to allow pandas dataframe reading
+                if (WriteTracesFile.is_open()) WriteTracesFile << "HilltopID Easting Northing DivergentCountFlag Length PlanarCountFlag E_Star R_Star Euclidean" << endl;
+	            }
+	            WriteTracesFile.close();
+              
+              //open output filestream again to  coastline data
+	            WriteTracesFile.open(OutputFileName.c_str(), fstream::app|fstream::out);
+
+	            //Check if file exists if not open a new one and write headers
+	            if (WriteTracesFile.is_open())
+	            {
+		            for (int v = 0; v < count+1; ++v)
+                {
+                  if (basin_filter_switch == false)
+                  {
+                    WriteTracesFile << ht_count << " " << setiosflags(ios::fixed) << setprecision(7) << east_vec[v] << " " << north_vec[v] << " " << DivergentCountFlag << " " << length << " " << PlanarCountFlag << " " << E_Star << " " << R_Star << " " << EucDist << endl;
+                  }
+                  else if (basin_filter_switch == true && find(Target_Basin_Vector.begin(), Target_Basin_Vector.end(), basin[a][b]) != Target_Basin_Vector.end() && find(Target_Basin_Vector.begin(), Target_Basin_Vector.end(), basin[i][j]) != Target_Basin_Vector.end())
+                  {  //is this correct? evaulating to not equal one past the end of the vector should equal that the value is found
+                    WriteTracesFile << ht_count << " " << setiosflags(ios::fixed) << setprecision(7) << east_vec[v] << " " << north_vec[v] << " " << DivergentCountFlag << " " << length << " " << PlanarCountFlag << " " << E_Star << " " << R_Star << " " << EucDist << endl;
+                  }
+                }
+              }
+              WriteTracesFile.close();
             }
           }
-        }
-
-        if (path[a][b] < 1)
-        {  // only update length on 'first slosh'
-          length += d;
-        }
-        else if (path[a][b] >= 3)
-        { //update the skip trace flag so we can categorise each trace
-           skip_trace = true;
-        }
-        degs = degs_new;
-
-        // test for plan curvature here and set a flag if flow is divergent or convergent but continue trace regardless
-        // The larger the counter the more convergent or divergent the trace is
-        if (abs(PlanCurvature.get_data_element(a,b)) > (0.001))
-        {
-          ++DivergentCountFlag;
-        }
-        else 
-        {
-          ++PlanarCountFlag;
-        }
-
-        if (a == 0 || b == 0 ||  a == NRows-1 || b == NCols-1 || stnet[a][b] != NoDataValue || stnet[a-1][b-1] != NoDataValue || stnet[a][b-1] != NoDataValue || stnet[a+1][b-1] != NoDataValue || stnet[a+1][b] != NoDataValue || stnet[a+1][b+1] != NoDataValue || stnet[a][b+1] != NoDataValue || stnet[a-1][b+1] != NoDataValue || stnet[a-1][b] != NoDataValue || path[a][b] >= 3 || skip_trace == true) flag = false;
+        } // End of path printing logic
       }
-  
-      if (a == 0 || b == 0 ||  a == NRows-1 || b == NCols-1 )
-      {
-        // avoid going out of bounds.
-
-        // this is caused by having a hilltop on the first row or col away from the border
-        // eg i or j == 1 or nrows/ncols - 2 and flowing towards the edge.
-        // can fix with a test here for if streamnet[a][b] != NDV otherwise trace will fail *correctly*
-
-        ++edge_count;
-
-      }
-      else
-      {
-      //if trace finished at a stream, print hillslope info.
-      if (stnet[a][b] != NoDataValue || stnet[a-1][b-1] != NoDataValue || stnet[a][b-1] != NoDataValue || stnet[a+1][b-1] != NoDataValue || stnet[a+1][b] != NoDataValue || stnet[a+1][b+1] != NoDataValue || stnet[a][b+1] != NoDataValue || stnet[a-1][b+1] != NoDataValue || stnet[a-1][b] != NoDataValue)
-      {
-        path[a][b] = 1;
-
-        ++s_count;
-
-        X = XMinimum + j*DataResolution;
-        Y = YMinimum - (NRows-i)*DataResolution;
-        relief = zeta[i][j] - zeta[a][b];
-        mean_slope = relief/(length * DataResolution);
-
-        // update arrays with the current metrics
-        RoutedHilltops[i][j] = 1;
-        HillslopeLength_Array[i][j] = (length * DataResolution);
-        Slope_Array[i][j] = mean_slope;
-        Relief_Array[i][j] = relief;
-
-        //calculate an E* and R* Value assuming S_c of 0.8
-        E_Star = (2.0 * abs(hilltops[i][j])*(length*DataResolution))/0.8;
-        R_Star = relief/((length*DataResolution)*0.8);
-
-        //calulate the Euclidean distance between the start and end points of the trace
-        EucDist = sqrt((pow(((i+0.5)-(a+yo)),2) + pow(((j+0.5)-(b+xo)),2))) * DataResolution;
-
-
-        if (relief > 0)
-        {
-          ofs << X << "," << Y << "," << i << "," << j << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[i][j] << "," << a << "," << b << "," << stnet[a][b] << "," << slope[i][j] << "," << DivergentCountFlag << "," << PlanarCountFlag << "," << E_Star << "," << R_Star << "," << EucDist << "\n";
-        }
-        else 
-        {
-          ++neg_count;
-        }
-      }
-      else
-      {  
-        //unable to route using aspects
-        //this will encompass skipped traces
-        ofs << "fail: " << a << " " << b << " " << i << " " << j << endl;
-        ++ns_count;
-      }
-    }
-
-  //This block checks the various path printing options and writes the data out accordingly
-  if (print_paths_switch == true){
-    if (ht_count % thinning == 0){
-      if (hilltops[i][j] != NoDataValue && skip_trace == false){ //check that the current i,j tuple corresponds to a hilltop, ie there is actually a trace to write to file, and check that the trace was valid.
-
-        //create stringstream object to create filename
-        ofstream pathwriter;
-
-        //create the output filename from the user supplied path
-        stringstream ss_path;
-        ss_path << trace_path << i << "_" << j << "_trace.txt";
-
-        pathwriter.open(ss_path.str().c_str());
-
-        if(pathwriter.fail() ){
-    cout << "\nFATAL ERROR: unable to write to " << ss_path.str() << endl;
-    exit(EXIT_FAILURE);
-        }
-
-        for (int v = 0; v < count+1; ++v){
-    if (basin_filter_switch == false){
-      pathwriter << setiosflags(ios::fixed) << setprecision(7) << east_vec[v] << " " << north_vec[v] << " " << DivergentCountFlag << " " << length << " " << PlanarCountFlag << " " << E_Star << " " << R_Star << " " << EucDist << endl;
-    }
-    else if (basin_filter_switch == true && find(Target_Basin_Vector.begin(), Target_Basin_Vector.end(), basin[a][b]) != Target_Basin_Vector.end() && find(Target_Basin_Vector.begin(), Target_Basin_Vector.end(), basin[i][j]) != Target_Basin_Vector.end()){  //is this correct? evaulating to not equal one past the end of the vector should equal that the value is found
-      pathwriter << setiosflags(ios::fixed) << setprecision(7) << east_vec[v] << " " << north_vec[v] << " " << DivergentCountFlag << " " << length << " " << PlanarCountFlag << " " << E_Star << " " << R_Star << " " << EucDist << endl;
-    }
-        }
-        pathwriter.close();
-      }
-    }
-  }
-  // End of path printing logic
-      }
-    }   //for loop i,j
+    } //for loop i,j
   }
 
   ofs.close();
