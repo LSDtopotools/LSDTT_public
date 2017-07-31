@@ -44,7 +44,7 @@
 
 #include <iostream>
 #include <string>
-#include <vector> 
+#include <vector>
 #include <ctime>
 #include <sys/time.h>
 #include <fstream>
@@ -61,7 +61,7 @@
 #include "../LSDParameterParser.hpp"
 #include "../LSDSpatialCSVReader.hpp"
 #include "../LSDShapeTools.hpp"
-        
+
 int main (int nNumberofArgs,char *argv[])
 {
 
@@ -164,21 +164,21 @@ int main (int nNumberofArgs,char *argv[])
   // If you want to visualise the data you need to switch both of these to true
   bool_default_map["calculate_MLE_collinearity"] = false;
   bool_default_map["print_profiles_fxn_movern_csv"] = false;
-  
+
   bool_default_map["calculate_MLE_collinearity_with_points"] = false;
   bool_default_map["movern_residuals_test"] = false;
-  
-  
-  
+
+
+
   bool_default_map["MCMC_movern_analysis"] = false;
   float_default_map["MCMC_movern_minimum"] = 0.05;
   float_default_map["MCMC_movern_maximum"] = 1.5;
   float_default_map["MCMC_chain_links"] = 5000;
-  
+
   bool_default_map["bootstrap_SA_data"] = false;
   int_default_map["N_SA_bootstrap_iterations"] = 1000;
   float_default_map["SA_bootstrap_retain_node_prbability"] = 0.5;
-  
+
 
   // parameters for various chi calculations as well as slope-area
   int_default_map["n_iterations"] = 20;
@@ -280,7 +280,7 @@ int main (int nNumberofArgs,char *argv[])
     LSDRaster Flooded = start_raster.mask_to_nodata_using_threshold(lower_threshold,belowthresholdisnodata);
     belowthresholdisnodata = false;
     topography_raster = Flooded.mask_to_nodata_using_threshold(upper_threshold,belowthresholdisnodata);
-    
+
     if (this_bool_map["print_raster_without_seas"])
     {
       cout << "I'm replacing your raster with a raster without seas." << endl;
@@ -427,6 +427,8 @@ int main (int nNumberofArgs,char *argv[])
 
     //write channel_heads to a csv file
     FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(sources, sources_csv_name);
+    string sources_csv_name_2 = OUT_DIR+OUT_ID+"_ATsources_rowcol.csv";
+    FlowInfo.print_vector_of_nodeindices_to_csv_file(sources, sources_csv_name_2);
 
     if ( this_bool_map["convert_csv_to_geojson"])
     {
@@ -511,11 +513,11 @@ int main (int nNumberofArgs,char *argv[])
       cout << "Fatal Error: Junctions File " << JunctionsFile << " does not exist" << endl;
       exit(EXIT_FAILURE);
     }
-    
+
     // Now make sure none of the basins drain to the edge
     cout << "I am pruning junctions that are influenced by the edge of the DEM!" << endl;
     BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions_Initial, FlowInfo, filled_topography);
-    
+
   }
 
   // Now check for larges basin, if that is what you want.
@@ -841,18 +843,18 @@ int main (int nNumberofArgs,char *argv[])
     ChiTool_MCMC.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_coordinate);
-    
-  
+
+
     // Get the pixel threshold. Make it one less than the previous threshold to ensure
     // you get all the nodes in the basin
     int pixel_thresh_for_this_example = this_int_map["threshold_contributing_pixels"] -1;
-    
+
     bool use_points = true;
-    ChiTool_MCMC.MCMC_driver(FlowInfo, pixel_thresh_for_this_example, 
+    ChiTool_MCMC.MCMC_driver(FlowInfo, pixel_thresh_for_this_example,
                              this_float_map["collinearity_MLE_sigma"],
                              this_float_map["MCMC_movern_minimum"],
                              this_float_map["MCMC_movern_maximum"],
-                             this_float_map["MCMC_chain_links"], 
+                             this_float_map["MCMC_chain_links"],
                              OUT_DIR, OUT_ID, use_points);
 
   }
@@ -874,7 +876,7 @@ int main (int nNumberofArgs,char *argv[])
     ChiTool_residuals.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_coordinate);
-    
+
     // Calculate and print results
     string residuals_name = OUT_DIR+OUT_ID+"_residual_movernstats";
     ChiTool_residuals.calculate_goodness_of_fit_collinearity_fxn_movern_using_median_residuals(FlowInfo, JunctionNetwork,
@@ -934,15 +936,15 @@ int main (int nNumberofArgs,char *argv[])
                       movern_name, this_float_map["collinearity_MLE_sigma"]);
     }
   }
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
+
+
+
   if(this_bool_map["calculate_MLE_collinearity_with_points"])
   {
     cout << "I am going to test the experimental MLE collinearity functions" << endl;
@@ -960,7 +962,7 @@ int main (int nNumberofArgs,char *argv[])
     chi_fracs_to_test.push_back(0.15);
     chi_fracs_to_test.push_back(0.1);
     chi_fracs_to_test.push_back(0.05);
-    
+
     // test the basin collinearity test
     //int baselevel_key = 1;
     vector<int> reference_source;
@@ -968,10 +970,10 @@ int main (int nNumberofArgs,char *argv[])
     vector<float> MLE_values;
     vector<float> RMSE_values;
     //bool only_use_mainstem_as_reference = true;
-    
+
     float this_sigma = this_float_map["collinearity_MLE_sigma"];
     this_sigma = 10;        // just for debugging
-    
+
 
     if(this_bool_map["use_precipitation_raster_for_chi"])
     {
@@ -981,7 +983,7 @@ int main (int nNumberofArgs,char *argv[])
                       JunctionNetwork, this_float_map["start_movern"], this_float_map["delta_movern"],
                       this_int_map["n_movern"],
                       this_bool_map["only_use_mainstem_as_reference"],
-                      movern_name, Discharge, this_sigma, 
+                      movern_name, Discharge, this_sigma,
                       chi_fracs_to_test);
     }
     else
@@ -991,15 +993,15 @@ int main (int nNumberofArgs,char *argv[])
                       this_float_map["start_movern"], this_float_map["delta_movern"],
                       this_int_map["n_movern"],
                       this_bool_map["only_use_mainstem_as_reference"],
-                      movern_name, this_sigma, 
+                      movern_name, this_sigma,
                       chi_fracs_to_test);
     }
-  
+
   }
-  
-  
-  
-  
+
+
+
+
 
   if(this_bool_map["print_profiles_fxn_movern_csv"] )
   {
@@ -1062,23 +1064,23 @@ int main (int nNumberofArgs,char *argv[])
 
     cout << "Printing binned S-A data." << endl;
     ChiTool_SA.bin_slope_area_data(FlowInfo, SA_midpoint_nodes, SA_slopes, this_float_map["log_A_bin_width"],filename_binned);
-    
+
     if (this_bool_map["bootstrap_SA_data"])
     {
       cout << "I am going to bootstrap the S-A data for you." << endl;
       string filename_SAbootstrap = OUT_DIR+OUT_ID+"_SABootstrap.csv";
       ChiTool_SA.bootstrap_slope_area_data(FlowInfo, SA_midpoint_nodes, SA_slopes,
                                            this_int_map["N_SA_bootstrap_iterations"],
-                                           this_float_map["SA_bootstrap_retain_node_prbability"], 
+                                           this_float_map["SA_bootstrap_retain_node_prbability"],
                                            filename_SAbootstrap);
     }
-    
-    
+
+
     if (this_bool_map["segment_slope_area_data"])
     {
       cout << "I am going to segment the S-A data from the main stem channel for you." << endl;
       string filename_SAseg = OUT_DIR+OUT_ID+"_SAsegmented.csv";
-      ChiTool_SA.segment_binned_slope_area_data(FlowInfo, SA_midpoint_nodes, SA_slopes, 
+      ChiTool_SA.segment_binned_slope_area_data(FlowInfo, SA_midpoint_nodes, SA_slopes,
                                   this_float_map["log_A_bin_width"],
                                   this_int_map["slope_area_minimum_segment_length"],
                                   filename_SAseg);
