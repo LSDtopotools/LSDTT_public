@@ -68,6 +68,8 @@ int main (int nNumberofArgs,char *argv[])
 	string_default_map["csv_file"] = "Merapi_swath_points.csv";
 	string_default_map["CHeads_format"] = "csv";
 
+	bool_default_map["trim_raster"] = true;
+
 	// set default float parameters
 	float_default_map["Minimum_Slope"] = 0.0001;
 
@@ -80,7 +82,7 @@ int main (int nNumberofArgs,char *argv[])
 	LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
 	map<string,float> this_float_map = LSDPP.get_float_parameters();
 	map<string,int> this_int_map = LSDPP.get_int_parameters();
-	//map<string,bool> this_bool_map = LSDPP.get_bool_parameters();
+	map<string,bool> this_bool_map = LSDPP.get_bool_parameters();
 	map<string,string> this_string_map = LSDPP.get_string_parameters();
 
 	// Now print the parameters for bug checking
@@ -155,7 +157,18 @@ int main (int nNumberofArgs,char *argv[])
 		cout << "\n\t Getting raster from swath" << endl;
 		LSDRaster SwathRaster = TestSwath.get_raster_from_swath_profile(FilledRaster, this_int_map["NormaliseToBaseline"]);
 		string swath_ext = "_swath_raster";
-		SwathRaster.write_raster((DATA_DIR+DEM_ID+swath_ext), raster_ext);
+		if(this_bool_map["trim_raster"])
+		{
+			// Reducing the Raster
+      cout << "I am now trying to reduce your raster, by removing part the NoDataValue" << endl;
+      LSDRaster LightRaster = SwathRaster.RasterTrimmerPadded(50);
+			LightRaster.write_raster((DATA_DIR+DEM_ID+swath_ext), raster_ext);
+		}
+		else
+		{
+			SwathRaster.write_raster((DATA_DIR+DEM_ID+swath_ext), raster_ext);
+		}
+
 		// get the raster values along the swath
 		vector <vector <float> > ElevationValues = TestSwath.get_RasterValues_along_swath(RasterTemplate, this_int_map["NormaliseToBaseline"]);
 
