@@ -34,8 +34,9 @@ int main (int nNumberofArgs,char *argv[])
     cout << "=========================================================" << endl;
     cout << "|| Welcome to the swath tool!  					              ||" << endl;
     cout << "|| This program takes in a csv file with latitude and  ||" << endl;
-		cout << "|| longitude and gets a swath profile along            ||" << endl;
-		cout << "|| a channel between the points												||" << endl;
+		cout << "|| longitude of the upstream and downstream points of  ||" << endl;
+		cout << "|| a series of channels. It runs a swath profile       ||" << endl;
+		cout << "|| between the points								      						||" << endl;
     cout << "|| This program was developed by                       ||" << endl;
     cout << "|| Fiona J. Clubb												              ||" << endl;
     cout << "||  at the University of Edinburgh                     ||" << endl;
@@ -117,12 +118,23 @@ int main (int nNumberofArgs,char *argv[])
 	// reading in the csv file with the lat long points
 	cout << "Reading in the csv file" << endl;
 	LSDSpatialCSVReader SwathPoints(FilledRaster, DATA_DIR+this_string_map["csv_file"]);
-	vector<float> UTME;
-	vector<float> UTMN;
-	SwathPoints.get_x_and_y_from_latlong(UTME, UTMN);
+
+	// get the upstream and downstream coordinates to vectors
+
+	string upstream_lat = "Latitude_upstream";
+	string upstream_long = "Longitude_upstream";
+	string downstream_lat = "Latitude_downstream";
+	string downstream_long = "Longitude_downstream";
+	vector<float> UTME_upstream;
+	vector<float> UTMN_upstream;
+	vector<float> UTME_downstream;
+	vector<float> UTMN_downstream;
+
+	SwathPoints.get_x_and_y_from_latlong_specify_columns(upstream_lat, upstream_long,UTME_upstream, UTMN_upstream);
+	SwathPoints.get_x_and_y_from_latlong_specify_columns(downstream_lat, downstream_long,UTME_downstream, UTMN_downstream);
 	cout << "Got the x and y locations" << endl;
-	string csv_outname = "_UTM_check.csv";
-	SwathPoints.print_UTM_coords_to_csv(UTME, UTMN, (DATA_DIR+DEM_ID+csv_outname));
+	// string csv_outname = "_UTM_check.csv";
+	// SwathPoints.print_UTM_coords_to_csv(UTME, UTMN, (DATA_DIR+DEM_ID+csv_outname));
 
 	// get the channel network
 	vector<int> sources;
@@ -154,57 +166,65 @@ int main (int nNumberofArgs,char *argv[])
 	// snap to nearest channel
 	int threshold_SO = 2;
 	vector<int> valid_indices;
-	vector<int> snapped_nodes;
-	vector<int> snapped_JNs;
-	ChanNetwork.snap_point_locations_to_channels(UTME, UTMN, this_int_map["search_radius"], threshold_SO, FlowInfo, valid_indices, snapped_nodes, snapped_JNs);
+	vector<int> upstream_nodes;
+	vector<int> upstream_jns;
+	vector<int> downstream_nodes;
+	vector<int> downstream_jns;
+	ChanNetwork.snap_point_locations_to_channels(UTME_upstream, UTMN_upstream, this_int_map["search_radius"], threshold_SO, FlowInfo, valid_indices, upstream_nodes, upstream_jns);
+	ChanNetwork.snap_point_locations_to_channels(UTME_downstream, UTMN_downstream, this_int_map["search_radius"], threshold_SO, FlowInfo, valid_indices, downstream_nodes, downstream_jns);
 
 	cout << "The number of valid points is: " << int(valid_indices.size()) << endl;
 
-	if (int(valid_indices.size()) == 2)
+	if (int(valid_indices.size()) == int(UTME_upstream.size()))
 	{
-		// get the channel between these points
-		cout << "Got channel nodes: " << snapped_nodes[0] << ", " << snapped_nodes[1] << endl;
-		LSDIndexChannel BaselineChannel(snapped_nodes[0], snapped_nodes[1], FlowInfo);
-		//BaselineChannel.write_channel_to_csv(DATA_DIR,DEM_ID+"_chan_check");
-		vector<double> X_coords;
-		vector<double> Y_coords;
-		BaselineChannel.get_coordinates_of_channel_nodes(X_coords, Y_coords);
-		// get the point data from the BaselineChannel
-		PointData BaselinePoints = get_point_data_from_coordinates(X_coords, Y_coords);
-
-		// get the swath
-		cout << "\t creating swath template" << endl;
-		LSDSwath TestSwath(BaselinePoints, FilledRaster, this_int_map["HalfWidth"]);
-
-		cout << "\n\t Getting raster from swath" << endl;
-		LSDRaster SwathRaster = TestSwath.get_raster_from_swath_profile(FilledRaster, this_int_map["NormaliseToBaseline"]);
-		string swath_ext = "_swath_raster";
-		if(this_bool_map["trim_raster"])
+		for (int i = 0; i < int(upstream_nodes.size()); i++)
 		{
-			// Reducing the Raster
-      cout << "I am now trying to reduce your raster, by removing part the NoDataValue" << endl;
-      LSDRaster LightRaster = SwathRaster.RasterTrimmerPadded(50);
-			LightRaster.write_raster((DATA_DIR+DEM_ID+swath_ext), raster_ext);
-		}
-		else
-		{
-			SwathRaster.write_raster((DATA_DIR+DEM_ID+swath_ext), raster_ext);
-		}
+			// get the channel between these points
+			cout << "Got channel nodes: " << upstream_nodes[i] << ", " << downstream_nodes[i] << endl;
+			LSDIndexChannel BaselineChannel(upstream_nodes[i], downstream_nodes[i], FlowInfo);
+			//BaselineChannel.write_channel_to_csv(DATA_DIR,DEM_ID+"_chan_check");
+			vector<double> X_coords;
+			vector<double> Y_coords;
+			BaselineChannel.get_coordinates_of_channel_nodes(X_coords, Y_coords);
+			// get the point data from the BaselineChannel
+			PointData BaselinePoints = get_point_data_from_coordinates(X_coords, Y_coords);
 
-		// get the raster values along the swath
-		vector <vector <float> > ElevationValues = TestSwath.get_RasterValues_along_swath(RasterTemplate, this_int_map["NormaliseToBaseline"]);
+			// get the swath
+			cout << "\t creating swath template" << endl;
+			LSDSwath TestSwath(BaselinePoints, FilledRaster, this_int_map["HalfWidth"]);
 
-		// push back results to file for plotting
-		ofstream output_file;
-		string output_fname = "_swath_elevations.csv";
-		output_file.open((path_name+DEM_ID+output_fname).c_str());
-		output_file << "Distance,Mean,Min,Max" << endl;
-		for (int i = 0; i < int(ElevationValues[0].size()); ++i)
-		{
-			output_file << ElevationValues[0][i] << "," << ElevationValues[1][i] << "," << ElevationValues[2][i] << "," << ElevationValues[3][i] << endl;
+			cout << "\n\t Getting raster from swath" << endl;
+			LSDRaster SwathRaster = TestSwath.get_raster_from_swath_profile(FilledRaster, this_int_map["NormaliseToBaseline"]);
+			string jn_name = itoa(downstream_jns[i]);
+			string uscore = "_";
+			jn_name = uscore+jn_name;
+			string swath_ext = "_swath_raster";
+			if(this_bool_map["trim_raster"])
+			{
+				// Reducing the Raster
+	      cout << "I am now trying to reduce your raster, by removing part the NoDataValue" << endl;
+	      LSDRaster LightRaster = SwathRaster.RasterTrimmerPadded(50);
+				LightRaster.write_raster((DATA_DIR+DEM_ID+swath_ext+jn_name), raster_ext);
+			}
+			else
+			{
+				SwathRaster.write_raster((DATA_DIR+DEM_ID+swath_ext+jn_name), raster_ext);
+			}
+
+			// get the raster values along the swath
+			vector <vector <float> > ElevationValues = TestSwath.get_RasterValues_along_swath(RasterTemplate, this_int_map["NormaliseToBaseline"]);
+
+			// push back results to file for plotting
+			ofstream output_file;
+			string output_fname = "_swath_elevations+"+jn_name+".csv";
+			output_file.open((path_name+DEM_ID+output_fname).c_str());
+			output_file << "Distance,Mean,Min,Max" << endl;
+			for (int i = 0; i < int(ElevationValues[0].size()); ++i)
+			{
+				output_file << ElevationValues[0][i] << "," << ElevationValues[1][i] << "," << ElevationValues[2][i] << "," << ElevationValues[3][i] << endl;
+			}
+			output_file.close();
 		}
-		output_file.close();
-
 	}
 	else
 	{
