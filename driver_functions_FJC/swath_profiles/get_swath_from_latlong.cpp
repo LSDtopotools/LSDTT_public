@@ -63,6 +63,7 @@ int main (int nNumberofArgs,char *argv[])
 	int_default_map["search_radius"] = 50;
 	int_default_map["HalfWidth"] = 500;
 	int_default_map["NormaliseToBaseline"] = 0;
+	int_default_map["threshold_contributing_pixels"] = 1000;
 
 	// set default string parameters
 	string_default_map["csv_file"] = "Merapi_swath_points.csv";
@@ -124,11 +125,32 @@ int main (int nNumberofArgs,char *argv[])
 	SwathPoints.print_UTM_coords_to_csv(UTME, UTMN, (DATA_DIR+DEM_ID+csv_outname));
 
 	// get the channel network
-	cout << "Loading channel heads from the file: " << DATA_DIR+CHeads_file << endl;
-	vector<int> sources = FlowInfo.Ingest_Channel_Heads((DATA_DIR+CHeads_file), this_string_map["CHeads_format"], 2);
-	cout << "\t Got sources!" << endl;
-	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
+	vector<int> sources;
+	if (CHeads_file == "NULL" || CHeads_file == "Null" || CHeads_file == "null")
+  {
 
+		int threshold_contributing_pixels = this_int_map["threshold_contributing_pixels"];
+    cout << endl << endl << endl << "==================================" << endl;
+    cout << "The channel head file is null. " << endl;
+    cout << "Getting sources from a threshold of "<< threshold_contributing_pixels << " pixels." <<endl;
+		// calculate the flow accumulation
+	  cout << "\t Calculating flow accumulation (in pixels)..." << endl;
+
+	  LSDIndexRaster FlowAcc = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+    sources = FlowInfo.get_sources_index_threshold(FlowAcc, threshold_contributing_pixels);
+
+    cout << "The number of sources is: " << sources.size() << endl;
+  }
+  else
+  {
+		cout << "Loading channel heads from the file: " << DATA_DIR+CHeads_file << endl;
+		sources = FlowInfo.Ingest_Channel_Heads((DATA_DIR+CHeads_file), this_string_map["CHeads_format"], 2);
+		cout << "\t Got sources!" << endl;
+
+  }
+
+
+	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 	// snap to nearest channel
 	int threshold_SO = 2;
 	vector<int> valid_indices;
