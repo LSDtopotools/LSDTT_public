@@ -1850,7 +1850,7 @@ void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "latitude,longitude,elevation,flow distance,drainage area,diff,ratio,sign,source_key,basin_key";
+  chi_data_out << "latitude,longitude,elevation,flow_distance,drainage_area,diff,ratio,sign,source_key,basin_key";
 
   chi_data_out << endl;
 
@@ -5264,7 +5264,7 @@ void LSDChiTools::print_slope_area_data_to_csv(LSDFlowInfo& FlowInfo,
   ofstream  SA_out;
   SA_out.open(filename.c_str());
   cout << "Opening the data file: " << filename << endl;
-  SA_out << "latitude,longitude,chi,elevation,flow distance,drainage area,slope,source_key,basin_key" << endl;
+  SA_out << "latitude,longitude,chi,elevation,flow_distance,drainage_area,slope,source_key,basin_key" << endl;
   int this_node;
   if (n_nodes <= 0)
   {
@@ -5316,7 +5316,7 @@ void LSDChiTools::print_chi_data_map_to_csv(LSDFlowInfo& FlowInfo, string filena
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "latitude,longitude,chi,elevation,flow distance,drainage area,source_key,basin_key" << endl;
+  chi_data_out << "latitude,longitude,chi,elevation,flow_distance,drainage_area,source_key,basin_key" << endl;
   if (n_nodes <= 0)
   {
     cout << "Cannot print since you have not calculated channel properties yet." << endl;
@@ -5366,7 +5366,7 @@ void LSDChiTools::print_chi_data_map_to_csv_for_single_basin(LSDFlowInfo& FlowIn
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "latitude,longitude,chi,elevation,flow distance,drainage area,source_key,basin_key" << endl;
+  chi_data_out << "latitude,longitude,chi,elevation,flow_distance,drainage_area,source_key,basin_key" << endl;
   if (n_nodes <= 0)
   {
     cout << "Cannot print since you have not calculated channel properties yet." << endl;
@@ -5436,7 +5436,7 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "node,row,col,latitude,longitude,chi,elevation,flow distance,drainage area,m_chi,b_chi,source_key,basin_key";
+  chi_data_out << "node,row,col,latitude,longitude,chi,elevation,flow_distance,drainage_area,m_chi,b_chi,source_key,basin_key";
   if(have_segmented_elevation)
   {
     chi_data_out << ",segmented_elevation";
@@ -5529,7 +5529,7 @@ void LSDChiTools::print_data_maps_to_file_full_knickpoints(LSDFlowInfo& FlowInfo
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "latitude,longitude,chi,elevation,flow distance,drainage area,m_chi,b_chi,source_key,basin_key";
+  chi_data_out << "latitude,longitude,chi,elevation,flow_distance,drainage_area,m_chi,b_chi,source_key,basin_key";
   if(have_segmented_elevation)
   {
     chi_data_out << ",segmented_elevation";
