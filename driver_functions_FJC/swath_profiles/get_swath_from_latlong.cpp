@@ -133,8 +133,13 @@ int main (int nNumberofArgs,char *argv[])
 	SwathPoints.get_x_and_y_from_latlong_specify_columns(upstream_lat, upstream_long,UTME_upstream, UTMN_upstream);
 	SwathPoints.get_x_and_y_from_latlong_specify_columns(downstream_lat, downstream_long,UTME_downstream, UTMN_downstream);
 	cout << "Got the x and y locations" << endl;
-	// string csv_outname = "_UTM_check.csv";
-	// SwathPoints.print_UTM_coords_to_csv(UTME, UTMN, (DATA_DIR+DEM_ID+csv_outname));
+	vector<float> combined_UTME = UTME_upstream;
+	combined_UTME.insert( UTME_upstream.end(), UTME_downstream.begin(), UTME_downstream.end() );
+
+	vector<float> combined_UTMN = UTMN_upstream;
+	combined_UTMN.insert( UTMN_upstream.end(), UTMN_downstream.begin(), UTMN_downstream.end() );
+	string csv_outname = "_UTM_check.csv";
+	SwathPoints.print_UTM_coords_to_csv(combined_UTME, combined_UTMN, (DATA_DIR+DEM_ID+csv_outname));
 
 	// get the channel network
 	vector<int> sources;
@@ -165,17 +170,18 @@ int main (int nNumberofArgs,char *argv[])
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 	// snap to nearest channel
 	int threshold_SO = 2;
-	vector<int> valid_indices;
+	vector<int> valid_indices_us;
+	vector<int> valid_indices_ds;
 	vector<int> upstream_nodes;
 	vector<int> upstream_jns;
 	vector<int> downstream_nodes;
 	vector<int> downstream_jns;
-	ChanNetwork.snap_point_locations_to_channels(UTME_upstream, UTMN_upstream, this_int_map["search_radius"], threshold_SO, FlowInfo, valid_indices, upstream_nodes, upstream_jns);
-	ChanNetwork.snap_point_locations_to_channels(UTME_downstream, UTMN_downstream, this_int_map["search_radius"], threshold_SO, FlowInfo, valid_indices, downstream_nodes, downstream_jns);
+	ChanNetwork.snap_point_locations_to_channels(UTME_upstream, UTMN_upstream, this_int_map["search_radius"], threshold_SO, FlowInfo, valid_indices_us, upstream_nodes, upstream_jns);
+	ChanNetwork.snap_point_locations_to_channels(UTME_downstream, UTMN_downstream, this_int_map["search_radius"], threshold_SO, FlowInfo, valid_indices_ds, downstream_nodes, downstream_jns);
 
-	cout << "The number of valid points is: " << int(valid_indices.size()) << endl;
+	cout << "The number of valid points is: " << int(valid_indices_us.size()) << endl;
 
-	if (int(valid_indices.size()) == int(UTME_upstream.size()))
+	if (int(valid_indices_us.size()) == int(UTME_upstream.size()))
 	{
 		for (int i = 0; i < int(upstream_nodes.size()); i++)
 		{
