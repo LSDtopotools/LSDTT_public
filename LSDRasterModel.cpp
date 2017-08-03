@@ -2123,7 +2123,7 @@ void LSDRasterModel::mtl_assemble_matrix(Array2D<float>& zeta_last_iter, Array2D
   mtl_b_vector = 0.0;
 
   // create the inserter. This is deleted when this function is exited
-  mtl::matrix::inserter< mtl::compressed2D<float> > ins(mtl_Assembly_matrix);
+  mtl::mat::inserter< mtl::compressed2D<float> > ins(mtl_Assembly_matrix);
 
   // first we assemble the boundary nodes. First the nodes in row 0 (the south boundary)
   for (int k = 0; k<NCols; k++)
@@ -3279,7 +3279,7 @@ mtl::compressed2D<float> LSDRasterModel::generate_fd_matrix( int dimension, int 
 
   mtl::compressed2D<float> matrix(size, size);
   matrix = 0.0;
-  mtl::matrix::inserter< mtl::compressed2D<float> > ins(matrix);
+  mtl::mat::inserter< mtl::compressed2D<float> > ins(matrix);
 
   for (int i=0; i<size; ++i)
   {
@@ -3573,7 +3573,7 @@ mtl::compressed2D<float> LSDRasterModel::generate_fv_matrix( int dimension, int 
   int start_i, start_j, end_i, end_j;
   mtl::compressed2D <float> matrix(size, size);
   matrix = 0.0;
-  mtl::matrix::inserter< mtl::compressed2D<float> > ins(matrix);
+  mtl::mat::inserter< mtl::compressed2D<float> > ins(matrix);
   
   if (dimension == 0)
   {
@@ -5949,7 +5949,7 @@ void LSDRasterModel::MuddPILE_assemble_matrix(Array2D<float>& uplift_rate,
   mtl_b_vector = 0.0;
 
   // create the inserter. This is deleted when this function is exited
-  mtl::matrix::inserter< mtl::compressed2D<float> > ins(mtl_Assembly_matrix);
+  mtl::mat::inserter< mtl::compressed2D<float> > ins(mtl_Assembly_matrix);
 
   // first we assemble the boundary nodes. First the nodes in row 0
   //cout << "Line 5180, getting south boundary" << endl;
