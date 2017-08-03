@@ -1,6 +1,6 @@
 CC = g++
-CFLAGS= -c -Wall -O3 -pg
-OFLAGS = -Wall -O3 -pg
+CFLAGS= -c -Wall -O3
+OFLAGS = -I/home/s0923330/boost -Wall -O3
 LDFLAGS= -Wall
 SOURCES = stream_power_model.cpp \
 		../../LSDRasterSpectral.cpp \
