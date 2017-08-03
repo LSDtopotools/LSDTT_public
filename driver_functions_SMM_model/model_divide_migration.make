@@ -1,6 +1,6 @@
 CC = g++
-CFLAGS= -c -Wall -O3 -pg
-OFLAGS = -Wall -O3 -pg
+CFLAGS= -c -I/home/smudd/libs/boost_1_64_0 -Wall -O3
+OFLAGS = -I/home/smudd/libs/boost_1_64_0 -Wall -O3
 LDFLAGS= -Wall
 SOURCES = model_divide_migration.cpp \
 		../LSDRasterSpectral.cpp \
