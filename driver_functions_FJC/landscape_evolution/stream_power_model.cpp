@@ -135,13 +135,13 @@ int main(int argc, char *argv[])
 	// and just to make sure, run it a bit longer
 	mod.run_components_combined();
 
-	// now print the slope area data
-	int area_flag = 1;       // use d8 (like current implementation of FASTSCAPE)
-	int slope_flag = 1;      // use d8 (like FASTSCAPE does)
-	string SA_ext = "_SA.slopearea";
-	string SA_fname = mod.get_name()+SA_ext;
-
-  mod.slope_area_data(SA_fname,slope_flag,area_flag);
+	// // now print the slope area data
+	// int area_flag = 1;       // use d8 (like current implementation of FASTSCAPE)
+	// int slope_flag = 1;      // use d8 (like FASTSCAPE does)
+	// string SA_ext = "_SA.slopearea";
+	// string SA_fname = mod.get_name()+SA_ext;
+	//
+  // mod.slope_area_data(SA_fname,slope_flag,area_flag);
 
 	return 0;
 
