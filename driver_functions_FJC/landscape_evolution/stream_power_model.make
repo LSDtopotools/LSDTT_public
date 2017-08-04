@@ -1,6 +1,6 @@
 CC = g++
 CFLAGS= -c -Wall -O3
-OFLAGS = -I/home/s0923330/boost -Wall -O3
+OFLAGS = -I/home/s0923330/libs/boost_1_64_0 -Wall -O3
 LDFLAGS= -Wall
 SOURCES = stream_power_model.cpp \
 		../../LSDRasterSpectral.cpp \
@@ -9,6 +9,9 @@ SOURCES = stream_power_model.cpp \
 		../../LSDRaster.cpp \
 		../../LSDRasterModel.cpp \
 		../../LSDStatsTools.cpp \
+		../../LSDParticleColumn.cpp \
+		../../LSDParticle.cpp \
+		../../LSDCRNParameters.cpp \
 		../../LSDFlowInfo.cpp
 SCRIPTS = animate.py
 OBJ = $(SOURCES:.cpp=.o)
