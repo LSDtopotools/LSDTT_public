@@ -10,6 +10,7 @@
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
+#include <ctime>
 #include <sys/stat.h>
 #include <python2.7/Python.h>
 #include "../../LSDRasterModel.hpp"
@@ -24,6 +25,9 @@ bool file_check(string name)
 
 int main(int argc, char *argv[])
 {
+	//start the clock
+	clock_t begin = clock();
+
 	//LSDRasterModel mod(0,0);
 	LSDRasterModel mod;
 	stringstream ss;
@@ -142,6 +146,13 @@ int main(int argc, char *argv[])
 	// string SA_fname = mod.get_name()+SA_ext;
 	//
   // mod.slope_area_data(SA_fname,slope_flag,area_flag);
+
+	// if chosen, then increase the uplift and run transient forcing
+
+	// Done, check how long it took
+	clock_t end = clock();
+	float elapsed_secs = float(end - begin) / CLOCKS_PER_SEC;
+	cout << "DONE, Time taken (secs): " << elapsed_secs << endl;
 
 	return 0;
 
