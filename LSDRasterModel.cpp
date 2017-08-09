@@ -51,7 +51,6 @@
 #include "TNT/jama_eig.h"
 #include <boost/numeric/mtl/mtl.hpp>
 #include <boost/numeric/itl/itl.hpp>
-#include <python2.7/Python.h>
 #include "LSDRaster.hpp"
 #include "LSDFlowInfo.hpp"
 //#include "LSDFlowInfo_alt.hpp"
@@ -5489,52 +5488,6 @@ void LSDRasterModel::make_template_param_file(string filename)
   param.close();
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-void LSDRasterModel::show( void )
-{
-  stringstream run_cmd;
-  run_cmd << "animate.run('" << name << "')";
-
-  Py_Initialize();
-  char path_word[] = "path";
-  PyObject *sys_path = PySys_GetObject(path_word);
-  PyList_Append(sys_path, PyString_FromString("."));
-  PyRun_SimpleString("import animate");
-  PyRun_SimpleString(run_cmd.str().c_str());
-  Py_Finalize();
-}
-
-
-
-/*
-float LSDRasterModel::filestream_param(ifstream & strm, float &upr_param, float &lwr_param, float &upr_t, float &lwr_t)
-{
-  float temp;
-  bool read;
-  
-  while (current_time >= upr_t)
-  {
-    if (strm >> temp)
-    {
-      if (upr_t == -99)
-        lwr_t = time_delay;
-      else
-        lwr_t = upr_t;
-      lwr_param = upr_param;
-      upr_t = temp+time_delay;
-      strm >> upr_param;
-      read = true;
-    }
-    else
-      read = false;
-
-  }
-  if (read)
-    return (upr_param - lwr_param) * (current_time-lwr_t) / (upr_t - lwr_t) + lwr_param;
-  else
-    return upr_param;
-}
-*/
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //

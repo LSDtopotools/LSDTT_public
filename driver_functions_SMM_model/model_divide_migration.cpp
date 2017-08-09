@@ -2,7 +2,6 @@
 #include <sstream>
 #include <cstdlib>
 #include <sys/stat.h>
-#include <python2.7/Python.h>
 #include "../LSDRasterModel.hpp"
 #include "../LSDParticleColumn.hpp"
 #include "../LSDParticle.hpp"

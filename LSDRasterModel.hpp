@@ -1112,12 +1112,6 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @date 01/01/2014
   void make_template_param_file(string filename);
 
-  /// ------------------------------------------------------------------
-  /// Display method
-  /// Wrapper for python script that animates the model output
-  /// ------------------------------------------------------------------
-  void show( void );
-
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // ~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~
   // MUDDPILE 
