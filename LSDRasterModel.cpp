@@ -5094,6 +5094,8 @@ void LSDRasterModel::print_column_erosion_and_apparent_erosion( int frame,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::print_rasters( int frame )
 {
+  string outfile_format = "bil";
+  
   cout << endl;
   //cout << "Printing raster, initial steady state: " << initial_steady_state 
   //     << " and D mode is : " << D_mode << endl;
@@ -5125,6 +5127,8 @@ void LSDRasterModel::print_rasters( int frame )
   outfile << get_max_uplift() << "\t";
   outfile << endl;
 
+  map<string,string> GRS = get_GeoReferencingStrings();
+
   //cout << "Printing, print elevation is " << print_elevation 
   //     << " and erosion is " << print_erosion << endl;
 
@@ -5132,7 +5136,7 @@ void LSDRasterModel::print_rasters( int frame )
   if (print_elevation)
   {
     ss << name << frame;
-    this->write_raster(ss.str(), "asc");
+    this->write_raster(ss.str(), outfile_format);
   }
   if (print_hillshade)
   {
@@ -5141,7 +5145,7 @@ void LSDRasterModel::print_rasters( int frame )
     LSDRaster * hillshade;
     hillshade = new LSDRaster(*this);
     *hillshade = this->hillshade(45, 315, 1);
-    hillshade->write_raster(ss.str(), "asc");
+    hillshade->write_raster(ss.str(), outfile_format);
     delete hillshade;
   }
   if (print_erosion)
@@ -5150,8 +5154,8 @@ void LSDRasterModel::print_rasters( int frame )
     ss << name << frame << "_erosion";
     Array2D <float> erosion_field = calculate_erosion_rates( );
     LSDRaster * erosion;
-    erosion = new LSDRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, erosion_field);
-    erosion->write_raster(ss.str(), "asc");
+    erosion = new LSDRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, erosion_field,GRS);
+    erosion->write_raster(ss.str(), outfile_format);
     delete erosion;
   }
 
