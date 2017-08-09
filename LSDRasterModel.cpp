@@ -5149,6 +5149,7 @@ void LSDRasterModel::print_rasters( int frame )
   }
   if (print_hillshade)
   {
+    cout << "Printing the hillshade" << endl;
     ss.str("");
     ss << name << frame << "_hillshade";
     LSDRaster * hillshade;

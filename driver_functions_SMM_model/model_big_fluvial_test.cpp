@@ -67,9 +67,10 @@ int main(int argc, char *argv[])
     mod.resize_and_reset(newrows,newcols,datares);
 
     // set the end time, print interval, etc
-    mod.set_K(0.0001);
+    mod.set_K(0.00001);
     mod.set_endTime(50000);  
     mod.set_print_interval(100);
+    mod.set_print_hillshade(true);
 
     string template_param = "template_param.param";
     string full_template_name = pathname+template_param;		
