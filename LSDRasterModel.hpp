@@ -134,7 +134,7 @@ class LSDRasterModel: public LSDRasterSpectral
   // INITIALISATION ROUTINES
   // @~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-  /// @brief this initialises the model by directly setting the data members
+  /// @brief this initialises the model by directly #ting the data members
   void initialize_model(
     string& parameter_file, string& run_name, float& dt, float& EndTime, float& PrintInterval,
     float& k_w, float& b, float& m, float& n, float& K, float& ErosionThreshold, 
@@ -968,6 +968,27 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @author JAJ
   /// @ date 01/01/2014    
   void set_quiet( bool on_status )      { quiet = on_status; }
+
+  // PRINTING OF RASTERS
+  /// @brief Sets the print elevation
+  /// @param boolean; if true prints elevation
+  /// @author SMM
+  /// @date 09/08/2017
+  void set_print_elevation( bool do_I_print_elevation )      { print_elevation = do_I_print_elevation; }
+
+  /// @brief Sets the print hillshade
+  /// @param boolean; if true prints hillshade
+  /// @author SMM
+  /// @date 09/08/2017
+  void set_print_hillshade( bool do_I_print_hillshade )      { print_hillshade = do_I_print_hillshade; }
+
+  /// @brief Sets the print erosion
+  /// @param boolean; if true prints erosion
+  /// @author SMM
+  /// @date 09/08/2017
+  void set_print_erosion( bool do_I_print_erosion )      { print_erosion = do_I_print_erosion; }
+
+
 
   // -------------------------------------------------------------------
   //@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@

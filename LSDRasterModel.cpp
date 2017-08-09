@@ -911,6 +911,11 @@ void LSDRasterModel::resize_and_reset( int new_rows, int new_cols )
   total_response = 0;
   steady_state = false;
   initial_steady_state = false;  
+  
+  int zone = 1;
+  string NorS = "N";
+  impose_georeferencing_UTM(zone, NorS);
+  
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -951,7 +956,11 @@ void LSDRasterModel::resize_and_reset( int new_rows, int new_cols, float new_res
   total_erosion = 0;
   total_response = 0;
   steady_state = false;
-  initial_steady_state = false;  
+  initial_steady_state = false; 
+  
+  int zone = 1;
+  string NorS = "N";
+  impose_georeferencing_UTM(zone, NorS);
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
