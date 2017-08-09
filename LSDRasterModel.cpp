@@ -100,15 +100,20 @@ LSDRasterModel::~LSDRasterModel( void )
 
 // the create function. 
 // This sets up a model domain with a default size and model parameters
+// Imposes UTM zone 1
 void LSDRasterModel::create()
 {
   NRows = 100;
   NCols = 100;
   DataResolution = 10;
-  NoDataValue = -99;
+  NoDataValue = -9999;
   XMinimum = 0;
   YMinimum = 0;
   RasterData = Array2D <float> (NRows, NCols, 0.0);
+  
+  int zone = 1;
+  string NorS = "N";
+  impose_georeferencing_UTM(zone, NorS);
 
   default_parameters();
 }
@@ -142,6 +147,10 @@ void LSDRasterModel::create(int nrows, int ncols, float xmin, float ymin,
     cout << "dimension of data is not the same as stated in NCols!" << endl;
     exit(EXIT_FAILURE);
   }
+  
+  int zone = 1;
+  string NorS = "N";
+  impose_georeferencing_UTM(zone, NorS);
 
 }
 
@@ -154,7 +163,7 @@ void LSDRasterModel::create(LSDRaster& An_LSDRaster)
   YMinimum = An_LSDRaster.get_YMinimum();
   DataResolution = An_LSDRaster.get_DataResolution();
   NoDataValue = An_LSDRaster.get_NoDataValue();
-
+  GeoReferencingStrings =  An_LSDRaster.get_GeoReferencingStrings();
   RasterData = An_LSDRaster.get_RasterData();
 }
 
@@ -164,10 +173,14 @@ LSDRasterModel::LSDRasterModel(int NRows, int NCols)
   this->NRows = NRows;
   this->NCols = NCols;
   this->DataResolution = 10;
-  this->NoDataValue = -99;
+  this->NoDataValue = -9999;
   XMinimum = 0;
   YMinimum = 0;
   RasterData = Array2D <float> (NRows, NCols, 0.0);
+  
+  int zone = 1;
+  string NorS = "N";
+  impose_georeferencing_UTM(zone, NorS);
 }
 
 // this creates an LSDRasterModel using a master parameter file
@@ -176,9 +189,14 @@ void LSDRasterModel::create(string master_param)
   NRows = 100;
   NCols = 100;
   DataResolution = 10;
-  NoDataValue = -99;
+  NoDataValue = -9999;
   XMinimum = 0;
   YMinimum = 0;
+
+  int zone = 1;
+  string NorS = "N";
+  impose_georeferencing_UTM(zone, NorS);
+
 
   default_parameters();
   initialize_model(master_param);

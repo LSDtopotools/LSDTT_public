@@ -85,7 +85,7 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @param filename A String, the file to be loaded.
   /// @param extension A String, the file extension to be loaded.
   LSDRasterModel(string filename, string extension)
-    {   
+  {   
     create(filename, extension); 
     default_parameters();
   }
