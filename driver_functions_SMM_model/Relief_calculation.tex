@@ -1,0 +1,48 @@
+\title{Notes on getting relief from a landscape}
+\author{
+        Simon M. Mudd \\
+        School of GeoSciences\\
+        University of Edinburgh \\
+				Drummond Street \\
+				Edinburgh EH8 9XP
+}
+\date{\today}
+
+\documentclass[12pt]{article}
+
+\begin{document}
+\maketitle
+
+
+
+\section{Introduction}
+At steady state, the equation of the stream power model reduces to:
+
+\begin{equation} \label{eq:profile_eqn_integrate}
+z(x) = z(x_b) + \Bigg(\frac{E}{K}\Bigg)^{\frac{1}{n}} \int_{x_b}^{x} \frac{dx}{A(x)^{\frac{m}{n}}},
+\end{equation}
+
+where the integration is performed upstream from an arbitrary baselevel ($x_b$) to a chosen point on the river channel, $x$.  The profile is then normalized to a reference drainage area ($A_0$) to ensure the integrand is dimensionless:
+
+\begin{equation} \label{eq:chi_profile}
+z(x) = z(x_b) + \Bigg(\frac{U}{K{A_0}^m}\Bigg)^{\frac{1}{n}} \chi,
+\end{equation}
+
+The relief, $R$ is then
+
+
+\begin{equation} \label{eq:relief_profile}
+R = z(x_L) - z(x_b) = \Bigg(\frac{U}{K{A_0}^m}\Bigg)^{\frac{1}{n}} \chi_L,
+\end{equation}
+
+where $z(x_L)$ is the elevation at the end of the longest channel and $\chi_L$ is the $\chi$ coordinate at the end of the longest channel. 
+
+If we want to calculate the $K$ value needed we simply have:
+
+\begin{equation} \label{eq:K_relief}
+K = \frac{U}{{A_0}^m} \Bigg( \frac{R}{\chi_L} \Bigg)^{-n},
+\end{equation}
+
+
+\end{document}
+
