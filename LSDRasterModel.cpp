@@ -53,7 +53,6 @@
 #include <boost/numeric/itl/itl.hpp>
 #include "LSDRaster.hpp"
 #include "LSDFlowInfo.hpp"
-//#include "LSDFlowInfo_alt.hpp"
 #include "LSDRasterSpectral.hpp"
 #include "LSDStatsTools.hpp"
 #include "LSDIndexRaster.hpp"
@@ -827,12 +826,34 @@ void LSDRasterModel::intialise_fourier_fractal_surface(float fractal_D)
   
   dfftw2D_inv_complex(A, X, 1);
   
-  RasterData = X;
+  RasterData = X.copy();
   
 }
     
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This creates a fractal surface DEM using the Fourier filtering method
+// (Saupe 1987)
+//
+// Like above, but uses the version in LSDRasterSpectral
+//
+// SMM 10/08/2017 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::intialise_fourier_fractal_surface_v2(float beta, float desired_relief)
+{
+  Array2D<float> zeta=RasterData.copy();
+
+  // Step one, create donor "stack" etc. via FlowInfo
+  LSDRasterSpectral Fourier(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
+
+  Fourier.generate_fractal_surface_spectral_method(beta,desired_relief);
+  
+  zeta = Fourier.get_RasterData();
+
+  RasterData = zeta.copy();
+
+}
 
 
 

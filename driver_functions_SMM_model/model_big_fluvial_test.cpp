@@ -61,8 +61,8 @@ int main(int argc, char *argv[])
     cout << "Creating a template parameter file (template_param)" << endl;
     cout << "###################################################" << endl;
     // first change the default dimensions
-    int newrows = 750;
-    int newcols = 1000;
+    int newrows = 512;
+    int newcols = 512;
     float datares = 30;
     mod.resize_and_reset(newrows,newcols,datares);
 
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
   if (argc <= 3)
   {
     cout << "No initial topography loaded, running to a steady condition" << endl;
-
+    float desired_relief = 100;
     
     // run to steady state using a large fluvial incision rate 
     // (I don't know why but this seems to encourage complete dissection)
@@ -137,13 +137,20 @@ int main(int argc, char *argv[])
     mod.set_hillslope(false);
     
     // lets use Declans fourier thing
-    bool use_fourier = false;
+    bool use_fourier = true;
     if (use_fourier)
     {
       // THIS DOESN'T WORK
       cout << "I am going to start with a fractal surface" << endl;
-      float fractal_D = 1.7;
-      mod.intialise_fourier_fractal_surface(fractal_D);
+      float fractal_D = 2.7;
+      //mod.intialise_fourier_fractal_surface(fractal_D);
+      
+      
+      mod.intialise_fourier_fractal_surface_v2(fractal_D,desired_relief);
+      cout << "Finished with the fractal surface " << endl;
+      
+      int frame = 9997;
+      mod.print_rasters(frame);
     }
     else
     {
@@ -167,7 +174,6 @@ int main(int argc, char *argv[])
     //mod.run_components();
     
     // Now set to steady state
-    float desired_relief = 1000;
     float U = 0.0001;    // a tenth of a mm per year
     float new_K = mod.fluvial_snap_to_steady_state_tune_K_for_relief(U, desired_relief);
     cout << "Getting a steady solution for a landscape with relief of " << desired_relief 
