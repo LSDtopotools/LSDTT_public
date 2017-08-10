@@ -3878,7 +3878,11 @@ void LSDRasterModel::fluvial_snap_to_steady_state(float U)
 
   // Step one, create donor "stack" etc. via FlowInfo
   LSDRaster temp(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
-  LSDFlowInfo flow(boundary_conditions, temp);
+  
+  // need to fill the raster to ensure there are no internal base level nodes
+  float slope_for_fill =  = 0.0001;
+  LSDRaster filled = temp.fill(slope_for_fill);
+  LSDFlowInfo flow(boundary_conditions, filled);
 
   float K = get_K();
   float m_exp = get_m();
@@ -3929,7 +3933,11 @@ float LSDRasterModel::fluvial_snap_to_steady_state_tune_K_for_relief(float U, fl
 
   // Step one, create donor "stack" etc. via FlowInfo
   LSDRaster temp(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
-  LSDFlowInfo flow(boundary_conditions, temp);
+  
+  // We need to fill the raster so we don't get internally drained catchments
+  float slope_for_fill =  = 0.0001;
+  LSDRaster filled = temp.fill(slope_for_fill);
+  LSDFlowInfo flow(boundary_conditions, filled);
 
   float K = get_K();
   float m_exp = get_m();

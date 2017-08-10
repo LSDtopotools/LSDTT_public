@@ -144,12 +144,26 @@ int main(int argc, char *argv[])
     mod.set_hillslope(false);
       
     // now run to steady state
-    cout << "Running fluvial only under steady forcing" << endl;
-    mod.reach_steady_state();
-  
-    // for some reason this doesn't seem to get it completely to steady state
-    // so run some more
-    mod.run_components();	
+    // Set a relatively high K value to dissect the landscape
+    cout << "Dissecting landscape." << endl;
+    mod.set_K(0.0005);
+    mod.run_components();
+    
+    // Now set to steady state
+    
+    float desired_relief = 1000;
+    float U = 0.0001;    // a tenth of a mm per year
+    float new_K = mod.fluvial_snap_to_steady_state_tune_K_for_relief(U, desired_relief);
+    cout << "Getting a steady solution for a landscape with relief of " << desired_relief 
+         << " metres and uplift of " << U*1000 << " mm per year." << endl;
+    cout << "The new K is: " << new_K << endl;
+    
+    cout << "Now let me print the raster for you" << endl;
+    mod.set_print_hillshade(true);
+    
+    int frame = 99;
+    mod.print_rasters(frame);
+
   
   }
   else if(argc > 3)
@@ -165,9 +179,9 @@ int main(int argc, char *argv[])
   // this will run until the end time specified by
   // the data member
   // It will also print to file
-  cout << "Running now with hillslopes, until "
-       << mod.get_endTime() << " years" << endl; 
-  mod.run_components_combined();
+  //cout << "Running now with hillslopes, until "
+  //     << mod.get_endTime() << " years" << endl; 
+  //mod.run_components_combined();
 
   // now set the tilting going
   //int new_mode = 1;
@@ -178,13 +192,13 @@ int main(int argc, char *argv[])
   //mod.set_baseline_uplift(new_baseline_uplift);
   
   // add some time
-  float new_end_time = mod.get_current_time();
-  float this_end_time = mod.get_endTime();
-  float run_end_time = this_end_time;
-  float brief_end_time = run_end_time*3;
-  new_end_time = new_end_time+brief_end_time; 
-  mod.set_endTime(new_end_time);
-  mod.set_print_hillshade(true);
+  //float new_end_time = mod.get_current_time();
+  //float this_end_time = mod.get_endTime();
+  //float run_end_time = this_end_time;
+  //float brief_end_time = run_end_time*3;
+  //new_end_time = new_end_time+brief_end_time; 
+  //mod.set_endTime(new_end_time);
+  //mod.set_print_hillshade(true);
 
   /*
   // now reduce the fluvial efficiency and run again
