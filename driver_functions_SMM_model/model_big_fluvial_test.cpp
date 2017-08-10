@@ -147,10 +147,10 @@ int main(int argc, char *argv[])
     // Set a relatively high K value to dissect the landscape
     cout << "Dissecting landscape." << endl;
     mod.set_K(0.0005);
-    mod.run_components();
+    mod.reach_steady_state();
+    //mod.run_components();
     
     // Now set to steady state
-    
     float desired_relief = 1000;
     float U = 0.0001;    // a tenth of a mm per year
     float new_K = mod.fluvial_snap_to_steady_state_tune_K_for_relief(U, desired_relief);
