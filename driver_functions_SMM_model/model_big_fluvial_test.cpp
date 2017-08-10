@@ -61,8 +61,8 @@ int main(int argc, char *argv[])
     cout << "Creating a template parameter file (template_param)" << endl;
     cout << "###################################################" << endl;
     // first change the default dimensions
-    int newrows = 512;
-    int newcols = 512;
+    int newrows = 1500;
+    int newcols = 3000;
     float datares = 30;
     mod.resize_and_reset(newrows,newcols,datares);
 
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
   if (argc <= 3)
   {
     cout << "No initial topography loaded, running to a steady condition" << endl;
-    float desired_relief = 100;
+    float desired_relief = 25;
     
     // run to steady state using a large fluvial incision rate 
     // (I don't know why but this seems to encourage complete dissection)
@@ -140,13 +140,13 @@ int main(int argc, char *argv[])
     bool use_fourier = true;
     if (use_fourier)
     {
-      // THIS DOESN'T WORK
       cout << "I am going to start with a fractal surface" << endl;
-      float fractal_D = 2.7;
+      //float fractal_D = 2.7;
       //mod.intialise_fourier_fractal_surface(fractal_D);
-      
-      
-      mod.intialise_fourier_fractal_surface_v2(fractal_D,desired_relief);
+
+      //mod.intialise_fourier_fractal_surface_v2(fractal_D,desired_relief);
+      int feature_order = 10;
+      mod.intialise_diamond_square_fractal_surface(feature_order, desired_relief);
       cout << "Finished with the fractal surface " << endl;
       
       int frame = 9997;
@@ -169,12 +169,13 @@ int main(int argc, char *argv[])
     // now run to steady state
     // Set a relatively high K value to dissect the landscape
     cout << "Dissecting landscape." << endl;
-    mod.set_K(0.0005);
+    mod.set_K(0.005);
     mod.reach_steady_state();
     //mod.run_components();
     
     // Now set to steady state
     float U = 0.0001;    // a tenth of a mm per year
+    desired_relief = 1000;
     float new_K = mod.fluvial_snap_to_steady_state_tune_K_for_relief(U, desired_relief);
     cout << "Getting a steady solution for a landscape with relief of " << desired_relief 
          << " metres and uplift of " << U*1000 << " mm per year." << endl;
@@ -185,6 +186,8 @@ int main(int argc, char *argv[])
     
     int frame = 99;
     mod.print_rasters(frame);
+
+    mod.run_components_combined();
 
   
   }

@@ -836,6 +836,7 @@ void LSDRasterModel::intialise_fourier_fractal_surface(float fractal_D)
 // (Saupe 1987)
 //
 // Like above, but uses the version in LSDRasterSpectral
+// ONLY WORKS ON SMALL DEMS WITH pow(2) dimensions
 //
 // SMM 10/08/2017 
 
@@ -844,7 +845,7 @@ void LSDRasterModel::intialise_fourier_fractal_surface_v2(float beta, float desi
 {
   Array2D<float> zeta=RasterData.copy();
 
-  // Step one, create donor "stack" etc. via FlowInfo
+  // Create a raster spectral
   LSDRasterSpectral Fourier(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
 
   Fourier.generate_fractal_surface_spectral_method(beta,desired_relief);
@@ -852,10 +853,41 @@ void LSDRasterModel::intialise_fourier_fractal_surface_v2(float beta, float desi
   zeta = Fourier.get_RasterData();
 
   RasterData = zeta.copy();
-
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This creates a fractal surface DEM using the diamond square algorithm. 
+// Believe it or not I lifted this algorithm from Notch, the creator of Minecraft, 
+// who posted it online and then had it modified by Charles Randall
+// https://www.bluh.org/code-the-diamond-square-algorithm/
+//
+// SMM 10/08/2017 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::intialise_diamond_square_fractal_surface(int feature_order, float desired_relief)
+{
+  Array2D<float> zeta=RasterData.copy();
+
+  // temprorary raster for performing diamond square
+  LSDRaster temp_raster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
+  
+  // get the dimaond square raster
+  // IMPORTANT: this will be bigger than the original raster
+  LSDRaster DSRaster = temp_raster.DiamondSquare(feature_order, desired_relief);
+  
+  // resample the raster to get a surface the correct size
+  // it won't wrap but the running to steady will take care of that.
+  for(int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      zeta[row][col] = DSRaster.get_data_element(row,col);
+    }
+  }
+
+  RasterData = zeta.copy();
+
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this creates a hillslope at steady state for the nonlinear sediment flux law

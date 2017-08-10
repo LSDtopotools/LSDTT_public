@@ -203,10 +203,19 @@ class LSDRasterModel: public LSDRasterSpectral
   /// 2 and 3.
   /// @param desired_relief The relief desired from the final surface
   /// @author SMM
-  /// @date 20/10/2014
+  /// @date 10/08/2017
   void intialise_fourier_fractal_surface_v2(float beta, float desired_relief);
 
-
+  /// @brief This initialises the raster model to a fractal surface using the 
+  ///  diamond square algorithm
+  /// @param feature_order is an interger n where the feature size consists of 2^n nodes.
+  /// If the feature order is set bigger than the dimensions of the parent raster then
+  /// this will default to the order of the parent raster.
+  /// @param desired_relief The relief desired from the final surface
+  /// @author SMM
+  /// @date 10/08/2017
+  void intialise_diamond_square_fractal_surface(int feature_order, float desired_relief);
+  
   /// @brief This initialises a surface with a hillslope
   /// that is the solution to the nonlinear sediment flux equation.
   /// It overwrites RasterData

@@ -731,7 +731,9 @@ class LSDRaster
   /// in each direction to have rows and columns that are the nearest powers
   /// of 2. The xllocation and yllocation data values are preserved. The function
   /// returns a pseudo fractal landscape generated with the diamond square algorithm
-  ///
+  /// Believe it or not this algorithm is absed on code poseted by Notch, the creator of Minecraft, 
+  /// who then had it modified by Charles Randall
+  /// https://www.bluh.org/code-the-diamond-square-algorithm/
   /// @param feature order is an interger n where the feature size consists of 2^n nodes.
   /// If the feature order is set bigger than the dimensions of the parent raster then
   /// this will default to the order of the parent raster.
