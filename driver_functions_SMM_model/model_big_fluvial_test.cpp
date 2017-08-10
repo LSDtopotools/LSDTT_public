@@ -61,8 +61,8 @@ int main(int argc, char *argv[])
     cout << "Creating a template parameter file (template_param)" << endl;
     cout << "###################################################" << endl;
     // first change the default dimensions
-    int newrows = 1500;
-    int newcols = 3000;
+    int newrows = 500;
+    int newcols = 1000;
     float datares = 30;
     mod.resize_and_reset(newrows,newcols,datares);
 
@@ -145,8 +145,12 @@ int main(int argc, char *argv[])
       //mod.intialise_fourier_fractal_surface(fractal_D);
 
       //mod.intialise_fourier_fractal_surface_v2(fractal_D,desired_relief);
-      int feature_order = 10;
+      int feature_order = 8;
       mod.intialise_diamond_square_fractal_surface(feature_order, desired_relief);
+      
+      // Make sure the edges are tapered
+      int rows_to_taper = 10;
+      mod.initialise_taper_edges_and_raise_raster(rows_to_taper);
       cout << "Finished with the fractal surface " << endl;
       
       int frame = 9997;
@@ -167,14 +171,17 @@ int main(int argc, char *argv[])
     
     
     // now run to steady state
-    // Set a relatively high K value to dissect the landscape
+    // Set a relatively high K value and a high uplift rate to dissect the landscape
     cout << "Dissecting landscape." << endl;
-    mod.set_K(0.005);
+    mod.set_K(0.01);
+    float new_baseline_uplift = 0.0025;
+    mod.set_baseline_uplift(new_baseline_uplift);
     mod.reach_steady_state();
     //mod.run_components();
     
     // Now set to steady state
     float U = 0.0001;    // a tenth of a mm per year
+    mod.set_baseline_uplift(U);
     desired_relief = 1000;
     float new_K = mod.fluvial_snap_to_steady_state_tune_K_for_relief(U, desired_relief);
     cout << "Getting a steady solution for a landscape with relief of " << desired_relief 

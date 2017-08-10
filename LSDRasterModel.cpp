@@ -889,6 +889,63 @@ void LSDRasterModel::intialise_diamond_square_fractal_surface(int feature_order,
 
 }
 
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This tapers the north and south boundaries to 0 elevation and raises the
+// entire DEM above sea level
+//
+// SMM 10/08/2017 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::initialise_taper_edges_and_raise_raster(int rows_to_taper)
+{
+  Array2D<float> zeta=RasterData.copy();
+  
+  // first we need to loop through all the data and raise above the sea level, 
+  // or lower to sea level accordingly
+  float MinElev = 9999999;
+  for(int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      if (zeta[row][col] < MinElev)
+      {
+        MinElev = zeta[row][col];
+      }
+    }
+  }
+  cout << "Tapering. Found the mininum elevation, it is: " << MinElev << endl;
+  
+  
+  // now adjust elevations so the lowst points are at zero elevation
+  for(int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      zeta[row][col] = zeta[row][col]-MinElev;
+    }
+  }
+  
+  // now we loop through the edge nodes, muliplying each by a fraction so they taper to zero elevation
+  float this_frac;
+  for (int taper_row = 0; taper_row < rows_to_taper; taper_row++)
+  {
+    this_frac = float(taper_row)/float(rows_to_taper);
+    
+    for(int col = 0; col<NCols; col++)
+    {
+      zeta[taper_row][col] = this_frac*zeta[taper_row][col];
+      zeta[NRows-1-taper_row][col] = this_frac*zeta[NRows-1-taper_row][col];
+    }
+  }
+  
+  RasterData = zeta.copy();
+
+}
+
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // this creates a hillslope at steady state for the nonlinear sediment flux law
 // Solution from Roering et al., (EPSL, 2007)

@@ -216,6 +216,13 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @date 10/08/2017
   void intialise_diamond_square_fractal_surface(int feature_order, float desired_relief);
   
+  /// @brief This takes a raster and tapers the edges to zero elevation. Its 
+  ///  purpose is to remove edge artefacts. 
+  /// @param rows_to_taper The number of rows at the N and S boudaries to taper
+  /// @author SMM
+  /// @date 10/08/2017
+  void initialise_taper_edges_and_raise_raster(int rows_to_taper);
+  
   /// @brief This initialises a surface with a hillslope
   /// that is the solution to the nonlinear sediment flux equation.
   /// It overwrites RasterData
