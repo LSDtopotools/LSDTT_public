@@ -717,6 +717,8 @@ void LSDRasterModel::initialise_parabolic_surface(float peak_elev, float edge_of
 // (Saupe 1987)
 //
 // DAV 17/10/2014
+//
+// SMM 10/08/2017 NOT WORKING
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::intialise_fourier_fractal_surface(float fractal_D)
 // 

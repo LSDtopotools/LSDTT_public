@@ -129,20 +129,36 @@ int main(int argc, char *argv[])
   if (argc <= 3)
   {
     cout << "No initial topography loaded, running to a steady condition" << endl;
-    // initiate a very low relief parabolic surface
-    // if the relief is too great you tend to get a network that 
-    // has many closely spaced parallel channels  
-    float max_elev = 0.2;
-    float new_noise = max_elev/2;
-    mod.set_noise(new_noise);
-    float edge_offset = 0.0;
-    mod.initialise_parabolic_surface(max_elev, edge_offset);
+
     
     // run to steady state using a large fluvial incision rate 
     // (I don't know why but this seems to encourage complete dissection)
     // and turn the hillslopes off, just to save some time
     mod.set_hillslope(false);
-      
+    
+    // lets use Declans fourier thing
+    bool use_fourier = false;
+    if (use_fourier)
+    {
+      // THIS DOESN'T WORK
+      cout << "I am going to start with a fractal surface" << endl;
+      float fractal_D = 1.7;
+      mod.intialise_fourier_fractal_surface(fractal_D);
+    }
+    else
+    {
+      cout << "I will start with a low relief, randomly perturbed parabola" << endl;
+      // initiate a very low relief parabolic surface
+      // if the relief is too great you tend to get a network that 
+      // has many closely spaced parallel channels  
+      float max_elev = 0.2;
+      float new_noise = max_elev/2;
+      mod.set_noise(new_noise);
+      float edge_offset = 0.0;
+      mod.initialise_parabolic_surface(max_elev, edge_offset);
+    }
+    
+    
     // now run to steady state
     // Set a relatively high K value to dissect the landscape
     cout << "Dissecting landscape." << endl;
