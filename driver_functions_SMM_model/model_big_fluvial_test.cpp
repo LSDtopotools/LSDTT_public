@@ -177,10 +177,20 @@ int main(int argc, char *argv[])
     float new_baseline_uplift = 0.0025;
     mod.set_baseline_uplift(new_baseline_uplift);
     mod.reach_steady_state();
-    //mod.run_components();
+        
+    int frame = 777;
+    mod.print_rasters(frame);
+    
+    // a bit more dissection
+    mod.set_K(0.001);
+    float U = 0.0001;    // a tenth of a mm per year
+    mod.set_baseline_uplift(U);
+    mod.reach_steady_state();
+    
+    frame = 778;
+    mod.print_rasters(frame);
     
     // Now set to steady state
-    float U = 0.0001;    // a tenth of a mm per year
     mod.set_baseline_uplift(U);
     desired_relief = 1000;
     float new_K = mod.fluvial_snap_to_steady_state_tune_K_for_relief(U, desired_relief);
@@ -191,7 +201,7 @@ int main(int argc, char *argv[])
     cout << "Now let me print the raster for you" << endl;
     mod.set_print_hillshade(true);
     
-    int frame = 99;
+    frame = 999;
     mod.print_rasters(frame);
 
     mod.run_components_combined();
