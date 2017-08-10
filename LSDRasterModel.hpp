@@ -585,6 +585,28 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @date 01/01/2014
   void reach_steady_state( void );
 
+  /// @brief This method creates a steady landscape that assumes everywhere obeys the 
+  ///  stream power law. It is based on equation 4a from Mudd et al 2014 JGR-ES
+  /// @detail There is no return but the underlying raster data will reflect the
+  ///  analytical steady topography for the uplift rate.
+  /// @param U the uplift rate (in m/yr)
+  /// @author SMM
+  /// @date 10/08/2017
+  void fluvial_snap_to_steady_state(float U);
+
+  /// @brief This method creates a steady landscape that assumes everywhere obeys the 
+  ///  stream power law. It is based on equation 4a from Mudd et al 2014 JGR-ES. 
+  ///  The function is given a target relief and the K value is adjusted to match 
+  ///  this target relief at the maximum chi value. 
+  /// @detail In addition to the return, the underlying raster data will reflect the
+  ///  analytical steady topography for the uplift rate.
+  /// @param U the uplift rate (in m/yr)
+  /// @param desired_relief The desired landscape relief in metres
+  /// @return The back calculated K value for the desired relief
+  /// @author SMM
+  /// @date 10/08/2017
+  float fluvial_snap_to_steady_state_tune_K_for_relief(float U, float desired_relief);
+
   /// @brief Fastscape, implicit finite difference solver for stream power equations
   /// O(n)
   /// Method takes its paramaters from the model data members
@@ -1023,6 +1045,17 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @author JAJ
   /// @date 01/01/2014    
   float get_D( void );
+
+  /// @brief Gets the area exponent
+  /// @author SMM
+  /// @date 10/08/2017
+  float get_m( void )    { return m; }
+  
+  /// @brief Gets the slope exponent
+  /// @author SMM
+  /// @date 10/08/2017
+  float get_n( void )    { return n; }
+  
   
   /// @brief this gets the current_time
   float get_current_time( void )   { return current_time; }

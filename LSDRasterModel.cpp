@@ -725,15 +725,17 @@ void LSDRasterModel::intialise_fourier_fractal_surface(float fractal_D)
 // A[][] is a 2D array of complex variables, size N^2
 {
   
-int N = NRows;
-//int N = RasterData.get_NRows;
-float H = fractal_D;
-Array2D< std::complex<float> > A;
-Array2D<float> X;
+  int N = NRows;
+  //int N = RasterData.get_NRows;
+  float H = fractal_D;
+  Array2D< std::complex<float> > A;
+  Array2D<float> X;
+  std::complex<float> this_complex;
 
-int i0, j0;
 
-float rad, phase;  //Polar coordinates of the Fourier coefficient
+  //int i0, j0;
+
+  float rad, phase;  //Polar coordinates of the Fourier coefficient
   
   for (int i = 0; i<=(N/2); i++)
   {
@@ -750,9 +752,16 @@ float rad, phase;  //Polar coordinates of the Fourier coefficient
         rad = 0;
       } 
       
-      A[i][j] = {rad * cos(phase), rad * sin(phase)};     // left of the comma is real part, right of the comma is imaginary part
+      this_complex.real(rad * cos(phase));
+      this_complex.imag(rad * sin(phase));
+      A[i][j] = this_complex;
+      
+      //A[i][j] = {rad * cos(phase), rad * sin(phase)};     // left of the comma is real part, right of the comma is imaginary part
       // This { } notation may only work in C++11 (i.e. the most recent standard as of 2014)
       
+      
+      
+      /* This stuff seems to have no effect
       if (i==0)
       {
         i0 = 0;
@@ -770,8 +779,13 @@ float rad, phase;  //Polar coordinates of the Fourier coefficient
       {
         j0 = N-j;
       }
+      */
       
-      A[i0][j0] = {rad * cos(phase), -rad * sin(phase)};
+      this_complex.real(rad * cos(phase));
+      this_complex.imag(-rad * sin(phase));
+      A[i][j] = this_complex;
+      
+      // A[i0][j0] = {rad * cos(phase), -rad * sin(phase)};
       
     }
   }
@@ -790,8 +804,17 @@ float rad, phase;  //Polar coordinates of the Fourier coefficient
       phase = 2 * PI * rand();
       rad = pow(i*i + j*j, -(H+1)/2) * Gauss_rand(100, 0.0, 1.0);
       
-      A[i][N-j] = {rad * cos(phase), rad * sin(phase)};    // left of the comma is real part, right of the comma is imaginary part
-      A[N-i][j] = {rad * cos(phase), -rad * sin(phase)};
+      this_complex.real(rad * cos(phase));
+      this_complex.imag(rad * sin(phase));
+      A[i][N-j] = this_complex;
+      
+      this_complex.real(rad * cos(phase));
+      this_complex.imag(-rad * sin(phase));
+      A[N-i][j] = this_complex;
+      
+      
+      //A[i][N-j] = {rad * cos(phase), rad * sin(phase)};    // left of the comma is real part, right of the comma is imaginary part
+      //A[N-i][j] = {rad * cos(phase), -rad * sin(phase)};
       
     }
   }
@@ -2306,6 +2329,7 @@ void LSDRasterModel::mtl_solve_assembler_matrix(Array2D<float>& zeta_last_iter, 
 
   // now solve the mtl system
   // Create an ILU(0) preconditioner
+  bool show_time = false;
   long time_start, time_end, time_diff;
   time_start = time(NULL);
   itl::pc::ilu_0< mtl::compressed2D<float> > P(mtl_Assembly_matrix);
@@ -2314,7 +2338,10 @@ void LSDRasterModel::mtl_solve_assembler_matrix(Array2D<float>& zeta_last_iter, 
   bicgstab(mtl_Assembly_matrix, mtl_zeta_solved_vector, mtl_b_vector, P, iter);
   time_end = time(NULL);
   time_diff = time_end-time_start;
-  //std::cout << "iter MTL bicg took: " << time_diff << endl;
+  if (show_time)
+  {
+    std::cout << "iter MTL bicg took: " << time_diff << endl;
+  }
 
   // now reconstitute zeta
   int counter = 0;//NCols;
@@ -3840,6 +3867,135 @@ void LSDRasterModel::soil_diffusion_fv_nonlinear( void )
 }
 
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This takes the model and calculates the steady state fluvial surface derived from
+// a chi map
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDRasterModel::fluvial_snap_to_steady_state(float U)
+{
+  Array2D<float> zeta=RasterData.copy();
+
+  // Step one, create donor "stack" etc. via FlowInfo
+  LSDRaster temp(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
+  LSDFlowInfo flow(boundary_conditions, temp);
+
+  float K = get_K();
+  float m_exp = get_m();
+  float n_exp = get_n();
+  float area_threshold = 0;
+  float m_over_n = m_exp/n_exp;
+  float A_0 = 1;
+  float one_over_n = 1/n_exp;
+  
+  LSDRaster ChiValues = flow.get_upslope_chi_from_all_baselevel_nodes(m_over_n, A_0,area_threshold);
+  float thisChi;
+  // now we calculate the elevations assuming that the elevation at chi = 0 is 0
+  // This is based on equation 4 from mudd et al 2014 JGR-ES
+  for (int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      thisChi = ChiValues.get_data_element(row,col);
+      if (thisChi == NoDataValue)
+      {
+        zeta[row][col] = NoDataValue;
+      }
+      else
+      {
+        if (n_exp == 1)
+        {
+          zeta[row][col] = (U/K)*thisChi;
+        }
+        else
+        {
+          zeta[row][col] = pow( (U/K),one_over_n)*thisChi;
+        }
+        
+      }
+    }
+  }
+  
+  RasterData = zeta.copy();
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This takes the model and calculates the steady state fluvial surface derived from
+// a chi map
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+float LSDRasterModel::fluvial_snap_to_steady_state_tune_K_for_relief(float U, float desired_relief)
+{
+  Array2D<float> zeta=RasterData.copy();
+
+  // Step one, create donor "stack" etc. via FlowInfo
+  LSDRaster temp(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
+  LSDFlowInfo flow(boundary_conditions, temp);
+
+  float K = get_K();
+  float m_exp = get_m();
+  float n_exp = get_n();
+  float area_threshold = 0;
+  float m_over_n = m_exp/n_exp;
+  float A_0 = 1;
+  float one_over_n = 1/n_exp;
+  
+  LSDRaster ChiValues = flow.get_upslope_chi_from_all_baselevel_nodes(m_over_n, A_0,area_threshold);
+  float thisChi;
+  float MaxChi = 0;
+  // now we calculate the elevations assuming that the elevation at chi = 0 is 0
+  // This is based on equation 4 from mudd et al 2014 JGR-ES
+  for (int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      thisChi = ChiValues.get_data_element(row,col);
+      if (thisChi != NoDataValue)
+      {
+        if (thisChi > MaxChi)
+        {
+          MaxChi = thisChi;
+        }
+      }
+    }
+  }
+  
+  // calculate K (you need to do some algebra on equation 4 from mudd et al 2014 JGR-ES)
+  K = U * pow((desired_relief/MaxChi),-n_exp);
+  cout << "I am updating K to " << K << " to get your desired relief." << endl; 
+  
+  
+  // now recalculate the elevations
+  // This is based on equation 4 from mudd et al 2014 JGR-ES
+  for (int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      thisChi = ChiValues.get_data_element(row,col);
+      if (thisChi == NoDataValue)
+      {
+        zeta[row][col] = NoDataValue;
+      }
+      else
+      {
+        if (n_exp == 1)
+        {
+          zeta[row][col] = (U/K)*thisChi;
+        }
+        else
+        {
+          zeta[row][col] = pow( (U/K),one_over_n)*thisChi;
+        }
+        
+      }
+    }
+  }
+  
+  set_K(K);
+  RasterData = zeta.copy();
+  return(K);
+   
+}
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // This is the component of the model that is solved using the 
 // FASTSCAPE algorithm of Willett and Braun (2013)
@@ -5079,8 +5235,8 @@ void LSDRasterModel::print_column_erosion_and_apparent_erosion( int frame,
                                               CRNColumns[cc].getCol());
     
     // get the uplift rate
-    double this_U = get_uplift_rate_at_cell(  CRNColumns[cc].getRow(),
-                                              CRNColumns[cc].getCol());     
+    //double this_U = get_uplift_rate_at_cell(  CRNColumns[cc].getRow(),
+    //                                          CRNColumns[cc].getCol());     
 
     // get the apparent erosion at the cell
     vector<double> this_app_erosion = 
@@ -5547,9 +5703,10 @@ float LSDRasterModel::get_K( void )
     outfile << infile.rdbuf();
 
     // This inhibits portablity
-    ss.str("");
-    ss << "chmod -w .K_file_" << name << ".aux";
-    system(ss.str().c_str());
+    // SMM: Something JAJ put in to manage permissions but I've got rid of it. 
+    //ss.str("");
+    //ss << "chmod -w .K_file_" << name << ".aux";
+    //system(ss.str().c_str());
 
     copied = true;
   }
@@ -5606,9 +5763,10 @@ float LSDRasterModel::get_D( void )
     outfile << infile.rdbuf();
 
     // This inhibits portablity
-    ss.str("");
-    ss << "chmod -w .D_file_" << name << ".aux";
-    system(ss.str().c_str());
+    // SMM: Something JAJ put in to manage permissions but I've got rid of it. 
+    //ss.str("");
+    //ss << "chmod -w .D_file_" << name << ".aux";
+    //system(ss.str().c_str());
 
     copied = true;
   }
@@ -6174,6 +6332,7 @@ void LSDRasterModel::MuddPILE_solve_assembler_matrix(Array2D<float>& uplift_rate
   // now solve the mtl system
   // Create an ILU(0) preconditioner
   long time_start, time_end, time_diff;
+  bool show_time = false;
   time_start = time(NULL);
   //cout << "LINE 5404 making P " << endl;
   itl::pc::ilu_0< mtl::compressed2D<float> > P(mtl_Assembly_matrix);
@@ -6185,7 +6344,11 @@ void LSDRasterModel::MuddPILE_solve_assembler_matrix(Array2D<float>& uplift_rate
   bicgstab(mtl_Assembly_matrix, mtl_zeta_solved_vector, mtl_b_vector, P, iter);
   time_end = time(NULL);
   time_diff = time_end-time_start;
-  //cout << "iter MTL bicg took: " << time_diff << endl;
+  
+  if(show_time)
+  {
+    cout << "iter MTL bicg took: " << time_diff << endl;
+  }
 
   // now reconstitute zeta
   int counter = 0;
