@@ -61,8 +61,8 @@ int main(int argc, char *argv[])
     cout << "Creating a template parameter file (template_param)" << endl;
     cout << "###################################################" << endl;
     // first change the default dimensions
-    int newrows = 500;
-    int newcols = 1000;
+    int newrows = 540;
+    int newcols = 1080;
     float datares = 30;
     mod.resize_and_reset(newrows,newcols,datares);
 
@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
       //mod.intialise_fourier_fractal_surface(fractal_D);
 
       //mod.intialise_fourier_fractal_surface_v2(fractal_D,desired_relief);
-      int feature_order = 8;
+      int feature_order = 9;
       mod.intialise_diamond_square_fractal_surface(feature_order, desired_relief);
       
       // Make sure the edges are tapered
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
       mod.initialise_taper_edges_and_raise_raster(rows_to_taper);
       cout << "Finished with the fractal surface " << endl;
       
-      int frame = 9997;
+      int frame = 555;
       mod.print_rasters(frame);
     }
     else
@@ -185,11 +185,9 @@ int main(int argc, char *argv[])
     mod.set_K(0.001);
     float U = 0.0001;    // a tenth of a mm per year
     mod.set_baseline_uplift(U);
-    mod.reach_steady_state();
+    mod.run_components_combined();
     
-    frame = 778;
-    mod.print_rasters(frame);
-    
+
     // Now set to steady state
     mod.set_baseline_uplift(U);
     desired_relief = 1000;
@@ -204,6 +202,13 @@ int main(int argc, char *argv[])
     frame = 999;
     mod.print_rasters(frame);
 
+    // add some time
+    float new_end_time = mod.get_current_time();
+    float this_end_time = mod.get_endTime();
+    float run_end_time = this_end_time;
+    float brief_end_time = run_end_time*3;
+    new_end_time = new_end_time+brief_end_time; 
+    mod.set_endTime(new_end_time);
     mod.run_components_combined();
 
   
