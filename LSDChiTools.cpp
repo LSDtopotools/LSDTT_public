@@ -1227,7 +1227,7 @@ void LSDChiTools::segment_counter(LSDFlowInfo& FlowInfo)
   int this_node;
   int segment_counter = 0;
   map<int,int> this_segment_counter_map;
-  float last_M_chi, this_M_chi;
+  float last_M_chi, this_M_chi, last_flow_length, this_flow_length, segment_length;
 
   // find the number of nodes
   int n_nodes = (node_sequence.size());
@@ -1239,19 +1239,32 @@ void LSDChiTools::segment_counter(LSDFlowInfo& FlowInfo)
   {
     this_node = node_sequence[0];
     last_M_chi =  M_chi_data_map[this_node];
+    last_flow_length = flow_distance_data_map[this_node];
 
     for (int n = 0; n< n_nodes; n++)
     {
 
-      // Get the M_chi from the current node
+      // Get the M_chi and flow_length from the current node
       this_node = node_sequence[n];
       this_M_chi = M_chi_data_map[this_node];
+      this_flow_length = flow_distance_data_map[this_node];
+      
+      // update the current segment length
+      segment_length = fabs(this_flow_length-last_flow_length);
 
       // If the M_chi has changed, increment the segment counter
       if (this_M_chi != last_M_chi)
       {
         segment_counter++;
         last_M_chi = this_M_chi;
+        last_flow_length = this_flow_length;
+      }
+      // Else if the segment length has exceeded the maximum length of segments increment the segment counter
+      else if (segment_length >= maximum_segment_length)
+      {
+        segment_counter++;
+        last_M_chi = this_M_chi;
+        last_flow_length = this_flow_length;
       }
 
       // Print the segment counter to the data map
@@ -1294,7 +1307,8 @@ LSDIndexRaster LSDChiTools::segment_mapping(LSDFlowInfo& FlowInfo)
     FlowInfo.retrieve_current_row_and_col(this_node,row,col);
 
     last_M_chi =  M_chi_data_map[this_node];
-
+    last_flow_length = flow_distance_data_map[this_node];
+    
     for (int n = 0; n< n_nodes; n++)
     {
 
@@ -1302,12 +1316,21 @@ LSDIndexRaster LSDChiTools::segment_mapping(LSDFlowInfo& FlowInfo)
       this_node = node_sequence[n];
       FlowInfo.retrieve_current_row_and_col(this_node,row,col);
       this_M_chi = M_chi_data_map[this_node];
-
+      this_flow_length = flow_distance_data_map[this_node];
+      
       // If the M_chi has changed, increment the segment counter
       if (this_M_chi != last_M_chi)
       {
         segment_counter++;
         last_M_chi = this_M_chi;
+        last_flow_length = this_flow_length;
+      }
+      // Else if the segment length has exceeded the maximum length of segments increment the segment counter
+      else if (segment_length >= maximum_segment_length)
+      {
+        segment_counter++;
+        last_M_chi = this_M_chi;
+        last_flow_length = this_flow_length;
       }
 
       // Print the segment counter to the data map and raster
