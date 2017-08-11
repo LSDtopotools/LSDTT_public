@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
   if (argc <= 3)
   {
     cout << "No initial topography loaded, running to a steady condition" << endl;
-    float desired_relief = 25;
+    float desired_relief = 10;
     
     // run to steady state using a large fluvial incision rate 
     // (I don't know why but this seems to encourage complete dissection)
@@ -151,6 +151,9 @@ int main(int argc, char *argv[])
       // Make sure the edges are tapered
       int rows_to_taper = 10;
       mod.initialise_taper_edges_and_raise_raster(rows_to_taper);
+      
+      // add a parabola to the topography
+      mod.superimpose_parabolic_surface(desired_relief);
       cout << "Finished with the fractal surface " << endl;
       
       int frame = 555;
@@ -173,6 +176,7 @@ int main(int argc, char *argv[])
     // now run to steady state
     // Set a relatively high K value and a high uplift rate to dissect the landscape
     cout << "Dissecting landscape." << endl;
+    mod.set_timeStep( 250 );
     mod.set_K(0.01);
     float new_baseline_uplift = 0.0025;
     mod.set_baseline_uplift(new_baseline_uplift);

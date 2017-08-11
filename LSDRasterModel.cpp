@@ -638,6 +638,38 @@ void LSDRasterModel::initialise_parabolic_surface(float peak_elev, float edge_of
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// superimposes a parabolic surface with elevations on the north and south edges at zero and
+// elevation in the middle of 'peak elevation'
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::superimpose_parabolic_surface(float peak_elev)
+{
+
+  // set up the length coordinate
+  float local_x;
+  float L = DataResolution*(NRows-1);
+  float row_elev;
+
+  // loop through getting the parabolic elevation at each row, and then
+  // writing across the entire domain
+  for(int row = 0; row < NRows; row++)
+  {
+
+    local_x = row*DataResolution;
+    row_elev = - 4.0*(local_x*local_x-local_x*L)*peak_elev / (L*L);
+
+    for (int col = 0; col < NCols; col++)
+    {
+      
+      // at N and S boundaries, tthere is no perturbation
+      if( row != 0 && row != NRows-1)
+      {
+        RasterData[row][col] = RasterData[row][col]+row_elev;
+      }      
+    }
+  }
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Initialies a fractal-based terrain surface with given fractal dimension, D
@@ -5427,7 +5459,7 @@ void LSDRasterModel::print_rasters( int frame )
   {
     cout << "Printing the hillshade" << endl;
     ss.str("");
-    ss << name << frame << "_hillshade";
+    ss << name << frame << "_hs";
     LSDRaster * hillshade;
     hillshade = new LSDRaster(*this);
     *hillshade = this->hillshade(45, 315, 1);

@@ -186,7 +186,16 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @author SMM
   /// @date 1/7/2014
   void initialise_parabolic_surface(float peak_elev, float edge_offset);
-  
+
+  /// @brief Adds a parabolic surface to the DEM. Used to try and avoid
+  ///  ;arge areas of fill from the fractal initiation steps
+  /// @param peak_elev The peak elevation in metres. Is in the middle of the
+  /// model domain
+  /// @author SMM
+  /// @date 11/8/2017
+  void superimpose_parabolic_surface(float peak_elev);
+
+
   /// @brief This initialises the raster model to a square model domain
   /// with a fractal surface using the algorithm from Saupe (1987d)
   /// @param fractal_D Used to determine the fractal dimension, D by:
