@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
     // set the end time, print interval, etc
     mod.set_K(0.00001);
     mod.set_endTime(50000);  
-    mod.set_print_interval(100);
+    mod.set_print_interval(5);
     mod.set_print_hillshade(true);
 
     string template_param = "template_param.param";
@@ -180,12 +180,19 @@ int main(int argc, char *argv[])
     mod.set_K(0.01);
     float new_baseline_uplift = 0.0025;
     mod.set_baseline_uplift(new_baseline_uplift);
-    mod.reach_steady_state();
+    
+    mod.set_current_frame(1);
+    
+    mod.set_endTime(50000);
+    mod.run_components_combined();
+    
+    //mod.reach_steady_state();
         
     int frame = 777;
-    mod.print_rasters(frame);
+    //mod.print_rasters(frame);
     
     // a bit more dissection
+    mod.set_endTime(100000);
     mod.set_K(0.001);
     float U = 0.0001;    // a tenth of a mm per year
     mod.set_baseline_uplift(U);
@@ -207,13 +214,16 @@ int main(int argc, char *argv[])
     mod.print_rasters(frame);
 
     // add some time
-    float new_end_time = mod.get_current_time();
-    float this_end_time = mod.get_endTime();
-    float run_end_time = this_end_time;
-    float brief_end_time = run_end_time*3;
-    new_end_time = new_end_time+brief_end_time; 
-    mod.set_endTime(new_end_time);
+    mod.set_endTime(150000);
     mod.run_components_combined();
+    
+    //float new_end_time = mod.get_current_time();
+    //float this_end_time = mod.get_endTime();
+    //float run_end_time = this_end_time;
+    //float brief_end_time = run_end_time*3;
+    //new_end_time = new_end_time+brief_end_time; 
+    //mod.set_endTime(new_end_time);
+    //mod.run_components_combined();
 
   
   }
