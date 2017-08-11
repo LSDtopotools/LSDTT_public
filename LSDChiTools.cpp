@@ -1221,7 +1221,7 @@ LSDIndexRaster LSDChiTools::get_basin_raster(LSDFlowInfo& FlowInfo, LSDJunctionN
 // This data is used by other routines to look at the spatial distribution of
 // hillslope-channel coupling.
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiTools::segment_counter(LSDFlowInfo& FlowInfo)
+void LSDChiTools::segment_counter(LSDFlowInfo& FlowInfo, float maximum_segment_length)
 {
   // these are for extracting element-wise data from the channel profiles.
   int this_node;
@@ -1283,13 +1283,13 @@ void LSDChiTools::segment_counter(LSDFlowInfo& FlowInfo)
 // hillslope-channel coupling. Generates an LSDIndexRaster of the channel network
 // indexed by segment numbers for feeding to the hilltop flow routing analysis.
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-LSDIndexRaster LSDChiTools::segment_mapping(LSDFlowInfo& FlowInfo)
+LSDIndexRaster LSDChiTools::segment_mapping(LSDFlowInfo& FlowInfo, float maximum_segment_length)
 {
   // these are for extracting element-wise data from the channel profiles.
   int this_node, row, col;
   int segment_counter = 0;
   map<int,int> this_segment_counter_map;
-  float last_M_chi, this_M_chi;
+  float last_M_chi, this_M_chi, last_flow_length, this_flow_length, segment_length;
 
   //declare empty array for raster generation
   Array2D<int> SegmentedStreamNetworkArray(NRows,NCols,-9999);
@@ -1317,6 +1317,9 @@ LSDIndexRaster LSDChiTools::segment_mapping(LSDFlowInfo& FlowInfo)
       FlowInfo.retrieve_current_row_and_col(this_node,row,col);
       this_M_chi = M_chi_data_map[this_node];
       this_flow_length = flow_distance_data_map[this_node];
+      
+      // update the current segment length
+      segment_length = fabs(this_flow_length-last_flow_length);
       
       // If the M_chi has changed, increment the segment counter
       if (this_M_chi != last_M_chi)

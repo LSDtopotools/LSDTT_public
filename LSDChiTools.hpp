@@ -265,9 +265,10 @@ class LSDChiTools
     /// @detail WARNING: ONLY use if you have segmented with skip 0 and iterations 1. Otherwise
     ///  you will get a new segment for every channel pixel
     /// @param FlowInfo an LSDFlowInfo object
+    /// @param maximum_segment_length is the longest a segment is allowed to be before a new segment is created
     /// @author SMM
     /// @date 4/02/2017
-    void segment_counter(LSDFlowInfo& FlowInfo);
+    void segment_counter(LSDFlowInfo& FlowInfo, float maximum_segment_length);
 
     /// @brief This function is used to tag channels with a segment number
     ///  It decides on segments if the M_Chi value has changed so should only be used
@@ -277,10 +278,11 @@ class LSDChiTools
     /// @detail WARNING: ONLY use if you have segmented with skip 0 and iterations 1. Otherwise
     ///  you will get a new segment for every channel pixel
     /// @param FlowInfo an LSDFlowInfo object
+    /// @param maximum_segment_length is the longest a segment is allowed to be before a new segment is created
     /// @return LSDIndexRaster showing stream network indexed by segment ID
     /// @author MDH
     /// @date 15/06/2017
-    LSDIndexRaster segment_mapping(LSDFlowInfo& FlowInfo);
+    LSDIndexRaster segment_mapping(LSDFlowInfo& FlowInfo, float maximum_segment_length);
 
     /// @brief This function calculates the fitted elevations: It uses m_chi and b_chi
     ///  data to get the fitted elevation of the channel points.
