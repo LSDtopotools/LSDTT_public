@@ -183,6 +183,7 @@ int main (int nNumberofArgs,char *argv[])
   // parameters for various chi calculations as well as slope-area
   int_default_map["n_iterations"] = 20;
   int_default_map["minimum_segment_length"] = 10;
+  int_default_map["maximum_segment_length"] = 100000; //make super large so as not to be a factor unless user defined
   int_default_map["n_nodes_to_visit"] = 10;
   int_default_map["target_nodes"] = 80;
   int_default_map["skip"] = 2;
@@ -259,6 +260,7 @@ int main (int nNumberofArgs,char *argv[])
   float movern = this_float_map["m_over_n"];
   int n_iterations = this_int_map["n_iterations"];
   int minimum_segment_length = this_int_map["minimum_segment_length"];
+  int maximum_segment_length = this_int_map["maximum_segment_length"];
   int n_nodes_to_visit = this_int_map["n_nodes_to_visit"];             // when constructing channel network, this
   float sigma = this_float_map["sigma"];
   int target_nodes = this_int_map["target_nodes"];
@@ -703,10 +705,10 @@ int main (int nNumberofArgs,char *argv[])
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_coordinate, target_nodes,
                             n_iterations, skip, minimum_segment_length, sigma);
-      ChiTool.segment_counter(FlowInfo);
+      ChiTool.segment_counter(FlowInfo, maximum_segment_length);
       if (this_bool_map["print_segments_raster"])
       {
-        LSDIndexRaster SegmentsRaster = ChiTool.segment_mapping(FlowInfo);
+        LSDIndexRaster SegmentsRaster = ChiTool.segment_mapping(FlowInfo, maximum_segment_length);
         string Segments_raster_name = OUT_DIR+OUT_ID+"_Segments";
         SegmentsRaster.write_raster(Segments_raster_name,raster_ext);
       }
@@ -1170,7 +1172,7 @@ int main (int nNumberofArgs,char *argv[])
                           filled_topography, DistanceFromOutlet,
                           DrainageArea, chi_coordinate, target_nodes,
                           n_iterations, skip, minimum_segment_length, sigma);
-    ChiTool.segment_counter(FlowInfo);
+    ChiTool.segment_counter(FlowInfo, maximum_segment_length);
     ChiTool.ksn_knickpoint_detection(FlowInfo);
     string csv_full_fname_knockpoint = OUT_DIR+OUT_ID+"_KsnKn.csv";
     ChiTool.print_knickpoint_to_csv(FlowInfo,csv_full_fname_knockpoint);
