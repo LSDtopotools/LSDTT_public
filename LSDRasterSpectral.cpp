@@ -426,8 +426,92 @@ void LSDRasterSpectral::generate_fractal_surface_spectral_method(float beta)
   dfftw2D_inv(OutputArrayReal, OutputArrayImaginary,
   	              InputArray, transform_direction);
 
-  RasterData = InputArray;
+  RasterData = InputArray.copy();
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// This creates a fractal surface using the spectral method
+// The method works as follows:
+//  1) Generate a random surface
+//  2) Perform DFT on this random surface
+//  3) Scale the tranform (both real and imaginary parts) by 1/f^beta
+//  4) Perform the inverse DFT.
+//
+//  This results in a pseudo fractal surface that can be used in comarison
+//  with real topography
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDRasterSpectral::generate_fractal_surface_spectral_method(float beta, float desired_relief)
+{
+  // first generate a random field
+  float range = 1.0;
+  rewrite_with_random_values(range);
+
+  // now get the frequency scaling
+  Array2D<float> freq_scaling = get_frequency_scaling_array(beta);
+
+  // now get the real and imaginary DFT arrays
+  // first set up the input and output arrays
+  Array2D<float> InputArray = RasterData.copy();
+  Array2D<float> OutputArrayReal = RasterData.copy();
+  Array2D<float> OutputArrayImaginary = RasterData.copy();
+  int transform_direction = -1;   // this means it will be a forward transform
+
+  // perform the fourier annalysis
+  dfftw2D_fwd(InputArray, OutputArrayReal, OutputArrayImaginary,transform_direction);
+  cout << "Performed DFT! " << endl;
+
+  // now scale the DFT. We replace values in the output arrays
+  for(int row = 0; row<NRows; row++)
+  {
+    for (int col = 0; col<NCols; col++)
+    {
+      OutputArrayReal[row][col] = OutputArrayReal[row][col]*freq_scaling[row][col];
+      OutputArrayImaginary[row][col] = OutputArrayImaginary[row][col]*freq_scaling[row][col];
+    }
+  }
+
+  // now perform the inverse transform
+  // this overwrites the InputArray
+  transform_direction = 1;
+  dfftw2D_inv(OutputArrayReal, OutputArrayImaginary,
+                InputArray, transform_direction);
+                
+                
+                
+  // now scale the data
+  // now scale the DFT. We replace values in the output arrays
+  float MaxElev = -999999999;
+  float MinElev = 999999999;
+  for(int row = 0; row<NRows; row++)
+  {
+    for (int col = 0; col<NCols; col++)
+    {
+      if (InputArray[row][col] > MaxElev)
+      {
+        MaxElev = InputArray[row][col];
+      }
+      if (InputArray[row][col] < MinElev)
+      {
+        MinElev = InputArray[row][col];
+      }
+    }
+  }
+  
+  float rel = MaxElev-MinElev;
+  for(int row = 0; row<NRows; row++)
+  {
+    for (int col = 0; col<NCols; col++)
+    {
+      InputArray[row][col] =  ((InputArray[row][col]-MinElev)/rel)*desired_relief;
+    }
+  }
+
+  RasterData = InputArray.copy();
+}
+
+
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

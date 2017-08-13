@@ -1,8 +1,8 @@
 CC = g++
-CFLAGS= -c -I/home/smudd/libs/boost_1_64_0 -Wall -O3
-OFLAGS = -I/home/smudd/libs/boost_1_64_0 -Wall -O3
+CFLAGS= -c -I../../boost_mtl_minimal -Wall -O3
+OFLAGS = -I../../boost_mtl_minimal -Wall -O3
 LDFLAGS= -Wall
-SOURCES = model_transient_fastscape.cpp \
+SOURCES = model_big_fluvial_test.cpp \
 		../LSDRasterSpectral.cpp \
 		../LSDIndexRaster.cpp \
 		../LSDShapeTools.cpp \
@@ -15,9 +15,9 @@ SOURCES = model_transient_fastscape.cpp \
 		../LSDCRNParameters.cpp
 SCRIPTS = animate.py
 OBJ = $(SOURCES:.cpp=.o)
-#LIBS = -lfftw3 -lpython2.7 -g -O0 -D_GLIBCXX_DEBUG
-LIBS = -lfftw3 -lpython2.7 -Wwrite-strings
-EXEC = model_transient_fastscape.out
+#LIBS = -lfftw3 -g -O0 -D_GLIBCXX_DEBUG
+LIBS = -lfftw3 -Wwrite-strings
+EXEC = model_big_fluvial_test.out
 
 all: $(SOURCES) $(SCRIPTS) $(EXEC)
 

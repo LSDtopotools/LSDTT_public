@@ -85,7 +85,7 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @param filename A String, the file to be loaded.
   /// @param extension A String, the file extension to be loaded.
   LSDRasterModel(string filename, string extension)
-    {   
+  {   
     create(filename, extension); 
     default_parameters();
   }
@@ -134,7 +134,7 @@ class LSDRasterModel: public LSDRasterSpectral
   // INITIALISATION ROUTINES
   // @~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-  /// @brief this initialises the model by directly setting the data members
+  /// @brief this initialises the model by directly #ting the data members
   void initialize_model(
     string& parameter_file, string& run_name, float& dt, float& EndTime, float& PrintInterval,
     float& k_w, float& b, float& m, float& n, float& K, float& ErosionThreshold, 
@@ -186,7 +186,16 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @author SMM
   /// @date 1/7/2014
   void initialise_parabolic_surface(float peak_elev, float edge_offset);
-  
+
+  /// @brief Adds a parabolic surface to the DEM. Used to try and avoid
+  ///  ;arge areas of fill from the fractal initiation steps
+  /// @param peak_elev The peak elevation in metres. Is in the middle of the
+  /// model domain
+  /// @author SMM
+  /// @date 11/8/2017
+  void superimpose_parabolic_surface(float peak_elev);
+
+
   /// @brief This initialises the raster model to a square model domain
   /// with a fractal surface using the algorithm from Saupe (1987d)
   /// @param fractal_D Used to determine the fractal dimension, D by:
@@ -196,6 +205,33 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @date 20/10/2014
   void intialise_fourier_fractal_surface(float fractal_D);
 
+  /// @brief This initialises the raster model to a square model domain
+  /// with a fractal surface using the algorithm from the LSDRasterModel
+  /// @param beta Used to determine the fractal dimension, beta by:
+  /// beta = 3 - fractal_beta. So the fractal dimension should be between
+  /// 2 and 3.
+  /// @param desired_relief The relief desired from the final surface
+  /// @author SMM
+  /// @date 10/08/2017
+  void intialise_fourier_fractal_surface_v2(float beta, float desired_relief);
+
+  /// @brief This initialises the raster model to a fractal surface using the 
+  ///  diamond square algorithm
+  /// @param feature_order is an interger n where the feature size consists of 2^n nodes.
+  /// If the feature order is set bigger than the dimensions of the parent raster then
+  /// this will default to the order of the parent raster.
+  /// @param desired_relief The relief desired from the final surface
+  /// @author SMM
+  /// @date 10/08/2017
+  void intialise_diamond_square_fractal_surface(int feature_order, float desired_relief);
+  
+  /// @brief This takes a raster and tapers the edges to zero elevation. Its 
+  ///  purpose is to remove edge artefacts. 
+  /// @param rows_to_taper The number of rows at the N and S boudaries to taper
+  /// @author SMM
+  /// @date 10/08/2017
+  void initialise_taper_edges_and_raise_raster(int rows_to_taper);
+  
   /// @brief This initialises a surface with a hillslope
   /// that is the solution to the nonlinear sediment flux equation.
   /// It overwrites RasterData
@@ -585,6 +621,28 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @date 01/01/2014
   void reach_steady_state( void );
 
+  /// @brief This method creates a steady landscape that assumes everywhere obeys the 
+  ///  stream power law. It is based on equation 4a from Mudd et al 2014 JGR-ES
+  /// @detail There is no return but the underlying raster data will reflect the
+  ///  analytical steady topography for the uplift rate.
+  /// @param U the uplift rate (in m/yr)
+  /// @author SMM
+  /// @date 10/08/2017
+  void fluvial_snap_to_steady_state(float U);
+
+  /// @brief This method creates a steady landscape that assumes everywhere obeys the 
+  ///  stream power law. It is based on equation 4a from Mudd et al 2014 JGR-ES. 
+  ///  The function is given a target relief and the K value is adjusted to match 
+  ///  this target relief at the maximum chi value. 
+  /// @detail In addition to the return, the underlying raster data will reflect the
+  ///  analytical steady topography for the uplift rate.
+  /// @param U the uplift rate (in m/yr)
+  /// @param desired_relief The desired landscape relief in metres
+  /// @return The back calculated K value for the desired relief
+  /// @author SMM
+  /// @date 10/08/2017
+  float fluvial_snap_to_steady_state_tune_K_for_relief(float U, float desired_relief);
+
   /// @brief Fastscape, implicit finite difference solver for stream power equations
   /// O(n)
   /// Method takes its paramaters from the model data members
@@ -969,6 +1027,27 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @ date 01/01/2014    
   void set_quiet( bool on_status )      { quiet = on_status; }
 
+  // PRINTING OF RASTERS
+  /// @brief Sets the print elevation
+  /// @param boolean; if true prints elevation
+  /// @author SMM
+  /// @date 09/08/2017
+  void set_print_elevation( bool do_I_print_elevation )      { print_elevation = do_I_print_elevation; }
+
+  /// @brief Sets the print hillshade
+  /// @param boolean; if true prints hillshade
+  /// @author SMM
+  /// @date 09/08/2017
+  void set_print_hillshade( bool do_I_print_hillshade )      { print_hillshade = do_I_print_hillshade; }
+
+  /// @brief Sets the print erosion
+  /// @param boolean; if true prints erosion
+  /// @author SMM
+  /// @date 09/08/2017
+  void set_print_erosion( bool do_I_print_erosion )      { print_erosion = do_I_print_erosion; }
+
+
+
   // -------------------------------------------------------------------
   //@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@
   // Getter methods 
@@ -1002,6 +1081,17 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @author JAJ
   /// @date 01/01/2014    
   float get_D( void );
+
+  /// @brief Gets the area exponent
+  /// @author SMM
+  /// @date 10/08/2017
+  float get_m( void )    { return m; }
+  
+  /// @brief Gets the slope exponent
+  /// @author SMM
+  /// @date 10/08/2017
+  float get_n( void )    { return n; }
+  
   
   /// @brief this gets the current_time
   float get_current_time( void )   { return current_time; }
@@ -1111,12 +1201,6 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @author JAJ
   /// @date 01/01/2014
   void make_template_param_file(string filename);
-
-  /// ------------------------------------------------------------------
-  /// Display method
-  /// Wrapper for python script that animates the model output
-  /// ------------------------------------------------------------------
-  void show( void );
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // ~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~

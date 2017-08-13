@@ -51,10 +51,8 @@
 #include "TNT/jama_eig.h"
 #include <boost/numeric/mtl/mtl.hpp>
 #include <boost/numeric/itl/itl.hpp>
-#include <python2.7/Python.h>
 #include "LSDRaster.hpp"
 #include "LSDFlowInfo.hpp"
-//#include "LSDFlowInfo_alt.hpp"
 #include "LSDRasterSpectral.hpp"
 #include "LSDStatsTools.hpp"
 #include "LSDIndexRaster.hpp"
@@ -101,15 +99,20 @@ LSDRasterModel::~LSDRasterModel( void )
 
 // the create function. 
 // This sets up a model domain with a default size and model parameters
+// Imposes UTM zone 1
 void LSDRasterModel::create()
 {
   NRows = 100;
   NCols = 100;
   DataResolution = 10;
-  NoDataValue = -99;
+  NoDataValue = -9999;
   XMinimum = 0;
   YMinimum = 0;
   RasterData = Array2D <float> (NRows, NCols, 0.0);
+  
+  int zone = 1;
+  string NorS = "N";
+  impose_georeferencing_UTM(zone, NorS);
 
   default_parameters();
 }
@@ -143,6 +146,10 @@ void LSDRasterModel::create(int nrows, int ncols, float xmin, float ymin,
     cout << "dimension of data is not the same as stated in NCols!" << endl;
     exit(EXIT_FAILURE);
   }
+  
+  int zone = 1;
+  string NorS = "N";
+  impose_georeferencing_UTM(zone, NorS);
 
 }
 
@@ -155,7 +162,7 @@ void LSDRasterModel::create(LSDRaster& An_LSDRaster)
   YMinimum = An_LSDRaster.get_YMinimum();
   DataResolution = An_LSDRaster.get_DataResolution();
   NoDataValue = An_LSDRaster.get_NoDataValue();
-
+  GeoReferencingStrings =  An_LSDRaster.get_GeoReferencingStrings();
   RasterData = An_LSDRaster.get_RasterData();
 }
 
@@ -165,10 +172,14 @@ LSDRasterModel::LSDRasterModel(int NRows, int NCols)
   this->NRows = NRows;
   this->NCols = NCols;
   this->DataResolution = 10;
-  this->NoDataValue = -99;
+  this->NoDataValue = -9999;
   XMinimum = 0;
   YMinimum = 0;
   RasterData = Array2D <float> (NRows, NCols, 0.0);
+  
+  int zone = 1;
+  string NorS = "N";
+  impose_georeferencing_UTM(zone, NorS);
 }
 
 // this creates an LSDRasterModel using a master parameter file
@@ -177,9 +188,14 @@ void LSDRasterModel::create(string master_param)
   NRows = 100;
   NCols = 100;
   DataResolution = 10;
-  NoDataValue = -99;
+  NoDataValue = -9999;
   XMinimum = 0;
   YMinimum = 0;
+
+  int zone = 1;
+  string NorS = "N";
+  impose_georeferencing_UTM(zone, NorS);
+
 
   default_parameters();
   initialize_model(master_param);
@@ -622,6 +638,38 @@ void LSDRasterModel::initialise_parabolic_surface(float peak_elev, float edge_of
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// superimposes a parabolic surface with elevations on the north and south edges at zero and
+// elevation in the middle of 'peak elevation'
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::superimpose_parabolic_surface(float peak_elev)
+{
+
+  // set up the length coordinate
+  float local_x;
+  float L = DataResolution*(NRows-1);
+  float row_elev;
+
+  // loop through getting the parabolic elevation at each row, and then
+  // writing across the entire domain
+  for(int row = 0; row < NRows; row++)
+  {
+
+    local_x = row*DataResolution;
+    row_elev = - 4.0*(local_x*local_x-local_x*L)*peak_elev / (L*L);
+
+    for (int col = 0; col < NCols; col++)
+    {
+      
+      // at N and S boundaries, tthere is no perturbation
+      if( row != 0 && row != NRows-1)
+      {
+        RasterData[row][col] = RasterData[row][col]+row_elev;
+      }      
+    }
+  }
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Initialies a fractal-based terrain surface with given fractal dimension, D
@@ -700,6 +748,8 @@ void LSDRasterModel::initialise_parabolic_surface(float peak_elev, float edge_of
 // (Saupe 1987)
 //
 // DAV 17/10/2014
+//
+// SMM 10/08/2017 NOT WORKING
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::intialise_fourier_fractal_surface(float fractal_D)
 // 
@@ -708,15 +758,17 @@ void LSDRasterModel::intialise_fourier_fractal_surface(float fractal_D)
 // A[][] is a 2D array of complex variables, size N^2
 {
   
-int N = NRows;
-//int N = RasterData.get_NRows;
-float H = fractal_D;
-Array2D< std::complex<float> > A;
-Array2D<float> X;
+  int N = NRows;
+  //int N = RasterData.get_NRows;
+  float H = fractal_D;
+  Array2D< std::complex<float> > A;
+  Array2D<float> X;
+  std::complex<float> this_complex;
 
-int i0, j0;
 
-float rad, phase;  //Polar coordinates of the Fourier coefficient
+  //int i0, j0;
+
+  float rad, phase;  //Polar coordinates of the Fourier coefficient
   
   for (int i = 0; i<=(N/2); i++)
   {
@@ -733,9 +785,16 @@ float rad, phase;  //Polar coordinates of the Fourier coefficient
         rad = 0;
       } 
       
-      A[i][j] = {rad * cos(phase), rad * sin(phase)};     // left of the comma is real part, right of the comma is imaginary part
+      this_complex.real(rad * cos(phase));
+      this_complex.imag(rad * sin(phase));
+      A[i][j] = this_complex;
+      
+      //A[i][j] = {rad * cos(phase), rad * sin(phase)};     // left of the comma is real part, right of the comma is imaginary part
       // This { } notation may only work in C++11 (i.e. the most recent standard as of 2014)
       
+      
+      
+      /* This stuff seems to have no effect
       if (i==0)
       {
         i0 = 0;
@@ -753,8 +812,13 @@ float rad, phase;  //Polar coordinates of the Fourier coefficient
       {
         j0 = N-j;
       }
+      */
       
-      A[i0][j0] = {rad * cos(phase), -rad * sin(phase)};
+      this_complex.real(rad * cos(phase));
+      this_complex.imag(-rad * sin(phase));
+      A[i][j] = this_complex;
+      
+      // A[i0][j0] = {rad * cos(phase), -rad * sin(phase)};
       
     }
   }
@@ -773,8 +837,17 @@ float rad, phase;  //Polar coordinates of the Fourier coefficient
       phase = 2 * PI * rand();
       rad = pow(i*i + j*j, -(H+1)/2) * Gauss_rand(100, 0.0, 1.0);
       
-      A[i][N-j] = {rad * cos(phase), rad * sin(phase)};    // left of the comma is real part, right of the comma is imaginary part
-      A[N-i][j] = {rad * cos(phase), -rad * sin(phase)};
+      this_complex.real(rad * cos(phase));
+      this_complex.imag(rad * sin(phase));
+      A[i][N-j] = this_complex;
+      
+      this_complex.real(rad * cos(phase));
+      this_complex.imag(-rad * sin(phase));
+      A[N-i][j] = this_complex;
+      
+      
+      //A[i][N-j] = {rad * cos(phase), rad * sin(phase)};    // left of the comma is real part, right of the comma is imaginary part
+      //A[N-i][j] = {rad * cos(phase), -rad * sin(phase)};
       
     }
   }
@@ -785,12 +858,123 @@ float rad, phase;  //Polar coordinates of the Fourier coefficient
   
   dfftw2D_inv_complex(A, X, 1);
   
-  RasterData = X;
+  RasterData = X.copy();
   
 }
     
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This creates a fractal surface DEM using the Fourier filtering method
+// (Saupe 1987)
+//
+// Like above, but uses the version in LSDRasterSpectral
+// ONLY WORKS ON SMALL DEMS WITH pow(2) dimensions
+//
+// SMM 10/08/2017 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::intialise_fourier_fractal_surface_v2(float beta, float desired_relief)
+{
+  Array2D<float> zeta=RasterData.copy();
+
+  // Create a raster spectral
+  LSDRasterSpectral Fourier(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
+
+  Fourier.generate_fractal_surface_spectral_method(beta,desired_relief);
+  
+  zeta = Fourier.get_RasterData();
+
+  RasterData = zeta.copy();
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This creates a fractal surface DEM using the diamond square algorithm. 
+// Believe it or not I lifted this algorithm from Notch, the creator of Minecraft, 
+// who posted it online and then had it modified by Charles Randall
+// https://www.bluh.org/code-the-diamond-square-algorithm/
+//
+// SMM 10/08/2017 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::intialise_diamond_square_fractal_surface(int feature_order, float desired_relief)
+{
+  Array2D<float> zeta=RasterData.copy();
+
+  // temprorary raster for performing diamond square
+  LSDRaster temp_raster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
+  
+  // get the dimaond square raster
+  // IMPORTANT: this will be bigger than the original raster
+  LSDRaster DSRaster = temp_raster.DiamondSquare(feature_order, desired_relief);
+  
+  // resample the raster to get a surface the correct size
+  // it won't wrap but the running to steady will take care of that.
+  for(int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      zeta[row][col] = DSRaster.get_data_element(row,col);
+    }
+  }
+
+  RasterData = zeta.copy();
+
+}
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This tapers the north and south boundaries to 0 elevation and raises the
+// entire DEM above sea level
+//
+// SMM 10/08/2017 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::initialise_taper_edges_and_raise_raster(int rows_to_taper)
+{
+  Array2D<float> zeta=RasterData.copy();
+  
+  // first we need to loop through all the data and raise above the sea level, 
+  // or lower to sea level accordingly
+  float MinElev = 9999999;
+  for(int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      if (zeta[row][col] < MinElev)
+      {
+        MinElev = zeta[row][col];
+      }
+    }
+  }
+  cout << "Tapering. Found the mininum elevation, it is: " << MinElev << endl;
+  
+  
+  // now adjust elevations so the lowst points are at zero elevation
+  for(int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      zeta[row][col] = zeta[row][col]-MinElev;
+    }
+  }
+  
+  // now we loop through the edge nodes, muliplying each by a fraction so they taper to zero elevation
+  float this_frac;
+  for (int taper_row = 0; taper_row < rows_to_taper; taper_row++)
+  {
+    this_frac = float(taper_row)/float(rows_to_taper);
+    
+    for(int col = 0; col<NCols; col++)
+    {
+      zeta[taper_row][col] = this_frac*zeta[taper_row][col];
+      zeta[NRows-1-taper_row][col] = this_frac*zeta[NRows-1-taper_row][col];
+    }
+  }
+  
+  RasterData = zeta.copy();
+
+}
 
 
 
@@ -894,6 +1078,11 @@ void LSDRasterModel::resize_and_reset( int new_rows, int new_cols )
   total_response = 0;
   steady_state = false;
   initial_steady_state = false;  
+  
+  int zone = 1;
+  string NorS = "N";
+  impose_georeferencing_UTM(zone, NorS);
+  
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -934,7 +1123,11 @@ void LSDRasterModel::resize_and_reset( int new_rows, int new_cols, float new_res
   total_erosion = 0;
   total_response = 0;
   steady_state = false;
-  initial_steady_state = false;  
+  initial_steady_state = false; 
+  
+  int zone = 1;
+  string NorS = "N";
+  impose_georeferencing_UTM(zone, NorS);
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -2123,7 +2316,7 @@ void LSDRasterModel::mtl_assemble_matrix(Array2D<float>& zeta_last_iter, Array2D
   mtl_b_vector = 0.0;
 
   // create the inserter. This is deleted when this function is exited
-  mtl::matrix::inserter< mtl::compressed2D<float> > ins(mtl_Assembly_matrix);
+  mtl::mat::inserter< mtl::compressed2D<float> > ins(mtl_Assembly_matrix);
 
   // first we assemble the boundary nodes. First the nodes in row 0 (the south boundary)
   for (int k = 0; k<NCols; k++)
@@ -2280,6 +2473,7 @@ void LSDRasterModel::mtl_solve_assembler_matrix(Array2D<float>& zeta_last_iter, 
 
   // now solve the mtl system
   // Create an ILU(0) preconditioner
+  bool show_time = false;
   long time_start, time_end, time_diff;
   time_start = time(NULL);
   itl::pc::ilu_0< mtl::compressed2D<float> > P(mtl_Assembly_matrix);
@@ -2288,7 +2482,10 @@ void LSDRasterModel::mtl_solve_assembler_matrix(Array2D<float>& zeta_last_iter, 
   bicgstab(mtl_Assembly_matrix, mtl_zeta_solved_vector, mtl_b_vector, P, iter);
   time_end = time(NULL);
   time_diff = time_end-time_start;
-  //std::cout << "iter MTL bicg took: " << time_diff << endl;
+  if (show_time)
+  {
+    std::cout << "iter MTL bicg took: " << time_diff << endl;
+  }
 
   // now reconstitute zeta
   int counter = 0;//NCols;
@@ -3279,7 +3476,7 @@ mtl::compressed2D<float> LSDRasterModel::generate_fd_matrix( int dimension, int 
 
   mtl::compressed2D<float> matrix(size, size);
   matrix = 0.0;
-  mtl::matrix::inserter< mtl::compressed2D<float> > ins(matrix);
+  mtl::mat::inserter< mtl::compressed2D<float> > ins(matrix);
 
   for (int i=0; i<size; ++i)
   {
@@ -3573,7 +3770,7 @@ mtl::compressed2D<float> LSDRasterModel::generate_fv_matrix( int dimension, int 
   int start_i, start_j, end_i, end_j;
   mtl::compressed2D <float> matrix(size, size);
   matrix = 0.0;
-  mtl::matrix::inserter< mtl::compressed2D<float> > ins(matrix);
+  mtl::mat::inserter< mtl::compressed2D<float> > ins(matrix);
   
   if (dimension == 0)
   {
@@ -3813,6 +4010,143 @@ void LSDRasterModel::soil_diffusion_fv_nonlinear( void )
 
 }
 
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This takes the model and calculates the steady state fluvial surface derived from
+// a chi map
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDRasterModel::fluvial_snap_to_steady_state(float U)
+{
+  Array2D<float> zeta=RasterData.copy();
+
+  // Step one, create donor "stack" etc. via FlowInfo
+  LSDRaster temp(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
+  
+  // need to fill the raster to ensure there are no internal base level nodes
+  float slope_for_fill = 0.0001;
+  LSDRaster filled = temp.fill(slope_for_fill);
+  LSDFlowInfo flow(boundary_conditions, filled);
+
+  float K = get_K();
+  float m_exp = get_m();
+  float n_exp = get_n();
+  float area_threshold = 0;
+  float m_over_n = m_exp/n_exp;
+  float A_0 = 1;
+  float one_over_n = 1/n_exp;
+  
+  LSDRaster ChiValues = flow.get_upslope_chi_from_all_baselevel_nodes(m_over_n, A_0,area_threshold);
+  float thisChi;
+  // now we calculate the elevations assuming that the elevation at chi = 0 is 0
+  // This is based on equation 4 from mudd et al 2014 JGR-ES
+  for (int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      thisChi = ChiValues.get_data_element(row,col);
+      if (thisChi == NoDataValue)
+      {
+        zeta[row][col] = NoDataValue;
+      }
+      else
+      {
+        if (n_exp == 1)
+        {
+          zeta[row][col] = (U/K)*thisChi;
+        }
+        else
+        {
+          zeta[row][col] = pow( (U/K),one_over_n)*thisChi;
+        }
+        
+      }
+    }
+  }
+  
+  RasterData = zeta.copy();
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This takes the model and calculates the steady state fluvial surface derived from
+// a chi map
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+float LSDRasterModel::fluvial_snap_to_steady_state_tune_K_for_relief(float U, float desired_relief)
+{
+  Array2D<float> zeta=RasterData.copy();
+
+  // Step one, create donor "stack" etc. via FlowInfo
+  LSDRaster temp(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
+  
+  // We need to fill the raster so we don't get internally drained catchments
+  float slope_for_fill = 0.0001;
+  LSDRaster filled = temp.fill(slope_for_fill);
+  LSDFlowInfo flow(boundary_conditions, filled);
+
+  float K = get_K();
+  float m_exp = get_m();
+  float n_exp = get_n();
+  float area_threshold = 0;
+  float m_over_n = m_exp/n_exp;
+  float A_0 = 1;
+  float one_over_n = 1/n_exp;
+  
+  LSDRaster ChiValues = flow.get_upslope_chi_from_all_baselevel_nodes(m_over_n, A_0,area_threshold);
+  float thisChi;
+  float MaxChi = 0;
+  // now we calculate the elevations assuming that the elevation at chi = 0 is 0
+  // This is based on equation 4 from mudd et al 2014 JGR-ES
+  for (int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      thisChi = ChiValues.get_data_element(row,col);
+      if (thisChi != NoDataValue)
+      {
+        if (thisChi > MaxChi)
+        {
+          MaxChi = thisChi;
+        }
+      }
+    }
+  }
+  
+  // calculate K (you need to do some algebra on equation 4 from mudd et al 2014 JGR-ES)
+  K = U * pow((desired_relief/MaxChi),-n_exp);
+  cout << "I am updating K to " << K << " to get your desired relief." << endl; 
+  
+  
+  // now recalculate the elevations
+  // This is based on equation 4 from mudd et al 2014 JGR-ES
+  for (int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      thisChi = ChiValues.get_data_element(row,col);
+      if (thisChi == NoDataValue)
+      {
+        zeta[row][col] = NoDataValue;
+      }
+      else
+      {
+        if (n_exp == 1)
+        {
+          zeta[row][col] = (U/K)*thisChi;
+        }
+        else
+        {
+          zeta[row][col] = pow( (U/K),one_over_n)*thisChi;
+        }
+        
+      }
+    }
+  }
+  
+  set_K(K);
+  RasterData = zeta.copy();
+  return(K);
+   
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // This is the component of the model that is solved using the 
@@ -5053,8 +5387,8 @@ void LSDRasterModel::print_column_erosion_and_apparent_erosion( int frame,
                                               CRNColumns[cc].getCol());
     
     // get the uplift rate
-    double this_U = get_uplift_rate_at_cell(  CRNColumns[cc].getRow(),
-                                              CRNColumns[cc].getCol());     
+    //double this_U = get_uplift_rate_at_cell(  CRNColumns[cc].getRow(),
+    //                                          CRNColumns[cc].getCol());     
 
     // get the apparent erosion at the cell
     vector<double> this_app_erosion = 
@@ -5077,6 +5411,8 @@ void LSDRasterModel::print_column_erosion_and_apparent_erosion( int frame,
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterModel::print_rasters( int frame )
 {
+  string outfile_format = "bil";
+  
   cout << endl;
   //cout << "Printing raster, initial steady state: " << initial_steady_state 
   //     << " and D mode is : " << D_mode << endl;
@@ -5108,6 +5444,8 @@ void LSDRasterModel::print_rasters( int frame )
   outfile << get_max_uplift() << "\t";
   outfile << endl;
 
+  map<string,string> GRS = get_GeoReferencingStrings();
+
   //cout << "Printing, print elevation is " << print_elevation 
   //     << " and erosion is " << print_erosion << endl;
 
@@ -5115,16 +5453,17 @@ void LSDRasterModel::print_rasters( int frame )
   if (print_elevation)
   {
     ss << name << frame;
-    this->write_raster(ss.str(), "asc");
+    this->write_raster(ss.str(), outfile_format);
   }
   if (print_hillshade)
   {
+    cout << "Printing the hillshade" << endl;
     ss.str("");
-    ss << name << frame << "_hillshade";
+    ss << name << frame << "_hs";
     LSDRaster * hillshade;
     hillshade = new LSDRaster(*this);
     *hillshade = this->hillshade(45, 315, 1);
-    hillshade->write_raster(ss.str(), "asc");
+    hillshade->write_raster(ss.str(), outfile_format);
     delete hillshade;
   }
   if (print_erosion)
@@ -5133,8 +5472,8 @@ void LSDRasterModel::print_rasters( int frame )
     ss << name << frame << "_erosion";
     Array2D <float> erosion_field = calculate_erosion_rates( );
     LSDRaster * erosion;
-    erosion = new LSDRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, erosion_field);
-    erosion->write_raster(ss.str(), "asc");
+    erosion = new LSDRaster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, erosion_field,GRS);
+    erosion->write_raster(ss.str(), outfile_format);
     delete erosion;
   }
 
@@ -5490,52 +5829,6 @@ void LSDRasterModel::make_template_param_file(string filename)
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-void LSDRasterModel::show( void )
-{
-  stringstream run_cmd;
-  run_cmd << "animate.run('" << name << "')";
-
-  Py_Initialize();
-  char path_word[] = "path";
-  PyObject *sys_path = PySys_GetObject(path_word);
-  PyList_Append(sys_path, PyString_FromString("."));
-  PyRun_SimpleString("import animate");
-  PyRun_SimpleString(run_cmd.str().c_str());
-  Py_Finalize();
-}
-
-
-
-/*
-float LSDRasterModel::filestream_param(ifstream & strm, float &upr_param, float &lwr_param, float &upr_t, float &lwr_t)
-{
-  float temp;
-  bool read;
-  
-  while (current_time >= upr_t)
-  {
-    if (strm >> temp)
-    {
-      if (upr_t == -99)
-        lwr_t = time_delay;
-      else
-        lwr_t = upr_t;
-      lwr_param = upr_param;
-      upr_t = temp+time_delay;
-      strm >> upr_param;
-      read = true;
-    }
-    else
-      read = false;
-
-  }
-  if (read)
-    return (upr_param - lwr_param) * (current_time-lwr_t) / (upr_t - lwr_t) + lwr_param;
-  else
-    return upr_param;
-}
-*/
-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // This function gets the fluvial erodability. It has a number of switches
@@ -5562,9 +5855,10 @@ float LSDRasterModel::get_K( void )
     outfile << infile.rdbuf();
 
     // This inhibits portablity
-    ss.str("");
-    ss << "chmod -w .K_file_" << name << ".aux";
-    system(ss.str().c_str());
+    // SMM: Something JAJ put in to manage permissions but I've got rid of it. 
+    //ss.str("");
+    //ss << "chmod -w .K_file_" << name << ".aux";
+    //system(ss.str().c_str());
 
     copied = true;
   }
@@ -5621,9 +5915,10 @@ float LSDRasterModel::get_D( void )
     outfile << infile.rdbuf();
 
     // This inhibits portablity
-    ss.str("");
-    ss << "chmod -w .D_file_" << name << ".aux";
-    system(ss.str().c_str());
+    // SMM: Something JAJ put in to manage permissions but I've got rid of it. 
+    //ss.str("");
+    //ss << "chmod -w .D_file_" << name << ".aux";
+    //system(ss.str().c_str());
 
     copied = true;
   }
@@ -5949,7 +6244,7 @@ void LSDRasterModel::MuddPILE_assemble_matrix(Array2D<float>& uplift_rate,
   mtl_b_vector = 0.0;
 
   // create the inserter. This is deleted when this function is exited
-  mtl::matrix::inserter< mtl::compressed2D<float> > ins(mtl_Assembly_matrix);
+  mtl::mat::inserter< mtl::compressed2D<float> > ins(mtl_Assembly_matrix);
 
   // first we assemble the boundary nodes. First the nodes in row 0
   //cout << "Line 5180, getting south boundary" << endl;
@@ -6189,6 +6484,7 @@ void LSDRasterModel::MuddPILE_solve_assembler_matrix(Array2D<float>& uplift_rate
   // now solve the mtl system
   // Create an ILU(0) preconditioner
   long time_start, time_end, time_diff;
+  bool show_time = false;
   time_start = time(NULL);
   //cout << "LINE 5404 making P " << endl;
   itl::pc::ilu_0< mtl::compressed2D<float> > P(mtl_Assembly_matrix);
@@ -6200,7 +6496,11 @@ void LSDRasterModel::MuddPILE_solve_assembler_matrix(Array2D<float>& uplift_rate
   bicgstab(mtl_Assembly_matrix, mtl_zeta_solved_vector, mtl_b_vector, P, iter);
   time_end = time(NULL);
   time_diff = time_end-time_start;
-  //cout << "iter MTL bicg took: " << time_diff << endl;
+  
+  if(show_time)
+  {
+    cout << "iter MTL bicg took: " << time_diff << endl;
+  }
 
   // now reconstitute zeta
   int counter = 0;

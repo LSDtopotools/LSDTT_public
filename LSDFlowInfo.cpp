@@ -4522,8 +4522,9 @@ void LSDFlowInfo::HilltopFlowRoutingOriginal(LSDRaster Elevation, LSDRaster Hill
 //
 // SWDG 12/2/14
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LSDRaster Hilltops, LSDRaster Slope,
-                                                         LSDIndexRaster StreamNetwork, LSDRaster Aspect, string Prefix, LSDIndexRaster Basins, LSDRaster PlanCurvature,
+vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LSDRaster Hilltop_ID, LSDRaster Slope, LSDRaster Aspect, LSDRaster HilltopCurv, LSDRaster PlanCurvature,  
+                                                         LSDIndexRaster StreamNetwork, LSDIndexRaster Basins, 
+                                                         string Prefix, 
                                                          bool print_paths_switch, int thinning, string trace_path, bool basin_filter_switch,
                                                          vector<int> Target_Basin_Vector)
 {
@@ -4563,8 +4564,9 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
   Array2D<float> zeta = Elevation.get_RasterData(); //elevation
   Array2D<int> stnet = StreamNetwork.get_RasterData(); // stream network
   Array2D<float> aspect = Aspect.get_RasterData(); //aspect
-  Array2D<float> hilltops = Hilltops.get_RasterData(); //hilltops
-  Array2D<float> slope = Slope.get_RasterData(); //hilltops
+  Array2D<float> hilltop_ID = Hilltop_ID.get_RasterData(); //hilltops
+  Array2D<float> CHT = HilltopCurv.get_RasterData(); //hilltip curv
+  Array2D<float> slope = Slope.get_RasterData(); //hilltop slope
   Array2D<int> basin = Basins.get_RasterData(); //basins
 
   //empty arrays for data to be stored in
@@ -4593,7 +4595,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
     cout << "\nFATAL ERROR: unable to write to " << ss_filename.str() << endl;
     exit(EXIT_FAILURE);
   }
-  ofs << "X,Y,i,j,hilltop_id,S,R,Lh,BasinID,a,b,StreamID,HilltopSlope,DivergentCount,PlanarCountFlag,E_Star,R_Star,EucDist\n";
+  ofs << "X,Y,i,j,hilltop_id,Cht,S,R,Lh,BasinID,a,b,StreamID,HilltopSlope,DivergentCount,PlanarCountFlag,E_Star,R_Star,EucDist\n";
 
   //calculate northing and easting
   for (i=0;i<NRows;++i) northing.push_back(ymax - DataResolution*(i - 0.5));
@@ -4618,7 +4620,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 
       // ignore edge cells and non-hilltop cells
       // route initial node by aspect and get outlet coordinates
-      if (hilltops[i][j] != NoDataValue)
+      if (hilltop_ID[i][j] != NoDataValue)
       {
 
         length = 0;
@@ -4997,7 +4999,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
             Relief_Array[i][j] = relief;
 
             //calculate an E* and R* Value assuming S_c of 0.8
-            E_Star = (2.0 * abs(hilltops[i][j])*(length*DataResolution))/0.8;
+            E_Star = (2.0 * abs(CHT[i][j])*(length*DataResolution))/0.8;
             R_Star = relief/((length*DataResolution)*0.8);
 
             //calulate the Euclidean distance between the start and end points of the trace
@@ -5005,7 +5007,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
     
             if (relief > 0)
             {
-              ofs << X << "," << Y << "," << i << "," << j << "," << hilltops[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[a][b] << "," << a << "," << b << "," << stnet[a][b] << "," << slope[i][j] << "," << DivergentCountFlag << "," << PlanarCountFlag << "," << E_Star << "," << R_Star << "," << EucDist << "\n";
+              ofs << X << "," << Y << "," << i << "," << j << "," << hilltop_ID[i][j] << "," << CHT[i][j] << "," << mean_slope << "," << relief << "," << length*DataResolution << "," << basin[a][b] << "," << a << "," << b << "," << stnet[a][b] << "," << slope[i][j] << "," << DivergentCountFlag << "," << PlanarCountFlag << "," << E_Star << "," << R_Star << "," << EucDist << "\n";
             }
             else 
             {
@@ -5026,7 +5028,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
         {
           if (ht_count % thinning == 0)
           {
-            if (hilltops[i][j] != NoDataValue) // && skip_trace == false)
+            if (hilltop_ID[i][j] != NoDataValue) // && skip_trace == false)
             { //check that the current i,j tuple corresponds to a hilltop, ie there is actually a trace to write to file, and check that the trace was valid.
               
               //declare some params for lat long conversion

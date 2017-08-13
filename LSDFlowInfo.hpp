@@ -974,9 +974,9 @@ void get_nodeindices_from_csv(string csv_filename, vector<int>& NIs, vector<floa
   /// @return Vector of Array2D<float> containing hillslope metrics.
   /// @author SWDG
   /// @date 12/2/14
-  vector< Array2D<float> > HilltopFlowRouting(LSDRaster Elevation, LSDRaster Hilltops, LSDRaster Slope,
-               LSDIndexRaster StreamNetwork, LSDRaster Aspect, string Prefix, LSDIndexRaster Basins, LSDRaster PlanCurvature,
-               bool print_paths_switch, int thinning, string trace_path, bool basin_filter_switch,
+  vector< Array2D<float> > HilltopFlowRouting(LSDRaster Elevation, LSDRaster Hilltop_ID, LSDRaster Slope,
+               LSDRaster Aspect, LSDRaster HilltopCurv, LSDRaster PlanCurvature, LSDIndexRaster StreamNetwork, LSDIndexRaster Basins, 
+               string Prefix, bool print_paths_switch, int thinning, string trace_path, bool basin_filter_switch,
                vector<int> Target_Basin_Vector);
 
   /// @brief Hilltop flow routing which runs on unsmoothed topography.
