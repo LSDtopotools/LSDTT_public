@@ -203,6 +203,7 @@ int main (int nNumberofArgs,char *argv[])
   // these print various basin and source data for visualisation
   bool_default_map["print_source_keys"] = false;
   bool_default_map["print_sources_to_csv"] = false;
+  bool_default_map["print_sources_to_raster"] = false;
   bool_default_map["print_baselevel_keys"] = false;
   bool_default_map["print_chi_data_maps"] = false;
 
@@ -436,6 +437,13 @@ int main (int nNumberofArgs,char *argv[])
       LSDSpatialCSVReader thiscsv(sources_csv_name);
       thiscsv.print_data_to_geojson(gjson_name);
     }
+  }
+
+  if( this_bool_map["print_sources_to_raster"])
+  {
+    string CH_name = "_AT_CH_old";
+    LSDIndexRaster Channel_heads_raster = FlowInfo.write_NodeIndexVector_to_LSDIndexRaster(sources);
+    Channel_heads_raster.write_raster((OUT_DIR+OUT_ID+CH_name),"bil");
   }
 
   if (this_bool_map["print_stream_order_raster"])
