@@ -126,7 +126,7 @@ int main (int nNumberofArgs,char *argv[])
 
   // IMPORTANT: S-A analysis and chi analysis wont work if you have a truncated
   // basin. For this reason the default is to test for edge effects
-  bool_default_map["find_complete_basins_in_window"] = false;
+  bool_default_map["find_complete_basins_in_window"] = true;
   bool_default_map["find_largest_complete_basins"] = false;
   bool_default_map["print_basin_raster"] = false;
 
