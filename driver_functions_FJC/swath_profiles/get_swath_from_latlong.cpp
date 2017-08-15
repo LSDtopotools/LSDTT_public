@@ -133,13 +133,8 @@ int main (int nNumberofArgs,char *argv[])
 	SwathPoints.get_x_and_y_from_latlong_specify_columns(upstream_lat, upstream_long,UTME_upstream, UTMN_upstream);
 	SwathPoints.get_x_and_y_from_latlong_specify_columns(downstream_lat, downstream_long,UTME_downstream, UTMN_downstream);
 	cout << "Got the x and y locations" << endl;
-	vector<float> combined_UTME = UTME_upstream;
-	combined_UTME.insert( UTME_upstream.end(), UTME_downstream.begin(), UTME_downstream.end() );
-
-	vector<float> combined_UTMN = UTMN_upstream;
-	combined_UTMN.insert( UTMN_upstream.end(), UTMN_downstream.begin(), UTMN_downstream.end() );
-	string csv_outname = "_UTM_check.csv";
-	SwathPoints.print_UTM_coords_to_csv(combined_UTME, combined_UTMN, (DATA_DIR+DEM_ID+csv_outname));
+	// string csv_outname = "_UTM_check.csv";
+	// SwathPoints.print_UTM_coords_to_csv(UTME, UTMN, (DATA_DIR+DEM_ID+csv_outname));
 
 	// get the channel network
 	vector<int> sources;
@@ -170,23 +165,23 @@ int main (int nNumberofArgs,char *argv[])
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 	// snap to nearest channel
 	int threshold_SO = 2;
-	vector<int> valid_indices_us;
-	vector<int> valid_indices_ds;
+	vector<int> valid_indices;
 	vector<int> upstream_nodes;
 	vector<int> upstream_jns;
 	vector<int> downstream_nodes;
 	vector<int> downstream_jns;
-	ChanNetwork.snap_point_locations_to_channels(UTME_upstream, UTMN_upstream, this_int_map["search_radius"], threshold_SO, FlowInfo, valid_indices_us, upstream_nodes, upstream_jns);
-	ChanNetwork.snap_point_locations_to_channels(UTME_downstream, UTMN_downstream, this_int_map["search_radius"], threshold_SO, FlowInfo, valid_indices_ds, downstream_nodes, downstream_jns);
+	ChanNetwork.snap_point_locations_to_channels(UTME_upstream, UTMN_upstream, this_int_map["search_radius"], threshold_SO, FlowInfo, valid_indices, upstream_nodes, upstream_jns);
+	ChanNetwork.snap_point_locations_to_channels(UTME_downstream, UTMN_downstream, this_int_map["search_radius"], threshold_SO, FlowInfo, valid_indices, downstream_nodes, downstream_jns);
 
-	cout << "The number of valid points is: " << int(valid_indices_us.size()) << endl;
+	//cout << "The number of valid points is: " << int(valid_indices.size()) << endl;
 
-	if (int(valid_indices_us.size()) == int(UTME_upstream.size()))
-	{
+	//if (int(valid_indices.size()) == int(UTME_upstream.size()))
+	//{
 		for (int i = 0; i < int(upstream_nodes.size()); i++)
 		{
 			// get the channel between these points
 			cout << "Got channel nodes: " << upstream_nodes[i] << ", " << downstream_nodes[i] << endl;
+			cout << "processing point " << i << endl;
 			LSDIndexChannel BaselineChannel(upstream_nodes[i], downstream_nodes[i], FlowInfo);
 			//BaselineChannel.write_channel_to_csv(DATA_DIR,DEM_ID+"_chan_check");
 			vector<double> X_coords;
@@ -204,7 +199,7 @@ int main (int nNumberofArgs,char *argv[])
 			string jn_name = itoa(downstream_jns[i]);
 			string uscore = "_";
 			jn_name = uscore+jn_name;
-			string swath_ext = "_swath_raster";
+			string swath_ext = "_swath_raster"+itoa(i);
 			if(this_bool_map["trim_raster"])
 			{
 				// Reducing the Raster
@@ -222,7 +217,7 @@ int main (int nNumberofArgs,char *argv[])
 
 			// push back results to file for plotting
 			ofstream output_file;
-			string output_fname = "_swath_elevations+"+jn_name+".csv";
+			string output_fname = "_swath_elevations+"+jn_name+itoa(i)+".csv";
 			output_file.open((path_name+DEM_ID+output_fname).c_str());
 			output_file << "Distance,Mean,Min,Max" << endl;
 			for (int i = 0; i < int(ElevationValues[0].size()); ++i)
@@ -231,11 +226,11 @@ int main (int nNumberofArgs,char *argv[])
 			}
 			output_file.close();
 		}
-	}
-	else
-	{
+	//}
+	//else
+	//{
 		cout << "I was unable to find a channel between those coordinates! Check your coordinates or increase the search radius." << endl;
-	}
+	//}
 
 	// // get the swath
   // cout << "\t creating swath template" << endl;
