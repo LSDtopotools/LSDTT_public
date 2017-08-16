@@ -121,7 +121,7 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["minimum_basin_size_pixels"] = 5000;
   int_default_map["maximum_basin_size_pixels"] = 500000;
   bool_default_map["test_drainage_boundaries"] = true;
-  bool_default_map["only_take_largest_basin"] = false;
+  bool_default_map["only_take_largest_basin"] = false; 
   string_default_map["BaselevelJunctions_file"] = "NULL";
 
   // IMPORTANT: S-A analysis and chi analysis wont work if you have a truncated
@@ -242,7 +242,7 @@ int main (int nNumberofArgs,char *argv[])
   string BaselevelJunctions_file = LSDPP.get_BaselevelJunctions_file();
 
   cout << "Read filename is: " <<  DATA_DIR+DEM_ID << endl;
-  cout << "Write filename is: " << OUT_DIR+OUT_ID << endl;
+  cout << "Write filename is: " << OUT_DIR+OUT_ID << endl; 
 
     // check to see if the raster exists
   LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);
@@ -507,8 +507,11 @@ int main (int nNumberofArgs,char *argv[])
   else
   {
     cout << "I am attempting to read junctions from a junction list." << endl;
+    
     //specify junctions to work on from a list file
-    string JunctionsFile = DATA_DIR+DEM_ID+"_junctions.list";
+    string JunctionsFile = DATA_DIR+BaselevelJunctions_file; 
+    cout << "The junctions file is: " << BaselevelJunctions_file << endl;
+
 
     vector<int> JunctionsList;
     ifstream infile(JunctionsFile.c_str());
