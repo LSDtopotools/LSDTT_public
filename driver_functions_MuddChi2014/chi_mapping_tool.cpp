@@ -123,7 +123,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["test_drainage_boundaries"] = true;
   bool_default_map["only_take_largest_basin"] = false; 
   string_default_map["BaselevelJunctions_file"] = "NULL";
-  bool_default_map["extend_channel_to_node_before_receiver_junction"] = false;
+  bool_default_map["extend_channel_to_node_before_receiver_junction"] = true;
 
   // IMPORTANT: S-A analysis and chi analysis wont work if you have a truncated
   // basin. For this reason the default is to test for edge effects
