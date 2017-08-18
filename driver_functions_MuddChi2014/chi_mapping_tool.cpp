@@ -195,7 +195,7 @@ int main (int nNumberofArgs,char *argv[])
 
   bool_default_map["print_chi_coordinate_raster"] = false;
   bool_default_map["print_simple_chi_map_to_csv"] = false;
-
+  bool_default_map["print_chi_data_maps"] = false;
 
   // these are routines that run segmentation
   bool_default_map["print_simple_chi_map_with_basins_to_csv"] = false;
@@ -207,7 +207,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_sources_to_csv"] = false;
   bool_default_map["print_sources_to_raster"] = false;
   bool_default_map["print_baselevel_keys"] = false;
-  bool_default_map["print_chi_data_maps"] = false;
+
 
   // These enable calculation of chi based on discharge
   bool_default_map["use_precipitation_raster_for_chi"] = false;
