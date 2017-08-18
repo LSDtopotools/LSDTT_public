@@ -129,6 +129,9 @@ int main(int argc, char *argv[])
   if (argc <= 3)
   {
     cout << "No initial topography loaded, running to a steady condition" << endl;
+    // This is the desired relief of the fractal surface. If this is large, it takes longer
+    // for the channels to fully dissect the landscape, but if it is too low
+    // I think you will get very straight channels.
     float desired_relief = 10;
     
     // run to steady state using a large fluvial incision rate 
@@ -145,6 +148,9 @@ int main(int argc, char *argv[])
       //mod.intialise_fourier_fractal_surface(fractal_D);
 
       //mod.intialise_fourier_fractal_surface_v2(fractal_D,desired_relief);
+      // The feature order sets the largest wavelength of repeating features. 
+      // The number of pixels of the largest feature is this 2^n where n is the
+      // feature order
       int feature_order = 9;
       mod.intialise_diamond_square_fractal_surface(feature_order, desired_relief);
       
@@ -152,8 +158,17 @@ int main(int argc, char *argv[])
       int rows_to_taper = 10;
       mod.initialise_taper_edges_and_raise_raster(rows_to_taper);
       
+      // add a bit of noise to get rid of straight channels on edge
+      mod.set_noise(0.02);
+      mod.random_surface_noise();
+      
       // add a parabola to the topography
-      mod.superimpose_parabolic_surface(desired_relief);
+      // It is set with a relief. If this is similar to the relief of the fractal
+      // surface then you are less likeley to get straight channels in the middle
+      // of the landscape where the model has had to fill low points created by the
+      // fractal algorithm, but you will be more likeley to get parallel rather
+      // than dendritic channels. 
+      mod.superimpose_parabolic_surface(desired_relief/2);
       cout << "Finished with the fractal surface " << endl;
       
       int frame = 555;
@@ -175,23 +190,26 @@ int main(int argc, char *argv[])
     
     // now run to steady state
     // Set a relatively high K value and a high uplift rate to dissect the landscape
+    // This happens quite fast at these settings! You might not even need
+    // 50000 years and could possible shorten the end time. 
     cout << "Dissecting landscape." << endl;
+    mod.set_endTime(50000);
     mod.set_timeStep( 250 );
     mod.set_K(0.01);
     float new_baseline_uplift = 0.0025;
     mod.set_baseline_uplift(new_baseline_uplift);
-    
     mod.set_current_frame(1);
-    
-    mod.set_endTime(50000);
     mod.run_components_combined();
     
     //mod.reach_steady_state();
-        
+
     int frame = 777;
     //mod.print_rasters(frame);
     
     // a bit more dissection
+    // I guess I just do this to make sure full dissection occurs. 
+    // You might reduce the end time. Note that the time is cumulative so this has
+    // to be greater than the previous end time. 
     mod.set_endTime(100000);
     mod.set_K(0.001);
     float U = 0.0001;    // a tenth of a mm per year
@@ -200,6 +218,15 @@ int main(int argc, char *argv[])
     
 
     // Now set to steady state
+    // This gives you the correct relief for a given U by back calculating K. 
+    // It is calculated directly from the chi plots. 
+    // Note that if the landscape is not completely dissected you will get weird
+    // looking landscapes at this point. 
+    
+    // Note that if you want to change m or n use
+    // mod.set_m(0.5);
+    // mod.set_n(1.5);
+    // the m/n ratio will be calculated from these. 
     mod.set_baseline_uplift(U);
     desired_relief = 1000;
     float new_K = mod.fluvial_snap_to_steady_state_tune_K_for_relief(U, desired_relief);
@@ -210,6 +237,8 @@ int main(int argc, char *argv[])
     cout << "Now let me print the raster for you" << endl;
     mod.set_print_hillshade(true);
     
+    // The frames are added to the filenames, so these set specific filenames
+    // for, in this case, the steady state landscape. 
     frame = 999;
     mod.print_rasters(frame);
 
