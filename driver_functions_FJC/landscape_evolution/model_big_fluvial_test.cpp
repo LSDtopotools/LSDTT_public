@@ -1,3 +1,29 @@
+//----------------------------------------------------------------------------//
+// steady_state_fluvial_model.cpp
+//
+// This script creates a steady state landscape for a specific m/n landscape.
+// The model is run in 3 stages:
+//
+// 1. The initial surface is created. Firstly, we generate a fractal surface
+// using a diamond square algorithm with a desired relief.  We then taper the
+// edges of the domain to sea level.  After the fractal surface is generated
+// we add a parabola to the topography in order to stop lots of random depressions
+// in the landscape. The user needs to specify the relief of the parabola - at
+// the moment this is set to fractal_relief/2.
+//
+// 2. The initial surface is fully dissected by setting a high K value and uplift
+// rate. We then run the model for 50,000 years.
+//
+// 3. The appropriate parameters are set using the chi values. We calculate chi
+// for every point in the model, and use this to calculate the appropriate K value
+// to get a desired relief of the final model domain.  We then use this K value
+// and uplift rate to calculate the elevation of the surface, and snap to steady
+// state.
+//
+// Authors: Simon M. Mudd and Fiona J. Clubb
+// University of Edinburgh
+//----------------------------------------------------------------------------//
+
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
@@ -164,11 +190,12 @@ int main(int argc, char *argv[])
 
       // add a parabola to the topography
       // It is set with a relief. If this is similar to the relief of the fractal
-      // surface then you are less likeley to get straight channels in the middle
+      // surface then you are less likely to get straight channels in the middle
       // of the landscape where the model has had to fill low points created by the
-      // fractal algorithm, but you will be more likeley to get parallel rather
+      // fractal algorithm, but you will be more likely to get parallel rather
       // than dendritic channels.
-      mod.superimpose_parabolic_surface(desired_relief/2);
+      float parabolic_relief = desired_relief/2;
+      mod.superimpose_parabolic_surface(parabolic_relief);
       cout << "Finished with the fractal surface " << endl;
 
       int frame = 555;
