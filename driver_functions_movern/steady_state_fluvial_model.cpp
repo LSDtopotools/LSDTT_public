@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 
   // see if we want to load a prior DEM
   bool create_initial_surface = false;
-  string DEM_ID = "LSDRM999"
+  string DEM_ID = "LSDRM999";
 
   if (create_initial_surface == false)
   {
@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
   {
     // loading in a previous raster, let's just modify it with the new steady state values
     float m = 0.5;
-    float n = 1
+    float n = 1;
     float U = 0.0001;    // a tenth of a mm per year
 
     mod.set_baseline_uplift(U);
@@ -244,7 +244,7 @@ int main(int argc, char *argv[])
 
     // The frames are added to the filenames, so these set specific filenames
     // for, in this case, the steady state landscape.
-    frame = 999;
+    int frame = 999;
     mod.print_rasters(frame);
 
     // add some time
@@ -254,4 +254,4 @@ int main(int argc, char *argv[])
   }
 
   return 0;
-  }
+}
