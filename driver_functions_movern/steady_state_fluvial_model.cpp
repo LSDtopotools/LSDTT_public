@@ -70,21 +70,22 @@ int main(int argc, char *argv[])
 
   // see if we want to load a prior DEM
   bool create_initial_surface = false;
-  string DEM_ID = "LSDRM999";
+  string DEM_ID = "LSDRM999_mn05";
 
   if (create_initial_surface == false)
   {
     cout << "I am going to try to read an intial raster for you." << endl;
-    cout << "The read filename is: " <<  pathname+DEM_ID << endl;
+    cout << "The read filename is: " <<  pathname+DEM_ID+".hdr" << endl;
     cout << "I am going to IGNORE initial surface instructions!" << endl;
     string header =  pathname+DEM_ID+".hdr";
     ifstream file_info_in;
     file_info_in.open(header.c_str());
     // check if the parameter file exists
-    if( file_info_in.fail() )
+    if( file_info_in.fail() == false)
     {
       cout << "I found the header. I am loading this initial file. " << endl;
       LSDRaster temp_raster(pathname+DEM_ID,"bil");
+      cout << "Loaded the raster, now initialising the model..." << endl;
       LSDRasterModel temp_mod(temp_raster);
       mod = temp_mod;
     }
@@ -223,14 +224,17 @@ int main(int argc, char *argv[])
   }
   else
   {
+    // add the path to the default filenames
+    mod.add_path_to_names( pathname);
     // loading in a previous raster, let's just modify it with the new steady state values
-    float m = 0.5;
+    float m = 0.8;
     float n = 1;
     float U = 0.0001;    // a tenth of a mm per year
 
     mod.set_baseline_uplift(U);
     mod.set_m(m);
     mod.set_n(n);
+    mod.set_print_interval(5);
 
     mod.set_baseline_uplift(U);
     float desired_relief = 1000;
