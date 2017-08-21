@@ -90,21 +90,33 @@ int main (int nNumberofArgs,char *argv[])
   map<string,string> string_default_map;
   
   // Parameters for initiating the model domain
-  bool_default_map["read_initial_raster"] = false;
   int_default_map["NRows"] = 200;
   int_default_map["NCols"] = 400;
   float_default_map["DataResolution"] = 30;
+  
+  // Parameters that are used if you load a raster
+  bool_default_map["read_initial_raster"] = false;
+  float_default_map["minimum_elevation"] = 0.0;
+  float_default_map["maximum_elevation"] = 30000;
+  float_default_map["min_slope_for_fill"] = 0.0001;
+  bool_default_map["remove_seas"] = true; // elevations above minimum and maximum will be changed to nodata
+  bool_default_map["print_raster_without_seas"] = false;
+  
+  
   
   // Parameters for the initial surface
   bool_default_map["use_diamond_square_initial"] = true;
   float_default_map["diamond_square_relief"] = 10;
   int_default_map["diamond_square_feature_order"] = 8;
+  bool_default_map["taper_edges"] = true;
+  int_default_map["taper_rows"] = 10;
   bool_default_map["superimpose_parabola"] = true;
   float_default_map["parabola_relief"] = 10;
   bool_default_map["roughen_surface"] = true;
+  bool_default_map["fill_then_roughen_surface"] = true;
   float_default_map["roughness_relief"] = 0.25;
-  bool_default_map["taper_edges"] = true;
-  int_default_map["taper_rows"] = 10;
+
+
   
   // Parameters for spinning up the simulation
   float_default_map["spinup_K"] = 0.001;
@@ -165,6 +177,23 @@ int main (int nNumberofArgs,char *argv[])
     {
       cout << "I found the header. I am loading this initial file. " << endl;
       LSDRaster temp_raster(DATA_DIR+DEM_ID,"bil");
+      if (this_bool_map["remove_seas"])
+      {
+        cout << "I am removing high and low values to get rid of things that should be nodata." << endl;
+        float lower_threshold = this_float_map["minimum_elevation"];
+        float upper_threshold = this_float_map["maximum_elevation"];
+        bool belowthresholdisnodata = true;
+        LSDRaster Flooded = temp_raster.mask_to_nodata_using_threshold(lower_threshold,belowthresholdisnodata);
+        belowthresholdisnodata = false;
+        temp_raster = Flooded.mask_to_nodata_using_threshold(upper_threshold,belowthresholdisnodata);
+        if (this_bool_map["print_raster_without_seas"])
+        {
+          cout << "I'm replacing your input raster with a raster without seas." << endl;
+          string this_raster_name = OUT_DIR+OUT_ID;
+          temp_raster.write_raster(this_raster_name,raster_ext);
+        }
+      } 
+      
       LSDRasterModel temp_mod(temp_raster);
       mod = temp_mod;
     }
@@ -219,10 +248,39 @@ int main (int nNumberofArgs,char *argv[])
 
       // Now actually build the fractal surface
       mod.intialise_diamond_square_fractal_surface(this_int_map["diamond_square_feature_order"], this_float_map["diamond_square_relief"]);
+      
+      if (this_bool_map["taper_edges"])
+      {
+        cout << "   Let me taper the edges of this fractal surface for you so that everything drains to the edge." << endl;
+        cout << "   I am tapering along the " << this_int_map["taper_rows"] << " row closes to the N and S boundaries" << endl;
+        mod.initialise_taper_edges_and_raise_raster(this_int_map["taper_rows"]);
+      }
     }
-    
-    
+    if (this_bool_map["superimpose_parabola"])
+    {
+      cout << "   I am superimposing a parabola with a relief of "  << this_float_map["parabola_relief"] << " metres" << endl;
+      mod.superimpose_parabolic_surface(this_float_map["parabola_relief"]);
+    }
+    if(this_bool_map["roughen_surface"])
+    {
+      cout << "   I am going to roughen the surface for you. Roughness elements will " << endl;
+      cout << "   have a maximum amplitude of " << this_float_map["roughness_relief"]<< " metres." << endl;
+      mod.set_noise(this_float_map["roughness_relief"]);
+      mod.random_surface_noise();
+    }
+    if(this_bool_map["fill_then_roughen_surface"])
+    {
+      cout << "   I am going to fill and then roughen the surface for you. Roughness elements will " << endl;
+      cout << "   have a maximum amplitude of " << this_float_map["roughness_relief"]<< " metres." << endl;
+      mod.fill(this_float_map["min_slope_for_fill"]);
+      mod.set_noise(this_float_map["roughness_relief"]);
+      mod.random_surface_noise();
+    }
+    cout << "Finished creating an initial surface. " << endl;
+    cout << "=============================================" << endl << endl << endl;
   }
+  
+  
   
 
 
