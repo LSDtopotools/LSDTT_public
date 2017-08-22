@@ -104,7 +104,7 @@ int main (int nNumberofArgs,char *argv[])
   
   // paramters for controlling model output
   int_default_map["print_interval"] = 10;
-  bool_default_map["write_hillshade"] = false;
+  bool_default_map["write_hillshade"] = true;
   
   // Parameters for the initial surface
   bool_default_map["use_diamond_square_initial"] = true;
@@ -124,7 +124,7 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["spinup_U"] = 0.001;
   float_default_map["spinup_dt"] = 250;
   float_default_map["spinup_time"] = 20000;
-  bool_default_map["staged_spinup"] = false;
+  bool_default_map["staged_spinup"] = true;
   
   // control of m and n, and paramters for chi
   float_default_map["A_0"] = 1;
@@ -164,14 +164,14 @@ int main (int nNumberofArgs,char *argv[])
   string raster_ext =  LSDPP.get_dem_read_extension();
   vector<string> boundary_conditions = LSDPP.get_boundary_conditions();
   string CHeads_file = LSDPP.get_CHeads_file();
-  
-  
-  cout << "Write filename is: " << OUT_DIR+OUT_ID << endl;
-
 
   // Initiate the model object
   LSDRasterModel mod;
-  
+
+  cout << "Write filename is: " << OUT_DIR+OUT_ID << endl;
+  mod.add_path_to_names(OUT_DIR);
+  mod.set_name(OUT_DIR+OUT_ID);
+
   // set the print intervals and other parameters
   mod.set_m(this_float_map["m"]);
   mod.set_n(this_float_map["n"]);
@@ -311,6 +311,7 @@ int main (int nNumberofArgs,char *argv[])
     cout << "This will rapidly develop a drainage network. It uses only fluvial incision." << endl;
     cout << "The typical spinup method is to dissect the landscape and then bring it to " << endl;
     cout << "steady state using the snap_to_steady flag." << endl;
+    mod.set_hillslope(false);
     
     current_end_time = this_float_map["spinup_time"];
     
