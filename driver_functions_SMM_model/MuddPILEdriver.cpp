@@ -119,7 +119,10 @@ int main (int nNumberofArgs,char *argv[])
 
   
   // Parameters for spinning up the simulation
+  bool_default_map["spinup"] = false;
   float_default_map["spinup_K"] = 0.001;
+  float_default_map["spinup_U"] = 0.001;
+  float_default_map["spinup_dt"] = 0.001;
   float_default_map["spinup_time"] = 50000;
   bool_default_map["staged_spinup"] = false;
   
@@ -280,7 +283,26 @@ int main (int nNumberofArgs,char *argv[])
     cout << "=============================================" << endl << endl << endl;
   }
   
-  
+  if(this_bool_map["spinup"])
+  {
+    cout << "I am going to spin the model up for you." << endl;
+    cout << "This will rapidly develop a drainage network. It uses only fluvial incision." << endl;
+    
+    
+    mod.set_endTime(this_float_map["spinup_time"]);
+    mod.set_timeStep( this_float_map["spinup_dt"] );
+    mod.set_K(this_float_map["spinup_K"]);
+    mod.set_baseline_uplift(this_float_map["spinup_U"]);
+    mod.set_current_frame(1);
+    mod.run_components_combined();
+    
+    if(this_bool_map["staged_spinup"])
+    {
+      float new_end_time = this_float_map["spinup_time"]+2*this_float_map["spinup_time"]
+    
+    }
+    
+  }
   
 
 
