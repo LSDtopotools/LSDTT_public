@@ -102,37 +102,48 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["remove_seas"] = true; // elevations above minimum and maximum will be changed to nodata
   bool_default_map["print_raster_without_seas"] = false;
   
-  
+  // paramters for controlling model output
+  int_default_map["print_interval"] = 10;
+  bool_default_map["write_hillshade"] = false;
   
   // Parameters for the initial surface
   bool_default_map["use_diamond_square_initial"] = true;
-  float_default_map["diamond_square_relief"] = 10;
+  float_default_map["diamond_square_relief"] = 16;
   int_default_map["diamond_square_feature_order"] = 8;
   bool_default_map["taper_edges"] = true;
   int_default_map["taper_rows"] = 10;
   bool_default_map["superimpose_parabola"] = true;
-  float_default_map["parabola_relief"] = 10;
+  float_default_map["parabola_relief"] = 6;
   bool_default_map["roughen_surface"] = true;
   bool_default_map["fill_then_roughen_surface"] = true;
   float_default_map["roughness_relief"] = 0.25;
 
-
-  
   // Parameters for spinning up the simulation
   bool_default_map["spinup"] = false;
   float_default_map["spinup_K"] = 0.001;
   float_default_map["spinup_U"] = 0.001;
-  float_default_map["spinup_dt"] = 0.001;
-  float_default_map["spinup_time"] = 50000;
+  float_default_map["spinup_dt"] = 250;
+  float_default_map["spinup_time"] = 20000;
   bool_default_map["staged_spinup"] = false;
   
-  
-  // control of how long you want the simulations to run
-  
-  
-  // paramters for controlling model output
+  // control of m and n, and paramters for chi
+  float_default_map["A_0"] = 1;
+  float_default_map["m"] = 0.5;
+  float_default_map["n"] = 1;
+  float_default_map["dt"] = 250;
   int_default_map["print_interval"] = 10;
-  bool_default_map["write_hillshade"] = false;
+  
+  // control of snapping to steady state
+  bool_default_map["snap_to_steady"] = true;
+  float_default_map["snapped_to_steady_uplift"] = 0.0001;
+  float_default_map["snapped_to_steady_relief"] = 400;
+
+  // Some parameters for very rudimentary steady forcing
+  bool_default_map["rudimentary_steady_forcing"] = true;
+  float_default_map["rudimentary_steady_forcing_time"] = 100000;
+  float_default_map["rudimentary_steady_forcing_uplift"] = 0.0005;
+
+
 
   // Use the parameter parser to get the maps of the parameters required for the 
   // analysis
@@ -160,11 +171,22 @@ int main (int nNumberofArgs,char *argv[])
 
   // Initiate the model object
   LSDRasterModel mod;
-
+  
+  // set the print intervals and other parameters
+  mod.set_m(this_float_map["m"]);
+  mod.set_n(this_float_map["n"]);
+  mod.set_print_hillshade(this_bool_map["write_hillshade"]);
+  mod.set_timeStep( this_float_map["dt"] );
+  mod.set_print_interval(this_int_map["print_interval"]);
 
   // print parameters to screen
   mod.print_parameters();
-
+  
+  // need this to keep track of the end time
+  float current_end_time = 0;
+  
+  
+  
   // see if we want to load a prior DEM
   bool create_initial_surface = false;
   if(this_bool_map["read_initial_raster"])
@@ -225,27 +247,27 @@ int main (int nNumberofArgs,char *argv[])
     if (this_bool_map["use_diamond_square_initial"])
     {
       cout << "   I am starting with a fractal surface created by the diamond square algorithm." << endl;
-      cout << "   It has a relief of " << this_int_map["diamond_square_feature_order"] << endl;
+      cout << "   It has a relief of " << this_int_map["diamond_square_relief"] << endl;
       cout << "   Let me check on the largest possible scale of features in the pseudo fractal surface." << endl;
       
       // we need to check the feature order to make sure it is not bigger than the largest dimension of the raster
-      int largest_dimension;
-      if( this_int_map["NRows"] >= this_int_map["NCols"]) 
+      int smallest_dimension;
+      if( this_int_map["NRows"] <= this_int_map["NCols"]) 
       {
-        largest_dimension = this_int_map["NRows"];
+        smallest_dimension = this_int_map["NRows"];
       }      
       else
       {
-        largest_dimension = this_int_map["NCols"];
+        smallest_dimension = this_int_map["NCols"];
       }
       // now get the largest possible dimension
-      float lps = floor( log2( float(largest_dimension) ) );
+      float lps = floor( log2( float(smallest_dimension) ) );
       int largest_possible_scale = int(lps);
       if( this_int_map["diamond_square_feature_order"] > largest_possible_scale )
       {
         this_int_map["diamond_square_feature_order"] = largest_possible_scale;
       }
-      cout << "    The largest dimnesion is: " << largest_dimension << " pixels." << endl;
+      cout << "    The largest dimnesion is: " << smallest_dimension << " pixels." << endl;
       cout << "    So the biggest scale is: " << pow(2,largest_possible_scale) << " pixels or 2 to the " << largest_possible_scale << " power" << endl;
       cout << "    I am setting the scale to: " << this_int_map["diamond_square_feature_order"] << endl; 
 
@@ -287,7 +309,10 @@ int main (int nNumberofArgs,char *argv[])
   {
     cout << "I am going to spin the model up for you." << endl;
     cout << "This will rapidly develop a drainage network. It uses only fluvial incision." << endl;
+    cout << "The typical spinup method is to dissect the landscape and then bring it to " << endl;
+    cout << "steady state using the snap_to_steady flag." << endl;
     
+    current_end_time = this_float_map["spinup_time"];
     
     mod.set_endTime(this_float_map["spinup_time"]);
     mod.set_timeStep( this_float_map["spinup_dt"] );
@@ -298,12 +323,37 @@ int main (int nNumberofArgs,char *argv[])
     
     if(this_bool_map["staged_spinup"])
     {
-      float new_end_time = this_float_map["spinup_time"]+2*this_float_map["spinup_time"]
-    
+      current_end_time = this_float_map["spinup_time"]+2*this_float_map["spinup_time"];
+      mod.set_endTime(current_end_time);
+      mod.set_K(this_float_map["spinup_K"]*0.1);
+      mod.set_baseline_uplift(this_float_map["spinup_U"]*0.1);
+      mod.run_components_combined();
     }
-    
   }
   
-
+  
+  if(this_bool_map["snap_to_steady"])
+  {
+    cout << "I am going to snap the landscape to steady state. " << endl;
+    cout << "The way this works is that chi is calculated and then the steady state" << endl;
+    cout << " elevation is calculated using equation 4a from Mudd et al 2014 JGR-ES" << endl;
+    cout << "This method assumes only fluvial erosion. If you want hillslopes you need" << endl;
+    cout << "To turn them on and then let the model run to steady state. " << endl;
+    
+    float new_K = mod.fluvial_snap_to_steady_state_tune_K_for_relief(this_float_map["snapped_to_steady_uplift"], this_float_map["snapped_to_steady_relief"]);
+    cout << "Getting a steady solution for a landscape with relief of " << this_float_map["snapped_to_steady_relief"] 
+         << " metres and uplift of " << this_float_map["snapped_to_steady_uplift"]*1000 << " mm per year." << endl;
+    cout << "The new K is: " << new_K << endl;
+    mod.set_K(new_K);
+  }
+  
+  if(this_bool_map["run_steady_forcing"])
+  {
+    cout << "Let me run some steady forcing for you. " << endl;
+    current_end_time = current_end_time+float_default_map["rudimentary_steady_forcing_time"];
+    mod.set_endTime(current_end_time);
+    mod.set_baseline_uplift(float_default_map["rudimentary_steady_forcing_uplift"]);
+    mod.run_components_combined();
+  }
 
 }
