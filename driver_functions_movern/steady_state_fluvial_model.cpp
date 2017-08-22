@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
     // The frames are added to the filenames, so these set specific filenames
     // for, in this case, the steady state landscape.
     int frame = 999;
-    mod.print_rasters(frame);
+    mod.print_rasters_and_csv(frame);
 
     // run the transient scenario
     if (steady_state == false)
@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
       cout << "Running the transient scenario, I've increased the uplift rate to: " << U*1000 << " mm per year." << endl;
 
       // now run the model until the end time
-      mod.set_current_frame(1)
+      mod.set_current_frame(1);
       // add some time
       mod.set_endTime(100000);
       mod.run_components_combined();
