@@ -68,8 +68,12 @@ int main(int argc, char *argv[])
     cout << "The pathname is: " << pathname << endl;
   }
 
+  // add the path to the default filenames
+  mod.add_path_to_names(pathname);
+
   // see if we want to load a prior DEM
   bool create_initial_surface = false;
+  bool steady_state = false; // set this to false to run the transient scenario
   string DEM_ID = "LSDRM999_mn05";
 
   if (create_initial_surface == false)
@@ -119,9 +123,6 @@ int main(int argc, char *argv[])
     string template_param = "template_param.param";
     string full_template_name = pathname+template_param;
     mod.make_template_param_file(full_template_name);
-
-    // add the path to the default filenames
-    mod.add_path_to_names( pathname);
 
     // add random asperities to the surface of default model
     mod.random_surface_noise();
@@ -222,12 +223,11 @@ int main(int argc, char *argv[])
     mod.set_endTime(100000);
     mod.run_components_combined();
   }
+  // otherwise read in a raster and get the steady state solution
   else
   {
-    // add the path to the default filenames
-    mod.add_path_to_names( pathname);
     // loading in a previous raster, let's just modify it with the new steady state values
-    float m = 0.8;
+    float m = 0.5;
     float n = 1;
     float U = 0.0001;    // a tenth of a mm per year
 
@@ -236,7 +236,6 @@ int main(int argc, char *argv[])
     mod.set_n(n);
     mod.set_print_interval(5);
 
-    mod.set_baseline_uplift(U);
     float desired_relief = 1000;
     float new_K = mod.fluvial_snap_to_steady_state_tune_K_for_relief(U, desired_relief);
     cout << "Getting a steady solution for a landscape with relief of " << desired_relief
@@ -251,11 +250,26 @@ int main(int argc, char *argv[])
     int frame = 999;
     mod.print_rasters(frame);
 
-    // add some time
-    mod.set_endTime(50000);
-    mod.run_components_combined();
+    // run the transient scenario
+    if (steady_state == false)
+    {
+      // increase the uplift rate
+      // loading in a previous raster, let's just modify it with the new values
+      U = 0.001;    // increase the uplift rate to a mm per year
 
+      mod.set_baseline_uplift(U);
+      mod.set_m(m);
+      mod.set_n(n);
+      mod.set_print_interval(5);
+
+      cout << "Running the transient scenario, I've increased the uplift rate to: " << U*1000 << " mm per year." << endl;
+
+      // now run the model until the end time
+      mod.set_current_frame(1)
+      // add some time
+      mod.set_endTime(100000);
+      mod.run_components_combined();
+    }
   }
-
   return 0;
 }
