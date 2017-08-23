@@ -397,9 +397,9 @@ int main (int nNumberofArgs,char *argv[])
       mod.set_hillslope(false);
     }
     cout << "Let me run some steady forcing for you. " << endl;
-    current_end_time = current_end_time+float_default_map["rudimentary_steady_forcing_time"];
+    current_end_time = current_end_time+this_float_map["rudimentary_steady_forcing_time"];
     mod.set_endTime(current_end_time);
-    mod.set_baseline_uplift(float_default_map["rudimentary_steady_forcing_uplift"]);
+    mod.set_baseline_uplift(this_float_map["rudimentary_steady_forcing_uplift"]);
     mod.run_components_combined();
   }
 
@@ -416,10 +416,10 @@ int main (int nNumberofArgs,char *argv[])
       mod.set_hillslope(false);
     }
     cout << "Let me run some transient forcing for you. " << endl;
-    current_end_time = current_end_time+float_default_map["transient_forcing_time"];
+    current_end_time = current_end_time+this_float_map["transient_forcing_time"];
     mod.set_endTime(current_end_time);
     //mod.set_baseline_uplift(float_default_map["rudimentary_steady_forcing_uplift"]);
-    mod.set_uplift(0, float_default_map["transient_forcing_uplift"]);
+    mod.set_uplift(0, this_float["transient_forcing_uplift"]);
     mod.run_components_combined();
   }
 
