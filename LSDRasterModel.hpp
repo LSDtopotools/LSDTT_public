@@ -1098,6 +1098,9 @@ class LSDRasterModel: public LSDRasterSpectral
 
   /// @brief this gets the endTime
   float get_endTime( void)         { return endTime; }
+  
+  /// @brief this gets the current frame for printing
+  int get_current_frame( void)     { return current_frame;}
 
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
