@@ -1,8 +1,8 @@
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // MuddPILEdriver
 // The main driver function for the MuddPILE model
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // Copyright (C) 2017 Simon M. Mudd 2017
 //
@@ -143,10 +143,7 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["rudimentary_steady_forcing_time"] = 100000;
   float_default_map["rudimentary_steady_forcing_uplift"] = 0.0005;
 
-
-
-  // Use the parameter parser to get the maps of the parameters required for the
-  // analysis
+  // Use the parameter parser to get the maps of the parameters required for the analysis
   LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
   map<string,float> this_float_map = LSDPP.get_float_parameters();
   map<string,int> this_int_map = LSDPP.get_int_parameters();
@@ -185,9 +182,12 @@ int main (int nNumberofArgs,char *argv[])
   // need this to keep track of the end time
   float current_end_time = 0;
 
-
-
-  // see if we want to load a prior DEM
+  //============================================================================
+  // Logic for reading an initial surface
+  // It will look for a raster but if it doesn't find one it will default back to
+  // fixed rows and columns. If you do load a raster it will override any
+  // instructions about NRows, NCols, and DataResolution
+  //============================================================================
   bool create_initial_surface = false;
   if(this_bool_map["read_initial_raster"])
   {
@@ -236,7 +236,21 @@ int main (int nNumberofArgs,char *argv[])
     create_initial_surface = true;
   }
 
-  // create an initial surface if needed
+  //============================================================================
+  // Logic for creating an initial surface
+  // There are a number of options here, but the defaults are the ones we have
+  // found to create the nicest initial surfaces.
+  // The diamond square routine creates a pseudo-fractal surface. The algorithm
+  // comes from Minecraft's creator, believe it or not.
+  // If you use only the diamond square, you will get pits in the middle of the
+  //  intial surface which will fill, leaving areas of the DEM with very
+  //  straight channels. To mitigate this you can superimpose a parabola
+  //  on the surface, and you can also run a fill function and then add roughness
+  //  to the filled DEM (these are the defaults).
+  // The greater the relief of the parabola relative to the relief of the
+  //  diamond square fractal, the straighter your channels and basins will be
+  //  after dissection.
+  //============================================================================
   if(create_initial_surface)
   {
     cout << endl << endl << "=============================================" << endl;
@@ -306,12 +320,23 @@ int main (int nNumberofArgs,char *argv[])
     cout << "=============================================" << endl << endl << endl;
   }
 
+  //============================================================================
+  // Logic for a spinning up the model.
+  // Here spinup is used to dissect the landscape. Usually you create a
+  // fractal surface first and then dissect it to get an initial channel and
+  // basin geometry. You can then snap it to steady state with the snapping
+  // functions.
+  // This uses fluvial only! You need to run hillslope diffusion after this
+  // if you want a steady landscape with hillslopes
+  //============================================================================
   if(this_bool_map["spinup"])
   {
     cout << "I am going to spin the model up for you." << endl;
     cout << "This will rapidly develop a drainage network. It uses only fluvial incision." << endl;
     cout << "The typical spinup method is to dissect the landscape and then bring it to " << endl;
     cout << "steady state using the snap_to_steady flag." << endl;
+
+    // turn the hillslope diffusion off
     mod.set_hillslope(false);
 
     current_end_time = this_float_map["spinup_time"];
@@ -333,7 +358,11 @@ int main (int nNumberofArgs,char *argv[])
     }
   }
 
-
+  //============================================================================
+  // Logic for snapping to steady state using equation 4a from Mudd et al 2014
+  // Every pixel is considered to be a channel. If you want hillslopes
+  // you will need to run the model after this with the hillslopes turned on
+  //============================================================================
   if(this_bool_map["snap_to_steady"])
   {
     cout << "I am going to snap the landscape to steady state. " << endl;
@@ -349,6 +378,9 @@ int main (int nNumberofArgs,char *argv[])
     mod.set_K(new_K);
   }
 
+  //============================================================================
+  // Logic for a rudimentary steady forcing of uplift
+  //============================================================================
   if(this_bool_map["run_steady_forcing"])
   {
     cout << "Let me run some steady forcing for you. " << endl;
