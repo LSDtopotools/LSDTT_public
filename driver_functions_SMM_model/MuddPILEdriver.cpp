@@ -404,7 +404,9 @@ int main (int nNumberofArgs,char *argv[])
   }
 
   //============================================================================
-  // Logic for a transient forcing
+  // Logic for a transient forcing. This at the moment is set with block
+  // uplift (I hope that is right...)
+  // FJC 23/08/17
   //============================================================================
   if(this_bool_map["run_transient_forcing"])
   {
@@ -413,7 +415,7 @@ int main (int nNumberofArgs,char *argv[])
       cout << "I'm turning hillslope diffusion off." << endl;
       mod.set_hillslope(false);
     }
-    cout << "Let me run some steady forcing for you. " << endl;
+    cout << "Let me run some transient forcing for you. " << endl;
     current_end_time = current_end_time+float_default_map["transient_forcing_time"];
     mod.set_endTime(current_end_time);
     //mod.set_baseline_uplift(float_default_map["rudimentary_steady_forcing_uplift"]);
