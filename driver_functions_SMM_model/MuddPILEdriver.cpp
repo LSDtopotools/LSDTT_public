@@ -415,11 +415,14 @@ int main (int nNumberofArgs,char *argv[])
       cout << "I'm turning hillslope diffusion off." << endl;
       mod.set_hillslope(false);
     }
-    cout << "Let me run some transient forcing for you. " << endl;
+    // tune K for the new uplift rate
+    // do this as a test for now
+    //mod.set_K(0.0000001);
+    cout << "Let me run some transient forcing for you. The new uplift rate is: " << this_float_map["transient_forcing_uplift"]*1000 << " mm/yr." << endl;
     current_end_time = current_end_time+this_float_map["transient_forcing_time"];
     mod.set_endTime(current_end_time);
-    //mod.set_baseline_uplift(float_default_map["rudimentary_steady_forcing_uplift"]);
-    mod.set_uplift(0, this_float_map["transient_forcing_uplift"]);
+    mod.set_baseline_uplift(float_default_map["transient_forcing_uplift"]);
+    //mod.set_uplift(0, this_float_map["transient_forcing_uplift"]);
     mod.run_components_combined();
   }
 
