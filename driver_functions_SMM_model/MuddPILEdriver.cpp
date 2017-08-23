@@ -88,12 +88,12 @@ int main (int nNumberofArgs,char *argv[])
   map<string,float> float_default_map;
   map<string,bool> bool_default_map;
   map<string,string> string_default_map;
-  
+
   // Parameters for initiating the model domain
   int_default_map["NRows"] = 200;
   int_default_map["NCols"] = 400;
   float_default_map["DataResolution"] = 30;
-  
+
   // Parameters that are used if you load a raster
   bool_default_map["read_initial_raster"] = false;
   float_default_map["minimum_elevation"] = 0.0;
@@ -101,11 +101,11 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["min_slope_for_fill"] = 0.0001;
   bool_default_map["remove_seas"] = true; // elevations above minimum and maximum will be changed to nodata
   bool_default_map["print_raster_without_seas"] = false;
-  
+
   // paramters for controlling model output
   int_default_map["print_interval"] = 10;
   bool_default_map["write_hillshade"] = true;
-  
+
   // Parameters for the initial surface
   bool_default_map["use_diamond_square_initial"] = true;
   float_default_map["diamond_square_relief"] = 16;
@@ -125,14 +125,14 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["spinup_dt"] = 250;
   float_default_map["spinup_time"] = 20000;
   bool_default_map["staged_spinup"] = true;
-  
+
   // control of m and n, and paramters for chi
   float_default_map["A_0"] = 1;
   float_default_map["m"] = 0.5;
   float_default_map["n"] = 1;
   float_default_map["dt"] = 250;
   int_default_map["print_interval"] = 10;
-  
+
   // control of snapping to steady state
   bool_default_map["snap_to_steady"] = true;
   float_default_map["snapped_to_steady_uplift"] = 0.0001;
@@ -145,7 +145,7 @@ int main (int nNumberofArgs,char *argv[])
 
 
 
-  // Use the parameter parser to get the maps of the parameters required for the 
+  // Use the parameter parser to get the maps of the parameters required for the
   // analysis
   LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
   map<string,float> this_float_map = LSDPP.get_float_parameters();
@@ -181,12 +181,12 @@ int main (int nNumberofArgs,char *argv[])
 
   // print parameters to screen
   mod.print_parameters();
-  
+
   // need this to keep track of the end time
   float current_end_time = 0;
-  
-  
-  
+
+
+
   // see if we want to load a prior DEM
   bool create_initial_surface = false;
   if(this_bool_map["read_initial_raster"])
@@ -195,10 +195,11 @@ int main (int nNumberofArgs,char *argv[])
     cout << "The read filename is: " <<  DATA_DIR+DEM_ID << endl;
     cout << "I am going to IGNORE initial surface instructions!" << endl;
     string header =  DATA_DIR+DEM_ID+".hdr";
+    cout << "The full read path is: " << header << endl;
     ifstream file_info_in;
     file_info_in.open(header.c_str());
     // check if the parameter file exists
-    if( file_info_in.fail() )
+    if( file_info_in.fail() == false)
     {
       cout << "I found the header. I am loading this initial file. " << endl;
       LSDRaster temp_raster(DATA_DIR+DEM_ID,"bil");
@@ -217,8 +218,8 @@ int main (int nNumberofArgs,char *argv[])
           string this_raster_name = OUT_DIR+OUT_ID;
           temp_raster.write_raster(this_raster_name,raster_ext);
         }
-      } 
-      
+      }
+
       LSDRasterModel temp_mod(temp_raster);
       mod = temp_mod;
     }
@@ -234,28 +235,28 @@ int main (int nNumberofArgs,char *argv[])
     cout << "You have chosen not to read an initial raster so I will create an initial surface for you." << endl;
     create_initial_surface = true;
   }
-  
+
   // create an initial surface if needed
   if(create_initial_surface)
   {
     cout << endl << endl << "=============================================" << endl;
     cout << "Creating and initial surface. " << endl;
-    cout << "NRows: " << this_int_map["NRows"]<< ", NCols: " << this_int_map["NCols"] 
+    cout << "NRows: " << this_int_map["NRows"]<< ", NCols: " << this_int_map["NCols"]
          << ", DataResolution: " << this_float_map["DataResolution"] << endl;
     mod.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"]);
-    
+
     if (this_bool_map["use_diamond_square_initial"])
     {
       cout << "   I am starting with a fractal surface created by the diamond square algorithm." << endl;
       cout << "   It has a relief of " << this_int_map["diamond_square_relief"] << endl;
       cout << "   Let me check on the largest possible scale of features in the pseudo fractal surface." << endl;
-      
+
       // we need to check the feature order to make sure it is not bigger than the largest dimension of the raster
       int smallest_dimension;
-      if( this_int_map["NRows"] <= this_int_map["NCols"]) 
+      if( this_int_map["NRows"] <= this_int_map["NCols"])
       {
         smallest_dimension = this_int_map["NRows"];
-      }      
+      }
       else
       {
         smallest_dimension = this_int_map["NCols"];
@@ -269,11 +270,11 @@ int main (int nNumberofArgs,char *argv[])
       }
       cout << "    The largest dimnesion is: " << smallest_dimension << " pixels." << endl;
       cout << "    So the biggest scale is: " << pow(2,largest_possible_scale) << " pixels or 2 to the " << largest_possible_scale << " power" << endl;
-      cout << "    I am setting the scale to: " << this_int_map["diamond_square_feature_order"] << endl; 
+      cout << "    I am setting the scale to: " << this_int_map["diamond_square_feature_order"] << endl;
 
       // Now actually build the fractal surface
       mod.intialise_diamond_square_fractal_surface(this_int_map["diamond_square_feature_order"], this_float_map["diamond_square_relief"]);
-      
+
       if (this_bool_map["taper_edges"])
       {
         cout << "   Let me taper the edges of this fractal surface for you so that everything drains to the edge." << endl;
@@ -304,7 +305,7 @@ int main (int nNumberofArgs,char *argv[])
     cout << "Finished creating an initial surface. " << endl;
     cout << "=============================================" << endl << endl << endl;
   }
-  
+
   if(this_bool_map["spinup"])
   {
     cout << "I am going to spin the model up for you." << endl;
@@ -312,16 +313,16 @@ int main (int nNumberofArgs,char *argv[])
     cout << "The typical spinup method is to dissect the landscape and then bring it to " << endl;
     cout << "steady state using the snap_to_steady flag." << endl;
     mod.set_hillslope(false);
-    
+
     current_end_time = this_float_map["spinup_time"];
-    
+
     mod.set_endTime(this_float_map["spinup_time"]);
     mod.set_timeStep( this_float_map["spinup_dt"] );
     mod.set_K(this_float_map["spinup_K"]);
     mod.set_baseline_uplift(this_float_map["spinup_U"]);
     mod.set_current_frame(1);
     mod.run_components_combined();
-    
+
     if(this_bool_map["staged_spinup"])
     {
       current_end_time = this_float_map["spinup_time"]+2*this_float_map["spinup_time"];
@@ -331,8 +332,8 @@ int main (int nNumberofArgs,char *argv[])
       mod.run_components_combined();
     }
   }
-  
-  
+
+
   if(this_bool_map["snap_to_steady"])
   {
     cout << "I am going to snap the landscape to steady state. " << endl;
@@ -340,14 +341,14 @@ int main (int nNumberofArgs,char *argv[])
     cout << " elevation is calculated using equation 4a from Mudd et al 2014 JGR-ES" << endl;
     cout << "This method assumes only fluvial erosion. If you want hillslopes you need" << endl;
     cout << "To turn them on and then let the model run to steady state. " << endl;
-    
+
     float new_K = mod.fluvial_snap_to_steady_state_tune_K_for_relief(this_float_map["snapped_to_steady_uplift"], this_float_map["snapped_to_steady_relief"]);
-    cout << "Getting a steady solution for a landscape with relief of " << this_float_map["snapped_to_steady_relief"] 
+    cout << "Getting a steady solution for a landscape with relief of " << this_float_map["snapped_to_steady_relief"]
          << " metres and uplift of " << this_float_map["snapped_to_steady_uplift"]*1000 << " mm per year." << endl;
     cout << "The new K is: " << new_K << endl;
     mod.set_K(new_K);
   }
-  
+
   if(this_bool_map["run_steady_forcing"])
   {
     cout << "Let me run some steady forcing for you. " << endl;
