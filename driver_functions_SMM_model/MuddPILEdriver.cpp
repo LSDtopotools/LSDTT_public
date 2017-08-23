@@ -202,7 +202,7 @@ int main (int nNumberofArgs,char *argv[])
     ifstream file_info_in;
     file_info_in.open(header.c_str());
     // check if the parameter file exists
-    if( file_info_in.fail() == false)
+    if( not file_info_in.fail() )
     {
       cout << "I found the header. I am loading this initial file. " << endl;
       LSDRaster temp_raster(DATA_DIR+DEM_ID,"bil");
@@ -386,7 +386,7 @@ int main (int nNumberofArgs,char *argv[])
   //============================================================================
   if(this_bool_map["run_steady_forcing"])
   {
-    if(this_bool_map["hillslopes_on"] == false)
+    if( not this_bool_map["hillslopes_on"] )
     {
       cout << "I'm turning hillslope diffusion off." << endl;
       mod.set_hillslope(false);
