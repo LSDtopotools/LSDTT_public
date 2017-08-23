@@ -143,6 +143,9 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["rudimentary_steady_forcing_time"] = 100000;
   float_default_map["rudimentary_steady_forcing_uplift"] = 0.0005;
 
+  // Parameters for hillslopes
+  bool_default_map["hillslopes_on"] = false;
+
   // Use the parameter parser to get the maps of the parameters required for the analysis
   LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
   map<string,float> this_float_map = LSDPP.get_float_parameters();
@@ -383,6 +386,11 @@ int main (int nNumberofArgs,char *argv[])
   //============================================================================
   if(this_bool_map["run_steady_forcing"])
   {
+    if(this_bool_map["hillslopes_on"] == false)
+    {
+      cout << "I'm turning hillslope diffusion off." << endl;
+      mod.set_hillslope(false);
+    }
     cout << "Let me run some steady forcing for you. " << endl;
     current_end_time = current_end_time+float_default_map["rudimentary_steady_forcing_time"];
     mod.set_endTime(current_end_time);
