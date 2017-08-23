@@ -139,7 +139,7 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["snapped_to_steady_relief"] = 400;
 
   // Some parameters for very rudimentary steady forcing
-  bool_default_map["rudimentary_steady_forcing"] = true;
+  bool_default_map["run_steady_forcing"] = true;
   float_default_map["rudimentary_steady_forcing_time"] = 100000;
   float_default_map["rudimentary_steady_forcing_uplift"] = 0.0005;
 
