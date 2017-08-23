@@ -130,6 +130,7 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["A_0"] = 1;
   float_default_map["m"] = 0.5;
   float_default_map["n"] = 1;
+  int_default_map["uplift_mode"] = 0;
   float_default_map["dt"] = 250;
   int_default_map["print_interval"] = 10;
 
@@ -137,9 +138,10 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["snap_to_steady"] = true;
   float_default_map["snapped_to_steady_uplift"] = 0.0001;
   float_default_map["snapped_to_steady_relief"] = 400;
+  bool_default_map["print_snapped_to_steady_frame"] = false;
 
   // Some parameters for very rudimentary steady forcing
-  bool_default_map["run_steady_forcing"] = true;
+  bool_default_map["rudimentary_steady_forcing"] = true;
   float_default_map["rudimentary_steady_forcing_time"] = 100000;
   float_default_map["rudimentary_steady_forcing_uplift"] = 0.0005;
 
@@ -180,6 +182,7 @@ int main (int nNumberofArgs,char *argv[])
   // set the print intervals and other parameters
   mod.set_m(this_float_map["m"]);
   mod.set_n(this_float_map["n"]);
+  mod.set_uplift_mode(this_int_map["uplift_mode"]);
   mod.set_print_hillshade(this_bool_map["write_hillshade"]);
   mod.set_timeStep( this_float_map["dt"] );
   mod.set_print_interval(this_int_map["print_interval"]);
@@ -352,7 +355,7 @@ int main (int nNumberofArgs,char *argv[])
     mod.set_endTime(this_float_map["spinup_time"]);
     mod.set_timeStep( this_float_map["spinup_dt"] );
     mod.set_K(this_float_map["spinup_K"]);
-    mod.set_baseline_uplift(this_float_map["spinup_U"]);
+    mod.set_uplift( this_int_map["uplift_mode"], this_float_map["spinup_U"] );
     mod.set_current_frame(1);
     mod.run_components_combined();
 
@@ -361,7 +364,7 @@ int main (int nNumberofArgs,char *argv[])
       current_end_time = this_float_map["spinup_time"]+2*this_float_map["spinup_time"];
       mod.set_endTime(current_end_time);
       mod.set_K(this_float_map["spinup_K"]*0.1);
-      mod.set_baseline_uplift(this_float_map["spinup_U"]*0.1);
+      mod.set_uplift( this_int_map["uplift_mode"], this_float_map["spinup_U"]*0.1 );
       mod.run_components_combined();
     }
   }
@@ -384,12 +387,22 @@ int main (int nNumberofArgs,char *argv[])
          << " metres and uplift of " << this_float_map["snapped_to_steady_uplift"]*1000 << " mm per year." << endl;
     cout << "The new K is: " << new_K << endl;
     mod.set_K(new_K);
+    
+    if(this_bool_map["print_snapped_to_steady_frame"])
+    {
+      cout << "I am printing the snapped surface, increasing the frame count by 1." << endl;
+      int this_frame = mod.get_current_frame();
+      mod.print_rasters_and_csv( this_frame );
+      this_frame++;
+      mod.set_current_frame(this_frame);
+      
+    }
   }
 
   //============================================================================
   // Logic for a rudimentary steady forcing of uplift
   //============================================================================
-  if(this_bool_map["run_steady_forcing"])
+  if(this_bool_map["rudimentary_steady_forcing"])
   {
     if( not this_bool_map["hillslopes_on"] )
     {
@@ -397,9 +410,16 @@ int main (int nNumberofArgs,char *argv[])
       mod.set_hillslope(false);
     }
     cout << "Let me run some steady forcing for you. " << endl;
+    cout << "Starting with a K of: " << mod.get_K() << endl;
     current_end_time = current_end_time+this_float_map["rudimentary_steady_forcing_time"];
     mod.set_endTime(current_end_time);
-    mod.set_baseline_uplift(this_float_map["rudimentary_steady_forcing_uplift"]);
+    mod.set_uplift( this_int_map["uplift_mode"], this_float_map["rudimentary_steady_forcing_uplift"] );
+    mod.run_components_combined();
+    
+    cout << "This is a test, I am changing the uplift." << endl;
+    current_end_time = current_end_time+this_float_map["rudimentary_steady_forcing_time"];
+    mod.set_endTime(current_end_time);
+    mod.set_baseline_uplift(this_float_map["rudimentary_steady_forcing_uplift"]*2);
     mod.run_components_combined();
   }
 
@@ -421,8 +441,7 @@ int main (int nNumberofArgs,char *argv[])
     cout << "Let me run some transient forcing for you. The new uplift rate is: " << this_float_map["transient_forcing_uplift"]*1000 << " mm/yr." << endl;
     current_end_time = current_end_time+this_float_map["transient_forcing_time"];
     mod.set_endTime(current_end_time);
-    mod.set_baseline_uplift(float_default_map["transient_forcing_uplift"]);
-    //mod.set_uplift(0, this_float_map["transient_forcing_uplift"]);
+    mod.set_uplift( this_int_map["uplift_mode"], this_float_map["transient_forcing_uplift"] );
     mod.run_components_combined();
   }
 

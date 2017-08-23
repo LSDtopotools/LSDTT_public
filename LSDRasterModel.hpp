@@ -754,6 +754,13 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @date 07/07/2014   commented 26/06/2014
   float get_uplift_rate_at_cell(int i, int j);
 
+  /// @brief This checks to see if the uplift field is consistent with 
+  ///  the raster dimensions. If not it corrects the dimensions of the uplift field
+  /// @author SMM
+  /// @date 23/08/2017
+  void check_and_correct_uplift_field();
+
+
   /// @brief this calcualtes the average uplfit rate over the entire model domain,
   /// excluding the N and S boundaries
   /// @return the average uplift rate in m/yr
@@ -875,6 +882,9 @@ class LSDRasterModel: public LSDRasterSpectral
   /// the same starting conditions
   void set_num_runs( int num )        { num_runs = num; }
 
+  /// @brief sets the uplift mode
+  void set_uplift_mode( int new_uplift_mode)    { uplift_mode = new_uplift_mode; }
+
   /// @brief overloaded function, set the array of uplift
   void set_uplift( Array2D <float> uplift )    { uplift_field = uplift; }
 
@@ -896,7 +906,7 @@ class LSDRasterModel: public LSDRasterSpectral
   void set_uplift_amplitude( double uplift_amplitude_fraction)
           { uplift_amplitude = max_uplift*uplift_amplitude_fraction; }
 
-  /// @brief this sets the baseline uplift rate for the tilt block
+  /// @brief this sets the baseline uplift rate for the tilt block                                  
   void set_baseline_uplift( float new_rate )    { baseline_uplift = new_rate; }
 
   /// @brief set the tolerance for determining steady state
@@ -1101,6 +1111,9 @@ class LSDRasterModel: public LSDRasterSpectral
   
   /// @brief this gets the current frame for printing
   int get_current_frame( void)     { return current_frame;}
+  
+  /// @brief gets the uplift mode
+  int get_uplift_mode(void)        { return uplift_mode; }
 
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

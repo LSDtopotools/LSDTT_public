@@ -1954,6 +1954,7 @@ float LSDRasterModel::get_uplift_at_cell(int i, int j)
 float LSDRasterModel::get_uplift_rate_at_cell(int i, int j)
 {
   float result;
+  
 
   // don't do anything if this is a base level node
   if (is_base_level(i,j))
@@ -1999,6 +2000,15 @@ float LSDRasterModel::get_uplift_rate_at_cell(int i, int j)
         result = periodic_parameter( get_max_uplift(), uplift_amplitude );
         break;
       }
+      case 5:
+      {
+        // The uplift field is a distance, so to get the rate we need to divide by the timestep.
+        // This is inherited from an old way of calculating uplift. 
+        // I will need to fix in future but don't know what all the dependencies are
+        // so can't do it now. 
+        result = uplift_field[i][j]/timeStep;
+      
+      }
       default:
         result = get_max_uplift();
         break;
@@ -2008,6 +2018,30 @@ float LSDRasterModel::get_uplift_rate_at_cell(int i, int j)
   return result;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Checks to see if the uplift field is the correct size
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::check_and_correct_uplift_field()
+{
+  cout << "I am checking to make sure the uplift field is the same dimensions" << endl;
+  cout << " as the model data. " << endl;
+  
+  cout << "NRows: " << NRows << " NCols: " << NCols << endl;
+  cout << "Data Rows: " << RasterData.dim1() << " NCols: " << RasterData.dim2() << endl;
+  cout << "Uplift rows: " << uplift_field.dim1() << " uplift cols: " << uplift_field.dim2() << endl;
+
+  // check to see, if the uplift mode is based on an uplift field,
+  // that the uplift field is the same size as the raster
+  if(uplift_mode == 5)
+  {
+    cout << "You have decided to uyse the uplift field matrix! " << endl;
+  }
+
+
+}
+
+
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2928,7 +2962,7 @@ void LSDRasterModel::run_components_combined( void )
     // now for fluvial erosion
     if (fluvial)
     {
-      // currently the opnly option is stream power using the FASTSCAPE
+      // currently the only option is stream power using the FASTSCAPE
       // algorithm so there are no choices here
       fluvial_incision_with_uplift();
     }
