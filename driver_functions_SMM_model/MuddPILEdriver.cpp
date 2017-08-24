@@ -110,6 +110,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["use_diamond_square_initial"] = true;
   float_default_map["diamond_square_relief"] = 16;
   int_default_map["diamond_square_feature_order"] = 8;
+  int_default_map["ds_minimum_feature_order"] = 4;
   bool_default_map["taper_edges"] = true;
   int_default_map["taper_rows"] = 10;
   bool_default_map["superimpose_parabola"] = true;
@@ -435,6 +436,7 @@ int main (int nNumberofArgs,char *argv[])
   {
     cout << "I am going to try to spin up the model by cycling between hillslope diffusion on and off."  << endl;
     mod.set_current_frame(1);
+    int this_frame;
     for(int i =0; i< this_int_map["snap_diffuse_cycles"]; i++)
     {
       cout << "++CYCLE NUMBER: "  << i << "+++++" << endl;
@@ -447,29 +449,57 @@ int main (int nNumberofArgs,char *argv[])
       mod.set_K(this_float_map["spinup_K"]);
       mod.set_uplift( this_int_map["uplift_mode"], this_float_map["spinup_U"] );
       mod.run_components_combined();
-      
+
       // then we snap to steady
       float steady_relief = this_float_map["DataResolution"];   // this ensure you don't get critical slopes 
       float new_K = mod.fluvial_snap_to_steady_state_tune_K_for_relief(this_float_map["snapped_to_steady_uplift"], steady_relief);
-      cout << "Getting a steady solution for a landscape with relief of " << this_float_map["snapped_to_steady_relief"]
+      cout << "Getting a steady solution for a landscape with relief of " << steady_relief
          << " metres and uplift of " << this_float_map["snapped_to_steady_uplift"]*1000 << " mm per year." << endl;
       cout << "The new K is: " << new_K << endl;
+
       
+      this_frame = mod.get_current_frame();
+      cout << "I am printing the snap! The frame is:" << this_frame << endl;
+      mod.print_rasters_and_csv( this_frame );
+      this_frame++;
+      mod.set_current_frame(this_frame);
+
       // now turn the hillslopes on and run a bit more 
-      mod.set_hillslope(true);
-      current_end_time = current_end_time+this_float_map["spinup_time"]*0.25;
+      //mod.set_hillslope(true);
+      mod.set_timeStep( this_float_map["spinup_dt"]*0.1 );
+      mod.set_print_interval(this_int_map["print_interval"]*10);
+      current_end_time = current_end_time+this_float_map["spinup_time"]*0.05;
       mod.set_endTime(current_end_time);
-      mod.set_K(this_float_map["new_K"]);
+      mod.set_K(this_float_map["new_K"]*2);
       mod.set_uplift( this_int_map["uplift_mode"], this_float_map["snapped_to_steady_uplift"] );
       mod.run_components_combined();
+      
+      this_frame = mod.get_current_frame();
+      cout << "I am printing the snap! The frame is:" << this_frame << endl;
+      mod.print_rasters_and_csv( this_frame );
+      this_frame++;
+      mod.set_current_frame(this_frame);
+
     }
     
-    current_end_time = current_end_time+this_float_map["spinup_time"];
+    // run at dissection speed
+    cout << "Last bit of dissection." << endl;
+    current_end_time = current_end_time+this_float_map["spinup_time"]*2;
     mod.set_hillslope(false);
     mod.set_endTime(current_end_time);
     mod.set_timeStep( this_float_map["spinup_dt"] );
     mod.set_K(this_float_map["spinup_K"]);
-    mod.set_uplift( this_int_map["uplift_mode"], this_float_map["spinup_U"] );
+    mod.set_uplift( this_int_map["uplift_mode"], this_float_map["snapped_to_steady_uplift"]*2 );
+    mod.run_components_combined();
+    
+    // now run at lower speed
+    cout << "Slowing down and dissecting" << endl;
+    current_end_time = current_end_time+this_float_map["spinup_time"]*5;
+    mod.set_hillslope(false);
+    mod.set_endTime(current_end_time);
+    mod.set_timeStep( this_float_map["spinup_dt"] );
+    mod.set_K(this_float_map["spinup_K"]);
+    mod.set_uplift( this_int_map["uplift_mode"], this_float_map["snapped_to_steady_uplift"] );
     mod.run_components_combined();
   }
   

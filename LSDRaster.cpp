@@ -2709,7 +2709,6 @@ LSDRaster LSDRaster::DiamondSquare(int feature_order, float scale)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // Make LSDRaster object using a 'template' raster and an Array2D of data.
 // SWDG 29/8/13

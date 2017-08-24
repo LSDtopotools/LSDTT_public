@@ -693,6 +693,9 @@ class LSDRaster
   /// @date 16/02/2014
   void DSSetFeatureCorners(int featuresize, float scale);
 
+
+
+
   /// @brief This is the square sampling step of the diamond square algorithm: it takes
   /// the average of the four corners and adds a random number to set the centrepoint
   /// of a square.
@@ -742,6 +745,7 @@ class LSDRaster
   /// @author SMM
   /// @date 16/02/2014
   LSDRaster DiamondSquare(int feature_order, float scale);
+  
 
   // Functions relating to shading, shadowing and shielding
 
