@@ -125,6 +125,10 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["spinup_dt"] = 250;
   float_default_map["spinup_time"] = 20000;
   bool_default_map["staged_spinup"] = true;
+  
+  // This spinup routine tries to combine snapping and hillslope diffusion
+  bool_default_map["spinup_snap_diffuse"] = false;
+  int_default_map["snap_diffuse_cycles"] = 5;
 
   // control of m and n, and paramters for chi
   float_default_map["A_0"] = 1;
@@ -424,25 +428,51 @@ int main (int nNumberofArgs,char *argv[])
   }
 
   //============================================================================
-  // Logic for a transient forcing. This at the moment is set with block
-  // uplift (I hope that is right...)
-  // FJC 23/08/17
+  // This cycles between version with hillslopes and without to speed up the initial
+  // condition.  
   //============================================================================
-  if(this_bool_map["run_transient_forcing"])
+  if(this_bool_map["spinup_snap_diffuse"])
   {
-    if( not this_bool_map["hillslopes_on"] )
+    cout << "I am going to try to spin up the model by cycling between hillslope diffusion on and off."  << endl;
+    mod.set_current_frame(1);
+    for(int i =0; i< this_int_map["snap_diffuse_cycles"]; i++)
     {
-      cout << "I'm turning hillslope diffusion off." << endl;
+      cout << "++CYCLE NUMBER: "  << i << "+++++" << endl;
+      
+      // first we do a little bit of fluvial action
+      current_end_time = current_end_time+this_float_map["spinup_time"];
       mod.set_hillslope(false);
+      mod.set_endTime(current_end_time);
+      mod.set_timeStep( this_float_map["spinup_dt"] );
+      mod.set_K(this_float_map["spinup_K"]);
+      mod.set_uplift( this_int_map["uplift_mode"], this_float_map["spinup_U"] );
+      mod.run_components_combined();
+      
+      // then we snap to steady
+      float steady_relief = this_float_map["DataResolution"];   // this ensure you don't get critical slopes 
+      float new_K = mod.fluvial_snap_to_steady_state_tune_K_for_relief(this_float_map["snapped_to_steady_uplift"], steady_relief);
+      cout << "Getting a steady solution for a landscape with relief of " << this_float_map["snapped_to_steady_relief"]
+         << " metres and uplift of " << this_float_map["snapped_to_steady_uplift"]*1000 << " mm per year." << endl;
+      cout << "The new K is: " << new_K << endl;
+      
+      // now turn the hillslopes on and run a bit more 
+      mod.set_hillslope(true);
+      current_end_time = current_end_time+this_float_map["spinup_time"]*0.25;
+      mod.set_endTime(current_end_time);
+      mod.set_K(this_float_map["new_K"]);
+      mod.set_uplift( this_int_map["uplift_mode"], this_float_map["snapped_to_steady_uplift"] );
+      mod.run_components_combined();
     }
-    // tune K for the new uplift rate
-    // do this as a test for now
-    //mod.set_K(0.0000001);
-    cout << "Let me run some transient forcing for you. The new uplift rate is: " << this_float_map["transient_forcing_uplift"]*1000 << " mm/yr." << endl;
-    current_end_time = current_end_time+this_float_map["transient_forcing_time"];
+    
+    current_end_time = current_end_time+this_float_map["spinup_time"];
+    mod.set_hillslope(false);
     mod.set_endTime(current_end_time);
-    mod.set_uplift( this_int_map["uplift_mode"], this_float_map["transient_forcing_uplift"] );
+    mod.set_timeStep( this_float_map["spinup_dt"] );
+    mod.set_K(this_float_map["spinup_K"]);
+    mod.set_uplift( this_int_map["uplift_mode"], this_float_map["spinup_U"] );
     mod.run_components_combined();
   }
+  
+
 
 }
