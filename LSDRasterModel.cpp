@@ -1954,7 +1954,7 @@ float LSDRasterModel::get_uplift_at_cell(int i, int j)
 float LSDRasterModel::get_uplift_rate_at_cell(int i, int j)
 {
   float result;
-  
+
 
   // don't do anything if this is a base level node
   if (is_base_level(i,j))
@@ -2003,11 +2003,11 @@ float LSDRasterModel::get_uplift_rate_at_cell(int i, int j)
       case 5:
       {
         // The uplift field is a distance, so to get the rate we need to divide by the timestep.
-        // This is inherited from an old way of calculating uplift. 
+        // This is inherited from an old way of calculating uplift.
         // I will need to fix in future but don't know what all the dependencies are
-        // so can't do it now. 
+        // so can't do it now.
         result = uplift_field[i][j]/timeStep;
-      
+
       }
       default:
         result = get_max_uplift();
@@ -2026,7 +2026,7 @@ void LSDRasterModel::check_and_correct_uplift_field()
 {
   cout << "I am checking to make sure the uplift field is the same dimensions" << endl;
   cout << " as the model data. " << endl;
-  
+
   cout << "NRows: " << NRows << " NCols: " << NCols << endl;
   cout << "Data Rows: " << RasterData.dim1() << " NCols: " << RasterData.dim2() << endl;
   cout << "Uplift rows: " << uplift_field.dim1() << " uplift cols: " << uplift_field.dim2() << endl;
@@ -5537,7 +5537,6 @@ void LSDRasterModel::print_rasters_and_csv( int frame )
     string metadata_fname =  name+"_model_info.csv";
     cout << "Name of raster metadata file is: " <<  metadata_fname << endl;
           outfile.open(metadata_fname.c_str());
-           outfile << name << endl;
           outfile << "Frame_num,";
     outfile << "Time,";
     outfile << "K,";

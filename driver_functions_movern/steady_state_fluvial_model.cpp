@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
     // set the end time, print interval, etc
     mod.set_K(0.00001);
     mod.set_endTime(50000);
-    mod.set_print_interval(5);
+    mod.set_print_interval(10);
     mod.set_print_hillshade(true);
 
     string template_param = "template_param.param";
@@ -220,8 +220,8 @@ int main(int argc, char *argv[])
     mod.print_rasters(frame);
 
     // add some time
-    //mod.set_endTime(150000);
-    //mod.run_components_combined();
+    mod.set_endTime(300000);
+    mod.run_components_combined();
   }
   // otherwise read in a raster and get the steady state solution
   else
