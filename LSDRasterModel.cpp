@@ -900,7 +900,7 @@ void LSDRasterModel::intialise_diamond_square_fractal_surface(int feature_order,
 {
   Array2D<float> zeta=RasterData.copy();
 
-  // temprorary raster for performing diamond square
+  // temporary raster for performing diamond square
   LSDRaster temp_raster(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
 
   // get the dimaond square raster
@@ -975,6 +975,56 @@ void LSDRasterModel::initialise_taper_edges_and_raise_raster(int rows_to_taper)
   RasterData = zeta.copy();
 
 }
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This raises and then fills the DEM
+//
+// SMM 25/08/2017
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::raise_and_fill_raster()
+{
+  Array2D<float> zeta=RasterData.copy();
+
+  // first we need to loop through all the data and raise above the sea level,
+  // or lower to sea level accordingly
+  float MinElev = 9999999;
+  for(int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      if (zeta[row][col] < MinElev)
+      {
+        MinElev = zeta[row][col];
+      }
+    }
+  }
+  cout << "Tapering. Found the mininum elevation, it is: " << MinElev << endl;
+
+
+  // now adjust elevations so the lowst points are at zero elevation
+  for(int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      zeta[row][col] = zeta[row][col]-MinElev;
+    }
+  }
+
+  RasterData = zeta.copy();
+  
+  cout << "Now I am filling the data" << endl;
+  LSDRaster *temp;
+  temp = new LSDRaster(*this);
+  float thresh_slope = 0.00001;
+  *temp = fill(thresh_slope);
+  RasterData = temp->get_RasterData();
+  delete temp;
+
+}
+
+
 
 
 

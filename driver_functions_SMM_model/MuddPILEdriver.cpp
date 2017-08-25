@@ -118,6 +118,10 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["roughen_surface"] = true;
   bool_default_map["fill_then_roughen_surface"] = true;
   float_default_map["roughness_relief"] = 0.25;
+  bool_default_map["diffuse_initial_surface"] = false;
+  int_default_map["diffuse_steps"] = 5;
+  bool_default_map["print_initial_surface"] = true;
+  
 
   // Parameters for spinning up the simulation
   bool_default_map["spinup"] = false;
@@ -328,9 +332,29 @@ int main (int nNumberofArgs,char *argv[])
     {
       cout << "   I am going to fill and then roughen the surface for you. Roughness elements will " << endl;
       cout << "   have a maximum amplitude of " << this_float_map["roughness_relief"]<< " metres." << endl;
-      mod.fill(this_float_map["min_slope_for_fill"]);
+      mod.raise_and_fill_raster();
       mod.set_noise(this_float_map["roughness_relief"]);
       mod.random_surface_noise();
+    }
+    
+    if(this_bool_map["diffuse_initial_surface"])
+    {
+      cout << "I am going to diffuse the initial surface for you." << endl;
+      mod.set_timeStep( 0.5 );
+      for (int i = 0; i< this_int_map["diffuse_steps"]; i++)
+      {
+        cout << "Diffuse step " << i <<"/" << this_int_map["diffuse_steps"] << endl;
+        mod.MuddPILE_nl_soil_diffusion_nouplift();
+      }
+      mod.set_timeStep( this_float_map["dt"] );
+      mod.raise_and_fill_raster();
+    }
+    
+    if(this_bool_map["print_initial_surface"])
+    {
+      int this_frame = 9999;
+      mod.print_rasters_and_csv( this_frame );
+    
     }
     cout << "Finished creating an initial surface. " << endl;
     cout << "=============================================" << endl << endl << endl;
@@ -409,6 +433,9 @@ int main (int nNumberofArgs,char *argv[])
   //============================================================================
   if(this_bool_map["rudimentary_steady_forcing"])
   {
+    
+    cout << "Let me check the boundary conditions!" << endl;
+    mod.print_boundary_conditions_to_screen();
     if( not this_bool_map["hillslopes_on"] )
     {
       cout << "I'm turning hillslope diffusion off." << endl;
@@ -435,6 +462,8 @@ int main (int nNumberofArgs,char *argv[])
   if(this_bool_map["spinup_snap_diffuse"])
   {
     cout << "I am going to try to spin up the model by cycling between hillslope diffusion on and off."  << endl;
+    //cout << "First I need to ensure the raster is raised"  <<endl;
+    mod.raise_and_fill_raster();
     mod.set_current_frame(1);
     int this_frame;
     for(int i =0; i< this_int_map["snap_diffuse_cycles"]; i++)
@@ -446,42 +475,45 @@ int main (int nNumberofArgs,char *argv[])
       mod.set_hillslope(false);
       mod.set_endTime(current_end_time);
       mod.set_timeStep( this_float_map["spinup_dt"] );
+      mod.set_print_interval(this_int_map["print_interval"]*10);
       mod.set_K(this_float_map["spinup_K"]);
       mod.set_uplift( this_int_map["uplift_mode"], this_float_map["spinup_U"] );
       mod.run_components_combined();
 
-      // then we snap to steady
-      float steady_relief = this_float_map["DataResolution"];   // this ensure you don't get critical slopes 
-      float new_K = mod.fluvial_snap_to_steady_state_tune_K_for_relief(this_float_map["snapped_to_steady_uplift"], steady_relief);
-      cout << "Getting a steady solution for a landscape with relief of " << steady_relief
-         << " metres and uplift of " << this_float_map["snapped_to_steady_uplift"]*1000 << " mm per year." << endl;
-      cout << "The new K is: " << new_K << endl;
-
-      
-      this_frame = mod.get_current_frame();
-      cout << "I am printing the snap! The frame is:" << this_frame << endl;
-      mod.print_rasters_and_csv( this_frame );
-      this_frame++;
-      mod.set_current_frame(this_frame);
-
+      /*
       // now turn the hillslopes on and run a bit more 
-      //mod.set_hillslope(true);
+      cout << "Switching to diffusion" << endl;
+      mod.set_hillslope(true);
+      mod.set_nonlinear(false);     // use linear diffusion
       mod.set_timeStep( this_float_map["spinup_dt"]*0.1 );
       mod.set_print_interval(this_int_map["print_interval"]*10);
       current_end_time = current_end_time+this_float_map["spinup_time"]*0.05;
       mod.set_endTime(current_end_time);
-      mod.set_K(this_float_map["new_K"]*2);
-      mod.set_uplift( this_int_map["uplift_mode"], this_float_map["snapped_to_steady_uplift"] );
+      mod.set_K(this_float_map["spinup_K"]*0.1);
+      mod.set_uplift( this_int_map["uplift_mode"], this_float_map["spinup_U"]*0.2 );
+      mod.run_components_combined();
+      */
+      
+      // now do a bit more fluvial only but at a different uplfit rate
+      cout << "A bit more fluvial at a different uplift rate" << endl;
+      current_end_time = current_end_time+this_float_map["spinup_time"];
+      mod.set_hillslope(false);
+      mod.set_endTime(current_end_time);
+      mod.set_timeStep( this_float_map["spinup_dt"] );
+      mod.set_print_interval(this_int_map["print_interval"]);
+      mod.set_K(this_float_map["spinup_K"]*2);
+      mod.set_uplift( this_int_map["uplift_mode"], this_float_map["spinup_U"] );
       mod.run_components_combined();
       
-      this_frame = mod.get_current_frame();
-      cout << "I am printing the snap! The frame is:" << this_frame << endl;
-      mod.print_rasters_and_csv( this_frame );
-      this_frame++;
-      mod.set_current_frame(this_frame);
+      //this_frame = mod.get_current_frame();
+      //cout << "I am printing the snap! The frame is:" << this_frame << endl;
+      //mod.print_rasters_and_csv( this_frame );
+      //this_frame++;
+      //mod.set_current_frame(this_frame);
 
     }
     
+    /*
     // run at dissection speed
     cout << "Last bit of dissection." << endl;
     current_end_time = current_end_time+this_float_map["spinup_time"]*2;
@@ -501,6 +533,7 @@ int main (int nNumberofArgs,char *argv[])
     mod.set_K(this_float_map["spinup_K"]);
     mod.set_uplift( this_int_map["uplift_mode"], this_float_map["snapped_to_steady_uplift"] );
     mod.run_components_combined();
+    */
   }
   
 
