@@ -232,6 +232,11 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @date 10/08/2017
   void initialise_taper_edges_and_raise_raster(int rows_to_taper);
 
+  /// @brief this raises the raster so the lowest point is zero and also fills the raster
+  /// @author SMM
+  /// @date 25/08/2017
+  void raise_and_fill_raster();
+
   /// @brief This initialises a surface with a hillslope
   /// that is the solution to the nonlinear sediment flux equation.
   /// It overwrites RasterData
@@ -871,6 +876,9 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @brief this sets the boundary conditions
   void set_boundary_conditions(vector <string> bc)
   { for (int i=0; i<4; ++i) {bc[i][0] = tolower(bc[i][0]);} boundary_conditions = bc; }
+
+  void print_boundary_conditions_to_screen()
+  { for (int i=0; i<4; ++i) { cout << "bc["<<i<<"]: "<<boundary_conditions[i] << endl;} }
 
   /// @brief set the time step
   void set_timeStep( float dt )        { timeStep = dt; }
