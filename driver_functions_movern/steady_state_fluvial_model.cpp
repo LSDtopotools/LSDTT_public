@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
     // This happens quite fast at these settings! You might not even need
     // 50000 years and could possible shorten the end time.
     cout << "Dissecting landscape." << endl;
-    mod.set_endTime(30000);
+    mod.set_endTime(200000);
     mod.set_timeStep( 250 );
     mod.set_K(0.01);
     float new_baseline_uplift = 0.0025;
@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
     // I guess I just do this to make sure full dissection occurs.
     // You might reduce the end time. Note that the time is cumulative so this has
     // to be greater than the previous end time.
-    mod.set_endTime(60000);
+    mod.set_endTime(250000);
     mod.set_K(0.001);
     float U = 0.0001;    // a tenth of a mm per year
     mod.set_baseline_uplift(U);
@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
          << " metres and uplift of " << U*1000 << " mm per year." << endl;
     cout << "The new K is: " << new_K << endl;
 
-    cout << "Now let me print the raster for you" << endl;
+    cout << "Now let me print the steady state raster for you" << endl;
     mod.set_print_hillshade(true);
 
     // The frames are added to the filenames, so these set specific filenames
@@ -220,8 +220,8 @@ int main(int argc, char *argv[])
     mod.print_rasters(frame);
 
     // add some time
-    mod.set_endTime(100000);
-    mod.run_components_combined();
+    //mod.set_endTime(150000);
+    //mod.run_components_combined();
   }
   // otherwise read in a raster and get the steady state solution
   else
