@@ -132,8 +132,8 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["staged_spinup"] = true;
   
   // This spinup routine tries to combine snapping and hillslope diffusion
-  bool_default_map["spinup_snap_diffuse"] = false;
-  int_default_map["snap_diffuse_cycles"] = 5;
+  bool_default_map["cyclic_spinup"] = false;
+  int_default_map["spinup_cycles"] = 5;
 
   // control of m and n, and paramters for chi
   float_default_map["A_0"] = 1;
@@ -459,14 +459,20 @@ int main (int nNumberofArgs,char *argv[])
   // This cycles between version with hillslopes and without to speed up the initial
   // condition.  
   //============================================================================
-  if(this_bool_map["spinup_snap_diffuse"])
+  if(this_bool_map["cyclic_spinup"])
   {
     cout << "I am going to try to spin up the model by cycling between hillslope diffusion on and off."  << endl;
-    //cout << "First I need to ensure the raster is raised"  <<endl;
+    
+    cout << "First I need to ensure the raster is raised, filled and roughened."  <<endl;
     mod.raise_and_fill_raster();
+    mod.set_noise(this_float_map["roughness_relief"]);
+    mod.random_surface_noise();
+    mod.raise_and_fill_raster();
+    
+    
     mod.set_current_frame(1);
     int this_frame;
-    for(int i =0; i< this_int_map["snap_diffuse_cycles"]; i++)
+    for(int i =0; i< this_int_map["spinup_cycles"]; i++)
     {
       cout << "++CYCLE NUMBER: "  << i << "+++++" << endl;
       
