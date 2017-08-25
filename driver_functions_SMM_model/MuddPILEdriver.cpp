@@ -475,7 +475,7 @@ int main (int nNumberofArgs,char *argv[])
       mod.set_hillslope(false);
       mod.set_endTime(current_end_time);
       mod.set_timeStep( this_float_map["spinup_dt"] );
-      mod.set_print_interval(this_int_map["print_interval"]*10);
+      mod.set_print_interval(this_int_map["print_interval"]);
       mod.set_K(this_float_map["spinup_K"]);
       mod.set_uplift( this_int_map["uplift_mode"], this_float_map["spinup_U"] );
       mod.run_components_combined();
