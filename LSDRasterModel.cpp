@@ -2865,13 +2865,15 @@ void LSDRasterModel::run_components( void )
     // hillslope rules are added?
     if (hillslope)
     {
-  if (nonlinear)
-  {
-    //soil_diffusion_fv_nonlinear();
-    MuddPILE_nl_soil_diffusion_nouplift();
-  }
-  else
-  soil_diffusion_fd_linear();
+      if (nonlinear)
+      {    
+        //soil_diffusion_fv_nonlinear();
+        MuddPILE_nl_soil_diffusion_nouplift();
+      }
+      else
+      {
+        soil_diffusion_fd_linear();
+      }
     }
 
     // sediment will have moved into channels. This is assumed to
@@ -2891,10 +2893,14 @@ void LSDRasterModel::run_components( void )
     if (isostasy)
     {
       if (flexure)
+      {
         //flexural_isostasy( 0.00001 );
         flexural_isostasy_alt( );
+      }
       else
+      {
         Airy_isostasy();
+      }
     }
 
     // after everything has been eroded/deposited, the surface is uplifted
@@ -3001,7 +3007,9 @@ void LSDRasterModel::run_components_combined( void )
         MuddPILE_nl_soil_diffusion_nouplift();
       }
       else
+      {
         soil_diffusion_fd_linear();
+      }
     }
 
     // sediment will have moved into channels. This is assumed to
@@ -4329,17 +4337,30 @@ void LSDRasterModel::fluvial_incision( void )
       float epsilon;     // in newton's method, z_n+1 = z_n - f(z_n)/f'(z_n)
                          // and here epsilon =   f(z_n)/f'(z_n)
                          // f(z_n) = -z_n + z_old - dt*K*A^m*( (z_n-z_r)/dx )^n
+                         // We differentiate the above equation to get f'(z_n)
+                         // the resulting equation f(z_n)/f'(z_n) is seen below
       float streamPowerFactor = K * pow(drainageArea, m) * timeStep;
       float slope;
 
       // iterate until you converge on a solution. Uses Newton's method.
+      int iter_count = 0;
       do
       {
         slope = (new_zeta - zeta[receiver_row][receiver_col]) / dx;
         epsilon = (new_zeta - old_zeta + streamPowerFactor * pow(slope, n)) /
              (1 + streamPowerFactor * (n/dx) * pow(slope, n-1));
         new_zeta -= epsilon;
-      } while (abs(epsilon > 1e-6));
+        
+        // This limits the number of iterations
+        iter_count++;
+        if(iter_count > 100)
+        {
+          //cout << "Too many iterations! epsilon is: " << abs(epsilon) << endl;
+          epsilon = 0.5e-6;
+        }
+      } while (abs(epsilon) > 1e-6);
+      zeta[row][col] = new_zeta;
+      
     }
   }
   //return LSDRasterModel(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
@@ -4448,7 +4469,11 @@ void LSDRasterModel::fluvial_incision_with_uplift( void )
       if (dx == -99)
         continue;
       float new_zeta = zeta[row][col];
+      //float old_iter_zeta = zeta[row][col];
       float old_zeta = zeta[row][col];
+
+      //cout << "computing for n != 1. " << endl;
+
 
       // get the uplift rate
       U = get_uplift_rate_at_cell(row,col);
@@ -4456,18 +4481,33 @@ void LSDRasterModel::fluvial_incision_with_uplift( void )
       float epsilon;     // in newton's method, z_n+1 = z_n - f(z_n)/f'(z_n)
                          // and here epsilon =   f(z_n)/f'(z_n)
                          // f(z_n) = -z_n + z_old - dt*K*A^m*( (z_n-z_r)/dx )^n
+                         // We differentiate the above equation to get f'(z_n)
+                         // the resulting equation f(z_n)/f'(z_n) is seen below
       float streamPowerFactor = K * pow(drainageArea, m) * timeStep;
       float slope;
 
       // iterate until you converge on a solution. Uses Newton's method.
+      int iter_count = 0;
       do
       {
         slope = (new_zeta - zeta[receiver_row][receiver_col]) / dx;
+        
+        // Get epsilon based on f(z_n)/f'(z_n)
         epsilon = (new_zeta - old_zeta
                    + streamPowerFactor * pow(slope, n) - timeStep*U) /
              (1 + streamPowerFactor * (n/dx) * pow(slope, n-1));
+        //cout << "slope: " << slope << " epsilon: " << epsilon << endl;
         new_zeta -= epsilon;
-      } while (abs(epsilon > 1e-6));
+        
+        iter_count++;
+        if(iter_count > 100)
+        {
+          //cout << "Too many iterations! epsilon is: " << abs(epsilon) << endl;
+          epsilon = 0.5e-6;
+        }
+        
+      } while (abs(epsilon) > 1e-6);
+      zeta[row][col] = new_zeta;
     }
   }
   //return LSDRasterModel(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
@@ -4627,7 +4667,7 @@ Array2D<float> LSDRasterModel::fluvial_erosion_rate()
         epsilon = (new_zeta - old_zeta + streamPowerFactor * pow(slope, n)) /
              (1 + streamPowerFactor * (n/dx) * pow(slope, n-1));
         new_zeta -= epsilon;
-      } while (abs(epsilon > 1e-6));
+      } while (abs(epsilon) > 1e-6);
       erosionRate[row][col] = (new_zeta - old_zeta) / timeStep;
     }
   }
