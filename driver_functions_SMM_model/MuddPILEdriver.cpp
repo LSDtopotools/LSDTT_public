@@ -134,6 +134,10 @@ int main (int nNumberofArgs,char *argv[])
   // This spinup routine tries to combine snapping and hillslope diffusion
   bool_default_map["cyclic_spinup"] = false;
   int_default_map["spinup_cycles"] = 5;
+  bool_default_map["cycle_K"] = true;
+  bool_default_map["cycle_U"] = false;
+  float_default_map["cycle_K_factor"] = 2;
+  float_default_map["cycle_U_factor"] = 2;
 
   // control of m and n, and paramters for chi
   float_default_map["A_0"] = 1;
@@ -461,17 +465,32 @@ int main (int nNumberofArgs,char *argv[])
   //============================================================================
   if(this_bool_map["cyclic_spinup"])
   {
+    int this_frame;
+    
     cout << "I am going to try to spin up the model by cycling between hillslope diffusion on and off."  << endl;
     
     cout << "First I need to ensure the raster is raised, filled and roughened."  <<endl;
     mod.raise_and_fill_raster();
     mod.set_noise(this_float_map["roughness_relief"]);
     mod.random_surface_noise();
-    mod.raise_and_fill_raster();
+    mod.raise_and_fill_raster(); 
+    
+    // run a few cycles to get a network and then fill
+    mod.set_timeStep( 1 );
+    for (int i = 0; i<100; i++)
+    {
+      if (i%10 == 0)
+      cout << "Initial dissection; i = " << i+1 << " of 100" << endl;
+      mod.fluvial_incision_with_uplift();
+    }
+    mod.set_timeStep( this_float_map["spinup_dt"] );
+    mod.raise_and_fill_raster(); 
+    this_frame = 9998;
+    mod.print_rasters_and_csv( this_frame );
+      
     
     
     mod.set_current_frame(1);
-    int this_frame;
     for(int i =0; i< this_int_map["spinup_cycles"]; i++)
     {
       cout << "++CYCLE NUMBER: "  << i << "+++++" << endl;
@@ -486,62 +505,22 @@ int main (int nNumberofArgs,char *argv[])
       mod.set_uplift( this_int_map["uplift_mode"], this_float_map["spinup_U"] );
       mod.run_components_combined();
 
-      /*
-      // now turn the hillslopes on and run a bit more 
-      cout << "Switching to diffusion" << endl;
-      mod.set_hillslope(true);
-      mod.set_nonlinear(false);     // use linear diffusion
-      mod.set_timeStep( this_float_map["spinup_dt"]*0.1 );
-      mod.set_print_interval(this_int_map["print_interval"]*10);
-      current_end_time = current_end_time+this_float_map["spinup_time"]*0.05;
-      mod.set_endTime(current_end_time);
-      mod.set_K(this_float_map["spinup_K"]*0.1);
-      mod.set_uplift( this_int_map["uplift_mode"], this_float_map["spinup_U"]*0.2 );
-      mod.run_components_combined();
-      */
-      
-      // now do a bit more fluvial only but at a different uplfit rate
+      // now do a bit more fluvial only but at a different parameter values
       cout << "A bit more fluvial at a different uplift rate" << endl;
       current_end_time = current_end_time+this_float_map["spinup_time"];
       mod.set_hillslope(false);
       mod.set_endTime(current_end_time);
       mod.set_timeStep( this_float_map["spinup_dt"] );
       mod.set_print_interval(this_int_map["print_interval"]);
-      mod.set_K(this_float_map["spinup_K"]*2);
-      mod.set_uplift( this_int_map["uplift_mode"], this_float_map["spinup_U"] );
+      if( this_bool_map["cycle_K"])
+      {
+        mod.set_K(this_float_map["spinup_K"]*this_float_map["cycle_K_factor"]);
+      }
+      if (this_bool_map["cycle_U"])
+      {
+        mod.set_uplift( this_int_map["uplift_mode"], this_float_map["spinup_U"]*this_float_map["cycle_K_factor"] );
+      }
       mod.run_components_combined();
-      
-      //this_frame = mod.get_current_frame();
-      //cout << "I am printing the snap! The frame is:" << this_frame << endl;
-      //mod.print_rasters_and_csv( this_frame );
-      //this_frame++;
-      //mod.set_current_frame(this_frame);
-
     }
-    
-    /*
-    // run at dissection speed
-    cout << "Last bit of dissection." << endl;
-    current_end_time = current_end_time+this_float_map["spinup_time"]*2;
-    mod.set_hillslope(false);
-    mod.set_endTime(current_end_time);
-    mod.set_timeStep( this_float_map["spinup_dt"] );
-    mod.set_K(this_float_map["spinup_K"]);
-    mod.set_uplift( this_int_map["uplift_mode"], this_float_map["snapped_to_steady_uplift"]*2 );
-    mod.run_components_combined();
-    
-    // now run at lower speed
-    cout << "Slowing down and dissecting" << endl;
-    current_end_time = current_end_time+this_float_map["spinup_time"]*5;
-    mod.set_hillslope(false);
-    mod.set_endTime(current_end_time);
-    mod.set_timeStep( this_float_map["spinup_dt"] );
-    mod.set_K(this_float_map["spinup_K"]);
-    mod.set_uplift( this_int_map["uplift_mode"], this_float_map["snapped_to_steady_uplift"] );
-    mod.run_components_combined();
-    */
   }
-  
-
-
 }
