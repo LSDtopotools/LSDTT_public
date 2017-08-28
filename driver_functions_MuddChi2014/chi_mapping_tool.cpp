@@ -121,7 +121,7 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["minimum_basin_size_pixels"] = 5000;
   int_default_map["maximum_basin_size_pixels"] = 500000;
   bool_default_map["test_drainage_boundaries"] = true;
-  bool_default_map["only_take_largest_basin"] = false; 
+  bool_default_map["only_take_largest_basin"] = false;
   string_default_map["BaselevelJunctions_file"] = "NULL";
   bool_default_map["extend_channel_to_node_before_receiver_junction"] = true;
 
@@ -225,6 +225,10 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_segments"] = false;
   bool_default_map["print_segments_raster"] = false;
 
+  // this switch turns on all the appropriate runs for estimating
+  // the best fit m/n
+  bool_default_map["estimate_best_fit_movern"] = false;
+
   // Use the parameter parser to get the maps of the parameters required for the
   // analysis
   LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
@@ -247,11 +251,31 @@ int main (int nNumberofArgs,char *argv[])
   string CHeads_file = LSDPP.get_CHeads_file();
   string BaselevelJunctions_file = this_string_map["BaselevelJunctions_file"];
 
+  //----------------------------------------------------------------------------//
+  // If you want, turn on all the appropriate switches for estimating the best
+  // fit m/n
+  //----------------------------------------------------------------------------//
+  if (this_bool_map["estimate_best_fit_movern"])
+  {
+    // we need to make sure we select basins the correct way
+    this_bool_map["find_complete_basins_in_window"] = true;
+    this_bool_map["print_basin_raster"] = true;
+    this_bool_map["write_hillshade"] = true;
 
+    // run the chi methods of estimating best fit m/n
+    this_bool_map["calculate_MLE_collinearity"] = true;
+    this_bool_map["calculate_MLE_collinearity_with_points"] = true;
+    this_bool_map["print_profiles_fxn_movern_csv"] = true;
+
+    // run the SA methods of estimating best fit m/n
+    this_bool_map["print_slope_area_data"] = true;
+    this_bool_map["segment_slope_area_data"] = true;
+
+  }
 
   cout << "Read filename is: " <<  DATA_DIR+DEM_ID << endl;
   cout << "Write filename is: " << OUT_DIR+OUT_ID << endl;
-  
+
   if(BaselevelJunctions_file == "NULL" || BaselevelJunctions_file == "Null" || BaselevelJunctions_file == "null" || BaselevelJunctions_file.empty() == true)
   {
     if(BaselevelJunctions_file.empty())
@@ -269,7 +293,7 @@ int main (int nNumberofArgs,char *argv[])
     BaselevelJunctions_file = DATA_DIR+BaselevelJunctions_file;
     cout << "You have selected a baselevel junctions file, it is: " << BaselevelJunctions_file << endl;
     cout << "Let me check if it exists..." << endl;
-    
+
     ifstream test_file;
     test_file.open(BaselevelJunctions_file.c_str());
     if( test_file.fail() )
@@ -546,9 +570,9 @@ int main (int nNumberofArgs,char *argv[])
   {
     cout << "I am attempting to read base level junctions from a base level junction list." << endl;
     cout << "If this is not a simple text file that only contains itegers there will be problems!" << endl;
-    
+
     //specify junctions to work on from a list file
-    //string JunctionsFile = DATA_DIR+BaselevelJunctions_file; 
+    //string JunctionsFile = DATA_DIR+BaselevelJunctions_file;
     cout << "The junctions file is: " << BaselevelJunctions_file << endl;
 
 
@@ -729,7 +753,7 @@ int main (int nNumberofArgs,char *argv[])
       cout << "  These channels extend below the junction to the channel that stops" << endl;
       cout << "  just before the reciever junction. This option is used to remain" << endl;
       cout << "  consitent with basin ordering, since a 2nd order basin will begin" << endl;
-      cout << "  at the channel one node upslope of the most upstream 3rd order junction." << endl; 
+      cout << "  at the channel one node upslope of the most upstream 3rd order junction." << endl;
       cout << "  If you simply want the channel starting from the selcted junction, " << endl;
       cout << "  set the option:" << endl;
       cout << "    extend_channel_to_node_before_receiver_junction" << endl;
