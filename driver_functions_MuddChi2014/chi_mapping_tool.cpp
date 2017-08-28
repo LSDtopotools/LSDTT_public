@@ -169,8 +169,8 @@ int main (int nNumberofArgs,char *argv[])
   // these are routines to calculate the movern ratio using points
   bool_default_map["calculate_MLE_collinearity_with_points"] = false;
   bool_default_map["calculate_MLE_collinearity_with_points_MC"] = false;
-  int_default_map["MC_point_fractions"] = 5,
-  int_default_map["MC_point_iterations"] = 50,
+  int_default_map["MC_point_fractions"] = 5;
+  int_default_map["MC_point_iterations"] = 1000;
   float_default_map["max_MC_point_fraction"] = 0.5;
   
   // and this is the residuals test
@@ -264,7 +264,7 @@ int main (int nNumberofArgs,char *argv[])
 
     // run the chi methods of estimating best fit m/n
     this_bool_map["calculate_MLE_collinearity"] = true;
-    this_bool_map["calculate_MLE_collinearity_with_points"] = true;
+    this_bool_map["calculate_MLE_collinearity_with_points_MC"] = true;
     this_bool_map["print_profiles_fxn_movern_csv"] = true;
 
     // run the SA methods of estimating best fit m/n
