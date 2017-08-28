@@ -506,6 +506,35 @@ class LSDChiTools
                         string file_prefix, float sigma, 
                         vector<float> chi_distance_fractions);
 
+
+    /// @brief This wraps the collinearity tester, looping through different m over n
+    ///  values and calculating goodness of fit statistics.
+    /// @detail Uses discrete points rather than all the tributary data. It uses monte carlo
+    ///   sampling to get the points, so one can repeatedly sample the MLE values for 
+    ///   a fixed number of points
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param JN an LSDJunctionNetwork object
+    /// @param start_movern the starting m/n ratio
+    /// @param delta_movern the change in m/n
+    /// @param n_novern the number of m/n values to use
+    /// @param only_use_mainstem_as_reference a boolean, if true only compare channels to mainstem .
+    /// @param The file prefix for the data files
+    /// @param sigma The uncertainty for the MLE calculation. In practice this simply scales MLE.
+    /// @param n_fracs the number of chi distance fractions you want to use
+    /// @param MC_iteration The number of iteration you want to use
+    /// @param max_frac the maximum chi fraction you want to examine. 
+    /// @author SMM
+    /// @date 28/08/2017
+    void calculate_goodness_of_fit_collinearity_fxn_movern_using_points_MC(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JN,
+                        float start_movern, float delta_movern, int n_movern,
+                        bool only_use_mainstem_as_reference,
+                        string file_prefix, float sigma, 
+                        int n_fracs, 
+                        int MC_iterations,
+                        float max_frac);
+
+
+
     /// @brief This wraps the collinearity tester, looping through different m over n
     ///  values and calculating goodness of fit statistics.
     ///  Same as above but can use a discharge raster to calculate chi

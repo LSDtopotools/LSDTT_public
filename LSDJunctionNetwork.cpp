@@ -6336,15 +6336,36 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_By_Contributing_Pixel_Window(vec
   int N_J = int(contributing_pixels_junctions.size());
   
   // loop through all the basins getting the ones in the size window
+  int min_basin_size = 1000000000;
+  int max_basin_size = 0;
   for(int J = 0; J<N_J; J++)
   {
     this_CP = contributing_pixels_junctions[J];
+    
+    if(this_CP > max_basin_size)
+    {
+      max_basin_size = this_CP;
+    }
+    if(this_CP < min_basin_size)
+    {
+      min_basin_size = this_CP;
+    }
+    
+    //cout << "Junction in BL list["<< J << "] has " << this_CP << " contributing pixels" << endl;
     
     // if the junction is within the contributing pixel window, keep it. 
     if( this_CP >= lower_limit && this_CP < upper_limit)
     {
       pruned_basin_list.push_back( Junctions_Initial[J] );
     }
+  }
+  
+  if(  pruned_basin_list.size() == 0)
+  {
+    cout << "LSDJunctionNetwork::Prune_Junctions_By_Contributing_Pixel_Window" << endl;
+    cout << "I have failed to find any basins meeting your criteria. " << endl;
+    cout << "The maximum basin in this DEM is: " << max_basin_size 
+         << " and the minimum is: " << min_basin_size << " pixels." << endl;
   }
 
   return pruned_basin_list;

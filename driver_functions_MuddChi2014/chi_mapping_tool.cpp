@@ -166,10 +166,15 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["calculate_MLE_collinearity"] = false;
   bool_default_map["print_profiles_fxn_movern_csv"] = false;
 
+  // these are routines to calculate the movern ratio using points
   bool_default_map["calculate_MLE_collinearity_with_points"] = false;
+  bool_default_map["calculate_MLE_collinearity_with_points_MC"] = false;
+  int_default_map["MC_point_fractions"] = 5,
+  int_default_map["MC_point_iterations"] = 50,
+  float_default_map["max_MC_point_fraction"] = 0.5;
+  
+  // and this is the residuals test
   bool_default_map["movern_residuals_test"] = false;
-
-
 
   bool_default_map["MCMC_movern_analysis"] = false;
   float_default_map["MCMC_movern_minimum"] = 0.05;
@@ -1061,6 +1066,61 @@ int main (int nNumberofArgs,char *argv[])
     }
 
   }
+
+
+
+
+
+
+
+  if(this_bool_map["calculate_MLE_collinearity_with_points_MC"])
+  {
+    cout << "I am going to test the MLE collinearity functions using points with Monte Carlo sampling." << endl;
+    cout << "I am testing the collinearity for you. " << endl;
+    // Lets make a new chi tool: this won't be segmented since we only
+    // need it for m/n
+    LSDChiTools ChiTool_movern(FlowInfo);
+    ChiTool_movern.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
+                            filled_topography, DistanceFromOutlet,
+                            DrainageArea, chi_coordinate);
+
+    // test the basin collinearity test
+    //int baselevel_key = 1;
+    vector<int> reference_source;
+    vector<int> test_source;
+    vector<float> MLE_values;
+    vector<float> RMSE_values;
+    //bool only_use_mainstem_as_reference = true;
+
+    float this_sigma = this_float_map["collinearity_MLE_sigma"];
+    this_sigma = 10;        // just for debugging
+
+
+    if(this_bool_map["use_precipitation_raster_for_chi"])
+    {
+      cout << "The Monte Carlo points routine does not have precipitaiton implemented yet." << endl;
+    }
+    else
+    {
+      string movern_name = OUT_DIR+OUT_ID+"_MCpoint_";
+      ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern_using_points_MC(FlowInfo, JunctionNetwork,
+                      this_float_map["start_movern"], this_float_map["delta_movern"],
+                      this_int_map["n_movern"],
+                      this_bool_map["only_use_mainstem_as_reference"],
+                      movern_name, this_sigma,
+                      this_int_map["MC_point_fractions"],
+                      this_int_map["MC_point_iterations"],
+                      this_float_map["max_MC_point_fraction"]);
+    }
+
+  }
+
+
+
+
+
+
+
 
 
 
