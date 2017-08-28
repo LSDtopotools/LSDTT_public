@@ -266,6 +266,7 @@ int main (int nNumberofArgs,char *argv[])
     this_bool_map["calculate_MLE_collinearity"] = true;
     this_bool_map["calculate_MLE_collinearity_with_points_MC"] = true;
     this_bool_map["print_profiles_fxn_movern_csv"] = true;
+    this_bool_map["movern_residuals_test"] = true;
 
     // run the SA methods of estimating best fit m/n
     this_bool_map["print_slope_area_data"] = true;
