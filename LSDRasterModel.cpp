@@ -4237,8 +4237,59 @@ float LSDRasterModel::fluvial_snap_to_steady_state_tune_K_for_relief(float U, fl
   set_K(K);
   RasterData = zeta.copy();
   return(K);
-
 }
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This takes the model and calculates the K needed for a fixed relief
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+float LSDRasterModel::fluvial_calculate_K_for_steady_state_relief(float U, float desired_relief)
+{
+  Array2D<float> zeta=RasterData.copy();
+
+  // Step one, create donor "stack" etc. via FlowInfo
+  LSDRaster temp(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
+
+  // We need to fill the raster so we don't get internally drained catchments
+  float slope_for_fill = 0.0001;
+  LSDRaster filled = temp.fill(slope_for_fill);
+  LSDFlowInfo flow(boundary_conditions, filled);
+
+  float K = get_K();
+  float m_exp = get_m();
+  float n_exp = get_n();
+  float area_threshold = 0;
+  float m_over_n = m_exp/n_exp;
+  float A_0 = 1;
+
+  LSDRaster ChiValues = flow.get_upslope_chi_from_all_baselevel_nodes(m_over_n, A_0,area_threshold);
+  float thisChi;
+  float MaxChi = 0;
+  // now we calculate the elevations assuming that the elevation at chi = 0 is 0
+  // This is based on equation 4 from mudd et al 2014 JGR-ES
+  for (int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      thisChi = ChiValues.get_data_element(row,col);
+      if (thisChi != NoDataValue)
+      {
+        if (thisChi > MaxChi)
+        {
+          MaxChi = thisChi;
+        }
+      }
+    }
+  }
+
+  // calculate K (you need to do some algebra on equation 4 from mudd et al 2014 JGR-ES)
+  K = U * pow((desired_relief/MaxChi),-n_exp);
+  cout << "I am updating K to " << K << " to get your desired relief." << endl;
+
+  return(K);
+}
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // This is the component of the model that is solved using the

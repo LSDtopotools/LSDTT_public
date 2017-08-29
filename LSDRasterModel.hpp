@@ -648,6 +648,18 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @date 10/08/2017
   float fluvial_snap_to_steady_state_tune_K_for_relief(float U, float desired_relief);
 
+  /// @brief This method calcualtes the fluvial K required to generate the
+  ///   desired relief at steady state for the farthest upstream chi.
+  ///   It is based on equation 4a from Mudd et al 2014 JGR-ES.
+  /// @detail This does not update aything in the model, but simply returns the desired K
+  /// @param U the uplift rate (in m/yr)
+  /// @param desired_relief The desired landscape relief in metres
+  /// @return The back calculated K value for the desired relief
+  /// @author SMM
+  /// @date 29/08/2017
+  float fluvial_calculate_K_for_steady_state_relief(float U, float desired_relief);
+
+
   /// @brief Fastscape, implicit finite difference solver for stream power equations
   /// O(n)
   /// Method takes its paramaters from the model data members
