@@ -1000,7 +1000,7 @@ void LSDRasterModel::raise_and_fill_raster()
       }
     }
   }
-  cout << "Tapering. Found the mininum elevation, it is: " << MinElev << endl;
+  cout << "Raising raster. Found the mininum elevation, it is: " << MinElev << endl;
 
 
   // now adjust elevations so the lowst points are at zero elevation
@@ -4398,8 +4398,16 @@ void LSDRasterModel::fluvial_incision( void )
       do
       {
         slope = (new_zeta - zeta[receiver_row][receiver_col]) / dx;
-        epsilon = (new_zeta - old_zeta + streamPowerFactor * pow(slope, n)) /
-             (1 + streamPowerFactor * (n/dx) * pow(slope, n-1));
+        
+        if(slope < 0)
+        {
+          epsilon = 0;
+        }
+        else
+        {
+          epsilon = (new_zeta - old_zeta + streamPowerFactor * pow(slope, n)) /
+               (1 + streamPowerFactor * (n/dx) * pow(slope, n-1));
+        }
         new_zeta -= epsilon;
         
         // This limits the number of iterations
@@ -4415,7 +4423,7 @@ void LSDRasterModel::fluvial_incision( void )
     }
   }
   //return LSDRasterModel(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
-  this->RasterData = zeta;
+  this->RasterData = zeta.copy();
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -4430,7 +4438,14 @@ void LSDRasterModel::fluvial_incision_with_uplift( void )
 
   // Step one, create donor "stack" etc. via FlowInfo
   LSDRaster temp(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
+  //cout << "The nodatavalue is: " << NoDataValue << endl;
   LSDFlowInfo flow(boundary_conditions, temp);
+  
+  //for(int i = 0; i<4; i++)
+  //{
+  //  cout << "bc["<<i<<"]: " << boundary_conditions[i] << endl; 
+  //}
+  
   vector <int> nodeList = flow.get_SVector();
   int numNodes = nodeList.size();
   int node, row, col, receiver, receiver_row, receiver_col;
@@ -4518,7 +4533,10 @@ void LSDRasterModel::fluvial_incision_with_uplift( void )
     else    // this else loop is for when n is not close to one and you need an iterative solution
     {
       if (dx == -99)
+      {
+        //cout << "WTF, I am getting an invalid flow length code. LSDRastermodel 4523" << endl;
         continue;
+      }
       float new_zeta = zeta[row][col];
       //float old_iter_zeta = zeta[row][col];
       float old_zeta = zeta[row][col];
@@ -4543,11 +4561,19 @@ void LSDRasterModel::fluvial_incision_with_uplift( void )
       {
         slope = (new_zeta - zeta[receiver_row][receiver_col]) / dx;
         
-        // Get epsilon based on f(z_n)/f'(z_n)
-        epsilon = (new_zeta - old_zeta
-                   + streamPowerFactor * pow(slope, n) - timeStep*U) /
-             (1 + streamPowerFactor * (n/dx) * pow(slope, n-1));
-        //cout << "slope: " << slope << " epsilon: " << epsilon << endl;
+        if(slope < 0)
+        {
+          epsilon = 0;
+        }
+        else
+        {
+          // Get epsilon based on f(z_n)/f'(z_n)
+          epsilon = (new_zeta - old_zeta
+                     + streamPowerFactor * pow(slope, n) - timeStep*U) /
+               (1 + streamPowerFactor * (n/dx) * pow(slope, n-1));
+          //cout << "slope: " << slope << " epsilon: " << epsilon << endl;
+        }
+
         new_zeta -= epsilon;
         
         iter_count++;
@@ -4559,10 +4585,13 @@ void LSDRasterModel::fluvial_incision_with_uplift( void )
         
       } while (abs(epsilon) > 1e-6);
       zeta[row][col] = new_zeta;
+      
     }
   }
+    
   //return LSDRasterModel(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
-  this->RasterData = zeta;
+  this->RasterData = zeta.copy();
+
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -4634,8 +4663,15 @@ LSDRaster LSDRasterModel::fluvial_erosion_rate(float timestep, float K, float m,
       do
       {
         slope = (new_zeta - zeta[receiver_row][receiver_col]) / dx;
-        epsilon = (new_zeta - old_zeta + streamPowerFactor * pow(slope, n)) /
-             (1 + streamPowerFactor * (n/dx) * pow(slope, n-1));
+        if (slope < 0)
+        {
+          epsilon = 0;
+        }
+        else
+        {
+          epsilon = (new_zeta - old_zeta + streamPowerFactor * pow(slope, n)) /
+               (1 + streamPowerFactor * (n/dx) * pow(slope, n-1));
+        }
         new_zeta -= epsilon;
       } while (abs(epsilon > 1e-6));
       erosionRate[row][col] = (new_zeta - old_zeta) / timestep;
@@ -5658,6 +5694,10 @@ void LSDRasterModel::print_rasters( int frame )
     ss << name << frame << "_sa";
     slope_area_data( name+"_sa");
   }
+  
+  
+
+  
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -5733,6 +5773,7 @@ void LSDRasterModel::print_rasters_and_csv( int frame )
     ss << name << frame << "_sa";
     slope_area_data( name+"_sa");
   }
+  
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

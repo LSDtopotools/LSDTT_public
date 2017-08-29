@@ -138,6 +138,9 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["cycle_U"] = false;
   float_default_map["cycle_K_factor"] = 2;
   float_default_map["cycle_U_factor"] = 2;
+  
+  // The diamond square spinup routine
+  bool_default_map["diamond_square_spinup"] = false;
 
   // control of m and n, and paramters for chi
   float_default_map["A_0"] = 1;
@@ -199,6 +202,10 @@ int main (int nNumberofArgs,char *argv[])
   mod.set_print_hillshade(this_bool_map["write_hillshade"]);
   mod.set_timeStep( this_float_map["dt"] );
   mod.set_print_interval(this_int_map["print_interval"]);
+  
+
+  
+  
 
   // print parameters to screen
   mod.print_parameters();
@@ -259,6 +266,18 @@ int main (int nNumberofArgs,char *argv[])
     cout << "You have chosen not to read an initial raster so I will create an initial surface for you." << endl;
     create_initial_surface = true;
   }
+
+
+  // a bit of logic to override spinup logic if you choose the diamond square spinup
+  if(this_bool_map["diamond_square_spinup"])
+  {
+    cout << "You have chosen the diamond square spinup. This orverrides all other spinup otions" << endl;
+    cout << "It also overrides initial surface options" << endl;
+    create_initial_surface = false;
+    this_bool_map["cyclic_spinup"] = false;
+    this_bool_map["spinup"] = false;
+  }
+
 
   //============================================================================
   // Logic for creating an initial surface
@@ -403,6 +422,158 @@ int main (int nNumberofArgs,char *argv[])
   }
 
   //============================================================================
+  // This wraps a number of functions to create a diamond-square based initial condition
+  // that is then dissected.
+  //============================================================================
+  if(this_bool_map["diamond_square_spinup"])
+  {
+    int this_frame;
+    
+    cout << "I am running a spinup that uses a diamond square initial surface and" << endl;
+    cout <<"then dissects the landscape for you." << endl;
+    mod.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"]);
+    // we need to check the feature order to make sure it is not bigger than the largest dimension of the raster
+    int smallest_dimension;
+    if( this_int_map["NRows"] <= this_int_map["NCols"])
+    {
+      smallest_dimension = this_int_map["NRows"];
+    }
+    else
+    {
+      smallest_dimension = this_int_map["NCols"];
+    }
+    // now get the largest possible dimension
+    float lps = floor( log2( float(smallest_dimension) ) );
+    int largest_possible_scale = int(lps);
+    if( this_int_map["diamond_square_feature_order"] > largest_possible_scale )
+    {
+      this_int_map["diamond_square_feature_order"] = largest_possible_scale;
+    }
+    cout << "    The largest dimnesion is: " << smallest_dimension << " pixels." << endl;
+    cout << "    So the biggest scale is: " << pow(2,largest_possible_scale) << " pixels or 2 to the " << largest_possible_scale << " power" << endl;
+    cout << "    I am setting the scale to: " << this_int_map["diamond_square_feature_order"] << endl;
+
+    // Now actually build the fractal surface
+    mod.intialise_diamond_square_fractal_surface(this_int_map["diamond_square_feature_order"], this_float_map["diamond_square_relief"]);
+
+    cout << "   Let me taper the edges of this fractal surface for you so that everything drains to the edge." << endl;
+    cout << "   I am tapering along the " << this_int_map["taper_rows"] << " row closes to the N and S boundaries" << endl;
+    mod.initialise_taper_edges_and_raise_raster(this_int_map["taper_rows"]);
+    
+    cout << "   I am superimposing a parabola with a relief of "  << this_float_map["parabola_relief"] << " metres" << endl;
+    mod.superimpose_parabolic_surface(this_float_map["parabola_relief"]);
+    
+    cout << "   I am going to fill and then roughen the surface for you. Roughness elements will " << endl;
+    cout << "   have a maximum amplitude of " << this_float_map["roughness_relief"]<< " metres." << endl;
+    mod.raise_and_fill_raster();
+    mod.set_noise(this_float_map["roughness_relief"]);
+    mod.random_surface_noise();
+    mod.raise_and_fill_raster(); 
+    
+    this_frame = 9999;
+    mod.print_rasters_and_csv( this_frame );
+    
+    
+    cout << "Now I am going to run some fluvial incision at a small timestep" << endl;
+    cout <<"I am going to use a moderate K value and uplift, since I don't" << endl;
+    cout << "want to overexcavate the surface" << endl;
+    mod.set_hillslope(false);
+    //mod.set_timeStep( 1 );
+    int this_uplift_mode = 0;     // block uplift
+    float this_K = 0.001;
+    float this_U = 0.0005;
+    mod.set_K(this_K);
+    
+    mod.set_uplift( this_uplift_mode, this_U );
+    this_frame = 1;
+    for (int cycle = 1; cycle<=10; cycle++)
+    {
+      cout << "Cycle " << cycle << " of 10" << endl;
+      mod.set_timeStep( float(cycle) );
+      for (int i = 0; i<21; i++)
+      {
+        
+        if (i%10 == 0)
+        cout << "Initial dissection; i = " << i << " of 20" << endl;
+        mod.fluvial_incision_with_uplift();
+
+      }
+      
+      mod.raise_and_fill_raster();
+      //this_frame++; 
+      //mod.print_rasters_and_csv( this_frame );
+    }
+    
+    // now print the model result
+    this_frame = 9998;
+    mod.print_rasters_and_csv( this_frame );
+  }
+
+
+
+  //============================================================================
+  // This cycles between version with hillslopes and without to speed up the initial
+  // condition.  
+  //============================================================================
+  if(this_bool_map["cyclic_spinup"])
+  {
+    int this_frame;
+    
+    cout << "I am going to try to spin up the model by cycling between hillslope diffusion on and off."  << endl;
+    cout << "First I need to ensure the raster is raised, filled and roughened."  <<endl;
+    mod.raise_and_fill_raster();
+    mod.set_noise(this_float_map["roughness_relief"]);
+    mod.random_surface_noise();
+    mod.raise_and_fill_raster(); 
+    mod.set_print_interval(this_int_map["print_interval"]);
+    mod.set_hillslope(false);
+    
+    // run a few cycles to get a network and then fill
+    mod.set_timeStep( 1 );
+    for (int i = 0; i<100; i++)
+    {
+      if (i%10 == 0)
+      cout << "Initial dissection; i = " << i+1 << " of 100" << endl;
+      mod.fluvial_incision_with_uplift();
+    }
+    mod.set_timeStep( this_float_map["spinup_dt"] );
+    mod.raise_and_fill_raster(); 
+    this_frame = 9998;
+    mod.print_rasters_and_csv( this_frame );
+      
+    mod.set_current_frame(1);
+    for(int i =0; i< this_int_map["spinup_cycles"]; i++)
+    {
+      cout << "++CYCLE NUMBER: "  << i << "+++++" << endl;
+      
+      // first we do a little bit of fluvial action
+      current_end_time = current_end_time+this_float_map["spinup_time"];
+
+      mod.set_endTime(current_end_time);
+      mod.set_K(this_float_map["spinup_K"]);
+      mod.set_uplift( this_int_map["uplift_mode"], this_float_map["spinup_U"] );
+      mod.run_components_combined();
+
+      // now do a bit more fluvial only but at a different parameter values
+      cout << "A bit more fluvial at a different uplift rate" << endl;
+      current_end_time = current_end_time+this_float_map["spinup_time"];
+      mod.set_endTime(current_end_time);
+
+      // logic for changing the K or U for the cycles. 
+      if( this_bool_map["cycle_K"])
+      {
+        mod.set_K(this_float_map["spinup_K"]*this_float_map["cycle_K_factor"]);
+      }
+      if (this_bool_map["cycle_U"])
+      {
+        mod.set_uplift( this_int_map["uplift_mode"], this_float_map["spinup_U"]*this_float_map["cycle_K_factor"] );
+      }
+      mod.run_components_combined();
+    }
+  }
+
+
+  //============================================================================
   // Logic for snapping to steady state using equation 4a from Mudd et al 2014
   // Every pixel is considered to be a channel. If you want hillslopes
   // you will need to run the model after this with the hillslopes turned on
@@ -458,69 +629,5 @@ int main (int nNumberofArgs,char *argv[])
     mod.set_baseline_uplift(this_float_map["rudimentary_steady_forcing_uplift"]*2);
     mod.run_components_combined();
   }
-
-  //============================================================================
-  // This cycles between version with hillslopes and without to speed up the initial
-  // condition.  
-  //============================================================================
-  if(this_bool_map["cyclic_spinup"])
-  {
-    int this_frame;
-    
-    cout << "I am going to try to spin up the model by cycling between hillslope diffusion on and off."  << endl;
-    
-    cout << "First I need to ensure the raster is raised, filled and roughened."  <<endl;
-    mod.raise_and_fill_raster();
-    mod.set_noise(this_float_map["roughness_relief"]);
-    mod.random_surface_noise();
-    mod.raise_and_fill_raster(); 
-    
-    // run a few cycles to get a network and then fill
-    mod.set_timeStep( 1 );
-    for (int i = 0; i<100; i++)
-    {
-      if (i%10 == 0)
-      cout << "Initial dissection; i = " << i+1 << " of 100" << endl;
-      mod.fluvial_incision_with_uplift();
-    }
-    mod.set_timeStep( this_float_map["spinup_dt"] );
-    mod.raise_and_fill_raster(); 
-    this_frame = 9998;
-    mod.print_rasters_and_csv( this_frame );
-      
-    
-    
-    mod.set_current_frame(1);
-    for(int i =0; i< this_int_map["spinup_cycles"]; i++)
-    {
-      cout << "++CYCLE NUMBER: "  << i << "+++++" << endl;
-      
-      // first we do a little bit of fluvial action
-      current_end_time = current_end_time+this_float_map["spinup_time"];
-      mod.set_hillslope(false);
-      mod.set_endTime(current_end_time);
-      mod.set_timeStep( this_float_map["spinup_dt"] );
-      mod.set_print_interval(this_int_map["print_interval"]);
-      mod.set_K(this_float_map["spinup_K"]);
-      mod.set_uplift( this_int_map["uplift_mode"], this_float_map["spinup_U"] );
-      mod.run_components_combined();
-
-      // now do a bit more fluvial only but at a different parameter values
-      cout << "A bit more fluvial at a different uplift rate" << endl;
-      current_end_time = current_end_time+this_float_map["spinup_time"];
-      mod.set_hillslope(false);
-      mod.set_endTime(current_end_time);
-      mod.set_timeStep( this_float_map["spinup_dt"] );
-      mod.set_print_interval(this_int_map["print_interval"]);
-      if( this_bool_map["cycle_K"])
-      {
-        mod.set_K(this_float_map["spinup_K"]*this_float_map["cycle_K_factor"]);
-      }
-      if (this_bool_map["cycle_U"])
-      {
-        mod.set_uplift( this_int_map["uplift_mode"], this_float_map["spinup_U"]*this_float_map["cycle_K_factor"] );
-      }
-      mod.run_components_combined();
-    }
-  }
 }
+
