@@ -151,23 +151,37 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["print_interval"] = 10;
 
   // control of snapping to steady state
-  bool_default_map["snap_to_steady"] = true;
+  bool_default_map["snap_to_steady"] = false;
   float_default_map["snapped_to_steady_uplift"] = 0.0001;
   float_default_map["snapped_to_steady_relief"] = 400;
   bool_default_map["print_snapped_to_steady_frame"] = false;
+  
+  // forcing of dissection
+  bool_default_map["force_dissect"] = true;
+  int_default_map["force_dissect_steps"] = 10000;
 
   // Some parameters for very rudimentary steady forcing
-  bool_default_map["rudimentary_steady_forcing"] = true;
+  bool_default_map["rudimentary_steady_forcing"] = false;
   float_default_map["rudimentary_steady_forcing_time"] = 100000;
   float_default_map["rudimentary_steady_forcing_uplift"] = 0.0005;
+  float_default_map["rudimentary_steady_forcing_K"] = 0.0005;
 
   // Parameters for hillslopes
   bool_default_map["hillslopes_on"] = false;
 
-  // Some parameters for transient forcing
-  bool_default_map["run_transient_forcing"] = false;
-  float_default_map["transient_forcing_time"] = 500000;
-  float_default_map["transient_forcing_uplift"] = 0.001;
+  // Some parameters for cyclic forcing
+  // these also inherit parameters from the cyclic spinup
+  bool_default_map["run_cyclic_forcing"] = false;
+  float_default_map["cyclic_forcing_time"] = 10000;
+  float_default_map["baseline_K_for_cyclic"] = 0.0001;
+  float_default_map["baseline_U_for_cyclic"] = 0.0005;
+  int_default_map["cyclic_cycles"] = 3;
+  float_default_map["cyclic_dt"] = 250;
+  
+
+  // some parameters for setting K to a fixed uplift and relief
+  bool_default_map["set_fixed_relief"] = false;
+  float_default_map["fixed_relief"] = 500;
 
   // Use the parameter parser to get the maps of the parameters required for the analysis
   LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
@@ -507,6 +521,8 @@ int main (int nNumberofArgs,char *argv[])
     // now print the model result
     this_frame = 9998;
     mod.print_rasters_and_csv( this_frame );
+    
+    current_end_time = 0;
   }
 
 
@@ -566,11 +582,47 @@ int main (int nNumberofArgs,char *argv[])
       }
       if (this_bool_map["cycle_U"])
       {
-        mod.set_uplift( this_int_map["uplift_mode"], this_float_map["spinup_U"]*this_float_map["cycle_K_factor"] );
+        mod.set_uplift( this_int_map["uplift_mode"], this_float_map["spinup_U"]*this_float_map["cycle_U_factor"] );
       }
       mod.run_components_combined();
     }
   }
+
+
+  if(this_bool_map["force_dissect"])
+  {
+    cout << "I am going to try to dissect your landscape by setting n = 1, having an rapid uplift rate, " << endl;
+    cout << " setting a very high K, and running for a while" << endl;
+    mod.raise_and_fill_raster(); 
+    mod.set_n(1.0);
+    mod.set_K(0.001);
+    mod.set_uplift( 0,0.001 );
+    mod.set_timeStep(100);
+    mod.set_hillslope(false);
+    int dissect_steps = this_int_map["force_dissect_steps"];
+    for(int i = 0; i< dissect_steps; i++ )
+    {
+      if (i%100 == 0)
+      {
+        cout << "dissecting, step: " << i << " of " << dissect_steps << endl;
+      }
+      mod.fluvial_incision_with_uplift();
+    }
+    
+    // set the print intervals and other parameters
+    mod.set_m(this_float_map["m"]);
+    mod.set_n(this_float_map["n"]);
+    mod.set_uplift_mode(this_int_map["uplift_mode"]);
+    mod.set_print_hillshade(this_bool_map["write_hillshade"]);
+    mod.set_timeStep( this_float_map["dt"] );
+    mod.set_print_interval(this_int_map["print_interval"]);
+    mod.raise_and_fill_raster(); 
+    
+    // now print the model result
+    int this_frame = 9997;
+    mod.print_rasters_and_csv( this_frame );
+  }
+
 
 
   //============================================================================
@@ -603,6 +655,9 @@ int main (int nNumberofArgs,char *argv[])
     }
   }
 
+
+
+
   //============================================================================
   // Logic for a rudimentary steady forcing of uplift
   //============================================================================
@@ -617,9 +672,10 @@ int main (int nNumberofArgs,char *argv[])
       mod.set_hillslope(false);
     }
     cout << "Let me run some steady forcing for you. " << endl;
-    cout << "Starting with a K of: " << mod.get_K() << endl;
+    cout << "Starting with a K of: " << this_float_map["rudimentary_steady_forcing_K"] << endl;
     current_end_time = current_end_time+this_float_map["rudimentary_steady_forcing_time"];
     mod.set_endTime(current_end_time);
+    mod.set_K(this_float_map["rudimentary_steady_forcing_K"]);
     mod.set_uplift( this_int_map["uplift_mode"], this_float_map["rudimentary_steady_forcing_uplift"] );
     mod.run_components_combined();
     
@@ -628,6 +684,97 @@ int main (int nNumberofArgs,char *argv[])
     mod.set_endTime(current_end_time);
     mod.set_baseline_uplift(this_float_map["rudimentary_steady_forcing_uplift"]*2);
     mod.run_components_combined();
+  }
+
+
+
+  
+  //============================================================================
+  // Logic for a rudimentary steady forcing of uplift
+  //============================================================================
+  if(this_bool_map["run_cyclic_forcing"])
+  {
+    cout << "I am going to force your model through a series of cycles, varying" << endl;
+    cout << " either K or U." << endl;
+    //int this_frame;
+
+    if( not this_bool_map["hillslopes_on"] )
+    {
+      cout << "I'm turning hillslope diffusion off." << endl;
+      mod.set_hillslope(false);
+    }
+
+    // get the K value for the desired relief
+    float first_cycle_K;
+    if(this_bool_map["set_fixed_relief"])
+    {
+      cout << "I am calculating a K value that will get a relief of " << this_float_map["fixed_relief"] << " metres" << endl;
+      cout << " for an uplift rate of " << this_float_map["baseline_U_for_cyclic"]*1000 << " mm/yr" << endl; 
+      first_cycle_K = mod.fluvial_calculate_K_for_steady_state_relief(this_float_map["baseline_U_for_cyclic"],this_float_map["fixed_relief"]);
+      cout << "The K value is: " << first_cycle_K << endl;
+    }
+    else
+    {
+      first_cycle_K = this_float_map["baseline_K_for_cyclic"];
+    }
+
+    // We need to run the model for a few timesteps at a short dt and then fill
+    // to make sure no baselevel nodes are created
+    mod.set_timeStep( 1 );
+    mod.set_K(first_cycle_K);
+    for (int i = 0; i<100; i++)
+    {
+      if (i%10 == 0)
+      cout << "Initial dissection; i = " << i+1 << " of 100" << endl;
+      mod.fluvial_incision_with_uplift();
+    }
+    mod.set_timeStep( this_float_map["spinup_dt"] );
+    mod.raise_and_fill_raster(); 
+
+
+    // Let the user know what you are doing
+    if( this_bool_map["cycle_K"])
+    {
+      cout << "I am going to vary the baseline K by a factor of " << this_float_map["cycle_K_factor"] << endl;
+    }
+    if (this_bool_map["cycle_U"])
+    {
+      cout << "I am going to vary the baseline U by a factor of " << this_float_map["cycle_U_factor"] << endl;
+    }
+
+    // now for the model run
+    mod.set_print_interval(this_int_map["print_interval"]);
+    current_end_time = 0;
+    mod.set_timeStep( this_float_map["cyclic_dt"] );
+    
+    for(int i =0; i< this_int_map["cyclic_cycles"]; i++)
+    {
+      cout << "++CYCLE NUMBER: "  << i << "+++++" << endl;
+      
+      // first we do a little bit of fluvial action
+      current_end_time = current_end_time+this_float_map["cyclic_forcing_time"];
+
+      mod.set_endTime(current_end_time);
+      mod.set_K(first_cycle_K);
+      mod.set_uplift( this_int_map["uplift_mode"], this_float_map["baseline_U_for_cyclic"] );
+      mod.run_components_combined();
+
+      // now do a bit more fluvial only but at a different parameter values
+      cout << "A bit more fluvial at a different uplift rate" << endl;
+      current_end_time = current_end_time+this_float_map["cyclic_forcing_time"];
+      mod.set_endTime(current_end_time);
+
+      // logic for changing the K or U for the cycles. 
+      if( this_bool_map["cycle_K"])
+      {
+        mod.set_K(first_cycle_K*this_float_map["cycle_K_factor"]);
+      }
+      if (this_bool_map["cycle_U"])
+      {
+        mod.set_uplift( this_int_map["uplift_mode"], this_float_map["baseline_U_for_cyclic"]*this_float_map["cycle_U_factor"] );
+      }
+      mod.run_components_combined();
+    }
   }
 }
 
