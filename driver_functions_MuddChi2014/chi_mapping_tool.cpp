@@ -778,6 +778,21 @@ int main (int nNumberofArgs,char *argv[])
     }
   }
 
+
+  //============================================================================
+  // Print a basin raster if you want it.
+  if(this_bool_map["print_basin_raster"])
+  {
+    cout << "I am going to print the basins for you. " << endl;
+    LSDChiTools ChiTool_basins(FlowInfo);
+    ChiTool_basins.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
+                            filled_topography, DistanceFromOutlet,
+                            DrainageArea, chi_coordinate);
+    string basin_raster_prefix = OUT_DIR+OUT_ID;
+    ChiTool_basins.print_basins(FlowInfo, JunctionNetwork, BaseLevelJunctions, basin_raster_prefix);
+  }
+
+
   if (this_bool_map["print_segmented_M_chi_map_to_csv"])
   {
     cout << "I am calculating the segmented channels" << endl;
@@ -1291,22 +1306,6 @@ int main (int nNumberofArgs,char *argv[])
       }
     }
   }
-
-  //============================================================================
-  // Print a basin raster if you want it.
-  if(this_bool_map["print_basin_raster"])
-  {
-    cout << "I am going to print the basins for you. " << endl;
-    LSDChiTools ChiTool_basins(FlowInfo);
-    ChiTool_basins.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
-                            filled_topography, DistanceFromOutlet,
-                            DrainageArea, chi_coordinate);
-    string basin_raster_prefix = OUT_DIR+OUT_ID;
-    ChiTool_basins.print_basins(FlowInfo, JunctionNetwork, BaseLevelJunctions, basin_raster_prefix);
-  }
-
-
-
 
 
 

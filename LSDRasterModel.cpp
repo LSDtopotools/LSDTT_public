@@ -4333,7 +4333,7 @@ void LSDRasterModel::fluvial_incision( void )
   for (int i=0; i<numNodes; ++i)
   {
 
-    // get the information about node relashionships from the flow info object
+    // get the information about node relationships from the flow info object
     node = nodeList[i];
     flow.retrieve_current_row_and_col(node, row, col);
     flow.retrieve_receiver_information(node, receiver, receiver_row, receiver_col);
