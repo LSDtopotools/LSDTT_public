@@ -637,7 +637,11 @@ int main (int nNumberofArgs,char *argv[])
     cout << " elevation is calculated using equation 4a from Mudd et al 2014 JGR-ES" << endl;
     cout << "This method assumes only fluvial erosion. If you want hillslopes you need" << endl;
     cout << "To turn them on and then let the model run to steady state. " << endl;
-
+    
+    // first ensure that the raster is filled and there are no below sea level nodes
+    mod.raise_and_fill_raster(); 
+    
+    // now snap!
     float new_K = mod.fluvial_snap_to_steady_state_tune_K_for_relief(this_float_map["snapped_to_steady_uplift"], this_float_map["snapped_to_steady_relief"]);
     cout << "Getting a steady solution for a landscape with relief of " << this_float_map["snapped_to_steady_relief"]
          << " metres and uplift of " << this_float_map["snapped_to_steady_uplift"]*1000 << " mm per year." << endl;
