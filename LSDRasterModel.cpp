@@ -4376,6 +4376,13 @@ void LSDRasterModel::fluvial_incision( void )
         streamPowerFactor = K * pow(drainageArea, m) * (timeStep / dx);
         zeta[row][col] = (zeta[row][col] + zeta[receiver_row][receiver_col] * streamPowerFactor) /
                          (1 + streamPowerFactor);
+
+        // check for overexcavation
+        if(zeta[row][col] < zeta[receiver_row][receiver_col])
+        {
+          //cout << "Warning, overexcavation. Setting to minimum slope." << endl;
+          zeta[row][col] = zeta[receiver_row][receiver_col]+(0.00001)*dx;
+        }
       }
     }
     else    // this else loop is for when n is not close to one and you need an iterative solution
@@ -4419,7 +4426,14 @@ void LSDRasterModel::fluvial_incision( void )
         }
       } while (abs(epsilon) > 1e-6);
       zeta[row][col] = new_zeta;
-      
+
+      // check for overexcavation
+      if(zeta[row][col] < zeta[receiver_row][receiver_col])
+      {
+        //cout << "Warning, overexcavation. Setting to minimum slope." << endl;
+        zeta[row][col] = zeta[receiver_row][receiver_col]+(0.00001)*dx;
+      }
+
     }
   }
   //return LSDRasterModel(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
