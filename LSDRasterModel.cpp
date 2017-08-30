@@ -4528,6 +4528,12 @@ void LSDRasterModel::fluvial_incision_with_uplift( void )
                           + zeta[receiver_row][receiver_col]*streamPowerFactor
                           + timeStep*U) /
                          (1 + streamPowerFactor);
+                         
+        if(zeta[row][col] < zeta[receiver_row][receiver_col])
+        {
+          //cout << "Warning, overexcavation. Setting to minimum slope." << endl;
+          zeta[row][col] = zeta[receiver_row][receiver_col]+(0.00001)*dx;
+        }
       }
     }
     else    // this else loop is for when n is not close to one and you need an iterative solution
@@ -4586,6 +4592,12 @@ void LSDRasterModel::fluvial_incision_with_uplift( void )
       } while (abs(epsilon) > 1e-6);
       zeta[row][col] = new_zeta;
       
+      // check for overexcavation
+      if(zeta[row][col] < zeta[receiver_row][receiver_col])
+      {
+        //cout << "Warning, overexcavation. Setting to minimum slope." << endl;
+        zeta[row][col] = zeta[receiver_row][receiver_col]+(0.00001)*dx;
+      }
     }
   }
     
