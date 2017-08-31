@@ -41,12 +41,14 @@
 #include <sstream>
 #include <cstdlib>
 #include <cmath>
+#include <ctime>
 #include <sys/stat.h>
 #include "../LSDRasterModel.hpp"
 #include "../LSDParticleColumn.hpp"
 #include "../LSDParticle.hpp"
 #include "../LSDCRNParameters.hpp"
 #include "../LSDParameterParser.hpp"
+#include "../LSDStatsTools.hpp"
 using namespace std;
 
 
@@ -182,6 +184,16 @@ int main (int nNumberofArgs,char *argv[])
   // some parameters for setting K to a fixed uplift and relief
   bool_default_map["set_fixed_relief"] = false;
   float_default_map["fixed_relief"] = 500;
+  
+  
+  // some parameters for having a random uplift through time
+  bool_default_map["run_random_forcing"] = false;
+  float_default_map["maximum_time_for_random_cycle"] = 20000;
+  float_default_map["minimum_time_for_random_cycle"] = 5000;
+  float_default_map["maximum_U_for_random_cycle"] = 0.001;
+  float_default_map["minimum_U_for_random_cycle"] = 0.0001;
+  float_default_map["random_dt"] = 10;  
+  int_default_map["random_cycles"] = 4;
 
   // Use the parameter parser to get the maps of the parameters required for the analysis
   LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
@@ -217,10 +229,6 @@ int main (int nNumberofArgs,char *argv[])
   mod.set_timeStep( this_float_map["dt"] );
   mod.set_print_interval(this_int_map["print_interval"]);
   
-
-  
-  
-
   // print parameters to screen
   mod.print_parameters();
 
@@ -694,7 +702,7 @@ int main (int nNumberofArgs,char *argv[])
 
   
   //============================================================================
-  // Logic for a rudimentary steady forcing of uplift
+  // Logic for cyclic forcing of uplift
   //============================================================================
   if(this_bool_map["run_cyclic_forcing"])
   {
@@ -780,5 +788,73 @@ int main (int nNumberofArgs,char *argv[])
       mod.run_components_combined();
     }
   }
+
+
+  //============================================================================
+  // Logic for a random forcing of uplift and/or K
+  //============================================================================
+  if(this_bool_map["run_random_forcing"])
+  {
+    string ran_uplift_fname = OUT_DIR+OUT_ID+"_randomU.csv";
+    ofstream Uout;
+    Uout.open(ran_uplift_fname.c_str());
+    Uout << "time,end_time,uplift_rate_m_yr" << endl;
+    
+    
+    cout << "I am going to force your model through a series of cycles, varying" << endl;
+    cout << " either K or U." << endl;
+    
+    // get the seed for the random forcing. 
+    long seed = time(NULL);
+    
+    
+    float time_gap = this_float_map["maximum_time_for_random_cycle"]-this_float_map["minimum_time_for_random_cycle"];
+    float U_gap = this_float_map["maximum_U_for_random_cycle"]-this_float_map["minimum_U_for_random_cycle"];
+    
+    
+    if( not this_bool_map["hillslopes_on"] )
+    {
+      cout << "I'm turning hillslope diffusion off." << endl;
+      mod.set_hillslope(false);
+    }
+
+    // get the K value for the desired relief
+    float first_cycle_K;
+    cout << "I am calculating a K value that will get a relief of " << this_float_map["fixed_relief"] << " metres" << endl;
+    cout << " for an uplift rate of " << this_float_map["minimum_U_for_random"]*1000 << " mm/yr" << endl; 
+    first_cycle_K = mod.fluvial_calculate_K_for_steady_state_relief(this_float_map["minimum_U_for_random"],this_float_map["fixed_relief"]);
+    cout << "The K value is: " << first_cycle_K << endl;
+    mod.set_K(first_cycle_K);
+    mod.raise_and_fill_raster(); 
+
+    // now for the model run
+    mod.set_print_interval(this_int_map["print_interval"]);
+    current_end_time = 0;
+    mod.set_timeStep( this_float_map["random_dt"] );
+    
+    for(int i =0; i< this_int_map["random_cycles"]; i++)
+    {
+      cout << "++CYCLE NUMBER: "  << i << "+++++" << endl;
+      
+      // get the time of this cycle
+      float this_time = time_gap*ran3(&seed)+this_float_map["minimum_time_for_random_cycle"];
+      current_end_time = current_end_time+this_time;
+      mod.set_endTime(current_end_time);
+      
+      
+      
+      // now for the uplift
+      float this_U = U_gap*ran3(&seed)+this_float_map["minimum_U_for_random_cycle"];
+      current_end_time = current_end_time+this_time;
+      
+      Uout << this_time <<"," << current_end_time << "," << this_U << endl;
+      cout << "Time of: " << this_time << " with U of " << this_U*1000 << " mm/yr." << endl;
+      
+      mod.set_uplift( this_int_map["uplift_mode"], this_U );
+      mod.run_components_combined();
+    }
+    Uout.close();
+  }
 }
+
 
