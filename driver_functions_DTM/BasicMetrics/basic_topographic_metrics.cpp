@@ -107,8 +107,10 @@ int main (int nNumberofArgs,char *argv[])
   surface_fitting = filled_topo.calculate_polyfit_surface_metrics(surface_fitting_window_radius, raster_selection);
 
   // now print the derivative rasters to file.
+  string slope_name = "_slope";
+  string aspect_name = "_aspect";
   aspect = surface_fitting[6];
-  aspect.write_raster(tan_curvature_name, DEM_ext);
+  aspect.write_raster(aspect_name, DEM_ext);
   slope = surface_fitting[1];
   slope.write_raster(slope_name, DEM_ext);
 
