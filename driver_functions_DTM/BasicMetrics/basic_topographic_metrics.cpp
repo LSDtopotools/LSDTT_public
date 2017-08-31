@@ -38,7 +38,6 @@
 #include "../../LSDStatsTools.hpp"
 #include "../../LSDRaster.hpp"
 #include "../../LSDIndexRaster.hpp"
-#include "../../LSDFlowInfo.hpp"
 
 int main (int nNumberofArgs,char *argv[])
 {
@@ -66,17 +65,17 @@ int main (int nNumberofArgs,char *argv[])
   cout << "The pathname is: " << path_name << endl;
 
   // make sure the extension is correct
-  if(f_ext != "asc" && f_ext != "flt")
+  if(f_ext != "asc" && f_ext != "flt" && f_ext != "bil")
   {
-    cout << "You did not choose a valid file option, options are asc and flt" << endl;
+    cout << "You did not choose a valid file option, options are bil, asc and flt" << endl;
     cout << "you selected: " << f_ext << endl;
     exit(EXIT_SUCCESS);
   }
 
   string full_name = path_name+f_name;
   cout << "The full path is: " << full_name << endl;
+
   //string DEM_name;
-  string fill_ext = "_fill";
 
   // get some file names
   string DEM_f_name = path_name+f_name;
@@ -97,13 +96,6 @@ int main (int nNumberofArgs,char *argv[])
   float MinSlope = 0.00001;
   cout << "Filling the DEM" << endl;
   LSDRaster filled_topo = topo.fill(MinSlope);
-  
-  // set no flux boundary conditions
-  vector<string> boundary_conditions(4);
-  boundary_conditions[0] = "No";
-  boundary_conditions[1] = "no flux";
-  boundary_conditions[2] = "no flux";
-  boundary_conditions[3] = "No flux";
 
   float surface_fitting_window_radius = 30;      // the radius of the fitting window in metres
   vector<LSDRaster> surface_fitting;
@@ -129,6 +121,6 @@ int main (int nNumberofArgs,char *argv[])
   TI_name = path_name+f_name+TI_name;
 
   D_inf_area.write_raster(area_name,DEM_ext);
-  TopoIndex.write_raster(TW_name,DEM_ext);
+  TopoIndex.write_raster(TI_name,DEM_ext);
 
 }
