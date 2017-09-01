@@ -49,6 +49,7 @@
 #include "../LSDCRNParameters.hpp"
 #include "../LSDParameterParser.hpp"
 #include "../LSDStatsTools.hpp"
+#include "../LSDRasterMaker.hpp"
 using namespace std;
 
 
@@ -194,6 +195,14 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["minimum_U_for_random_cycle"] = 0.0001;
   float_default_map["random_dt"] = 10;  
   int_default_map["random_cycles"] = 4;
+  
+  // some parameters for a spatially varying K
+  bool_default_map["make_spatially_varying_K"] = false;
+  float_default_map["spatially_varying_max_K"] = 0.0001;
+  float_default_map["spatially_varying_min_K"] = 0.000001;
+  int_default_map["min_blob_size"] = 50;
+  int_default_map["max_blob_size"] = 100;
+  int_default_map["n_blobs"] = 10;
 
   // Use the parameter parser to get the maps of the parameters required for the analysis
   LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
@@ -404,6 +413,29 @@ int main (int nNumberofArgs,char *argv[])
     cout << "Finished creating an initial surface. " << endl;
     cout << "=============================================" << endl << endl << endl;
   }
+
+  //============================================================================
+  // Logic for making spatially varying K fields
+  //============================================================================
+  if(this_bool_map["make_spatially_varying_K"])
+  {
+    cout << "I am going to make a spatially varying raster for the K parameter." << endl;
+    
+    LSDRasterMaker KRaster(this_int_map["NRows"],this_int_map["NCols"]);
+    KRaster.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["spatially_varying_min_K"]);
+    
+    KRaster.random_square_blobs(this_int_map["min_blob_size"], this_int_map["max_blob_size"], 
+                                this_float_map["spatially_varying_min_K"], this_float_map["spatially_varying_max_K"],
+                                this_int_map["n_blobs"]);
+  
+  // write the raster
+    string K_fname = OUT_DIR+OUT_ID+"_KRaster";
+    string bil_name = "bil";
+    
+    KRaster.write_raster(K_fname,bil_name);
+  }
+
+
 
   //============================================================================
   // Logic for a spinning up the model.
