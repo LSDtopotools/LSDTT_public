@@ -128,6 +128,11 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @brief operator assignment
   LSDRasterModel& operator=(const LSDRasterModel& LSDR);
 
+  /// @brief This just returns the raster model object data as a raster
+  /// @return A raster with the data from the LSDRasterModel
+  /// @author SMM
+  /// @date 01/09/2017
+  LSDRaster return_as_raster();
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // @~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@

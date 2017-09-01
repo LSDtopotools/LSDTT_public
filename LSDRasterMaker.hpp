@@ -68,9 +68,12 @@ class LSDRasterMaker: public LSDRaster
       create(NRows,NCols);
     }
 
-    /// @brief operator assignment
-    //LSDRasterMaker& operator=(const LSDRasterMaker& LSDR);
-
+    /// @brief This just returns the raster model object data as a raster
+    /// @return A raster with the data from the LSDRasterModel
+    /// @author SMM
+    /// @date 01/09/2017
+    LSDRaster return_as_raster();
+    
     /// @brief This resizes the LSDRasterModel, resetting some flags in the process,
     /// as well as setting many of the Array2D data members to be empty arrays
     /// The raster data in the end is a random surface (determined by the noise
@@ -97,6 +100,12 @@ class LSDRasterMaker: public LSDRaster
     /// @date 01/09/2017
     void random_square_blobs(int minimum_blob_size, int maximum_blob_size, float minimum_value, float maximum_value, int n_blobs);
 
+    /// @brief This function adds some sine waves together to get patterns
+    /// @param x_coefficients Coefficients of the sin waves in the x direction.
+    /// @param y_coefficients Coefficients of the sin waves in the y direction.
+    /// @author SMM
+    /// @date 01/09/2017
+    void sine_waves(vector<float> x_coefficients, vector<float> y_coefficients);
 
   protected:
 

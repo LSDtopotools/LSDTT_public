@@ -423,7 +423,6 @@ int main (int nNumberofArgs,char *argv[])
     
     LSDRasterMaker KRaster(this_int_map["NRows"],this_int_map["NCols"]);
     KRaster.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["spatially_varying_min_K"]);
-    
     KRaster.random_square_blobs(this_int_map["min_blob_size"], this_int_map["max_blob_size"], 
                                 this_float_map["spatially_varying_min_K"], this_float_map["spatially_varying_max_K"],
                                 this_int_map["n_blobs"]);
@@ -433,6 +432,23 @@ int main (int nNumberofArgs,char *argv[])
     string bil_name = "bil";
     
     KRaster.write_raster(K_fname,bil_name);
+    
+    
+    // now do a sine version. 
+    LSDRasterMaker URaster(this_int_map["NRows"],this_int_map["NCols"]);
+    URaster.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["spatially_varying_min_K"]);
+    vector<float> x_coeff;
+    vector<float> y_coeff;
+    y_coeff.push_back(10);
+    //y_coeff.push_back(0);
+    //y_coeff.push_back(2);
+    //y_coeff.push_back(0);
+    //y_coeff.push_back(5);
+    
+    URaster.sine_waves(x_coeff, y_coeff);
+    
+    string U_fname = OUT_DIR+OUT_ID+"_URaster";
+    URaster.write_raster(U_fname,bil_name);
   }
 
 

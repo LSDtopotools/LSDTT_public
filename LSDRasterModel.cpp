@@ -266,6 +266,17 @@ void LSDRasterModel::default_parameters( void )
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+// This returns the data in the raster model as a raster
+LSDRaster LSDRasterModel::return_as_raster()
+{
+  LSDRaster NewRaster(NRows, NCols, XMinimum, YMinimum,
+                      DataResolution, NoDataValue, RasterData, 
+                      GeoReferencingStrings);
+  return NewRaster;
+}
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This adds a path to the run name and the report name
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

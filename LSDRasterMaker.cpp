@@ -84,6 +84,17 @@ void LSDRasterMaker::create(LSDRaster& An_LSDRaster)
   GeoReferencingStrings =  An_LSDRaster.get_GeoReferencingStrings();
   RasterData = An_LSDRaster.get_RasterData();
 }
+
+
+
+// This returns the data in the raster model as a raster
+LSDRaster LSDRasterMaker::return_as_raster()
+{
+  LSDRaster NewRaster(NRows, NCols, XMinimum, YMinimum,
+                      DataResolution, NoDataValue, RasterData, 
+                      GeoReferencingStrings);
+  return NewRaster;
+}
  
  
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -207,5 +218,37 @@ void LSDRasterMaker::random_square_blobs(int minimum_blob_size, int maximum_blob
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Some functions for making random values in the rasters
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterMaker::sine_waves(vector<float> x_coefficients, vector<float> y_coefficients)
+{
+  int n_x_coeff = int(x_coefficients.size());
+  int n_y_coeff = int(y_coefficients.size());
+  
+  float x_factor = M_PI/ float(NCols-1);
+  float y_factor = M_PI / float(NRows-1);
+  
+  float this_x_value;
+  float this_y_value;
+  
+  // so the wavelengths of the sin waves depend on the number
+  for (int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      this_x_value = 0;
+      for(int xv = 0; xv<n_x_coeff; xv++)
+      {
+        this_x_value+=x_coefficients[xv]*sin(x_factor*(xv+1)*float(col));
+      }
+      this_y_value = 0;
+      for(int yv = 0; yv<n_y_coeff; yv++)
+      {
+        this_y_value+=y_coefficients[yv]*sin(y_factor*(yv+1)*float(row));
+      }
+      RasterData[row][col] = this_x_value+this_y_value;
+    }
+  }
+}
+
+
 
 #endif
