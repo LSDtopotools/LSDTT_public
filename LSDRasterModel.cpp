@@ -4815,7 +4815,7 @@ void LSDRasterModel::fluvial_incision_with_uplift_and_variable_K( LSDRaster& K_r
 // FASTSCAPE algorithm of Willett and Braun (2013)
 // Uses Newton's method to solve incision if the slope exponent != 1
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDRasterModel::fluvial_incision_with_uplift_and_variable_K( LSDRaster& Urate_raster, LSDRaster& K_raster )
+void LSDRasterModel::fluvial_incision_with_variable_uplift_and_variable_K( LSDRaster& Urate_raster, LSDRaster& K_raster )
 {
   Array2D<float> zeta=RasterData.copy();
 

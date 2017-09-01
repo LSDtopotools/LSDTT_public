@@ -702,6 +702,7 @@ class LSDRasterModel: public LSDRasterSpectral
   /// This version includes the current uplift, so you do not need to call
   /// uplift after this has finished
   /// @param K_raster the raster of K values. 
+  /// @param Uplift_rate a raster of uplift rates in m/yr
   /// @author SMM
   /// @date 01/09/2017
   void fluvial_incision_with_variable_uplift_and_variable_K( LSDRaster& Uplift_rate, LSDRaster& K_raster );
