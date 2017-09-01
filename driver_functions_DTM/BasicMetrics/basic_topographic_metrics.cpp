@@ -109,6 +109,8 @@ int main (int nNumberofArgs,char *argv[])
   // now print the derivative rasters to file.
   string slope_name = "_slope";
   string aspect_name = "_aspect";
+  slope_name = path_name+f_name+slope_name;
+  aspect_name = path_name+f_name+aspect_name;
   aspect = surface_fitting[6];
   aspect.write_raster(aspect_name, DEM_ext);
   slope = surface_fitting[1];
