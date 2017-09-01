@@ -4810,7 +4810,174 @@ void LSDRasterModel::fluvial_incision_with_uplift_and_variable_K( LSDRaster& K_r
 
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This is the component of the model that is solved using the
+// FASTSCAPE algorithm of Willett and Braun (2013)
+// Uses Newton's method to solve incision if the slope exponent != 1
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::fluvial_incision_with_uplift_and_variable_K( LSDRaster& Urate_raster, LSDRaster& K_raster )
+{
+  Array2D<float> zeta=RasterData.copy();
 
+  // Step one, create donor "stack" etc. via FlowInfo
+  LSDRaster temp(NRows, NCols, XMinimum, YMinimum, DataResolution, NoDataValue, zeta);
+  //cout << "The nodatavalue is: " << NoDataValue << endl;
+  LSDFlowInfo flow(boundary_conditions, temp);
+  
+  //for(int i = 0; i<4; i++)
+  //{
+  //  cout << "bc["<<i<<"]: " << boundary_conditions[i] << endl; 
+  //}
+  
+  vector <int> nodeList = flow.get_SVector();
+  int numNodes = nodeList.size();
+  int node, row, col, receiver, receiver_row, receiver_col;
+  float drainageArea, dx, streamPowerFactor;
+  float U;
+
+  // these save a bit of computational expense.
+  float root_2 = pow(2, 0.5);
+  float dx_root2 = root_2*DataResolution;
+  float DR2 = DataResolution*DataResolution;
+
+
+  // this is only for bug checking
+  if (not quiet && name == "debug" && NRows <= 10 && NCols <= 10)
+  {
+    cout << "Drainage area: " << endl;
+    for (int i=0; i<NRows*NCols; ++i)
+    {
+      drainageArea = flow.retrieve_contributing_pixels_of_node(i) *  DR2;
+      cout << drainageArea << " ";
+      if (((i+1)%NCols) == 0)
+      cout << endl;
+    }
+  }
+
+  // Step two calculate new height
+  //for (int i=numNodes-1; i>=0; --i)
+  for (int i=0; i<numNodes; ++i)
+  {
+
+    // get the information about node relashionships from the flow info object
+    node = nodeList[i];
+    flow.retrieve_current_row_and_col(node, row, col);
+    flow.retrieve_receiver_information(node, receiver, receiver_row, receiver_col);
+    drainageArea = flow.retrieve_contributing_pixels_of_node(node) *  DR2;
+
+    // some code for debugging
+    if (not quiet && name == "debug" && NRows <= 10 && NCols <= 10)
+    {
+      cout << row << ", " << col << ", " << receiver_row << ", " << receiver_col << endl;
+      cout << flow.retrieve_flow_length_code_of_node(node) << endl;
+      cout << drainageArea << endl;
+    }
+
+    // get the distance between nodes. Depends on flow direction
+    switch (flow.retrieve_flow_length_code_of_node(node))
+    {
+      case 0:
+        dx = -99;
+        break;
+      case 1:
+        dx = DataResolution;
+        break;
+      case 2:
+        dx = dx_root2;
+        break;
+      default:
+        dx = -99;
+        break;
+    }
+
+    // some logic if n is close to 1. Saves a bit of computational expense.
+    if (abs(n - 1) < 0.0001)
+    {
+      if (dx == -99)
+        continue;
+
+      // compute new elevation if node is not a base level node
+      if (node != receiver)
+      {
+        // get the uplift rate
+        U = Urate_raster.get_data_element(row,col);
+
+        // get the stream power factor
+        streamPowerFactor = K_raster.get_data_element(row,col) * pow(drainageArea, m) * (timeStep / dx);
+
+        // calculate elevation
+        zeta[row][col] = (zeta[row][col]
+                          + zeta[receiver_row][receiver_col]*streamPowerFactor
+                          + timeStep*U) /
+                         (1 + streamPowerFactor);
+                         
+        if(zeta[row][col] < zeta[receiver_row][receiver_col])
+        {
+          zeta[row][col] = zeta[receiver_row][receiver_col]+(0.00001)*dx;
+        }
+      }
+    }
+    else    // this else loop is for when n is not close to one and you need an iterative solution
+    {
+      if (dx == -99)
+      {
+        continue;
+      }
+      float new_zeta = zeta[row][col];
+      //float old_iter_zeta = zeta[row][col];
+      float old_zeta = zeta[row][col];
+
+      // get the uplift rate
+      U = Urate_raster.get_data_element(row,col);
+
+      float epsilon;     // in newton's method, z_n+1 = z_n - f(z_n)/f'(z_n)
+                         // and here epsilon =   f(z_n)/f'(z_n)
+                         // f(z_n) = -z_n + z_old - dt*K*A^m*( (z_n-z_r)/dx )^n
+                         // We differentiate the above equation to get f'(z_n)
+                         // the resulting equation f(z_n)/f'(z_n) is seen below
+      float streamPowerFactor = K_raster.get_data_element(row,col) * pow(drainageArea, m) * timeStep;
+      float slope;
+
+      // iterate until you converge on a solution. Uses Newton's method.
+      int iter_count = 0;
+      do
+      {
+        slope = (new_zeta - zeta[receiver_row][receiver_col]) / dx;
+        
+        if(slope < 0)
+        {
+          epsilon = 0;
+        }
+        else
+        {
+          // Get epsilon based on f(z_n)/f'(z_n)
+          epsilon = (new_zeta - old_zeta
+                     + streamPowerFactor * pow(slope, n) - timeStep*U) /
+               (1 + streamPowerFactor * (n/dx) * pow(slope, n-1));
+        }
+
+        new_zeta -= epsilon;
+        
+        iter_count++;
+        if(iter_count > 100)
+        {
+          epsilon = 0.5e-6;
+        }
+        
+      } while (abs(epsilon) > 1e-6);
+      zeta[row][col] = new_zeta;
+      
+      // check for overexcavation
+      if(zeta[row][col] < zeta[receiver_row][receiver_col])
+      {
+        zeta[row][col] = zeta[receiver_row][receiver_col]+(0.00001)*dx;
+      }
+    }
+  }
+  this->RasterData = zeta.copy();
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 
