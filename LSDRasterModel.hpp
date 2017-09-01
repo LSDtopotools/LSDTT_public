@@ -679,9 +679,33 @@ class LSDRasterModel: public LSDRasterSpectral
   /// and solves the stream power equation at a future timestep in linear time
   /// This version includes the current uplift, so you do not need to call
   /// uplift after this has finished
-  /// @SMM
+  /// @author SMM
   /// @date 7/07/2014
   void fluvial_incision_with_uplift( void );
+
+  /// @brief Fastscape, implicit finite difference solver for stream power equations
+  /// O(n)
+  /// Method takes the K value from a raster fed to it
+  /// and solves the stream power equation at a future timestep in linear time
+  /// This version includes the current uplift, so you do not need to call
+  /// uplift after this has finished
+  /// @param K_raster the raster of K values. 
+  /// @author SMM
+  /// @date 01/09/2017
+  void fluvial_incision_with_uplift_and_variable_K( LSDRaster& K_raster );
+
+  /// @brief Fastscape, implicit finite difference solver for stream power equations
+  /// O(n)
+  /// Method takes the K value from a raster fed to it
+  /// and also take a raster of the uplift rates
+  /// and solves the stream power equation at a future timestep in linear time
+  /// This version includes the current uplift, so you do not need to call
+  /// uplift after this has finished
+  /// @param K_raster the raster of K values. 
+  /// @author SMM
+  /// @date 01/09/2017
+  void fluvial_incision_with_variable_uplift_and_variable_K( LSDRaster& Uplift_rate, LSDRaster& K_raster );
+
 
   /// @brief This function is more or less identical to fluvial_incision above, but it
   /// Returns a raster with the erosion rate and takes arguments rather
