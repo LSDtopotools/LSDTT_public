@@ -15,6 +15,7 @@ SOURCES = MuddPILEdriver.cpp \
 		../LSDStatsTools.cpp \
 		../LSDFlowInfo.cpp \
 		../LSDParticle.cpp \
+    ../LSDRasterMaker.cpp \
 		../LSDParticleColumn.cpp \
     ../LSDParameterParser.cpp \
 		../LSDCRNParameters.cpp
