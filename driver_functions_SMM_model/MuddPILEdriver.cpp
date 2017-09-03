@@ -216,7 +216,10 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["spatial_variation_time"] = 20000;
   float_default_map["min_U_for_spatial_var"] = 0.0001;
   float_default_map["max_U_for_spatial_var"] = 0.001;
-  int_default_map["test_steps"] = 5000;
+  int_default_map["K_smoothing_steps"] = 2;
+  float_default_map["spatial_dt"] = 100;
+  
+
   
 
   // Use the parameter parser to get the maps of the parameters required for the analysis
@@ -969,7 +972,14 @@ int main (int nNumberofArgs,char *argv[])
             KRaster1.random_square_blobs(this_int_map["min_blob_size"], this_int_map["max_blob_size"], 
                                   this_min_K, this_max_K,
                                   this_int_map["n_blobs"]);
+                                  
+            // smooth the raster
+            for(int si = 0; si< this_int_map["K_smoothing_steps"]; si++)
+            {
+              KRaster1.smooth(0);
+            }
             this_K_raster = KRaster1.return_as_raster();
+            
           }
           break;
         case 1:
@@ -989,6 +999,12 @@ int main (int nNumberofArgs,char *argv[])
             KRaster1.random_square_blobs(this_int_map["min_blob_size"], this_int_map["max_blob_size"], 
                                   this_min_K, this_max_K,
                                   this_int_map["n_blobs"]);
+
+            // smooth the raster
+            for(int si = 0; si< this_int_map["K_smoothing_steps"]; si++)
+            {
+              KRaster1.smooth(0);
+            }
             this_K_raster = KRaster1.return_as_raster();
           }
           break;
@@ -1001,6 +1017,9 @@ int main (int nNumberofArgs,char *argv[])
       KRaster2.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_min_K);
       this_K_raster = KRaster2.return_as_raster();
     }
+    
+    
+    
     // write the raster
     string K_fname = OUT_DIR+OUT_ID+"_KRaster";
     string bil_name = "bil";
@@ -1093,25 +1112,11 @@ int main (int nNumberofArgs,char *argv[])
     current_end_time = this_float_map["spatial_variation_time"];
     mod.set_endTime(current_end_time);
     mod.set_print_interval(this_int_map["print_interval"]);
-    current_end_time = 0;
+    mod.set_timeStep( this_float_map["spatial_dt"] );
     
-    // note for the time being we will just test the incision rules
-    int frame = 0;
-    float test_timestep = 100;
-    mod.set_timeStep( test_timestep );
-    float t_ime = 0;
-    for(int i = 0; i< this_int_map["test_steps"]; i++)
-    {
-      
-      mod.fluvial_incision_with_variable_uplift_and_variable_K( this_U_raster, this_K_raster );
-      t_ime+=test_timestep;
-      if(i%(this_int_map["print_interval"]) == 0)
-      {
-        frame++;
-        cout << "Time is: " << t_ime << " with " << i << " of " << this_int_map["test_steps"] << " steps." << endl;
-        mod.print_rasters_and_csv( frame );
-      }
-    }
+    // Now run the model
+    mod.run_components_combined(this_U_raster, this_K_raster);
+    
   }
   
   
