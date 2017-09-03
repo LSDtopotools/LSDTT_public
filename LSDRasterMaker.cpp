@@ -167,9 +167,7 @@ void LSDRasterMaker::scale_to_new_minimum_and_maximum_value(float new_minimum, f
   float scaling_fraction;
   float original_range = min_max[1] - min_max[0];
   float new_range = new_maximum-new_minimum;
-  float new_value;
-  
-  
+
   // now loop through the matrix rescaling the values. 
   for (int row = 0; row< NRows; row++)
   {
@@ -193,6 +191,110 @@ void LSDRasterMaker::scale_to_new_minimum_and_maximum_value(float new_minimum, f
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This smooths the raster by taking a weighted average of the given pixel
+// and neighboring pixels. 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+void LSDRasterMaker::smooth(int boundary_type)
+{
+  // at the moment the boundary type can only be 0 and this is a periodic 
+  // boundary type at the E and W boundaries.
+  
+  Array2D<float> new_data(NRows,NCols,NoDataValue);
+  float total_weighting;
+  float total_sum;
+  int rp1, rm1,cp1, cm1;
+  
+  
+  for(int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      total_weighting = 0;
+      total_sum = 0;
+      
+      rp1 = row+1;
+      rm1 = row-1;
+      cp1 = col+1;
+      cm1 = col-1;
+      
+      // implement boundary conditions. 
+      if(boundary_type == 0)
+      {
+        if (rp1 == NRows)
+        {
+          rp1 = rm1;
+        }
+        if (rm1 == -1)
+        {
+          rm1 = rp1;
+        }
+        if (cp1 == NCols)
+        {
+          cp1 = 0;
+        }
+        if(cm1 == -1)
+        {
+          cm1 = NCols-1;
+        }
+      }
+      else
+      {
+        if (rp1 == NRows)
+        {
+          rp1 = rm1;
+        }
+        if (rm1 == -1)
+        {
+          rm1 = rp1;
+        }
+        if (cp1 == NCols)
+        {
+          cp1 = 0;
+        }
+        if(cm1 == -1)
+        {
+          cm1 = NCols-1;
+        }
+      }
+      
+      if( RasterData[row][col] != NoDataValue)
+      {
+        total_weighting += 2;
+        total_sum += 2*RasterData[row][col];
+        
+        // now go through all the other directions.
+        if (RasterData[row][cp1] != NoDataValue)
+        {
+          total_weighting +=1;
+          total_sum = RasterData[row][cp1];
+        }
+        if (RasterData[row][cm1] != NoDataValue)
+        {
+          total_weighting +=1;
+          total_sum = RasterData[row][cm1];
+        } 
+        if (RasterData[rp1][col] != NoDataValue)
+        {
+          total_weighting +=1;
+          total_sum = RasterData[rp1][col];
+        }
+        if (RasterData[rm1][col] != NoDataValue)
+        {
+          total_weighting +=1;
+          total_sum = RasterData[rm1][col];
+        }
+      }
+      // Now update the array
+      new_data[row][col] = total_sum/total_weighting;
+    }
+  }
+  
+  RasterData = new_data.copy();
+
+}
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

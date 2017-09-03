@@ -101,6 +101,16 @@ class LSDRasterMaker: public LSDRaster
     void scale_to_new_minimum_and_maximum_value(float new_minimum, float new_maximum);
 
 
+    /// @brief This smooths the raster. At some point in the future I'll
+    ///  add more options but at the moment it just uses 4 neighbours and has
+    ///  double weighting on the central pixel. It assumes periodic boundaries
+    ///  on the E/W
+    /// @param boundary type: this just goes to a default at the moment.
+    /// @author SMM
+    /// @date 03/09/2017
+    void smooth(int boundary_type);
+
+
     //void random_horizontal_strips(int minimum_strip_size, int maximum_strip_size, float minimum_value, float maximum_value);
     
     /// @brief This makes square blobs randomly in the DEM
