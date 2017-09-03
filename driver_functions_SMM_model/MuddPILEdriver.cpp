@@ -143,6 +143,7 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["cycle_U_factor"] = 2;
   
   // The diamond square spinup routine
+  // THis generates the nicest initial surfaces. 
   bool_default_map["diamond_square_spinup"] = false;
 
   // control of m and n, and paramters for chi
@@ -215,6 +216,7 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["spatial_variation_time"] = 20000;
   float_default_map["min_U_for_spatial_var"] = 0.0001;
   float_default_map["max_U_for_spatial_var"] = 0.001;
+  int_default_map["test_steps"] = 5000;
   
 
   // Use the parameter parser to get the maps of the parameters required for the analysis
@@ -1078,7 +1080,46 @@ int main (int nNumberofArgs,char *argv[])
     string U_fname = OUT_DIR+OUT_ID+"_URaster";
     this_U_raster.write_raster(U_fname,bil_name);
     
-  
+    
+    cout << "========================================" << endl;
+    cout << "I am now going to run your model with some spatially variable parameters." << endl;
+    
+    // set the end time and other model parameters
+    if( not this_bool_map["hillslopes_on"] )
+    {
+      cout << "I'm turning hillslope diffusion off." << endl;
+      mod.set_hillslope(false);
+    }
+    current_end_time = this_float_map["spatial_variation_time"];
+    mod.set_endTime(current_end_time);
+    mod.set_print_interval(this_int_map["print_interval"]);
+    current_end_time = 0;
+    
+    // note for the time being we will just test the incision rules
+    int frame = 0;
+    float test_timestep = 100;
+    mod.set_timeStep( test_timestep );
+    float t_ime = 0;
+    for(int i = 0; i< this_int_map["test_steps"]; i++)
+    {
+      
+      mod.fluvial_incision_with_variable_uplift_and_variable_K( this_U_raster, this_K_raster );
+      t_ime+=test_timestep;
+      if(i%50 == 0)
+      {
+        frame++;
+        cout << "Time is: " << t_ime << " with " << i << " of " << this_int_map["test_steps"] << " steps." endl;
+        mod.print_rasters_and_csv( frame );
+      }
+    }
   }
+  
+  
+  
+  
+  
+  
+  
+  
   
 }
