@@ -122,6 +122,42 @@ void LSDRasterMaker::resize_and_reset( int new_rows, int new_cols, float new_res
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Gets the minimum and maximum values in the raster
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<float> LSDRasterMaker::minimum_and_maximum_value()
+{
+
+  // The vector min max will contain minimum and maximum values. It is initiated
+  // with a very high minimum and a very low maximum to guarantee that one will 
+  // always get sensible if the raster has non-nodata values.
+  vector<float> min_max;
+  min_max.push_back(1e12);
+  min_max.push_back(-9998.0);
+  
+  for(int row = 0; row < NRows; row++)
+  {
+    for(int col = 0; col < NCols; col++)
+    {
+      if(RasterData[row][col] != NoDataValue)
+      {
+        if(RasterData[row][col] > min_max[1])
+        {
+          min_max[1]= RasterData[row][col];
+        }
+        if(RasterData[row][col] < min_max[0])
+        {
+          min_max[0]= RasterData[row][col];
+        }
+      }
+    }
+  }
+  return min_max;
+
+}
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Some functions for making random values in the rasters
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDRasterMaker::random_square_blobs(int minimum_blob_size, int maximum_blob_size, float minimum_value, float maximum_value, int n_blobs)

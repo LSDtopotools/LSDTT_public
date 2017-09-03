@@ -87,7 +87,12 @@ class LSDRasterMaker: public LSDRaster
     /// @date 01/09/2017
     void resize_and_reset( int new_rows, int new_cols, float new_resolution, float new_value );
 
-
+    /// @brief Gets the minimum and maximum values from a raster
+    /// @return vector with the first element is the minimum and second is the maximum
+    /// @author SMM
+    /// @date 03/09/2017
+    vector<float> minimum_and_maximum_value();
+    
     //void random_horizontal_strips(int minimum_strip_size, int maximum_strip_size, float minimum_value, float maximum_value);
     
     /// @brief This makes square blobs randomly in the DEM
