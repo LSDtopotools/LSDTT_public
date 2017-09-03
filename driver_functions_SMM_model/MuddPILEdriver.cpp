@@ -196,13 +196,19 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["random_dt"] = 10;  
   int_default_map["random_cycles"] = 4;
   
-  // some parameters for a spatially varying K
+  // some parameters for a spatially varying K and U
   bool_default_map["make_spatially_varying_K"] = false;
   float_default_map["spatially_varying_max_K"] = 0.0001;
   float_default_map["spatially_varying_min_K"] = 0.000001;
   int_default_map["min_blob_size"] = 50;
   int_default_map["max_blob_size"] = 100;
   int_default_map["n_blobs"] = 10;
+  
+  bool_default_map["spatially_varying_forcing"] = false;
+  int_default_map["spatial_K_method"] = 0;
+  float_default_map["spatial_K_factor"] = 10;
+  float_default_map["spatial_variation_tie"] = 20000;
+  
 
   // Use the parameter parser to get the maps of the parameters required for the analysis
   LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
@@ -903,6 +909,79 @@ int main (int nNumberofArgs,char *argv[])
     }
     Uout.close();
   }
+
+  //============================================================================
+  // Logic for simulations with spatially varying uplift or K
+  // There are a nubmer of flags here. One day I will try to organise the
+  // flags to they are more consistent but today is not that day.
+  // Just trying to get this thing working for the m/n paper at the moment. 
+  //============================================================================
+  if(this_bool_map["spatially_varying_forcing"])
+  {
+    // start by raising and filling the model
+    mod.raise_and_fill_raster(); 
+    
+    cout << "I am running a simulation with spatially varying forcing." << endl;
+    LSDRaster this_K_raster;
+    LSDRaster this_U_raster;
+    
+    float this_max_K;
+    float this_min_K;
+    
+    // Calculate or set the K parameter depending on your choices about the simulation
+    if(this_bool_map["calculate_K_from_relief"])
+    {
+      cout << "I am calculating a K value that will get a relief of " << this_float_map["fixed_relief"] << " metres" << endl;
+      cout << " for an uplift rate of " << this_float_map["min_U_for_spatial_var"]*1000 << " mm/yr" << endl; 
+      this_min_K = mod.fluvial_calculate_K_for_steady_state_relief(this_float_map["min_U_for_spatial_var"],this_float_map["fixed_relief"]);
+      this_max_K = this_min_K*this_float_map["spatial_K_factor"];
+    }
+    else
+    {
+      cout << "I am using the maximum and minimum K values you have given me." << endl;
+      this_max_K = this_float_map["spatially_varying_max_K"];
+      this_min_K = this_float_map["spatially_varying_min_K"];
+    }
+     
+     
+    if(this_bool_map["spatially_varying_K"])
+    {
+      cout << "I am varying K" << endl;
+      switch (this_int_map["spatial_K_method"])
+      {
+        case 0:
+          cout << "Case 0." << endl;
+          //LSDRasterMaker KRaster1(this_int_map["NRows"],this_int_map["NCols"]);
+          //K/Raster1.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["spatially_varying_min_K"]);
+          //KRaster1.random_square_blobs(this_int_map["min_blob_size"], this_int_map["max_blob_size"], 
+          //                      this_min_K, this_max_K,
+          //                      this_int_map["n_blobs"]);
+          //this_K_raster = KRaster1.return_as_raster();
+          break;
+        case 1:
+          cout << "HAHAHA This is a secret kill switch. You lose! Try again next time Sonic!"  << endl;
+          exit(EXIT_FAILURE);
+          break;
+        default:
+          cout << "The options are 0 == random squares" << endl;
+          cout << "  0 == random squares" << endl;
+          cout << "  1 == sine waves (I lied, at the moment this doesn't work--SMM Sept 2017." << endl;
+          cout << "You didn't choose a valid option so I am defaulting to random squares." << endl;
+          break;
+      }
+    }
+    else
+    {
+      LSDRasterMaker KRaster2(this_int_map["NRows"],this_int_map["NCols"]);
+      KRaster2.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_min_K);
+      this_K_raster = KRaster2.return_as_raster();
+    }
+    // write the raster
+    string K_fname = OUT_DIR+OUT_ID+"_KRaster";
+    string bil_name = "bil";
+    this_K_raster.write_raster(K_fname,bil_name);
+    
+  
+  }
+  
 }
-
-
