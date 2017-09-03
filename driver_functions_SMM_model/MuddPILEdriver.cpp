@@ -950,23 +950,35 @@ int main (int nNumberofArgs,char *argv[])
       switch (this_int_map["spatial_K_method"])
       {
         case 0:
-          cout << "Case 0." << endl;
-          //LSDRasterMaker KRaster1(this_int_map["NRows"],this_int_map["NCols"]);
-          //K/Raster1.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["spatially_varying_min_K"]);
-          //KRaster1.random_square_blobs(this_int_map["min_blob_size"], this_int_map["max_blob_size"], 
-          //                      this_min_K, this_max_K,
-          //                      this_int_map["n_blobs"]);
-          //this_K_raster = KRaster1.return_as_raster();
+          {
+            cout << "Case 0." << endl;
+            LSDRasterMaker KRaster1(this_int_map["NRows"],this_int_map["NCols"]);
+            KRaster1.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["spatially_varying_min_K"]);
+            KRaster1.random_square_blobs(this_int_map["min_blob_size"], this_int_map["max_blob_size"], 
+                                  this_min_K, this_max_K,
+                                  this_int_map["n_blobs"]);
+            this_K_raster = KRaster1.return_as_raster();
+          }
           break;
         case 1:
-          cout << "HAHAHA This is a secret kill switch. You lose! Try again next time Sonic!"  << endl;
-          exit(EXIT_FAILURE);
+          {
+            cout << "HAHAHA This is a secret kill switch. You lose! Try again next time Sonic!"  << endl;
+            exit(EXIT_FAILURE);
+          }
           break;
         default:
-          cout << "The options are 0 == random squares" << endl;
-          cout << "  0 == random squares" << endl;
-          cout << "  1 == sine waves (I lied, at the moment this doesn't work--SMM Sept 2017." << endl;
-          cout << "You didn't choose a valid option so I am defaulting to random squares." << endl;
+          {
+            cout << "The options are 0 == random squares" << endl;
+            cout << "  0 == random squares" << endl;
+            cout << "  1 == sine waves (I lied, at the moment this doesn't work--SMM Sept 2017." << endl;
+            cout << "You didn't choose a valid option so I am defaulting to random squares." << endl;
+            LSDRasterMaker KRaster1(this_int_map["NRows"],this_int_map["NCols"]);
+            KRaster1.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["spatially_varying_min_K"]);
+            KRaster1.random_square_blobs(this_int_map["min_blob_size"], this_int_map["max_blob_size"], 
+                                  this_min_K, this_max_K,
+                                  this_int_map["n_blobs"]);
+            this_K_raster = KRaster1.return_as_raster();
+          }
           break;
       }
     }
