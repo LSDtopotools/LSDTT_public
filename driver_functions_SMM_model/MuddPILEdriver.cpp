@@ -205,6 +205,8 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["n_blobs"] = 10;
   
   bool_default_map["spatially_varying_forcing"] = false;
+  bool_default_map["spatially_varying_K"] = false;
+  bool_default_map["spatially_varying_U"] = false;
   int_default_map["spatial_K_method"] = 0;
   int_default_map["spatial_U_method"] = 1;          // 0 doesn't work
   float_default_map["spatial_K_factor"] = 10;
@@ -938,23 +940,26 @@ int main (int nNumberofArgs,char *argv[])
       cout << " for an uplift rate of " << this_float_map["min_U_for_spatial_var"]*1000 << " mm/yr" << endl; 
       this_min_K = mod.fluvial_calculate_K_for_steady_state_relief(this_float_map["min_U_for_spatial_var"],this_float_map["fixed_relief"]);
       this_max_K = this_min_K*this_float_map["spatial_K_factor"];
+      cout << "The maximum K is: " << this_max_K << " and the minimum K is: " << this_min_K << endl;
     }
     else
     {
       cout << "I am using the maximum and minimum K values you have given me." << endl;
       this_max_K = this_float_map["spatially_varying_max_K"];
       this_min_K = this_float_map["spatially_varying_min_K"];
+      cout << "The maximum K is: " << this_max_K << " and the minimum K is: " << this_min_K << endl;
+
     }
      
      
     if(this_bool_map["spatially_varying_K"])
     {
-      cout << "I am varying K" << endl;
+      cout << "I am going to vary K." << endl;
       switch (this_int_map["spatial_K_method"])
       {
         case 0:
           {
-            cout << "Case 0." << endl;
+            cout << "K variation case 0." << endl;
             LSDRasterMaker KRaster1(this_int_map["NRows"],this_int_map["NCols"]);
             KRaster1.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["spatially_varying_min_K"]);
             KRaster1.random_square_blobs(this_int_map["min_blob_size"], this_int_map["max_blob_size"], 
@@ -971,9 +976,9 @@ int main (int nNumberofArgs,char *argv[])
           break;
         default:
           {
-            cout << "The options are 0 == random squares" << endl;
+            cout << "K variation. The options are 0 == random squares" << endl;
             cout << "  0 == random squares" << endl;
-            cout << "  1 == sine waves (I lied, at the moment this doesn't work--SMM Sept 2017." << endl;
+            cout << "  1 == sine waves (I lied, at the moment this doesn't work--SMM Sept 2017)." << endl;
             cout << "You didn't choose a valid option so I am defaulting to random squares." << endl;
             LSDRasterMaker KRaster1(this_int_map["NRows"],this_int_map["NCols"]);
             KRaster1.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["spatially_varying_min_K"]);
@@ -987,6 +992,7 @@ int main (int nNumberofArgs,char *argv[])
     }
     else
     {
+      cout<< "You decided not to vary K. The value of K is: " << this_min_K << endl;
       LSDRasterMaker KRaster2(this_int_map["NRows"],this_int_map["NCols"]);
       KRaster2.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_min_K);
       this_K_raster = KRaster2.return_as_raster();
@@ -999,17 +1005,17 @@ int main (int nNumberofArgs,char *argv[])
     // now deal with the uplift. We only use a sine uplift for now. 
     if(this_bool_map["spatially_varying_U"])
     {
-      cout << "I am varying U" << endl;
+      cout << "I am varying U." << endl;
       switch (this_int_map["spatial_U_method"])
       {
         case 0:
           {
-            cout << "HAHAHA This is a secret kill switch. You lose! Try again next time Sonic!"  << endl;
+            cout << "Spatial variation in U. HAHAHA This is a secret kill switch. You lose! Try again next time Sonic!"  << endl;
             exit(EXIT_FAILURE);
           }
         case 1:
           {
-            cout << "Case 0." << endl;
+            cout << "Spatial variation in U. Case 0." << endl;
             LSDRasterMaker URaster(this_int_map["NRows"],this_int_map["NCols"]);
             URaster.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["min_U_for_spatial_var"]);
             
@@ -1034,7 +1040,7 @@ int main (int nNumberofArgs,char *argv[])
           break;
         default:
           {
-            cout << "The options are 0 == random squares" << endl;
+            cout << "Spatial variation in U. The options are 0 == random squares" << endl;
             cout << "  0 == random squares (I lied, at the moment this doesn't work--SMM Sept 2017)." << endl;
             cout << "  1 == sine waves" << endl;
             cout << "You didn't choose a valid option so I am defaulting to random squares." << endl;
@@ -1061,6 +1067,7 @@ int main (int nNumberofArgs,char *argv[])
     }
     else
     {
+      cout << "I am not going to vary U in space. Instead I will use block uplift of " << this_float_map["min_U_for_spatial_var"] << endl;
       LSDRasterMaker URaster(this_int_map["NRows"],this_int_map["NCols"]);
       URaster.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["min_U_for_spatial_var"]);
       this_U_raster = URaster.return_as_raster();
