@@ -212,7 +212,7 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["spatial_K_method"] = 0;
   int_default_map["spatial_U_method"] = 1;          // 0 doesn't work
   
-  float_default_map["spatial_K_factor"] = 10;
+  float_default_map["spatial_K_factor"] = 3;
   float_default_map["spatial_variation_time"] = 20000;
   float_default_map["min_U_for_spatial_var"] = 0.0001;
   float_default_map["max_U_for_spatial_var"] = 0.001;
@@ -1105,10 +1105,10 @@ int main (int nNumberofArgs,char *argv[])
       
       mod.fluvial_incision_with_variable_uplift_and_variable_K( this_U_raster, this_K_raster );
       t_ime+=test_timestep;
-      if(i%50 == 0)
+      if(i%(this_int_map["print_interval"]) == 0)
       {
         frame++;
-        cout << "Time is: " << t_ime << " with " << i << " of " << this_int_map["test_steps"] << " steps." endl;
+        cout << "Time is: " << t_ime << " with " << i << " of " << this_int_map["test_steps"] << " steps." << endl;
         mod.print_rasters_and_csv( frame );
       }
     }
