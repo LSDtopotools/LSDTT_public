@@ -1012,9 +1012,20 @@ int main (int nNumberofArgs,char *argv[])
             cout << "Case 0." << endl;
             LSDRasterMaker URaster(this_int_map["NRows"],this_int_map["NCols"]);
             URaster.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["min_U_for_spatial_var"]);
-            URaster.random_square_blobs(this_int_map["min_blob_size"], this_int_map["max_blob_size"], 
-                                  this_min_K, this_max_K,
-                                  this_int_map["n_blobs"]);
+            
+            // The way the sine function work is that you give the function 
+            // coefficients that give the varuous amplitudes of sine waves with 
+            // 1/2 wavelengths that are 1*model_domain, 1/2*model_domain, 1/3*model domain, etc.
+            // Here we only do the y coefficients since we are only going to vary
+            // uplift in the y direction.
+            vector<float> x_coeff;
+            vector<float> y_coeff;
+            y_coeff.push_back(10);
+            URaster.sine_waves(x_coeff, y_coeff);
+            
+            // now scale to the desired minimum and maximum
+            URaster.scale_to_new_minimum_and_maximum_value(float_default_map["min_U_for_spatial_var"],
+                                                           float_default_map["max_U_for_spatial_var"]);
             this_U_raster = URaster.return_as_raster();
           }
           break;
@@ -1029,9 +1040,20 @@ int main (int nNumberofArgs,char *argv[])
             cout << "You didn't choose a valid option so I am defaulting to random squares." << endl;
             LSDRasterMaker URaster(this_int_map["NRows"],this_int_map["NCols"]);
             URaster.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["min_U_for_spatial_var"]);
-            URaster.random_square_blobs(this_int_map["min_blob_size"], this_int_map["max_blob_size"], 
-                                  this_min_K, this_max_K,
-                                  this_int_map["n_blobs"]);
+            
+            // The way the sine function work is that you give the function 
+            // coefficients that give the varuous amplitudes of sine waves with 
+            // 1/2 wavelengths that are 1*model_domain, 1/2*model_domain, 1/3*model domain, etc.
+            // Here we only do the y coefficients since we are only going to vary
+            // uplift in the y direction.
+            vector<float> x_coeff;
+            vector<float> y_coeff;
+            y_coeff.push_back(10);
+            URaster.sine_waves(x_coeff, y_coeff);
+            
+            // now scale to the desired minimum and maximum
+            URaster.scale_to_new_minimum_and_maximum_value(float_default_map["min_U_for_spatial_var"],
+                                                           float_default_map["max_U_for_spatial_var"]);
             this_U_raster = URaster.return_as_raster();
           }
           break;
