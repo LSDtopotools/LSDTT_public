@@ -207,8 +207,10 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["spatially_varying_forcing"] = false;
   bool_default_map["spatially_varying_K"] = false;
   bool_default_map["spatially_varying_U"] = false;
+  bool_default_map["calculate_K_from_relief"] = false;
   int_default_map["spatial_K_method"] = 0;
   int_default_map["spatial_U_method"] = 1;          // 0 doesn't work
+  
   float_default_map["spatial_K_factor"] = 10;
   float_default_map["spatial_variation_time"] = 20000;
   float_default_map["min_U_for_spatial_var"] = 0.0001;
