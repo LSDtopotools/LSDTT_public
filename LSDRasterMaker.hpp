@@ -92,7 +92,15 @@ class LSDRasterMaker: public LSDRaster
     /// @author SMM
     /// @date 03/09/2017
     vector<float> minimum_and_maximum_value();
-    
+
+    /// @brief This linearly scales the raster to new minimum and maximum values
+    /// @param new_minimum does what it says on the tin. 
+    /// @param new_maxuimum does what it says on the tin
+    /// @author SMM
+    /// @date 03/09/2017
+    void scale_to_new_minimum_and_maximum_value(float new_minimum, float new_maximum);
+
+
     //void random_horizontal_strips(int minimum_strip_size, int maximum_strip_size, float minimum_value, float maximum_value);
     
     /// @brief This makes square blobs randomly in the DEM

@@ -155,6 +155,44 @@ vector<float> LSDRasterMaker::minimum_and_maximum_value()
 
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function takes the existing raster data and then linearly scales it
+// to new minimum and maximum values.
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterMaker::scale_to_new_minimum_and_maximum_value(float new_minimum, float new_maximum)
+{
+  // first we get the existing minimum and maximum
+  vector<float> min_max = minimum_and_maximum_value();
+  
+  float scaling_fraction;
+  float original_range = min_max[1] - min_max[0];
+  float new_range = new_maximum-new_minimum;
+  float new_value;
+  
+  
+  // now loop through the matrix rescaling the values. 
+  for (int row = 0; row< NRows; row++)
+  {
+    for(int col = 0; col < NCols; col++)
+    {
+      if(RasterData[row][col] != NoDataValue)
+      {
+        // first find where the value is between min and max
+        if(original_range == 0)
+        {
+          scaling_fraction = 0;
+        }
+        else
+        {
+          scaling_fraction = (RasterData[row][col] - min_max[0])/original_range;
+        }
+        RasterData[row][col] = (scaling_fraction*new_range + new_minimum);
+      }
+    }
+  }
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
