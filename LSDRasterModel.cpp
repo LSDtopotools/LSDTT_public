@@ -3082,6 +3082,127 @@ void LSDRasterModel::run_components_combined( void )
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This is a wrapper function used to drive a model run
+// it checks parameters and flags from the data members
+//
+// Similar to run_componets but instead of running fluvial
+// and uplift in seperate steps it inserts the fluvial
+// and uplift matrices into the nonlinear hillslope
+// solver.
+//
+// This version allows variable K and U rasters to be used.
+//
+// SMM, 3/09/2017
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterModel::run_components_combined( LSDRaster& URaster, LSDRaster& KRaster)
+{
+  //recording = false;
+  cycle_number = 1;
+  total_erosion = 0;
+  max_erosion = 0;
+  min_erosion = -99;
+  switch_delay = 0;
+  time_delay = 0;
+
+  stringstream ss, ss_root;
+
+  // some fields for uplift and fluvial incision
+  Array2D<float> uplift_field;
+  Array2D<float> fluvial_incision_rate_field;
+
+  // set the frame to the current frame plus 1
+  int frame = current_frame;
+  int print = 1;
+  do
+  {
+    // Check if hung
+    if ( check_if_hung() )
+    {
+      cout << "Model took too long to reach steady state, assumed to be stuck" << endl;
+      break;
+    }
+
+    // ONLY IMPORTANT IF USING TWO PERIODICITIES
+    check_periodicity_switch();     // This checks to see if this is a periodic
+                                    // run, if so it adjusts time and end time
+                                    // it really only comes into play if you
+                                    // have more than one periodicity that
+                                    // between which the model oscillates.
+
+    // Record current topography
+    zeta_old = RasterData.copy();
+
+    // run active model components
+    // first diffuse the hillslopes. Currently two options. Perhaps a flag could be
+    // added so that we don't have to keep adding if statements as more
+    // hillslope rules are added?
+    if (hillslope)
+    {
+      if (nonlinear)
+      {
+        //soil_diffusion_fv_nonlinear();
+        MuddPILE_nl_soil_diffusion_nouplift();
+      }
+      else
+      {
+        soil_diffusion_fd_linear();
+      }
+    }
+
+    // sediment will have moved into channels. This is assumed to
+    // be immediately removed by fluvial processes, so we use the
+    // 'wash out' member function
+    wash_out();
+
+    // now for fluvial erosion
+    if (fluvial)
+    {
+      // currently the only option is stream power using the FASTSCAPE
+      // algorithm so there are no choices here
+      fluvial_incision_with_variable_uplift_and_variable_K( URaster, KRaster );
+    }
+
+    // this writes a file if it is on the print interval, and writes some erosion
+    // data to an array always so that steady state may be tested
+    write_report();
+
+    //update the time
+    current_time += timeStep;
+
+    // write at every print interval
+    if ( print_interval > 0 && (print % print_interval) == 0)
+    {
+      print_rasters_and_csv( frame );
+      ++frame;
+    }
+    if (not quiet) cout << "\rTime: " << current_time << " years" << flush;
+    ++print;
+
+    // check to see if steady state has been achieved
+    check_steady_state();
+
+  } while (not check_end_condition());
+
+  if ( print_interval == 0 || (print_interval > 0 && ((print-1) % print_interval) != 0))
+  {
+    // if the print interval is 0, we set the frame to zero
+    if (print_interval == 0)
+    {
+      frame = 0;
+    }
+    print_rasters_and_csv( frame );
+  }
+
+  // reset the current frame
+  current_frame = frame;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This is a wrapper function used to drive a model run
 // it checks parameters and flags from the data members

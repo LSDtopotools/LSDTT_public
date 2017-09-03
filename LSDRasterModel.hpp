@@ -585,6 +585,16 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @date 07/07/2014
   void run_components_combined( void );
 
+  /// @brief This is a wrapper similar to run_components but sends the
+  /// fluvial and uplfit fields to the nonlinear solver.
+  /// @detail Variable U and K rasters can be used. 
+  /// @param URaster A raster of uplift rates
+  /// @param KRaster A raster of K values
+  /// @author SMM
+  /// @date 03/09/2017
+  void run_components_combined( LSDRaster& URaster, LSDRaster& KRaster );
+
+
   /// @brief This is a wrapper that runs the model but includes CRN columns
   /// fluvial and uplfit fields to the nonlinear solver
   /// @param CRNColumns the vector of particle columns
