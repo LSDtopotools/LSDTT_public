@@ -206,8 +206,11 @@ int main (int nNumberofArgs,char *argv[])
   
   bool_default_map["spatially_varying_forcing"] = false;
   int_default_map["spatial_K_method"] = 0;
+  int_default_map["spatial_U_method"] = 0;
   float_default_map["spatial_K_factor"] = 10;
-  float_default_map["spatial_variation_tie"] = 20000;
+  float_default_map["spatial_variation_time"] = 20000;
+  float_default_map["min_U_for_spatial_var"] = 0.0001;
+  float_default_map["max_U_for_spatial_var"] = 0.001;
   
 
   // Use the parameter parser to get the maps of the parameters required for the analysis
@@ -992,6 +995,57 @@ int main (int nNumberofArgs,char *argv[])
     string K_fname = OUT_DIR+OUT_ID+"_KRaster";
     string bil_name = "bil";
     this_K_raster.write_raster(K_fname,bil_name);
+    
+    // now deal with the uplift. We only use a sine uplift for now. 
+    if(this_bool_map["spatially_varying_U"])
+    {
+      cout << "I am varying U" << endl;
+      switch (this_int_map["spatial_U_method"])
+      {
+        case 0:
+          {
+            cout << "HAHAHA This is a secret kill switch. You lose! Try again next time Sonic!"  << endl;
+            exit(EXIT_FAILURE);
+          }
+        case 1:
+          {
+            cout << "Case 0." << endl;
+            LSDRasterMaker URaster(this_int_map["NRows"],this_int_map["NCols"]);
+            URaster.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["min_U_for_spatial_var"]);
+            URaster.random_square_blobs(this_int_map["min_blob_size"], this_int_map["max_blob_size"], 
+                                  this_min_K, this_max_K,
+                                  this_int_map["n_blobs"]);
+            this_U_raster = URaster.return_as_raster();
+          }
+          break;
+
+
+          break;
+        default:
+          {
+            cout << "The options are 0 == random squares" << endl;
+            cout << "  0 == random squares (I lied, at the moment this doesn't work--SMM Sept 2017)." << endl;
+            cout << "  1 == sine waves" << endl;
+            cout << "You didn't choose a valid option so I am defaulting to random squares." << endl;
+            LSDRasterMaker URaster(this_int_map["NRows"],this_int_map["NCols"]);
+            URaster.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["min_U_for_spatial_var"]);
+            URaster.random_square_blobs(this_int_map["min_blob_size"], this_int_map["max_blob_size"], 
+                                  this_min_K, this_max_K,
+                                  this_int_map["n_blobs"]);
+            this_U_raster = URaster.return_as_raster();
+          }
+          break;
+      }
+    }
+    else
+    {
+      LSDRasterMaker URaster(this_int_map["NRows"],this_int_map["NCols"]);
+      URaster.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["min_U_for_spatial_var"]);
+      this_U_raster = URaster.return_as_raster();
+    }
+    // write the raster
+    string U_fname = OUT_DIR+OUT_ID+"_URaster";
+    this_U_raster.write_raster(U_fname,bil_name);
     
   
   }
