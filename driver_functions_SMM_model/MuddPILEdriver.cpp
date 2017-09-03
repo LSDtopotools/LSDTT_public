@@ -215,11 +215,9 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["spatial_K_factor"] = 3;
   float_default_map["spatial_variation_time"] = 20000;
   float_default_map["min_U_for_spatial_var"] = 0.0001;
-  float_default_map["max_U_for_spatial_var"] = 0.001;
+  float_default_map["max_U_for_spatial_var"] = 0.0005;
   int_default_map["K_smoothing_steps"] = 2;
   float_default_map["spatial_dt"] = 100;
-  
-
   
 
   // Use the parameter parser to get the maps of the parameters required for the analysis
