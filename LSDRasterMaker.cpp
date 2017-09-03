@@ -269,25 +269,26 @@ void LSDRasterMaker::smooth(int boundary_type)
         if (RasterData[row][cp1] != NoDataValue)
         {
           total_weighting +=1;
-          total_sum = RasterData[row][cp1];
+          total_sum += RasterData[row][cp1];
         }
         if (RasterData[row][cm1] != NoDataValue)
         {
           total_weighting +=1;
-          total_sum = RasterData[row][cm1];
+          total_sum += RasterData[row][cm1];
         } 
         if (RasterData[rp1][col] != NoDataValue)
         {
           total_weighting +=1;
-          total_sum = RasterData[rp1][col];
+          total_sum += RasterData[rp1][col];
         }
         if (RasterData[rm1][col] != NoDataValue)
         {
           total_weighting +=1;
-          total_sum = RasterData[rm1][col];
+          total_sum += RasterData[rm1][col];
         }
       }
       // Now update the array
+      
       new_data[row][col] = total_sum/total_weighting;
     }
   }

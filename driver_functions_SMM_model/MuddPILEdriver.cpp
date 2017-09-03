@@ -955,7 +955,6 @@ int main (int nNumberofArgs,char *argv[])
       this_max_K = this_float_map["spatially_varying_max_K"];
       this_min_K = this_float_map["spatially_varying_min_K"];
       cout << "The maximum K is: " << this_max_K << " and the minimum K is: " << this_min_K << endl;
-
     }
      
      
@@ -974,8 +973,10 @@ int main (int nNumberofArgs,char *argv[])
                                   this_int_map["n_blobs"]);
                                   
             // smooth the raster
+            //cout << "I am going to smooth K a few times" << endl;
             for(int si = 0; si< this_int_map["K_smoothing_steps"]; si++)
             {
+              //cout << "diffuse_K step: " << si << endl;
               KRaster1.smooth(0);
             }
             this_K_raster = KRaster1.return_as_raster();
@@ -1003,6 +1004,7 @@ int main (int nNumberofArgs,char *argv[])
             // smooth the raster
             for(int si = 0; si< this_int_map["K_smoothing_steps"]; si++)
             {
+              //cout << "diffuse_K step: " << si << endl;
               KRaster1.smooth(0);
             }
             this_K_raster = KRaster1.return_as_raster();
