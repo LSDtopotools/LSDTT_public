@@ -218,6 +218,7 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["max_U_for_spatial_var"] = 0.0005;
   int_default_map["K_smoothing_steps"] = 2;
   float_default_map["spatial_dt"] = 100;
+  int_default_map["spatial_cycles"] = 5;
   
 
   // Use the parameter parser to get the maps of the parameters required for the analysis
@@ -1109,13 +1110,25 @@ int main (int nNumberofArgs,char *argv[])
       cout << "I'm turning hillslope diffusion off." << endl;
       mod.set_hillslope(false);
     }
-    current_end_time = this_float_map["spatial_variation_time"];
-    mod.set_endTime(current_end_time);
+
     mod.set_print_interval(this_int_map["print_interval"]);
     mod.set_timeStep( this_float_map["spatial_dt"] );
     
     // Now run the model
-    mod.run_components_combined(this_U_raster, this_K_raster);
+    // Use cycles and fill after to avoid internal baselevel nodes
+    for(int i = 0; i< this_int_map["spatial_cycles"]; i++)
+    {
+      current_end_time = current_end_time+this_float_map["spatial_variation_time"];
+      mod.set_endTime(current_end_time);
+      mod.run_components_combined(this_U_raster, this_K_raster);
+      mod.raise_and_fill_raster(); 
+    }
+    
+    // now run at steady condition for a few extra cycles
+    current_end_time = current_end_time+float(this_int_map["spatial_cycles"])*this_float_map["spatial_variation_time"];
+    mod.set_endTime(current_end_time);
+    
+    
     
   }
   
