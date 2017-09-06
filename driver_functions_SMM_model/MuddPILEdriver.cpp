@@ -1140,13 +1140,13 @@ int main (int nNumberofArgs,char *argv[])
       mod.set_endTime(current_end_time);
       
       mod.run_components_combined(this_U_raster, this_K_raster,use_adaptive_timestep);
-      //mod.raise_and_fill_raster(); 
+      mod.raise_and_fill_raster(); 
     }
     
     // now run at steady condition for a few extra cycles
     current_end_time = current_end_time+float(this_int_map["spatial_cycles"])*this_float_map["spatial_variation_time"];
     mod.set_endTime(current_end_time);
-    
+    mod.run_components_combined(this_U_raster, this_K_raster,use_adaptive_timestep);
   }
   
   
