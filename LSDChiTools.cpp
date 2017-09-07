@@ -4096,7 +4096,10 @@ void LSDChiTools::print_profiles_as_fxn_movern(LSDFlowInfo& FlowInfo, string fil
 // This prints a series of simple profiles (chi-elevation) as a function of
 // movern
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiTools::print_profiles_as_fxn_movern_with_burned_raster(LSDFlowInfo& FlowInfo, string filename, float start_movern, float delta_movern, int n_movern, LSDRaster& BurnRaster)
+void LSDChiTools::print_profiles_as_fxn_movern_with_burned_raster(LSDFlowInfo& FlowInfo, 
+                                         string filename, float start_movern, 
+                                         float delta_movern, int n_movern, 
+                                         LSDRaster& BurnRaster, string burned_column_name)
 {
   float A_0 = 1;
   float this_movern;

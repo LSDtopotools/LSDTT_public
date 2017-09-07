@@ -664,9 +664,12 @@ class LSDChiTools
     /// @param delta_movern the change in m/n
     /// @param n_novern the number of m/n values to use
     /// @param BurnRaster the raster to burn to the csv
+    /// @param column_name the name of the column to which the data will be burned
     /// @author SMM
     /// @date 7/09/2017
-    void print_profiles_as_fxn_movern_with_burned_raster(LSDFlowInfo& FlowInfo, string filename, float start_movern, float delta_movern, int n_movern, LSDRaster& BurnRaster);
+    void print_profiles_as_fxn_movern_with_burned_raster(LSDFlowInfo& FlowInfo, 
+                          string filename, float start_movern, float delta_movern, 
+                          int n_movern, LSDRaster& BurnRaster, string column_name);
 
     /// @brief This prints a series of chi profiles as a function of mover
     ///  for visualisation
