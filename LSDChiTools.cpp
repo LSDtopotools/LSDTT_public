@@ -4142,7 +4142,7 @@ void LSDChiTools::print_profiles_as_fxn_movern_with_burned_raster(LSDFlowInfo& F
   {
     chi_csv_out << ",m_over_n = " << movern_values[i];
   }
-  chi_csv_out << endl;
+  chi_csv_out << "," << burned_column_name << endl;
 
   // now loop through all the nodes
   chi_csv_out.precision(5);
@@ -4152,7 +4152,7 @@ void LSDChiTools::print_profiles_as_fxn_movern_with_burned_raster(LSDFlowInfo& F
     this_node = node_sequence[n];
     
     FlowInfo.retrieve_current_row_and_col(this_node,curr_row,curr_col);
-
+    
     chi_csv_out << source_keys_map[this_node] << ","
                  << baselevel_keys_map[this_node] << ","
                  << elev_data_map[this_node];
@@ -4161,6 +4161,7 @@ void LSDChiTools::print_profiles_as_fxn_movern_with_burned_raster(LSDFlowInfo& F
     {
       chi_csv_out << "," << chi_vecvec[i][n];
     }
+    chi_csv_out << "," << BurnRaster.get_data_element(curr_row,curr_col);
     chi_csv_out << endl;
   }
   chi_csv_out.close();

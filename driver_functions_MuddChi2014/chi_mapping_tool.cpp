@@ -338,6 +338,11 @@ int main (int nNumberofArgs,char *argv[])
     LSDRaster TempRaster(burn_fname,raster_ext);
     BurnRaster = TempRaster;
   }
+  else
+  {
+    cout << "The burn raster doesn't exist! I am turning off the  burn flag" << endl;
+    this_bool_map["burn_raster_to_csv"] = false;
+  }
   //============================================================================
   
   // check the threshold pixels for chi
@@ -1287,11 +1292,25 @@ int main (int nNumberofArgs,char *argv[])
     }
     else
     {
-      string movern_name = OUT_DIR+OUT_ID+"_movern.csv";
-      ChiTool_movern.print_profiles_as_fxn_movern(FlowInfo, movern_name,
+      
+      if(this_bool_map["burn_raster_to_csv"])
+      {
+        string movern_name = OUT_DIR+OUT_ID+"_burned_movern.csv";
+        ChiTool_movern.print_profiles_as_fxn_movern_with_burned_raster(FlowInfo, movern_name,
+                                  this_float_map["start_movern"],
+                                  this_float_map["delta_movern"],
+                                  this_int_map["n_movern"],
+                                  BurnRaster,
+                                  this_string_map["burn_data_csv_column_header"]);
+      }
+      else
+      {
+        string movern_name = OUT_DIR+OUT_ID+"_movern.csv";
+        ChiTool_movern.print_profiles_as_fxn_movern(FlowInfo, movern_name,
                                   this_float_map["start_movern"],
                                   this_float_map["delta_movern"],
                                   this_int_map["n_movern"]);
+      }
     }
   }
 
