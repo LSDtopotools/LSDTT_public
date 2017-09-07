@@ -5280,12 +5280,6 @@ void LSDRasterModel::fluvial_incision_with_variable_uplift_and_variable_K_adapti
             cout << "There is an overexcavation that has not  been fixed by a very small timestep." << endl;
             cout << "I think there is a numerical instability and I am killing the computation." << endl;
             cout << "This does not mean that you are a bad person." << endl;
-            cout << "zeta old is" << zeta_old << endl;
-            cout << "zeta_ reciever is: " << zeta[receiver_row][receiver_col] << endl;
-            cout << "Streampower factor: " << streamPowerFactor << endl;
-            cout << "denominator is: " << (1 + streamPowerFactor) << endl;
-            cout << "uplift term is: " << timeStep*U << endl;
-            cout << "reciever term is: " << zeta[receiver_row][receiver_col]*streamPowerFactor << endl;
             exit(EXIT_FAILURE);
           }
         }

@@ -143,6 +143,13 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["write_hillshade"] = false;
   bool_default_map["print_basic_M_chi_map_to_csv"] = false;
   bool_default_map["ksn_knickpoint_analysis"] = false;
+  
+  
+  // This burns a raster value to any csv output of chi data
+  // Useful for appending geology data to chi profiles
+  bool_default_map["burn_raster_to_csv"] = false;
+  string_default_map["burn_raster_prefix"] = "NULL";
+  string_default_map["burn_data_csv_column_header"] = "burned_data";
 
   // basic parameters for calculating chi
   float_default_map["A_0"] = 1;
@@ -309,7 +316,23 @@ int main (int nNumberofArgs,char *argv[])
 
     // check to see if the raster exists
   LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);
-
+  
+  //============================================================================
+  // check to see if the raster for burning exists
+  LSDRaster BurnRaster;
+  bool burn_raster_exists = false;
+  string burn_raster_header = DATA_DIR+this_string_map["burn_raster_fname"]+".hdr";
+  ifstream burn_head_in;
+  burn_head_in.open(burn_raster_header.c_str());
+  if( not burn_head_in.fail() )
+  {
+    burn_raster_exists = true;
+    string burn_fname = DATA_DIR+this_string_map["burn_raster_fname"];
+    LSDRaster TempRaster(burn_fname,raster_ext);
+    BurnRaster = TempRaster;
+  }
+  //============================================================================
+  
   // check the threshold pixels for chi
   if (this_int_map["threshold_pixels_for_chi"] > this_int_map["threshold_contributing_pixels"])
   {
@@ -460,6 +483,22 @@ int main (int nNumberofArgs,char *argv[])
   {
     string channel_csv_name = OUT_DIR+OUT_ID+"_CN";
     JunctionNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+
+    // if this gets burned, do it
+    if(this_bool_map["burn_raster_to_csv"])
+    {
+      if(burn_raster_exists)
+      {
+        string full_csv_name = OUT_DIR+OUT_ID+"_CN.csv";
+        LSDSpatialCSVReader CSVFile(RI,full_csv_name);
+        
+        cout << "I am burning the raster to the csv file." << endl;
+        CSVFile.burn_raster_data_to_csv(BurnRaster,this_string_map["burn_data_csv_column_header"]);
+ 
+        string full_burned_csv_name = OUT_DIR+OUT_ID+"_CNburned.csv";
+        CSVFile.print_data_to_csv(full_burned_csv_name);
+      }
+    }
 
     // convert to geojson if that is what the user wants
     // It is read more easily by GIS software but has bigger file size
