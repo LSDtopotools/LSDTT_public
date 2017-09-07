@@ -782,7 +782,7 @@ void LSDSpatialCSVReader::burn_raster_data_to_csv(LSDRaster& ThisRaster,string c
   }
   else
   {
-    cout << "Let me get the x and y data." << endl;
+    //cout << "Let me get the x and y data." << endl;
     get_x_and_y_from_latlong(UTME,UTMN);
     int n_nodes = int(UTME.size());
     for(int i = 0; i<n_nodes; i++)
@@ -792,7 +792,7 @@ void LSDSpatialCSVReader::burn_raster_data_to_csv(LSDRaster& ThisRaster,string c
       this_UTMN = UTMN[i];
 
       this_value = ThisRaster.get_value_of_point(this_UTME, this_UTMN);
-      cout << "Node is: " << i << " and value is: " << this_value << endl;
+      //cout << "Node is: " << i << " and value is: " << this_value << endl;
       s << this_value;
       new_column_data.push_back(s.str());
     }

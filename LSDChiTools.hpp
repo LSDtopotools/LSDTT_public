@@ -645,7 +645,7 @@ class LSDChiTools
                           float movern_minimum, float movern_maximum, int basin_key, bool use_points);
 
 
-    /// @brief This prints a series of chi profiles as a function of mover
+    /// @brief This prints a series of chi profiles as a function of m over n
     ///  for visualisation
     /// @param FlowInfo an LSDFlowInfo object
     /// @param file_prefix THe path and name of file without extension
@@ -655,6 +655,18 @@ class LSDChiTools
     /// @author SMM
     /// @date 17/05/2017
     void print_profiles_as_fxn_movern(LSDFlowInfo& FlowInfo,string file_prefix, float start_movern, float delta_movern, int n_movern);
+
+    /// @brief This prints a series of chi profiles as a function of m over n
+    ///  for visualisation. It also burns a raster value to each of the nodes
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param file_prefix THe path and name of file without extension
+    /// @param start_movern the starting m/n ratio
+    /// @param delta_movern the change in m/n
+    /// @param n_novern the number of m/n values to use
+    /// @param BurnRaster the raster to burn to the csv
+    /// @author SMM
+    /// @date 7/09/2017
+    void print_profiles_as_fxn_movern_with_burned_raster(LSDFlowInfo& FlowInfo, string filename, float start_movern, float delta_movern, int n_movern, LSDRaster& BurnRaster);
 
     /// @brief This prints a series of chi profiles as a function of mover
     ///  for visualisation

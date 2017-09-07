@@ -946,6 +946,38 @@ int main (int nNumberofArgs,char *argv[])
       string chiQ_data_maps_string = OUT_DIR+OUT_ID+"_chi_data_mapQ.csv";
       ChiTool_chi_checker.print_chi_data_map_to_csv(FlowInfo, chiQ_data_maps_string);
 
+
+      // if this gets burned, do it
+      if(this_bool_map["burn_raster_to_csv"])
+      {
+        cout << "You asked me to burn a raster to the csv" << endl;
+        if(burn_raster_exists)
+        {
+          cout << "I am burning the raster into the column header " << this_string_map["burn_data_csv_column_header"] << endl;
+          string full_csv_name = chiQ_data_maps_string;
+          LSDSpatialCSVReader CSVFile(RI,full_csv_name);
+          
+          cout << "I am burning the raster to the csv file." << endl;
+          CSVFile.burn_raster_data_to_csv(BurnRaster,this_string_map["burn_data_csv_column_header"]);
+   
+          string full_burned_csv_name = OUT_DIR+DEM_ID+"_chiQ_data_map_burned.csv";
+          cout << "Now I'll print the data to a new file" << endl;
+          CSVFile.print_data_to_csv(full_burned_csv_name);
+          
+          if ( this_bool_map["convert_csv_to_geojson"])
+          {
+            string gjson_name = OUT_DIR+OUT_ID+"_chiQ_data_map_burned.geojson";
+            LSDSpatialCSVReader thiscsv(full_burned_csv_name);
+            thiscsv.print_data_to_geojson(gjson_name);
+          }
+        }
+        else
+        {
+          cout << "The raster you asked me to burn doesn't exist. I am not burning." << endl;
+        }
+      }
+
+
       if ( this_bool_map["convert_csv_to_geojson"])
       {
         string gjson_name = OUT_DIR+OUT_ID+"_chi_data_mapQ.geojson";
@@ -1220,13 +1252,6 @@ int main (int nNumberofArgs,char *argv[])
     }
 
   }
-
-
-
-
-
-
-
 
 
 
