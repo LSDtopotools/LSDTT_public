@@ -5196,12 +5196,12 @@ void LSDRasterModel::fluvial_incision_with_variable_uplift_and_variable_K_adapti
                          (1 + streamPowerFactor);
           
           // check for overexcavation
-          if(zeta[row][col] < zeta[receiver_row][receiver_col])
+          if(zeta[row][col] <= zeta[receiver_row][receiver_col])
           {
             //cout << "HEY HEY JABBA I found overexcavation!" << endl;
             it_has_overexcavated = true;
             
-            if (timestep_iterator> 50)
+            if (timestep_iterator> 100)
             {
               cout << "There is an overexcavation that has not  been fixed by a very small timestep." << endl;
               cout << "I think there is a numerical instability and I am killing the computation." << endl;
@@ -5270,9 +5270,24 @@ void LSDRasterModel::fluvial_incision_with_variable_uplift_and_variable_K_adapti
         zeta[row][col] = new_zeta;
       
         // check for overexcavation
-        if(zeta[row][col] < zeta[receiver_row][receiver_col])
+        if(zeta[row][col] <= zeta[receiver_row][receiver_col])
         {
           it_has_overexcavated = true;
+          
+          // kill the program if the number of overexcavation steps get too small
+          if (timestep_iterator> 100)
+          {
+            cout << "There is an overexcavation that has not  been fixed by a very small timestep." << endl;
+            cout << "I think there is a numerical instability and I am killing the computation." << endl;
+            cout << "This does not mean that you are a bad person." << endl;
+            cout << "zeta old is" << zeta_old << endl;
+            cout << "zeta_ reciever is: " << zeta[receiver_row][receiver_col] << endl;
+            cout << "Streampower factor: " << streamPowerFactor << endl;
+            cout << "denominator is: " << (1 + streamPowerFactor) << endl;
+            cout << "uplift term is: " << timeStep*U << endl;
+            cout << "reciever term is: " << zeta[receiver_row][receiver_col]*streamPowerFactor << endl;
+            exit(EXIT_FAILURE);
+          }
         }
       }        // end logic for n not equal to one
       
@@ -5286,14 +5301,7 @@ void LSDRasterModel::fluvial_incision_with_variable_uplift_and_variable_K_adapti
       }
 
     }         // end logic for node loop
-    //if (it_has_overexcavated)
-    //{
-    //  cout << "I have been forced to change the timestep" << endl;
-    //}
-    //else
-    //{
-    //  cout << "No overexcavation found" << endl;
-    //}
+
   } while ( it_has_overexcavated);
   
   // if the model didn't overexcavate at all, then increase the timestep.
