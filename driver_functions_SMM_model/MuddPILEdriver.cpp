@@ -211,6 +211,8 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["calculate_K_from_relief"] = false;
   int_default_map["spatial_K_method"] = 0;
   int_default_map["spatial_U_method"] = 1;          // 0 doesn't work
+  bool_default_map["load_K_raster"] = false;
+  bool_default_map["load_U_raster"] = false;
   
   float_default_map["spatial_K_factor"] = 3;
   float_default_map["spatial_variation_time"] = 20000;
@@ -963,55 +965,79 @@ int main (int nNumberofArgs,char *argv[])
     if(this_bool_map["spatially_varying_K"])
     {
       cout << "I am going to vary K." << endl;
-      switch (this_int_map["spatial_K_method"])
+      if(this_bool_map["load_K_raster"])
       {
-        case 0:
-          {
-            cout << "K variation case 0." << endl;
-            LSDRasterMaker KRaster1(this_int_map["NRows"],this_int_map["NCols"]);
-            KRaster1.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["spatially_varying_min_K"]);
-            KRaster1.random_square_blobs(this_int_map["min_blob_size"], this_int_map["max_blob_size"], 
-                                  this_min_K, this_max_K,
-                                  this_int_map["n_blobs"]);
-                                  
-            // smooth the raster
-            //cout << "I am going to smooth K a few times" << endl;
-            for(int si = 0; si< this_int_map["K_smoothing_steps"]; si++)
+        
+        string header = DATA_DIR+DEM_ID+"_KRaster.hdr";
+        cout << "The full read path is: " << header << endl;
+        ifstream file_info_in;
+        file_info_in.open(header.c_str());
+        // check if the parameter file exists
+        if( not file_info_in.fail() )
+        {
+          cout << "I found the header. I am loading this initial file. " << endl;
+          LSDRaster temp_raster(DATA_DIR+DEM_ID+"_KRaster","bil");
+          this_K_raster = temp_raster;
+        }
+        else
+        {
+          // If you can't read the file then turn the creation routine on
+          this_bool_map["load_K_raster"] = false;
+          cout << "Warning, the K raster you wanted to load doesn't exist. I am making a new one." << endl;
+        }
+      }
+      if( not this_bool_map["load_K_raster"])
+      {
+        switch (this_int_map["spatial_K_method"])
+        {
+          case 0:
             {
-              //cout << "diffuse_K step: " << si << endl;
-              KRaster1.smooth(0);
+              cout << "K variation case 0." << endl;
+              LSDRasterMaker KRaster1(this_int_map["NRows"],this_int_map["NCols"]);
+              KRaster1.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["spatially_varying_min_K"]);
+              KRaster1.random_square_blobs(this_int_map["min_blob_size"], this_int_map["max_blob_size"], 
+                                    this_min_K, this_max_K,
+                                    this_int_map["n_blobs"]);
+                                    
+              // smooth the raster
+              //cout << "I am going to smooth K a few times" << endl;
+              for(int si = 0; si< this_int_map["K_smoothing_steps"]; si++)
+              {
+                //cout << "diffuse_K step: " << si << endl;
+                KRaster1.smooth(0);
+              }
+              this_K_raster = KRaster1.return_as_raster();
+              
             }
-            this_K_raster = KRaster1.return_as_raster();
-            
-          }
-          break;
-        case 1:
-          {
-            cout << "HAHAHA This is a secret kill switch. You lose! Try again next time Sonic!"  << endl;
-            exit(EXIT_FAILURE);
-          }
-          break;
-        default:
-          {
-            cout << "K variation. The options are 0 == random squares" << endl;
-            cout << "  0 == random squares" << endl;
-            cout << "  1 == sine waves (I lied, at the moment this doesn't work--SMM Sept 2017)." << endl;
-            cout << "You didn't choose a valid option so I am defaulting to random squares." << endl;
-            LSDRasterMaker KRaster1(this_int_map["NRows"],this_int_map["NCols"]);
-            KRaster1.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["spatially_varying_min_K"]);
-            KRaster1.random_square_blobs(this_int_map["min_blob_size"], this_int_map["max_blob_size"], 
-                                  this_min_K, this_max_K,
-                                  this_int_map["n_blobs"]);
-
-            // smooth the raster
-            for(int si = 0; si< this_int_map["K_smoothing_steps"]; si++)
+            break;
+          case 1:
             {
-              //cout << "diffuse_K step: " << si << endl;
-              KRaster1.smooth(0);
+              cout << "HAHAHA This is a secret kill switch. You lose! Try again next time Sonic!"  << endl;
+              exit(EXIT_FAILURE);
             }
-            this_K_raster = KRaster1.return_as_raster();
-          }
-          break;
+            break;
+          default:
+            {
+              cout << "K variation. The options are 0 == random squares" << endl;
+              cout << "  0 == random squares" << endl;
+              cout << "  1 == sine waves (I lied, at the moment this doesn't work--SMM Sept 2017)." << endl;
+              cout << "You didn't choose a valid option so I am defaulting to random squares." << endl;
+              LSDRasterMaker KRaster1(this_int_map["NRows"],this_int_map["NCols"]);
+              KRaster1.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["spatially_varying_min_K"]);
+              KRaster1.random_square_blobs(this_int_map["min_blob_size"], this_int_map["max_blob_size"], 
+                                    this_min_K, this_max_K,
+                                    this_int_map["n_blobs"]);
+  
+              // smooth the raster
+              for(int si = 0; si< this_int_map["K_smoothing_steps"]; si++)
+              {
+                //cout << "diffuse_K step: " << si << endl;
+                KRaster1.smooth(0);
+              }
+              this_K_raster = KRaster1.return_as_raster();
+            }
+            break;
+        }
       }
     }
     else
@@ -1033,63 +1059,87 @@ int main (int nNumberofArgs,char *argv[])
     if(this_bool_map["spatially_varying_U"])
     {
       cout << "I am varying U." << endl;
-      switch (this_int_map["spatial_U_method"])
+      if(this_bool_map["load_U_raster"])
       {
-        case 0:
-          {
-            cout << "Spatial variation in U. HAHAHA This is a secret kill switch. You lose! Try again next time Sonic!"  << endl;
-            exit(EXIT_FAILURE);
-          }
-        case 1:
-          {
-            cout << "Spatial variation in U. Case 0." << endl;
-            LSDRasterMaker URaster(this_int_map["NRows"],this_int_map["NCols"]);
-            URaster.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["min_U_for_spatial_var"]);
-            
-            // The way the sine function work is that you give the function 
-            // coefficients that give the varuous amplitudes of sine waves with 
-            // 1/2 wavelengths that are 1*model_domain, 1/2*model_domain, 1/3*model domain, etc.
-            // Here we only do the y coefficients since we are only going to vary
-            // uplift in the y direction.
-            vector<float> x_coeff;
-            vector<float> y_coeff;
-            y_coeff.push_back(10);
-            URaster.sine_waves(x_coeff, y_coeff);
-            
-            // now scale to the desired minimum and maximum
-            URaster.scale_to_new_minimum_and_maximum_value(float_default_map["min_U_for_spatial_var"],
-                                                           float_default_map["max_U_for_spatial_var"]);
-            this_U_raster = URaster.return_as_raster();
-          }
-          break;
-
-
-          break;
-        default:
-          {
-            cout << "Spatial variation in U. The options are 0 == random squares" << endl;
-            cout << "  0 == random squares (I lied, at the moment this doesn't work--SMM Sept 2017)." << endl;
-            cout << "  1 == sine waves" << endl;
-            cout << "You didn't choose a valid option so I am defaulting to random squares." << endl;
-            LSDRasterMaker URaster(this_int_map["NRows"],this_int_map["NCols"]);
-            URaster.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["min_U_for_spatial_var"]);
-            
-            // The way the sine function work is that you give the function 
-            // coefficients that give the varuous amplitudes of sine waves with 
-            // 1/2 wavelengths that are 1*model_domain, 1/2*model_domain, 1/3*model domain, etc.
-            // Here we only do the y coefficients since we are only going to vary
-            // uplift in the y direction.
-            vector<float> x_coeff;
-            vector<float> y_coeff;
-            y_coeff.push_back(10);
-            URaster.sine_waves(x_coeff, y_coeff);
-            
-            // now scale to the desired minimum and maximum
-            URaster.scale_to_new_minimum_and_maximum_value(float_default_map["min_U_for_spatial_var"],
-                                                           float_default_map["max_U_for_spatial_var"]);
-            this_U_raster = URaster.return_as_raster();
-          }
-          break;
+        
+        string header = DATA_DIR+DEM_ID+"_URaster.hdr";
+        cout << "The full read path is: " << header << endl;
+        ifstream file_info_in;
+        file_info_in.open(header.c_str());
+        // check if the parameter file exists
+        if( not file_info_in.fail() )
+        {
+          cout << "I found the header. I am loading this initial file. " << endl;
+          LSDRaster temp_raster(DATA_DIR+DEM_ID,"bil");
+          this_U_raster = temp_raster;
+        }
+        else
+        {
+          // If you can't read the file then turn the creation routine on
+          this_bool_map["load_U_raster"] = false;
+          cout << "Warning, the U raster you wanted to load doesn't exist. I am making a new one." << endl;
+        }
+      }
+      if( not this_bool_map["load_U_raster"])
+      {
+        switch (this_int_map["spatial_U_method"])
+        {
+          case 0:
+            {
+              cout << "Spatial variation in U. HAHAHA This is a secret kill switch. You lose! Try again next time Sonic!"  << endl;
+              exit(EXIT_FAILURE);
+            }
+          case 1:
+            {
+              cout << "Spatial variation in U. Case 0." << endl;
+              LSDRasterMaker URaster(this_int_map["NRows"],this_int_map["NCols"]);
+              URaster.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["min_U_for_spatial_var"]);
+              
+              // The way the sine function work is that you give the function 
+              // coefficients that give the varuous amplitudes of sine waves with 
+              // 1/2 wavelengths that are 1*model_domain, 1/2*model_domain, 1/3*model domain, etc.
+              // Here we only do the y coefficients since we are only going to vary
+              // uplift in the y direction.
+              vector<float> x_coeff;
+              vector<float> y_coeff;
+              y_coeff.push_back(10);
+              URaster.sine_waves(x_coeff, y_coeff);
+              
+              // now scale to the desired minimum and maximum
+              URaster.scale_to_new_minimum_and_maximum_value(float_default_map["min_U_for_spatial_var"],
+                                                             float_default_map["max_U_for_spatial_var"]);
+              this_U_raster = URaster.return_as_raster();
+            }
+            break;
+  
+  
+            break;
+          default:
+            {
+              cout << "Spatial variation in U. The options are 0 == random squares" << endl;
+              cout << "  0 == random squares (I lied, at the moment this doesn't work--SMM Sept 2017)." << endl;
+              cout << "  1 == sine waves" << endl;
+              cout << "You didn't choose a valid option so I am defaulting to random squares." << endl;
+              LSDRasterMaker URaster(this_int_map["NRows"],this_int_map["NCols"]);
+              URaster.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["min_U_for_spatial_var"]);
+              
+              // The way the sine function work is that you give the function 
+              // coefficients that give the varuous amplitudes of sine waves with 
+              // 1/2 wavelengths that are 1*model_domain, 1/2*model_domain, 1/3*model domain, etc.
+              // Here we only do the y coefficients since we are only going to vary
+              // uplift in the y direction.
+              vector<float> x_coeff;
+              vector<float> y_coeff;
+              y_coeff.push_back(10);
+              URaster.sine_waves(x_coeff, y_coeff);
+              
+              // now scale to the desired minimum and maximum
+              URaster.scale_to_new_minimum_and_maximum_value(float_default_map["min_U_for_spatial_var"],
+                                                             float_default_map["max_U_for_spatial_var"]);
+              this_U_raster = URaster.return_as_raster();
+            }
+            break;
+        }
       }
     }
     else
