@@ -492,30 +492,6 @@ int main (int nNumberofArgs,char *argv[])
     string channel_csv_name = OUT_DIR+OUT_ID+"_CN";
     JunctionNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
 
-    // if this gets burned, do it
-    if(this_bool_map["burn_raster_to_csv"])
-    {
-      cout << "You asked me to burn a raster to the csv" << endl;
-      if(burn_raster_exists)
-      {
-        cout << "I am burning the raster into the column header " << this_string_map["burn_data_csv_column_header"] << endl;
-        string full_csv_name = OUT_DIR+OUT_ID+"_CN.csv";
-        LSDSpatialCSVReader CSVFile(RI,full_csv_name);
-        
-        cout << "I am burning the raster to the csv file." << endl;
-        CSVFile.burn_raster_data_to_csv(BurnRaster,this_string_map["burn_data_csv_column_header"]);
-        
- 
-        string full_burned_csv_name = OUT_DIR+OUT_ID+"_CNburned.csv";
-        cout << "Now I'll print the data to a new file" << endl;
-        CSVFile.print_data_to_csv(full_burned_csv_name);
-      }
-      else
-      {
-        cout << "The raster you asked me to burn doesn't exist. I am not burning." << endl;
-      }
-    }
-
     // convert to geojson if that is what the user wants
     // It is read more easily by GIS software but has bigger file size
     if ( this_bool_map["convert_csv_to_geojson"])
@@ -1000,6 +976,13 @@ int main (int nNumberofArgs,char *argv[])
           string full_burned_csv_name = OUT_DIR+DEM_ID+"_chi_data_map_burned.csv";
           cout << "Now I'll print the data to a new file" << endl;
           CSVFile.print_data_to_csv(full_burned_csv_name);
+          
+          if ( this_bool_map["convert_csv_to_geojson"])
+          {
+            string gjson_name = OUT_DIR+OUT_ID+"_chi_data_map_burned.geojson";
+            LSDSpatialCSVReader thiscsv(full_burned_csv_name);
+            thiscsv.print_data_to_geojson(gjson_name);
+          }
         }
         else
         {
@@ -1013,6 +996,9 @@ int main (int nNumberofArgs,char *argv[])
         string gjson_name = OUT_DIR+OUT_ID+"_chi_data_map.geojson";
         LSDSpatialCSVReader thiscsv(chi_data_maps_string);
         thiscsv.print_data_to_geojson(gjson_name);
+        
+        
+        
       }
     }
   }
