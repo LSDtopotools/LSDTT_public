@@ -321,13 +321,20 @@ int main (int nNumberofArgs,char *argv[])
   // check to see if the raster for burning exists
   LSDRaster BurnRaster;
   bool burn_raster_exists = false;
-  string burn_raster_header = DATA_DIR+this_string_map["burn_raster_fname"]+".hdr";
+  string burn_raster_header = DATA_DIR+this_string_map["burn_raster_prefix"]+".hdr";
+  if (this_bool_map["burn_raster_to_csv"])
+  {
+    cout << "I am going to burn a raster to all your csv files. The header name for this raster is: " << endl;
+    cout <<  burn_raster_header << endl;
+  }
   ifstream burn_head_in;
   burn_head_in.open(burn_raster_header.c_str());
   if( not burn_head_in.fail() )
   {
     burn_raster_exists = true;
-    string burn_fname = DATA_DIR+this_string_map["burn_raster_fname"];
+    string burn_fname = DATA_DIR+this_string_map["burn_raster_prefix"];
+    cout << "The burn raster exists. It has a prefix of: " << endl;
+    cout <<  burn_fname << endl;
     LSDRaster TempRaster(burn_fname,raster_ext);
     BurnRaster = TempRaster;
   }
@@ -481,22 +488,31 @@ int main (int nNumberofArgs,char *argv[])
   // Print channels and junctions if you want them.
   if( this_bool_map["print_channels_to_csv"])
   {
+    cout << "I am going to print the channel network." << endl;
     string channel_csv_name = OUT_DIR+OUT_ID+"_CN";
     JunctionNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
 
     // if this gets burned, do it
     if(this_bool_map["burn_raster_to_csv"])
     {
+      cout << "You asked me to burn a raster to the csv" << endl;
       if(burn_raster_exists)
       {
+        cout << "I am burning the raster into the column header " << this_string_map["burn_data_csv_column_header"] << endl;
         string full_csv_name = OUT_DIR+OUT_ID+"_CN.csv";
         LSDSpatialCSVReader CSVFile(RI,full_csv_name);
         
         cout << "I am burning the raster to the csv file." << endl;
         CSVFile.burn_raster_data_to_csv(BurnRaster,this_string_map["burn_data_csv_column_header"]);
+        
  
         string full_burned_csv_name = OUT_DIR+OUT_ID+"_CNburned.csv";
+        cout << "Now I'll print the data to a new file" << endl;
         CSVFile.print_data_to_csv(full_burned_csv_name);
+      }
+      else
+      {
+        cout << "The raster you asked me to burn doesn't exist. I am not burning." << endl;
       }
     }
 
@@ -966,6 +982,31 @@ int main (int nNumberofArgs,char *argv[])
     {
       string chi_data_maps_string = OUT_DIR+OUT_ID+"_chi_data_map.csv";
       ChiTool_chi_checker.print_chi_data_map_to_csv(FlowInfo, chi_data_maps_string);
+
+
+      // if this gets burned, do it
+      if(this_bool_map["burn_raster_to_csv"])
+      {
+        cout << "You asked me to burn a raster to the csv" << endl;
+        if(burn_raster_exists)
+        {
+          cout << "I am burning the raster into the column header " << this_string_map["burn_data_csv_column_header"] << endl;
+          string full_csv_name = chi_data_maps_string;
+          LSDSpatialCSVReader CSVFile(RI,full_csv_name);
+          
+          cout << "I am burning the raster to the csv file." << endl;
+          CSVFile.burn_raster_data_to_csv(BurnRaster,this_string_map["burn_data_csv_column_header"]);
+   
+          string full_burned_csv_name = OUT_DIR+DEM_ID+"_chi_data_map_burned.csv";
+          cout << "Now I'll print the data to a new file" << endl;
+          CSVFile.print_data_to_csv(full_burned_csv_name);
+        }
+        else
+        {
+          cout << "The raster you asked me to burn doesn't exist. I am not burning." << endl;
+        }
+      }
+
 
       if ( this_bool_map["convert_csv_to_geojson"])
       {
