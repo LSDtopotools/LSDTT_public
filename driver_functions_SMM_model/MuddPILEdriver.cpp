@@ -224,6 +224,8 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["use_adaptive_timestep"] = true;
   float_default_map["maximum_timestep"] = 500;
   float_default_map["float_print_interval"] = 2000;
+  bool_default_map["snap_to_steep_for_spatial_uplift"] = false;
+  bool_default_map["snap_to_minimum_uplift"] = true;
   
 
   // Use the parameter parser to get the maps of the parameters required for the analysis
@@ -1181,6 +1183,26 @@ int main (int nNumberofArgs,char *argv[])
     
     mod.set_next_printing_time(0);
     mod.set_float_print_interval(this_float_map["float_print_interval"]);
+    
+    if(this_bool_map["snap_to_steep_for_spatial_uplift"])
+    {
+      
+      cout << "I am going to snap this model to a steep landscape. " << endl;
+      mod.set_K(this_K_raster.get_data_element(0,0));
+      
+      if(this_bool_map["snap_to_minimum_uplift"])
+      {
+        cout << "I'm snapping to the minimum uplift rate." << endl;
+        mod.fluvial_snap_to_steady_state(this_float_map["min_U_for_spatial_var"]);
+      }
+      else
+      {
+        cout << "I'm snapping to the maximum uplift rate." << endl;
+        mod.fluvial_snap_to_steady_state(this_float_map["max_U_for_spatial_var"]);
+      }
+      int snap_frame = 9991;
+      mod.print_rasters_and_csv( snap_frame );
+    }
     
     // Now run the model
     // Use cycles and fill after to avoid internal baselevel nodes
