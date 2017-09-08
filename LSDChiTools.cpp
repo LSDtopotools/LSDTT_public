@@ -2501,7 +2501,7 @@ float LSDChiTools::test_all_segment_collinearity_by_basin_using_points(LSDFlowIn
                                                  vector<float>& MLE_values, vector<float>& RMSE_values,
                                                  float sigma, vector<float> chi_fractions_for_testing)
 {
-  //cout << "Testing the segment collinearity for basin key " << baselevel_key << endl;
+  //cout << "Testing the segment collinearity for basin key " << baselevel_key << " and sigma is " << sigma << endl;
   // get some information about the number of basins
   int n_basins = int(ordered_baselevel_nodes.size());
   if (baselevel_key >= n_basins)
@@ -2640,7 +2640,7 @@ float LSDChiTools::test_all_segment_collinearity_by_basin_using_points(LSDFlowIn
       float MLE1 = calculate_MLE_from_residuals(residuals, sigma);
       float RMSE = calculate_RMSE_from_residuals(residuals);
       last_ref_channel = chan0;
-      //cout << "MLE: " << MLE1 << " and RMSE: " << RMSE << endl;
+      //cout << "sigma is: " << sigma << " MLE: " << MLE1 << " and RMSE: " << RMSE << endl;
 
       // If we are only using the mainstem channel, we only use the first channel
       // as a reference channel. The first channel is denoted by this_combo[0] == 0
@@ -3526,6 +3526,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_points
 
       for(int basin_key = 0; basin_key<n_basins; basin_key++)
       {
+        //cout << "The sigma is: " << sigma << endl;
         tot_MLE = test_all_segment_collinearity_by_basin_using_points(FlowInfo, only_use_mainstem_as_reference,
                                     basin_key,
                                     reference_source, test_source, MLE_values, RMSE_values, sigma,
