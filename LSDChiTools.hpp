@@ -658,6 +658,7 @@ class LSDChiTools
 
     /// @brief This prints a series of chi profiles as a function of m over n
     ///  for visualisation. It also burns a raster value to each of the nodes
+    /// @detail The raster burning is useful for adding information like geology or K values
     /// @param FlowInfo an LSDFlowInfo object
     /// @param file_prefix THe path and name of file without extension
     /// @param start_movern the starting m/n ratio
@@ -666,7 +667,7 @@ class LSDChiTools
     /// @param BurnRaster the raster to burn to the csv
     /// @param column_name the name of the column to which the data will be burned
     /// @author SMM
-    /// @date 7/09/2017
+    /// @date 07/09/2017
     void print_profiles_as_fxn_movern_with_burned_raster(LSDFlowInfo& FlowInfo, 
                           string filename, float start_movern, float delta_movern, 
                           int n_movern, LSDRaster& BurnRaster, string column_name);
@@ -685,6 +686,22 @@ class LSDChiTools
                                    float start_movern, float delta_movern,
                                    int n_movern, LSDRaster& Discharge);
 
+    /// @brief This prints a series of chi profiles as a function of mover
+    ///  for visualisation. It also burns a raster value to each of the nodes
+    /// @detail The raster burning is useful for adding information like geology or K values
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param file_prefix THe path and name of file without extension
+    /// @param start_movern the starting m/n ratio
+    /// @param delta_movern the change in m/n
+    /// @param n_novern the number of m/n values to use
+    /// @param Discharge an LSDRaster of discharge
+    /// @param BurnRaster the raster to burn to the csv
+    /// @param column_name the name of the column to which the data will be burned
+    /// @author SMM
+    /// @date 08/09/2017
+    void print_profiles_as_fxn_movern_with_discharge_and_burned_raster(LSDFlowInfo& FlowInfo, string filename,
+           float start_movern, float delta_movern, int n_movern, LSDRaster& Discharge,
+           LSDRaster& BurnRaster, string burned_column_name);
 
     /// @brief This inverst the key_to_baselevel map
     ///  so that the key is the baselevel key and the value is the node index of the outlet node

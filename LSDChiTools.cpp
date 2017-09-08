@@ -4245,6 +4245,91 @@ void LSDChiTools::print_profiles_as_fxn_movern_with_discharge(LSDFlowInfo& FlowI
 }
 
 
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prints a series of simple profiles (chi-elevation) as a function of
+// movern
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::print_profiles_as_fxn_movern_with_discharge_and_burned_raster(LSDFlowInfo& FlowInfo, string filename,
+           float start_movern, float delta_movern, int n_movern, LSDRaster& Discharge,
+           LSDRaster& BurnRaster, string burned_column_name)
+{
+  float A_0 = 1.0;
+  float this_movern;
+
+  vector<float> movern_values;
+  vector< vector<float> > chi_vecvec;
+  vector<float> empty_vec;
+  vector<float> this_chi_vec;
+  int this_node;
+  int n_nodes = int(node_sequence.size());
+  int curr_row,curr_col;
+
+  // loop through m over n values
+  for(int i = 0; i< n_movern; i++)
+  {
+
+    this_movern =  float(i)*delta_movern+start_movern;
+
+    // calculate chi
+    float area_threshold = 0;
+
+    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(this_movern,A_0,
+                                 area_threshold, Discharge);
+    update_chi_data_map(FlowInfo, this_chi);
+
+    cout << "m/n is: " << this_movern << endl;
+
+    movern_values.push_back(this_movern);
+    this_chi_vec = empty_vec;
+
+    // now get the chi values for each node and push them into the chi_vecvec
+    for (int n = 0; n< n_nodes; n++)
+    {
+      this_node = node_sequence[n];
+      this_chi_vec.push_back(chi_data_map[this_node]);
+    }
+    chi_vecvec.push_back(this_chi_vec);
+  }
+  cout << "Okay, I've got all the chi values in the vecvec." << endl;
+  // okay, we are done getting all the chi values, now add these into the file
+
+  ofstream chi_csv_out;
+  cout << "Running the printing for movern. Filename is: " << filename << endl;
+  chi_csv_out.open(filename.c_str());
+  chi_csv_out << "source_key,basin_key,elevation";
+  for (int i = 0; i< n_movern; i++)
+  {
+    chi_csv_out << ",m_over_n = " << movern_values[i];
+  }
+  chi_csv_out << "," << burned_column_name << endl;
+
+  // now loop through all the nodes
+  chi_csv_out.precision(5);
+  for (int n = 0; n< n_nodes; n++)
+  {
+    this_node = node_sequence[n];
+
+    // get the row and column to use with the raster for burning
+    FlowInfo.retrieve_current_row_and_col(this_node,curr_row,curr_col);
+    
+    chi_csv_out << source_keys_map[this_node] << ","
+                 << baselevel_keys_map[this_node] << ","
+                 << elev_data_map[this_node];
+
+    for (int i = 0; i< n_movern; i++)
+    {
+      chi_csv_out << "," << chi_vecvec[i][n];
+    }
+    chi_csv_out << "," << BurnRaster.get_data_element(curr_row,curr_col);
+    chi_csv_out << endl;
+  }
+  chi_csv_out.close();
+}
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This gets the source node of a given key
 // Returns a map were the key is the basin key and the value is the

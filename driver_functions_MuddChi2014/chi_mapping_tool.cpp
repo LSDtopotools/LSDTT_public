@@ -1282,13 +1282,26 @@ int main (int nNumberofArgs,char *argv[])
 
     if(this_bool_map["use_precipitation_raster_for_chi"])
     {
-      string movern_name = OUT_DIR+OUT_ID+"_movernQ.csv";
       cout << "Using a discharge raster to calculate m over n." << endl;
-      ChiTool_movern.print_profiles_as_fxn_movern_with_discharge(FlowInfo, movern_name,
+      if(this_bool_map["burn_raster_to_csv"])
+      {
+        string movern_name = OUT_DIR+OUT_ID+"_burned_movernQ.csv";
+        ChiTool_movern.print_profiles_as_fxn_movern_with_discharge_and_burned_raster(FlowInfo, movern_name,
+                                  this_float_map["start_movern"],
+                                  this_float_map["delta_movern"],
+                                  this_int_map["n_movern"],
+                                  Discharge,BurnRaster,
+                                  this_string_map["burn_data_csv_column_header"]);
+      }
+      else
+      {
+        string movern_name = OUT_DIR+OUT_ID+"_movernQ.csv";
+        ChiTool_movern.print_profiles_as_fxn_movern_with_discharge(FlowInfo, movern_name,
                                   this_float_map["start_movern"],
                                   this_float_map["delta_movern"],
                                   this_int_map["n_movern"],
                                   Discharge);
+      }
     }
     else
     {
