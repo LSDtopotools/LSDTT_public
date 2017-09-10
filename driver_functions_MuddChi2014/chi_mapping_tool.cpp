@@ -268,7 +268,7 @@ int main (int nNumberofArgs,char *argv[])
     this_bool_map["find_complete_basins_in_window"] = true;
     this_bool_map["print_basin_raster"] = true;
     this_bool_map["write_hillshade"] = true;
-    this_bool_map["print_channels_to_csv"] = true;
+    this_bool_map["print_chi_data_maps"] = true;
 
     // run the chi methods of estimating best fit m/n
     this_bool_map["calculate_MLE_collinearity"] = true;
