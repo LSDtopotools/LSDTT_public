@@ -143,8 +143,8 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["write_hillshade"] = false;
   bool_default_map["print_basic_M_chi_map_to_csv"] = false;
   bool_default_map["ksn_knickpoint_analysis"] = false;
-  
-  
+
+
   // This burns a raster value to any csv output of chi data
   // Useful for appending geology data to chi profiles
   bool_default_map["burn_raster_to_csv"] = false;
@@ -179,7 +179,7 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["MC_point_fractions"] = 5;
   int_default_map["MC_point_iterations"] = 1000;
   float_default_map["max_MC_point_fraction"] = 0.5;
-  
+
   // and this is the residuals test
   bool_default_map["movern_residuals_test"] = false;
 
@@ -268,6 +268,7 @@ int main (int nNumberofArgs,char *argv[])
     this_bool_map["find_complete_basins_in_window"] = true;
     this_bool_map["print_basin_raster"] = true;
     this_bool_map["write_hillshade"] = true;
+    this_bool_map["print_channels_to_csv"] = true;
 
     // run the chi methods of estimating best fit m/n
     this_bool_map["calculate_MLE_collinearity"] = true;
@@ -316,7 +317,7 @@ int main (int nNumberofArgs,char *argv[])
 
     // check to see if the raster exists
   LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);
-  
+
   //============================================================================
   // check to see if the raster for burning exists
   LSDRaster BurnRaster;
@@ -344,7 +345,7 @@ int main (int nNumberofArgs,char *argv[])
     this_bool_map["burn_raster_to_csv"] = false;
   }
   //============================================================================
-  
+
   // check the threshold pixels for chi
   if (this_int_map["threshold_pixels_for_chi"] > this_int_map["threshold_contributing_pixels"])
   {
@@ -961,14 +962,14 @@ int main (int nNumberofArgs,char *argv[])
           cout << "I am burning the raster into the column header " << this_string_map["burn_data_csv_column_header"] << endl;
           string full_csv_name = chiQ_data_maps_string;
           LSDSpatialCSVReader CSVFile(RI,full_csv_name);
-          
+
           cout << "I am burning the raster to the csv file." << endl;
           CSVFile.burn_raster_data_to_csv(BurnRaster,this_string_map["burn_data_csv_column_header"]);
-   
+
           string full_burned_csv_name = OUT_DIR+DEM_ID+"_chiQ_data_map_burned.csv";
           cout << "Now I'll print the data to a new file" << endl;
           CSVFile.print_data_to_csv(full_burned_csv_name);
-          
+
           if ( this_bool_map["convert_csv_to_geojson"])
           {
             string gjson_name = OUT_DIR+OUT_ID+"_chiQ_data_map_burned.geojson";
@@ -1006,14 +1007,14 @@ int main (int nNumberofArgs,char *argv[])
           cout << "I am burning the raster into the column header " << this_string_map["burn_data_csv_column_header"] << endl;
           string full_csv_name = chi_data_maps_string;
           LSDSpatialCSVReader CSVFile(RI,full_csv_name);
-          
+
           cout << "I am burning the raster to the csv file." << endl;
           CSVFile.burn_raster_data_to_csv(BurnRaster,this_string_map["burn_data_csv_column_header"]);
-   
+
           string full_burned_csv_name = OUT_DIR+DEM_ID+"_chi_data_map_burned.csv";
           cout << "Now I'll print the data to a new file" << endl;
           CSVFile.print_data_to_csv(full_burned_csv_name);
-          
+
           if ( this_bool_map["convert_csv_to_geojson"])
           {
             string gjson_name = OUT_DIR+OUT_ID+"_chi_data_map_burned.geojson";
@@ -1033,9 +1034,9 @@ int main (int nNumberofArgs,char *argv[])
         string gjson_name = OUT_DIR+OUT_ID+"_chi_data_map.geojson";
         LSDSpatialCSVReader thiscsv(chi_data_maps_string);
         thiscsv.print_data_to_geojson(gjson_name);
-        
-        
-        
+
+
+
       }
     }
   }
@@ -1292,7 +1293,7 @@ int main (int nNumberofArgs,char *argv[])
     }
     else
     {
-      
+
       if(this_bool_map["burn_raster_to_csv"])
       {
         string movern_name = OUT_DIR+OUT_ID+"_burned_movern.csv";
