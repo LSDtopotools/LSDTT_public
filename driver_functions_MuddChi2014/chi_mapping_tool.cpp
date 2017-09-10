@@ -1237,7 +1237,7 @@ int main (int nNumberofArgs,char *argv[])
     //bool only_use_mainstem_as_reference = true;
 
     float this_sigma = this_float_map["collinearity_MLE_sigma"];
-    this_sigma = 10;        // just for debugging
+    this_sigma = this_float_map["collinearity_MLE_sigma"];        // just for debugging
 
 
     if(this_bool_map["use_precipitation_raster_for_chi"])
@@ -1246,7 +1246,7 @@ int main (int nNumberofArgs,char *argv[])
     }
     else
     {
-      string movern_name = OUT_DIR+OUT_ID+"_MCpoint_";
+      string movern_name = OUT_DIR+OUT_ID+"_MCpoint";
       ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern_using_points_MC(FlowInfo, JunctionNetwork,
                       this_float_map["start_movern"], this_float_map["delta_movern"],
                       this_int_map["n_movern"],
@@ -1283,13 +1283,26 @@ int main (int nNumberofArgs,char *argv[])
 
     if(this_bool_map["use_precipitation_raster_for_chi"])
     {
-      string movern_name = OUT_DIR+OUT_ID+"_movernQ.csv";
       cout << "Using a discharge raster to calculate m over n." << endl;
-      ChiTool_movern.print_profiles_as_fxn_movern_with_discharge(FlowInfo, movern_name,
+      if(this_bool_map["burn_raster_to_csv"])
+      {
+        string movern_name = OUT_DIR+OUT_ID+"_burned_movernQ.csv";
+        ChiTool_movern.print_profiles_as_fxn_movern_with_discharge_and_burned_raster(FlowInfo, movern_name,
+                                  this_float_map["start_movern"],
+                                  this_float_map["delta_movern"],
+                                  this_int_map["n_movern"],
+                                  Discharge,BurnRaster,
+                                  this_string_map["burn_data_csv_column_header"]);
+      }
+      else
+      {
+        string movern_name = OUT_DIR+OUT_ID+"_movernQ.csv";
+        ChiTool_movern.print_profiles_as_fxn_movern_with_discharge(FlowInfo, movern_name,
                                   this_float_map["start_movern"],
                                   this_float_map["delta_movern"],
                                   this_int_map["n_movern"],
                                   Discharge);
+      }
     }
     else
     {
