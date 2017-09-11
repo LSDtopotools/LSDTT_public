@@ -132,7 +132,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_basin_raster"] = false;
 
   // printing of rasters and data before chi analysis
-  bool_default_map["convert_csv_to_geojson"] = false;  // THis converts all cv files to geojson (for easier loading in a GIS)
+  bool_default_map["convert_csv_to_geojson"] = false;  // This converts all cv files to geojson (for easier loading in a GIS)
 
   bool_default_map["print_stream_order_raster"] = false;
   bool_default_map["print_channels_to_csv"] = false;
@@ -142,14 +142,9 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_DrainageArea_raster"] = false;
   bool_default_map["write_hillshade"] = false;
   bool_default_map["print_basic_M_chi_map_to_csv"] = false;
+
+  // knickpoint analysis. This is still under development.
   bool_default_map["ksn_knickpoint_analysis"] = false;
-
-
-  // This burns a raster value to any csv output of chi data
-  // Useful for appending geology data to chi profiles
-  bool_default_map["burn_raster_to_csv"] = false;
-  string_default_map["burn_raster_prefix"] = "NULL";
-  string_default_map["burn_data_csv_column_header"] = "burned_data";
 
   // basic parameters for calculating chi
   float_default_map["A_0"] = 1;
@@ -157,20 +152,22 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["threshold_pixels_for_chi"] = 0;
   int_default_map["basic_Mchi_regression_nodes"] = 11;
 
+  // This burns a raster value to any csv output of chi data
+  // Useful for appending geology data to chi profiles
+  bool_default_map["burn_raster_to_csv"] = false;
+  string_default_map["burn_raster_prefix"] = "NULL";
+  string_default_map["burn_data_csv_column_header"] = "burned_data";
+
   // parameters if you want to explore m/n ratios or slope-area analysis
   int_default_map["n_movern"] = 8;
   float_default_map["start_movern"] = 0.1;
   float_default_map["delta_movern"] = 0.1;
-  float_default_map["collinearity_MLE_sigma"] = 1000;
-  float_default_map["SA_vertical_interval"] = 20;
-  float_default_map["log_A_bin_width"] = 0.1;
-  bool_default_map["print_slope_area_data"] = false;
-  bool_default_map["segment_slope_area_data"] = false;
-  int_default_map["slope_area_minimum_segment_length"] = 3;
   bool_default_map["only_use_mainstem_as_reference"] = true;
+
   // these loop through m/n spitting out profies and calculating goodness of fit
   // If you want to visualise the data you need to switch both of these to true
   bool_default_map["calculate_MLE_collinearity"] = false;
+  float_default_map["collinearity_MLE_sigma"] = 1000;
   bool_default_map["print_profiles_fxn_movern_csv"] = false;
 
   // these are routines to calculate the movern ratio using points
@@ -188,6 +185,16 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["MCMC_movern_maximum"] = 1.5;
   float_default_map["MCMC_chain_links"] = 5000;
 
+  // this switch turns on all the appropriate runs for estimating
+  // the best fit m/n
+  bool_default_map["estimate_best_fit_movern"] = false;
+
+  // S-A analysis parameters
+  float_default_map["SA_vertical_interval"] = 20;
+  float_default_map["log_A_bin_width"] = 0.1;
+  bool_default_map["print_slope_area_data"] = false;
+  bool_default_map["segment_slope_area_data"] = false;
+  int_default_map["slope_area_minimum_segment_length"] = 3;
   bool_default_map["bootstrap_SA_data"] = false;
   int_default_map["N_SA_bootstrap_iterations"] = 1000;
   float_default_map["SA_bootstrap_retain_node_prbability"] = 0.5;
@@ -229,12 +236,11 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["check_chi_maps"] = false;
   string_default_map["precipitation_fname"] = "NULL";
 
+
+  // Somebody put these here. I don't know what they do--SMM
   bool_default_map["print_segments"] = false;
   bool_default_map["print_segments_raster"] = false;
 
-  // this switch turns on all the appropriate runs for estimating
-  // the best fit m/n
-  bool_default_map["estimate_best_fit_movern"] = false;
 
   // Use the parameter parser to get the maps of the parameters required for the
   // analysis
