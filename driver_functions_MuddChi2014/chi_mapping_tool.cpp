@@ -237,7 +237,9 @@ int main (int nNumberofArgs,char *argv[])
   string_default_map["precipitation_fname"] = "NULL";
 
 
-  // Somebody put these here. I don't know what they do--SMM
+  // These give unique IDs to each segment and then add this information to the
+  // MChi and also semgent raster. We use this to map segments to other landscape
+  // properties such as various hillslope metrics
   bool_default_map["print_segments"] = false;
   bool_default_map["print_segments_raster"] = false;
 
@@ -285,7 +287,6 @@ int main (int nNumberofArgs,char *argv[])
     // run the SA methods of estimating best fit m/n
     this_bool_map["print_slope_area_data"] = true;
     this_bool_map["segment_slope_area_data"] = true;
-
   }
 
   cout << "Read filename is: " <<  DATA_DIR+DEM_ID << endl;
