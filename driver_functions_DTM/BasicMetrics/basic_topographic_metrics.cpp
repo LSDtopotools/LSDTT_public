@@ -111,7 +111,7 @@ int main (int nNumberofArgs,char *argv[])
   string aspect_name = "_aspect";
   slope_name = path_name+f_name+slope_name;
   aspect_name = path_name+f_name+aspect_name;
-  aspect = surface_fitting[6];
+  aspect = surface_fitting[2];
   aspect.write_raster(aspect_name, DEM_ext);
   slope = surface_fitting[1];
   slope.write_raster(slope_name, DEM_ext);
