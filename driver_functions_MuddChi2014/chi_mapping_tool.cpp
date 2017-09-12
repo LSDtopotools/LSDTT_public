@@ -264,8 +264,8 @@ int main (int nNumberofArgs,char *argv[])
   string raster_ext =  LSDPP.get_dem_read_extension();
   vector<string> boundary_conditions = LSDPP.get_boundary_conditions();
   string CHeads_file = LSDPP.get_CHeads_file();
-  string BaselevelJunctions_file = this_string_map["BaselevelJunctions_file"];
-
+  string BaselevelJunctions_file = LSDPP.get_BaselevelJunctions_file();
+  
   //----------------------------------------------------------------------------//
   // If you want, turn on all the appropriate switches for estimating the best
   // fit m/n
