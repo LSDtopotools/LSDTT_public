@@ -128,6 +128,11 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @brief operator assignment
   LSDRasterModel& operator=(const LSDRasterModel& LSDR);
 
+  /// @brief This just returns the raster model object data as a raster
+  /// @return A raster with the data from the LSDRasterModel
+  /// @author SMM
+  /// @date 01/09/2017
+  LSDRaster return_as_raster();
 
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // @~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@~@
@@ -580,6 +585,17 @@ class LSDRasterModel: public LSDRasterSpectral
   /// @date 07/07/2014
   void run_components_combined( void );
 
+  /// @brief This is a wrapper similar to run_components but sends the
+  /// fluvial and uplfit fields to the nonlinear solver.
+  /// @detail Variable U and K rasters can be used. 
+  /// @param URaster A raster of uplift rates
+  /// @param KRaster A raster of K values
+  /// @param use_adaptive_timestep If true, an adaptive timestep is used
+  /// @author SMM
+  /// @date 03/09/2017
+  void run_components_combined( LSDRaster& URaster, LSDRaster& KRaster, bool use_adaptive_timestep );
+
+
   /// @brief This is a wrapper that runs the model but includes CRN columns
   /// fluvial and uplfit fields to the nonlinear solver
   /// @param CRNColumns the vector of particle columns
@@ -674,9 +690,47 @@ class LSDRasterModel: public LSDRasterSpectral
   /// and solves the stream power equation at a future timestep in linear time
   /// This version includes the current uplift, so you do not need to call
   /// uplift after this has finished
-  /// @SMM
+  /// @author SMM
   /// @date 7/07/2014
   void fluvial_incision_with_uplift( void );
+
+  /// @brief Fastscape, implicit finite difference solver for stream power equations
+  /// O(n)
+  /// Method takes the K value from a raster fed to it
+  /// and solves the stream power equation at a future timestep in linear time
+  /// This version includes the current uplift, so you do not need to call
+  /// uplift after this has finished
+  /// @param K_raster the raster of K values. 
+  /// @author SMM
+  /// @date 01/09/2017
+  void fluvial_incision_with_uplift_and_variable_K( LSDRaster& K_raster );
+
+  /// @brief Fastscape, implicit finite difference solver for stream power equations
+  /// O(n)
+  /// Method takes the K value from a raster fed to it
+  /// and also take a raster of the uplift rates
+  /// and solves the stream power equation at a future timestep in linear time
+  /// This version includes the current uplift, so you do not need to call
+  /// uplift after this has finished
+  /// @param K_raster the raster of K values. 
+  /// @param Uplift_rate a raster of uplift rates in m/yr
+  /// @author SMM
+  /// @date 01/09/2017
+  void fluvial_incision_with_variable_uplift_and_variable_K( LSDRaster& Uplift_rate, LSDRaster& K_raster );
+
+
+  /// @brief Fastscape, implicit finite difference solver for stream power equations
+  /// O(n)
+  /// Method takes the K value from a raster fed to it
+  /// and also take a raster of the uplift rates
+  /// and solves the stream power equation at a future timestep in linear time
+  /// This version includes the current uplift, so you do not need to call
+  /// uplift after this has finished. Uses an adaptive timestep.
+  /// @param K_raster the raster of K values. 
+  /// @param Uplift_rate a raster of uplift rates in m/yr
+  /// @author SMM
+  /// @date 06/09/2017
+  void fluvial_incision_with_variable_uplift_and_variable_K_adaptive_timestep( LSDRaster& Uplift_rate, LSDRaster& K_raster );
 
   /// @brief This function is more or less identical to fluvial_incision above, but it
   /// Returns a raster with the erosion rate and takes arguments rather
@@ -894,6 +948,9 @@ class LSDRasterModel: public LSDRasterSpectral
 
   /// @brief set the time step
   void set_timeStep( float dt )        { timeStep = dt; }
+  
+  /// @brief set the maximum time step
+  void set_maxtimeStep (float max_dt)  { maxtimeStep = max_dt; }
 
   /// @brief set the ending time
   void set_endTime( float time )        { endTime = time; }
@@ -968,6 +1025,13 @@ class LSDRasterModel: public LSDRasterSpectral
 
   /// set the print interval
   void set_print_interval( int num_steps )    { print_interval = num_steps; }
+
+  /// set the float print interval
+  void set_float_print_interval( float float_dt_print )    { float_print_interval = float_dt_print; }
+
+  /// set the float print interval
+  void set_next_printing_time ( float next_float_dt_print )    { next_printing_time = next_float_dt_print; }
+
 
   /// @brief this sets the K mode
   /// @param mode The mode of calculating K
@@ -1128,6 +1192,12 @@ class LSDRasterModel: public LSDRasterSpectral
 
   /// @brief this gets the endTime
   float get_endTime( void)         { return endTime; }
+  
+  /// @brief Gets the timestep
+  float get_timeStep( void)        { return timeStep; }
+  
+  /// @brief Gets the maximum timestep
+  float get_maxtimeStep( void )    { return maxtimeStep; }
   
   /// @brief this gets the current frame for printing
   int get_current_frame( void)     { return current_frame;}
@@ -1404,6 +1474,9 @@ class LSDRasterModel: public LSDRasterSpectral
 
   /// Time in between each calculation
   float       timeStep;
+  
+  /// The maximum possible timestep. Used with adaptive timestepping
+  float maxtimeStep;
 
   /// ending time
   float      endTime;
@@ -1570,6 +1643,10 @@ class LSDRasterModel: public LSDRasterSpectral
 
   /// interval over which output is written. Just based on number of timesteps
   int        print_interval;      // Interval at which output is written
+  
+  /// this is for printing at fixed times
+  float float_print_interval;
+  float next_printing_time;
 
   /// Switch for printing elevation, if true elevation is printed to a raster
   bool      print_elevation;

@@ -68,9 +68,12 @@ class LSDRasterMaker: public LSDRaster
       create(NRows,NCols);
     }
 
-    /// @brief operator assignment
-    //LSDRasterMaker& operator=(const LSDRasterMaker& LSDR);
-
+    /// @brief This just returns the raster model object data as a raster
+    /// @return A raster with the data from the LSDRasterModel
+    /// @author SMM
+    /// @date 01/09/2017
+    LSDRaster return_as_raster();
+    
     /// @brief This resizes the LSDRasterModel, resetting some flags in the process,
     /// as well as setting many of the Array2D data members to be empty arrays
     /// The raster data in the end is a random surface (determined by the noise
@@ -83,6 +86,29 @@ class LSDRasterMaker: public LSDRaster
     /// @author SMM
     /// @date 01/09/2017
     void resize_and_reset( int new_rows, int new_cols, float new_resolution, float new_value );
+
+    /// @brief Gets the minimum and maximum values from a raster
+    /// @return vector with the first element is the minimum and second is the maximum
+    /// @author SMM
+    /// @date 03/09/2017
+    vector<float> minimum_and_maximum_value();
+
+    /// @brief This linearly scales the raster to new minimum and maximum values
+    /// @param new_minimum does what it says on the tin. 
+    /// @param new_maxuimum does what it says on the tin
+    /// @author SMM
+    /// @date 03/09/2017
+    void scale_to_new_minimum_and_maximum_value(float new_minimum, float new_maximum);
+
+
+    /// @brief This smooths the raster. At some point in the future I'll
+    ///  add more options but at the moment it just uses 4 neighbours and has
+    ///  double weighting on the central pixel. It assumes periodic boundaries
+    ///  on the E/W
+    /// @param boundary type: this just goes to a default at the moment.
+    /// @author SMM
+    /// @date 03/09/2017
+    void smooth(int boundary_type);
 
 
     //void random_horizontal_strips(int minimum_strip_size, int maximum_strip_size, float minimum_value, float maximum_value);
@@ -97,6 +123,12 @@ class LSDRasterMaker: public LSDRaster
     /// @date 01/09/2017
     void random_square_blobs(int minimum_blob_size, int maximum_blob_size, float minimum_value, float maximum_value, int n_blobs);
 
+    /// @brief This function adds some sine waves together to get patterns
+    /// @param x_coefficients Coefficients of the sin waves in the x direction.
+    /// @param y_coefficients Coefficients of the sin waves in the y direction.
+    /// @author SMM
+    /// @date 01/09/2017
+    void sine_waves(vector<float> x_coefficients, vector<float> y_coefficients);
 
   protected:
 

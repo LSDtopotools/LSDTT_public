@@ -84,6 +84,17 @@ void LSDRasterMaker::create(LSDRaster& An_LSDRaster)
   GeoReferencingStrings =  An_LSDRaster.get_GeoReferencingStrings();
   RasterData = An_LSDRaster.get_RasterData();
 }
+
+
+
+// This returns the data in the raster model as a raster
+LSDRaster LSDRasterMaker::return_as_raster()
+{
+  LSDRaster NewRaster(NRows, NCols, XMinimum, YMinimum,
+                      DataResolution, NoDataValue, RasterData, 
+                      GeoReferencingStrings);
+  return NewRaster;
+}
  
  
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -109,6 +120,183 @@ void LSDRasterMaker::resize_and_reset( int new_rows, int new_cols, float new_res
   impose_georeferencing_UTM(zone, NorS);
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Gets the minimum and maximum values in the raster
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<float> LSDRasterMaker::minimum_and_maximum_value()
+{
+
+  // The vector min max will contain minimum and maximum values. It is initiated
+  // with a very high minimum and a very low maximum to guarantee that one will 
+  // always get sensible if the raster has non-nodata values.
+  vector<float> min_max;
+  min_max.push_back(1e12);
+  min_max.push_back(-9998.0);
+  
+  for(int row = 0; row < NRows; row++)
+  {
+    for(int col = 0; col < NCols; col++)
+    {
+      if(RasterData[row][col] != NoDataValue)
+      {
+        if(RasterData[row][col] > min_max[1])
+        {
+          min_max[1]= RasterData[row][col];
+        }
+        if(RasterData[row][col] < min_max[0])
+        {
+          min_max[0]= RasterData[row][col];
+        }
+      }
+    }
+  }
+  return min_max;
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function takes the existing raster data and then linearly scales it
+// to new minimum and maximum values.
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterMaker::scale_to_new_minimum_and_maximum_value(float new_minimum, float new_maximum)
+{
+  // first we get the existing minimum and maximum
+  vector<float> min_max = minimum_and_maximum_value();
+  
+  float scaling_fraction;
+  float original_range = min_max[1] - min_max[0];
+  float new_range = new_maximum-new_minimum;
+
+  // now loop through the matrix rescaling the values. 
+  for (int row = 0; row< NRows; row++)
+  {
+    for(int col = 0; col < NCols; col++)
+    {
+      if(RasterData[row][col] != NoDataValue)
+      {
+        // first find where the value is between min and max
+        if(original_range == 0)
+        {
+          scaling_fraction = 0;
+        }
+        else
+        {
+          scaling_fraction = (RasterData[row][col] - min_max[0])/original_range;
+        }
+        RasterData[row][col] = (scaling_fraction*new_range + new_minimum);
+      }
+    }
+  }
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This smooths the raster by taking a weighted average of the given pixel
+// and neighboring pixels. 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+void LSDRasterMaker::smooth(int boundary_type)
+{
+  // at the moment the boundary type can only be 0 and this is a periodic 
+  // boundary type at the E and W boundaries.
+  
+  Array2D<float> new_data(NRows,NCols,NoDataValue);
+  float total_weighting;
+  float total_sum;
+  int rp1, rm1,cp1, cm1;
+  
+  
+  for(int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      total_weighting = 0;
+      total_sum = 0;
+      
+      rp1 = row+1;
+      rm1 = row-1;
+      cp1 = col+1;
+      cm1 = col-1;
+      
+      // implement boundary conditions. 
+      if(boundary_type == 0)
+      {
+        if (rp1 == NRows)
+        {
+          rp1 = rm1;
+        }
+        if (rm1 == -1)
+        {
+          rm1 = rp1;
+        }
+        if (cp1 == NCols)
+        {
+          cp1 = 0;
+        }
+        if(cm1 == -1)
+        {
+          cm1 = NCols-1;
+        }
+      }
+      else
+      {
+        if (rp1 == NRows)
+        {
+          rp1 = rm1;
+        }
+        if (rm1 == -1)
+        {
+          rm1 = rp1;
+        }
+        if (cp1 == NCols)
+        {
+          cp1 = 0;
+        }
+        if(cm1 == -1)
+        {
+          cm1 = NCols-1;
+        }
+      }
+      
+      if( RasterData[row][col] != NoDataValue)
+      {
+        total_weighting += 2;
+        total_sum += 2*RasterData[row][col];
+        
+        // now go through all the other directions.
+        if (RasterData[row][cp1] != NoDataValue)
+        {
+          total_weighting +=1;
+          total_sum += RasterData[row][cp1];
+        }
+        if (RasterData[row][cm1] != NoDataValue)
+        {
+          total_weighting +=1;
+          total_sum += RasterData[row][cm1];
+        } 
+        if (RasterData[rp1][col] != NoDataValue)
+        {
+          total_weighting +=1;
+          total_sum += RasterData[rp1][col];
+        }
+        if (RasterData[rm1][col] != NoDataValue)
+        {
+          total_weighting +=1;
+          total_sum += RasterData[rm1][col];
+        }
+      }
+      // Now update the array
+      
+      new_data[row][col] = total_sum/total_weighting;
+    }
+  }
+  
+  RasterData = new_data.copy();
+
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Some functions for making random values in the rasters
@@ -207,5 +395,37 @@ void LSDRasterMaker::random_square_blobs(int minimum_blob_size, int maximum_blob
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Some functions for making random values in the rasters
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDRasterMaker::sine_waves(vector<float> x_coefficients, vector<float> y_coefficients)
+{
+  int n_x_coeff = int(x_coefficients.size());
+  int n_y_coeff = int(y_coefficients.size());
+  
+  float x_factor = M_PI/ float(NCols-1);
+  float y_factor = M_PI / float(NRows-1);
+  
+  float this_x_value;
+  float this_y_value;
+  
+  // so the wavelengths of the sin waves depend on the number
+  for (int row = 0; row<NRows; row++)
+  {
+    for(int col = 0; col<NCols; col++)
+    {
+      this_x_value = 0;
+      for(int xv = 0; xv<n_x_coeff; xv++)
+      {
+        this_x_value+=x_coefficients[xv]*sin(x_factor*(xv+1)*float(col));
+      }
+      this_y_value = 0;
+      for(int yv = 0; yv<n_y_coeff; yv++)
+      {
+        this_y_value+=y_coefficients[yv]*sin(y_factor*(yv+1)*float(row));
+      }
+      RasterData[row][col] = this_x_value+this_y_value;
+    }
+  }
+}
+
+
 
 #endif
