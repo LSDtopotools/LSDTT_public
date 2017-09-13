@@ -264,7 +264,33 @@ int main (int nNumberofArgs,char *argv[])
   string raster_ext =  LSDPP.get_dem_read_extension();
   vector<string> boundary_conditions = LSDPP.get_boundary_conditions();
   string CHeads_file = LSDPP.get_CHeads_file();
-  string BaselevelJunctions_file = LSDPP.get_BaselevelJunctions_file();
+  
+  
+  // deal with the baslevel junctions file
+  string BaselevelJunctions_file;
+  string test_BaselevelJunctions_file = LSDPP.get_BaselevelJunctions_file();
+  if(this_string_map["BaselevelJunctions_file"] == "NULL" && test_BaselevelJunctions_file == "NULL")
+  {
+    cout << "No baselevel junctions file found. I am going to use algorithms to extract basins." << endl;
+    BaselevelJunctions_file = "NULL";
+  }
+  else if(this_string_map["BaselevelJunctions_file"] == "NULL" && test_BaselevelJunctions_file != "NULL")
+  {
+    BaselevelJunctions_file = test_BaselevelJunctions_file;
+  }
+  else if(this_string_map["BaselevelJunctions_file"] != "NULL" && test_BaselevelJunctions_file == "NULL") 
+  {
+    BaselevelJunctions_file = this_string_map["BaselevelJunctions_file"];
+  }
+  else
+  {
+    cout << "WARNING You have defined the baselevel junction file in two ways. " << endl;
+    cout << "This is because the authors of LSDTopoTools created a dumb inheritance problem and can't fix it or it will break legacy code." << endl;
+    cout << "I will use the newer version." << endl;
+    BaselevelJunctions_file = this_string_map["BaselevelJunctions_file"];
+    cout << "The junctions file I am using is: " <<  BaselevelJunctions_file << endl;
+  }
+  
   
   //----------------------------------------------------------------------------//
   // If you want, turn on all the appropriate switches for estimating the best
