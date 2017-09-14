@@ -146,8 +146,8 @@ int main (int nNumberofArgs,char *argv[])
 
   // This burns a raster value to any csv output of chi data
   // Useful for appending geology data to chi profiles
-  bool_default_map["burn_raster_to_csv"] = false;
-  string_default_map["burn_raster_prefix"] = "NULL";
+  bool_default_map["geolithomap_to_csv"] = false;
+  string_default_map["geolithomap_prefix"] = "NULL";
   string_default_map["burn_data_csv_column_header"] = "burned_data";
 
   // these print various basin and source data for visualisation
@@ -155,6 +155,10 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_sources_to_csv"] = false;
   bool_default_map["print_sources_to_raster"] = false;
   bool_default_map["print_baselevel_keys"] = false;
+  bool_default_map["find_complete_basins_in_window"] = true;
+  bool_default_map["print_basin_raster"] = true;
+  bool_default_map["write_hillshade"] = true;
+  bool_default_map["print_chi_data_maps"] = true;
 
   // Use the parameter parser to get the maps of the parameters required for the
   // analysis
@@ -178,31 +182,13 @@ int main (int nNumberofArgs,char *argv[])
   string CHeads_file = LSDPP.get_CHeads_file();
   string BaselevelJunctions_file = LSDPP.get_BaselevelJunctions_file();
 
-  //----------------------------------------------------------------------------//
-  // If you want, turn on all the appropriate switches for estimating the best
-  // fit m/n
-  //----------------------------------------------------------------------------//
-  if (this_bool_map["estimate_best_fit_movern"])
-  {
-    // we need to make sure we select basins the correct way
-    this_bool_map["find_complete_basins_in_window"] = true;
-    this_bool_map["print_basin_raster"] = true;
-    this_bool_map["write_hillshade"] = true;
-    this_bool_map["print_chi_data_maps"] = true;
 
-    // run the chi methods of estimating best fit m/n
-    this_bool_map["calculate_MLE_collinearity"] = true;
-    this_bool_map["calculate_MLE_collinearity_with_points_MC"] = true;
-    this_bool_map["print_profiles_fxn_movern_csv"] = true;
-    this_bool_map["movern_residuals_test"] = true;
-
-    // run the SA methods of estimating best fit m/n
-    this_bool_map["print_slope_area_data"] = true;
-    this_bool_map["segment_slope_area_data"] = true;
-  }
 
   cout << "Read filename is: " <<  DATA_DIR+DEM_ID << endl;
   cout << "Write filename is: " << OUT_DIR+OUT_ID << endl;
+
+
+  // -------------------------------------------------Baslevel stuffs----------------------------------------------
 
   if(BaselevelJunctions_file == "NULL" || BaselevelJunctions_file == "Null" || BaselevelJunctions_file == "null" || BaselevelJunctions_file.empty() == true)
   {
@@ -233,37 +219,41 @@ int main (int nNumberofArgs,char *argv[])
     }
     test_file.close();
   }
+ // ----------------------------------------------end of Baslevel stuffs----------------------------------------------
+
 
     // check to see if the raster exists
   LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);
 
   //============================================================================
-  // check to see if the raster for burning exists
-  LSDRaster BurnRaster;
-  bool burn_raster_exists = false;
-  string burn_raster_header = DATA_DIR+this_string_map["burn_raster_prefix"]+".hdr";
-  if (this_bool_map["burn_raster_to_csv"])
+  // check to see if the raster for burning exists - lithologic/geologic map
+  LSDRaster geolithomap;
+  bool geolithomap_exists = false;
+  string geolithomap_header = DATA_DIR+this_string_map["geolithomap_prefix"]+".hdr";
+  if (this_bool_map["geolithomap_to_csv"])
   {
-    cout << "I am going to burn a raster to all your csv files. The header name for this raster is: " << endl;
-    cout <<  burn_raster_header << endl;
+    cout << "Your lithologic map is: " << endl;
+    cout <<  geolithomap_header << endl;
   }
   ifstream burn_head_in;
-  burn_head_in.open(burn_raster_header.c_str());
+  burn_head_in.open(geolithomap_header.c_str());
   if( not burn_head_in.fail() )
   {
-    burn_raster_exists = true;
-    string burn_fname = DATA_DIR+this_string_map["burn_raster_prefix"];
-    cout << "The burn raster exists. It has a prefix of: " << endl;
+    geolithomap_exists = true;
+    string burn_fname = DATA_DIR+this_string_map["geolithomap_prefix"];
+    cout << "The lithologic raster exists. It has a prefix of: " << endl;
     cout <<  burn_fname << endl;
     LSDRaster TempRaster(burn_fname,raster_ext);
-    BurnRaster = TempRaster;
+    geolithomap = TempRaster;
   }
   else
   {
     cout << "The burn raster doesn't exist! I am turning off the  burn flag" << endl;
-    this_bool_map["burn_raster_to_csv"] = false;
+    this_bool_map["geolithomap_to_csv"] = false;
   }
-  //============================================================================
+  //=================================================================
+
+  cout << "The lithologic raster the base raster and the lithologic raster are loaded " << endl;
 
   // check the threshold pixels for chi
   if (this_int_map["threshold_pixels_for_chi"] > this_int_map["threshold_contributing_pixels"])
