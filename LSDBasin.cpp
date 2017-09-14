@@ -1333,14 +1333,32 @@ LSDRaster LSDBasin::Merge_Basins(vector<LSDRaster> Basins)
 // take a lithologic raster and a topographic raster in argument
 // BG 17/09/17
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-map<int,int> LSDBasin::count_unique_values_from_litho_raster(LSDIndexRaster& litho, LSDRaster& topo)
+map<int,int> LSDBasin::count_unique_values_from_litho_raster(LSDIndexRaster& litho, LSDFlowInfo& topo)
 {
   // First get the unique values in litho
   vector<int> values = litho.get_list_of_values();
   // Initialisation of the map
   map<int,int> lithost;
-  lithost[45] = 5;
+  // get the info
+  int temp_count = 0;
+  for(size_t i; i<values.size(); i++)
+  {
+    temp_count = 0;
+    int trow,tcol;
+    float teasting, tnorthing;
+    for(size_t j; j<BasinNodes.size();j++)
+    {
+      // getting the easting_northing for this node
+      topo.get_x_and_y_from_current_node(j,teasting,tnorthing);
+      // getting the corresponding row-col for the litho raster
+      litho.get_row_and_col_of_a_point(teasting,tnorthing,trow,tcol);
+      // ALRIGHT TO DO LATER:
+      // OPTIMIZE THE STRUCTURE TO LOOP ONCE THROUGH THE NODES AND IMPLEMENT DIRECTLY THE map
+      // WRITE THE MAP IN A CSV FILE FROM THE driver
+      // ADD A PARAMETER PERCENTAGE
+    }
 
+  }
 
 
   //return the results

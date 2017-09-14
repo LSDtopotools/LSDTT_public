@@ -730,7 +730,7 @@ LSDRaster TrimPaddedRasterToBasin(int padding_pixels, LSDFlowInfo& FlowInfo,
   ///
   /// @author BG
   /// @date 17/09/17
-  map<int,int> count_unique_values_from_litho_raster(LSDIndexRaster& litho, LSDRaster& topo) ;
+  map<int,int> count_unique_values_from_litho_raster(LSDIndexRaster& litho, LSDFlowInfo& topo) ;
 
   protected:
 
