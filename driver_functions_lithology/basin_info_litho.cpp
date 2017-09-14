@@ -315,3 +315,4 @@ int main (int nNumberofArgs,char *argv[])
     topography_raster = start_raster;
   }
   cout << "Got the dem: " <<  DATA_DIR+DEM_ID << endl;
+}
