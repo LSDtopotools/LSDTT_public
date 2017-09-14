@@ -251,6 +251,7 @@ int main (int nNumberofArgs,char *argv[])
   {
     cout << "No lithology raster. Please check the prefix is correctly spelled and without the extention" << endl;
     cout << "The file you tried to give me is: " << burn_fname << endl << "But it does not exists" << endl ;
+    exit(EXIT_FAILURE);
   }
 
   // load the  DEM
@@ -475,16 +476,9 @@ int main (int nNumberofArgs,char *argv[])
 
     // Now make sure none of the basins drain to the edge
     cout << "I am pruning junctions that are influenced by the edge of the DEM!" << endl;
-    cout << "This is necessary because basins draining to the edge will have incorrect chi values." << endl;
+    cout << "This is necessary to have complete basins." << endl;
     BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions_Initial, FlowInfo, filled_topography);
 
-  }
-
-  // Now check for larges basin, if that is what you want.
-  if (this_bool_map["only_take_largest_basin"])
-  {
-    cout << "I am only going to take the largest basin." << endl;
-    BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Largest(BaseLevelJunctions, FlowInfo, FlowAcc);
   }
 
   // Correct number of base level junctions
@@ -496,5 +490,9 @@ int main (int nNumberofArgs,char *argv[])
     exit(EXIT_FAILURE);
   }
 
+  // Now getting the basin list - I need a chitool object ??? I think there might be a way to optimise this
+  LSDChiTools blasinf(FlowInfo);
+  LSDIndexRaster basin_raster = blasinf.get_basin_raster(FlowInfo, JunctionNetwork, BaseLevelJunctions);
+  basin_raster.write_raster(OUT_DIR+OUT_ID+"_bas","bil");
 
 }
