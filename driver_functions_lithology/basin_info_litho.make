@@ -4,7 +4,7 @@ CC=g++
 CFLAGS=-c -Wall -O3
 OFLAGS = -Wall -O3
 LDFLAGS= -Wall
-SOURCES=chi_mapping_tool.cpp \
+SOURCES=basin_info_litho.cpp \
              ../LSDMostLikelyPartitionsFinder.cpp \
              ../LSDIndexRaster.cpp \
              ../LSDRaster.cpp \
@@ -24,7 +24,7 @@ SOURCES=chi_mapping_tool.cpp \
              ../LSDSpatialCSVReader.cpp \
              ../LSDCRNParameters.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=chi_mapping_tool.exe
+EXECUTABLE=lithobasinfo.exe
 
 all: $(SOURCES) $(EXECUTABLE)
 
@@ -33,6 +33,6 @@ $(EXECUTABLE): $(OBJECTS)
 
 .cpp.o:
 	$(CC) $(CFLAGS) $< -o $@
-	
+
 clean:
 	rm -f ../*.o *.o *.out *.exe
