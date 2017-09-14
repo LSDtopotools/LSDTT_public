@@ -221,7 +221,7 @@ int main (int nNumberofArgs,char *argv[])
   }
  // ----------------------------------------------end of Baslevel stuffs----------------------------------------------
 
-
+ // ===================== LOADING RASTERS ====================================
     // check to see if the raster exists
   LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);
 
@@ -282,15 +282,219 @@ int main (int nNumberofArgs,char *argv[])
   cout << "Got the base dem: " <<  DATA_DIR+DEM_ID << endl;
 
 
-  //=================================================================
 
   cout << "The lithologic raster the base raster and the lithologic raster are loaded " << endl;
 
+  //================= END OF LOADING ============================================================================================================
+
+
+  //================= Flow - River - Basin extracion from the topographic raster ============================================================================================================
+
+  cout << "I will now divide the topographic raster into basins " << endl;
+
   // initialise variables to be assigned from .driver file
   // These will all be assigned default values
+  cout << "Loading the parameters:" << endl;
   int threshold_contributing_pixels = this_int_map["threshold_contributing_pixels"];
   int minimum_basin_size_pixels = this_int_map["minimum_basin_size_pixels"];
-  int basic_Mchi_regression_nodes = this_int_map["basic_Mchi_regression_nodes"];
+  int maximum_basin_size_pixels = this_int_map["maximum_basin_size_pixels"];
+  cout << "threshold_contributing_pixels: " << threshold_contributing_pixels << " - Define the density of the river network" << endl;
+  cout << "I'll only select basins containing more than " << minimum_basin_size_pixels << " pixels and less than " << maximum_basin_size_pixels <<" pixels" << endl;
+  float reso_dem = topography_raster.get_DataResolution();
+  float minibas = minimum_basin_size_pixels * reso_dem* reso_dem;
+  float maxibas = maximum_basin_size_pixels * reso_dem* reso_dem;
+  cout << "(Between " << minibas <<" square meters and " << maxibas <<" square meters )" << endl;
+
+  // Filling topography to get the right flow direction
+  LSDRaster filled_topography;
+  // now get the flow info object
+  if ( this_bool_map["raster_is_filled"] )
+  {
+    cout << "You have chosen to use a filled raster." << endl;
+    filled_topography = topography_raster;
+  }
+  else
+  {
+    cout << "Let me fill that raster for you, the min slope is: "
+         << this_float_map["min_slope_for_fill"] << endl;
+    filled_topography = topography_raster.fill(this_float_map["min_slope_for_fill"]);
+  }
+
+  if (this_bool_map["print_fill_raster"])
+  {
+    cout << "Let me print the fill raster for you."  << endl;
+    string filled_raster_name = OUT_DIR+OUT_ID+"_Fill";
+    filled_topography.write_raster(filled_raster_name,raster_ext);
+  }
+
+  if (this_bool_map["write_hillshade"])
+  {
+    cout << "Let me print the hillshade for you. " << endl;
+    float hs_azimuth = 315;
+    float hs_altitude = 45;
+    float hs_z_factor = 1;
+    LSDRaster hs_raster = topography_raster.hillshade(hs_altitude,hs_azimuth,hs_z_factor);
+
+    string hs_fname = OUT_DIR+OUT_ID+"_hs";
+    hs_raster.write_raster(hs_fname,raster_ext);
+  }
+
+
+  cout << "\t Flow routing..." << endl;
+  // get a flow info object
+  LSDFlowInfo FlowInfo(boundary_conditions,filled_topography);
+
+  // calculate the flow accumulation
+  cout << "\t Calculating flow accumulation (in pixels)..." << endl;
+  LSDIndexRaster FlowAcc = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+
+  cout << "\t Converting to flow area..." << endl;
+  LSDRaster DrainageArea = FlowInfo.write_DrainageArea_to_LSDRaster();
+
+  if (this_bool_map["print_DrainageArea_raster"])
+  {
+    string DA_raster_name = OUT_DIR+OUT_ID+"_DArea";
+    DrainageArea.write_raster(DA_raster_name,raster_ext);
+  }
+
+  // calcualte the distance from outlet
+  cout << "\t Calculating flow distance..." << endl;
+  LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
+
+  cout << "\t Loading Sources..." << endl;
+  cout << "\t Source file is... " << CHeads_file << endl;
+
+  // load the sources
+  vector<int> sources;
+  if (CHeads_file == "NULL" || CHeads_file == "Null" || CHeads_file == "null")
+  {
+    cout << endl << endl << endl << "==================================" << endl;
+    cout << "The channel head file is null. " << endl;
+    cout << "Getting sources from a threshold of "<< threshold_contributing_pixels << " pixels." <<endl;
+    sources = FlowInfo.get_sources_index_threshold(FlowAcc, threshold_contributing_pixels);
+
+    cout << "The number of sources is: " << sources.size() << endl;
+  }
+  else
+  {
+    cout << "Loading channel heads from the file: " << DATA_DIR+CHeads_file << endl;
+    sources = FlowInfo.Ingest_Channel_Heads((DATA_DIR+CHeads_file), "csv",2);
+    cout << "\t Got sources!" << endl;
+  }
+
+  // now get the junction network
+  LSDJunctionNetwork JunctionNetwork(sources, FlowInfo);
+
+  // Print channels and junctions if you want them.
+  if( this_bool_map["print_channels_to_csv"])
+  {
+    cout << "I am going to print the channel network." << endl;
+    string channel_csv_name = OUT_DIR+OUT_ID+"_CN";
+    JunctionNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+
+  }
+
+  // Print sources
+  if( this_bool_map["print_sources_to_csv"])
+  {
+    string sources_csv_name = OUT_DIR+OUT_ID+"_ATsources.csv";
+
+    //write channel_heads to a csv file
+    FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(sources, sources_csv_name);
+    string sources_csv_name_2 = OUT_DIR+OUT_ID+"_ATsources_rowcol.csv";
+    FlowInfo.print_vector_of_nodeindices_to_csv_file(sources, sources_csv_name_2);
+
+  }
+
+  // need to get base-level nodes , otherwise these catchments will be missed!
+  vector< int > BaseLevelJunctions;
+  vector< int > BaseLevelJunctions_Initial;
+
+  //Check to see if a list of junctions for extraction exists
+  if (BaselevelJunctions_file == "NULL" || BaselevelJunctions_file == "Null" || BaselevelJunctions_file == "null" || BaselevelJunctions_file.empty() == true)
+  {
+    cout << "To reiterate, there is no base level junction file. I am going to select basins for you using an algorithm. " << endl;
+    // remove basins drainage from edge if that is what the user wants
+    if (this_bool_map["find_complete_basins_in_window"])
+    {
+      cout << "I am going to look for basins in a pixel window that are not influended by nodata." << endl;
+      cout << "I am also going to remove any nested basins." << endl;
+      BaseLevelJunctions = JunctionNetwork.Prune_Junctions_By_Contributing_Pixel_Window_Remove_Nested_And_Nodata(FlowInfo, filled_topography, FlowAcc,
+                                              this_int_map["minimum_basin_size_pixels"],this_int_map["maximum_basin_size_pixels"]);
+    }
+    else
+    {
+      //Get baselevel junction nodes from the whole network
+      BaseLevelJunctions_Initial = JunctionNetwork.get_BaseLevelJunctions();
+
+      // now prune these by drainage area
+      cout << "Removing basins with fewer than " << minimum_basin_size_pixels << " pixels" << endl;
+      BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Area(BaseLevelJunctions_Initial,
+                                              FlowInfo, FlowAcc, minimum_basin_size_pixels);
+      cout << "Now I have " << BaseLevelJunctions.size() << " baselelvel junctions left. " << endl;
+
+      if (this_bool_map["find_largest_complete_basins"])
+      {
+        cout << "I am looking for the largest basin not influenced by nodata within all baselevel nodes." << endl;
+        BaseLevelJunctions = JunctionNetwork.Prune_To_Largest_Complete_Basins(BaseLevelJunctions,FlowInfo, filled_topography, FlowAcc);
+      }
+      else
+      {
+        if (this_bool_map["test_drainage_boundaries"])     // now check for edge effects
+        {
+          cout << endl << endl << "I am going to remove basins draining to the edge." << endl;
+          BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions,FlowInfo, filled_topography);
+          //BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge(BaseLevelJunctions,FlowInfo);
+        }
+      }
+    }
+  }
+  else
+  {
+    cout << "I am attempting to read base level junctions from a base level junction list." << endl;
+    cout << "If this is not a simple text file that only contains itegers there will be problems!" << endl;
+
+    //specify junctions to work on from a list file
+    //string JunctionsFile = DATA_DIR+BaselevelJunctions_file;
+    cout << "The junctions file is: " << BaselevelJunctions_file << endl;
+
+
+    vector<int> JunctionsList;
+    ifstream infile(BaselevelJunctions_file.c_str());
+    if (infile)
+    {
+      cout << "Junctions File " << BaselevelJunctions_file << " exists" << endl;;
+      int n;
+      while (infile >> n) BaseLevelJunctions_Initial.push_back(n);
+    }
+    else
+    {
+      cout << "Fatal Error: Junctions File " << BaselevelJunctions_file << " does not exist" << endl;
+      exit(EXIT_FAILURE);
+    }
+
+    // Now make sure none of the basins drain to the edge
+    cout << "I am pruning junctions that are influenced by the edge of the DEM!" << endl;
+    cout << "This is necessary because basins draining to the edge will have incorrect chi values." << endl;
+    BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions_Initial, FlowInfo, filled_topography);
+
+  }
+
+  // Now check for larges basin, if that is what you want.
+  if (this_bool_map["only_take_largest_basin"])
+  {
+    cout << "I am only going to take the largest basin." << endl;
+    BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Largest(BaseLevelJunctions, FlowInfo, FlowAcc);
+  }
+
+  // Correct number of base level junctions
+  int N_BaseLevelJuncs = BaseLevelJunctions.size();
+  cout << "The number of basins I will analyse is: " << N_BaseLevelJuncs << endl;
+  if (N_BaseLevelJuncs == 0)
+  {
+    cout << "I am stopping here since I don't have any basins to analyse." << endl;
+    exit(EXIT_FAILURE);
+  }
 
 
 }
