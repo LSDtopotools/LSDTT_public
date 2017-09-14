@@ -127,6 +127,8 @@ void LSDIndexRaster::create()
 void LSDIndexRaster::create(string filename, string extension)
 {
   read_raster(filename,extension);
+  vector<int> list_unique_values;
+  
 }
 
 // this creates a raster filled with the data in data
@@ -154,6 +156,7 @@ void LSDIndexRaster::create(int nrows, int ncols, float xmin, float ymin,
     cout << "LSDIndexRaster create::dimension of data is not the same as stated in NRows!" << endl;
     exit(EXIT_FAILURE);
   }
+  vector<int> list_unique_values;
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -175,6 +178,7 @@ void LSDIndexRaster::create(int nrows, int ncols, float xmin, float ymin,
   DataResolution = cellsize;
   NoDataValue = ndv;
   GeoReferencingStrings = GRS_map;
+  vector<int> list_unique_values;
 
   RasterData = data.copy();
 
@@ -207,6 +211,7 @@ void LSDIndexRaster::create(int nrows, int ncols, float xmin, float ymin,
   DataResolution = cellsize;
   NoDataValue = ndv;
   GeoReferencingStrings = GRS_map;
+  vector<int> list_unique_values;
 
   Array2D<int> TempData(NRows,NCols,ConstValue);
 
@@ -241,6 +246,7 @@ void LSDIndexRaster::create(LSDRaster& NonIntLSDRaster)
   NoDataValue = NonIntLSDRaster.get_NoDataValue();
   GeoReferencingStrings = NonIntLSDRaster.get_GeoReferencingStrings();
   Array2D<float> RasterDataFloat = NonIntLSDRaster.get_RasterData();
+  vector<int> list_unique_values;
 
   //Declarations
   Array2D<int> RasterDataInt(NRows,NCols,NoDataValue);
@@ -269,6 +275,7 @@ void LSDIndexRaster::create(LSDRaster& ARaster, int ConstValue)
   NoDataValue = ARaster.get_NoDataValue();
   GeoReferencingStrings = ARaster.get_GeoReferencingStrings();
   Array2D<int> RasterDataInt(NRows,NCols,ConstValue);
+  vector<int> list_unique_values;
 
   RasterData = RasterDataInt.copy();
 }
@@ -3121,7 +3128,7 @@ void LSDIndexRaster::PadRaster(int NPixels)
   int dX[] = {1, 1, 1, 0, -1, -1, -1, 0};
   int dY[] = {-1, 0, 1, 1, 1, 0, -1, -1};
   Array2D<int> NewRasterData = RasterData.copy();
-  
+
   // Loop through pad size (quick and dirty!)
   for (int n = 0; n<NPixels; ++n)
   {
@@ -3130,7 +3137,7 @@ void LSDIndexRaster::PadRaster(int NPixels)
 	  {
 		  for (int col = 0; col < NCols; col++)
 		  {
-			  // if there is a raster value, pad the cells around it with it's own value 
+			  // if there is a raster value, pad the cells around it with it's own value
 			  if (RasterData[row][col] != NoDataValue)
 			  {
 				  //loop through the 8 neighbours of the target cell
@@ -3138,7 +3145,7 @@ void LSDIndexRaster::PadRaster(int NPixels)
           {
             //handle edges here
             if ((row +dY[c] > NRows-1) || (col + dX[c] > NCols-1) || (row+dY[c]<0) || (col+dY[c]<0)) continue;
-            
+
             //otherwise update values
             else if (RasterData[row+dY[c]][col+dX[c]] == NoDataValue) NewRasterData[row+dY[c]][col+dX[c]] = RasterData[row][col];
           }
@@ -3147,6 +3154,36 @@ void LSDIndexRaster::PadRaster(int NPixels)
 	  }
 	}
 	RasterData = NewRasterData.copy();
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Function to detect and store all the unique values
+// into the vector list_unique_values. Detect if this has already been launched to avoid relaunch.
+//  No param
+//  Nothing, change directly the protected vector attribute
+//  BG
+//  17/09/17
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDIndexRaster::detect_unique_values()
+{
+  // first check if this method has already been launched
+  cout << "I am checking all the unique value of your lithologic map" << endl;
+  if(list_unique_values.size()==0)
+  {
+
+    for (int row = 0; row < NRows -1; row++)
+    {
+      for (int col = 0; col < NCols -1; col++)
+      {
+        if ((find(list_unique_values.begin(), list_unique_values.end(),RasterData[row][col])==list_unique_values.end()))
+        {
+          list_unique_values.push_back(RasterData[row][col]);
+          cout << "I am adding this unique value " << RasterData[row][col] << endl;
+        }
+      }
+    }
+  }
 }
 
 #endif

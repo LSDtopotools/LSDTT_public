@@ -227,7 +227,7 @@ int main (int nNumberofArgs,char *argv[])
 
   //============================================================================
   // check to see if the raster for burning exists - lithologic/geologic map
-  LSDRaster geolithomap;
+  LSDIndexRaster geolithomap;
   bool geolithomap_exists = false;
   string geolithomap_header = DATA_DIR+this_string_map["geolithomap_prefix"]+".hdr";
   if (this_bool_map["geolithomap_to_csv"])
@@ -244,7 +244,8 @@ int main (int nNumberofArgs,char *argv[])
 
     cout << "The lithologic raster exists. It has a prefix of: " << endl;
     cout <<  burn_fname << endl;
-    LSDRaster TempRaster(burn_fname,raster_ext);
+    LSDIndexRaster TempRaster(burn_fname,raster_ext);
+
     geolithomap = TempRaster;
   }
   else
@@ -493,6 +494,9 @@ int main (int nNumberofArgs,char *argv[])
   // Now getting the basin list - I need a chitool object ??? I think there might be a way to optimise this
   LSDChiTools blasinf(FlowInfo);
   LSDIndexRaster basin_raster = blasinf.get_basin_raster(FlowInfo, JunctionNetwork, BaseLevelJunctions);
-  basin_raster.write_raster(OUT_DIR+OUT_ID+"_bas","bil");
+  geolithomap.detect_unique_values();
+  geolithomap.detect_unique_values();
+  basin_raster.write_raster(OUT_DIR+OUT_ID+"_basicheck","bil"); // saving for checking
+
 
 }

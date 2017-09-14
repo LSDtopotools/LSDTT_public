@@ -186,7 +186,7 @@ class LSDBasin
   /// @return Percentile value.
   /// @author SWDG
   /// @date 5/2/17
-  float CalculateBasinPercentile(LSDFlowInfo& FlowInfo, LSDRaster Data, int Percentile); 
+  float CalculateBasinPercentile(LSDFlowInfo& FlowInfo, LSDRaster Data, int Percentile);
 
   /// @brief Calculate the Standard Deviation of values of an LSDRaster which falls inside a basin.
   /// @param FlowInfo Flowinfo object.

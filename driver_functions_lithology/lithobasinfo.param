@@ -18,4 +18,4 @@ threshold_contributing_pixels: 1000
 minimum_basin_size_pixels: 20000
 maximum_basin_size_pixels: 100000
 # Parameters for the geological extraction
-geolithomap_prefix: GS_new2
+geolithomap_prefix: santa_cruz_litho

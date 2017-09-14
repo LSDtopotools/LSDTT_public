@@ -587,7 +587,7 @@ class LSDIndexRaster
   /// @author FJC
   /// @date 07/04/17
   void MergeIndexRasters(LSDIndexRaster& RasterToAdd);
-  
+
   /// @brief Function to pad values in an LSDIndexRaster by a certain number of pixels
   /// with values taken from the nearest pixel to be padded.
   /// @param NPixels the number of pixels to pad by
@@ -595,6 +595,14 @@ class LSDIndexRaster
   /// @author MDH
   /// @date 20/07/17
   void PadRaster(int NPixels);
+
+  /// @brief Function to detect and store all the unique values
+  /// into the vector list_unique_values. Detect if this has already been launched to avoid relaunch.
+  /// @param No param
+	/// @return Nothing, change directly the protected vector attribute
+  /// @author BG
+  /// @date 17/09/17
+  void detect_unique_values();
 
   protected:
   ///Number of rows.
@@ -610,6 +618,8 @@ class LSDIndexRaster
   float DataResolution;
   ///No data value.
   int NoDataValue;
+  /// list of unique values, for example in case of a lithologic raster
+  vector<int> list_unique_values;
 
   ///A map of strings for holding georeferencing information
   map<string,string> GeoReferencingStrings;
