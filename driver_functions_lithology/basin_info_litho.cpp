@@ -146,9 +146,9 @@ int main (int nNumberofArgs,char *argv[])
 
   // This burns a raster value to any csv output of chi data
   // Useful for appending geology data to chi profiles
-  bool_default_map["geolithomap_to_csv"] = false;
+  bool_default_map["geolithomap_to_csv"] = true;
   string_default_map["geolithomap_prefix"] = "NULL";
-  string_default_map["burn_data_csv_column_header"] = "burned_data";
+  string_default_map["burn_data_csv_column_header"] = "geolitho";
 
   // these print various basin and source data for visualisation
   bool_default_map["print_source_keys"] = false;
@@ -237,10 +237,11 @@ int main (int nNumberofArgs,char *argv[])
   }
   ifstream burn_head_in;
   burn_head_in.open(geolithomap_header.c_str());
+  string burn_fname = DATA_DIR+this_string_map["geolithomap_prefix"];
   if( not burn_head_in.fail() )
   {
     geolithomap_exists = true;
-    string burn_fname = DATA_DIR+this_string_map["geolithomap_prefix"];
+
     cout << "The lithologic raster exists. It has a prefix of: " << endl;
     cout <<  burn_fname << endl;
     LSDRaster TempRaster(burn_fname,raster_ext);
@@ -248,35 +249,9 @@ int main (int nNumberofArgs,char *argv[])
   }
   else
   {
-    cout << "The burn raster doesn't exist! I am turning off the  burn flag" << endl;
-    this_bool_map["geolithomap_to_csv"] = false;
+    cout << "No lithology raster. Please check the prefix is correctly spelled and without the extention" << endl;
+    cout << "The file you tried to give me is: " << burn_fname << endl << "But it does not exists" << endl ;
   }
-  //=================================================================
-
-  cout << "The lithologic raster the base raster and the lithologic raster are loaded " << endl;
-
-  // check the threshold pixels for chi
-  if (this_int_map["threshold_pixels_for_chi"] > this_int_map["threshold_contributing_pixels"])
-  {
-    cout << "WARNING: you have chosen a threshold pixels for chi which is greater" << endl;
-    cout << "   the threshold contributing pixels. Defaulting so these are equal." << endl;
-    this_int_map["threshold_pixels_for_chi"] = this_int_map["threshold_contributing_pixels"];
-  }
-
-  // initialise variables to be assigned from .driver file
-  // These will all be assigned default values
-  float A_0 = this_float_map["A_0"];
-  float movern = this_float_map["m_over_n"];
-  int n_iterations = this_int_map["n_iterations"];
-  int minimum_segment_length = this_int_map["minimum_segment_length"];
-  int maximum_segment_length = this_int_map["maximum_segment_length"];
-  int n_nodes_to_visit = this_int_map["n_nodes_to_visit"];             // when constructing channel network, this
-  float sigma = this_float_map["sigma"];
-  int target_nodes = this_int_map["target_nodes"];
-  int skip = this_int_map["skip"];
-  int threshold_contributing_pixels = this_int_map["threshold_contributing_pixels"];
-  int minimum_basin_size_pixels = this_int_map["minimum_basin_size_pixels"];
-  int basic_Mchi_regression_nodes = this_int_map["basic_Mchi_regression_nodes"];
 
   // load the  DEM
   LSDRaster topography_raster;
@@ -304,5 +279,18 @@ int main (int nNumberofArgs,char *argv[])
     LSDRaster start_raster((DATA_DIR+DEM_ID), raster_ext);
     topography_raster = start_raster;
   }
-  cout << "Got the dem: " <<  DATA_DIR+DEM_ID << endl;
+  cout << "Got the base dem: " <<  DATA_DIR+DEM_ID << endl;
+
+
+  //=================================================================
+
+  cout << "The lithologic raster the base raster and the lithologic raster are loaded " << endl;
+
+  // initialise variables to be assigned from .driver file
+  // These will all be assigned default values
+  int threshold_contributing_pixels = this_int_map["threshold_contributing_pixels"];
+  int minimum_basin_size_pixels = this_int_map["minimum_basin_size_pixels"];
+  int basic_Mchi_regression_nodes = this_int_map["basic_Mchi_regression_nodes"];
+
+
 }
