@@ -4097,9 +4097,9 @@ void LSDChiTools::print_profiles_as_fxn_movern(LSDFlowInfo& FlowInfo, string fil
 // This prints a series of simple profiles (chi-elevation) as a function of
 // movern
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiTools::print_profiles_as_fxn_movern_with_burned_raster(LSDFlowInfo& FlowInfo, 
-                                         string filename, float start_movern, 
-                                         float delta_movern, int n_movern, 
+void LSDChiTools::print_profiles_as_fxn_movern_with_burned_raster(LSDFlowInfo& FlowInfo,
+                                         string filename, float start_movern,
+                                         float delta_movern, int n_movern,
                                          LSDRaster& BurnRaster, string burned_column_name)
 {
   float A_0 = 1;
@@ -4151,9 +4151,9 @@ void LSDChiTools::print_profiles_as_fxn_movern_with_burned_raster(LSDFlowInfo& F
   for (int n = 0; n< n_nodes; n++)
   {
     this_node = node_sequence[n];
-    
+
     FlowInfo.retrieve_current_row_and_col(this_node,curr_row,curr_col);
-    
+
     chi_csv_out << source_keys_map[this_node] << ","
                  << baselevel_keys_map[this_node] << ","
                  << elev_data_map[this_node];
@@ -4315,7 +4315,7 @@ void LSDChiTools::print_profiles_as_fxn_movern_with_discharge_and_burned_raster(
 
     // get the row and column to use with the raster for burning
     FlowInfo.retrieve_current_row_and_col(this_node,curr_row,curr_col);
-    
+
     chi_csv_out << source_keys_map[this_node] << ","
                  << baselevel_keys_map[this_node] << ","
                  << elev_data_map[this_node];
