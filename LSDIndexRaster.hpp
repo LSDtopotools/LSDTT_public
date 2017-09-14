@@ -190,6 +190,7 @@ class LSDIndexRaster
   /// @return Map of strings containing georeferencing information
   map<string,string> get_GeoReferencingStrings() const { return GeoReferencingStrings; }
 
+
   /// Assignment operator.
   LSDIndexRaster& operator=(const LSDIndexRaster& LSDIR);
 
@@ -211,6 +212,11 @@ class LSDIndexRaster
   /// @author SMM
   /// @date 01/01/12
   void read_raster(string filename, string extension);
+
+  /// @brief Return the list of value but check if it has been initialized
+  /// @author BG
+  /// @date 19/09/2017
+  vector<int> get_list_of_values();
 
   /// @brief Read a raster from memory to a file.
   ///

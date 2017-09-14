@@ -1326,7 +1326,7 @@ LSDRaster LSDBasin::Merge_Basins(vector<LSDRaster> Basins)
   return OutputRaster;
 }
 
-/*
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Count the number of each unique lithology value contain in the basin from a topographic raster
 //
@@ -1335,10 +1335,18 @@ LSDRaster LSDBasin::Merge_Basins(vector<LSDRaster> Basins)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 map<int,int> LSDBasin::count_unique_values_from_litho_raster(LSDIndexRaster& litho, LSDRaster& topo)
 {
+  // First get the unique values in litho
+  vector<int> values = litho.get_list_of_values();
+  // Initialisation of the map
+  map<int,int> lithost;
+  lithost[45] = 5;
 
 
+
+  //return the results
+  return lithost;
 }
-*/
+
 
 
 

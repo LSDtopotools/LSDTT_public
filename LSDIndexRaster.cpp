@@ -128,7 +128,7 @@ void LSDIndexRaster::create(string filename, string extension)
 {
   read_raster(filename,extension);
   vector<int> list_unique_values;
-  
+
 }
 
 // this creates a raster filled with the data in data
@@ -936,10 +936,23 @@ void LSDIndexRaster::get_x_and_y_locations(int row, int col, double& x_loc, doub
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
+// This function returns list_unique_values vector
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDIndexRaster::get_list_of_values()
+{
+  detect_unique_values();
+  return list_unique_values;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
 // This function returns the x and y location of a row and column
 // Same as above but with floats
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 void LSDIndexRaster::get_x_and_y_locations(int row, int col, float& x_loc, float& y_loc)
 {
 

@@ -495,7 +495,7 @@ int main (int nNumberofArgs,char *argv[])
   LSDChiTools blasinf(FlowInfo);
   LSDIndexRaster basin_raster = blasinf.get_basin_raster(FlowInfo, JunctionNetwork, BaseLevelJunctions);
   geolithomap.detect_unique_values();
-  geolithomap.detect_unique_values();
+  
   basin_raster.write_raster(OUT_DIR+OUT_ID+"_basicheck","bil"); // saving for checking
 
 

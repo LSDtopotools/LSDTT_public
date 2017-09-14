@@ -724,6 +724,14 @@ LSDRaster TrimPaddedRasterToBasin(int padding_pixels, LSDFlowInfo& FlowInfo,
   /// @date 07/12/14
   LSDRaster Merge_Basins(vector<LSDRaster> Basins);
 
+
+  /// @brief Count the number of each unique lithology value contain in the basin from a topographic raster
+  /// take a lithologic raster and a topographic raster in argument
+  ///
+  /// @author BG
+  /// @date 17/09/17
+  map<int,int> count_unique_values_from_litho_raster(LSDIndexRaster& litho, LSDRaster& topo) ;
+
   protected:
 
   //These instance variables are set at initialisation
