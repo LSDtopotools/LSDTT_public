@@ -617,6 +617,91 @@ void LSDChiTools::simple_litho_basin_to_csv(LSDFlowInfo& FlowInfo, string csv_sl
   cout << "I am done writing the simple litho file." << endl;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prints a csv with basin_ID, all the litho count and the total
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::extended_litho_basin_to_csv(LSDFlowInfo& FlowInfo, string csv_slbc_fname,
+                                  map<int,map<int,int>> map_slbc)
+{
+  cout << "I am writing a simple basin/litho csv file: " << csv_slbc_fname << endl;
+  // opening the stream to write the csv file
+  ofstream csv_out;
+  csv_out.open(csv_slbc_fname.c_str());
+  // writing the header
+  csv_out << "method," << "basin_id,";
+  for(map<int,int>::iterator it = map_slbc[0].begin(); it !=map_slbc[0].end();++it)
+  {
+    csv_out << it->first << ",";
+  }
+  csv_out << "total"<< endl;
+
+  // Some stats on it
+  map<int,map<int,float>> percentmap;
+  map<int,float> tempmappercent;
+  map<int,int> tempmapcsv1;
+  int total_temp;
+  float tvalue;
+
+  for(map<int,map<int,int>>::iterator it1 = map_slbc.begin(); it1 !=map_slbc.end();++it1)
+  {
+    total_temp = 0;
+    // Second loop through the map of litho
+    tempmapcsv1 = it1->second;
+    for(map<int,int>::iterator it = tempmapcsv1.begin(); it !=tempmapcsv1.end();++it)
+    {
+      total_temp += it->second;
+    }
+    for(map<int,int>::iterator it = tempmapcsv1.begin(); it !=tempmapcsv1.end();++it)
+    {
+      tvalue = it->second;
+      tempmappercent[it->first] = tvalue*100/float(total_temp);
+    }
+    percentmap[it1->first] = tempmappercent;
+    tempmappercent.clear();
+    total_temp  = 0;
+  }
+
+
+  // preparing the writing
+  total_temp = 0;
+  map<int,int> tempmapcsv; // temporary map to avoid mapception confusions
+  // writing, first loop through basins
+  for(map<int,map<int,int>>::iterator it1 = map_slbc.begin(); it1 !=map_slbc.end();++it1)
+  {
+    // writing the raw count
+    csv_out << "count,";
+    csv_out << it1->first<<","; // writing the basin ID
+    tempmapcsv = it1->second; // Getting the map of values
+    // Second loop through the map of litho
+    for(map<int,int>::iterator it = tempmapcsv.begin(); it !=tempmapcsv.end();++it)
+    {
+      csv_out << it->second << ","; // writing the value
+      total_temp += it->second; // temporary temp
+    }
+    // writing and reinitializing the total
+    csv_out << total_temp << endl;
+    total_temp = 0;
+
+    // writing the percentage
+    csv_out << "percentage,";
+    csv_out << it1->first<<","; // writing the basin ID
+    tempmappercent = percentmap[it1->first]; // Getting the map of values
+    // Second loop through the map of litho
+    float percentemptot =0;
+    for(map<int,float>::iterator it = tempmappercent.begin(); it !=tempmappercent.end();++it)
+    {
+      csv_out << it->second << ","; // writing the value
+      percentemptot += it->second; // temporary temp
+    }
+    // writing and reinitializing the total
+    csv_out << percentemptot << endl; // should be 100 if everything is ok
+    percentemptot = 0;
+  }
+  // Done, closing the file stream
+  csv_out.close();
+  cout << "I am done writing the simple litho file." << endl;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function creates the data structures for keeping track of
