@@ -1212,6 +1212,55 @@ LSDIndexRaster LSDChiTools::get_basin_raster(LSDFlowInfo& FlowInfo, LSDJunctionN
 
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// extract lithology data per basins from a litho map, a FlowInfo and a junction networks
+// ongoing work
+// BG - 15/09/2017
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+map<int,map<int,int>> LSDChiTools::get_basin_lithocount(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork, LSDIndexRaster litho,
+                               vector<int> Junctions)
+{
+  int N_Juncs = Junctions.size();
+  LSDCoordinateConverterLLandUTM Converter;
+  map<int,map<int,int>> lithocount;
+
+  // Get some data members for holding basins and the raster
+  vector<LSDBasin> AllTheBasins;
+  map<int,int> drainage_of_other_basins;
+  LSDIndexRaster BasinMasterRaster;
+
+  //cout << "I am trying to print basins, found " << N_BaseLevelJuncs << " base levels." << endl;
+  // Loop through the junctions
+  for(int BN = 0; BN<N_Juncs; BN++)
+  {
+    //cout << "Getting basin " << BN << " and the junction is: "  << BaseLevelJunctions[BN] << endl;
+    LSDBasin thisBasin(Junctions[BN],FlowInfo, JunctionNetwork);
+    //cout << "...got it!" << endl;
+    AllTheBasins.push_back(thisBasin);
+
+    // This is required if the basins are nested--test the code which numbers
+    // to be overwritten by a smaller basin
+    drainage_of_other_basins[Junctions[BN]] = thisBasin.get_NumberOfCells();
+
+  }
+
+  // now loop through everything again getting the raster
+  if (N_Juncs > 0)     // this gets the first raster
+  {
+    BasinMasterRaster = AllTheBasins[0].write_integer_data_to_LSDIndexRaster(Junctions[0], FlowInfo);
+  }
+
+  // now add on the subsequent basins
+  for(int BN = 1; BN<N_Juncs; BN++)
+  {
+    AllTheBasins[BN].add_basin_to_LSDIndexRaster(BasinMasterRaster, FlowInfo,
+                              drainage_of_other_basins, Junctions[BN]);
+  }
+
+  return lithocount;
+
+}
+
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

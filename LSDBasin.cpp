@@ -1339,27 +1339,40 @@ map<int,int> LSDBasin::count_unique_values_from_litho_raster(LSDIndexRaster& lit
   vector<int> values = litho.get_list_of_values();
   // Initialisation of the map
   map<int,int> lithost;
-  // get the info
-  int temp_count = 0;
   for(size_t i; i<values.size(); i++)
   {
-    temp_count = 0;
-    int trow,tcol;
-    float teasting, tnorthing;
-    for(size_t j; j<BasinNodes.size();j++)
-    {
-      // getting the easting_northing for this node
-      topo.get_x_and_y_from_current_node(j,teasting,tnorthing);
-      // getting the corresponding row-col for the litho raster
-      litho.get_row_and_col_of_a_point(teasting,tnorthing,trow,tcol);
-      // ALRIGHT TO DO LATER:
-      // OPTIMIZE THE STRUCTURE TO LOOP ONCE THROUGH THE NODES AND IMPLEMENT DIRECTLY THE map
-      // WRITE THE MAP IN A CSV FILE FROM THE driver
-      // ADD A PARAMETER PERCENTAGE
-    }
-
+    lithost[i] = 0;
   }
+  // map initialized with all the values of lithology present on the map
 
+  // Now counting through the nodes
+
+  //int trow,tcol,tvalue; // temporary variables to store the row, col and value - OBSOLETE
+  int tvalue,tcbbtf; // temporary variables to store the row, col and value
+  float teasting, tnorthing; // temporary variables to store the easting/northing.
+  // OPTIMIZITION THOUGH:
+  // rather than calculating the easting/northing/row/col each times, maybe cropping the
+  // litho raster to the extent of the toporaster to avoid this??
+  // END OF OPTIMIZATION THOUGH
+  for(size_t j; j<BasinNodes.size();j++)
+  {
+    // getting the easting_northing for this node
+    topo.get_x_and_y_from_current_node(j,teasting,tnorthing);
+    // getting the corresponding row-col for the litho raster
+    //litho.get_row_and_col_of_a_point(teasting,tnorthing,trow,tcol);
+    // implementing the counting
+    tvalue = litho.get_value_of_point(teasting,tnorthing);
+    tcbbtf = lithost[tvalue];
+    lithost[tvalue] = tcbbtf+1;
+    // ALRIGHT TO DO LATER:
+    // OPTIMIZE THE STRUCTURE TO LOOP ONCE THROUGH THE NODES AND IMPLEMENT DIRECTLY THE map
+    // WRITE THE MAP IN A CSV FILE FROM THE driver
+    // ADD A PARAMETER PERCENTAGE
+  }
+  for(map<int,int>::iterator it = lithost.begin(); it!=lithost.end(); ++it)
+  {
+    cout << "Litho " << it->first << " is represented " << it->second << " times." << endl;
+  }
 
   //return the results
   return lithost;

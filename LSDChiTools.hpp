@@ -947,6 +947,16 @@ class LSDChiTools
     LSDIndexRaster get_basin_raster(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork,
                                vector<int> Juntions);
 
+    /// @brief This return a map with the basin ID as key, and map of the count of the different lithology as key/value.
+    /// @param FlowInfo
+    /// @param JunctionNetwork
+    /// @param LSDIndexRaster as lithologic or geologic map
+    /// @parma vector of baselevel junctions
+    /// @author BG
+    /// @date 15/09/2017
+    map<int,map<int,int>> get_basin_lithocount(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork, LSDIndexRaster litho,
+                                                              vector<int> Junctions);
+
 
     /// @brief This prints a csv file that has the locations of the sources and their keys
     ///  latitude,longitude,source_node, source_key
