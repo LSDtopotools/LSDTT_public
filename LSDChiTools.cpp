@@ -577,6 +577,46 @@ void LSDChiTools::chi_map_to_csv(LSDFlowInfo& FlowInfo, string chi_map_fname,
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prints a csv with basin_ID, all the litho count and the total
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::simple_litho_basin_to_csv(LSDFlowInfo& FlowInfo, string csv_slbc_fname,
+                                  map<int,map<int,int>> map_slbc)
+{
+  cout << "I am writing a simple basin/litho csv file: " << csv_slbc_fname << endl;
+  // opening the stream to write the csv file
+  ofstream csv_out;
+  csv_out.open(csv_slbc_fname.c_str());
+  // writing the header
+  csv_out << "basin_id,";
+  for(map<int,int>::iterator it = map_slbc[0].begin(); it !=map_slbc[0].end();++it)
+  {
+    csv_out << it->first << ",";
+  }
+  csv_out << "total"<< endl;
+  // preparing the writing
+  int total_temp = 0;
+  map<int,int> tempmapcsv; // temporary map to avoid mapception confusions
+  // writing, first loop through basins
+  for(map<int,map<int,int>>::iterator it1 = map_slbc.begin(); it1 !=map_slbc.end();++it1)
+  {
+    csv_out << it1->first<<","; // writing the basin ID
+    tempmapcsv = it1->second; // Getting the map of values
+    // Second loop through the map of litho
+    for(map<int,int>::iterator it = tempmapcsv.begin(); it !=tempmapcsv.end();++it)
+    {
+      csv_out << it->second << ","; // writing the value
+      total_temp += it->second; // temporary temp
+    }
+    // writing and reinitializing the total
+    csv_out << total_temp << endl;
+    total_temp = 0;
+  }
+  // Done, closing the file stream
+  csv_out.close();
+  cout << "I am done writing the simple litho file." << endl;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function creates the data structures for keeping track of
@@ -1217,7 +1257,7 @@ LSDIndexRaster LSDChiTools::get_basin_raster(LSDFlowInfo& FlowInfo, LSDJunctionN
 // ongoing work
 // BG - 15/09/2017
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-map<int,map<int,int>> LSDChiTools::get_basin_lithocount(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork, LSDIndexRaster litho,
+map<int,map<int,int>> LSDChiTools::get_basin_lithocount(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork, LSDIndexRaster& litho,
                                vector<int> Junctions)
 {
   int N_Juncs = Junctions.size();
@@ -1241,20 +1281,7 @@ map<int,map<int,int>> LSDChiTools::get_basin_lithocount(LSDFlowInfo& FlowInfo, L
     // This is required if the basins are nested--test the code which numbers
     // to be overwritten by a smaller basin
     drainage_of_other_basins[Junctions[BN]] = thisBasin.get_NumberOfCells();
-
-  }
-
-  // now loop through everything again getting the raster
-  if (N_Juncs > 0)     // this gets the first raster
-  {
-    BasinMasterRaster = AllTheBasins[0].write_integer_data_to_LSDIndexRaster(Junctions[0], FlowInfo);
-  }
-
-  // now add on the subsequent basins
-  for(int BN = 1; BN<N_Juncs; BN++)
-  {
-    AllTheBasins[BN].add_basin_to_LSDIndexRaster(BasinMasterRaster, FlowInfo,
-                              drainage_of_other_basins, Junctions[BN]);
+    lithocount[BN] = thisBasin.count_unique_values_from_litho_raster(litho, FlowInfo);
   }
 
   return lithocount;

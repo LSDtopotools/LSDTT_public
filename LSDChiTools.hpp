@@ -954,7 +954,7 @@ class LSDChiTools
     /// @parma vector of baselevel junctions
     /// @author BG
     /// @date 15/09/2017
-    map<int,map<int,int>> get_basin_lithocount(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork, LSDIndexRaster litho,
+    map<int,map<int,int>> get_basin_lithocount(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork, LSDIndexRaster& litho,
                                                               vector<int> Junctions);
 
 
@@ -1011,6 +1011,14 @@ class LSDChiTools
     /// @date 14/07/2017
     void print_chi_data_map_to_csv_for_single_basin(LSDFlowInfo& FlowInfo, string filename, int basin_key);
 
+    /// @brief Print a csv file with basin_key and the number of lithology pixels per lithology ID. You need the files from the rasterisation to decrypt it.
+    /// @param FlowInfo
+    /// @param path+name of the file
+    /// @param map of map of litho obtain from a ChiTool.count_unique_values_from_litho_raster function for example
+    /// @author BG
+    /// @date 15/09/2017
+    void simple_litho_basin_to_csv(LSDFlowInfo& FlowInfo, string csv_slbc_fname,
+                                      map<int,map<int,int>> map_slbc);
 
     /// @brief This prints a csv file with all the data from the data maps
     ///  the columns are:

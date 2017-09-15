@@ -1335,6 +1335,7 @@ LSDRaster LSDBasin::Merge_Basins(vector<LSDRaster> Basins)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 map<int,int> LSDBasin::count_unique_values_from_litho_raster(LSDIndexRaster& litho, LSDFlowInfo& topo)
 {
+  //cout << "I am now proceeding to counting the lithology per basin you gave me." <<endl;
   // First get the unique values in litho
   vector<int> values = litho.get_list_of_values();
   // Initialisation of the map
@@ -1369,11 +1370,15 @@ map<int,int> LSDBasin::count_unique_values_from_litho_raster(LSDIndexRaster& lit
     // WRITE THE MAP IN A CSV FILE FROM THE driver
     // ADD A PARAMETER PERCENTAGE
   }
-  for(map<int,int>::iterator it = lithost.begin(); it!=lithost.end(); ++it)
-  {
-    cout << "Litho " << it->first << " is represented " << it->second << " times." << endl;
-  }
 
+  // //DEBUG STATMENT TO KEEP IN CASE
+  // for(map<int,int>::iterator it = lithost.begin(); it!=lithost.end(); ++it)
+  // {
+  //   cout << "Litho " << it->first << " is represented " << it->second << " times." << endl;
+  // }
+
+
+  //cout << "I am done with counting the lithology per basins" <<endl;
   //return the results
   return lithost;
 }

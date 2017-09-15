@@ -3181,10 +3181,10 @@ void LSDIndexRaster::PadRaster(int NPixels)
 void LSDIndexRaster::detect_unique_values()
 {
   // first check if this method has already been launched
-  cout << "I am checking all the unique value of your lithologic map" << endl;
+
   if(list_unique_values.size()==0)
   {
-
+    cout << "I am checking all the unique value of your lithologic map" << endl;
     for (int row = 0; row < NRows -1; row++)
     {
       for (int col = 0; col < NCols -1; col++)
