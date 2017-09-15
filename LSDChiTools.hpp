@@ -1020,6 +1020,15 @@ class LSDChiTools
     void simple_litho_basin_to_csv(LSDFlowInfo& FlowInfo, string csv_slbc_fname,
                                       map<int,map<int,int>> map_slbc);
 
+    /// @brief Print a csv file with basin_key and the number/percentages of lithology pixels per lithology ID. You need the files from the rasterisation to decrypt it.
+    /// @param FlowInfo
+    /// @param path+name of the file
+    /// @param map of map of litho obtain from a ChiTool.count_unique_values_from_litho_raster function for example
+    /// @author BG
+    /// @date 15/09/2017
+    void extended_litho_basin_to_csv(LSDFlowInfo& FlowInfo, string csv_slbc_fname,
+                                      map<int,map<int,int>> map_slbc);
+
     /// @brief This prints a csv file with all the data from the data maps
     ///  the columns are:
     ///  latitude,longitude,chi,elevation,flow distance,drainage area,m_chi,b_chi

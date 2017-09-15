@@ -243,6 +243,10 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_segments"] = false;
   bool_default_map["print_segments_raster"] = false;
 
+  // Parameters linked to the lithology
+  bool_default_map["print_litho_info"] = false;
+  string_default_map["litho_raster"] = "NULL";
+
 
   // Use the parameter parser to get the maps of the parameters required for the
   // analysis
@@ -264,8 +268,8 @@ int main (int nNumberofArgs,char *argv[])
   string raster_ext =  LSDPP.get_dem_read_extension();
   vector<string> boundary_conditions = LSDPP.get_boundary_conditions();
   string CHeads_file = LSDPP.get_CHeads_file();
-  
-  
+
+
   // deal with the baslevel junctions file
   string BaselevelJunctions_file;
   string test_BaselevelJunctions_file = LSDPP.get_BaselevelJunctions_file();
@@ -278,7 +282,7 @@ int main (int nNumberofArgs,char *argv[])
   {
     BaselevelJunctions_file = test_BaselevelJunctions_file;
   }
-  else if(this_string_map["BaselevelJunctions_file"] != "NULL" && test_BaselevelJunctions_file == "NULL") 
+  else if(this_string_map["BaselevelJunctions_file"] != "NULL" && test_BaselevelJunctions_file == "NULL")
   {
     BaselevelJunctions_file = this_string_map["BaselevelJunctions_file"];
   }
@@ -290,8 +294,8 @@ int main (int nNumberofArgs,char *argv[])
     BaselevelJunctions_file = this_string_map["BaselevelJunctions_file"];
     cout << "The junctions file I am using is: " <<  BaselevelJunctions_file << endl;
   }
-  
-  
+
+
   //----------------------------------------------------------------------------//
   // If you want, turn on all the appropriate switches for estimating the best
   // fit m/n
@@ -830,8 +834,10 @@ int main (int nNumberofArgs,char *argv[])
       cout << "    extend_channel_to_node_before_receiver_junction" << endl;
       cout << "  to false." << endl;
       cout << "=====================================================" << endl << endl;
+      
       JunctionNetwork.get_overlapping_channels_to_downstream_outlets(FlowInfo, BaseLevelJunctions, DistanceFromOutlet,
                                     source_nodes,outlet_nodes,baselevel_node_of_each_basin,n_nodes_to_visit);
+
     }
     else
     {
@@ -843,6 +849,7 @@ int main (int nNumberofArgs,char *argv[])
       cout << "    extend_channel_to_node_before_receiver_junction" << endl;
       cout << "  to true." << endl;
       cout << "=====================================================" << endl << endl;
+
       JunctionNetwork.get_overlapping_channels(FlowInfo, BaseLevelJunctions, DistanceFromOutlet,
                                     source_nodes,outlet_nodes,baselevel_node_of_each_basin,n_nodes_to_visit);
     }
@@ -851,7 +858,7 @@ int main (int nNumberofArgs,char *argv[])
 
   //============================================================================
   // Print a basin raster if you want it.
-  if(this_bool_map["print_basin_raster"])
+  if(this_bool_map["print_basin_raster"] || this_bool_map["print_litho_info"])
   {
     cout << "I am going to print the basins for you. " << endl;
     LSDChiTools ChiTool_basins(FlowInfo);
@@ -860,6 +867,43 @@ int main (int nNumberofArgs,char *argv[])
                             DrainageArea, chi_coordinate);
     string basin_raster_prefix = OUT_DIR+OUT_ID;
     ChiTool_basins.print_basins(FlowInfo, JunctionNetwork, BaseLevelJunctions, basin_raster_prefix);
+
+    if(this_bool_map["print_litho_info"])
+    {
+      //LOADING THE LITHO RASTER
+      // check to see if the raster for burning exists - lithologic/geologic map
+      LSDIndexRaster geolithomap;
+      bool geolithomap_exists = false;
+      string geolithomap_header = DATA_DIR+this_string_map["litho_raster"]+".hdr";
+      cout << "Your lithologic map is: " << endl;
+      cout <<  geolithomap_header << endl;
+
+      ifstream burn_head_in;
+      burn_head_in.open(geolithomap_header.c_str());
+      string burn_fname = DATA_DIR+this_string_map["litho_raster"];
+      if( not burn_head_in.fail() )
+      {
+        geolithomap_exists = true;
+
+        cout << "The lithologic raster exists. It has a prefix of: " << endl;
+        cout <<  burn_fname << endl;
+        LSDIndexRaster TempRaster(burn_fname,raster_ext);
+
+        geolithomap = TempRaster;
+      }
+      else
+      {
+        cout << "No lithology raster. Please check the prefix is correctly spelled and without the extention" << endl;
+        cout << "The file you tried to give me is: " << burn_fname << endl << "But it does not exists" << endl ;
+        exit(EXIT_FAILURE);
+      }
+      // loading finished
+      // now getting the basins informations
+      map<int,map<int,int>> basin_litho_count = ChiTool_basins.get_basin_lithocount(FlowInfo, JunctionNetwork, geolithomap, BaseLevelJunctions);
+      //geolithomap.detect_unique_values();
+      string csv_slbc_fname = OUT_DIR+OUT_ID+"_SBASLITH.csv";
+      ChiTool_basins.extended_litho_basin_to_csv(FlowInfo, csv_slbc_fname, basin_litho_count);
+    }
   }
 
 
