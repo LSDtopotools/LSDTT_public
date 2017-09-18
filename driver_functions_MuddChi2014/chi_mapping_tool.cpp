@@ -256,6 +256,21 @@ int main (int nNumberofArgs,char *argv[])
   map<string,bool> this_bool_map = LSDPP.get_bool_parameters();
   map<string,string> this_string_map = LSDPP.get_string_parameters();
 
+  // catch some stupid parameters
+  cout << endl << endl << "=====================================" << endl;
+  cout << "I am going to check your parameters and fix ones likeley to lead to segmentation faults." << endl;
+  float thresh_cp = float(this_int_map["threshold_contributing_pixels"]);
+  float min_basin_size = float(this_int_map["minimum_basin_size_pixels"]);
+  if(thresh_cp/min_basin_size >0.8)
+  {
+    cout << "WARNING WARNING Your threshold contributing pixels needs to be bigger than your minimum basin size. " << endl;
+    cout << "Resetting the threshold contributing pixels to half the minimum basin size." << endl;
+    float new_thresh = min_basin_size*0.5;
+    int nt = int(new_thresh);
+    this_int_map["threshold_contributing_pixels"] = nt;
+  }
+
+
   // Now print the parameters for bug checking
   cout << "PRINT THE PARAMETERS..." << endl;
   LSDPP.print_parameters();
