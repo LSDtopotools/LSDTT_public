@@ -2937,11 +2937,12 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_median
 
     // now run the collinearity test
     vector<float> these_residuals;
+
     for(int basin_key = 0; basin_key<n_basins; basin_key++)
     {
       these_residuals = retrieve_all_residuals_by_basin(FlowInfo, only_use_mainstem_as_reference,
                                                         basin_key);
-
+      // BUg HERE WHEN FEEDING VOID VECTOR - TO FIX - Boris                                                  
       vector<float> these_stats = calculate_descriptive_stats(these_residuals);
       Q1_values.push_back(these_stats[1]);
       median_values.push_back(these_stats[2]);
@@ -2951,6 +2952,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_median
     }
 
     // add the data to the vecvecs
+
     median_vecvec.push_back(median_values);
     Q1_vecvec.push_back(Q1_values);
     Q3_vecvec.push_back(Q3_values);
