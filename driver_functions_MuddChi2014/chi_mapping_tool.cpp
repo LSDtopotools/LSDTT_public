@@ -1173,8 +1173,7 @@ int main (int nNumberofArgs,char *argv[])
                       this_float_map["start_movern"], this_float_map["delta_movern"],
                       this_int_map["n_movern"],
                       this_bool_map["only_use_mainstem_as_reference"],
-                      residuals_name);
-
+                      residuals_name);                  
 
   }
 
