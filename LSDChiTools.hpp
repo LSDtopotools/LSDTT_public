@@ -954,7 +954,7 @@ class LSDChiTools
     /// @parma vector of baselevel junctions
     /// @author BG
     /// @date 15/09/2017
-    map<int,map<int,int>> get_basin_lithocount(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork, LSDIndexRaster& litho,
+    map<int,map<int,int> > get_basin_lithocount(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork, LSDIndexRaster& litho,
                                                               vector<int> Junctions);
 
 
@@ -1018,7 +1018,7 @@ class LSDChiTools
     /// @author BG
     /// @date 15/09/2017
     void simple_litho_basin_to_csv(LSDFlowInfo& FlowInfo, string csv_slbc_fname,
-                                      map<int,map<int,int>> map_slbc);
+                                      map<int,map<int,int> > map_slbc);
 
     /// @brief Print a csv file with basin_key and the number/percentages of lithology pixels per lithology ID. You need the files from the rasterisation to decrypt it.
     /// @param FlowInfo
@@ -1027,7 +1027,7 @@ class LSDChiTools
     /// @author BG
     /// @date 15/09/2017
     void extended_litho_basin_to_csv(LSDFlowInfo& FlowInfo, string csv_slbc_fname,
-                                      map<int,map<int,int>> map_slbc);
+                                      map<int,map<int,int> > map_slbc);
 
     /// @brief This prints a csv file with all the data from the data maps
     ///  the columns are:

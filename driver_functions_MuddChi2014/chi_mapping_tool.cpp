@@ -834,7 +834,7 @@ int main (int nNumberofArgs,char *argv[])
       cout << "    extend_channel_to_node_before_receiver_junction" << endl;
       cout << "  to false." << endl;
       cout << "=====================================================" << endl << endl;
-      
+
       JunctionNetwork.get_overlapping_channels_to_downstream_outlets(FlowInfo, BaseLevelJunctions, DistanceFromOutlet,
                                     source_nodes,outlet_nodes,baselevel_node_of_each_basin,n_nodes_to_visit);
 
@@ -899,7 +899,7 @@ int main (int nNumberofArgs,char *argv[])
       }
       // loading finished
       // now getting the basins informations
-      map<int,map<int,int>> basin_litho_count = ChiTool_basins.get_basin_lithocount(FlowInfo, JunctionNetwork, geolithomap, BaseLevelJunctions);
+      map<int,map<int,int> > basin_litho_count = ChiTool_basins.get_basin_lithocount(FlowInfo, JunctionNetwork, geolithomap, BaseLevelJunctions);
       //geolithomap.detect_unique_values();
       string csv_slbc_fname = OUT_DIR+OUT_ID+"_SBASLITH.csv";
       ChiTool_basins.extended_litho_basin_to_csv(FlowInfo, csv_slbc_fname, basin_litho_count);

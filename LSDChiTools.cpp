@@ -581,7 +581,7 @@ void LSDChiTools::chi_map_to_csv(LSDFlowInfo& FlowInfo, string chi_map_fname,
 // This prints a csv with basin_ID, all the litho count and the total
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::simple_litho_basin_to_csv(LSDFlowInfo& FlowInfo, string csv_slbc_fname,
-                                  map<int,map<int,int>> map_slbc)
+                                  map<int,map<int,int> > map_slbc)
 {
   cout << "I am writing a simple basin/litho csv file: " << csv_slbc_fname << endl;
   // opening the stream to write the csv file
@@ -598,7 +598,7 @@ void LSDChiTools::simple_litho_basin_to_csv(LSDFlowInfo& FlowInfo, string csv_sl
   int total_temp = 0;
   map<int,int> tempmapcsv; // temporary map to avoid mapception confusions
   // writing, first loop through basins
-  for(map<int,map<int,int>>::iterator it1 = map_slbc.begin(); it1 !=map_slbc.end();++it1)
+  for(map<int,map<int,int> >::iterator it1 = map_slbc.begin(); it1 !=map_slbc.end();++it1)
   {
     csv_out << it1->first<<","; // writing the basin ID
     tempmapcsv = it1->second; // Getting the map of values
@@ -621,7 +621,7 @@ void LSDChiTools::simple_litho_basin_to_csv(LSDFlowInfo& FlowInfo, string csv_sl
 // This prints a csv with basin_ID, all the litho count and the total
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::extended_litho_basin_to_csv(LSDFlowInfo& FlowInfo, string csv_slbc_fname,
-                                  map<int,map<int,int>> map_slbc)
+                                  map<int,map<int,int> > map_slbc)
 {
   cout << "I am writing a simple basin/litho csv file: " << csv_slbc_fname << endl;
   // opening the stream to write the csv file
@@ -636,13 +636,13 @@ void LSDChiTools::extended_litho_basin_to_csv(LSDFlowInfo& FlowInfo, string csv_
   csv_out << "total"<< endl;
 
   // Some stats on it
-  map<int,map<int,float>> percentmap;
+  map<int,map<int,float> > percentmap;
   map<int,float> tempmappercent;
   map<int,int> tempmapcsv1;
   int total_temp;
   float tvalue;
 
-  for(map<int,map<int,int>>::iterator it1 = map_slbc.begin(); it1 !=map_slbc.end();++it1)
+  for(map<int,map<int,int> >::iterator it1 = map_slbc.begin(); it1 !=map_slbc.end();++it1)
   {
     total_temp = 0;
     // Second loop through the map of litho
@@ -666,7 +666,7 @@ void LSDChiTools::extended_litho_basin_to_csv(LSDFlowInfo& FlowInfo, string csv_
   total_temp = 0;
   map<int,int> tempmapcsv; // temporary map to avoid mapception confusions
   // writing, first loop through basins
-  for(map<int,map<int,int>>::iterator it1 = map_slbc.begin(); it1 !=map_slbc.end();++it1)
+  for(map<int,map<int,int> >::iterator it1 = map_slbc.begin(); it1 !=map_slbc.end();++it1)
   {
     // writing the raw count
     csv_out << "count,";
@@ -1342,12 +1342,12 @@ LSDIndexRaster LSDChiTools::get_basin_raster(LSDFlowInfo& FlowInfo, LSDJunctionN
 // ongoing work
 // BG - 15/09/2017
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-map<int,map<int,int>> LSDChiTools::get_basin_lithocount(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork, LSDIndexRaster& litho,
+map<int,map<int,int> > LSDChiTools::get_basin_lithocount(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JunctionNetwork, LSDIndexRaster& litho,
                                vector<int> Junctions)
 {
   int N_Juncs = Junctions.size();
   LSDCoordinateConverterLLandUTM Converter;
-  map<int,map<int,int>> lithocount;
+  map<int,map<int,int> > lithocount;
 
   // Get some data members for holding basins and the raster
   vector<LSDBasin> AllTheBasins;
