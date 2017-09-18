@@ -1136,6 +1136,7 @@ int main (int nNumberofArgs,char *argv[])
 
     // Get the pixel threshold. Make it one less than the previous threshold to ensure
     // you get all the nodes in the basin
+    //cout << "BUG TRACKER" << endl; exit(EXIT_FAILURE);
     int pixel_thresh_for_this_example = this_int_map["threshold_contributing_pixels"] -1;
 
     bool use_points = true;

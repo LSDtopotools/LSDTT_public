@@ -866,7 +866,7 @@ void LSDChiTools::chi_map_automator_chi_only(LSDFlowInfo& FlowInfo,
   baselevel_keys_map = these_baselevel_keys;
   key_to_source_map = this_key_to_source_map;
   key_to_baselevel_map = this_key_to_baselevel_map;
-
+  //cout << "BUG TRACKER" << endl; exit(EXIT_FAILURE);
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
