@@ -903,6 +903,7 @@ int main (int nNumberofArgs,char *argv[])
         LSDIndexRaster TempRaster(burn_fname,raster_ext);
 
         geolithomap = TempRaster.clip_to_smaller_raster(topography_raster);
+        geolithomap.NoData_from_another_raster(topography_raster);
 
         cout << "I am now writing a lithologic raster clipped to the extent of your topographic raster to make the plotting easier" << endl;
         string lithrastname = OUT_DIR+OUT_ID+"_LITHRAST";
