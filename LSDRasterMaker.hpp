@@ -49,6 +49,8 @@ class LSDRasterMaker: public LSDRaster
       create(An_LSDRaster);
     }
 
+    
+
     /// @brief Constructor. Create an LSDRasterMaker from a file.
     /// Uses a filename and file extension
     /// @return LSDRasterMaker
@@ -129,6 +131,45 @@ class LSDRasterMaker: public LSDRaster
     /// @author SMM
     /// @date 01/09/2017
     void sine_waves(vector<float> x_coefficients, vector<float> y_coefficients);
+
+    /// @brief This returns a clipped raster that has the same dimensions as the
+    ///  smaller raster
+    /// @param smaller_raster the raster to which the bigger raster should be
+    ///  clipped
+    /// @author SMM
+    /// @date 20/03/2015
+    LSDRaster clip_to_smaller_raster(LSDRaster& smaller_raster);
+
+    /// @brief This returns a clipped raster that has the same dimensions as the
+    ///  smaller raster
+    /// @param smaller_raster the raster to which the bigger raster should be
+    ///  clipped
+    /// @author SMM
+    /// @date 20/03/2015
+    LSDRaster clip_to_smaller_raster(LSDIndexRaster& smaller_raster);
+
+    ///@brief This function returns the raster data as text file
+  ///@return text file with raster data
+  ///@author FJC
+  ///@date 30/09/16
+    void write_RasterData_to_text_file(string filename);
+
+    ///@brief This function returns the raster data as a vector
+  ///@return vector<float> with raster data
+  ///@author FJC
+  ///@date 06/11/15
+  vector<float> get_RasterData_vector();
+
+  /// @brief This function returns a vector with the X adn Y minimum and max
+  ///   values
+  /// @return XYMinMax a vector with four elements
+  ///   XYMinMax[0] = XMinimum
+  ///   XYMinMax[1] = YMinimum
+  ///   XYMinMax[2] = XMaximum
+  ///   XYMinMax[3] = XMaximum
+  /// @author SMM
+  /// @date 3/7/2015
+  vector<float> get_XY_MinMax();
 
   protected:
 

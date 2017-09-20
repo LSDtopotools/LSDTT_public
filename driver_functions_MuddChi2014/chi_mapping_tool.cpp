@@ -61,6 +61,7 @@
 #include "../LSDParameterParser.hpp"
 #include "../LSDSpatialCSVReader.hpp"
 #include "../LSDShapeTools.hpp"
+#include "../LSDRasterMaker.hpp"
 
 int main (int nNumberofArgs,char *argv[])
 {
@@ -882,13 +883,12 @@ int main (int nNumberofArgs,char *argv[])
                             DrainageArea, chi_coordinate);
     string basin_raster_prefix = OUT_DIR+OUT_ID;
     ChiTool_basins.print_basins(FlowInfo, JunctionNetwork, BaseLevelJunctions, basin_raster_prefix);
-
+    
     if(this_bool_map["print_litho_info"])
     {
       //LOADING THE LITHO RASTER
       // check to see if the raster for burning exists - lithologic/geologic map
       LSDIndexRaster geolithomap;
-      bool geolithomap_exists = false;
       string geolithomap_header = DATA_DIR+this_string_map["litho_raster"]+".hdr";
       cout << "Your lithologic map is: " << endl;
       cout <<  geolithomap_header << endl;
@@ -898,13 +898,17 @@ int main (int nNumberofArgs,char *argv[])
       string burn_fname = DATA_DIR+this_string_map["litho_raster"];
       if( not burn_head_in.fail() )
       {
-        geolithomap_exists = true;
-
         cout << "The lithologic raster exists. It has a prefix of: " << endl;
         cout <<  burn_fname << endl;
         LSDIndexRaster TempRaster(burn_fname,raster_ext);
 
-        geolithomap = TempRaster;
+        geolithomap = TempRaster.clip_to_smaller_raster(topography_raster);
+
+        cout << "I am now writing a lithologic raster clipped to the extent of your topographic raster to make the plotting easier" << endl;
+        string lithrastname = OUT_DIR+OUT_ID+"_LITHRAST";
+        geolithomap.write_raster(OUT_DIR+OUT_ID+"_LITHRAST",raster_ext);
+        cout << lithrastname << endl;
+
       }
       else
       {
