@@ -1056,12 +1056,22 @@ int main (int nNumberofArgs,char *argv[])
         cout << "You asked me to burn a raster to the csv" << endl;
         if(burn_raster_exists)
         {
-          cout << "I am burning the raster into the column header " << this_string_map["burn_data_csv_column_header"] << endl;
+          string header_for_burn_data;
+          if(this_bool_map["print_litho_info"])
+          {
+            header_for_burn_data = DEM_ID + "_geol";
+          }
+          else
+          {
+            header_for_burn_data = this_string_map["burn_data_csv_column_header"];
+          }
+
+          cout << "I am burning the raster into the column header " << header_for_burn_data << endl;
           string full_csv_name = chiQ_data_maps_string;
           LSDSpatialCSVReader CSVFile(RI,full_csv_name);
 
           cout << "I am burning the raster to the csv file." << endl;
-          CSVFile.burn_raster_data_to_csv(BurnRaster,this_string_map["burn_data_csv_column_header"]);
+          CSVFile.burn_raster_data_to_csv(BurnRaster,header_for_burn_data);
 
           string full_burned_csv_name = OUT_DIR+DEM_ID+"_chiQ_data_map_burned.csv";
           cout << "Now I'll print the data to a new file" << endl;
