@@ -1403,6 +1403,7 @@ int main (int nNumberofArgs,char *argv[])
       cout << "Using a discharge raster to calculate m over n." << endl;
       if(this_bool_map["burn_raster_to_csv"])
       {
+        cout << "I am using a burned raster for plotting the profiles. " << endl;
         string movern_name = OUT_DIR+OUT_ID+"_burned_movernQ.csv";
         ChiTool_movern.print_profiles_as_fxn_movern_with_discharge_and_burned_raster(FlowInfo, movern_name,
                                   this_float_map["start_movern"],
@@ -1413,6 +1414,7 @@ int main (int nNumberofArgs,char *argv[])
       }
       else
       {
+        cout << "I am plotting the profiles. " << endl;
         string movern_name = OUT_DIR+OUT_ID+"_movernQ.csv";
         ChiTool_movern.print_profiles_as_fxn_movern_with_discharge(FlowInfo, movern_name,
                                   this_float_map["start_movern"],
@@ -1426,6 +1428,7 @@ int main (int nNumberofArgs,char *argv[])
 
       if(this_bool_map["burn_raster_to_csv"])
       {
+        cout << "I am using a burned raster for plotting the profiles. " << endl;
         string movern_name = OUT_DIR+OUT_ID+"_burned_movern.csv";
         ChiTool_movern.print_profiles_as_fxn_movern_with_burned_raster(FlowInfo, movern_name,
                                   this_float_map["start_movern"],
@@ -1433,9 +1436,14 @@ int main (int nNumberofArgs,char *argv[])
                                   this_int_map["n_movern"],
                                   BurnRaster,
                                   this_string_map["burn_data_csv_column_header"]);
+                                  
+        //cout << "TEST I will print the burn raster" << endl;
+        //BurnRaster.write_raster(OUT_DIR+OUT_ID+"_theburnYOYO","bil");
+        
       }
       else
       {
+        cout << "I am plotting the profiles. " << endl;
         string movern_name = OUT_DIR+OUT_ID+"_movern.csv";
         ChiTool_movern.print_profiles_as_fxn_movern(FlowInfo, movern_name,
                                   this_float_map["start_movern"],
