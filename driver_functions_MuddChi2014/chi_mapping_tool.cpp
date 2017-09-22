@@ -1059,7 +1059,7 @@ int main (int nNumberofArgs,char *argv[])
           string header_for_burn_data;
           if(this_bool_map["print_litho_info"])
           {
-            header_for_burn_data = DEM_ID + "_geol";
+            header_for_burn_data = OUT_ID + "_geol";
           }
           else
           {
@@ -1114,7 +1114,7 @@ int main (int nNumberofArgs,char *argv[])
           string header_for_burn_data;
           if(this_bool_map["print_litho_info"])
           {
-            header_for_burn_data = DEM_ID + "_geol";
+            header_for_burn_data = OUT_ID + "_geol";
           }
           else
           {
