@@ -371,34 +371,6 @@ int main (int nNumberofArgs,char *argv[])
     // check to see if the raster exists
   LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);
 
-  //============================================================================
-  // check to see if the raster for burning exists
-  LSDRaster BurnRaster;
-  bool burn_raster_exists = false;
-  string burn_raster_header = DATA_DIR+this_string_map["burn_raster_prefix"]+".hdr";
-  if (this_bool_map["burn_raster_to_csv"])
-  {
-    cout << "I am going to burn a raster to all your csv files. The header name for this raster is: " << endl;
-    cout <<  burn_raster_header << endl;
-  }
-  ifstream burn_head_in;
-  burn_head_in.open(burn_raster_header.c_str());
-  if( not burn_head_in.fail() )
-  {
-    burn_raster_exists = true;
-    string burn_fname = DATA_DIR+this_string_map["burn_raster_prefix"];
-    cout << "The burn raster exists. It has a prefix of: " << endl;
-    cout <<  burn_fname << endl;
-    LSDRaster TempRaster(burn_fname,raster_ext);
-    BurnRaster = TempRaster;
-  }
-  else
-  {
-    cout << "The burn raster doesn't exist! I am turning off the  burn flag" << endl;
-    this_bool_map["burn_raster_to_csv"] = false;
-  }
-  //============================================================================
-
   // check the threshold pixels for chi
   if (this_int_map["threshold_pixels_for_chi"] > this_int_map["threshold_contributing_pixels"])
   {
@@ -461,6 +433,90 @@ int main (int nNumberofArgs,char *argv[])
     cout << "the parameters to file and am now exiting." << endl;
     exit(0);
   }
+
+
+  // Checking the burning stuffs
+
+  //Loading the lithologic raster - This need to be done now to adjust some burning parameters
+  LSDIndexRaster geolithomap;
+  if(this_bool_map["print_litho_info"])
+    {
+      //LOADING THE LITHO RASTER
+      // check to see if the raster for burning exists - lithologic/geologic map
+      
+      string geolithomap_header = DATA_DIR+this_string_map["litho_raster"]+".hdr";
+      cout << "Your lithologic map is: " << endl;
+      cout <<  geolithomap_header << endl;
+
+      ifstream burn_head_in;
+      burn_head_in.open(geolithomap_header.c_str());
+      string burn_fname = DATA_DIR+this_string_map["litho_raster"];
+      if( not burn_head_in.fail() )
+      {
+        cout << "The lithologic raster exists. It has a prefix of: " << endl;
+        cout <<  burn_fname << endl;
+        LSDIndexRaster TempRaster(burn_fname,raster_ext);
+
+        geolithomap = TempRaster.clip_to_smaller_raster(topography_raster);
+        geolithomap.NoData_from_another_raster(topography_raster);
+
+        cout << "I am now writing a lithologic raster clipped to the extent of your topographic raster to make the plotting easier" << endl;
+        string lithrastname = OUT_DIR+OUT_ID+"_LITHRAST";
+        geolithomap.write_raster(OUT_DIR+OUT_ID+"_LITHRAST",raster_ext);
+        cout << lithrastname << endl;
+
+      }
+      else
+      {
+        cout << "No lithology raster. Please check the prefix is correctly spelled and without the extention" << endl;
+        cout << "The file you tried to give me is: " << burn_fname << endl << "But it does not exists" << endl ;
+        exit(EXIT_FAILURE);
+      }
+    }
+
+
+
+  //============================================================================
+  // check to see if the raster for burning exists
+  LSDRaster BurnRaster;
+  bool burn_raster_exists = false;
+  string burn_raster_header;
+  // If you're burning lithologic info I am replacing your raster by the preprocessed lithologic raster
+  if(this_bool_map["print_litho_info"])
+  {
+    burn_raster_header = DATA_DIR+this_string_map["burn_raster_prefix"]+"_LITHRAST"+".hdr";
+  }
+  else
+  {
+    burn_raster_header = DATA_DIR+this_string_map["burn_raster_prefix"]+".hdr";
+  }
+  
+  if (this_bool_map["burn_raster_to_csv"])
+  {
+    cout << "I am going to burn a raster to all your csv files. The header name for this raster is: " << endl;
+    cout <<  burn_raster_header << endl;
+  }
+  ifstream burn_head_in2;
+  burn_head_in2.open(burn_raster_header.c_str());
+  if( not burn_head_in2.fail() )
+  {
+    burn_raster_exists = true;
+    string burn_fname = DATA_DIR+this_string_map["burn_raster_prefix"];
+    cout << "The burn raster exists. It has a prefix of: " << endl;
+    cout <<  burn_fname << endl;
+    LSDRaster TempRaster(burn_fname,raster_ext);
+    BurnRaster = TempRaster;
+  }
+  else
+  {
+    cout << "The burn raster doesn't exist! I am turning off the  burn flag" << endl;
+    this_bool_map["burn_raster_to_csv"] = false;
+  }
+  //============================================================================
+
+
+
+
 
   //============================================================================
   // Start gathering necessary rasters
@@ -886,37 +942,7 @@ int main (int nNumberofArgs,char *argv[])
     
     if(this_bool_map["print_litho_info"])
     {
-      //LOADING THE LITHO RASTER
-      // check to see if the raster for burning exists - lithologic/geologic map
-      LSDIndexRaster geolithomap;
-      string geolithomap_header = DATA_DIR+this_string_map["litho_raster"]+".hdr";
-      cout << "Your lithologic map is: " << endl;
-      cout <<  geolithomap_header << endl;
-
-      ifstream burn_head_in;
-      burn_head_in.open(geolithomap_header.c_str());
-      string burn_fname = DATA_DIR+this_string_map["litho_raster"];
-      if( not burn_head_in.fail() )
-      {
-        cout << "The lithologic raster exists. It has a prefix of: " << endl;
-        cout <<  burn_fname << endl;
-        LSDIndexRaster TempRaster(burn_fname,raster_ext);
-
-        geolithomap = TempRaster.clip_to_smaller_raster(topography_raster);
-        geolithomap.NoData_from_another_raster(topography_raster);
-
-        cout << "I am now writing a lithologic raster clipped to the extent of your topographic raster to make the plotting easier" << endl;
-        string lithrastname = OUT_DIR+OUT_ID+"_LITHRAST";
-        geolithomap.write_raster(OUT_DIR+OUT_ID+"_LITHRAST",raster_ext);
-        cout << lithrastname << endl;
-
-      }
-      else
-      {
-        cout << "No lithology raster. Please check the prefix is correctly spelled and without the extention" << endl;
-        cout << "The file you tried to give me is: " << burn_fname << endl << "But it does not exists" << endl ;
-        exit(EXIT_FAILURE);
-      }
+      
       // loading finished
       // now getting the basins informations
       map<int,map<int,int> > basin_litho_count = ChiTool_basins.get_basin_lithocount(FlowInfo, JunctionNetwork, geolithomap, BaseLevelJunctions);
