@@ -109,6 +109,13 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["print_interval"] = 10;
   bool_default_map["write_hillshade"] = true;
 
+  // control of m and n, and paramters for chi
+  float_default_map["A_0"] = 1;
+  float_default_map["m"] = 0.5;
+  float_default_map["n"] = 1;
+  int_default_map["uplift_mode"] = 0;
+  float_default_map["dt"] = 250;
+
   // Parameters for the initial surface
   bool_default_map["use_diamond_square_initial"] = true;
   float_default_map["diamond_square_relief"] = 16;
@@ -143,16 +150,8 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["cycle_U_factor"] = 2;
   
   // The diamond square spinup routine
-  // THis generates the nicest initial surfaces. 
+  // This generates the nicest initial surfaces. 
   bool_default_map["diamond_square_spinup"] = false;
-
-  // control of m and n, and paramters for chi
-  float_default_map["A_0"] = 1;
-  float_default_map["m"] = 0.5;
-  float_default_map["n"] = 1;
-  int_default_map["uplift_mode"] = 0;
-  float_default_map["dt"] = 250;
-  int_default_map["print_interval"] = 10;
 
   // control of snapping to steady state
   bool_default_map["snap_to_steady"] = false;
