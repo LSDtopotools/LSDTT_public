@@ -440,7 +440,7 @@ int main (int nNumberofArgs,char *argv[])
   //Loading the lithologic raster - This need to be done now to adjust some burning parameters
   LSDIndexRaster geolithomap;
   if(this_bool_map["print_litho_info"])
-    {
+  {
       //LOADING THE LITHO RASTER
       // check to see if the raster for burning exists - lithologic/geologic map
       
@@ -471,8 +471,8 @@ int main (int nNumberofArgs,char *argv[])
         cout << "No lithology raster. Please check the prefix is correctly spelled and without the extention" << endl;
         cout << "The file you tried to give me is: " << burn_fname << endl << "But it does not exists" << endl ;
         exit(EXIT_FAILURE);
-      }
     }
+  }
 
 
 
@@ -481,14 +481,17 @@ int main (int nNumberofArgs,char *argv[])
   LSDRaster BurnRaster;
   bool burn_raster_exists = false;
   string burn_raster_header;
+  string burn_prefix;
   // If you're burning lithologic info I am replacing your raster by the preprocessed lithologic raster
   if(this_bool_map["print_litho_info"])
   {
-    burn_raster_header = DATA_DIR+this_string_map["burn_raster_prefix"]+"_LITHRAST"+".hdr";
+    burn_raster_header = DATA_DIR+OUT_ID+"_LITHRAST"+".hdr";
+    burn_prefix = DATA_DIR+OUT_ID+"_LITHRAST";
   }
   else
   {
     burn_raster_header = DATA_DIR+this_string_map["burn_raster_prefix"]+".hdr";
+    burn_prefix = DATA_DIR+this_string_map["burn_raster_prefix"];
   }
   
   if (this_bool_map["burn_raster_to_csv"])
@@ -501,7 +504,7 @@ int main (int nNumberofArgs,char *argv[])
   if( not burn_head_in2.fail() )
   {
     burn_raster_exists = true;
-    string burn_fname = DATA_DIR+this_string_map["burn_raster_prefix"];
+    string burn_fname = burn_prefix;
     cout << "The burn raster exists. It has a prefix of: " << endl;
     cout <<  burn_fname << endl;
     LSDRaster TempRaster(burn_fname,raster_ext);
@@ -1464,7 +1467,8 @@ int main (int nNumberofArgs,char *argv[])
                                   this_string_map["burn_data_csv_column_header"]);
                                   
         //cout << "TEST I will print the burn raster" << endl;
-        //BurnRaster.write_raster(OUT_DIR+OUT_ID+"_theburnYOYO","bil");
+        // BurnRaster.write_raster(OUT_DIR+OUT_ID+"_theburnYOYO","bil");
+        // exit(EXIT_FAILURE);
         
       }
       else
