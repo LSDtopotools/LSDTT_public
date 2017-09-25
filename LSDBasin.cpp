@@ -1330,7 +1330,7 @@ LSDRaster LSDBasin::Merge_Basins(vector<LSDRaster> Basins)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Count the number of each unique lithology value contain in the basin from a topographic raster
 //
-// take a lithologic raster and a topographic raster in argument
+// take a lithologic raster and a flowinfo raster in argument
 // BG 17/09/17
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 map<int,int> LSDBasin::count_unique_values_from_litho_raster(LSDIndexRaster& litho, LSDFlowInfo& topo)
@@ -1340,10 +1340,14 @@ map<int,int> LSDBasin::count_unique_values_from_litho_raster(LSDIndexRaster& lit
   vector<int> values = litho.get_list_of_values();
   // Initialisation of the map
   map<int,int> lithost;
-  for(size_t i; i<values.size(); i++)
+  for(size_t i = 0; i<values.size(); i++)
   {
-    lithost[i] = 0;
+    lithost[values[i]] = 0;
+    //cout << values[i] << endl;
+
   }
+  
+  // Initializing the NoData as well
   // map initialized with all the values of lithology present on the map
 
   // Now counting through the nodes
@@ -1355,10 +1359,10 @@ map<int,int> LSDBasin::count_unique_values_from_litho_raster(LSDIndexRaster& lit
   // rather than calculating the easting/northing/row/col each times, maybe cropping the
   // litho raster to the extent of the toporaster to avoid this??
   // END OF OPTIMIZATION THOUGH
-  for(size_t j; j<BasinNodes.size();j++)
+  for(size_t j = 0; j<BasinNodes.size();j++)
   {
     // getting the easting_northing for this node
-    topo.get_x_and_y_from_current_node(j,teasting,tnorthing);
+    topo.get_x_and_y_from_current_node(BasinNodes[j],teasting,tnorthing);
     // getting the corresponding row-col for the litho raster
     //litho.get_row_and_col_of_a_point(teasting,tnorthing,trow,tcol);
     // implementing the counting
