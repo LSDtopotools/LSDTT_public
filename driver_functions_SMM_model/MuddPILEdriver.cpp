@@ -747,7 +747,7 @@ int main (int nNumberofArgs,char *argv[])
   //============================================================================
   if(this_bool_map["rudimentary_steady_forcing"])
   {
-    
+    cout << "I am going to run some very basic steady forcing." << endl;
     cout << "Let me check the boundary conditions!" << endl;
     mod.print_boundary_conditions_to_screen();
     if( not this_bool_map["hillslopes_on"] )
@@ -758,16 +758,12 @@ int main (int nNumberofArgs,char *argv[])
     cout << "Let me run some steady forcing for you. " << endl;
     cout << "Starting with a K of: " << this_float_map["rudimentary_steady_forcing_K"] << endl;
     current_end_time = current_end_time+this_float_map["rudimentary_steady_forcing_time"];
+    mod.set_timeStep( this_float_map["dt"] );
     mod.set_endTime(current_end_time);
     mod.set_K(this_float_map["rudimentary_steady_forcing_K"]);
     mod.set_uplift( this_int_map["uplift_mode"], this_float_map["rudimentary_steady_forcing_uplift"] );
     mod.run_components_combined();
-    
-    cout << "This is a test, I am changing the uplift." << endl;
-    current_end_time = current_end_time+this_float_map["rudimentary_steady_forcing_time"];
-    mod.set_endTime(current_end_time);
-    mod.set_baseline_uplift(this_float_map["rudimentary_steady_forcing_uplift"]*2);
-    mod.run_components_combined();
+
   }
 
 
