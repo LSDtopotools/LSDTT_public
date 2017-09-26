@@ -115,6 +115,8 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["n"] = 1;
   int_default_map["uplift_mode"] = 0;
   float_default_map["dt"] = 250;
+  float_default_map["D"] = 0.002;
+  float_default_map["S_c"] = 1.0;
 
   // Parameters for the initial surface
   bool_default_map["use_diamond_square_initial"] = true;
@@ -260,6 +262,8 @@ int main (int nNumberofArgs,char *argv[])
   mod.set_print_hillshade(this_bool_map["write_hillshade"]);
   mod.set_timeStep( this_float_map["dt"] );
   mod.set_print_interval(this_int_map["print_interval"]);
+  mod.set_D( this_float_map["D"]);
+  mod.set_S_c( this_float_map["S_c"] );
   
   // print parameters to screen
   mod.print_parameters();
