@@ -117,6 +117,7 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["dt"] = 250;
   float_default_map["D"] = 0.002;
   float_default_map["S_c"] = 1.0;
+  float_default_map["background_K"] = 0.0005;
 
   // Parameters for the initial surface
   bool_default_map["use_diamond_square_initial"] = true;
@@ -264,6 +265,7 @@ int main (int nNumberofArgs,char *argv[])
   mod.set_print_interval(this_int_map["print_interval"]);
   mod.set_D( this_float_map["D"]);
   mod.set_S_c( this_float_map["S_c"] );
+  mod.set_K( this_float_map["background_K"]);
   
   // print parameters to screen
   mod.print_parameters();
@@ -904,14 +906,24 @@ int main (int nNumberofArgs,char *argv[])
       mod.set_hillslope(true);
     }
     
-    // get the K value for the desired relief
-    float first_cycle_K;
-    cout << "I am calculating a K value that will get a relief of " << this_float_map["fixed_relief"] << " metres" << endl;
-    cout << " for an uplift rate of " << this_float_map["minimum_U_for_random"]*1000 << " mm/yr" << endl; 
-    first_cycle_K = mod.fluvial_calculate_K_for_steady_state_relief(this_float_map["minimum_U_for_random"],this_float_map["fixed_relief"]);
-    cout << "The K value is: " << first_cycle_K << endl;
-    mod.set_K(first_cycle_K);
-    mod.raise_and_fill_raster(); 
+
+
+
+    if(this_bool_map["set_fixed_relief"])
+    {
+      // get the K value for the desired relief
+      float first_cycle_K;
+      cout << "I am calculating a K value that will get a relief of " << this_float_map["fixed_relief"] << " metres" << endl;
+      cout << " for an uplift rate of " << this_float_map["minimum_U_for_random"]*1000 << " mm/yr" << endl; 
+      first_cycle_K = mod.fluvial_calculate_K_for_steady_state_relief(this_float_map["minimum_U_for_random"],this_float_map["fixed_relief"]);
+      cout << "The K value is: " << first_cycle_K << endl;
+      mod.set_K(first_cycle_K);
+    }
+    else
+    {
+      cout << "I am using the background K value." << endl;
+      mod.set_K(this_float_map["background_K"]);
+    }
 
     // now for the model run
     mod.set_print_interval(this_int_map["print_interval"]);
