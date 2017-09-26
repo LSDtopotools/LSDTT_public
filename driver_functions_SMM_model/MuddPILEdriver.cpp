@@ -1020,9 +1020,9 @@ int main (int nNumberofArgs,char *argv[])
         {
           case 0:
             {
-              cout << "K variation case 0." << endl;
+              cout << "K variation case 0. Min K: " << this_min_K<<  " and max K: " << this_max_K << endl;
               LSDRasterMaker KRaster1(this_int_map["NRows"],this_int_map["NCols"]);
-              KRaster1.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["spatially_varying_min_K"]);
+              KRaster1.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_min_K);
               KRaster1.random_square_blobs(this_int_map["min_blob_size"], this_int_map["max_blob_size"], 
                                     this_min_K, this_max_K,
                                     this_int_map["n_blobs"]);
@@ -1050,8 +1050,9 @@ int main (int nNumberofArgs,char *argv[])
               cout << "  0 == random squares" << endl;
               cout << "  1 == sine waves (I lied, at the moment this doesn't work--SMM Sept 2017)." << endl;
               cout << "You didn't choose a valid option so I am defaulting to random squares." << endl;
+              cout << "K variation: Min K: " << this_min_K<<  " and max K: " << this_max_K << endl;
               LSDRasterMaker KRaster1(this_int_map["NRows"],this_int_map["NCols"]);
-              KRaster1.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_float_map["spatially_varying_min_K"]);
+              KRaster1.resize_and_reset(this_int_map["NRows"],this_int_map["NCols"],this_float_map["DataResolution"],this_min_K);
               KRaster1.random_square_blobs(this_int_map["min_blob_size"], this_int_map["max_blob_size"], 
                                     this_min_K, this_max_K,
                                     this_int_map["n_blobs"]);
