@@ -758,6 +758,11 @@ int main (int nNumberofArgs,char *argv[])
       cout << "I'm turning hillslope diffusion off." << endl;
       mod.set_hillslope(false);
     }
+    else
+    {
+      cout << "This forcing includes hillslope diffusion." << endl;
+      mod.set_hillslope(true);
+    }
     cout << "Let me run some steady forcing for you. " << endl;
     cout << "Starting with a K of: " << this_float_map["rudimentary_steady_forcing_K"] << endl;
     current_end_time = current_end_time+this_float_map["rudimentary_steady_forcing_time"];
@@ -786,7 +791,12 @@ int main (int nNumberofArgs,char *argv[])
       cout << "I'm turning hillslope diffusion off." << endl;
       mod.set_hillslope(false);
     }
-
+    else
+    {
+      cout << "This forcing includes hillslope diffusion." << endl;
+      mod.set_hillslope(true);
+    }
+    
     // get the K value for the desired relief
     float first_cycle_K;
     if(this_bool_map["set_fixed_relief"])
@@ -888,7 +898,12 @@ int main (int nNumberofArgs,char *argv[])
       cout << "I'm turning hillslope diffusion off." << endl;
       mod.set_hillslope(false);
     }
-
+    else
+    {
+      cout << "This forcing includes hillslope diffusion." << endl;
+      mod.set_hillslope(true);
+    }
+    
     // get the K value for the desired relief
     float first_cycle_K;
     cout << "I am calculating a K value that will get a relief of " << this_float_map["fixed_relief"] << " metres" << endl;
@@ -1164,7 +1179,12 @@ int main (int nNumberofArgs,char *argv[])
       cout << "I'm turning hillslope diffusion off." << endl;
       mod.set_hillslope(false);
     }
-
+    else
+    {
+      cout << "This forcing includes hillslope diffusion." << endl;
+      mod.set_hillslope(true);
+    }
+    
     bool use_adaptive_timestep =   this_bool_map["use_adaptive_timestep"];
     
     if (use_adaptive_timestep)
@@ -1219,13 +1239,5 @@ int main (int nNumberofArgs,char *argv[])
     mod.set_endTime(current_end_time);
     mod.run_components_combined(this_U_raster, this_K_raster,use_adaptive_timestep);
   }
-  
-  
-  
-  
-  
-  
-  
-  
   
 }
