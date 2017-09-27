@@ -382,8 +382,9 @@ int main (int nNumberofArgs,char *argv[])
     {
       cout << "I am writing dinf drainage area to raster." << endl;
       string DA_raster_name = OUT_DIR+OUT_ID+"_dinf_area";
-      LSDRaster DA1 = filled_topography.D_inf_ConvertFlowToArea();
-      DA1.write_raster(DA_raster_name,raster_ext);
+      LSDRaster DA1 = filled_topography.D_inf();
+      LSDRaster DA2 = DA1.D_inf_ConvertFlowToArea();
+      DA2.write_raster(DA_raster_name,raster_ext);
     }
   
     if (this_bool_map["print_d8_drainage_area_raster"])
