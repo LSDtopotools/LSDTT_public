@@ -317,6 +317,15 @@ void LSDTerrace::get_terraces_along_main_stem(int junction_number, LSDJunctionNe
 }
 
 //----------------------------------------------------------------------------------------
+// This function compiles the data along each terrace into a single bin for each point
+// along the main stem. It returns a vector of vectors with
+//----------------------------------------------------------------------------------------
+// vector< vector<float> > LSDTerrace::Collate_TerraceData_Along_MainStem()
+// {
+//
+// }
+
+//----------------------------------------------------------------------------------------
 // FUNCTIONS TO GENERATE RASTERS
 //----------------------------------------------------------------------------------------
 
@@ -533,5 +542,16 @@ void LSDTerrace::print_TerraceAreas_to_file(string filename, LSDFlowInfo& FlowIn
 	}
 	output_file.close();
 }
+
+////----------------------------------------------------------------------------------------
+//// Write a csv which you can use to plot the long profile of the terraces.
+//// FJC 28/09/17
+////----------------------------------------------------------------------------------------
+// void LSDTerrace::print_terrace_long_profiles_to_csv(string filename, LSDFlowInfo& FlowInfo)
+// {
+// 	ofstream output_file;
+// 	output_file.open(filename.c_str());
+// 	output_file << "TerraceID,Elevation,"
+// }
 
 #endif
