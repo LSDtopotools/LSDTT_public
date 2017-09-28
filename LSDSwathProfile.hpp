@@ -120,6 +120,13 @@ class LSDSwath
   ///@date 15/02/17
   vector <vector <float> > get_RasterValues_along_swath(LSDRaster& RasterTemplate, int NormaliseToBaseline);
 
+  ///@details This function takes in a connected components raster and returns an array
+  ///@param ConnectedComponents connected components raster
+  ///@return array with baseline components
+  ///@author FJC
+  ///@date 28/09/17
+  Array2D<float> get_BaselineDist_ConnectedComponents(LSDIndexRaster& ConnectedComponents);
+
   // write profiles to file
   void write_transverse_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix, int NormaliseToBaseline);
   void write_longitudinal_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix, int NormaliseToBaseline);
