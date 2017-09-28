@@ -33,13 +33,15 @@ int main (int nNumberofArgs,char *argv[])
   {
     cout << "=========================================================" << endl;
     cout << "|| Welcome to the terrace swath tool!  	              ||" << endl;
-    cout << "|| This program takes in a baseline csv file and gets  ||" << endl;
-		cout << "|| a swath profile along a channel between the points. ||" << endl;
+    cout << "|| This program takes in a baseline shapefile and gets ||" << endl;
+		cout << "|| a swath profile along a channel from it.            ||" << endl;
 		cout << "|| It then extracts the terraces along the channel			||" << endl;
 		cout << "|| using slope and relief thresholds.									||" << endl;
     cout << "|| This program was developed by                       ||" << endl;
     cout << "|| Fiona J. Clubb												              ||" << endl;
-    cout << "||  at the University of Edinburgh                     ||" << endl;
+    cout << "|| at the University of Edinburgh.                     ||" << endl;
+		cout << "|| Was then further developed at the University of     ||" << endl;
+		cout << "|| Minnesota, AMERICAN STYLE.         									||" << endl;
     cout << "=========================================================" << endl;
     cout << "This program requires two inputs: " << endl;
     cout << "* First the path to the parameter file." << endl;
@@ -47,9 +49,10 @@ int main (int nNumberofArgs,char *argv[])
     cout << "---------------------------------------------------------" << endl;
     cout << "Then the command line argument will be, for example: " << endl;
     cout << "In linux:" << endl;
-    cout << "./get_terraces.out /LSDTopoTools/Topographic_projects/Test_data/ LSDTT_terraces.param" << endl;
+    cout << "./get_terraces_from_shapefile.out /LSDTopoTools/Topographic_projects/Test_data/ LSDTT_terraces.param" << endl;
 		cout << "For more information please see the documentation: " << endl;
 		cout << "http://lsdtopotools.github.io/LSDTT_book/#_terraces" << endl;
+		cout << "Although the documentation is not up to date for this version, SORRY." << endl;
     cout << "=========================================================" << endl;
     exit(EXIT_SUCCESS);
   }
