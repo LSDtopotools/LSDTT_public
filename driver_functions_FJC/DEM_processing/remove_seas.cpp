@@ -33,6 +33,17 @@ int main (int nNumberofArgs,char *argv[])
 
 	//load the DEM
   cout << "\t Loading the DEM" << endl;
+
+  string fname = path_name+DEM_ID;
+  ifstream file_info_in;
+  file_info_in.open(fname.c_str());
+  if( file_info_in.fail() )
+  {
+    cout << "\nFATAL ERROR: the header file \"" << fname
+         << "\" doesn't exist" << endl;
+    exit(EXIT_FAILURE);
+  }
+
 	LSDRaster DEM(path_name+DEM_ID, DEM_extension);
 
   // remove the seas
