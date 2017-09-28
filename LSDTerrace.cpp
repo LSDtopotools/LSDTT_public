@@ -126,10 +126,10 @@ void LSDTerrace::create(LSDRaster& ChannelRelief, LSDRaster& Slope, LSDJunctionN
       }
     }
   }
-	LSDIndexRaster FloodplainRaster(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,BinaryArray,GeoReferencingStrings);
+	LSDIndexRaster TerraceRaster(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,BinaryArray,GeoReferencingStrings);
 
-	// run the connected components algorithm on the floodplain array
-	LSDIndexRaster ConnectedComponents = FloodplainRaster.ConnectedComponents();
+	// run the connected components algorithm on the terrace array
+	LSDIndexRaster ConnectedComponents = TerraceRaster.ConnectedComponents();
 	if (min_patch_size > 0)
 	{
 		LSDIndexRaster ConnectedComponents_final = ConnectedComponents.RemoveSmallPatches(min_patch_size);
