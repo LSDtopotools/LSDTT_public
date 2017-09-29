@@ -185,6 +185,9 @@ int main (int nNumberofArgs,char *argv[])
 	string swath_ext = "_swath_raster";
 	SwathRaster.write_raster((DATA_DIR+DEM_ID+swath_ext), DEM_extension);
 
+	// get the elevation raster from the swath
+	LSDRaster ElevationRaster = TestSwath.get_raster_from_swath_profile(RasterTemplate, 0);
+
   // get the slope
 	cout << "\t Getting the slope" << endl;
   vector<LSDRaster> surface_fitting;
@@ -216,23 +219,27 @@ int main (int nNumberofArgs,char *argv[])
 	string CC_ext = "_terrace_IDs";
 	ConnectedComponents.write_raster((DATA_DIR+DEM_ID+CC_ext), DEM_extension);
 
-	cout << "\t Testing connected components" << endl;
-	vector <vector <float> > CC_vector = TestSwath.get_connected_components_along_swath(ConnectedComponents, RasterTemplate, this_int_map["NormaliseToBaseline"]);
-
-	// push back results to file for plotting
-	ofstream output_file_CC;
-	string output_fname = "_terrace_swath_plots.txt";
-	output_file_CC.open((DATA_DIR+DEM_ID+output_fname).c_str());
-	for (int i = 0; i < int(CC_vector[0].size()); ++i)
-	{
-		output_file_CC << CC_vector[0][i] << " " << CC_vector[1][i] << " " << CC_vector[2][i] << endl;
-	}
-	output_file_CC.close();
+	// cout << "\t Testing connected components" << endl;
+	// vector <vector <float> > CC_vector = TestSwath.get_connected_components_along_swath(ConnectedComponents, RasterTemplate, this_int_map["NormaliseToBaseline"]);
+	//
+	// // push back results to file for plotting
+	// ofstream output_file_CC;
+	// string output_fname = "_terrace_swath_plots.txt";
+	// output_file_CC.open((DATA_DIR+DEM_ID+output_fname).c_str());
+	// for (int i = 0; i < int(CC_vector[0].size()); ++i)
+	// {
+	// 	output_file_CC << CC_vector[0][i] << " " << CC_vector[1][i] << " " << CC_vector[2][i] << endl;
+	// }
+	// output_file_CC.close();
 
 	// write raster of terrace elevations
 	LSDRaster ChannelRelief = Terraces.get_Terraces_RasterValues(SwathRaster);
 	string relief_ext = "_terrace_relief_final";
 	ChannelRelief.write_raster((DATA_DIR+DEM_ID+relief_ext), DEM_extension);
+
+	// print the terrace information to a csv
+	string csv_fname = "_terrace_info.csv";
+	Terraces.print_TerraceInfo_to_csv(DATA_DIR+DEM_ID+csv_fname, ElevationRaster, FlowInfo, TestSwath);
 
 	// Done, check how long it took
 	clock_t end = clock();
