@@ -137,6 +137,12 @@ class LSDSwath
   Array2D<float> get_DistanceAlongBaselineArray() const { return DistanceAlongBaselineArray; }
   Array2D<float> get_BaselineValueArray() const { return BaselineValueArray; }
 
+  float get_XMax() const { return XMax; }
+  float get_YMax() const { return YMax; }
+  float get_XMin() const { return XMin; }
+  float get_YMin() const { return YMin; }
+  float get_ProfileHalfWidth() const { return ProfileHalfWidth; }
+
 	protected:
 
   // Swath template
