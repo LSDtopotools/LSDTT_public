@@ -239,7 +239,9 @@ int main (int nNumberofArgs,char *argv[])
 
 	// print the terrace information to a csv
 	string csv_fname = "_terrace_info.csv";
-	Terraces.print_TerraceInfo_to_csv(DATA_DIR+DEM_ID+csv_fname, ElevationRaster, FlowInfo, TestSwath);
+	string full_csv_name = DATA_DIR+DEM_ID+csv_fname;
+	cout << "The full csv filename is: " << full_csv_name << endl;
+	Terraces.print_TerraceInfo_to_csv(full_csv_name, ElevationRaster, FlowInfo, TestSwath);
 
 	// Done, check how long it took
 	clock_t end = clock();
