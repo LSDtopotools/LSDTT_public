@@ -1253,7 +1253,7 @@ Array2D<float> LSDSwath::get_BaselineDist_ConnectedComponents(LSDIndexRaster& Co
 
 }
 //------------------------------------------------------------------------------
-// This function takes in a  raster and returns the mean, min and max values of
+// This function takes in a raster and returns the mean, min and max values of
 // the raster at each point along the swath
 // vector of vectors has the format:
 // 0 = distance along swath

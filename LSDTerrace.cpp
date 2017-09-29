@@ -65,6 +65,7 @@
 #include "LSDIndexChannel.hpp"
 #include "LSDJunctionNetwork.hpp"
 #include "LSDStatsTools.hpp"
+#include "LSDSwathProfile.hpp"
 #include "LSDFloodplain.hpp"
 #include "LSDTerrace.hpp"
 using namespace std;
@@ -542,16 +543,36 @@ void LSDTerrace::print_TerraceAreas_to_file(string filename, LSDFlowInfo& FlowIn
 	}
 	output_file.close();
 }
-
 ////----------------------------------------------------------------------------------------
-//// Write a csv which you can use to plot the long profile of the terraces.
+//// Write a csv file giving elevation and distance information for each pixel in each terrace.
 //// FJC 28/09/17
 ////----------------------------------------------------------------------------------------
-// void LSDTerrace::print_terrace_long_profiles_to_csv(string filename, LSDFlowInfo& FlowInfo)
-// {
-// 	ofstream output_file;
-// 	output_file.open(filename.c_str());
-// 	output_file << "TerraceID,Elevation,"
-// }
+void LSDTerrace::print_TerraceInfo_to_csv(string csv_filename, LSDRaster& ElevationRaster, LSDFlowInfo& FlowInfo, LSDSwath& Swath)
+{
+	ofstream output_file;
+	output_file.open(csv_filename.c_str());
+	output_file << "TerraceID,NodeNumber,Elevation,DistAlongBaseline,ChannelRelief" << endl;
+
+	LSDIndexRaster ConnectedComponents(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,ConnectedComponents_Array,GeoReferencingStrings);
+
+	// get the baseline distance array
+	Array2D<float> BaselineDistance = Swath.get_BaselineDist_ConnectedComponents(ConnectedComponents);
+	Array2D<float> ElevationArray = ElevationRaster.get_RasterData();
+
+	// loop through all the rows and cols and print some information
+	for (int row=0; row < NRows; row++)
+	{
+		for (int col = 0; col < NCols; col++)
+		{
+			if (ConnectedComponents_Array[row][col] != NoDataValue)
+			{
+				int this_node = FlowInfo.retrieve_node_from_row_and_column(row, col);
+				float this_elev = ElevationRaster.get_data_element(row,col);
+				output_file << ConnectedComponents_Array[row][col] << "," << this_node << "," << ElevationArray[row][col] << "," << BaselineDistance[row][col] << "," << ChannelRelief_array[row][col] << endl;;
+			}
+		}
+	}
+	output_file.close();
+}
 
 #endif
