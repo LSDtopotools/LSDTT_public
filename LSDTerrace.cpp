@@ -599,6 +599,8 @@ void LSDTerrace::print_TerraceInfo_to_csv(string csv_filename, LSDRaster& Elevat
     {
 			if (ConnectedComponents_Array[row][col] != NoDataValue)
 			{
+				cout << "This row: " << row << " this col: " << col << endl;
+				cout << "this_cc: " << ConnectedComponents_Array[row][col] << endl;
 				//int this_node = FlowInfo.retrieve_node_from_row_and_column(row, col);
 				float this_elev = ElevationRaster.get_data_element(row,col);
 				cout << " this_elev: " << this_elev << endl << " this_dist: " << BaselineDistance[row][col] << " this_relief: " << ChannelRelief_array[row][col] << endl;
