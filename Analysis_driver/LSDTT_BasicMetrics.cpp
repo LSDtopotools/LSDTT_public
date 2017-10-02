@@ -59,6 +59,7 @@
 #include "../LSDParameterParser.hpp"
 #include "../LSDSpatialCSVReader.hpp"
 #include "../LSDShapeTools.hpp"
+#include "../LSDChiTools.hpp"
 
 int main (int nNumberofArgs,char *argv[])
 {
@@ -139,6 +140,19 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_channels_to_csv"] = false;
   bool_default_map["print_junction_index_raster"] = false;
   bool_default_map["print_junctions_to_csv"] = false;
+  
+  // Basin-based channel extraction
+  bool_default_map["find_basins"] = false;
+  int_default_map["minimum_basin_size_pixels"] = 5000;
+  int_default_map["maximum_basin_size_pixels"] = 500000;
+  bool_default_map["only_take_largest_basin"] = false;
+  string_default_map["BaselevelJunctions_file"] = "NULL";
+  bool_default_map["extend_channel_to_node_before_receiver_junction"] = true;
+  bool_default_map["print_basin_raster"] = false;
+  
+  // Some chi coordinate settings
+  float_default_map["A_0"] = 1.0;
+  float_default_map["m_over_n"] = 0.5;
   
   // This converts all csv files to geojson (for easier loading in a GIS)
   bool_default_map["convert_csv_to_geojson"] = false;  
@@ -341,10 +355,10 @@ int main (int nNumberofArgs,char *argv[])
         || this_bool_map["print_stream_order_raster"]
         || this_bool_map["print_channels_to_csv"]
         || this_bool_map["print_junction_index_raster"]
-        || this_bool_map["print_junctions_to_csv"])
+        || this_bool_map["print_junctions_to_csv"]
+        || this_bool_map["find_basins"])
   {
-        
-        
+
     //==========================================================================
     // Fill the raster
     //==========================================================================
@@ -387,12 +401,18 @@ int main (int nNumberofArgs,char *argv[])
       DA2.write_raster(DA_raster_name,raster_ext);
     }
   
-    if (this_bool_map["print_d8_drainage_area_raster"])
+    LSDRaster DA_d8;
+    if (this_bool_map["print_d8_drainage_area_raster"] ||
+        this_bool_map["find_basins"])
     {
-      cout << "I am writing d8 drainage area to raster." << endl;
-      string DA_raster_name = OUT_DIR+OUT_ID+"_d8_area";
-      LSDRaster DA2 = FlowInfo.write_DrainageArea_to_LSDRaster();
-      DA2.write_raster(DA_raster_name,raster_ext);
+      LSDRaster DA_d8 = FlowInfo.write_DrainageArea_to_LSDRaster();
+      
+      if (this_bool_map["print_d8_drainage_area_raster"])
+      {
+        cout << "I am writing d8 drainage area to raster." << endl;
+        string DA_raster_name = OUT_DIR+OUT_ID+"_d8_area";
+        DA_d8.write_raster(DA_raster_name,raster_ext);
+      }
     }
     
     if (this_bool_map["print_QuinnMD_drainage_area_raster"])
@@ -419,12 +439,18 @@ int main (int nNumberofArgs,char *argv[])
     }
 
     // Get the distance from outet raster if you want it.
-    if(this_bool_map["print_distance_from_outlet"])
+     LSDRaster FD;
+    if(this_bool_map["print_distance_from_outlet"] ||
+       this_bool_map["find_basins"])
     {
-      cout << "I am writing a distant from outlet raster." << endl;
-      string FD_raster_name = OUT_DIR+OUT_ID+"_FDIST";
-      LSDRaster FD = FlowInfo.distance_from_outlet();
-      FD.write_raster(FD_raster_name,raster_ext);
+      FD = FlowInfo.distance_from_outlet();
+      
+      if(this_bool_map["print_distance_from_outlet"])
+      {
+        cout << "I am writing a distant from outlet raster." << endl;
+        string FD_raster_name = OUT_DIR+OUT_ID+"_FDIST";
+        FD.write_raster(FD_raster_name,raster_ext);
+      }
     }
 
     // This is the logic for a simple stream network
@@ -509,6 +535,182 @@ int main (int nNumberofArgs,char *argv[])
         }
       }   // End print sources logic
       
+      // Now we check if we are going to deal with basins
+      if(this_bool_map["find_basins"])
+      {
+        cout << "I am now going to extract some basins for you." << endl;
+        vector<int> BaseLevelJunctions;
+        vector<int> BaseLevelJunctions_Initial;
+        
+        // deal with the baselevel junctions file
+        string BaselevelJunctions_file;
+        string test_BaselevelJunctions_file = LSDPP.get_BaselevelJunctions_file();
+        if(this_string_map["BaselevelJunctions_file"] == "NULL" && test_BaselevelJunctions_file == "NULL")
+        {
+          cout << "No baselevel junctions file found. I am going to use algorithms to extract basins." << endl;
+          BaselevelJunctions_file = "NULL";
+        }
+        else if(this_string_map["BaselevelJunctions_file"] == "NULL" && test_BaselevelJunctions_file != "NULL")
+        {
+          BaselevelJunctions_file = test_BaselevelJunctions_file;
+        }
+        else if(this_string_map["BaselevelJunctions_file"] != "NULL" && test_BaselevelJunctions_file == "NULL")
+        {
+          BaselevelJunctions_file = this_string_map["BaselevelJunctions_file"];
+        }
+        else
+        {
+          cout << "WARNING You have defined the baselevel junction file in two ways. " << endl;
+          cout << "This is because the authors of LSDTopoTools created a dumb inheritance problem and can't fix it or it will break legacy code." << endl;
+          cout << "I will use the newer version." << endl;
+          BaselevelJunctions_file = this_string_map["BaselevelJunctions_file"];
+          cout << "The junctions file I am using is: " <<  BaselevelJunctions_file << endl;
+        }
+        
+        // Now we try to get the basins using 
+        //Check to see if a list of junctions for extraction exists
+        if (BaselevelJunctions_file == "NULL" || BaselevelJunctions_file == "Null" || BaselevelJunctions_file == "null" || BaselevelJunctions_file.empty() == true)
+        {
+          cout << "To reiterate, there is no base level junction file. I am going to select basins for you using an algorithm. " << endl;
+          cout << "I am going to look for basins in a pixel window that are not influended by nodata." << endl;
+          cout << "I am also going to remove any nested basins." << endl;
+          BaseLevelJunctions = JunctionNetwork.Prune_Junctions_By_Contributing_Pixel_Window_Remove_Nested_And_Nodata(FlowInfo, filled_topography, FlowAcc,
+                                                    this_int_map["minimum_basin_size_pixels"],this_int_map["maximum_basin_size_pixels"]);
+        }
+        else
+        {
+          cout << "I am attempting to read base level junctions from a base level junction list." << endl;
+          cout << "If this is not a simple text file that only contains itegers there will be problems!" << endl;
+      
+          //specify junctions to work on from a list file
+          //string JunctionsFile = DATA_DIR+BaselevelJunctions_file;
+          cout << "The junctions file is: " << BaselevelJunctions_file << endl;
+      
+          vector<int> JunctionsList;
+          ifstream infile(BaselevelJunctions_file.c_str());
+          if (infile)
+          {
+            cout << "Junctions File " << BaselevelJunctions_file << " exists" << endl;;
+            int n;
+            while (infile >> n) BaseLevelJunctions_Initial.push_back(n);
+          }
+          else
+          {
+            cout << "Fatal Error: Junctions File " << BaselevelJunctions_file << " does not exist" << endl;
+            exit(EXIT_FAILURE);
+          }
+      
+          // Now make sure none of the basins drain to the edge
+          cout << "I am pruning junctions that are influenced by the edge of the DEM!" << endl;
+          cout << "This is necessary because basins draining to the edge will have incorrect chi values." << endl;
+          BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions_Initial, FlowInfo, filled_topography);
+        }
+        
+        // Now check for larges basin, if that is what you want.
+        if (this_bool_map["only_take_largest_basin"])
+        {
+          cout << "I am only going to take the largest basin." << endl;
+          BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Largest(BaseLevelJunctions, FlowInfo, FlowAcc);
+        }
+      
+        // Correct number of base level junctions
+        int N_BaseLevelJuncs = BaseLevelJunctions.size();
+        cout << "The number of basins I will analyse is: " << N_BaseLevelJuncs << endl;
+        if (N_BaseLevelJuncs == 0)
+        {
+          cout << "I am stopping here since I don't have any basins to analyse." << endl;
+          exit(EXIT_FAILURE);
+        }
+
+        // Now we get the channel segments. This information is used for plotting
+        vector<int> source_nodes;
+        vector<int> outlet_nodes;
+        vector<int> baselevel_node_of_each_basin;
+        int n_nodes_to_visit = 5;
+        if (this_bool_map["extend_channel_to_node_before_receiver_junction"])
+        {
+          cout << endl << endl << "=====================================================" << endl;
+          cout << "I am now getting the channels by basin." << endl;
+          cout << "  These channels extend below the junction to the channel that stops" << endl;
+          cout << "  just before the reciever junction. This option is used to remain" << endl;
+          cout << "  consitent with basin ordering, since a 2nd order basin will begin" << endl;
+          cout << "  at the channel one node upslope of the most upstream 3rd order junction." << endl;
+          cout << "  If you simply want the channel starting from the selcted junction, " << endl;
+          cout << "  set the option:" << endl;
+          cout << "    extend_channel_to_node_before_receiver_junction" << endl;
+          cout << "  to false." << endl;
+          cout << "=====================================================" << endl << endl;
+    
+          JunctionNetwork.get_overlapping_channels_to_downstream_outlets(FlowInfo, BaseLevelJunctions, FD,
+                                        source_nodes,outlet_nodes,baselevel_node_of_each_basin,n_nodes_to_visit);
+    
+        }
+        else
+        {
+          cout << endl << endl << "=====================================================" << endl;
+          cout << "I am now getting the channels by basin." << endl;
+          cout << "  These channels will start from the baselevel junctions selected. " << endl;
+          cout << "  If you want them to extend to below the junction to the channel that stops" << endl;
+          cout << "  just before the reciever junction, then set the option:" << endl;
+          cout << "    extend_channel_to_node_before_receiver_junction" << endl;
+          cout << "  to true." << endl;
+          cout << "=====================================================" << endl << endl;
+    
+          JunctionNetwork.get_overlapping_channels(FlowInfo, BaseLevelJunctions, FD,
+                                        source_nodes,outlet_nodes,baselevel_node_of_each_basin,n_nodes_to_visit);
+        }
+        
+
+        // Get the chi coordinate if needed
+        LSDRaster chi_coordinate;
+        if ( this_bool_map["print_basin_raster"] ||
+             this_bool_map["print_chi_data_maps"])
+        {
+          chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(this_float_map["m_over_n"],this_float_map["A_0"],this_int_map["threshold_contributing_pixels"]);
+        
+        }
+        
+        //======================================================================
+        // Print a basin raster if you want it.
+        if(this_bool_map["print_basin_raster"])
+        {
+          cout << "I am going to print the basins for you. " << endl;
+          LSDChiTools ChiTool_basins(FlowInfo);
+          ChiTool_basins.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
+                                  filled_topography, FD,
+                                  DA_d8, chi_coordinate);
+          string basin_raster_prefix = OUT_DIR+OUT_ID;
+          ChiTool_basins.print_basins(FlowInfo, JunctionNetwork, BaseLevelJunctions, basin_raster_prefix);
+        }
+
+
+        //======================================================================
+        // This is for visualisation of the channel data in the basin
+        //======================================================================
+        if(this_bool_map["print_chi_data_maps"])
+        {
+
+          cout << "I am going to print some simple chi data maps for visualisation." << endl;
+          cout << "These data maps are also useful for visualising channel networks and making channel profiles." << endl;
+          LSDChiTools ChiTool_chi_checker(FlowInfo);
+          ChiTool_chi_checker.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
+                                  filled_topography, FD,
+                                  DA_d8, chi_coordinate);
+      
+      
+          string chi_data_maps_string = OUT_DIR+OUT_ID+"_chi_data_map.csv";
+          ChiTool_chi_checker.print_chi_data_map_to_csv(FlowInfo, chi_data_maps_string);
+      
+          if ( this_bool_map["convert_csv_to_geojson"])
+          {
+            string gjson_name = OUT_DIR+OUT_ID+"_chi_data_map.geojson";
+            LSDSpatialCSVReader thiscsv(chi_data_maps_string);
+            thiscsv.print_data_to_geojson(gjson_name);
+          }
+        }
+        //======================================================================
+
+      }   // end logic for basin finding
     }     // end logic for tasks related to channel network extraction
   }       // end logic for tasks requiring flow info and filling
 }

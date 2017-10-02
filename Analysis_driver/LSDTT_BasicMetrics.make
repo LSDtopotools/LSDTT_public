@@ -7,6 +7,11 @@ LDFLAGS= -Wall
 SOURCES=LSDTT_BasicMetrics.cpp \
          ../LSDIndexRaster.cpp \
          ../LSDRaster.cpp \
+         ../LSDChiTools.cpp \
+         ../LSDChiNetwork.cpp \
+         ../LSDBasin.cpp \
+         ../LSDParticle.cpp \
+         ../LSDCRNParameters.cpp \
          ../LSDFlowInfo.cpp \
          ../LSDIndexChannel.cpp \
          ../LSDStatsTools.cpp \
