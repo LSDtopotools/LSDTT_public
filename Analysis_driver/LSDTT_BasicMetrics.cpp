@@ -59,6 +59,7 @@
 #include "../LSDParameterParser.hpp"
 #include "../LSDSpatialCSVReader.hpp"
 #include "../LSDShapeTools.hpp"
+#include "../LSDRasterSpectral.hpp"
 #include "../LSDChiTools.hpp"
 
 int main (int nNumberofArgs,char *argv[])
@@ -153,7 +154,11 @@ int main (int nNumberofArgs,char *argv[])
   // Some chi coordinate settings
   float_default_map["A_0"] = 1.0;
   float_default_map["m_over_n"] = 0.5;
-  
+
+  // The wiener filter
+  bool_default_map["print_wiener_filtered_raster"] = false;
+
+
   // This converts all csv files to geojson (for easier loading in a GIS)
   bool_default_map["convert_csv_to_geojson"] = false;  
 
@@ -322,6 +327,24 @@ int main (int nNumberofArgs,char *argv[])
     surface_fitting[7].write_raster(this_raster_name,raster_ext);
   }
   
+
+  //============================================================================
+  // Print the wiener filtered raster if that is what you want
+  //============================================================================
+  if (this_bool_map["print_wiener_filtered_raster"])
+  {
+  
+    cout << "I am running a filter to print to raster." << endl;
+    cout << "This uses spectral analysis and is memory intensive. If you are working on a system with limited memory, " << endl;
+    cout << "you may get a segmentation fault here!" << endl;
+    LSDRasterSpectral SpectralRaster(topography_raster);
+    LSDRaster topo_test_wiener = SpectralRaster.fftw2D_wiener();
+    cout << "Finished getting the filtered raster. " << endl;
+
+    string wiener_name = OUT_DIR+OUT_ID+"_Wfilt";
+    topo_test_wiener.write_raster(wiener_name,raster_ext);
+  }
+
 
 
   //============================================================================
