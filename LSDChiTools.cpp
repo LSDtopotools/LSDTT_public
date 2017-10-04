@@ -1993,7 +1993,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
       // If the M_chi has changed I increment the knickpoints, I also check if the two point are on the same channel to avoid stange unrelated knickpoints
       if (this_M_chi != last_M_chi && source_keys_map[this_node] == source_keys_map[last_node])
       {
-        cout << "THIS LAST SAVED" << endl << endl << endl;
+        //cout << "THIS LAST SAVED" << endl << endl << endl;
         if(this_M_chi == 0)
         {
           ratio_mchi = -9999; // correspond to +infinite

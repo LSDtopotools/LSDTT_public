@@ -933,7 +933,7 @@ int main (int nNumberofArgs,char *argv[])
 
   //============================================================================
   // Print a basin raster if you want it.
-  if(this_bool_map["print_basin_raster"] || this_bool_map["print_litho_info"])
+  if(this_bool_map["print_basin_raster"] || this_bool_map["print_litho_info"] || this_bool_map["ksn_knickpoint_analysis"] )
   {
     cout << "I am going to print the basins for you. " << endl;
     LSDChiTools ChiTool_basins(FlowInfo);
