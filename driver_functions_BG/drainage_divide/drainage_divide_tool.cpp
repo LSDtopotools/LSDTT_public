@@ -299,10 +299,10 @@ int main (int nNumberofArgs,char *argv[])
 
     int n_valid_points =  int(basin_junctions.size());
     cout << "I am trying to spawn basins, found " << n_valid_points << " valid points." << endl;
-    
+    vector<LSDBasin> basin_list;
     for(int samp = 0; samp<n_valid_points; samp++)
     {
-      vector<LSDBasin> basin_list;
+      
       cout << "Getting basin" << endl;
       LSDBasin thisBasin(basin_junctions[samp],FlowInfo, JunctionNetwork);
       basin_list.push_back(thisBasin);
@@ -321,11 +321,27 @@ int main (int nNumberofArgs,char *argv[])
       }
     }
 
+    int n_basins = basin_list.size();
     // checking if the basins are adjacent
-    if(n_valid_points>1)
+    if(n_basins>1)
     {
       cout << "I am now checking if your basins are adjacents" << endl;
-      
+      //bool all_adjacent = true;
+      LSDBasin out_basin = basin_list[0];
+      for(size_t samp = 1; samp<basin_list.size(); samp++)
+      {
+        if(out_basin.is_adjacent(basin_list[samp], FlowInfo) == false)
+        {
+          cout << "check your coordinates, your basins are not adjacents"<< endl;
+          exit(EXIT_FAILURE);
+        }
+      }
+      cout << "Your Basins are adjacent, let me merge their perimeter and remove the common part" << endl;
+
+    }
+    else
+    {
+      LSDBasin out_basin = basin_list[0];
     }
 
 

@@ -534,6 +534,15 @@ class LSDBasin
   /// @date 18/03/2015
 LSDRaster TrimPaddedRasterToBasin(int padding_pixels, LSDFlowInfo& FlowInfo,
                                             LSDRaster& Raster_Data);
+  
+  /// @brief This function check if two basin are adjacent
+  /// @detail return true if the two basin are adjacent with at least one pixel
+  ///  TODO add a minimum adjacent pixel parameter
+  /// @param LSDBasin another LSDBasin object
+  /// @author BG
+  /// @date 10/10/2017
+  bool is_adjacent(LSDBasin& DifferentBasin, LSDFlowInfo& flowpy);
+
 
 
   /// @brief Write Junction values into the shape of the basin.
@@ -730,7 +739,15 @@ LSDRaster TrimPaddedRasterToBasin(int padding_pixels, LSDFlowInfo& FlowInfo,
   ///
   /// @author BG
   /// @date 17/09/17
-  map<int,int> count_unique_values_from_litho_raster(LSDIndexRaster& litho, LSDFlowInfo& topo) ;
+  map<int,int> count_unique_values_from_litho_raster(LSDIndexRaster& litho, LSDFlowInfo& topo);
+
+
+  /// @brief merge and contour the perimeter from a vector of adjacent basins
+  /// @detail WARNING There may be 1 pixel-size holes in the perimeter.
+  /// @param vector of LSDBasin objects
+  /// @author BG
+  /// @date 10/10/17
+  vector<int> merge_perimeter_nodes_adjacent_basins(vector<LSDBasin> budgerigar, LSDFlowInfo& flowpy);
 
   protected:
 
