@@ -543,6 +543,14 @@ LSDRaster TrimPaddedRasterToBasin(int padding_pixels, LSDFlowInfo& FlowInfo,
   /// @date 10/10/2017
   bool is_adjacent(LSDBasin& DifferentBasin, LSDFlowInfo& flowpy);
 
+/// @brief detect the source nodes in a pixel window around a perimeter, for instance a basin  perimeter
+/// @detail It needs a sequence of nodes where it will loop around and gather all the source nodes encountered.
+/// @param vector of nodes, Flowinfo object and a JunctionNetwork object and a number of pixel for the window.
+/// @return vector of node indices of the new perimeter
+/// @author BG
+/// @date 11/10/17
+vector<int> get_source_node_from_perimeter(vector<int> perimeter, LSDFlowInfo& flowpy, LSDJunctionNetwork& junky, int pixel_window);
+
 
 
   /// @brief Write Junction values into the shape of the basin.

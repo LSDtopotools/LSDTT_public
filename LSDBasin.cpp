@@ -1462,6 +1462,65 @@ vector<int> LSDBasin::merge_perimeter_nodes_adjacent_basins(vector<LSDBasin> bud
 
 
 
+/// @brief detect the source nodes in a pixel window around a perimeter, for instance a basin  perimeter
+/// @detail It needs a sequence of nodes where it will loop around and gather all the source nodes encountered.
+/// @param vector of nodes, Flowinfo object and a JunctionNetwork object and a number of pixel for the window.
+/// @return vector of node indices of the new perimeter
+/// @author BG
+/// @date 10/10/17
+vector<int> LSDBasin::get_source_node_from_perimeter(vector<int> perimeter, LSDFlowInfo& flowpy, LSDJunctionNetwork& junky, int pixel_window)
+{
+
+  //First, creating a square-shaped mangoose vector (vector that host the pixel window parameter to loop through)
+  vector<int> mangoose;
+  mangoose.push_back(0);
+  for(size_t coati = 1; coati<pixel_window; coati++){mangoose.push_back(coati);mangoose.push_back(-coati);}
+  // mangoose is ready
+
+  //get all the sources
+  vector<int> all_sources = junky.get_SourcesVector();
+
+  // creating an empty output vector 
+  vector<int> selected_sources_nodes;
+
+  //creating the temp variables
+  int that_row = 0;
+  int that_col = 0;
+  int tested_node = 0;
+  
+  //loop through the perimeter and neighbooring nodes in the window
+  for(size_t coati = 0; coati<perimeter.size();coati++)
+  {
+    flowpy.retrieve_current_row_and_col(perimeter[coati],that_row,that_col);
+    for(size_t hogger =0; hogger<mangoose.size(); hogger++)
+    {
+      for(size_t hoggest =0; hoggest<mangoose.size(); hoggest++)
+      {
+        if((that_row + mangoose[hogger]>=0)&&(that_row + mangoose[hogger]< flowpy.get_NRows())&&(that_col+ mangoose[hoggest] >=0)&&(that_col+ mangoose[hoggest]<flowpy.get_NCols()))
+        {
+          tested_node = flowpy.retrieve_node_from_row_and_column(that_row+mangoose[hogger],that_col+mangoose[hoggest]);
+          if(find(all_sources.begin(), all_sources.end(), tested_node) != all_sources.end()){selected_sources_nodes.push_back(tested_node);}
+        }
+        
+
+      }
+    }
+  }
+
+  // now selecting the unique values
+
+  sort( selected_sources_nodes.begin(), selected_sources_nodes.end() );
+  selected_sources_nodes.erase( unique( selected_sources_nodes.begin(), selected_sources_nodes.end() ), selected_sources_nodes.end() ); 
+
+  // it should work
+  return selected_sources_nodes;
+} 
+
+
+
+
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //  +++++++++++++++++
