@@ -1390,11 +1390,17 @@ map<int,int> LSDBasin::count_unique_values_from_litho_raster(LSDIndexRaster& lit
 
 bool LSDBasin::is_adjacent(LSDBasin& DifferentBasin, LSDFlowInfo& flowpy)
 {
-
-  cout << "I will check if the two basins are adjacents" << endl;
+  // Check if the perimeter has been calculated, and set it if not
+  if(Perimeter_nodes.size() == 1){set_Perimeter(flowpy);}
+  //
+  //cout << "I will check if the two basins are adjacents" << endl;
   // this is a comment
-
+  // Perimeter nodes of the other basin + proceeding to a test if the other basin's perimeter has been calculated
   vector<int> DB_perimeter_nodes = DifferentBasin.get_Perimeter_nodes();
+  if(DB_perimeter_nodes.size() == 1){DifferentBasin.set_Perimeter(flowpy); DB_perimeter_nodes =  DifferentBasin.get_Perimeter_nodes();}
+  // 
+
+  // cout << Perimeter_nodes.size() << "|||||" << DB_perimeter_nodes.size() << endl;
   bool adjacenty = false;
   int this_row = 0;
   int this_col = 0;
@@ -1428,31 +1434,50 @@ bool LSDBasin::is_adjacent(LSDBasin& DifferentBasin, LSDFlowInfo& flowpy)
 /// @date 10/10/17
 vector<int> LSDBasin::merge_perimeter_nodes_adjacent_basins(vector<LSDBasin> budgerigar,LSDFlowInfo& flowpy)
 {
-  vector<int> out_perimeter = budgerigar[0].get_Perimeter_nodes();
+  // getting and checking the perimeter for the the first basin
+  vector<int> out_perimeter;
+  vector<int> first_perimeter;
+
+  // other variables
   vector<int> temp_perimeter;
   bool adjacenty = false;
   int this_row = 0;
   int this_col = 0;
   int tested_node = 0;
 
-  for(int basilisk = 1; basilisk<budgerigar.size();basilisk++)
+
+  for(int basilisk = 0; basilisk<budgerigar.size();basilisk++)
   {
-    temp_perimeter = budgerigar[basilisk].get_Perimeter_nodes();
-    for(size_t flude = 0; flude<temp_perimeter.size() && adjacenty == false ;flude++)
+    // Getting and checking the existence of the perimeter node
+    first_perimeter = budgerigar[basilisk].get_Perimeter_nodes();
+    if(first_perimeter.size() == 1){budgerigar[basilisk].set_Perimeter(flowpy);first_perimeter = budgerigar[basilisk].get_Perimeter_nodes();}
+
+    // now check the nodes around each perimeter nodes to see if it is adjacent to the other perimiter (diagonal excluded) and select it if not
+    for(int itb = 0; itb<budgerigar.size();itb++)
     {
-      flowpy.retrieve_current_row_and_col(temp_perimeter[flude], this_row, this_col);
-      if(this_row>0 && this_row<flowpy.get_NRows()-1 && this_col>0 && this_col<flowpy.get_NCols()-1)
+      if(itb != basilisk)
       {
-        tested_node = flowpy.retrieve_node_from_row_and_column(this_row,this_col+1);
-        if(find(out_perimeter.begin(), out_perimeter.end(), tested_node) != out_perimeter.end()){adjacenty=true;}
-        tested_node = flowpy.retrieve_node_from_row_and_column(this_row,this_col-1);
-        if(find(out_perimeter.begin(), out_perimeter.end(), tested_node) != out_perimeter.end()){adjacenty=true;}
-        tested_node = flowpy.retrieve_node_from_row_and_column(this_row+1,this_col);
-        if(find(out_perimeter.begin(), out_perimeter.end(), tested_node) != out_perimeter.end()){adjacenty=true;}
-        tested_node = flowpy.retrieve_node_from_row_and_column(this_row-1,this_col);
-        if(find(out_perimeter.begin(), out_perimeter.end(), tested_node) != out_perimeter.end()){adjacenty=true;}
+        temp_perimeter = budgerigar[itb].get_Perimeter_nodes();
+        if(temp_perimeter.size() == 1){budgerigar[itb].set_Perimeter(flowpy);temp_perimeter = budgerigar[itb].get_Perimeter_nodes();}
+        for(size_t flude = 0; flude<first_perimeter.size();flude++)
+        {
+          flowpy.retrieve_current_row_and_col(first_perimeter[flude], this_row, this_col);
+          if(this_row>0 && this_row<flowpy.get_NRows()-1 && this_col>0 && this_col<flowpy.get_NCols()-1)
+          {
+            tested_node = flowpy.retrieve_node_from_row_and_column(this_row,this_col+1);
+            if(find(temp_perimeter.begin(), temp_perimeter.end(), tested_node) != temp_perimeter.end()){adjacenty=true;}
+            tested_node = flowpy.retrieve_node_from_row_and_column(this_row,this_col-1);
+            if(find(temp_perimeter.begin(), temp_perimeter.end(), tested_node) != temp_perimeter.end()){adjacenty=true;}
+            tested_node = flowpy.retrieve_node_from_row_and_column(this_row+1,this_col);
+            if(find(temp_perimeter.begin(), temp_perimeter.end(), tested_node) != temp_perimeter.end()){adjacenty=true;}
+            tested_node = flowpy.retrieve_node_from_row_and_column(this_row-1,this_col);
+            if(find(temp_perimeter.begin(), temp_perimeter.end(), tested_node) != temp_perimeter.end()){adjacenty=true;}
+          }
+          
+          if(!adjacenty){out_perimeter.push_back(temp_perimeter[flude]);}
+          adjacenty = false;
+        }
       }
-      if(!adjacenty){out_perimeter.push_back(temp_perimeter[flude]);}
 
     }
   }
