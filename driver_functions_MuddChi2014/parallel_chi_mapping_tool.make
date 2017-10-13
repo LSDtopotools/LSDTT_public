@@ -1,8 +1,8 @@
 # make with make -f chi_mapping_tool.make
 
 CC=g++
-CFLAGS=-c -Wall -O3
-OFLAGS = -Wall -O3
+CFLAGS=-c -Wall -O3 -fopenmp
+OFLAGS = -Wall -O3 -fopenmp
 LDFLAGS= -Wall
 SOURCES=parallel_chi_mapping_tool.cpp \
              ../LSDMostLikelyPartitionsFinder.cpp \

@@ -51,6 +51,7 @@
 #include <ctime>
 #include <sys/time.h>
 #include <fstream>
+#include <omp.h>
 #include "../LSDStatsTools.hpp"
 #include "../LSDChiNetwork.hpp"
 #include "../LSDRaster.hpp"
@@ -815,6 +816,7 @@ int main (int nNumberofArgs,char *argv[])
   JunctionNetwork = EmptyLSDJunctionNetwork;
   
   // Loop through baselevel junctions and launch chi analysis
+  #pragma omp parallel for
   for (int BN = 0; BN< N_BaseLevelJuncs; BN++)
   {
     cout << "Launching Chi Analysis for basin " << BN << endl;
