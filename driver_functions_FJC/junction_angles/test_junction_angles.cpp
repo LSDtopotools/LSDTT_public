@@ -107,6 +107,8 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_filled_raster"] = false;
   bool_default_map["print_junctions_to_csv"] = false;
   bool_default_map["print_junction_angles_to_csv"] = false;
+  bool_default_map["read_junctions_from_file"] = false;
+  bool_default_map["print_junction_statistics_to_csv"] = false;
   bool_default_map["convert_csv_to_geojson"] = false;
   bool_default_map["get_basin_perimeter"] = false;
 
@@ -128,6 +130,8 @@ int main (int nNumberofArgs,char *argv[])
   string_default_map["basin_outlet_csv"] = "NULL";
   string_default_map["sample_ID_column_name"] = "IDs";
   string_default_map["parameter_file_for_spawning"] = "NULL";
+
+  // turn on parameter 
 
 
 

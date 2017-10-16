@@ -13141,4 +13141,31 @@ vector< vector<float> > LSDRaster::Sample_Along_Ridge(LSDRaster& Raster1, LSDRas
   return Vector_of_Samples;
 }
 
+//-----------------------------------------------------------------------------//
+// Function for converting elevation values in a raster from feet to metres for
+// stupid US imperial measurements
+// WHY WOULD YOU USE FEET?!
+// FJC 16/10/17
+//-----------------------------------------------------------------------------//
+LSDRaster LSDRaster::convert_from_feet_to_metres()
+{
+  Array2D<float> elev_in_metres(NRows,NCols,NoDataValue);
+  double conversion = 0.3048006096012192;
+
+  for (int i = 0; i < NRows; i++)
+  {
+    for (int j = 0; j < NCols; j++)
+    {
+      if (RasterData[i][j] != NoDataValue)
+      {
+        elev_in_metres[i][j] = RasterData[i][j] * conversion;
+      }
+    }
+  }
+
+  LSDRaster output(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,elev_in_metres,GeoReferencingStrings);
+  return output;
+
+}
+
 #endif
