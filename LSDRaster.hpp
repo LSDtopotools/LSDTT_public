@@ -2309,6 +2309,12 @@ class LSDRaster
   /// @date 16/10/17
   LSDRaster convert_from_feet_to_metres();
 
+  /// @brief function to convert elevations from centimetres to metres
+  /// @return raster of elevations in metres
+  /// @author FJC
+  /// @date 18/10/17
+  LSDRaster convert_from_centimetres_to_metres()
+
 protected:
 
   ///Number of rows.

@@ -4245,29 +4245,22 @@ void LSDRaster::calculate_polyfit_coefficient_matrices(float window_radius,
 //   Array2D<float> void_array(1,1,NoDataValue);
 //   LSDRaster VOID(1,1,NoDataValue,NoDataValue,NoDataValue,NoDataValue,void_array,GeoReferencingStrings);
 //
-//   // catch if the supplied window radius is less than the data resolution and
-//   // set it to equal the data resolution - SWDG
-//   if (window_radius < sqrt(2)*DataResolution)
+//   // mask the DEM based on the nodes of interest
+//   Array2D<int> mask_array(NRows,NCols,0);
+//   int row, col;
+//   for (int i = 0; i < int(NodeIndices.size(); i++))
 //   {
-//     cout << "Supplied window radius: " << window_radius << " is less than the data resolution * sqrt(2), i.e. the diagonal of a single grid cell: " <<
-//     sqrt(2)*DataResolution << ".\nWindow radius has been set to sqrt(2) * data resolution." << endl;
-//     window_radius = sqrt(2)*DataResolution;
+//     this_node = NodeIndices[i];
+//     FlowInfo.retrieve_current_row_and_col(this_node, row, col);
+//     mask_array[row][col] = 1;
 //   }
-//   // this fits a polynomial surface over a kernel window. First, perpare the
-//   // kernel
-//   int kr = int(ceil(window_radius/DataResolution));  // Set radius of kernel
-//   int kw=2*kr+1;                                     // width of kernel
-//
-//   Array2D<float> data_kernel(kw,kw,NoDataValue);
-//   Array2D<float> x_kernel(kw,kw,NoDataValue);
-//   Array2D<float> y_kernel(kw,kw,NoDataValue);
-//   Array2D<int> mask(kw,kw,0);
 //
 //   // reset the a,b,c,d,e and f matrices (the coefficient matrices)
 //   Array2D<float> temp_coef(NRows,NCols,NoDataValue);
 //   Array2D<float> elevation_raster, slope_raster, aspect_raster, curvature_raster, planform_curvature_raster,
 //                   profile_curvature_raster, tangential_curvature_raster, classification_raster,
 //                   s1_raster, s2_raster, s3_raster;
+//
 //   // Copy across raster template into the desired array containers
 //   if(raster_selection[0]==1)  elevation_raster = temp_coef.copy();
 //   if(raster_selection[1]==1)  slope_raster = temp_coef.copy();
@@ -4278,28 +4271,6 @@ void LSDRaster::calculate_polyfit_coefficient_matrices(float window_radius,
 //   if(raster_selection[6]==1)  tangential_curvature_raster = temp_coef.copy();
 //   if(raster_selection[7]==1)  classification_raster = temp_coef.copy();
 //
-//   //float a,b,c,d,e,f;
-//
-//   // scale kernel window to resolution of DEM, and translate coordinates to be
-//   // centred on cell of interest (the centre cell)
-//   float x,y,zeta,radial_dist;
-//   for(int i=0;i<kw;++i)
-//   {
-//     for(int j=0;j<kw;++j)
-//     {
-//       x_kernel[i][j]=(i-kr)*DataResolution;
-//       y_kernel[i][j]=(j-kr)*DataResolution;
-//       // Build circular mask
-//       // distance from centre to this point.
-//       radial_dist = sqrt(y_kernel[i][j]*y_kernel[i][j] + x_kernel[i][j]*x_kernel[i][j]);
-//
-//       //if (floor(radial_dist) <= window_radius)
-//       if (radial_dist <= window_radius)
-//       {
-//         mask[i][j] = 1;
-//       }
-//     }
-//   }
 //   // FIT POLYNOMIAL SURFACE BY LEAST SQUARES REGRESSION AND USE COEFFICIENTS TO
 //   // DETERMINE TOPOGRAPHIC METRICS
 //   // Have N simultaneous linear equations, and N unknowns.
@@ -4310,9 +4281,9 @@ void LSDRaster::calculate_polyfit_coefficient_matrices(float window_radius,
 //   // For 2nd order surface fitting, there are 6 coefficients, therefore A is a
 //   // 6x6 matrix
 //   Array2D<float> A(6,6,0.0);
-//   for (int i=0; i<kw; ++i)
+//   for (int i=0; i<NRows; ++i)
 //   {
-//     for (int j=0; j<kw; ++j)
+//     for (int j=0; j<NCols; ++j)
 //     {
 //       if (mask[i][j] == 1)
 //       {
@@ -4545,9 +4516,6 @@ void LSDRaster::calculate_polyfit_coefficient_matrices(float window_radius,
 //   }
 //   return raster_output;
 // }
-
-
-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
@@ -13499,6 +13467,31 @@ LSDRaster LSDRaster::convert_from_feet_to_metres()
       if (RasterData[i][j] != NoDataValue)
       {
         elev_in_metres[i][j] = RasterData[i][j] * conversion;
+      }
+    }
+  }
+
+  LSDRaster output(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,elev_in_metres,GeoReferencingStrings);
+  return output;
+
+}
+
+//-----------------------------------------------------------------------------//
+// Function for converting elevation values in a raster from centimetres to metres.
+// This is possibly even more stupid than using feet.
+// FJC 18/10/17
+//-----------------------------------------------------------------------------//
+LSDRaster LSDRaster::convert_from_centimetres_to_metres()
+{
+  Array2D<float> elev_in_metres(NRows,NCols,NoDataValue);
+
+  for (int i = 0; i < NRows; i++)
+  {
+    for (int j = 0; j < NCols; j++)
+    {
+      if (RasterData[i][j] != NoDataValue)
+      {
+        elev_in_metres[i][j] = RasterData[i][j]/100;
       }
     }
   }
