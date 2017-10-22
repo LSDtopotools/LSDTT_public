@@ -798,7 +798,11 @@ int main (int nNumberofArgs,char *argv[])
     string basin_driver = "basin"+INT+"_movern.driver";
     LSDPP.set_read_fname(basin_fname);
     LSDPP.set_write_fname(basin_fname);
-    LSDPP.print_parameters(basin_driver);
+    //LSDPP.print_parameters(basin_driver);
+    map<string,string> replace_parameters;
+    replace_parameters["only_take_largest_basin"] = "false";
+    
+    LSDPP.replace_and_print_parameter_file(basin_fname,DATA_DIR, basin_fname,OUT_DIR,basin_fname,replace_parameters)
   }
   
   //clear out memory!
