@@ -2313,7 +2313,7 @@ class LSDRaster
   /// @return raster of elevations in metres
   /// @author FJC
   /// @date 18/10/17
-  LSDRaster convert_from_centimetres_to_metres()
+  LSDRaster convert_from_centimetres_to_metres();
 
 protected:
 

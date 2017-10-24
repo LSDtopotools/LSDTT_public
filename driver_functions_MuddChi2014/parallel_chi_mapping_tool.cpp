@@ -773,7 +773,7 @@ int main (int nNumberofArgs,char *argv[])
   }
 
   // Pad the DEMs by 1 pixel
-  int padding_pixels = 1;
+  int padding_pixels = 2;
   
   // Loop through base level junctions and generate a DEM for each basin
   // create the new driver file while we're at it
@@ -800,9 +800,9 @@ int main (int nNumberofArgs,char *argv[])
     LSDPP.set_write_fname(basin_fname);
     //LSDPP.print_parameters(basin_driver);
     map<string,string> replace_parameters;
-    replace_parameters["only_take_largest_basin"] = "false";
+    replace_parameters["only_take_largest_basin"] = "true";
     
-    LSDPP.replace_and_print_parameter_file(basin_fname,DATA_DIR, basin_fname,OUT_DIR,basin_fname,replace_parameters)
+    LSDPP.replace_and_print_parameter_file(basin_fname,DATA_DIR, basin_fname,OUT_DIR,basin_fname,replace_parameters);
   }
   
   //clear out memory!
