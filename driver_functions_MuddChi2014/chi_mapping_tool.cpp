@@ -939,7 +939,7 @@ int main (int nNumberofArgs,char *argv[])
 
   //============================================================================
   // Print a basin raster if you want it.
-  if(this_bool_map["print_basin_raster"] || this_bool_map["print_litho_info"])
+  if(this_bool_map["print_basin_raster"] || this_bool_map["print_litho_info"] || this_bool_map["ksn_knickpoint_analysis"] )
   {
     cout << "I am going to print the basins for you. " << endl;
     LSDChiTools ChiTool_basins(FlowInfo);
@@ -1607,6 +1607,10 @@ int main (int nNumberofArgs,char *argv[])
     ChiTool.ksn_knickpoint_detection(FlowInfo);
     string csv_full_fname_knockpoint = OUT_DIR+OUT_ID+"_KsnKn.csv";
     ChiTool.print_knickpoint_to_csv(FlowInfo,csv_full_fname_knockpoint);
+    // Testing something
+    string csv_full_fname = OUT_DIR+OUT_ID+"_MChiSegmented_TESTKNICKPOINT.csv";
+    cout << "Let me print A Test File " << csv_full_fname << endl;
+    ChiTool.print_data_maps_to_file_full(FlowInfo, csv_full_fname);
   }
 
 

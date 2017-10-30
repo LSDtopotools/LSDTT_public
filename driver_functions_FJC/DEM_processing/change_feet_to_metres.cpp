@@ -1,7 +1,7 @@
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
-// remove_seas.cpp
-// make with remove_seas.make
+// change_feet_to_metres.cpp
+// make with make -f change_feet_to_metres.make
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
@@ -33,30 +33,12 @@ int main (int nNumberofArgs,char *argv[])
 
 	//load the DEM
   cout << "\t Loading the DEM" << endl;
-
-  string fname = path_name+DEM_ID+"."+DEM_extension;
-  ifstream file_info_in;
-  file_info_in.open(fname.c_str());
-  if( file_info_in.fail() )
-  {
-    cout << "\nFATAL ERROR: the header file \"" << fname
-         << "\" doesn't exist" << endl;
-    exit(EXIT_FAILURE);
-  }
-
 	LSDRaster DEM(path_name+DEM_ID, DEM_extension);
 
-  // remove the seas
-	cout << "\t Removing seas" << endl;
-  DEM.remove_seas();
+	cout << "\t Fixing your DEM to use the metric system like a normal country should" << endl;
+	//LSDRaster FilledDEM = DEM.nodata_fill_irregular_raster(window_radius);
 
-  //removing some weird values
-  // float threshold = 0.5;
-  // bool below_threshold = true;
-  // DEM.mask_to_nodata_using_threshold(threshold, below_threshold);
+	LSDRaster NewDEM = DEM.convert_from_feet_to_metres();
 
-  // trim the raster_array
-  cout << "\t Trimming the raster" << endl;
-  //DEM.RasterTrimmer();
-	DEM.write_raster((path_name+DEM_ID), DEM_extension);
+	NewDEM.write_raster((path_name+DEM_ID), DEM_extension);
 }
