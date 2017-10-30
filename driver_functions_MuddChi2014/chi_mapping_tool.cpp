@@ -84,6 +84,12 @@ int main (int nNumberofArgs,char *argv[])
     cout << "In linux:" << endl;
     cout << "./chi_mapping_tool.exe /LSDTopoTools/Topographic_projects/LSDTT_chi_examples/ Xian_example1.driver" << endl;
     cout << "=========================================================" << endl;
+    cout << "If you want to visualise basins and channels you should set " << endl;
+    cout << "print_basin_raster: true" << endl;
+    cout << "print_chi_data_maps: true" << endl;
+    cout << "See documentation for information. " << endl;
+    cout << "Visualisation scripts found here: https://github.com/LSDtopotools/LSDMappingTools" << endl;
+    cout << "=========================================================" << endl;
     cout << "For more documentation on the parameter file, " << endl;
     cout << " see readme and online documentation." << endl;
     cout << " https://lsdtopotools.github.io/LSDTopoTools_ChiMudd2014/" << endl;
