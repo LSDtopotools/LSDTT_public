@@ -26,7 +26,7 @@ SOURCES=LSDTT_BasicMetrics.cpp \
          ../LSDShapeTools.cpp
 LIBS   = -lm -lstdc++ -lfftw3
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=LSDTT_BasicMetrics.exe
+EXECUTABLE=LSDTT_BasicMetrics.out
 
 all: $(SOURCES) $(EXECUTABLE)
 
