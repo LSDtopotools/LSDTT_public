@@ -39,6 +39,7 @@ int main (int nNumberofArgs,char *argv[])
 	//LSDRaster FilledDEM = DEM.nodata_fill_irregular_raster(window_radius);
 
 	LSDRaster NewDEM = DEM.convert_from_feet_to_metres();
+  NewDEM.remove_seas();
 
 	NewDEM.write_raster((path_name+DEM_ID), DEM_extension);
 }

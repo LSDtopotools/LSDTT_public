@@ -116,8 +116,8 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
   // with each iteration
   vector<float> DistanceAlongBaseline_temp(NPtsInProfile,NoDataValue);
   vector<float> BaselineValue_temp(NPtsInProfile,NoDataValue);
-	vector<int> BaselineRows(NPtsInProfile,NoDataValue);
-	vector<int> BaselineCols(NPtsInProfile,NoDataValue);
+	vector<int> BaselineRows_temp(NPtsInProfile,NoDataValue);
+	vector<int> BaselineCols_temp(NPtsInProfile,NoDataValue);
   float cumulative_distance = 0;
   DistanceAlongBaseline_temp[0]=cumulative_distance;
   // Retrieve baseline value at each point - sample closest pixel in template raster
@@ -130,8 +130,8 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
   else
 	{
 		BaselineValue_temp[0] = RasterTemplate.get_data_element(row_point,col_point);
-		BaselineRows[0] = row_point;
-		BaselineCols[0] = col_point;
+		BaselineRows_temp[0] = row_point;
+		BaselineCols_temp[0] = col_point;
 	}
 
 
@@ -153,8 +153,8 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
     else
 		{
 			BaselineValue_temp[i] = RasterTemplate.get_data_element(row_point,col_point);
-			BaselineRows[i] = row_point;
-			BaselineCols[i] = col_point;
+			BaselineRows_temp[i] = row_point;
+			BaselineCols_temp[i] = col_point;
 		}
   }
 
@@ -410,6 +410,8 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
   DistanceToBaselineArray = DistanceToBaseline_temp.copy();
   DistanceAlongBaselineArray = ProjectedDistanceAlongBaseline_temp.copy();
   BaselineValueArray = BaselineValueArray_temp.copy();
+  BaselineRows = BaselineRows_temp;
+  BaselineCols = BaselineCols_temp;
 }
 
 void LSDSwath::create(vector<float>& Y_X_points, LSDRaster& RasterTemplate, float& HalfWidth, float d_space)
@@ -473,8 +475,8 @@ void LSDSwath::create(vector<float>& Y_X_points, LSDRaster& RasterTemplate, floa
   // with each iteration
   vector<float> DistanceAlongBaseline_temp(NPtsInProfile,NoDataValue);
   vector<float> BaselineValue_temp(NPtsInProfile,NoDataValue);
-	vector<int> BaselineRows(NPtsInProfile,NoDataValue);
-	vector<int> BaselineCols(NPtsInProfile,NoDataValue);
+	vector<int> BaselineRows_temp(NPtsInProfile,NoDataValue);
+	vector<int> BaselineCols_temp(NPtsInProfile,NoDataValue);
   float cumulative_distance = 0;
   DistanceAlongBaseline_temp[0]=cumulative_distance;
   // Retrieve baseline value at each point - sample closest pixel in template raster
@@ -487,8 +489,8 @@ void LSDSwath::create(vector<float>& Y_X_points, LSDRaster& RasterTemplate, floa
   else
 	{
 		BaselineValue_temp[0] = RasterTemplate.get_data_element(row_point,col_point);
-		BaselineRows[0] = row_point;
-		BaselineCols[0] = col_point;
+		BaselineRows_temp[0] = row_point;
+		BaselineCols_temp[0] = col_point;
 	}
 
 
@@ -510,8 +512,8 @@ void LSDSwath::create(vector<float>& Y_X_points, LSDRaster& RasterTemplate, floa
     else
 		{
 			BaselineValue_temp[i] = RasterTemplate.get_data_element(row_point,col_point);
-			BaselineRows[i] = row_point;
-			BaselineCols[i] = col_point;
+			BaselineRows_temp[i] = row_point;
+			BaselineCols_temp[i] = col_point;
 		}
   }
 
@@ -767,6 +769,8 @@ void LSDSwath::create(vector<float>& Y_X_points, LSDRaster& RasterTemplate, floa
   DistanceToBaselineArray = DistanceToBaseline_temp.copy();
   DistanceAlongBaselineArray = ProjectedDistanceAlongBaseline_temp.copy();
   BaselineValueArray = BaselineValueArray_temp.copy();
+  BaselineRows = BaselineRows_temp;
+  BaselineCols = BaselineCols_temp;
 
 }
 
