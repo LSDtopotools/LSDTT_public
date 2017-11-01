@@ -418,7 +418,6 @@ int main (int nNumberofArgs,char *argv[])
       DA2.write_raster(DA_raster_name,raster_ext);
     }
   
-    LSDRaster DA_d8;
     if (this_bool_map["print_d8_drainage_area_raster"] ||
         this_bool_map["find_basins"])
     {
