@@ -155,6 +155,12 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["A_0"] = 1.0;
   float_default_map["m_over_n"] = 0.5;
   bool_default_map["print_chi_data_maps"] = false;
+  
+  if (bool_default_map["print_chi_data_maps"] == true)
+  {
+    cout << "You want the chi data maps, so I am setting the basin finding to true." << endl;
+    bool_default_map["print_chi_data_maps"] = true;
+  }
 
   // The wiener filter
   bool_default_map["print_wiener_filtered_raster"] = false;
@@ -356,19 +362,6 @@ int main (int nNumberofArgs,char *argv[])
   // with limited memory you might get segmentation faults after this point
   //
   //============================================================================
-  bool_default_map["print_dinf_drainage_area_raster"] = false;
-  bool_default_map["print_d8_drainage_area_raster"] = false;
-  bool_default_map["print_QuinnMD_drainage_area_raster"] = false;
-  bool_default_map["print_FreemanMD_drainage_area_raster"] = false;
-  bool_default_map["print_MD_drainage_area_raster"] = false;
-  bool_default_map["print_fill_raster"] = false;
-
-  // Basic channel network
-  bool_default_map["print_stream_order_raster"] = false;
-  bool_default_map["print_channels_to_csv"] = false;
-  bool_default_map["print_junction_index_raster"] = false;
-  bool_default_map["print_junctions_to_csv"] = false;
-  
   if (this_bool_map["print_dinf_drainage_area_raster"]
         || this_bool_map["print_d8_drainage_area_raster"]
         || this_bool_map["print_QuinnMD_drainage_area_raster"]
@@ -382,7 +375,7 @@ int main (int nNumberofArgs,char *argv[])
         || this_bool_map["find_basins"]
         || this_bool_map["print_chi_data_map"])
   {
-
+    cout << "I will need to compute flow information, because you are getting drainage area or channel networks." << endl;
     //==========================================================================
     // Fill the raster
     //==========================================================================
@@ -471,7 +464,7 @@ int main (int nNumberofArgs,char *argv[])
       
       if(this_bool_map["print_distance_from_outlet"])
       {
-        cout << "I am writing a distant from outlet raster." << endl;
+        cout << "I am writing a distance from outlet raster." << endl;
         string FD_raster_name = OUT_DIR+OUT_ID+"_FDIST";
         FD.write_raster(FD_raster_name,raster_ext);
       }
@@ -515,11 +508,13 @@ int main (int nNumberofArgs,char *argv[])
         cout << "I am going to print the channel network." << endl;
         string channel_csv_name = OUT_DIR+OUT_ID+"_CN";
         JunctionNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
+        cout << "I've printed the channel network. " << endl;
     
         // convert to geojson if that is what the user wants
         // It is read more easily by GIS software but has bigger file size
         if ( this_bool_map["convert_csv_to_geojson"])
         {
+          cout << "Let me convert that data to json." << endl;
           string gjson_name = OUT_DIR+OUT_ID+"_CN.geojson";
           LSDSpatialCSVReader thiscsv(OUT_DIR+OUT_ID+"_CN.csv");
           thiscsv.print_data_to_geojson(gjson_name);
@@ -561,7 +556,7 @@ int main (int nNumberofArgs,char *argv[])
       
       // Now we check if we are going to deal with basins
       if(this_bool_map["find_basins"] ||
-         this_bool_map["print_chi_data_maps]")
+         this_bool_map["print_chi_data_maps"])
       {
         cout << "I am now going to extract some basins for you." << endl;
         vector<int> BaseLevelJunctions;
@@ -691,6 +686,7 @@ int main (int nNumberofArgs,char *argv[])
         if ( this_bool_map["print_basin_raster"] ||
              this_bool_map["print_chi_data_maps"])
         {
+          cout << "I am calculating the chi coordinate." << endl;
           chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(this_float_map["m_over_n"],this_float_map["A_0"],this_int_map["threshold_contributing_pixels"]);
         
         }
@@ -701,9 +697,10 @@ int main (int nNumberofArgs,char *argv[])
         {
           cout << "I am going to print the basins for you. " << endl;
           LSDChiTools ChiTool_basins(FlowInfo);
+          LSDRaster DA_for_chi = FlowInfo.write_DrainageArea_to_LSDRaster();
           ChiTool_basins.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
                                   filled_topography, FD,
-                                  DA_d8, chi_coordinate);
+                                  DA_for_chi , chi_coordinate);
           string basin_raster_prefix = OUT_DIR+OUT_ID;
           ChiTool_basins.print_basins(FlowInfo, JunctionNetwork, BaseLevelJunctions, basin_raster_prefix);
         }
@@ -718,9 +715,10 @@ int main (int nNumberofArgs,char *argv[])
           cout << "I am going to print some simple chi data maps for visualisation." << endl;
           cout << "These data maps are also useful for visualising channel networks and making channel profiles." << endl;
           LSDChiTools ChiTool_chi_checker(FlowInfo);
+          LSDRaster DA_for_chi = FlowInfo.write_DrainageArea_to_LSDRaster();
           ChiTool_chi_checker.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
                                   filled_topography, FD,
-                                  DA_d8, chi_coordinate);
+                                  DA_for_chi, chi_coordinate);
       
       
           string chi_data_maps_string = OUT_DIR+OUT_ID+"_chi_data_map.csv";
@@ -736,6 +734,9 @@ int main (int nNumberofArgs,char *argv[])
         //======================================================================
 
       }   // end logic for basin finding
+      cout << "Finished with basins" << endl;
     }     // end logic for tasks related to channel network extraction
+    cout << "Done with channel extraction" << endl;
   }       // end logic for tasks requiring flow info and filling
+  cout << "I'm all finished! Have a nice day." << endl;
 }
