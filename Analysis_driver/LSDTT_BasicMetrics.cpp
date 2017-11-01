@@ -154,11 +154,11 @@ int main (int nNumberofArgs,char *argv[])
   // Some chi coordinate settings
   float_default_map["A_0"] = 1.0;
   float_default_map["m_over_n"] = 0.5;
+  bool_default_map["print_chi_data_maps"] = false;
 
   // The wiener filter
   bool_default_map["print_wiener_filtered_raster"] = false;
-
-
+ 
   // This converts all csv files to geojson (for easier loading in a GIS)
   bool_default_map["convert_csv_to_geojson"] = false;  
 
@@ -379,7 +379,8 @@ int main (int nNumberofArgs,char *argv[])
         || this_bool_map["print_channels_to_csv"]
         || this_bool_map["print_junction_index_raster"]
         || this_bool_map["print_junctions_to_csv"]
-        || this_bool_map["find_basins"])
+        || this_bool_map["find_basins"]
+        || this_bool_map["print_chi_data_map"])
   {
 
     //==========================================================================
@@ -559,7 +560,8 @@ int main (int nNumberofArgs,char *argv[])
       }   // End print sources logic
       
       // Now we check if we are going to deal with basins
-      if(this_bool_map["find_basins"])
+      if(this_bool_map["find_basins"] ||
+         this_bool_map["print_chi_data_maps]")
       {
         cout << "I am now going to extract some basins for you." << endl;
         vector<int> BaseLevelJunctions;
