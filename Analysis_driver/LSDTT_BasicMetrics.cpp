@@ -113,6 +113,11 @@ int main (int nNumberofArgs,char *argv[])
   // the most basic raster printing
   bool_default_map["write_hillshade"] = false;
   bool_default_map["print_raster_without_seas"] = false;
+  bool_default_map["print_distance_from_outlet"] = false;
+  bool_default_map["print_fill_raster"] = false;
+  
+  // This converts all csv files to geojson (for easier loading in a GIS)
+  bool_default_map["convert_csv_to_geojson"] = false;    
   
   // Slope calculations
   float_default_map["surface_fitting_radius"] = 30;
@@ -132,11 +137,10 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_QuinnMD_drainage_area_raster"] = false;
   bool_default_map["print_FreemanMD_drainage_area_raster"] = false;
   bool_default_map["print_MD_drainage_area_raster"] = false;
-  bool_default_map["print_distance_from_outlet"] = false;
-  bool_default_map["print_fill_raster"] = false;
+
 
   // Basic channel network
-  int_default_map["threshold_contributing_pixels"] = 500;
+  int_default_map["threshold_contributing_pixels"] = 1000;
   bool_default_map["print_stream_order_raster"] = false;
   bool_default_map["print_channels_to_csv"] = false;
   bool_default_map["print_junction_index_raster"] = false;
@@ -165,8 +169,7 @@ int main (int nNumberofArgs,char *argv[])
   // The wiener filter
   bool_default_map["print_wiener_filtered_raster"] = false;
  
-  // This converts all csv files to geojson (for easier loading in a GIS)
-  bool_default_map["convert_csv_to_geojson"] = false;  
+
 
   // Use the parameter parser to get the maps of the parameters required for the
   // analysis
@@ -623,7 +626,7 @@ int main (int nNumberofArgs,char *argv[])
           cout << "I am pruning junctions that are influenced by the edge of the DEM!" << endl;
           cout << "This is necessary because basins draining to the edge will have incorrect chi values." << endl;
           BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions_Initial, FlowInfo, filled_topography);
-        }
+        }    // end logic for reading from juncitons list
         
         // Now check for larges basin, if that is what you want.
         if (this_bool_map["only_take_largest_basin"])
