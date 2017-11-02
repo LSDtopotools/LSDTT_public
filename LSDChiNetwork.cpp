@@ -5748,8 +5748,8 @@ Array2D<float> LSDChiNetwork::calculate_channel_heads(int min_seg_length_for_cha
     //float sigma = 0.2;
     float test_value;
     float max_test_value = 0;
-    int best_chan_seg;
-    int best_hill_seg;
+    //int best_chan_seg;
+    //int best_hill_seg;
     int start_node = 0;
     float chan_gradient = 0;
     float hill_gradient = 0;
@@ -5804,8 +5804,8 @@ Array2D<float> LSDChiNetwork::calculate_channel_heads(int min_seg_length_for_cha
         if (test_value > max_test_value)
         {
            max_test_value = test_value;
-           best_hill_seg = hill_seg_length;
-           best_chan_seg = chan_seg_length;
+           //best_hill_seg = hill_seg_length;
+           //best_chan_seg = chan_seg_length;
            hill_gradient = results_hill[0];
            chan_gradient = results_chan[0];
            hill_intercept = results_hill[1];

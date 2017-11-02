@@ -3887,6 +3887,7 @@ void LSDChiTools::MCMC_driver(LSDFlowInfo& FlowInfo, int minimum_contributing_pi
                                  minimum_contributing_pixels,
                                  N_chain_links, this_sigma, this_dmovern_stddev,
                                  movern_minimum,movern_maximum,basin_key, use_points);
+    cout << "The final acceptance rate was: " << accept << endl;
   }
 
 
@@ -5663,6 +5664,8 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
     this_source_key =  it->first;
 
     //cout << "The source key is: " << this_source_key << endl;
+    // Initiate the last basin
+    last_basin = basin_key_of_this_source_map[this_source_key];
 
     // extract the log S-log A data for this source
     vector<float> log_area = log_area_map[this_source_key];
