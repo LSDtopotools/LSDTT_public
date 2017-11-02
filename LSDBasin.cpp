@@ -1,4 +1,50 @@
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//
+// LSDBasin
+// Land Surface Dynamics Basin
+//
+// An object within the University
+//  of Edinburgh Land Surface Dynamics group topographic toolbox
+//  for manipulating
+//  and analysing basins
+//
+// Developed by:
+//  Stuart W.D. Grieve
+//  Simon M. Mudd
+//  Fiona Clubb
+//
+// Copyright (C) 2017 Simon M. Mudd 2017
+//
+// Developer can be contacted by simon.m.mudd _at_ ed.ac.uk
+//
+//    Simon Mudd
+//    University of Edinburgh
+//    School of GeoSciences
+//    Drummond Street
+//    Edinburgh, EH8 9XP
+//    Scotland
+//    United Kingdom
+//
+// This program is free software;
+// you can redistribute it and/or modify it under the terms of the
+// GNU General Public License as published by the Free Software Foundation;
+// either version 2 of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY;
+// without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the GNU General Public License for more details.
+//
+// You should have received a copy of the
+// GNU General Public License along with this program;
+// if not, write to:
+// Free Software Foundation, Inc.,
+// 51 Franklin Street, Fifth Floor,
+// Boston, MA 02110-1301
+// USA
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 #ifndef LSDBasin_CPP
 #define LSDBasin_CPP
@@ -755,7 +801,7 @@ void LSDBasin::print_perimeter_to_csv(LSDFlowInfo& FlowInfo, string perimeter_fn
   int n_nodes = int(Perimeter_nodes.size());
   for(int i = 0; i< n_nodes; i++)
   {
-    FlowInfo.get_x_and_y_from_current_node(Perimeter_nodes[i], curr_x, curr_x);
+    FlowInfo.get_x_and_y_from_current_node(Perimeter_nodes[i], curr_x, curr_y);
     FlowInfo.get_lat_and_long_from_current_node(Perimeter_nodes[i], curr_lat, curr_long,converter);
     perim_out << Perimeter_nodes[i] << "," << curr_x << "," << curr_y <<"," << curr_lat << "," << curr_long << endl;
   }
@@ -1446,14 +1492,14 @@ vector<int> LSDBasin::merge_perimeter_nodes_adjacent_basins(vector<LSDBasin> bud
   int tested_node = 0;
 
 
-  for(int basilisk = 0; basilisk<budgerigar.size();basilisk++)
+  for(int basilisk = 0; basilisk< int(budgerigar.size());basilisk++)
   {
     // Getting and checking the existence of the perimeter node
     first_perimeter = budgerigar[basilisk].get_Perimeter_nodes();
     if(first_perimeter.size() == 1){budgerigar[basilisk].set_Perimeter(flowpy);first_perimeter = budgerigar[basilisk].get_Perimeter_nodes();}
 
     // now check the nodes around each perimeter nodes to see if it is adjacent to the other perimiter (diagonal excluded) and select it if not
-    for(int itb = 0; itb<budgerigar.size();itb++)
+    for(int itb = 0; itb< int(budgerigar.size());itb++)
     {
       if(itb != basilisk)
       {
@@ -1499,7 +1545,11 @@ vector<int> LSDBasin::get_source_node_from_perimeter(vector<int> perimeter, LSDF
   //First, creating a square-shaped mangoose vector (vector that host the pixel window parameter to loop through)
   vector<int> mangoose;
   mangoose.push_back(0);
-  for(size_t coati = 1; coati<pixel_window; coati++){mangoose.push_back(coati);mangoose.push_back(-coati);}
+  for(size_t coati = 1; coati<size_t(pixel_window); coati++)
+  {  
+    mangoose.push_back(coati);
+    mangoose.push_back(-coati);
+  }
   // mangoose is ready
 
   //get all the sources
