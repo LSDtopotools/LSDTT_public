@@ -475,7 +475,9 @@ int main (int nNumberofArgs,char *argv[])
     // This is the logic for a simple stream network
     if (this_bool_map["print_channels_to_csv"]
         || this_bool_map["print_junctions_to_csv"]
-        || this_bool_map["print_sources_to_csv"] )
+        || this_bool_map["print_sources_to_csv"]
+        || this_bool_map["find_basins"] 
+        || this_bool_map["print_chi_data_maps"])
     {
       // calculate the flow accumulation
       cout << "\t Calculating flow accumulation (in pixels)..." << endl;
@@ -556,6 +558,8 @@ int main (int nNumberofArgs,char *argv[])
         }
       }   // End print sources logic
       
+      cout << "WHAMMOOO!!!" << endl;
+      
       // Now we check if we are going to deal with basins
       if(this_bool_map["find_basins"] ||
          this_bool_map["print_chi_data_maps"])
@@ -574,10 +578,12 @@ int main (int nNumberofArgs,char *argv[])
         }
         else if(this_string_map["BaselevelJunctions_file"] == "NULL" && test_BaselevelJunctions_file != "NULL")
         {
+          cout << "I am loading a baselevel junctions file." << endl;
           BaselevelJunctions_file = test_BaselevelJunctions_file;
         }
         else if(this_string_map["BaselevelJunctions_file"] != "NULL" && test_BaselevelJunctions_file == "NULL")
         {
+          cout << "I am loading a baselevel junctions file." << endl;
           BaselevelJunctions_file = this_string_map["BaselevelJunctions_file"];
         }
         else
