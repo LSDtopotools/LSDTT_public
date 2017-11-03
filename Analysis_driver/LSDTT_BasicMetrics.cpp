@@ -596,6 +596,7 @@ int main (int nNumberofArgs,char *argv[])
           cout << "To reiterate, there is no base level junction file. I am going to select basins for you using an algorithm. " << endl;
           cout << "I am going to look for basins in a pixel window that are not influended by nodata." << endl;
           cout << "I am also going to remove any nested basins." << endl;
+          cout << "The pixel limits are: lower: " << this_int_map["minimum_basin_size_pixels"] << " and upper: " << this_int_map["maximum_basin_size_pixels"] << endl;
           BaseLevelJunctions = JunctionNetwork.Prune_Junctions_By_Contributing_Pixel_Window_Remove_Nested_And_Nodata(FlowInfo, filled_topography, FlowAcc,
                                                     this_int_map["minimum_basin_size_pixels"],this_int_map["maximum_basin_size_pixels"]);
         }
@@ -626,6 +627,13 @@ int main (int nNumberofArgs,char *argv[])
           cout << "I am pruning junctions that are influenced by the edge of the DEM!" << endl;
           cout << "This is necessary because basins draining to the edge will have incorrect chi values." << endl;
           BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions_Initial, FlowInfo, filled_topography);
+          
+          cout << "The remaining baselevel junctions are: " << endl;
+          for (int i = 0; i<int(BaseLevelJunctions.size()); i++)
+          {
+            cout << BaseLevelJunctions[i] << endl;
+          }
+          
         }    // end logic for reading from juncitons list
         
         // Now check for larges basin, if that is what you want.
@@ -680,6 +688,17 @@ int main (int nNumberofArgs,char *argv[])
     
           JunctionNetwork.get_overlapping_channels(FlowInfo, BaseLevelJunctions, FD,
                                         source_nodes,outlet_nodes,baselevel_node_of_each_basin,n_nodes_to_visit);
+        }
+        
+        cout << "I've got the overlapping channels. The baselevel junctions are now: " << endl;
+        for (int i = 0; i<int(BaseLevelJunctions.size()); i++)
+        {
+          cout << BaseLevelJunctions[i] << endl;
+        }
+        cout << "And the baselevel nodes of each basin are: " << endl;
+        for (int i = 0; i<int(BaseLevelJunctions.size()); i++)
+        {
+          cout << baselevel_node_of_each_basin[i] << endl;
         }
         
 

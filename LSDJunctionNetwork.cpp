@@ -6391,6 +6391,7 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_By_Contributing_Pixel_Window_Rem
   // get the flow accumulation (in pixels) from each of these basins
   cout << "First let me prune within the contributing area window." << endl;
   cout << " I'm starting with " << Junctions_Initial.size() << " junctions." << endl;
+  cout << "The lower limit is: " << lower_limit << " and upper limit "<< upper_limit << endl;
   vector<int> first_pruning = Prune_Junctions_By_Contributing_Pixel_Window(Junctions_Initial,FlowInfo,
                                               FlowAcc, lower_limit, upper_limit);
   cout << "Right, I've pruned those and have " << first_pruning.size() << " junctions left." << endl;
