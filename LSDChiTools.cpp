@@ -1956,6 +1956,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
   int last_node = 0;
   int number_of_0 = 0;
   int n_knp = 0;
+  float temp_mchi_last, temp_mchi_this;
   
 
 
@@ -2000,9 +2001,13 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
       {
         // cout << "THIS LAST SAVED" << endl << endl << endl; // DEBUG STUFFS
         
+        // TEST TO RECAST REALLY SMALL DATA
+        if(abs(last_M_chi)<1){temp_mchi_last = 1;} else { temp_mchi_last = last_M_chi;}
+        if(abs(this_M_chi)<1){temp_mchi_this = 1;} else { temp_mchi_this = this_M_chi;}
+        last_M_atan = atan(temp_mchi_last);
+        this_M_atan = atan(temp_mchi_this);
+        // END OF THE TEST
         
-        last_M_atan = atan(last_M_chi);
-        this_M_atan = atan(this_M_chi);
         if(this_M_chi == 0)
         {
           ratio_mchi = -9999; // correspond to +infinite
@@ -2014,15 +2019,19 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         }
         delta_mchi = last_M_chi-this_M_chi; // diff between last and new chi steepness
         if(delta_mchi<=0){knickpoint_sign = -1;} else {knickpoint_sign = 1;} // Assign the knickpoint sign value
-        delta_mchi = abs(delta_mchi); // we want the absolute mangitude of this, the sign being displayed in another column. it is just like nicer like this.
-        delta_atan = abs(last_M_atan - this_M_atan);
+        delta_mchi = delta_mchi; // we want the absolute mangitude of this, the sign being displayed in another column. it is just like nicer like this.
+        delta_atan = last_M_atan - this_M_atan;
         // Allocate the values to local maps
         this_kickpoint_diff_map[this_node] = delta_mchi;
         this_kickpoint_ratio_map[this_node] = ratio_mchi;
         this_knickpoint_rad[this_node] = delta_atan;
         this_knickpoint_sign_map[this_node] = knickpoint_sign;
         n_knp ++;
-        // cout << "detecting knickpoint between last mchi:" << last_M_chi << " and this M chi: " << this_M_chi << " with diff: " << delta_mchi << " with ratio: " << ratio_mchi << " with rad: " << delta_atan << " with sign: " << knickpoint_sign << endl; 
+        if(delta_atan>=1)
+        {
+          cout << this_M_chi << "||" << last_M_chi << "||" << source_keys_map[this_node] << endl;
+        }
+        //cout << "detecting knickpoint between last mchi:" << last_M_chi << " and this M chi: " << this_M_chi << " with diff: " << delta_mchi << " with ratio: " << ratio_mchi << " with rad: " << delta_atan << " with sign: " << knickpoint_sign << " on river number " << source_keys_map[this_node] << endl; 
 
       }
     }
