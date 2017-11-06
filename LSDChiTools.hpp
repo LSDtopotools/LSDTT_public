@@ -1118,6 +1118,8 @@ class LSDChiTools
     map<int,float> kns_diff_knickpoint_map;
     /// A map that holds knickpoints signs
     map<int,int> ksn_sign_knickpoint_map;
+    /// Map of the knickpoints value in radian
+    map<int,float> ksn_rad_knickpoint_map;
 
     /// A vector to hold the order of the nodes. Starts from longest channel
     /// and then works through sources in descending order of channel lenght

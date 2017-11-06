@@ -1945,15 +1945,18 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
   //int abs_threshhold_knickpoint = abs (threshold_knickpoint);
   int this_node = 0;
   map<int,float> this_kickpoint_diff_map;
+  map<int,float> this_knickpoint_rad;
   map<int,float> this_kickpoint_ratio_map;
   map<int,int> this_knickpoint_sign_map;
-  float last_M_chi, this_M_chi;
+  float last_M_chi, this_M_chi, last_M_atan, this_M_atan;
   float delta_mchi = 0; // difference between last and new m_chi
   float ratio_mchi = 0; // ratio between last and new m_chi
+  float delta_atan = 0; // difference for the slope in radian
   int knickpoint_sign = 0; // sign of the knickpoint: + =1 and - = -1
   int last_node = 0;
   int number_of_0 = 0;
   int n_knp = 0;
+  
 
 
 
@@ -1994,6 +1997,10 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
       if (this_M_chi != last_M_chi && source_keys_map[this_node] == source_keys_map[last_node])
       {
         //cout << "THIS LAST SAVED" << endl << endl << endl;
+        
+        
+        last_M_atan = atan(last_M_chi);
+        this_M_chi = atan(this_M_chi);
         if(this_M_chi == 0)
         {
           ratio_mchi = -9999; // correspond to +infinite
@@ -2006,9 +2013,11 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         delta_mchi = last_M_chi-this_M_chi; // diff between last and new chi steepness
         if(delta_mchi<=0){knickpoint_sign = -1;} else {knickpoint_sign = 1;} // Assign the knickpoint sign value
         delta_mchi = abs(delta_mchi); // we want the absolute mangitude of this, the sign being displayed in another column. it is just like nicer like this.
+        delta_atan = abs(last_M_atan - this_M_atan);
         // Allocate the values to local maps
         this_kickpoint_diff_map[this_node] = delta_mchi;
         this_kickpoint_ratio_map[this_node] = ratio_mchi;
+        this_knickpoint_rad[this_node] = delta_atan;
         this_knickpoint_sign_map[this_node] = knickpoint_sign;
         n_knp ++;
 
@@ -2023,6 +2032,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
   kns_ratio_knickpoint_map = this_kickpoint_ratio_map;
   kns_diff_knickpoint_map = this_kickpoint_diff_map;
   ksn_sign_knickpoint_map = this_knickpoint_sign_map;
+  ksn_rad_knickpoint_map = this_knickpoint_rad;
   cout << "I finished to detect the knickpoints, you have " << n_knp << " knickpoints, thus " << number_of_0 << " ratios are switched to -9999 due to 0 divisions." << endl;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
