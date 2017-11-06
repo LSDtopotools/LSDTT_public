@@ -2055,7 +2055,7 @@ void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "latitude,longitude,elevation,flow_distance,chi,drainage_area,diff,ratio,sign,source_key,basin_key";
+  chi_data_out << "latitude,longitude,elevation,flow_distance,chi,drainage_area,diff,ratio,sign,rad_diff,source_key,basin_key";
 
   chi_data_out << endl;
 
@@ -2086,6 +2086,7 @@ void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename
                      << kns_diff_knickpoint_map[this_node] << ","
                      << kns_ratio_knickpoint_map[this_node] << ","
                      << ksn_sign_knickpoint_map[this_node] << ","
+                     << ksn_rad_knickpoint_map[this_node] << ","
                      << source_keys_map[this_node] << ","
                      << baselevel_keys_map[this_node];
 
