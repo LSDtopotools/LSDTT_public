@@ -2002,7 +2002,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         
         
         last_M_atan = atan(last_M_chi);
-        this_M_chi = atan(this_M_chi);
+        this_M_atan = atan(this_M_chi);
         if(this_M_chi == 0)
         {
           ratio_mchi = -9999; // correspond to +infinite
@@ -2022,6 +2022,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         this_knickpoint_rad[this_node] = delta_atan;
         this_knickpoint_sign_map[this_node] = knickpoint_sign;
         n_knp ++;
+        // cout << "detecting knickpoint between last mchi:" << last_M_chi << " and this M chi: " << this_M_chi << " with diff: " << delta_mchi << " with ratio: " << ratio_mchi << " with rad: " << delta_atan << " with sign: " << knickpoint_sign << endl; 
 
       }
     }
