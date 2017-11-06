@@ -1976,13 +1976,13 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
     {
 
       // set the nodes number and keep information about the previous one
-      if(n>0)
-      {
-        last_node = this_node;
-      }
+     
+      last_node = this_node;
+      
       this_node = node_sequence[n];
       // Get the M_chi from the current node
       this_M_chi = M_chi_data_map[this_node];
+      last_M_chi = M_chi_data_map[last_node];
 
       if(this_M_chi < 0 && n>0){this_M_chi = 0;} // getting rid of the negative values because we don't want it, I don't want the n = 0 to avoid detecting fake knickpoint if the first value is actually negative
       
@@ -1992,11 +1992,13 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
       // cout << "MCHI: " << M_chi_data_map[this_node] << " LAST: " << M_chi_data_map[last_node] << endl;
       // cout << "MCHI2: " << this_M_chi << " LAST: " << last_M_chi << endl;
 
+      // END OF DEBUGGING
+
 
       // If the M_chi has changed I increment the knickpoints, I also check if the two point are on the same channel to avoid stange unrelated knickpoints
       if (this_M_chi != last_M_chi && source_keys_map[this_node] == source_keys_map[last_node])
       {
-        //cout << "THIS LAST SAVED" << endl << endl << endl;
+        // cout << "THIS LAST SAVED" << endl << endl << endl; // DEBUG STUFFS
         
         
         last_M_atan = atan(last_M_chi);
@@ -2021,10 +2023,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         this_knickpoint_sign_map[this_node] = knickpoint_sign;
         n_knp ++;
 
-        // reinitialise the parameters for next loop turn
-        
       }
-    last_M_chi = this_M_chi;
     }
 
   }
@@ -2068,13 +2067,15 @@ void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename
   }
   else
   {
-    for (int n = 0; n< n_nodes; n++)
+    map<int,float>::iterator iter;
+
+    for (iter = kns_diff_knickpoint_map.begin(); iter != kns_diff_knickpoint_map.end(); iter++)
     {
-        this_node = node_sequence[n];
+        this_node = iter->first;
         FlowInfo.retrieve_current_row_and_col(this_node,row,col);
         get_lat_and_long_locations(row, col, latitude, longitude, Converter);
-        if(kns_diff_knickpoint_map.count(this_node) == 1)
-        {
+        // cout << "printing node " << this_node << " with diff " << kns_diff_knickpoint_map[this_node] << endl; 
+        
         chi_data_out.precision(9);
         chi_data_out << latitude << ","
                      << longitude << ",";
@@ -2089,9 +2090,7 @@ void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename
                      << ksn_rad_knickpoint_map[this_node] << ","
                      << source_keys_map[this_node] << ","
                      << baselevel_keys_map[this_node];
-
         chi_data_out << endl;
-      }
     }
   }
 

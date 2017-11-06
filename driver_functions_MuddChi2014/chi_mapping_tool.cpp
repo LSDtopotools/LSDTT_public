@@ -897,7 +897,8 @@ int main (int nNumberofArgs,char *argv[])
         || this_bool_map["print_baselevel_keys"]
         || this_bool_map["print_basin_raster"]
         || this_bool_map["MCMC_movern_analysis"]
-        || this_bool_map["print_chi_data_maps"])
+        || this_bool_map["print_chi_data_maps"]
+        || this_bool_map["ksn_knickpoint_analysis"])
   {
     cout << "I am getting the source and outlet nodes for the overlapping channels" << endl;
     cout << "The n_nodes to visit are: " << n_nodes_to_visit << endl;
@@ -1599,6 +1600,7 @@ int main (int nNumberofArgs,char *argv[])
   {
     n_iterations = 1;
     skip = 0;
+    LSDChiTools ChiTool(FlowInfo);
     ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
                           filled_topography, DistanceFromOutlet,
                           DrainageArea, chi_coordinate, target_nodes,
@@ -1607,7 +1609,7 @@ int main (int nNumberofArgs,char *argv[])
     ChiTool.ksn_knickpoint_detection(FlowInfo);
     string csv_full_fname_knockpoint = OUT_DIR+OUT_ID+"_KsnKn.csv";
     ChiTool.print_knickpoint_to_csv(FlowInfo,csv_full_fname_knockpoint);
-    // Testing something
+
     string csv_full_fname = OUT_DIR+OUT_ID+"_MChiSegmented_Ks.csv";
     cout << "Let me print A Test File " << csv_full_fname << endl;
     ChiTool.print_data_maps_to_file_full(FlowInfo, csv_full_fname);
