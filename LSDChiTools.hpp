@@ -1120,6 +1120,11 @@ class LSDChiTools
     map<int,int> ksn_sign_knickpoint_map;
     /// Map of the knickpoints value in radian
     map<int,float> ksn_rad_knickpoint_map;
+    /// Map of the knickzone by cumulative variations
+    map<int,float> ksn_cumul_knickzone_map;
+    /// Map of the cumulative variations derivative
+    map<int,float> ksn_deriv_knickzone_map;
+
 
     /// A vector to hold the order of the nodes. Starts from longest channel
     /// and then works through sources in descending order of channel lenght

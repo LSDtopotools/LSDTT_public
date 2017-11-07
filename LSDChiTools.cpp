@@ -1957,7 +1957,9 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
   int number_of_0 = 0;
   int n_knp = 0;
   float temp_mchi_last, temp_mchi_this;
-  
+  map<int,vector<int> > this_node_kp_per_source_key; // this map store the node of each river knickpoint, the key is the source_key
+  map<int,float> this_cumul_ksn_map; // This map store the cumulative ksn for each rivers
+  map<int,float> this_derivative_cumul_ksn_map; // this map store derivative values at each nodes
 
 
 
@@ -1972,6 +1974,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
   {
     this_node = node_sequence[0];
     last_M_chi =  M_chi_data_map[this_node];
+
 
     for (int n = 0; n< n_nodes; n++)
     {
@@ -1989,9 +1992,9 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
       
       // DEBUG STATEMENT - PLEASE KEEP I USE THIS SOMETIMES
 
-      // cout << "RIVER SOURCE: " << source_keys_map[this_node] << " LAST: " << source_keys_map[last_node] << endl;
-      // cout << "MCHI: " << M_chi_data_map[this_node] << " LAST: " << M_chi_data_map[last_node] << endl;
-      // cout << "MCHI2: " << this_M_chi << " LAST: " << last_M_chi << endl;
+      // ############################################################### cout << "RIVER SOURCE: " << source_keys_map[this_node] << " LAST: " << source_keys_map[last_node] << endl;
+      // ############################################################### cout << "MCHI: " << M_chi_data_map[this_node] << " LAST: " << M_chi_data_map[last_node] << endl;
+      // ############################################################### cout << "MCHI2: " << this_M_chi << " LAST: " << last_M_chi << endl;
 
       // END OF DEBUGGING
 
@@ -1999,15 +2002,16 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
       // If the M_chi has changed I increment the knickpoints, I also check if the two point are on the same channel to avoid stange unrelated knickpoints
       if (this_M_chi != last_M_chi && source_keys_map[this_node] == source_keys_map[last_node])
       {
-        // cout << "THIS LAST SAVED" << endl << endl << endl; // DEBUG STUFFS
-        
-        // TEST TO RECAST REALLY SMALL DATA
-        if(abs(last_M_chi)<1){temp_mchi_last = 1;} else { temp_mchi_last = last_M_chi;}
-        if(abs(this_M_chi)<1){temp_mchi_this = 1;} else { temp_mchi_this = this_M_chi;}
-        last_M_atan = atan(temp_mchi_last);
-        this_M_atan = atan(temp_mchi_this);
-        // END OF THE TEST
-        
+        // If this condition is satisfied, we change segment and the knickpoint will be saved
+        // -> first thing to do is to save the node into the map of knickpoint per river
+        this_node_kp_per_source_key[source_keys_map[this_node]].push_back(this_node);
+       
+
+        // Calculation of the arctan of the M_Chi to get angle of M_chi segment 
+        last_M_atan = abs(atan(last_M_chi));// if you want degrees *180/M_PI;
+        this_M_atan = abs(atan(this_M_chi));// if you want degrees *180/M_PI;
+
+        // dealing with division/0 and calculation of the ratio
         if(this_M_chi == 0)
         {
           ratio_mchi = -9999; // correspond to +infinite
@@ -2017,33 +2021,70 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         {
           ratio_mchi = last_M_chi/this_M_chi; // Ratio between last and new chi steepness
         }
-        delta_mchi = last_M_chi-this_M_chi; // diff between last and new chi steepness
+
+        // calculation of the delta between the two segments referred as diff
+        delta_mchi = -(last_M_chi-this_M_chi); // diff between last and new chi steepness - note that the minus is because we loop up to bottom
+
+        // Determination of the sign
         if(delta_mchi<=0){knickpoint_sign = -1;} else {knickpoint_sign = 1;} // Assign the knickpoint sign value
-        delta_mchi = delta_mchi; // we want the absolute mangitude of this, the sign being displayed in another column. it is just like nicer like this.
-        delta_atan = last_M_atan - this_M_atan;
+
+        // Delta between the radian angle 
+        delta_atan = -(last_M_atan - this_M_atan); // note that the minus is because we loop up to bottom
+
         // Allocate the values to local maps
         this_kickpoint_diff_map[this_node] = delta_mchi;
         this_kickpoint_ratio_map[this_node] = ratio_mchi;
         this_knickpoint_rad[this_node] = delta_atan;
         this_knickpoint_sign_map[this_node] = knickpoint_sign;
         n_knp ++;
-        if(delta_atan>=1)
-        {
-          cout << this_M_chi << "||" << last_M_chi << "||" << source_keys_map[this_node] << endl;
-        }
-        //cout << "detecting knickpoint between last mchi:" << last_M_chi << " and this M chi: " << this_M_chi << " with diff: " << delta_mchi << " with ratio: " << ratio_mchi << " with rad: " << delta_atan << " with sign: " << knickpoint_sign << " on river number " << source_keys_map[this_node] << endl; 
-
       }
     }
 
+    // Now calculating the cumulation of angle and ksn
+    map<int,vector<int> >::iterator marten;
+    float ksn_cumul, ksn_last_cumul, ksn_deriv, last_chi;
+    for(marten = (this_node_kp_per_source_key.begin());marten != this_node_kp_per_source_key.end();marten++)
+    {
+      // Now looping through the river sources
+      ksn_cumul = 0;
+      for(vector<int>::reverse_iterator tapir = marten->second.rbegin(); tapir!= marten->second.rend(); ++tapir)
+      {
+        // Now looping through the knickpoint of each river, *tapir is the node number. /!\ Note that I am loooing using a reverse_iterator to go from the bottom to the top of each river
+        ksn_last_cumul = ksn_cumul; // saving the last ksn value
+        ksn_cumul += this_kickpoint_diff_map[*tapir]; // cumulating the ksn value
+        this_cumul_ksn_map[*tapir] = ksn_cumul; // adding it to the map
+
+        // now calculating the derivative
+        if(tapir == marten->second.rbegin())
+        {
+          ksn_deriv = 0;
+        }
+        else
+        {
+          ksn_deriv = (ksn_cumul - ksn_last_cumul)/(chi_data_map[*tapir]/last_chi); // each knickpoint nodes has the derivative of the gradient of the last segments
+        }
+
+        // adding the value to the map
+        this_derivative_cumul_ksn_map[*tapir] = ksn_deriv;
+
+        // storing the last chi value for the derivative
+        last_chi = chi_data_map[*tapir];
+
+      }
+    }
   }
+
   // print everything in the public/protected maps
   kns_ratio_knickpoint_map = this_kickpoint_ratio_map;
   kns_diff_knickpoint_map = this_kickpoint_diff_map;
   ksn_sign_knickpoint_map = this_knickpoint_sign_map;
   ksn_rad_knickpoint_map = this_knickpoint_rad;
+  ksn_cumul_knickzone_map = this_cumul_ksn_map;
+  ksn_deriv_knickzone_map = this_derivative_cumul_ksn_map;
   cout << "I finished to detect the knickpoints, you have " << n_knp << " knickpoints, thus " << number_of_0 << " ratios are switched to -9999 due to 0 divisions." << endl;
+
 }
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2064,7 +2105,7 @@ void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "latitude,longitude,elevation,flow_distance,chi,drainage_area,diff,ratio,sign,rad_diff,source_key,basin_key";
+  chi_data_out << "latitude,longitude,elevation,flow_distance,chi,drainage_area,diff,ratio,sign,rad_diff,cumul_ksn,deriv_cumul_ksn,source_key,basin_key";
 
   chi_data_out << endl;
 
@@ -2098,6 +2139,8 @@ void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename
                      << kns_ratio_knickpoint_map[this_node] << ","
                      << ksn_sign_knickpoint_map[this_node] << ","
                      << ksn_rad_knickpoint_map[this_node] << ","
+                     << ksn_cumul_knickzone_map[this_node] << ","
+                     << ksn_deriv_knickzone_map[this_node] << ","
                      << source_keys_map[this_node] << ","
                      << baselevel_keys_map[this_node];
         chi_data_out << endl;
