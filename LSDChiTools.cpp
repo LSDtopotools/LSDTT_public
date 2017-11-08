@@ -1518,7 +1518,9 @@ LSDIndexRaster LSDChiTools::segment_mapping(LSDFlowInfo& FlowInfo, float maximum
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float threshold_knickpoint, float threshold_knickpoint_length)
 {
-  // these are for extracting element-wise data from the channel profiles.
+  cout << "Deprecated function, do not use it anymore. I am keeping it for a time just to check if someone still need it" << endl;
+  exit(EXIT_FAILURE);
+  /*// these are for extracting element-wise data from the channel profiles.
   //int abs_threshhold_knickpoint = abs (threshold_knickpoint);
   int this_node = 0;
   int segment_counter_knickpoint = 0; // count the number of knickpoints
@@ -1777,7 +1779,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
 
 
 
-    /*
+    
 
 
     if(false)
@@ -1923,7 +1925,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
         }
         else{still_processing = true;}
       }
-    }*/
+    }
   }
 
 
@@ -1932,8 +1934,11 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
   segment_counter_knickpoint_map = this_segment_counter_knickpoint_map;
   segment_knickpoint_sign_map = this_segment_knickpoint_sign_map;
   segment_length_map = this_segment_length_map;
+  */
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // New function for the knickpoint detection
@@ -1941,63 +1946,56 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
 {
-  // these are for extracting element-wise data from the channel profiles.
-  //int abs_threshhold_knickpoint = abs (threshold_knickpoint);
-  int this_node = 0;
-  map<int,float> this_kickpoint_diff_map;
-  map<int,float> this_knickpoint_rad;
-  map<int,float> this_kickpoint_ratio_map;
-  map<int,int> this_knickpoint_sign_map;
-  float last_M_chi, this_M_chi, last_M_atan, this_M_atan;
+
+  // setting the variables for extracting the knickpoints
+  int this_node = 0; // Node to investigate
+  map<int,float> this_kickpoint_diff_map; // map of the delta k_sn, key is node number from Flowinfo
+  map<int,float> this_knickpoint_rad; // map of the radian angle, key is node number from Flowinfo
+  map<int,float> this_kickpoint_ratio_map; // map of the ratio k_sn, key is node number from Flowinfo
+  map<int,int> this_knickpoint_sign_map; // map of the sign k_sn, key is node number from Flowinfo
+  float last_M_chi, this_M_chi, last_M_atan, this_M_atan; // Floating storage of each last/new knickpoint value
   float delta_mchi = 0; // difference between last and new m_chi
   float ratio_mchi = 0; // ratio between last and new m_chi
   float delta_atan = 0; // difference for the slope in radian
   int knickpoint_sign = 0; // sign of the knickpoint: + =1 and - = -1
-  int last_node = 0;
-  int number_of_0 = 0;
-  int n_knp = 0;
-  float temp_mchi_last, temp_mchi_this;
+  int last_node = 0; // store the last investigated node to investigate
+  int number_of_0 = 0; // debug storage of the number of knickpoint ratio recasted to avoid x/0
+  int n_knp = 0; // hum ... probably the number of knickpoint, I have no recognition of this
   map<int,vector<int> > this_node_kp_per_source_key; // this map store the node of each river knickpoint, the key is the source_key
   map<int,float> this_cumul_ksn_map; // This map store the cumulative ksn for each rivers
   map<int,float> this_derivative_cumul_ksn_map; // this map store derivative values at each nodes
-
-
-
+  map<int,float> this_cumul_rad_map; // This map store the cumulative ksn for each rivers
+  map<int,float> this_derivative_cumul_rad_map; // this map store derivative values at each nodes
 
   // find the number of nodes
   int n_nodes = (node_sequence.size());
   if (n_nodes <= 0)
   {
     cout << "Cannot calculate segments since you have not calculated channel properties yet." << endl;
+    exit(EXIT_FAILURE);
   }
   else
   {
+    // At this point, you have the required condition to launch the knickpoint analysis
+    cout << "I am now extracting the knickpoint dataset" << endl;
+
+    // Initializing the first node
     this_node = node_sequence[0];
     last_M_chi =  M_chi_data_map[this_node];
 
-
+    // Engaging the loop through the rivers nodes
     for (int n = 0; n< n_nodes; n++)
     {
-
       // set the nodes number and keep information about the previous one
-     
       last_node = this_node;
-      
       this_node = node_sequence[n];
+
       // Get the M_chi from the current node
       this_M_chi = M_chi_data_map[this_node];
       last_M_chi = M_chi_data_map[last_node];
 
+      // recasting if negative M_Chi. These negative values are artifact for really flat segments, recasting it to 0 is then inconsequential
       if(this_M_chi < 0 && n>0){this_M_chi = 0;} // getting rid of the negative values because we don't want it, I don't want the n = 0 to avoid detecting fake knickpoint if the first value is actually negative
-      
-      // DEBUG STATEMENT - PLEASE KEEP I USE THIS SOMETIMES
-
-      // ############################################################### cout << "RIVER SOURCE: " << source_keys_map[this_node] << " LAST: " << source_keys_map[last_node] << endl;
-      // ############################################################### cout << "MCHI: " << M_chi_data_map[this_node] << " LAST: " << M_chi_data_map[last_node] << endl;
-      // ############################################################### cout << "MCHI2: " << this_M_chi << " LAST: " << last_M_chi << endl;
-
-      // END OF DEBUGGING
-
 
       // If the M_chi has changed I increment the knickpoints, I also check if the two point are on the same channel to avoid stange unrelated knickpoints
       if (this_M_chi != last_M_chi && source_keys_map[this_node] == source_keys_map[last_node])
@@ -2007,7 +2005,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         this_node_kp_per_source_key[source_keys_map[this_node]].push_back(this_node);
        
 
-        // Calculation of the arctan of the M_Chi to get angle of M_chi segment 
+        // Calculation of the arctan of the M_Chi to get angle of M_chi segment, We want the absolute value, atan can have some sign issue. Uses of atan2 solve this quadrant issue, however require the x/y value that would be painful to get here
         last_M_atan = abs(atan(last_M_chi));// if you want degrees *180/M_PI;
         this_M_atan = abs(atan(this_M_chi));// if you want degrees *180/M_PI;
 
@@ -2023,7 +2021,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         }
 
         // calculation of the delta between the two segments referred as diff
-        delta_mchi = -(last_M_chi-this_M_chi); // diff between last and new chi steepness - note that the minus is because we loop up to bottom
+        delta_mchi = (last_M_chi-this_M_chi); // diff between last and new chi steepness - note that there is no minus because we loop up to bottom
 
         // Determination of the sign
         if(delta_mchi<=0){knickpoint_sign = -1;} else {knickpoint_sign = 1;} // Assign the knickpoint sign value
@@ -2037,35 +2035,55 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         this_knickpoint_rad[this_node] = delta_atan;
         this_knickpoint_sign_map[this_node] = knickpoint_sign;
         n_knp ++;
+        // end of the loop
       }
     }
 
-    // Now calculating the cumulation of angle and ksn
-    map<int,vector<int> >::iterator marten;
-    float ksn_cumul, ksn_last_cumul, ksn_deriv, last_chi;
+    // Now calculating the cumulation of angle and ksn, we could incorporate that in the last loop, but it is clearer that way I think. The loss of efficienty isn't too bad
+
+    // Iteration over each river, 
+    map<int,vector<int> >::iterator marten; //I quite like the map<...>::iterator
+    float ksn_cumul, ksn_last_cumul, ksn_deriv, rad_cumul, rad_last_cumul, rad_deriv, last_chi; //  temporary variables to store each turns values
     for(marten = (this_node_kp_per_source_key.begin());marten != this_node_kp_per_source_key.end();marten++)
     {
       // Now looping through the river sources
-      ksn_cumul = 0;
-      for(vector<int>::reverse_iterator tapir = marten->second.rbegin(); tapir!= marten->second.rend(); ++tapir)
+      ksn_cumul = 0; // intialization of the ksn cumul to 0
+      rad_cumul = 0; // intialization of the rad cumul to 0
+      for(vector<int>::reverse_iterator tapir = marten->second.rbegin(); tapir!= marten->second.rend(); ++tapir) // The iterator can be reversed to loop backward !! I love iterators. 
       {
-        // Now looping through the knickpoint of each river, *tapir is the node number. /!\ Note that I am loooing using a reverse_iterator to go from the bottom to the top of each river
+        // Now looping through the knickpoint of each river, *tapir is the pointer that refers to node number. /!\ Note that I am loooing using a reverse_iterator to go from the bottom to the top of each river
+        
+        // Getting the requested ksn values
         ksn_last_cumul = ksn_cumul; // saving the last ksn value
         ksn_cumul += this_kickpoint_diff_map[*tapir]; // cumulating the ksn value
         this_cumul_ksn_map[*tapir] = ksn_cumul; // adding it to the map
+        // Getting the radian values
+        rad_last_cumul = rad_cumul; // saving the last rad value
+        rad_cumul += (this_knickpoint_rad[*tapir]*this_knickpoint_sign_map[*tapir]); // cumulating the rad value /!\ rad is the absolute value, I am correcting it by multiplicating byt the sign to get the cumul of variations
+        this_cumul_rad_map[*tapir] = rad_cumul; // adding it to the map
+
+        // Commented this for some reason
+///////////////////////////////////////////////////////////////////////////////////////////
 
         // now calculating the derivative
+        last_chi = 0; // avoiding warning
         if(tapir == marten->second.rbegin())
         {
+          // the first run arbitrary set the boundary variation at 0
           ksn_deriv = 0;
+          rad_deriv = 0;
+
         }
         else
         {
+          // actual derivation. point i holds the slope between i and i-1, i increasing from base to top.
           ksn_deriv = (ksn_cumul - ksn_last_cumul)/(chi_data_map[*tapir]/last_chi); // each knickpoint nodes has the derivative of the gradient of the last segments
+          rad_deriv = (rad_cumul - rad_last_cumul)/(chi_data_map[*tapir]/last_chi); // each knickpoint nodes has the derivative of the gradient of the last segments
         }
 
-        // adding the value to the map
-        this_derivative_cumul_ksn_map[*tapir] = ksn_deriv;
+        // adding the value to the maps
+        this_derivative_cumul_ksn_map[*tapir] = ksn_deriv; // ksn
+        this_derivative_cumul_rad_map[*tapir] = rad_deriv; // rad
 
         // storing the last chi value for the derivative
         last_chi = chi_data_map[*tapir];
@@ -2074,13 +2092,15 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
     }
   }
 
-  // print everything in the public/protected maps
+  // print everything in the public/protected maps -> saving the calculated data in the system
   kns_ratio_knickpoint_map = this_kickpoint_ratio_map;
   kns_diff_knickpoint_map = this_kickpoint_diff_map;
   ksn_sign_knickpoint_map = this_knickpoint_sign_map;
   ksn_rad_knickpoint_map = this_knickpoint_rad;
   ksn_cumul_knickzone_map = this_cumul_ksn_map;
   ksn_deriv_knickzone_map = this_derivative_cumul_ksn_map;
+  rad_cumul_knickzone_map = this_cumul_rad_map;
+  rad_deriv_knickzone_map = this_derivative_cumul_rad_map;
   cout << "I finished to detect the knickpoints, you have " << n_knp << " knickpoints, thus " << number_of_0 << " ratios are switched to -9999 due to 0 divisions." << endl;
 
 }
@@ -2105,7 +2125,7 @@ void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "latitude,longitude,elevation,flow_distance,chi,drainage_area,diff,ratio,sign,rad_diff,cumul_ksn,deriv_cumul_ksn,source_key,basin_key";
+  chi_data_out << "latitude,longitude,elevation,flow_distance,chi,drainage_area,diff,ratio,sign,rad_diff,cumul_ksn,deriv_cumul_ksn,cumul_rad,deriv_cumul_rad,source_key,basin_key";
 
   chi_data_out << endl;
 
@@ -2141,6 +2161,8 @@ void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename
                      << ksn_rad_knickpoint_map[this_node] << ","
                      << ksn_cumul_knickzone_map[this_node] << ","
                      << ksn_deriv_knickzone_map[this_node] << ","
+                     << rad_cumul_knickzone_map[this_node] << ","
+                     << rad_deriv_knickzone_map[this_node] << ","
                      << source_keys_map[this_node] << ","
                      << baselevel_keys_map[this_node];
         chi_data_out << endl;
