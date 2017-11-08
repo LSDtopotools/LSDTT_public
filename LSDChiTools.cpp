@@ -1961,6 +1961,9 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
   int last_node = 0; // store the last investigated node to investigate
   int number_of_0 = 0; // debug storage of the number of knickpoint ratio recasted to avoid x/0
   int n_knp = 0; // hum ... probably the number of knickpoint, I have no recognition of this
+  float max_elev = 0; // used to recast the M_chi value for angle determination 
+  float max_chi = 0; // used to recast the M_chi value for angle determination
+  float natural_coeff = 0;  // used to recast the M_chi value for angle determination
   map<int,vector<int> > this_node_kp_per_source_key; // this map store the node of each river knickpoint, the key is the source_key
   map<int,float> this_cumul_ksn_map; // This map store the cumulative ksn for each rivers
   map<int,float> this_derivative_cumul_ksn_map; // this map store derivative values at each nodes
@@ -1976,6 +1979,32 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
   }
   else
   {
+    // Preprocessing step, I am getting the maximum of chi values, in order to recast the calculation of the angle.
+    // short explanation: the angle is calculated using arctan to get a rad of the segment. ksn is obtained by calculating Mchi with A0 = 1
+    // This usually give to Chi values between 0 and 20~30ish depending on the landscape. We keep this value for the ksn knickpoints calculation
+    // However, to get a "natural" angle, we recast the Mchi to correspond to a Chi value comparable to the elevation, thus using a A0 to get a maximum chi similar to the maximum elevation.
+
+    // First we want to get the maximum elevation and the maximum chi
+    for (int n = 0; n< n_nodes; n++)
+    {
+      if(elev_data_map[node_sequence[n]] > max_elev)
+      {
+        max_elev = elev_data_map[node_sequence[n]];
+        cout << max_elev << endl;
+      }
+      if(chi_data_map[node_sequence[n]] > max_chi)
+      {
+        max_chi = chi_data_map[node_sequence[n]];
+        cout << max_chi << endl;
+      }
+    }
+
+    // natural coeff is then maxz/maxChi (= A0_new^(-m/n))
+    natural_coeff = max_elev/max_chi;
+    natural_coeff = 1/(natural_coeff);
+    cout << natural_coeff << endl;
+
+
     // At this point, you have the required condition to launch the knickpoint analysis
     cout << "I am now extracting the knickpoint dataset" << endl;
 
@@ -2006,8 +2035,9 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
        
 
         // Calculation of the arctan of the M_Chi to get angle of M_chi segment, We want the absolute value, atan can have some sign issue. Uses of atan2 solve this quadrant issue, however require the x/y value that would be painful to get here
-        last_M_atan = abs(atan(last_M_chi));// if you want degrees *180/M_PI;
-        this_M_atan = abs(atan(this_M_chi));// if you want degrees *180/M_PI;
+        // We use the natural coeff to adjust M_chi
+        last_M_atan = abs(atan(natural_coeff * last_M_chi));// if you want degrees *180/M_PI;
+        this_M_atan = abs(atan(natural_coeff * this_M_chi));// if you want degrees *180/M_PI;
 
         // dealing with division/0 and calculation of the ratio
         if(this_M_chi == 0)
@@ -2027,7 +2057,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         if(delta_mchi<=0){knickpoint_sign = -1;} else {knickpoint_sign = 1;} // Assign the knickpoint sign value
 
         // Delta between the radian angle 
-        delta_atan = -(last_M_atan - this_M_atan); // note that the minus is because we loop up to bottom
+        delta_atan = (last_M_atan - this_M_atan); // note that the minus is because we loop up to bottom, in fact no, no minus, my bad
 
         // Allocate the values to local maps
         this_kickpoint_diff_map[this_node] = delta_mchi;
@@ -2044,6 +2074,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
     // Iteration over each river, 
     map<int,vector<int> >::iterator marten; //I quite like the map<...>::iterator
     float ksn_cumul, ksn_last_cumul, ksn_deriv, rad_cumul, rad_last_cumul, rad_deriv, last_chi; //  temporary variables to store each turns values
+    last_chi = 0; // avoiding warnings
     for(marten = (this_node_kp_per_source_key.begin());marten != this_node_kp_per_source_key.end();marten++)
     {
       // Now looping through the river sources
@@ -2059,14 +2090,13 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         this_cumul_ksn_map[*tapir] = ksn_cumul; // adding it to the map
         // Getting the radian values
         rad_last_cumul = rad_cumul; // saving the last rad value
-        rad_cumul += (this_knickpoint_rad[*tapir]*this_knickpoint_sign_map[*tapir]); // cumulating the rad value /!\ rad is the absolute value, I am correcting it by multiplicating byt the sign to get the cumul of variations
+        rad_cumul += this_knickpoint_rad[*tapir]; // cumulating the rad value 
         this_cumul_rad_map[*tapir] = rad_cumul; // adding it to the map
 
         // Commented this for some reason
 ///////////////////////////////////////////////////////////////////////////////////////////
 
         // now calculating the derivative
-        last_chi = 0; // avoiding warning
         if(tapir == marten->second.rbegin())
         {
           // the first run arbitrary set the boundary variation at 0
