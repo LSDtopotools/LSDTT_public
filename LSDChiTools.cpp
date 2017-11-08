@@ -1990,19 +1990,16 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
       if(elev_data_map[node_sequence[n]] > max_elev)
       {
         max_elev = elev_data_map[node_sequence[n]];
-        cout << max_elev << endl;
       }
       if(chi_data_map[node_sequence[n]] > max_chi)
       {
         max_chi = chi_data_map[node_sequence[n]];
-        cout << max_chi << endl;
       }
     }
 
     // natural coeff is then maxz/maxChi (= A0_new^(-m/n))
     natural_coeff = max_elev/max_chi;
     natural_coeff = 1/(natural_coeff);
-    cout << natural_coeff << endl;
 
 
     // At this point, you have the required condition to launch the knickpoint analysis
