@@ -1049,6 +1049,16 @@ class LSDChiTools
     /// @date 06/06/2017
     void print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename);
 
+    /// @brief This prints a csv file with all the knickzones raw data
+    ///  the columns are:
+    ///  latitude,longitude,elevation,flow distance,drainage area,ratio,diff,sign
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param filename The name of the filename to print to (should have full
+    ///   path and the extension .csv
+    /// @author BG
+    /// @date 06/06/2017
+    void print_knickzone_to_csv(LSDFlowInfo& FlowInfo, string filename);
+
     /// @brief This prints a csv file with a subset of the data from the data maps
     ///  the columns are:
     ///  latitude,longitude,m_chi,b_chi
@@ -1132,6 +1142,12 @@ class LSDChiTools
     map<int,float> rad_cumul_knickzone_map;
     /// Map of the cumulative variations derivative
     map<int,float> rad_deriv_knickzone_map;
+    /// map of nickzones for ksn variations
+    map<pair<int,int>, float> knickzone_raw_cumul_ksn;
+    /// map of nickzones for rksn variations
+    map<pair<int,int>, float> knickzone_raw_cumul_rksn;
+    /// map of nickzones for rad variations
+    map<pair<int,int>, float> knickzone_raw_cumul_rad;
 
 
     /// A vector to hold the order of the nodes. Starts from longest channel
