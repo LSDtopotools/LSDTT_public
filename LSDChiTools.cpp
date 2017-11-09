@@ -1967,6 +1967,8 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
   map<int,vector<int> > this_node_kp_per_source_key; // this map store the node of each river knickpoint, the key is the source_key
   map<int,float> this_cumul_ksn_map; // This map store the cumulative ksn for each rivers
   map<int,float> this_derivative_cumul_ksn_map; // this map store derivative values at each nodes
+  map<int,float> this_cumul_rksn_map; // This map store the cumulative ratio ksn for each rivers
+  map<int,float> this_derivative_cumul_rksn_map; // this map store derivative ratio ksn values at each nodes
   map<int,float> this_cumul_rad_map; // This map store the cumulative ksn for each rivers
   map<int,float> this_derivative_cumul_rad_map; // this map store derivative values at each nodes
 
@@ -2070,12 +2072,13 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
 
     // Iteration over each river, 
     map<int,vector<int> >::iterator marten; //I quite like the map<...>::iterator
-    float ksn_cumul, ksn_last_cumul, ksn_deriv, rad_cumul, rad_last_cumul, rad_deriv, last_chi; //  temporary variables to store each turns values
+    float ksn_cumul, rksn_cumul, ksn_last_cumul, rksn_last_cumul, ksn_deriv, rksn_deriv, rad_cumul, rad_last_cumul, rad_deriv, last_chi, falafel; //  temporary variables to store each turns values
     last_chi = 0; // avoiding warnings
     for(marten = (this_node_kp_per_source_key.begin());marten != this_node_kp_per_source_key.end();marten++)
     {
       // Now looping through the river sources
       ksn_cumul = 0; // intialization of the ksn cumul to 0
+      rksn_cumul = 0; // intialization of the rksn cumul to 0
       rad_cumul = 0; // intialization of the rad cumul to 0
       for(vector<int>::reverse_iterator tapir = marten->second.rbegin(); tapir!= marten->second.rend(); ++tapir) // The iterator can be reversed to loop backward !! I love iterators. 
       {
@@ -2085,6 +2088,10 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         ksn_last_cumul = ksn_cumul; // saving the last ksn value
         ksn_cumul += this_kickpoint_diff_map[*tapir]; // cumulating the ksn value
         this_cumul_ksn_map[*tapir] = ksn_cumul; // adding it to the map
+        // Getting the requested ratio ksn values
+        rksn_last_cumul = rksn_cumul; // saving the last rksn value
+        rksn_cumul += this_kickpoint_ratio_map[*tapir]; // cumulating the rksn value
+        this_cumul_rksn_map[*tapir] = rksn_cumul; // adding it to the map
         // Getting the radian values
         rad_last_cumul = rad_cumul; // saving the last rad value
         rad_cumul += this_knickpoint_rad[*tapir]; // cumulating the rad value 
@@ -2099,17 +2106,21 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
           // the first run arbitrary set the boundary variation at 0
           ksn_deriv = 0;
           rad_deriv = 0;
+          rksn_deriv = 0;
 
         }
         else
         {
           // actual derivation. point i holds the slope between i and i-1, i increasing from base to top.
-          ksn_deriv = (ksn_cumul - ksn_last_cumul)/(chi_data_map[*tapir]/last_chi); // each knickpoint nodes has the derivative of the gradient of the last segments
-          rad_deriv = (rad_cumul - rad_last_cumul)/(chi_data_map[*tapir]/last_chi); // each knickpoint nodes has the derivative of the gradient of the last segments
+          falafel = (chi_data_map[*tapir]-last_chi); // Calcul of this ratio once rather than three time. I probably spent more time writing this comment than the time this optimization will ever save but I regret nothing
+          ksn_deriv = (ksn_cumul - ksn_last_cumul)/falafel; // each knickpoint nodes has the derivative of the gradient of the last segments
+          rksn_deriv = (rksn_cumul - rksn_last_cumul)/falafel; // each knickpoint nodes has the derivative of the gradient of the last segments
+          rad_deriv = (rad_cumul - rad_last_cumul)/falafel; // each knickpoint nodes has the derivative of the gradient of the last segments
         }
 
         // adding the value to the maps
         this_derivative_cumul_ksn_map[*tapir] = ksn_deriv; // ksn
+        this_derivative_cumul_rksn_map[*tapir] = rksn_deriv; // ratio ksn
         this_derivative_cumul_rad_map[*tapir] = rad_deriv; // rad
 
         // storing the last chi value for the derivative
@@ -2126,6 +2137,8 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
   ksn_rad_knickpoint_map = this_knickpoint_rad;
   ksn_cumul_knickzone_map = this_cumul_ksn_map;
   ksn_deriv_knickzone_map = this_derivative_cumul_ksn_map;
+  rksn_cumul_knickzone_map = this_cumul_rksn_map;
+  rksn_deriv_knickzone_map = this_derivative_cumul_rksn_map;
   rad_cumul_knickzone_map = this_cumul_rad_map;
   rad_deriv_knickzone_map = this_derivative_cumul_rad_map;
   cout << "I finished to detect the knickpoints, you have " << n_knp << " knickpoints, thus " << number_of_0 << " ratios are switched to -9999 due to 0 divisions." << endl;

@@ -1124,6 +1124,10 @@ class LSDChiTools
     map<int,float> ksn_cumul_knickzone_map;
     /// Map of the cumulative variations derivative
     map<int,float> ksn_deriv_knickzone_map;
+    /// Map of the knickzone by cumulative variations -  ratio
+    map<int,float> rksn_cumul_knickzone_map;
+    /// Map of the cumulative variations derivative - ratio
+    map<int,float> rksn_deriv_knickzone_map;
     /// Map of the knickzone by cumulative variations
     map<int,float> rad_cumul_knickzone_map;
     /// Map of the cumulative variations derivative
