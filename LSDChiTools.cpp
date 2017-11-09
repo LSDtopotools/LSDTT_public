@@ -2119,12 +2119,37 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
           this_cumul_rksn_map[*tapir] = rksn_cumul; // adding it to the map
           this_cumul_rad_map[*tapir] = rad_cumul; // adding it to the map          
 
-          // This also end a knickzone
-          ending_node = *tapir;
-          temp_knickzone = make_pair (begining_node,ending_node);
-          this_knickzone_raw_cumul_ksn_map[temp_knickzone] = ksn_cumul;
-          this_knickzone_raw_cumul_rksn_map[temp_knickzone] = rksn_cumul;
-          this_knickzone_raw_cumul_rad_map[temp_knickzone] = rad_cumul;
+          // This also end a knickzone, I have to check if this is still the last one or not
+          if(this_knickpoint_sign_map[last_node_tapir] == this_knickpoint_sign_map[*tapir])
+          {
+            ending_node = *tapir;
+            temp_knickzone = make_pair (begining_node,ending_node);
+            this_knickzone_raw_cumul_ksn_map[temp_knickzone] = ksn_cumul;
+            this_knickzone_raw_cumul_rksn_map[temp_knickzone] = rksn_cumul;
+            this_knickzone_raw_cumul_rad_map[temp_knickzone] = rad_cumul;
+          }
+          else
+          {
+
+            ending_node = last_node_tapir;
+            temp_knickzone = make_pair (begining_node,ending_node);
+            this_knickzone_raw_cumul_ksn_map[temp_knickzone] = ksn_cumul;
+            this_knickzone_raw_cumul_rksn_map[temp_knickzone] = rksn_cumul;
+            this_knickzone_raw_cumul_rad_map[temp_knickzone] = rad_cumul;
+            // Getting the requested ksn values
+            ksn_cumul = this_kickpoint_diff_map[*tapir]; // cumulating the ksn value
+            // Getting the requested ratio ksn values
+            rksn_cumul = this_kickpoint_ratio_map[*tapir]; // cumulating the rksn value
+            // Getting the radian values
+            rad_cumul = this_knickpoint_rad[*tapir]; // cumulating the rad value 
+            begining_node = *tapir;
+            ending_node = *tapir;
+            this_knickzone_raw_cumul_ksn_map[temp_knickzone] = ksn_cumul;
+            this_knickzone_raw_cumul_rksn_map[temp_knickzone] = rksn_cumul;
+            this_knickzone_raw_cumul_rad_map[temp_knickzone] = rad_cumul;
+          }
+          
+          
 
           // cleaning
           ksn_last_cumul = 0; // reinitializing the last ksn value
