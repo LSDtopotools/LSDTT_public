@@ -1609,6 +1609,8 @@ int main (int nNumberofArgs,char *argv[])
     ChiTool.ksn_knickpoint_detection(FlowInfo);
     string csv_full_fname_knockpoint = OUT_DIR+OUT_ID+"_KsnKn.csv";
     ChiTool.print_knickpoint_to_csv(FlowInfo,csv_full_fname_knockpoint);
+    string csv_full_fname_knockzone = OUT_DIR+OUT_ID+"_KsnKz.csv";
+    ChiTool.print_knickzone_to_csv(FlowInfo,csv_full_fname_knockzone);
 
     string csv_full_fname = OUT_DIR+OUT_ID+"_MChiSegmented_Ks.csv";
     cout << "Let me print A Test File " << csv_full_fname << endl;
