@@ -2095,6 +2095,8 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         rksn_cumul = this_kickpoint_ratio_map[*tapir]; // cumulating the rksn value
         // Getting the radian values
         rad_cumul = this_knickpoint_rad[*tapir]; // cumulating the rad value 
+        node_to_implement_for_the_knickzone_cumulation.push_back(*tapir); // saving the node for completion
+
         }
         // if this is the last element of the river, we save everything and reinitialize for the following
         else if(tapir == marten->second.rend()-1)
@@ -2146,6 +2148,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
           rad_cumul = this_knickpoint_rad[*tapir]; // cumulating the rad value
           // reinitializing vector
           node_to_implement_for_the_knickzone_cumulation.clear();
+          node_to_implement_for_the_knickzone_cumulation.push_back(*tapir);
         } 
 
 
