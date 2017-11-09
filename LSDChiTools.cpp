@@ -2144,6 +2144,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
             rad_cumul = this_knickpoint_rad[*tapir]; // cumulating the rad value 
             begining_node = *tapir;
             ending_node = *tapir;
+            temp_knickzone = make_pair (begining_node,ending_node);
             this_knickzone_raw_cumul_ksn_map[temp_knickzone] = ksn_cumul;
             this_knickzone_raw_cumul_rksn_map[temp_knickzone] = rksn_cumul;
             this_knickzone_raw_cumul_rad_map[temp_knickzone] = rad_cumul;
