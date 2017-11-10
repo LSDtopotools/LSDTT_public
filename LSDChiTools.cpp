@@ -1974,6 +1974,9 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
   map<pair<int,int>, float> this_knickzone_raw_cumul_ksn_map; //this map store the raw cumulative value of each knickpoints
   map<pair<int,int>, float> this_knickzone_raw_cumul_rksn_map; //this map store the raw cumulative value of each knickpoints
   map<pair<int,int>, float> this_knickzone_raw_cumul_rad_map; //this map store the raw cumulative value of each knickpoints
+  map<pair<int,int>, float> this_knickzone_raw_cumul_ksn_wPlenght_map; //this map store the raw cumulative value of each knickpoints weight per lenght
+  map<pair<int,int>, float> this_knickzone_raw_cumul_rksn_wPlenght_map; //this map store the raw cumulative value of each knickpoints weight per lenght
+  map<pair<int,int>, float> this_knickzone_raw_cumul_rad_wPlenght_map; //this map store the raw cumulative value of each knickpoints weight per lenght
 
   // find the number of nodes
   int n_nodes = (node_sequence.size());
