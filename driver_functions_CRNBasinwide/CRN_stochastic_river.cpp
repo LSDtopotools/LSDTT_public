@@ -96,6 +96,8 @@ double EvolveParticle(double start_concentration, double velocity,
   string path_to_atmospheric_data = "./";
   LSDCRNP.load_parameters_for_atmospheric_scaling(path_to_atmospheric_data);
   
+  // Update to the latest production rates
+  LSDCRNP.set_newCRONUS_parameters();
   
   int current_node = 0;
   double Next_flow_distance = FlowDistance[1];
