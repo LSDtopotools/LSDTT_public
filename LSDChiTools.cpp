@@ -1974,9 +1974,8 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
   map<pair<int,int>, float> this_knickzone_raw_cumul_ksn_map; //this map store the raw cumulative value of each knickpoints
   map<pair<int,int>, float> this_knickzone_raw_cumul_rksn_map; //this map store the raw cumulative value of each knickpoints
   map<pair<int,int>, float> this_knickzone_raw_cumul_rad_map; //this map store the raw cumulative value of each knickpoints
-  map<pair<int,int>, float> this_knickzone_raw_cumul_ksn_wPlenght_map; //this map store the raw cumulative value of each knickpoints weight per lenght
-  map<pair<int,int>, float> this_knickzone_raw_cumul_rksn_wPlenght_map; //this map store the raw cumulative value of each knickpoints weight per lenght
-  map<pair<int,int>, float> this_knickzone_raw_cumul_rad_wPlenght_map; //this map store the raw cumulative value of each knickpoints weight per lenght
+  map<pair<int,int>, vector<int> > this_knickzone_list_of_nodes; // This map stores the nodes of each knickzones
+
 
   // find the number of nodes
   int n_nodes = (node_sequence.size());
@@ -2081,7 +2080,8 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
     float ksn_cumul, rksn_cumul,ksn_last_cumul = 0 ,rksn_last_cumul = 0 ,rad_last_cumul = 0 , ksn_deriv, rksn_deriv, rad_cumul, rad_deriv, last_chi, falafel; //  temporary variables to store each turns values
     int begining_node = 0, ending_node = 0, last_node_tapir = 0; // temporaries integers
     last_chi = 0; // avoiding warnings
-    vector<int> node_to_implement_for_the_knickzone_cumulation; 
+    vector<int> node_to_implement_for_the_knickzone_cumulation;
+    vector<int> node_per_knickzones; 
     pair<int,int> temp_knickzone (0,0);
     for(marten = (this_node_kp_per_source_key.begin());marten != this_node_kp_per_source_key.end();marten++)
     {
@@ -2112,15 +2112,15 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         {
           for(vector<int>::iterator dormouse = node_to_implement_for_the_knickzone_cumulation.begin(); dormouse != node_to_implement_for_the_knickzone_cumulation.end(); dormouse++)
           {
-            this_cumul_ksn_map[*dormouse] = ksn_cumul; // adding it to the map
-            this_cumul_rksn_map[*dormouse] = rksn_cumul; // adding it to the map
-            this_cumul_rad_map[*dormouse] = rad_cumul; // adding it to the map
+            this_cumul_ksn_map[*dormouse] += ksn_cumul; // adding it to the map
+            this_cumul_rksn_map[*dormouse] += rksn_cumul; // adding it to the map
+            this_cumul_rad_map[*dormouse] += rad_cumul; // adding it to the map
           }
 
           // implementing the last node as well
-          this_cumul_ksn_map[*tapir] = ksn_cumul; // adding it to the map
-          this_cumul_rksn_map[*tapir] = rksn_cumul; // adding it to the map
-          this_cumul_rad_map[*tapir] = rad_cumul; // adding it to the map          
+          this_cumul_ksn_map[*tapir] += ksn_cumul; // adding it to the map
+          this_cumul_rksn_map[*tapir] += rksn_cumul; // adding it to the map
+          this_cumul_rad_map[*tapir] += rad_cumul; // adding it to the map          
 
           // This also end a knickzone, I have to check if this is still the last one or not
           if(this_knickpoint_sign_map[last_node_tapir] == this_knickpoint_sign_map[*tapir])
@@ -2130,6 +2130,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
             this_knickzone_raw_cumul_ksn_map[temp_knickzone] = ksn_cumul;
             this_knickzone_raw_cumul_rksn_map[temp_knickzone] = rksn_cumul;
             this_knickzone_raw_cumul_rad_map[temp_knickzone] = rad_cumul;
+            this_knickzone_list_of_nodes[temp_knickzone] = node_to_implement_for_the_knickzone_cumulation; // saving the list of nodes per knickzones
           }
           else
           {
@@ -2139,6 +2140,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
             this_knickzone_raw_cumul_ksn_map[temp_knickzone] = ksn_cumul;
             this_knickzone_raw_cumul_rksn_map[temp_knickzone] = rksn_cumul;
             this_knickzone_raw_cumul_rad_map[temp_knickzone] = rad_cumul;
+            this_knickzone_list_of_nodes[temp_knickzone] = node_to_implement_for_the_knickzone_cumulation; // saving the list of nodes per knickzones
             // Getting the requested ksn values
             ksn_cumul = this_kickpoint_diff_map[*tapir]; // cumulating the ksn value
             // Getting the requested ratio ksn values
@@ -2151,6 +2153,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
             this_knickzone_raw_cumul_ksn_map[temp_knickzone] = ksn_cumul;
             this_knickzone_raw_cumul_rksn_map[temp_knickzone] = rksn_cumul;
             this_knickzone_raw_cumul_rad_map[temp_knickzone] = rad_cumul;
+            this_knickzone_list_of_nodes[temp_knickzone] = node_to_implement_for_the_knickzone_cumulation; // saving the list of nodes per knickzones
           }
           
           
@@ -2187,6 +2190,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
           this_knickzone_raw_cumul_ksn_map[temp_knickzone] = ksn_cumul;
           this_knickzone_raw_cumul_rksn_map[temp_knickzone] = rksn_cumul;
           this_knickzone_raw_cumul_rad_map[temp_knickzone] = rad_cumul;
+          this_knickzone_list_of_nodes[temp_knickzone] = node_to_implement_for_the_knickzone_cumulation; // saving the list of nodes per knickzones
 
           begining_node = *tapir;
           ksn_last_cumul = ksn_cumul; // saving the last ksn value
@@ -2253,11 +2257,51 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
   knickzone_raw_cumul_rksn = this_knickzone_raw_cumul_rksn_map;
   knickzone_raw_cumul_rad = this_knickzone_raw_cumul_rad_map;
 
+  knickzone_weighting_completion(this_knickzone_list_of_nodes);
+
   //  cout << "I finished to detect the knickpoints, you have " << n_knp << " knickpoints, thus " << number_of_0 << " ratios are switched to -9999 due to 0 divisions." << endl;
 
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Loop through all the knickzones to weight all the different combinations
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::knickzone_weighting_completion(map<pair<int,int>, vector<int> > mapofnode)
+{
+  // Good resolution, I'll try to better comment my codes now then
+  // This function attend to weight and save all the combinations of knickzones previously calculated
+  // The idea is to apply an outlier to each possibles knickzones to select the most probable ones
+  // I'll begin by declaring all the variables I'll need for this purpose
+  int this_node = 0;
+
+  // then I'll loop throught the map:
+  // first through the list of knickzones
+  map<pair<int,int>, vector<int> >::iterator Dwarf_epauletted_fruit_bat; // iterator is a tool to loop through map, efficiently and cleanly, with a random animal name because it is monday morning and life need random animal names on a monday morning
+  for(Dwarf_epauletted_fruit_bat = mapofnode.begin(); Dwarf_epauletted_fruit_bat!=mapofnode.end();Dwarf_epauletted_fruit_bat++)
+  {
+
+    //Ok, now I am looping through the nodes of each knickzones
+    for(size_t ity = 0; ity!= Dwarf_epauletted_fruit_bat->second.size();ity ++)
+    {
+      //I am letting this typical debug statement to check if I am in a ascending mode or not. It can be consufing depending How I looped before 
+      // cout << elev_data_map[Dwarf_epauletted_fruit_bat->second[ity]] << "||" << ity << endl;
+      // I am in an ascending node mode
+
+      // Just A quick note why I am note using iterator for this vector iteration, I find iterator really useful but slightly less clear when we want to use previous or next element in a vector or array
+      // Note that I don't know yet If I will use that but anyway let's code
+
+      // The difficulty here is too loop through all the knickzone combinations:
+      // We need to loop through all the i to n combinations with 0 <= i <= n 
+
+      // TODO AFTER MY SKYPE
+      cout << "done"<< endl;
+    }
+
+  }
+  exit(EXIT_FAILURE);
+} 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Print data maps to file - knickpoint version

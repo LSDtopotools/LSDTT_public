@@ -297,6 +297,12 @@ class LSDChiTools
     /// @date 4/02/2017
     void ksn_knickpoint_detection(LSDFlowInfo& FlowInfo);
 
+    /// @brief This function extract the difference,ratio,sign between each segments of the M_segmented_chi analysis
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @author BG
+    /// @date 13/11/2017
+    void knickzone_weighting_completion(map<pair<int,int>, vector<int> > mapofnode);
+
     /// @brief Development function based on segment_counter to help
     ///  knickpoint detection. More description will be added when it will be
     ///  functional.
