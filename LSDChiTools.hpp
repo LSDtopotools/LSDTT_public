@@ -1129,31 +1129,35 @@ class LSDChiTools
     /// A map that holds knickpoints signs
     map<int,int> segment_length_map;
     /// A map that holds knickpoints ratio
-    map<int,float> kns_ratio_knickpoint_map;
+    map<int,float> ksn_ratio_knickpoint_map;
     /// A map that holds knickpoints difference_between_segments
-    map<int,float> kns_diff_knickpoint_map;
+    map<int,float> ksn_diff_knickpoint_map;
     /// A map that holds knickpoints signs
     map<int,int> ksn_sign_knickpoint_map;
     /// Map of the knickpoints value in radian
     map<int,float> ksn_rad_knickpoint_map;
     /// Map of the knickzone by cumulative variations
-    map<int,float> ksn_cumul_knickzone_map;
-    /// Map of the cumulative variations derivative
-    map<int,float> ksn_deriv_knickzone_map;
-    /// Map of the knickzone by cumulative variations -  ratio
-    map<int,float> rksn_cumul_knickzone_map;
-    /// Map of the cumulative variations derivative - ratio
-    map<int,float> rksn_deriv_knickzone_map;
-    /// Map of the knickzone by cumulative variations
-    map<int,float> rad_cumul_knickzone_map;
-    /// Map of the cumulative variations derivative
-    map<int,float> rad_deriv_knickzone_map;
+    map<int,float> ksn_cumul_knickpoint_map;
+
+    /// Map of the knickpoint by cumulative variations -  ratio
+    map<int,float> rksn_cumul_knickpoint_map;
+
+    /// Map of the knickpoint by cumulative variations
+    map<int,float> rad_cumul_knickpoint_map;
+
     /// map of nickzones for ksn variations
     map<pair<int,int>, float> knickzone_raw_cumul_ksn;
     /// map of nickzones for rksn variations
     map<pair<int,int>, float> knickzone_raw_cumul_rksn;
     /// map of nickzones for rad variations
     map<pair<int,int>, float> knickzone_raw_cumul_rad;
+    /// map of nickzones for ksn variations WEIGHTED VERSION
+    map<pair<int,int>, float> knickzone_WP_ksn;
+    /// map of nickzones for rksn variations WEIGHTED VERSION
+    map<pair<int,int>, float> knickzone_WP_rksn;
+    /// map of nickzones for rad variations WEIGHTED VERSION
+    map<pair<int,int>, float> knickzone_WP_rad;
+
 
 
     /// A vector to hold the order of the nodes. Starts from longest channel
