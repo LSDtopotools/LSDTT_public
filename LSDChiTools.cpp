@@ -1966,11 +1966,8 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
   float natural_coeff = 0;  // used to recast the M_chi value for angle determination
   map<int,vector<int> > this_node_kp_per_source_key; // this map store the node of each river knickpoint, the key is the source_key
   map<int,float> this_cumul_ksn_map; // This map store the cumulative ksn for each rivers
-  map<int,float> this_derivative_cumul_ksn_map; // this map store derivative values at each nodes
   map<int,float> this_cumul_rksn_map; // This map store the cumulative ratio ksn for each rivers
-  map<int,float> this_derivative_cumul_rksn_map; // this map store derivative ratio ksn values at each nodes
   map<int,float> this_cumul_rad_map; // This map store the cumulative ksn for each rivers
-  map<int,float> this_derivative_cumul_rad_map; // this map store derivative values at each nodes
   map<pair<int,int>, float> this_knickzone_raw_cumul_ksn_map; //this map store the raw cumulative value of each knickpoints
   map<pair<int,int>, float> this_knickzone_raw_cumul_rksn_map; //this map store the raw cumulative value of each knickpoints
   map<pair<int,int>, float> this_knickzone_raw_cumul_rad_map; //this map store the raw cumulative value of each knickpoints
@@ -2077,18 +2074,13 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
 
     // Iteration over each river, 
     map<int,vector<int> >::iterator marten; //I quite like the map<...>::iterator
-    float ksn_cumul, rksn_cumul,ksn_last_cumul = 0 ,rksn_last_cumul = 0 ,rad_last_cumul = 0 , ksn_deriv, rksn_deriv, rad_cumul, rad_deriv, last_chi, falafel; //  temporary variables to store each turns values
     int begining_node = 0, ending_node = 0, last_node_tapir = 0; // temporaries integers
-    last_chi = 0; // avoiding warnings
     vector<int> node_to_implement_for_the_knickzone_cumulation;
     vector<int> node_per_knickzones; 
     pair<int,int> temp_knickzone (0,0);
     for(marten = (this_node_kp_per_source_key.begin());marten != this_node_kp_per_source_key.end();marten++)
     {
-      // Now looping through the river sources
-      ksn_cumul = 0; // intialization of the ksn cumul to 0
-      rksn_cumul = 0; // intialization of the rksn cumul to 0
-      rad_cumul = 0; // intialization of the rad cumul to 0
+
       for(vector<int>::reverse_iterator tapir = marten->second.rbegin(); tapir!= marten->second.rend(); ++tapir) // The iterator can be reversed to loop backward !! I love iterators. 
       {
         // Now looping through the knickpoint of each river, *tapir is the pointer that refers to node number. /!\ Note that I am loooing using a reverse_iterator to go from the bottom to the top of each river
@@ -2098,11 +2090,12 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         if(tapir == marten->second.rbegin())
         {
         // Getting the requested ksn values
-        ksn_cumul = this_kickpoint_diff_map[*tapir]; // cumulating the ksn value
+        ksn_cumul_knickpoint_map[*tapir] = this_kickpoint_diff_map[*tapir]; // cumulating the ksn value
         // Getting the requested ratio ksn values
-        rksn_cumul = this_kickpoint_ratio_map[*tapir]; // cumulating the rksn value
+        rksn_cumul_knickpoint_map[*tapir] = this_kickpoint_ratio_map[*tapir]; // cumulating the rksn value
         // Getting the radian values
-        rad_cumul = this_knickpoint_rad[*tapir]; // cumulating the rad value 
+        rad_cumul_knickpoint_map[*tapir] = this_knickpoint_rad[*tapir]; // cumulating the rad value 
+
         node_to_implement_for_the_knickzone_cumulation.push_back(*tapir); // saving the node for completion
         begining_node = *tapir; //this will be a beginning node whatever happense
 
@@ -2110,59 +2103,33 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         // if this is the last element of the river, we save everything and reinitialize for the following
         else if(tapir == marten->second.rend()-1)
         {
-          for(vector<int>::iterator dormouse = node_to_implement_for_the_knickzone_cumulation.begin(); dormouse != node_to_implement_for_the_knickzone_cumulation.end(); dormouse++)
-          {
-            this_cumul_ksn_map[*dormouse] += ksn_cumul; // adding it to the map
-            this_cumul_rksn_map[*dormouse] += rksn_cumul; // adding it to the map
-            this_cumul_rad_map[*dormouse] += rad_cumul; // adding it to the map
-          }
-
-          // implementing the last node as well
-          this_cumul_ksn_map[*tapir] += ksn_cumul; // adding it to the map
-          this_cumul_rksn_map[*tapir] += rksn_cumul; // adding it to the map
-          this_cumul_rad_map[*tapir] += rad_cumul; // adding it to the map          
-
-          // This also end a knickzone, I have to check if this is still the last one or not
           if(this_knickpoint_sign_map[last_node_tapir] == this_knickpoint_sign_map[*tapir])
           {
+            ksn_cumul_knickpoint_map[*tapir] += this_kickpoint_diff_map[*tapir];
+            rksn_cumul_knickpoint_map[*tapir] += this_kickpoint_ratio_map[*tapir];
+            rad_cumul_knickpoint_map[*tapir] += this_knickpoint_rad[*tapir];
             ending_node = *tapir;
             temp_knickzone = make_pair (begining_node,ending_node);
-            this_knickzone_raw_cumul_ksn_map[temp_knickzone] = ksn_cumul;
-            this_knickzone_raw_cumul_rksn_map[temp_knickzone] = rksn_cumul;
-            this_knickzone_raw_cumul_rad_map[temp_knickzone] = rad_cumul;
+
+            node_to_implement_for_the_knickzone_cumulation.push_back(*tapir);
             this_knickzone_list_of_nodes[temp_knickzone] = node_to_implement_for_the_knickzone_cumulation; // saving the list of nodes per knickzones
+
           }
           else
           {
-
-            ending_node = last_node_tapir;
+            ksn_cumul_knickpoint_map[*tapir] += this_kickpoint_diff_map[*tapir];
+            rksn_cumul_knickpoint_map[*tapir] += this_kickpoint_ratio_map[*tapir];
+            rad_cumul_knickpoint_map[*tapir] += this_knickpoint_rad[*tapir];
             temp_knickzone = make_pair (begining_node,ending_node);
-            this_knickzone_raw_cumul_ksn_map[temp_knickzone] = ksn_cumul;
-            this_knickzone_raw_cumul_rksn_map[temp_knickzone] = rksn_cumul;
-            this_knickzone_raw_cumul_rad_map[temp_knickzone] = rad_cumul;
-            this_knickzone_list_of_nodes[temp_knickzone] = node_to_implement_for_the_knickzone_cumulation; // saving the list of nodes per knickzones
-            // Getting the requested ksn values
-            ksn_cumul = this_kickpoint_diff_map[*tapir]; // cumulating the ksn value
-            // Getting the requested ratio ksn values
-            rksn_cumul = this_kickpoint_ratio_map[*tapir]; // cumulating the rksn value
-            // Getting the radian values
-            rad_cumul = this_knickpoint_rad[*tapir]; // cumulating the rad value 
+            this_knickzone_list_of_nodes[temp_knickzone] = node_to_implement_for_the_knickzone_cumulation;
+
+            node_to_implement_for_the_knickzone_cumulation.clear();
             begining_node = *tapir;
             ending_node = *tapir;
             temp_knickzone = make_pair (begining_node,ending_node);
-            this_knickzone_raw_cumul_ksn_map[temp_knickzone] = ksn_cumul;
-            this_knickzone_raw_cumul_rksn_map[temp_knickzone] = rksn_cumul;
-            this_knickzone_raw_cumul_rad_map[temp_knickzone] = rad_cumul;
-            this_knickzone_list_of_nodes[temp_knickzone] = node_to_implement_for_the_knickzone_cumulation; // saving the list of nodes per knickzones
+            this_knickzone_list_of_nodes[temp_knickzone] = node_to_implement_for_the_knickzone_cumulation;
+
           }
-          
-          
-
-          // cleaning
-          ksn_last_cumul = 0; // reinitializing the last ksn value
-          rksn_last_cumul = 0; // reinitializing the last rksn value
-          rad_last_cumul = 0; // reinitializing the last rad value
-
 
           // reinitializing vector
           node_to_implement_for_the_knickzone_cumulation.clear();
@@ -2170,92 +2137,42 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         // # Other Case, the signs are the same, so we just cumulate the values and save the node to change
         else if(this_knickpoint_sign_map[last_node_tapir] == this_knickpoint_sign_map[*tapir])
         {
-          ksn_cumul += this_kickpoint_diff_map[*tapir]; // cumulating the ksn valu
-          rksn_cumul += this_kickpoint_ratio_map[*tapir]; // cumulating the rksn valu
-          rad_cumul += this_knickpoint_rad[*tapir]; // cumulating the rad value
+          ksn_cumul_knickpoint_map[*tapir] += this_kickpoint_diff_map[*tapir]; // cumulating the ksn valu
+          rksn_cumul_knickpoint_map[*tapir] += this_kickpoint_ratio_map[*tapir]; // cumulating the rksn valu
+          rad_cumul_knickpoint_map[*tapir] += this_knickpoint_rad[*tapir]; // cumulating the rad value
           node_to_implement_for_the_knickzone_cumulation.push_back(*tapir); // saving the node for completion
         }
         // # Finally, the sign are differents so we save the cumulative value for each nodes of the raw knickzone then reinitialize everything for the following
         else
         {
-          for(vector<int>::iterator dormouse = node_to_implement_for_the_knickzone_cumulation.begin(); dormouse != node_to_implement_for_the_knickzone_cumulation.end(); dormouse++)
-          {
-            this_cumul_ksn_map[*dormouse] = ksn_cumul; // adding it to the map
-            this_cumul_rksn_map[*dormouse] = rksn_cumul; // adding it to the map
-            this_cumul_rad_map[*dormouse] = rad_cumul; // adding it to the map
-          }
+
           // This also end a knickzone
           ending_node = last_node_tapir;
           temp_knickzone = make_pair (begining_node,ending_node);
-          this_knickzone_raw_cumul_ksn_map[temp_knickzone] = ksn_cumul;
-          this_knickzone_raw_cumul_rksn_map[temp_knickzone] = rksn_cumul;
-          this_knickzone_raw_cumul_rad_map[temp_knickzone] = rad_cumul;
           this_knickzone_list_of_nodes[temp_knickzone] = node_to_implement_for_the_knickzone_cumulation; // saving the list of nodes per knickzones
 
           begining_node = *tapir;
-          ksn_last_cumul = ksn_cumul; // saving the last ksn value
-          rksn_last_cumul = rksn_cumul; // saving the last rksn value
-          rad_last_cumul = rad_cumul; // saving the last rad value
-
-          // Getting the requested ksn values
-          ksn_cumul = this_kickpoint_diff_map[*tapir]; // cumulating the ksn value
-          // Getting the requested ratio ksn values
-          rksn_cumul = this_kickpoint_ratio_map[*tapir]; // cumulating the rksn value
-          // Getting the radian values
-          rad_cumul = this_knickpoint_rad[*tapir]; // cumulating the rad value
           // reinitializing vector
           node_to_implement_for_the_knickzone_cumulation.clear();
           node_to_implement_for_the_knickzone_cumulation.push_back(*tapir);
         } 
 
-
-        // Commented this for some reason
-///////////////////////////////////////////////////////////////////////////////////////////
-
-        // now calculating the derivative
-        if(tapir == marten->second.rbegin())
-        {
-          // the first run arbitrary set the boundary variation at 0
-          ksn_deriv = 0;
-          rad_deriv = 0;
-          rksn_deriv = 0;
-
-        }
-        else
-        {
-          // actual derivation. point i holds the slope between i and i-1, i increasing from base to top.
-          falafel = (chi_data_map[*tapir]-last_chi); // Calcul of this ratio once rather than three time. I probably spent more time writing this comment than the time this optimization will ever save but I regret nothing
-          ksn_deriv = (ksn_cumul - ksn_last_cumul)/falafel; // each knickpoint nodes has the derivative of the gradient of the last segments
-          rksn_deriv = (rksn_cumul - rksn_last_cumul)/falafel; // each knickpoint nodes has the derivative of the gradient of the last segments
-          rad_deriv = (rad_cumul - rad_last_cumul)/falafel; // each knickpoint nodes has the derivative of the gradient of the last segments
-        }
-
-        // adding the value to the maps
-        this_derivative_cumul_ksn_map[*tapir] = ksn_deriv; // ksn
-        this_derivative_cumul_rksn_map[*tapir] = rksn_deriv; // ratio ksn
-        this_derivative_cumul_rad_map[*tapir] = rad_deriv; // rad
+        // Here lies the remianing of my beloved derivation code that diseapeared after realizing how useless it was
 
         // storing the last chi value for the derivative
-        last_chi = chi_data_map[*tapir];
         last_node_tapir = *tapir;
       }
     }
   }
 
   // print everything in the public/protected maps -> saving the calculated data in the system
-  kns_ratio_knickpoint_map = this_kickpoint_ratio_map;
-  kns_diff_knickpoint_map = this_kickpoint_diff_map;
+  ksn_ratio_knickpoint_map = this_kickpoint_ratio_map;
+  ksn_diff_knickpoint_map = this_kickpoint_diff_map;
   ksn_sign_knickpoint_map = this_knickpoint_sign_map;
   ksn_rad_knickpoint_map = this_knickpoint_rad;
-  ksn_cumul_knickzone_map = this_cumul_ksn_map;
-  ksn_deriv_knickzone_map = this_derivative_cumul_ksn_map;
-  rksn_cumul_knickzone_map = this_cumul_rksn_map;
-  rksn_deriv_knickzone_map = this_derivative_cumul_rksn_map;
-  rad_cumul_knickzone_map = this_cumul_rad_map;
-  rad_deriv_knickzone_map = this_derivative_cumul_rad_map;
-  knickzone_raw_cumul_ksn = this_knickzone_raw_cumul_ksn_map;
-  knickzone_raw_cumul_rksn = this_knickzone_raw_cumul_rksn_map;
-  knickzone_raw_cumul_rad = this_knickzone_raw_cumul_rad_map;
+  ksn_cumul_knickpoint_map = this_cumul_ksn_map;
+  rksn_cumul_knickpoint_map = this_cumul_rksn_map;
+  rad_cumul_knickpoint_map = this_cumul_rad_map;
 
   knickzone_weighting_completion(this_knickzone_list_of_nodes);
 
@@ -2274,7 +2191,13 @@ void LSDChiTools::knickzone_weighting_completion(map<pair<int,int>, vector<int> 
   // This function attend to weight and save all the combinations of knickzones previously calculated
   // The idea is to apply an outlier to each possibles knickzones to select the most probable ones
   // I'll begin by declaring all the variables I'll need for this purpose
-  int this_node = 0;
+  int begining_node = 0, ending_node = 0;
+  vector<int> working_nodes; //  temporary vector to store the working nodes
+  float chi_size = 0, weighted_sum_ksn = 0, weighted_sum_rksn = 0, weighted_sum_rad = 0, weighter_coeff = 1, weighter = 0, ksn_sum = 0, rksn_sum = 0, rad_sum = 0 ; 
+  pair<int,int> temp_pair;
+
+  // Message to check
+  cout<< "I am now testing and writing all the possible knickzones combinations, weighted by their chi lenght. The execution time depends on the number of detected knickzones and can take a while." << endl;
 
   // then I'll loop throught the map:
   // first through the list of knickzones
@@ -2282,8 +2205,9 @@ void LSDChiTools::knickzone_weighting_completion(map<pair<int,int>, vector<int> 
   for(Dwarf_epauletted_fruit_bat = mapofnode.begin(); Dwarf_epauletted_fruit_bat!=mapofnode.end();Dwarf_epauletted_fruit_bat++)
   {
 
+    working_nodes = Dwarf_epauletted_fruit_bat->second;
     //Ok, now I am looping through the nodes of each knickzones
-    for(size_t ity = 0; ity!= Dwarf_epauletted_fruit_bat->second.size();ity ++)
+    for(size_t ity = 0; ity!= working_nodes.size();ity ++)
     {
       //I am letting this typical debug statement to check if I am in a ascending mode or not. It can be consufing depending How I looped before 
       // cout << elev_data_map[Dwarf_epauletted_fruit_bat->second[ity]] << "||" << ity << endl;
@@ -2295,12 +2219,62 @@ void LSDChiTools::knickzone_weighting_completion(map<pair<int,int>, vector<int> 
       // The difficulty here is too loop through all the knickzone combinations:
       // We need to loop through all the i to n combinations with 0 <= i <= n 
 
-      // TODO AFTER MY SKYPE
-      cout << "done"<< endl;
+      // Each knickzone will be store in the global knickzone_WP_ksn maps
+
+      begining_node = working_nodes[ity];
+      ending_node = working_nodes[working_nodes.size()-1];
+
+      // Checking if the knickzone does have 
+      if(begining_node != ending_node)
+      {
+        chi_size = chi_data_map[ending_node]-chi_data_map[begining_node]; 
+        weighter_coeff = 1;
+        // second iteration through the knickzone
+        for(size_t frutbat = ity; frutbat != working_nodes.size(); frutbat ++)
+        {
+          ending_node = working_nodes[frutbat];
+          weighter = (exp((-(chi_data_map[ending_node]-chi_data_map[begining_node])) / (chi_size * weighter_coeff) ) );
+          weighted_sum_ksn += (ksn_diff_knickpoint_map[ending_node] * weighter);
+          weighted_sum_rksn += (ksn_ratio_knickpoint_map[ending_node] * weighter);
+          weighted_sum_rad += (ksn_rad_knickpoint_map[ending_node] * weighter);
+          ksn_sum += ksn_diff_knickpoint_map[ending_node];
+          rksn_sum += ksn_ratio_knickpoint_map[ending_node];
+          rad_sum += ksn_rad_knickpoint_map[ending_node];
+
+          temp_pair = make_pair (begining_node,ending_node);
+          knickzone_WP_ksn[temp_pair] = weighted_sum_ksn;
+          knickzone_WP_rksn[temp_pair] = weighted_sum_rksn;
+          knickzone_WP_rad[temp_pair] = weighted_sum_rad;
+          knickzone_raw_cumul_ksn[temp_pair] = ksn_sum;
+          knickzone_raw_cumul_rksn[temp_pair] = rksn_sum;
+          knickzone_raw_cumul_rad[temp_pair] = rad_sum;
+
+        }
+
+      }
+      else
+      {
+        temp_pair = make_pair (begining_node,ending_node);
+        knickzone_WP_ksn[temp_pair] = ksn_diff_knickpoint_map[ending_node];
+        knickzone_WP_rksn[temp_pair] = ksn_ratio_knickpoint_map[ending_node];
+        knickzone_WP_rad[temp_pair] = ksn_rad_knickpoint_map[ending_node];
+        knickzone_raw_cumul_ksn[temp_pair] = ksn_diff_knickpoint_map[ending_node];
+        knickzone_raw_cumul_rksn[temp_pair] = ksn_ratio_knickpoint_map[ending_node];
+        knickzone_raw_cumul_rad[temp_pair] = ksn_rad_knickpoint_map[ending_node];
+      }
+
+      weighted_sum_rad = 0;
+      weighted_sum_ksn = 0;
+      weighted_sum_rksn = 0;
+      ksn_sum = 0;
+      rksn_sum = 0;
+      rad_sum = 0;
+      
+
     }
 
   }
-  exit(EXIT_FAILURE);
+  cout << "I am done testing all your knickzones combinations" << endl;
 } 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2321,7 +2295,7 @@ void LSDChiTools::print_knickzone_to_csv(LSDFlowInfo& FlowInfo, string filename)
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "Alatitude,Alongitude,Blatitude,Blongitude,Aelevation,Belevation,Aflow_distance,Bflow_distance,Achi,Bchi,Adrainage_area,Bdrainage_area,ksn,rksn,sign,rad,source_key,basin_key";
+  chi_data_out << "Alatitude,Alongitude,Blatitude,Blongitude,Aelevation,Belevation,Aflow_distance,Bflow_distance,Achi,Bchi,Adrainage_area,Bdrainage_area,ksn,rksn,sign,rad,Wgksn,Wgrksn,Wgrad,source_key,basin_key";
 
   chi_data_out << endl;
 
@@ -2341,7 +2315,7 @@ void LSDChiTools::print_knickzone_to_csv(LSDFlowInfo& FlowInfo, string filename)
         get_lat_and_long_locations(row, col, Alatitude, Alongitude, Converter);
         FlowInfo.retrieve_current_row_and_col(B_node,row,col);
         get_lat_and_long_locations(row, col, Blatitude, Blongitude, Converter);
-        // cout << "printing node " << this_node << " with diff " << kns_diff_knickpoint_map[this_node] << endl; 
+        // cout << "printing node " << this_node << " with diff " << ksn_diff_knickpoint_map[this_node] << endl; 
         
         chi_data_out.precision(9);
         chi_data_out << Alatitude << ","
@@ -2361,6 +2335,9 @@ void LSDChiTools::print_knickzone_to_csv(LSDFlowInfo& FlowInfo, string filename)
                      << knickzone_raw_cumul_rksn[iter->first] << ","
                      << ksn_sign_knickpoint_map[A_node] << ","
                      << knickzone_raw_cumul_rad[iter->first] << ","
+                     << knickzone_WP_ksn[iter->first] << ","
+                     << knickzone_WP_rksn[iter->first] << ","
+                     << knickzone_WP_rad[iter->first] << ","
                      << source_keys_map[A_node] << ","
                      << baselevel_keys_map[A_node];
         chi_data_out << endl;
@@ -2392,7 +2369,7 @@ void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "latitude,longitude,elevation,flow_distance,chi,drainage_area,diff,ratio,sign,rad_diff,cumul_ksn,deriv_cumul_ksn,cumul_rksn,deriv_cumul_rksn,cumul_rad,deriv_cumul_rad,source_key,basin_key";
+  chi_data_out << "latitude,longitude,elevation,flow_distance,chi,drainage_area,diff,ratio,sign,rad_diff,cumul_ksn,cumul_rksn,cumul_rad,source_key,basin_key";
 
   chi_data_out << endl;
 
@@ -2407,12 +2384,12 @@ void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename
   {
     map<int,float>::iterator iter;
 
-    for (iter = kns_diff_knickpoint_map.begin(); iter != kns_diff_knickpoint_map.end(); iter++)
+    for (iter = ksn_diff_knickpoint_map.begin(); iter != ksn_diff_knickpoint_map.end(); iter++)
     {
         this_node = iter->first;
         FlowInfo.retrieve_current_row_and_col(this_node,row,col);
         get_lat_and_long_locations(row, col, latitude, longitude, Converter);
-        // cout << "printing node " << this_node << " with diff " << kns_diff_knickpoint_map[this_node] << endl; 
+        // cout << "printing node " << this_node << " with diff " << ksn_diff_knickpoint_map[this_node] << endl; 
         
         chi_data_out.precision(9);
         chi_data_out << latitude << ","
@@ -2422,16 +2399,13 @@ void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename
                      << flow_distance_data_map[this_node] << ","
                      << chi_data_map[this_node] << ","
                      << drainage_area_data_map[this_node] << ","
-                     << kns_diff_knickpoint_map[this_node] << ","
-                     << kns_ratio_knickpoint_map[this_node] << ","
+                     << ksn_diff_knickpoint_map[this_node] << ","
+                     << ksn_ratio_knickpoint_map[this_node] << ","
                      << ksn_sign_knickpoint_map[this_node] << ","
                      << ksn_rad_knickpoint_map[this_node] << ","
-                     << ksn_cumul_knickzone_map[this_node] << ","
-                     << ksn_deriv_knickzone_map[this_node] << ","
-                     << rksn_cumul_knickzone_map[this_node] << ","
-                     << rksn_deriv_knickzone_map[this_node] << ","
-                     << rad_cumul_knickzone_map[this_node] << ","
-                     << rad_deriv_knickzone_map[this_node] << ","
+                     << ksn_cumul_knickpoint_map[this_node] << ","
+                     << rksn_cumul_knickpoint_map[this_node] << ","
+                     << rad_cumul_knickpoint_map[this_node] << ","
                      << source_keys_map[this_node] << ","
                      << baselevel_keys_map[this_node];
         chi_data_out << endl;
@@ -6008,7 +5982,7 @@ void LSDChiTools::segment_binned_slope_area_data(LSDFlowInfo& FlowInfo,
 
   // this holds the source numbers for each basin
   vector<int> basins_with_data;
-  int last_basin;
+  int last_basin = 0; // I am initializing last basin to 0 to avoid warnings. 13/11/2017 (if something break after that.) Boris
   map<int, vector<int> > basin_and_sources_map;
 
   // loop through all the source nodes
