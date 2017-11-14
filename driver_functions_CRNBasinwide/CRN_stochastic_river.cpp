@@ -340,6 +340,22 @@ int main (int nNumberofArgs,char *argv[])
     data_out << velocity << "," << FinalConc- Ne21_Conc << endl;
 
   }
+  
+  // add a few more with faster velocities: starting at 10 m/s and going up by 1 m/s
+  de = 1.0;
+  start_vel = 10.0;
+  for( int i = 1; i<=90; i++)
+  {
+    velocity = double(i)*de+start_vel;
+    cout << "velocity is: " << velocity << endl;
+    
+    double FinalConc =  EvolveParticle(Ne21_Conc, velocity,Latitude, Longitude, 
+                                     Elevation, FlowDistance);
+                                     
+    data_out << velocity << "," << FinalConc- Ne21_Conc << endl;
+
+  }
+
   data_out.close();
 
 }
