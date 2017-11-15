@@ -37,6 +37,7 @@
 #include "LSDShapeTools.hpp"
 #include "LSDSwathProfile.hpp"
 #include "LSDStatsTools.hpp"
+#include "LSDSpatialCSVReader.hpp"
 
 // PCL
 #include <pcl/point_types.h>
@@ -1256,6 +1257,57 @@ Array2D<float> LSDSwath::get_BaselineDist_ConnectedComponents(LSDIndexRaster& Co
   return BaselineDistance;
 
 }
+
+//------------------------------------------------------------------------------
+// This function takes in a connected components raster
+// and returns an array with the euclidian distance to the nearest point on
+// the baseline for each pixel of the connected components raster
+// FJC
+// 12/10/17
+//
+//------------------------------------------------------------------------------
+Array2D<float> LSDSwath::get_DistanceToBaseline_ConnectedComponents(LSDIndexRaster& ConnectedComponents)
+{
+  // declare baseline dist array
+  Array2D<float> BaselineDistance(NRows,NCols,NoDataValue);
+
+  // get some raster info
+  float Resolution = ConnectedComponents.get_DataResolution();
+	map<string,string> GeoReferencingStrings = ConnectedComponents.get_GeoReferencingStrings();
+
+  // Define bounding box of swath profile
+  int ColStart = int(floor((XMin)/Resolution));
+  int ColEnd = ColStart + int(ceil((XMax-XMin)/Resolution));
+  ColStart = ColStart - int(ceil(ProfileHalfWidth/Resolution));
+  ColEnd = ColEnd + int(ceil(ProfileHalfWidth/Resolution));
+  if (ColStart < 0) ColStart = 0;
+  if (ColEnd > NCols) ColEnd = NCols;
+
+  int RowEnd = NRows - 1 - int(floor(YMin/Resolution));
+  int RowStart = RowEnd - int(ceil((YMax-YMin)/Resolution));
+  RowStart = RowStart - int(ceil(ProfileHalfWidth/Resolution));
+  RowEnd = RowEnd + int(ceil(ProfileHalfWidth/Resolution));
+  if (RowEnd > NRows) RowEnd = NRows;
+  if (RowStart < 0) RowStart = 0;
+
+  // get the array of the connected components
+  Array2D<int> CC_array = ConnectedComponents.get_RasterData();
+
+  for (int row=RowStart; row<RowEnd; row++)
+  {
+    for (int col=ColStart; col<ColEnd; col++)
+    {
+      if (CC_array[row][col] != NoDataValue)
+      {
+        // get the baseline value
+        BaselineDistance[row][col] = DistanceToBaselineArray[row][col];
+      }
+    }
+  }
+
+  return BaselineDistance;
+
+}
 //------------------------------------------------------------------------------
 // This function takes in a raster and returns the mean, min and max values of
 // the raster at each point along the swath
@@ -1420,4 +1472,45 @@ void LSDSwath::write_longitudinal_profile_to_file(LSDRaster& Raster, vector<floa
 
   ofs.close();
 }
+
+//---------------------------------------------------------------------------//
+// Function to print the baseline of the swath profile to a csv. prints the
+// distance along swath and the elevation of each point.
+// FJC 12/10/17
+//---------------------------------------------------------------------------//
+void LSDSwath::print_baseline_to_csv(LSDRaster& ElevationRaster, string csv_filename)
+{
+  Array2D<float> ElevationArray = ElevationRaster.get_RasterData();
+
+  // setup the output csv
+  ofstream output_file;
+  output_file.open(csv_filename.c_str());
+  output_file.precision(8);
+  if (!output_file)
+  {
+     cout << "\n Error opening output csv file. Please check your filename";
+     exit(1);
+  }
+  cout << "Opened the csv" << endl;
+
+  output_file << "DistAlongBaseline,Elevation,X,Y,latitude,longitude,row,col" << endl;
+  double x_loc, y_loc;
+  double latitude, longitude;
+
+  // this is for latitude and longitude
+  LSDCoordinateConverterLLandUTM Converter;
+
+  cout << "N baseline rows: " << BaselineRows.size() << " N baseline cols: " << BaselineCols.size() << endl;
+  // loop through and get the values for the csv
+  for (int i =0; i < NPtsInProfile; i++)
+  {
+    // get the latitude and longitude of the point
+    ElevationRaster.get_x_and_y_locations(BaselineRows[i], BaselineCols[i], x_loc, y_loc);
+    //cout << "Row: " << row << " Col: " << col << " X: " << x_loc << " Y: " << y_loc << endl;
+    ElevationRaster.get_lat_and_long_locations(BaselineRows[i], BaselineCols[i], latitude, longitude, Converter);
+    output_file << DistanceAlongBaseline[i] << "," << BaselineValue[i] << "," << x_loc << "," << y_loc << "," << latitude << "," << longitude << "," << BaselineRows[i] << "," << BaselineCols[i] << endl;
+  }
+  output_file.close();
+}
+
 #endif

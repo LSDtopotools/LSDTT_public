@@ -547,10 +547,12 @@ void LSDTerrace::print_TerraceAreas_to_file(string filename, LSDFlowInfo& FlowIn
 //// Write a csv file giving elevation and distance information for each pixel in each terrace.
 //// FJC 28/09/17
 ////----------------------------------------------------------------------------------------
-void LSDTerrace::print_TerraceInfo_to_csv(string csv_filename, LSDRaster& ElevationRaster, LSDFlowInfo& FlowInfo, LSDSwath& Swath)
+void LSDTerrace::print_TerraceInfo_to_csv(string csv_filename, LSDRaster& ElevationRaster, LSDRaster& ChannelRelief, LSDFlowInfo& FlowInfo, LSDSwath& Swath)
 {
 	ofstream output_file;
 	output_file.open(csv_filename.c_str());
+  output_file.precision(8);
+
 	if (!output_file)
  {
 		 cout << "\n Error opening output csv file. Please check your filename";
@@ -558,7 +560,7 @@ void LSDTerrace::print_TerraceInfo_to_csv(string csv_filename, LSDRaster& Elevat
  }
  cout << "Opened the csv" << endl;
 
-	output_file << "TerraceID,Elevation,DistAlongBaseline,ChannelRelief" << endl;
+	output_file << "TerraceID,Latitude,Longitude,X,Y,Elevation,DistAlongBaseline,DistToBaseline,ChannelRelief" << endl;
 
 	LSDIndexRaster ConnectedComponents(NRows,NCols,XMinimum,YMinimum,DataResolution,NoDataValue,ConnectedComponents_Array,GeoReferencingStrings);
 
@@ -567,44 +569,31 @@ void LSDTerrace::print_TerraceInfo_to_csv(string csv_filename, LSDRaster& Elevat
 	// get the baseline distance array
 	Array2D<float> BaselineDistance = Swath.get_BaselineDist_ConnectedComponents(ConnectedComponents);
 	Array2D<float> ElevationArray = ElevationRaster.get_RasterData();
-
-	// do we need to get the bounding box of the swath?? probably. this is a massive pain
-	// that took me hours to debug.
-	float XMin = Swath.get_XMin();
-	float YMin = Swath.get_YMin();
-	float XMax = Swath.get_XMax();
-	float YMax = Swath.get_YMax();
-	float ProfileHalfWidth = Swath.get_ProfileHalfWidth();
-
-	// now get the bounding box
-	int ColStart = int(floor((XMin)/DataResolution));
-	int ColEnd = ColStart + int(ceil((XMax-XMin)/DataResolution));
-	ColStart = ColStart - int(ceil(ProfileHalfWidth/DataResolution));
-	ColEnd = ColEnd + int(ceil(ProfileHalfWidth/DataResolution));
-	if (ColStart < 0) ColStart = 0;
-	if (ColEnd > NCols) ColEnd = NCols;
-
-	int RowEnd = NRows - 1 - int(floor(YMin/DataResolution));
-	int RowStart = RowEnd - int(ceil((YMax-YMin)/DataResolution));
-	RowStart = RowStart - int(ceil(ProfileHalfWidth/DataResolution));
-	RowEnd = RowEnd + int(ceil(ProfileHalfWidth/DataResolution));
-	if (RowEnd > NRows) RowEnd = NRows;
-	if (RowStart < 0) RowStart = 0;
+	Array2D<float> ReliefArray = ChannelRelief.get_RasterData();
+	Array2D<float> DistToBaseline = Swath.get_DistanceToBaseline_ConnectedComponents(ConnectedComponents);
 
 	cout << "Now writing the terrace information to the csv file..." << endl;
+
+  // the x and y locations
+	double x_loc, y_loc;
+	double latitude,longitude;
+
+  // this is for latitude and longitude
+  LSDCoordinateConverterLLandUTM Converter;
+
 	// loop through all the rows and cols and print some information
-	for (int row=RowStart; row<RowEnd; row++)
+	for (int row=0; row<NRows; row++)
   {
-    for (int col=ColStart; col<ColEnd; col++)
+    for (int col=0; col<NCols; col++)
     {
-			if (ConnectedComponents_Array[row][col] != NoDataValue)
+			if (ConnectedComponents_Array[row][col] != NoDataValue && BaselineDistance[row][col] != NoDataValue && ElevationArray[row][col] != NoDataValue && ReliefArray[row][col] != NoDataValue && DistToBaseline[row][col] != NoDataValue)
 			{
-				cout << "This row: " << row << " this col: " << col << endl;
-				cout << "this_cc: " << ConnectedComponents_Array[row][col] << endl;
-				//int this_node = FlowInfo.retrieve_node_from_row_and_column(row, col);
+				// get the latitude and longitude of the point
+				ElevationRaster.get_x_and_y_locations(row, col, x_loc, y_loc);
+				//cout << "Row: " << row << " Col: " << col << " X: " << x_loc << " Y: " << y_loc << endl;
+				ElevationRaster.get_lat_and_long_locations(row, col, latitude, longitude, Converter);
 				float this_elev = ElevationRaster.get_data_element(row,col);
-				cout << " this_elev: " << this_elev << endl << " this_dist: " << BaselineDistance[row][col] << " this_relief: " << ChannelRelief_array[row][col] << endl;
-				output_file << ConnectedComponents_Array[row][col] << "," << ElevationArray[row][col] << "," << BaselineDistance[row][col] << "," << ChannelRelief_array[row][col] << endl;
+				output_file << ConnectedComponents_Array[row][col] << "," << latitude << "," << longitude << "," << x_loc << "," << y_loc << "," << this_elev << "," << BaselineDistance[row][col] << "," << DistToBaseline[row][col] << "," << ReliefArray[row][col] << endl;
 			}
 		}
 	}

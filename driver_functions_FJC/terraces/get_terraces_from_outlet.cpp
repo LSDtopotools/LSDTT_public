@@ -259,6 +259,12 @@ int main (int nNumberofArgs,char *argv[])
 		cout << "\t Testing connected components" << endl;
 		vector <vector <float> > CC_vector = TestSwath.get_connected_components_along_swath(ConnectedComponents, RasterTemplate, this_int_map["NormaliseToBaseline"]);
 
+		// write raster of terrace elevations
+		LSDRaster ChannelRelief = Terraces.get_Terraces_RasterValues(SwathRaster);
+		TerraceElevations.OverwriteRaster(ChannelRelief);
+		// string relief_ext = "_terrace_relief_final";
+		// ChannelRelief.write_raster((DATA_DIR+DEM_ID+relief_ext+jn_name), DEM_extension);
+
 		// print the terrace information to a csv
 		string csv_fname = "_terrace_info"+jn_name+".csv";
 		string full_csv_name = DATA_DIR+DEM_ID+csv_fname;
@@ -269,12 +275,6 @@ int main (int nNumberofArgs,char *argv[])
 		string channel_csv_fname = "_baseline_channel_info"+jn_name+".csv";
 		cout << "The channel csv filename is" << DATA_DIR+DEM_ID+channel_csv_fname << endl;
 		TestSwath.print_baseline_to_csv(RasterTemplate, DATA_DIR+DEM_ID+channel_csv_fname);
-
-		// write raster of terrace elevations
-		LSDRaster ChannelRelief = Terraces.get_Terraces_RasterValues(SwathRaster);
-		TerraceElevations.OverwriteRaster(ChannelRelief);
-		// string relief_ext = "_terrace_relief_final";
-		// ChannelRelief.write_raster((DATA_DIR+DEM_ID+relief_ext+jn_name), DEM_extension);
 	}
 
 	string CC_ext = "_terrace_IDs";
