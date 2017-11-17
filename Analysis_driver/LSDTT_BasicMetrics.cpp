@@ -169,6 +169,13 @@ int main (int nNumberofArgs,char *argv[])
   // The wiener filter
   bool_default_map["print_wiener_filtered_raster"] = false;
  
+  // This burns a raster value to any csv output of chi data
+  // Useful for appending geology data to chi profiles
+  bool_default_map["burn_raster_to_csv"] = false;
+  string_default_map["burn_raster_prefix"] = "NULL";
+  string_default_map["burn_data_csv_column_header"] = "burned_data";
+  string_default_map["csv_to_burn_name"] = "NULL";
+
 
 
   // Use the parameter parser to get the maps of the parameters required for the
@@ -232,6 +239,68 @@ int main (int nNumberofArgs,char *argv[])
     cout << "the parameters to file and am now exiting." << endl;
     exit(0);
   }
+
+
+  //============================================================================
+  // Raster burning
+
+  // if this gets burned, do it
+  if(this_bool_map["burn_raster_to_csv"])
+  {
+    cout << "You asked me to burn a raster to a csv." << endl;
+    cout << "WARNING: This was written in a hurry and has no bug checking." << endl;
+    cout << "If you have the wrong filenames it will crash." << endl;
+    
+    cout << "First I am going to load the raster." << endl;
+    string burn_raster_name;
+    bool burn_raster_exists = true;
+    if (this_string_map["burn_raster_prefix"] != "NULL")
+    {
+      burn_raster_name = DATA_DIR+this_string_map["burn_raster_prefix"];
+      cout << "I will burn data from the raster: " << burn_raster_name << endl;
+    }
+    else
+    {
+      burn_raster_exists = false;
+      cout << "You don't have a working burn raster." << endl;
+    }
+    
+    if(burn_raster_exists)
+    {
+      LSDRaster BurnRaster(burn_raster_name,raster_ext);
+      
+      string header_for_burn_data;
+      header_for_burn_data = this_string_map["burn_data_csv_column_header"];
+      
+      cout << "I am burning the raster into the column header " << header_for_burn_data << endl;
+      
+      string full_csv_name = DATA_DIR+this_string_map["csv_to_burn_name"];
+      cout << "I am burning the raster to the csv file." << full_csv_name << endl;
+      LSDSpatialCSVReader CSVFile(RI,full_csv_name);
+
+      CSVFile.burn_raster_data_to_csv(BurnRaster,header_for_burn_data);
+
+      string full_burned_csv_name = OUT_DIR+OUT_ID+"_burned.csv";
+      cout << "Now I'll print the data to a new file, the file is: " << full_burned_csv_name << endl;
+      CSVFile.print_data_to_csv(full_burned_csv_name);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_csv_burned.geojson";
+        LSDSpatialCSVReader thiscsv(full_burned_csv_name);
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+    }
+    else
+    {
+      cout << "Burn raster doesn't exist so I didn't do anything." << endl;
+    }
+  }
+  //============================================================================
+
+
+
+
 
 
   //============================================================================
