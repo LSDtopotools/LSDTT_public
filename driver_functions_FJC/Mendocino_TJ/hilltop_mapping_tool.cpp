@@ -223,8 +223,14 @@ int main (int nNumberofArgs,char *argv[])
   {
     // convert the lat and long to a node
     LSDCoordinateConverterLLandUTM Converter;
+    int search_radius = 25;
+    int threshold_SO = 2;
+    int outlet_node = ChanNetwork.get_nodeindex_of_nearest_channel_from_lat_long(this_double_map["Latitude_outlet"], this_double_map["Longitude_outlet"], search_radius, threshold_SO, FlowInfo, Converter);
 
-    // get the longest channel from this outlet point
-    LSDIndexChannel ThisChannel = ChanNetwork.generate_longest_index_channel_from_junction()
+    cout << "Channel node: " << outlet_node << endl;
+
+    //
+    // // get the longest channel from this outlet point
+    // LSDIndexChannel ThisChannel = ChanNetwork.generate_longest_index_channel_from_junction()
   }
 }
