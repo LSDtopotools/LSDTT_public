@@ -8012,7 +8012,7 @@ void LSDJunctionNetwork::get_overlapping_channels_to_downstream_outlets(LSDFlowI
   // create the visited array
   int not_visited = 0;
   LSDIndexRaster VisitedRaster(NRows,NCols, XMinimum, YMinimum, DataResolution, NoDataValue, GeoReferencingStrings,not_visited);
-  
+
   vector<int> NewSources;
   vector<int> NewOutlets;
   vector<int> NewBaselevelNodes;

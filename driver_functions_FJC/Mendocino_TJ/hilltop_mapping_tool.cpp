@@ -55,6 +55,7 @@ int main (int nNumberofArgs,char *argv[])
 	map<string,float> float_default_map;
 	map<string,bool> bool_default_map;
 	map<string,string> string_default_map;
+  map<string,double> double_default_map;
 
 	// set default int parameters
 	int_default_map["Chan area threshold"] = 1000;
@@ -62,12 +63,15 @@ int main (int nNumberofArgs,char *argv[])
   // set default float parameters
   float_default_map["surface_fitting_window_radius"] = 6;
   float_default_map["Min slope filling"] = 0.0001;
-	float_default_map["Latitude_outlet"] = 40.0000;
-	float_default_map["Longitude_outlet"] = -123.000;
+
+  // set default double parameters
+	double_default_map["Latitude_outlet"] = 40.0000;
+	double_default_map["Longitude_outlet"] = -123.000;
 
 	// set default string parameters
 	string_default_map["CHeads_file"] = "NULL";
 
+  // params for printing
 	bool_default_map["write_hillshade"] = false;
 	bool_default_map["write_slope"] = true;
 	bool_default_map["write_aspect"] = true;
@@ -79,17 +83,21 @@ int main (int nNumberofArgs,char *argv[])
 	bool_default_map["print_stream_order_raster"] = false;
 	bool_default_map["use_filtered_topography"] = false;
 
+  // params for choosing which analysis you want to do
+  bool_default_map["analyse_hilltops_along_swath"] = false;
+
 	// Use the parameter parser to get the maps of the parameters required for the
 	// analysis
 	// load parameter parser object
 	LSDParameterParser LSDPP(path_name,f_name);
 	LSDPP.force_bil_extension();
 
-	LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
+	LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map,double_default_map);
 	map<string,float> this_float_map = LSDPP.get_float_parameters();
 	map<string,int> this_int_map = LSDPP.get_int_parameters();
 	map<string,bool> this_bool_map = LSDPP.get_bool_parameters();
 	map<string,string> this_string_map = LSDPP.get_string_parameters();
+  map<string,double>  this_double_map = LSDPP.get_double_parameters();
 
 	// Now print the parameters for bug checking
 	LSDPP.print_parameters();
@@ -210,4 +218,13 @@ int main (int nNumberofArgs,char *argv[])
 		string CHT_ext = "_cht";
 		CHT.write_raster((DATA_DIR+DEM_ID+CHT_ext), DEM_extension);
 	}
+
+  if (this_bool_map["analyse_hilltops_along_swath"])
+  {
+    // convert the lat and long to a node
+    LSDCoordinateConverterLLandUTM Converter;
+
+    // get the longest channel from this outlet point
+    LSDIndexChannel ThisChannel = ChanNetwork.generate_longest_index_channel_from_junction()
+  }
 }

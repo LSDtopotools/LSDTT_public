@@ -199,6 +199,20 @@ vector<string> extract_keys(map<string, string> input_map)
   return retkey;
 }
 
+vector<string> extract_keys(map<string, double> input_map)
+{
+  vector<string> retkey;
+
+  map<string, double>::iterator it;
+  string key;
+  for(it = input_map.begin(); it != input_map.end(); it++)
+  {
+    key = it->first;
+    retkey.push_back(key);
+  }
+  return retkey;
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

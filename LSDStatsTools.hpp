@@ -65,6 +65,7 @@ vector<string> extract_keys(map<string, int> input_map);
 vector<string> extract_keys(map<string, float> input_map);
 vector<string> extract_keys(map<string, bool> input_map);
 vector<string> extract_keys(map<string, string> input_map);
+vector<string> extract_keys(map<string, double> input_map);
 
 // tools for reversing arrays
 Array2D<double> reverse_array_rows(Array2D<double>& data);
@@ -400,15 +401,15 @@ void bin_data(vector<float>& InputVectorX, vector<float>& InputVectorY, float bi
 
 // Regular binning algoritm for data stored in a 1D vector Similar to above but spits out more stats
 void bin_data(vector<float>& InputVectorX, vector<float>& InputVectorY, float bin_width,
-              vector<float>& midpoints_output, vector<float>&  MeanX_output, 
+              vector<float>& midpoints_output, vector<float>&  MeanX_output,
               vector<float>&  MedianX_output, vector<float>&  StandardDeviationX_output,
-              vector<float>& StandardErrorX_output, vector<float>& MADX_output, 
+              vector<float>& StandardErrorX_output, vector<float>& MADX_output,
               vector<float>& MeanY_output, vector<float>& MinimumY_output,
               vector<float>& FirstQuartileY_output, vector<float>& MedianY_output,
               vector<float>& ThirdQuartileY_output, vector<float>& MaximumY_output,
-              vector<float>&  StandardDeviationY_output, vector<float>& StandardErrorY_output, 
+              vector<float>&  StandardDeviationY_output, vector<float>& StandardErrorY_output,
               vector<float>& MADY_output, vector<int>& number_observations_output,
-              float NoDataValue); 
+              float NoDataValue);
 
 
 //look for empty bins output from the log binning function and removes them to avoid
@@ -485,17 +486,17 @@ float angle_between_vectors(float x1, float y1, float x2, float y2);
 // Get the angle between two vectors in radians
 // We need to calculate the (x1,y1) and (x2,y2) coordinates by moving
 // the vectors to intercept (0,0)
-// the bool vectors_point_downstream is true if the vector's first element is the 
-// upstream node in a channel and false if the first node is downstream. 
+// the bool vectors_point_downstream is true if the vector's first element is the
+// upstream node in a channel and false if the first node is downstream.
 float angle_between_two_vector_datasets(vector<float>& x1_data, vector<float>& y1_data,
                                         vector<float>& x2_data, vector<float>& y2_data,
                                         bool vectors_point_downstream);
 
 // This function takes x and y data as vectors and returns a 2 element vector
-// where the 0 element is the x1 component of a directional vector 
+// where the 0 element is the x1 component of a directional vector
 // and the 1 element is the y1 component of a directional vector
-// vector vector vector, Victor. 
-vector<float> get_directional_vector_coords_from_dataset(vector<float> x1_data, vector<float>& y_data, 
+// vector vector vector, Victor.
+vector<float> get_directional_vector_coords_from_dataset(vector<float> x1_data, vector<float>& y_data,
                       bool vectors_point_downstream);
 
 // Get the data for a boxplot from an unsorted vector of floats, which does not

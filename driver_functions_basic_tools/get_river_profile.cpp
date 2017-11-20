@@ -97,11 +97,13 @@ int main(int argc, char *argv[])
   bool_default_map["print_distance_from_outlet"]  = false;
   bool_default_map["print_drainage_area"]  = false;
   bool_default_map["print_elevation"] = false;
+  bool_default_map["read_shapefile"] = false;
 
 
   // set default string parameters
   string_default_map["CHeads_file"] = "NULL";
   string_default_map["coords_csv_file"] = "NULL";
+  string_default_map["input_shapefile"] = "NULL";
 
   // Use the parameter parser to get the maps of the parameters required for the
   // analysis
@@ -169,6 +171,16 @@ int main(int argc, char *argv[])
   // now get the junction network
   LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
   cout << "\t Got the channel network" << endl;
+
+  if(this_bool_map["read_shapefile"])
+  {
+    // read in the shapefile with the points to a point data object
+    cout << "\t Reading in the shapefile" << endl;
+    PointData BaselinePoints = LoadShapefile(path_name+this_string_map["input_shapefile"].c_str());
+
+    // for the output csv print the latitude, longitude, distance from outlet, and elevation
+    
+  }
 
   // reading in the csv file with the lat long points
   cout << "\t Reading in the csv file" << endl;
