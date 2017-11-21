@@ -143,6 +143,13 @@ class LSDSwath
   ///@date 12/10/17
   Array2D<float> get_DistanceToBaseline_ConnectedComponents(LSDIndexRaster& ConnectedComponents);
 
+  ///@details This function takes in a raster for analysis and gets the width of pixels in that raster
+  ///@param RasterForAnalysis analysis index raster
+  ///@return vector with widths along baseline
+  ///@author FJC
+  ///@date 21/11/17
+  vector<float> get_widths_along_swath(LSDIndexRaster& RasterForAnalysis);
+
   // write profiles to file
   void write_transverse_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix, int NormaliseToBaseline);
   void write_longitudinal_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix, int NormaliseToBaseline);
@@ -153,6 +160,7 @@ class LSDSwath
   Array2D<float> get_DistanceToBaselineArray() const { return DistanceToBaselineArray; }
   Array2D<float> get_DistanceAlongBaselineArray() const { return DistanceAlongBaselineArray; }
   Array2D<float> get_BaselineValueArray() const { return BaselineValueArray; }
+  vector<float> get_DistanceAlongBaseline() const { return DistanceAlongBaseline; }
 
   float get_XMax() const { return XMax; }
   float get_YMax() const { return YMax; }

@@ -1432,7 +1432,7 @@ void LSDSwath::write_RasterValues_along_swath_to_csv(LSDRaster& RasterTemplate, 
   LSDCoordinateConverterLLandUTM Converter;
 
   int n_points= BaselineValue.size();
-  
+
   for (int i = 0; i < n_points; i++)
   {
     float this_dist = DistanceAlongBaseline[i];
@@ -1448,6 +1448,67 @@ void LSDSwath::write_RasterValues_along_swath_to_csv(LSDRaster& RasterTemplate, 
 
   output_file.close();
 
+}
+
+//---------------------------------------------------------//
+// Take in a swath profile, and get the width of the
+// index raster values at every point along the baseline.
+// Finds the max and min distance from baseline at each
+// point: width = max - min
+// Used for getting valley width.
+// FJC 21/11/17
+//---------------------------------------------------------//
+vector<float> LSDSwath::get_widths_along_swath(LSDIndexRaster& RasterForAnalysis)
+{
+	vector<float> Widths;
+	Array2D<int> MaskArray = RasterForAnalysis.get_RasterData();
+
+  float Resolution = RasterForAnalysis.get_DataResolution();
+	Array2D<int> RasterValues_temp = RasterForAnalysis.get_RasterData();
+	map<string,string> GeoReferencingStrings = RasterForAnalysis.get_GeoReferencingStrings();
+
+  // Define bounding box of swath profile
+  int ColStart = int(floor((XMin)/Resolution));
+  int ColEnd = ColStart + int(ceil((XMax-XMin)/Resolution));
+  ColStart = ColStart - int(ceil(ProfileHalfWidth/Resolution));
+  ColEnd = ColEnd + int(ceil(ProfileHalfWidth/Resolution));
+  if (ColStart < 0) ColStart = 0;
+  if (ColEnd > NCols) ColEnd = NCols;
+
+  int RowEnd = NRows - 1 - int(floor(YMin/Resolution));
+  int RowStart = RowEnd - int(ceil((YMax-YMin)/Resolution));
+  RowStart = RowStart - int(ceil(ProfileHalfWidth/Resolution));
+  RowEnd = RowEnd + int(ceil(ProfileHalfWidth/Resolution));
+  if (RowEnd > NRows) RowEnd = NRows;
+  if (RowStart < 0) RowStart = 0;
+
+  // loop through the baseline and find all points in the swath that are closest to this point
+  for (int i = 0; i < NPtsInProfile; i++)
+  {
+    float max_dist = 0;
+    float min_dist = 10000000000000000;
+    for (int row=RowStart; row<RowEnd; row++)
+    {
+      for (int col=ColStart; col<ColEnd; col++)
+      {
+        if (MaskArray[row][col] != NoDataValue)
+        {
+          float this_dist = DistanceAlongBaselineArray[row][col];
+          if (this_dist == DistanceAlongBaseline[i])
+          {
+            // now check if this is the max or the min for this point.
+            if (this_dist > max_dist) { max_dist = this_dist; }
+            if (this_dist < min_dist) { min_dist = this_dist; }
+          }
+        }
+      }
+    }
+    // now get the width at this point (max - min)
+    float width = max_dist - min_dist;
+    Widths.push_back(width);
+  }
+
+  return Widths;
 }
 
 //------------------------------------------------------------------------------

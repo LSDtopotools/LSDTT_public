@@ -600,4 +600,42 @@ void LSDTerrace::print_TerraceInfo_to_csv(string csv_filename, LSDRaster& Elevat
 	output_file.close();
 }
 
+//-----------------------------------------------------------------------//
+// function to print terrace widths to csv
+// FJC 21/11/17
+//-----------------------------------------------------------------------//
+
+void LSDTerrace::print_TerraceWidths_to_csv(string csv_filename, LSDSwath& Swath)
+{
+	// get the cc to index raster
+	LSDIndexRaster ConnectedComponents = print_ConnectedComponents_to_Raster();
+
+	// now get the terrace widths
+	vector<float> Widths = Swath.get_widths_along_swath(ConnectedComponents);
+
+	vector<float> DistAlongBaseline = Swath.get_DistanceAlongBaseline();
+
+	// open the csv
+	ofstream output_file;
+	output_file.open(csv_filename.c_str());
+  output_file.precision(8);
+
+	if (!output_file)
+	{
+	  cout << "\n Error opening output csv file. Please check your filename";
+	  exit(1);
+	}
+  cout << "Opened the csv" << endl;
+
+	// write to file
+	output_file << "DistAlongBaseline,TerraceWidth" << endl;
+
+	for (int i = 0; i < int(DistAlongBaseline.size()); i++)
+	{
+		output_file << DistAlongBaseline[i] << "," << Widths[i] << endl;
+	}
+	output_file.close();
+
+}
+
 #endif
