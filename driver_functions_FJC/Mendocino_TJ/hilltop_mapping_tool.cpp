@@ -37,7 +37,8 @@ int main (int nNumberofArgs,char *argv[])
 		cout << "|| It then gets a load of info about the hilltops		  ||" << endl;
     cout << "|| upstream of that point.                             ||" << endl;
     cout << "|| This program was developed by                       ||" << endl;
-    cout << "|| Fiona J. Clubb while at SAFL.                       ||" << endl;
+    cout << "|| Fiona J. Clubb while at SAFL, University of         ||" << endl;
+    cout << "|| Minnesota (GO GOPHERS, WOOOOOO)                     ||" << endl;
     cout << "=========================================================" << endl;
     cout << "This program requires two inputs: " << endl;
     cout << "* First the path to the parameter file." << endl;
@@ -68,6 +69,7 @@ int main (int nNumberofArgs,char *argv[])
   // set default float parameters
   float_default_map["surface_fitting_window_radius"] = 6;
   float_default_map["Min slope filling"] = 0.0001;
+  float_default_map["Threshold_Hilltop_Gradient"] = 0.4;
 
 	// set default string parameters
 	string_default_map["CHeads_file"] = "NULL";
@@ -86,6 +88,9 @@ int main (int nNumberofArgs,char *argv[])
 	bool_default_map["use_filtered_topography"] = false;
 
   // params for choosing which analysis you want to do
+  bool_default_map["MaskHilltopstoBasins"] = true;
+  bool_default_map["RemoveSteepHilltops"] = true;
+  bool_default_map["RemovePositiveHilltops"] = true;
   bool_default_map["analyse_hilltops_along_swath"] = false;
 
 	// Use the parameter parser to get the maps of the parameters required for the
@@ -203,23 +208,11 @@ int main (int nNumberofArgs,char *argv[])
 
   cout << "\nExtracting hilltops and hilltop curvature" << endl;
 
-  // extract hilltops - no critical slope filtering is performed here
-  LSDRaster hilltops = ChanNetwork.ExtractRidges(FlowInfo);
-	if (this_bool_map["write_hilltops"])
-	{
-		string ht_ext = "_hilltops";
-		hilltops.write_raster((DATA_DIR+DEM_ID+ht_ext), DEM_extension);
-	}
+  LSDRaster Hilltops = ChanNetwork.ExtractRidges(FlowInfo);
 
   //get hilltop curvature using filter to remove positive curvatures
-  LSDRaster cht_raster = FilledDEM.get_hilltop_curvature(Surfaces[3], hilltops);
-  LSDRaster CHT = FilledDEM.remove_positive_hilltop_curvature(cht_raster);
-
-	if (this_bool_map["write_cht"])
-	{
-		string CHT_ext = "_cht";
-		CHT.write_raster((DATA_DIR+DEM_ID+CHT_ext), DEM_extension);
-	}
+  //LSDRaster cht_raster = FilledDEM.get_hilltop_curvature(Surfaces[3], hilltops);
+  //LSDRaster CHT = FilledDEM.remove_positive_hilltop_curvature(cht_raster);
 
   if (this_bool_map["analyse_hilltops_along_swath"])
   {
@@ -240,6 +233,50 @@ int main (int nNumberofArgs,char *argv[])
   	ChanNetwork.snap_point_locations_to_channels(UTME, UTMN, this_int_map["search_radius"], this_int_map["Threshold_SO"], FlowInfo, valid_indices, snapped_nodes, snapped_JNs);
 
   	cout << "The number of valid points is: " << int(valid_indices.size()) << endl;
+
+    // get the basin of this channel
+    int basin_no = 0;
+    LSDIndexRaster BasinRaster = ChanNetwork.extract_basin_from_junction(snapped_JNs[1], basin_no, FlowInfo);
+
+    // Mask to only use hilltops inside basins being analysed
+    if (this_bool_map["MaskHilltopstoBasins"])
+    {
+      cout << "\tMasking hilltops to basins being analysed..." << endl;
+      Hilltops.MaskRaster(BasinRaster);
+    }
+    if (this_bool_map["RemoveSteepHilltops"])
+    {
+      cout << "\tFiltering out hilltops with slopes greater than " << this_float_map["Threshold_Hilltop_Gradient"] << "..." << endl;
+      string Condition = "<";
+      LSDIndexRaster SteepHilltopsMask = Surfaces[1].Create_Mask(Condition,this_float_map["Threshold_Hilltop_Gradient"]);
+      Hilltops.MaskRaster(SteepHilltopsMask);
+    }
+
+    if (this_bool_map["RemovePositiveHilltops"])
+    {
+      cout << "\tFiltering out hilltops with positive curvature..." << endl;
+      float Zero = 0;
+      string Condition = "<";
+      LSDIndexRaster NegativeCurvatureMask = Surfaces[3].Create_Mask(Condition,Zero);
+      Hilltops.MaskRaster(NegativeCurvatureMask);
+    }
+
+    if (this_bool_map["write_hilltops"])
+    {
+      string ht_ext = "_hilltops";
+      Hilltops.write_raster((DATA_DIR+DEM_ID+ht_ext), DEM_extension);
+    }
+
+    //get hilltop curvature using filters to remove positive curvatures and steep slopes
+    cout << "\tGetting hilltop curvature..." << endl;
+    LSDRaster CHT = FilledDEM.get_hilltop_curvature(Surfaces[3], Hilltops);
+
+    if (this_bool_map["write_cht"])
+    {
+      string CHT_ext = "_cht";
+      CHT.write_raster((DATA_DIR+DEM_ID+CHT_ext), DEM_extension);
+    }
+
 
   	if (int(valid_indices.size()) == 2)
   	{
