@@ -120,6 +120,14 @@ class LSDSwath
   ///@date 15/02/17
   vector <vector <float> > get_RasterValues_along_swath(LSDRaster& RasterTemplate, int NormaliseToBaseline);
 
+  ///@details Wrapper to write raster values along swath to csv
+  /// @param RasterTemplate raster of values to write
+  /// @param NormaliseToBaseline int, if 1 then will be noramlised to the baseline value
+  /// @param csv_filename file name of output csv
+  ///@author FJC
+  ///@date 20/11/17
+  void write_RasterValues_along_swath_to_csv(LSDRaster& RasterTemplate, int NormaliseToBaseline, string csv_filename);
+
   ///@details This function takes in a connected components raster and returns an array
   ///@param ConnectedComponents connected components raster
   ///@return array with baseline components

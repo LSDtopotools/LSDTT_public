@@ -21,6 +21,7 @@
 #include "../../LSDBasin.hpp"
 #include "../../LSDShapeTools.hpp"
 #include "../../LSDParameterParser.hpp"
+#include "../../LSDSwathProfile.hpp"
 
 int main (int nNumberofArgs,char *argv[])
 {
@@ -59,6 +60,7 @@ int main (int nNumberofArgs,char *argv[])
 
 	// set default int parameters
 	int_default_map["Chan area threshold"] = 1000;
+  int_default_map["HalfWidth"] = 1000;
 
   // set default float parameters
   float_default_map["surface_fitting_window_radius"] = 6;
@@ -225,12 +227,26 @@ int main (int nNumberofArgs,char *argv[])
     LSDCoordinateConverterLLandUTM Converter;
     int search_radius = 25;
     int threshold_SO = 2;
-    int outlet_node = ChanNetwork.get_nodeindex_of_nearest_channel_from_lat_long(this_double_map["Latitude_outlet"], this_double_map["Longitude_outlet"], search_radius, threshold_SO, FlowInfo, Converter);
+    int outlet_jn = ChanNetwork.get_junction_of_nearest_channel_from_lat_long(this_double_map["Latitude_outlet"], this_double_map["Longitude_outlet"], FlowInfo, Converter);
 
-    cout << "Channel node: " << outlet_node << endl;
+    cout << "Channel jn: " << outlet_jn << endl;
 
-    //
-    // // get the longest channel from this outlet point
-    // LSDIndexChannel ThisChannel = ChanNetwork.generate_longest_index_channel_from_junction()
+    LSDRaster DistFromOutlet = FlowInfo.distance_from_outlet();
+
+    // get the longest channel from this outlet point
+    LSDIndexChannel ThisChannel = ChanNetwork.generate_longest_index_channel_from_junction(outlet_jn, FlowInfo, DistFromOutlet);
+
+    vector<double> X_coords;
+    vector<double> Y_coords;
+    ThisChannel.get_coordinates_of_channel_nodes(X_coords, Y_coords);
+    // get the point data from the BaselineChannel
+    PointData BaselinePoints = get_point_data_from_coordinates(X_coords, Y_coords);
+
+    // get the swath
+    cout << "\t creating swath template" << endl;
+    LSDSwath TestSwath(BaselinePoints, FilledDEM, this_int_map["HalfWidth"]);
+
+    // now get the raster values along the swath
+    TestSwath.write_RasterValues_along_swath_to_csv(CHT, 0, DATA_DIR+DEM_ID+"_swath_cht_data.csv");
   }
 }

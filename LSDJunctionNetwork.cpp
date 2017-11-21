@@ -6672,7 +6672,7 @@ int LSDJunctionNetwork::get_receiver_junction_for_specified_coordinates(float X_
 // FJC 20/11/17
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-int LSDJunctionNetwork::get_nodeindex_of_nearest_channel_from_lat_long(double latitude, double longitude, int search_radius_nodes, int threshold_stream_order, LSDFlowInfo& FlowInfo, LSDCoordinateConverterLLandUTM Converter)
+int LSDJunctionNetwork::get_junction_of_nearest_channel_from_lat_long(double latitude, double longitude, LSDFlowInfo& FlowInfo, LSDCoordinateConverterLLandUTM Converter)
 {
   double this_Northing, this_Easting;
   int UTM_zone;
@@ -6683,10 +6683,10 @@ int LSDJunctionNetwork::get_nodeindex_of_nearest_channel_from_lat_long(double la
                     this_Northing, this_Easting, UTM_zone);
 
   // now get the nearest channel node
-  int this_node = get_nodeindex_of_nearest_channel_for_specified_coordinates(this_Easting, this_Northing, search_radius_nodes, threshold_stream_order, FlowInfo);
+  int this_junc = get_receiver_junction_for_specified_coordinates(this_Easting, this_Northing, FlowInfo);
 
-  return this_node;
-  
+  return this_junc;
+
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=

@@ -1401,6 +1401,44 @@ vector <vector <float> > LSDSwath::get_RasterValues_along_swath(LSDRaster& Raste
   return MasterVector;
 }
 
+void LSDSwath::write_RasterValues_along_swath_to_csv(LSDRaster& RasterTemplate, int NormaliseToBaseline, string csv_filename)
+{
+  vector<vector <float> > MasterVector = get_RasterValues_along_swath(RasterTemplate, NormaliseToBaseline);
+
+  // setup the output csv
+  ofstream output_file;
+  output_file.open(csv_filename.c_str());
+  output_file.precision(8);
+  if (!output_file)
+  {
+     cout << "\n Error opening output csv file. Please check your filename";
+     exit(1);
+  }
+  cout << "Opened the csv" << endl;
+
+  output_file << "DistAlongBaseline,X,Y,latitude,longitude,mean,min,max" << endl;
+
+  double x_loc, y_loc;
+  double latitude, longitude;
+
+  // this is for latitude and longitude
+  LSDCoordinateConverterLLandUTM Converter;
+
+  int n_points= MasterVector[0].size();
+
+  for (int i = 0; i < n_points; i++)
+  {
+    // get the latitude and longitude of the point
+    RasterTemplate.get_x_and_y_locations(BaselineRows[i], BaselineCols[i], x_loc, y_loc);
+    //cout << "Row: " << row << " Col: " << col << " X: " << x_loc << " Y: " << y_loc << endl;
+    RasterTemplate.get_lat_and_long_locations(BaselineRows[i], BaselineCols[i], latitude, longitude, Converter);
+    output_file << MasterVector[0][i] << "," << x_loc << "," << y_loc << "," << latitude << "," << longitude << "," << MasterVector[1][i] << "," << MasterVector[2][i] << "," << MasterVector[3][i] << endl;
+  }
+
+  output_file.close();
+
+}
+
 //------------------------------------------------------------------------------
 // WRITE PROFILES TO FILE
 // These routines take a swath profile template, comprising the LSDSwath object,

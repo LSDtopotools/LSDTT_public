@@ -1342,16 +1342,12 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @brief Function to snap input coordinates to the nearest channel node from latitude and longitude
   /// @param latitude
   /// @param longitude
-  /// @param threshold_stream_order The minimum stream order that will be considers a 'channel' by the algorithm
-  /// @param search_radius_nodes the radius of the kernal used to check if there is a nearby channel. A radius of 0 only
-  /// includes the centre point, a radius of 1 has a kernal diameter of 3,  radius of 2 has a kernal diameter of 5
-  /// and so on
   /// @param FlowInfo LSDFlowInfo object.
   /// @param Converter LSDCoordinateConverterLLandUTM object
   /// @return Returns the NodeIndex of the nearest channel node.
   /// @author FJC
   /// @date 20/11/17
-  int get_nodeindex_of_nearest_channel_from_lat_long(double latitude, double longitude, int search_radius_nodes, int threshold_stream_order, LSDFlowInfo& FlowInfo, LSDCoordinateConverterLLandUTM Converter);
+  int get_junction_of_nearest_channel_from_lat_long(double latitude, double longitude, LSDFlowInfo& FlowInfo, LSDCoordinateConverterLLandUTM Converter);
 
 
 	/// @brief Function to get info about the nearest channel node of a given node.
