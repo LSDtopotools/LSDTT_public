@@ -22,6 +22,7 @@
 #include "../../LSDShapeTools.hpp"
 #include "../../LSDParameterParser.hpp"
 #include "../../LSDSwathProfile.hpp"
+#include "../../LSDSpatialCSVReader.hpp"
 
 int main (int nNumberofArgs,char *argv[])
 {
@@ -61,17 +62,16 @@ int main (int nNumberofArgs,char *argv[])
 	// set default int parameters
 	int_default_map["Chan area threshold"] = 1000;
   int_default_map["HalfWidth"] = 1000;
+  int_default_map["search_radius"] = 25;
+  int_default_map["Threshold_SO"] = 3;
 
   // set default float parameters
   float_default_map["surface_fitting_window_radius"] = 6;
   float_default_map["Min slope filling"] = 0.0001;
 
-  // set default double parameters
-	double_default_map["Latitude_outlet"] = 40.0000;
-	double_default_map["Longitude_outlet"] = -123.000;
-
 	// set default string parameters
 	string_default_map["CHeads_file"] = "NULL";
+  string_default_map["coords_csv_file"] = "NULL";
 
   // params for printing
 	bool_default_map["write_hillshade"] = false;
@@ -223,30 +223,44 @@ int main (int nNumberofArgs,char *argv[])
 
   if (this_bool_map["analyse_hilltops_along_swath"])
   {
-    // convert the lat and long to a node
-    LSDCoordinateConverterLLandUTM Converter;
-    int search_radius = 25;
-    int threshold_SO = 2;
-    int outlet_jn = ChanNetwork.get_junction_of_nearest_channel_from_lat_long(this_double_map["Latitude_outlet"], this_double_map["Longitude_outlet"], FlowInfo, Converter);
+    // reading in the csv file with the lat long points
+  	cout << "\t Reading in the csv file, filename is: " << this_string_map["coords_csv_file"] << endl;
+  	LSDSpatialCSVReader SwathPoints(FilledDEM, DATA_DIR+this_string_map["coords_csv_file"]);
+  	vector<float> UTME;
+  	vector<float> UTMN;
+  	SwathPoints.get_x_and_y_from_latlong(UTME, UTMN);
+  	cout << "\t Got the x and y locations" << endl;
+  	string csv_outname = "_UTM_check.csv";
+  	SwathPoints.print_UTM_coords_to_csv(UTME, UTMN, (DATA_DIR+DEM_ID+csv_outname));
 
-    cout << "Channel jn: " << outlet_jn << endl;
+  	// snap to nearest channel
+  	vector<int> valid_indices;
+  	vector<int> snapped_nodes;
+  	vector<int> snapped_JNs;
+  	ChanNetwork.snap_point_locations_to_channels(UTME, UTMN, this_int_map["search_radius"], this_int_map["Threshold_SO"], FlowInfo, valid_indices, snapped_nodes, snapped_JNs);
 
-    LSDRaster DistFromOutlet = FlowInfo.distance_from_outlet();
+  	cout << "The number of valid points is: " << int(valid_indices.size()) << endl;
 
-    // get the longest channel from this outlet point
-    LSDIndexChannel ThisChannel = ChanNetwork.generate_longest_index_channel_from_junction(outlet_jn, FlowInfo, DistFromOutlet);
+  	if (int(valid_indices.size()) == 2)
+  	{
+  		// get the channel between these points
+  		cout << "Got channel nodes: " << snapped_nodes[0] << ", " << snapped_nodes[1] << endl;
+  		LSDIndexChannel BaselineChannel(snapped_nodes[0], snapped_nodes[1], FlowInfo);
+  		vector<double> X_coords;
+  		vector<double> Y_coords;
+  		BaselineChannel.get_coordinates_of_channel_nodes(X_coords, Y_coords);
+      // get the point data from the BaselineChannel
+      PointData BaselinePoints = get_point_data_from_coordinates(X_coords, Y_coords);
 
-    vector<double> X_coords;
-    vector<double> Y_coords;
-    ThisChannel.get_coordinates_of_channel_nodes(X_coords, Y_coords);
-    // get the point data from the BaselineChannel
-    PointData BaselinePoints = get_point_data_from_coordinates(X_coords, Y_coords);
+      // get the swath
+      cout << "\t creating swath template" << endl;
+      LSDSwath TestSwath(BaselinePoints, FilledDEM, this_int_map["HalfWidth"]);
 
-    // get the swath
-    cout << "\t creating swath template" << endl;
-    LSDSwath TestSwath(BaselinePoints, FilledDEM, this_int_map["HalfWidth"]);
+      // now get the raster values along the swath
+      TestSwath.write_RasterValues_along_swath_to_csv(CHT, 0, DATA_DIR+DEM_ID+"_swath_cht_data.csv");
 
-    // now get the raster values along the swath
-    TestSwath.write_RasterValues_along_swath_to_csv(CHT, 0, DATA_DIR+DEM_ID+"_swath_cht_data.csv");
+      string baseline_filename = "_baseline.csv";
+      TestSwath.print_baseline_to_csv(FilledDEM, DATA_DIR+DEM_ID+baseline_filename);
+    }
   }
 }

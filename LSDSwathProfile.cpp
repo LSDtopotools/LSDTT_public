@@ -1390,6 +1390,13 @@ vector <vector <float> > LSDSwath::get_RasterValues_along_swath(LSDRaster& Raste
       MaxRasterValues.push_back(max_value);
       //cout << "Distance: " << DistanceAlongBaseline[i] << " n_raster values: " << raster_values.size() << endl;
     }
+    else
+    {
+      DistAlongBaseline.push_back(DistanceAlongBaseline[i]);
+      MeanRasterValues.push_back(NoDataValue);
+      MinRasterValues.push_back(NoDataValue);
+      MaxRasterValues.push_back(NoDataValue);
+    }
   }
 
   // store in the MasterVector
@@ -1424,15 +1431,19 @@ void LSDSwath::write_RasterValues_along_swath_to_csv(LSDRaster& RasterTemplate, 
   // this is for latitude and longitude
   LSDCoordinateConverterLLandUTM Converter;
 
-  int n_points= MasterVector[0].size();
-
+  int n_points= BaselineValue.size();
+  
   for (int i = 0; i < n_points; i++)
   {
-    // get the latitude and longitude of the point
-    RasterTemplate.get_x_and_y_locations(BaselineRows[i], BaselineCols[i], x_loc, y_loc);
-    //cout << "Row: " << row << " Col: " << col << " X: " << x_loc << " Y: " << y_loc << endl;
-    RasterTemplate.get_lat_and_long_locations(BaselineRows[i], BaselineCols[i], latitude, longitude, Converter);
-    output_file << MasterVector[0][i] << "," << x_loc << "," << y_loc << "," << latitude << "," << longitude << "," << MasterVector[1][i] << "," << MasterVector[2][i] << "," << MasterVector[3][i] << endl;
+    float this_dist = DistanceAlongBaseline[i];
+    if (MasterVector[1][i] != NoDataValue)
+    {
+      // get the latitude and longitude of the point
+      RasterTemplate.get_x_and_y_locations(BaselineRows[i], BaselineCols[i], x_loc, y_loc);
+      //cout << "Row: " << row << " Col: " << col << " X: " << x_loc << " Y: " << y_loc << endl;
+      RasterTemplate.get_lat_and_long_locations(BaselineRows[i], BaselineCols[i], latitude, longitude, Converter);
+      output_file << MasterVector[0][i] << "," << x_loc << "," << y_loc << "," << latitude << "," << longitude << "," << MasterVector[1][i] << "," << MasterVector[2][i] << "," << MasterVector[3][i] << endl;
+    }
   }
 
   output_file.close();
