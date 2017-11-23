@@ -116,6 +116,11 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["padding_pixels"] = 100;
   string_default_map["basin_outlet_csv"] = "NULL";
   bool_default_map["print_individual_basin_raster"] = false;
+  bool_default_map["merge_adjacent_raster"] = false;
+
+  // Analysis
+  bool_default_map["swath_my_ridge"] = false;
+  bool_default_map["extract_my_sources"] = false;
 
 
 
@@ -321,34 +326,44 @@ int main (int nNumberofArgs,char *argv[])
       }
     }
 
-    int n_basins = basin_list.size();
+
     vector<int> perimeter;
-    bool basin_check = false;
-    // checking if the basins are adjacent
-    if(n_basins>1)
+    if(this_bool_map["merge_adjacent_raster"])
     {
-      cout << "I am now checking if your basins are adjacents" << endl;
-      //bool all_adjacent = true;
-      LSDBasin out_basin = basin_list[0];
-      for(size_t samp = 0; samp<basin_list.size(); samp++)
+      int n_basins = basin_list.size();
+      
+      bool basin_check = false;
+      // checking if the basins are adjacent
+      if(n_basins>1)
       {
-        for(size_t sec = 0; sec<basin_list.size(); sec++)
+        cout << "I am now checking if your basins are adjacents" << endl;
+        //bool all_adjacent = true;
+        LSDBasin out_basin = basin_list[0];
+        for(size_t samp = 0; samp<basin_list.size(); samp++)
         {
-          if(sec != samp && basin_list[samp].is_adjacent(basin_list[sec], FlowInfo))
+          for(size_t sec = 0; sec<basin_list.size(); sec++)
           {
-            basin_check = true;
+            if(sec != samp && basin_list[samp].is_adjacent(basin_list[sec], FlowInfo))
+            {
+              basin_check = true;
+            }
           }
+          if(!basin_check)
+          {
+            cout<< "Your basin number "<< samp+1 << " is not adjacent with the others. I am aborting" << endl;
+            exit(EXIT_FAILURE);
+          }
+          basin_check = false;
+          basin_list[samp].print_perimeter_to_csv(FlowInfo, OUT_DIR+OUT_ID+"_"+itoa(samp)+"_perimeter.csv");
         }
-        if(!basin_check)
-        {
-          cout<< "Your basin number "<< samp+1 << " is not adjacent with the others. I am aborting" << endl;
-          exit(EXIT_FAILURE);
-        }
-        basin_check = false;
-        basin_list[samp].print_perimeter_to_csv(FlowInfo, OUT_DIR+OUT_ID+"_"+itoa(samp)+"_perimeter.csv");
+        cout << "Your Basins are adjacent, let me merge their perimeter and remove theIR Adjacent border, It takes a while I need to optimize this part" << endl;
+        perimeter = out_basin.merge_perimeter_nodes_adjacent_basins(basin_list, FlowInfo);
       }
-      cout << "Your Basins are adjacent, let me merge their perimeter and remove theIR Adjacent border, It takes a while I need to optimize this part" << endl;
-      perimeter = out_basin.merge_perimeter_nodes_adjacent_basins(basin_list, FlowInfo);
+      else
+      {
+        LSDBasin out_basin = basin_list[0];
+        perimeter = out_basin.get_Perimeter_nodes();
+      }
     }
     else
     {
@@ -356,24 +371,34 @@ int main (int nNumberofArgs,char *argv[])
       perimeter = out_basin.get_Perimeter_nodes();
     }
 
-    vector<int> selected_sources;
-    selected_sources = basin_list[0].get_source_node_from_perimeter(perimeter, FlowInfo, JunctionNetwork, this_int_map["search_radius_nodes"]);
-    cout<< perimeter.size() << endl;
+    if(this_bool_map["extract_my_sources"])
+    {
+      vector<int> selected_sources;
+      selected_sources = basin_list[0].get_source_node_from_perimeter(perimeter, FlowInfo, JunctionNetwork, this_int_map["search_radius_nodes"]);
+      cout<< perimeter.size() << endl;
 
-    // printing the selected sources
-    if(selected_sources.size() == 0){cout<<"No Channel heads detected, you can try to increase you search radius or check your basins, Check as well if your basin is entirely in the DEM" << endl; exit(EXIT_FAILURE);}
+      // printing the selected sources
+      if(selected_sources.size() == 0){cout<<"No Channel heads detected, you can try to increase you search radius or check your basins, Check as well if your basin is entirely in the DEM" << endl; exit(EXIT_FAILURE);}
 
-    string sources_csv_name = OUT_DIR+OUT_ID+"_ATsourcesDD.csv";
+      string sources_csv_name = OUT_DIR+OUT_ID+"_ATsourcesDD.csv";
 
-    //write selected channel_heads to a csv file
-    FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(selected_sources, sources_csv_name);
-    cout << "I printed the selected sources into " << sources_csv_name << endl;
+      //write selected channel_heads to a csv file
+      FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(selected_sources, sources_csv_name);
+      cout << "I printed the selected sources into " << sources_csv_name << endl;
 
-  //write all channel_heads to a csv file
-    sources_csv_name = OUT_DIR+OUT_ID+"_ATsources.csv";
-   
-    FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(sources, sources_csv_name);
-    cout << "I printed the selected sources into " << sources_csv_name << endl;
+    //write all channel_heads to a csv file
+      sources_csv_name = OUT_DIR+OUT_ID+"_ATsources.csv";
+     
+      FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(sources, sources_csv_name);
+      cout << "I printed the selected sources into " << sources_csv_name << endl;
+    }
+
+
+    if(this_bool_map["swath_my_ridge"])
+    {
+      cout<< "TO BUILD" << endl;
+
+    }
 
 
 
