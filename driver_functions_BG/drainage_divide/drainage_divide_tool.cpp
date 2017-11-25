@@ -56,6 +56,7 @@
 #include "../../LSDShapeTools.hpp"
 #include "../../LSDSpatialCSVReader.hpp"
 #include "../../LSDParameterParser.hpp"
+#include "../../LSDSwathProfile.hpp"
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Declare the print basins function
@@ -120,6 +121,7 @@ int main (int nNumberofArgs,char *argv[])
 
   // Analysis
   bool_default_map["swath_my_ridge"] = false;
+  int_default_map["distance_from_ridge"] = 50;
   bool_default_map["extract_my_sources"] = false;
 
 
@@ -397,6 +399,53 @@ int main (int nNumberofArgs,char *argv[])
     if(this_bool_map["swath_my_ridge"])
     {
       cout<< "TO BUILD" << endl;
+      vector<double> X_coord,Y_coord;
+      int temp_row = 0, temp_col = 0;
+      double temp_X = 0,temp_Y = 0;
+      for(vector<int>::iterator cat = perimeter.begin();cat!=perimeter.end();cat++)
+      {
+        FlowInfo.retrieve_current_row_and_col(*cat,temp_row,temp_col);
+        FlowInfo.get_x_and_y_locations(temp_row,temp_col, temp_X,temp_Y);
+        X_coord.push_back(temp_X);
+        Y_coord.push_back(temp_Y);
+      }
+      // get the point data from the BaselineChannel
+      PointData BaselinePoints = get_point_data_from_coordinates(X_coord, Y_coord);
+
+      // get the swath
+      cout << "\t creating swath template" << endl;
+      LSDSwath TestSwath(BaselinePoints, FillRaster, this_int_map["distance_from_ridge"]);
+
+      cout << "\n\t Getting raster from swath" << endl;
+      LSDRaster SwathRaster = TestSwath.get_raster_from_swath_profile(FillRaster, 1);
+      cout << "I am now trying to reduce your raster, by removing part the NoDataValue" << endl;
+      LSDRaster LightRaster = SwathRaster.RasterTrimmerPadded(50);
+      LightRaster.write_raster((DATA_DIR+DEM_ID+"_swath_ridges_norm"), raster_ext);
+      // getting the elevation swath
+      LSDRaster SwathRaster_elev = TestSwath.get_raster_from_swath_profile(FillRaster, 0);
+      cout << "I am now trying to reduce your raster, by removing part the NoDataValue" << endl;
+      LSDRaster LightRaster_elev = SwathRaster_elev.RasterTrimmerPadded(50);
+      LightRaster_elev.write_raster((DATA_DIR+DEM_ID+"_swath_ridges"), raster_ext);
+
+      // Now getting the slope raster
+      vector<int> raster_selection(8, 0);  // This controls which usrface fitting metrics to compute
+      raster_selection[1] = 1;
+      vector<LSDRaster> surface_fitting;
+      surface_fitting = topography_raster.calculate_polyfit_surface_metrics(30, raster_selection);
+      // surface_fitting[1] is the slope raster
+      LSDSwath TestSwath_slope(BaselinePoints, surface_fitting[1], this_int_map["distance_from_ridge"]);
+
+      cout << "\n\t Getting raster from swath" << endl;
+      LSDRaster SwathRaster_slope = TestSwath_slope.get_raster_from_swath_profile(FillRaster, 1);
+      cout << "I am now trying to reduce your raster, by removing part the NoDataValue" << endl;
+      LSDRaster LightRaster_slope = SwathRaster_slope.RasterTrimmerPadded(50);
+      LightRaster_slope.write_raster((DATA_DIR+DEM_ID+"_swath_ridges_slope_norm"), raster_ext);
+      // getting the elevation swath
+      LSDRaster SwathRaster_slopelev = TestSwath_slope.get_raster_from_swath_profile(FillRaster, 0);
+      cout << "I am now trying to reduce your raster, by removing part the NoDataValue" << endl;
+      LSDRaster LightRaster_slopelev = SwathRaster_slopelev.RasterTrimmerPadded(50);
+      LightRaster_slopelev.write_raster((DATA_DIR+DEM_ID+"_swath_ridges_slope"), raster_ext);
+
 
     }
 
