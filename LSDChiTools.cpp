@@ -2191,10 +2191,11 @@ void LSDChiTools::knickzone_weighting_completion(map<pair<int,int>, vector<int> 
   // This function attend to weight and save all the combinations of knickzones previously calculated
   // The idea is to apply an outlier to each possibles knickzones to select the most probable ones
   // I'll begin by declaring all the variables I'll need for this purpose
-  int begining_node = 0, ending_node = 0;
+  int begining_node = 0, ending_node = 0, this_knickzone_ID = 0;
   vector<int> working_nodes; //  temporary vector to store the working nodes
   float chi_size = 0, weighted_sum_ksn = 0, weighted_sum_rksn = 0, weighted_sum_rad = 0, weighter_coeff = 1, weighter = 0, ksn_sum = 0, rksn_sum = 0, rad_sum = 0 ; 
   pair<int,int> temp_pair;
+
 
   // Message to check
   cout<< "I am now testing and writing all the possible knickzones combinations, weighted by their chi lenght. The execution time depends on the number of detected knickzones and can take a while." << endl;
@@ -2248,6 +2249,7 @@ void LSDChiTools::knickzone_weighting_completion(map<pair<int,int>, vector<int> 
           knickzone_raw_cumul_ksn[temp_pair] = ksn_sum;
           knickzone_raw_cumul_rksn[temp_pair] = rksn_sum;
           knickzone_raw_cumul_rad[temp_pair] = rad_sum;
+          knickzone_ID[temp_pair] = this_knickzone_ID;
 
         }
 
@@ -2261,6 +2263,7 @@ void LSDChiTools::knickzone_weighting_completion(map<pair<int,int>, vector<int> 
         knickzone_raw_cumul_ksn[temp_pair] = ksn_diff_knickpoint_map[ending_node];
         knickzone_raw_cumul_rksn[temp_pair] = ksn_ratio_knickpoint_map[ending_node];
         knickzone_raw_cumul_rad[temp_pair] = ksn_rad_knickpoint_map[ending_node];
+        knickzone_ID[temp_pair] = this_knickzone_ID;
       }
 
       weighted_sum_rad = 0;
@@ -2272,7 +2275,7 @@ void LSDChiTools::knickzone_weighting_completion(map<pair<int,int>, vector<int> 
       
 
     }
-
+  this_knickzone_ID ++;
   }
   cout << "I am done testing all your knickzones combinations" << endl;
 } 
@@ -2295,7 +2298,7 @@ void LSDChiTools::print_knickzone_to_csv(LSDFlowInfo& FlowInfo, string filename)
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "Alatitude,Alongitude,Blatitude,Blongitude,Aelevation,Belevation,Aflow_distance,Bflow_distance,Achi,Bchi,Adrainage_area,Bdrainage_area,ksn,rksn,sign,rad,Wgksn,Wgrksn,Wgrad,source_key,basin_key";
+  chi_data_out << "Alatitude,Alongitude,Blatitude,Blongitude,Aelevation,Belevation,Aflow_distance,Bflow_distance,Achi,Bchi,Adrainage_area,Bdrainage_area,ksn,rksn,sign,rad,Wgksn,Wgrksn,Wgrad,source_key,basin_key,knickzone_key";
 
   chi_data_out << endl;
 
@@ -2339,7 +2342,8 @@ void LSDChiTools::print_knickzone_to_csv(LSDFlowInfo& FlowInfo, string filename)
                      << knickzone_WP_rksn[iter->first] << ","
                      << knickzone_WP_rad[iter->first] << ","
                      << source_keys_map[A_node] << ","
-                     << baselevel_keys_map[A_node];
+                     << baselevel_keys_map[A_node]<< ","
+                     << knickzone_ID[iter->first];
         chi_data_out << endl;
     }
   }

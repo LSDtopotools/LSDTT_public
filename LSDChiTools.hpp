@@ -1157,6 +1157,8 @@ class LSDChiTools
     map<pair<int,int>, float> knickzone_WP_rksn;
     /// map of nickzones for rad variations WEIGHTED VERSION
     map<pair<int,int>, float> knickzone_WP_rad;
+    /// map of knickzone ID to identify all the knickzones from a same base one
+    map<pair<int,int>,int>  knickzone_ID;
 
 
 
