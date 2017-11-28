@@ -152,6 +152,8 @@ int main (int nNumberofArgs,char *argv[])
 
   // knickpoint analysis. This is still under development.
   bool_default_map["ksn_knickpoint_analysis"] = false;
+  int_default_map["force_skip_knickpoint_analysis"] = 0;
+  int_default_map["force_n_iteration_knickpoint_analysis"] = 1;
 
   // basic parameters for calculating chi
   float_default_map["A_0"] = 1;
@@ -1598,8 +1600,8 @@ int main (int nNumberofArgs,char *argv[])
 
   if(this_bool_map["ksn_knickpoint_analysis"])
   {
-    n_iterations = 1;
-    skip = 0;
+    n_iterations = this_int_map["force_n_iteration_knickpoint_analysis"];
+    skip = this_int_map["force_skip_knickpoint_analysis"];
     LSDChiTools ChiTool(FlowInfo);
     ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
                           filled_topography, DistanceFromOutlet,

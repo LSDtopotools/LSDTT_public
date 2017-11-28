@@ -2298,7 +2298,7 @@ void LSDChiTools::print_knickzone_to_csv(LSDFlowInfo& FlowInfo, string filename)
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "Alatitude,Alongitude,Blatitude,Blongitude,Aelevation,Belevation,Aflow_distance,Bflow_distance,Achi,Bchi,Adrainage_area,Bdrainage_area,ksn,rksn,sign,rad,Wgksn,Wgrksn,Wgrad,source_key,basin_key,knickzone_key";
+  chi_data_out << "Alatitude,Alongitude,Blatitude,Blongitude,Aelevation,Belevation,Aflow_distance,Bflow_distance,Achi,Bchi,Adrainage_area,Bdrainage_area,ksn,rksn,sign,rad,Wgksn,Wgrksn,Wgrad,source_key,basin_key,knickzone_key,lenght";
 
   chi_data_out << endl;
 
@@ -2343,7 +2343,8 @@ void LSDChiTools::print_knickzone_to_csv(LSDFlowInfo& FlowInfo, string filename)
                      << knickzone_WP_rad[iter->first] << ","
                      << source_keys_map[A_node] << ","
                      << baselevel_keys_map[A_node]<< ","
-                     << knickzone_ID[iter->first];
+                     << knickzone_ID[iter->first] << ","
+                     << (chi_data_map[B_node]-chi_data_map[A_node]);
         chi_data_out << endl;
     }
   }
