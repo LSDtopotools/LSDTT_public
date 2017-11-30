@@ -7818,6 +7818,17 @@ void LSDJunctionNetwork::print_junctions_to_csv(LSDFlowInfo& FlowInfo, vector<in
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function is for calculating a bonehead version of the chi slope
 // and the chi intercept
+//
+// What this does is it takes a list of baselevel junctions
+// It then finds all sources in the basin
+// It then sorts these according to length
+// Starting with the longest channel it moves down marking channels as read
+// For all but the longest channel, it will eventually come upon a channel that has
+// already been visited. So it will stop there. 
+// BUT we want to keep a few chi nodes downslope (to make sure there are not
+// big jumps in chi at tributary junctions)
+// so it follows the visited channel down a few nodes. It does this using the
+// flowinfo function   get_downslope_node_after_fixed_visited_nodes
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDJunctionNetwork::get_overlapping_channels(LSDFlowInfo& FlowInfo,
                                     vector<int> BaseLevel_Junctions,
