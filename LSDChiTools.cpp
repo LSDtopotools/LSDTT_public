@@ -1939,6 +1939,66 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::get_previous_mchi_for_all_sources(LSDFlowInfo& Flowinfo)
+{
+  // setting the variables for extracting the knickpoints
+  
+   // find the number of nodes
+  int n_nodes = (node_sequence.size());
+  if (n_nodes <= 0)
+  {
+    cout << "Cannot calculate segments since you have not calculated channel properties yet." << endl;
+    exit(EXIT_FAILURE);
+  }
+  else
+  {
+    int working_source = source_keys_map[node_sequence[0]]; // This is the working source key, the one you already have extracted the information
+    int current_source = source_keys_map[node_sequence[0]]; // this is the currently tested source_key that will become the working key is different than previous key
+    int starting_node_of_source_key = get_starting_node_of_source(working_source); // This store the starting node of the river with this source_key
+    
+    // Now getting the receiving node of the river with this source
+    int receiving_node_of_source_key, temp_row, temp_col;
+    Flowinfo.retrieve_receiver_information(starting_node_of_source_key, receiving_node_of_source_key, temp_row,temp_col);
+
+    //Finally getting the 
+    float m_chi_receiving_river = M_chi_data_map[receiving_node_of_source_key];
+    
+    // Creating temp data_map to save everything
+    map<int,int> this_map_source_key_receiver; // 
+    map<int,float> this_map_source_key_receiver_mchi;
+    this_map_source_key_receiver[working_source] = source_keys_map[receiving_node_of_source_key];
+    this_map_source_key_receiver_mchi[working_source] = m_chi_receiving_river;
+
+    // done initializing, let's do it for all the rivers
+
+    for (int n = 0; n< n_nodes; n++)
+    {
+      current_source = source_keys_map[node_sequence[0]];
+      if(current_source != working_source && current_source != -9999)
+      {
+        working_source = current_source;
+        starting_node_of_source_key = get_starting_node_of_source(working_source);
+        Flowinfo.retrieve_receiver_information(starting_node_of_source_key, receiving_node_of_source_key, temp_row,temp_col);
+        m_chi_receiving_river = M_chi_data_map[receiving_node_of_source_key];
+        this_map_source_key_receiver[working_source] = source_keys_map[receiving_node_of_source_key];
+        this_map_source_key_receiver_mchi[working_source] = m_chi_receiving_river;
+      }  
+
+    }
+
+    // generalizing the maps
+    map_source_key_receiver = this_map_source_key_receiver;
+    map_source_key_receiver_mchi = this_map_source_key_receiver_mchi;
+
+
+  }
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // New function for the knickpoint detection
@@ -2019,6 +2079,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
       // set the nodes number and keep information about the previous one
       last_node = this_node;
       this_node = node_sequence[n];
+
 
       // Get the M_chi from the current node
       this_M_chi = M_chi_data_map[this_node];
@@ -6432,6 +6493,37 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
 
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Print data maps to file
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::print_intersources_mchi_map( string filename)
+{
+
+  // open the data file
+  ofstream  file_out_;
+  file_out_.open(filename.c_str());
+  file_out_ << "source_key,receiving_source_key,m_chi_receiver";
+  file_out_ << endl;
+
+ 
+  for (map<int,int>::iterator alpaca = map_source_key_receiver.begin(); alpaca != map_source_key_receiver.end() ; alpaca++)
+  {
+    file_out_.precision(5);
+    file_out_ << alpaca->first << ","
+                 << alpaca->second << ","
+                 << map_source_key_receiver_mchi[alpaca->first];
+    file_out_ << endl;
+  }
+  
+
+  file_out_.close();
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Development function to Print data maps to file including knickpoints

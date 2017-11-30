@@ -1086,6 +1086,20 @@ class LSDChiTools
     /// @date 02/06/2016
     void print_data_maps_to_file_basic(LSDFlowInfo& FlowInfo, string filename);
 
+
+    /// @brief fill maps containing information of receiving rivers
+    /// @param FlowInfo: a FlowInfo object
+    /// @author BG
+    /// @date 30/11/2017 
+    void get_previous_mchi_for_all_sources(LSDFlowInfo& Flowinfo);
+
+    /// @brief print a csv file with the receiver of each source and the corresponding source with the m_chi
+    /// That is barely understable, however I have a cold so I am tired as F. Just ask me if you need more info about that
+    /// @param string filename: the path/name.csv of your file
+    /// @author BG
+    /// @date 30/11/2017
+    void print_intersources_mchi_map(string filename);
+
   protected:
     ///Number of rows.
     int NRows;
@@ -1159,6 +1173,10 @@ class LSDChiTools
     map<pair<int,int>, float> knickzone_WP_rad;
     /// map of knickzone ID to identify all the knickzones from a same base one
     map<pair<int,int>,int>  knickzone_ID;
+    /// map of source_keys of receiving rivers<source_key_of_river,source_key_of_receiving_river>
+    map<int,int> map_source_key_receiver;
+    /// map of m_chi precedant the source_key <source_key_of_river,previous_m_chi>
+    map<int,float> map_source_key_receiver_mchi;
 
 
 
