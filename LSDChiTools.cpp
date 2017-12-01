@@ -1955,7 +1955,7 @@ void LSDChiTools::get_previous_mchi_for_all_sources(LSDFlowInfo& Flowinfo)
   {
     int working_source = source_keys_map[node_sequence[0]]; // This is the working source key, the one you already have extracted the information
     int current_source = source_keys_map[node_sequence[0]]; // this is the currently tested source_key that will become the working key is different than previous key
-    int starting_node_of_source_key = get_starting_node_of_source(working_source); // This store the starting node of the river with this source_key
+    int starting_node_of_source_key = get_ending_node_of_source(Flowinfo ,working_source); // This store the starting node of the river with this source_key
     
     // Now getting the receiving node of the river with this source
     int receiving_node_of_source_key, temp_row, temp_col;
@@ -1974,11 +1974,13 @@ void LSDChiTools::get_previous_mchi_for_all_sources(LSDFlowInfo& Flowinfo)
 
     for (int n = 0; n< n_nodes; n++)
     {
-      current_source = source_keys_map[node_sequence[0]];
+      current_source = source_keys_map[node_sequence[n]];
+      //cout << source_keys_map[node_sequence[starting_node_of_source_key]] << "||" << node_sequence[source_keys_map[receiving_node_of_source_key]] << endl;
       if(current_source != working_source && current_source != -9999)
       {
+        // cout << "changing sources" << endl;
         working_source = current_source;
-        starting_node_of_source_key = get_starting_node_of_source(working_source);
+        starting_node_of_source_key = get_ending_node_of_source(Flowinfo, working_source);
         Flowinfo.retrieve_receiver_information(starting_node_of_source_key, receiving_node_of_source_key, temp_row,temp_col);
         m_chi_receiving_river = M_chi_data_map[receiving_node_of_source_key];
         this_map_source_key_receiver[working_source] = source_keys_map[receiving_node_of_source_key];
@@ -4975,6 +4977,33 @@ int LSDChiTools::get_starting_node_of_source(int source_key)
   //cout << "The starting node in the sequence is: " << this_starting_node << endl;
 
   return this_starting_node;
+}
+
+
+int LSDChiTools::get_ending_node_of_source(LSDFlowInfo& FlowInfo,int source_key)
+{
+  int starting_node_index = get_starting_node_of_source(source_key);
+  int node_indenter = starting_node_index;
+  int temp1, temp2, temp_node_index = starting_node_index, temp_node = node_sequence[starting_node_index];
+
+
+  
+
+  while(source_keys_map[temp_node] == source_key && temp_node_index < node_sequence.size())
+  {
+
+    node_indenter ++;
+    temp_node_index = node_indenter;
+    FlowInfo.retrieve_receiver_information(node_sequence[temp_node_index], temp_node, temp1, temp2);
+
+    
+
+  }
+  int ending_node = temp_node;
+
+
+  return ending_node;
+
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

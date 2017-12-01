@@ -1093,6 +1093,12 @@ class LSDChiTools
     /// @date 30/11/2017 
     void get_previous_mchi_for_all_sources(LSDFlowInfo& Flowinfo);
 
+    /// @brief It should find the ending (aka downstair) node 
+    /// @param FlowInfo: a FlowInfo object
+    /// @author BG
+    /// @date 30/11/2017 
+    int get_ending_node_of_source(LSDFlowInfo& FlowInfo, int source_key);
+
     /// @brief print a csv file with the receiver of each source and the corresponding source with the m_chi
     /// That is barely understable, however I have a cold so I am tired as F. Just ask me if you need more info about that
     /// @param string filename: the path/name.csv of your file
