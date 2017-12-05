@@ -1616,7 +1616,7 @@ int main (int nNumberofArgs,char *argv[])
 
     string csv_full_fname = OUT_DIR+OUT_ID+"_MChiSegmented_Ks.csv";
     cout << "Let me print A Test File " << csv_full_fname << endl;
-    ChiTool.print_data_maps_to_file_full(FlowInfo, csv_full_fname);
+    ChiTool.print_mchisegmented_knickpoint_version(FlowInfo, csv_full_fname);
     cout << "I am printing a file containing the receiver of each sources" << endl;
     ChiTool.get_previous_mchi_for_all_sources(FlowInfo);
     string csv_intersource_fullname = OUT_DIR+OUT_ID+"_SourcesLinks.csv";

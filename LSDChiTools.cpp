@@ -2428,7 +2428,7 @@ void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename
   // these are for extracting element-wise data from the channel profiles.
   cout << "I am now writing your ksn knickzone file:" << endl;
   int this_node, row,col;
-  double latitude,longitude;
+  double latitude,longitude, this_x, this_y;;
   LSDCoordinateConverterLLandUTM Converter;
 
   // find the number of nodes
@@ -2437,7 +2437,7 @@ void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "latitude,longitude,elevation,flow_distance,chi,drainage_area,ksn,rksn,sign,rad,cumul_ksn,cumul_rksn,cumul_rad,source_key,basin_key";
+  chi_data_out << "Y,X,latitude,longitude,elevation,flow_distance,chi,drainage_area,ksn,rksn,sign,rad,cumul_ksn,cumul_rksn,cumul_rad,source_key,basin_key";
 
   chi_data_out << endl;
 
@@ -2457,10 +2457,12 @@ void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename
         this_node = iter->first;
         FlowInfo.retrieve_current_row_and_col(this_node,row,col);
         get_lat_and_long_locations(row, col, latitude, longitude, Converter);
-        // cout << "printing node " << this_node << " with diff " << ksn_diff_knickpoint_map[this_node] << endl; 
+        get_x_and_y_locations(row, col, this_x, this_y);
         
         chi_data_out.precision(9);
-        chi_data_out << latitude << ","
+        chi_data_out << this_y << ","
+                     << this_x << ","
+                     << latitude << ","
                      << longitude << ",";
         chi_data_out.precision(5);
         chi_data_out << elev_data_map[this_node] << ","
@@ -6493,6 +6495,101 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
       chi_data_out << this_node << ","
                    << row << ","
                    << col << ",";
+      chi_data_out.precision(9);
+      chi_data_out << latitude << ","
+                   << longitude << ",";
+      chi_data_out.precision(5);
+      chi_data_out << chi_data_map[this_node] << ","
+                   << elev_data_map[this_node] << ","
+                   << flow_distance_data_map[this_node] << ","
+                   << drainage_area_data_map[this_node] << ","
+                   << M_chi_data_map[this_node] << ","
+                   << b_chi_data_map[this_node] << ","
+                   << source_keys_map[this_node] << ","
+                   << baselevel_keys_map[this_node];
+
+      if(have_segmented_elevation)
+      {
+        chi_data_out << "," << segmented_elevation_map[this_node];
+      }
+      if (have_segments)
+      {
+        chi_data_out << "," << segment_counter_map[this_node];
+      }
+      chi_data_out << endl;
+    }
+  }
+
+  chi_data_out.close();
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Print data maps to file for the knickpoint algorithm
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, string filename)
+{
+
+  // these are for extracting element-wise data from the channel profiles.
+  int this_node, row, col;
+  double latitude,longitude;
+  double this_x,this_y;
+  LSDCoordinateConverterLLandUTM Converter;
+
+  // find the number of nodes
+  int n_nodes = (node_sequence.size());
+
+  // test to see if there is segment numbering
+  bool have_segments = false;
+  if( segment_counter_map.size() == node_sequence.size())
+  {
+    have_segments = true;
+  }
+
+  // test to see if the fitted elevations have been calculated
+  bool have_segmented_elevation = false;
+  if( segmented_elevation_map.size() == node_sequence.size())
+  {
+    have_segmented_elevation = true;
+  }
+
+
+  // open the data file
+  ofstream  chi_data_out;
+  chi_data_out.open(filename.c_str());
+  chi_data_out << "node,Y,X,latitude,longitude,chi,elevation,flow_distance,drainage_area,m_chi,b_chi,source_key,basin_key";
+  if(have_segmented_elevation)
+  {
+    chi_data_out << ",segmented_elevation";
+  }
+  if (have_segments)
+  {
+    chi_data_out << ",segment_number";
+    cout << "I added the segment number in the csv file"<< endl;
+  }
+  chi_data_out << endl;
+
+
+
+
+  if (n_nodes <= 0)
+  {
+    cout << "Cannot print since you have not calculated channel properties yet." << endl;
+  }
+  else
+  {
+    for (int n = 0; n< n_nodes; n++)
+    {
+      this_node = node_sequence[n];
+      FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+      get_lat_and_long_locations(row, col, latitude, longitude, Converter);
+      get_x_and_y_locations(row, col, this_x, this_y);
+
+      chi_data_out << this_node << ","
+                   << this_y << ","
+                   << this_x << ",";
       chi_data_out.precision(9);
       chi_data_out << latitude << ","
                    << longitude << ",";

@@ -130,6 +130,13 @@ class LSDChiTools
     /// @date 22/12/2014
     void get_x_and_y_locations(int row, int col, double& x_loc, double& y_loc);
 
+    /// @biref This function write a file similar to the MCHISegmented one slightly different to match with the knickpoint plotting requirements
+    /// @ param LSDFlowInfo A LSDFlowInfo object
+    /// @param string filename the path name and extension of hte required file
+    /// @author BG
+    /// @date 05/12/2017
+    void print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, string filename);
+
     /// @brief this gets the x and y location of a node at row and column
     /// @param row the row of the node
     /// @param col the column of the node
