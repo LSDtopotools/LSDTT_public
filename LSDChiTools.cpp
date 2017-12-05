@@ -6630,7 +6630,7 @@ void LSDChiTools::print_intersources_mchi_map( string filename)
   // open the data file
   ofstream  file_out_;
   file_out_.open(filename.c_str());
-  file_out_ << "source_key,receiving_source_key,m_chi";
+  file_out_ << "source_key,receiving_source_key,m_chi,chi";
   file_out_ << endl;
 
  
@@ -6640,7 +6640,8 @@ void LSDChiTools::print_intersources_mchi_map( string filename)
     file_out_ << alpaca->first << ","
                  << alpaca->second << ","
                  << map_source_key_receiver_mchi[alpaca->first]
-                 << flow_distance_data_map[alpaca->first];
+                 << M_chi_data_map[alpaca->first]
+                 << chi_data_map[alpaca->first];
     file_out_ << endl;
   }
   
