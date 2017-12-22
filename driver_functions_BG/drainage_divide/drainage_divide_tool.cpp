@@ -257,6 +257,7 @@ int main (int nNumberofArgs,char *argv[])
   // 3) There should be a few more options here, one idea is to have a raster filling
   //     function that does some kind of heirarchical sorting to fill the raster.
   vector<int> basin_junctions;
+  vector<LSDBasin> basin_list;
   vector<string> IDs;
 
   // This uses a list lat-long coordinates and snaps these coordinates to the
@@ -306,7 +307,7 @@ int main (int nNumberofArgs,char *argv[])
 
     int n_valid_points =  int(basin_junctions.size());
     cout << "I am trying to spawn basins, found " << n_valid_points << " valid points." << endl;
-    vector<LSDBasin> basin_list;
+    
     for(int samp = 0; samp<n_valid_points; samp++)
     {
       
@@ -365,6 +366,7 @@ int main (int nNumberofArgs,char *argv[])
       else
       {
         LSDBasin out_basin = basin_list[0];
+
         temp_perimeter = out_basin.get_Perimeter_nodes();
         perimeter = out_basin.get_Perimeter_nodes();
         list_of_perimeters.push_back(temp_perimeter);
@@ -376,6 +378,8 @@ int main (int nNumberofArgs,char *argv[])
       for(size_t num = 0;num<basin_list.size();num++)
       {
         LSDBasin out_basin = basin_list[num];
+        out_basin.set_Perimeter(FlowInfo);
+        out_basin.print_perimeter_to_csv(FlowInfo, OUT_DIR+OUT_ID+"_"+itoa(num)+"_perimeter.csv");
         perimeter = out_basin.get_Perimeter_nodes();
         list_of_perimeters.push_back(perimeter);
       }
