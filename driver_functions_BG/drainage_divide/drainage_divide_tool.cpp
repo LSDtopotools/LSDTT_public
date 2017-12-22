@@ -121,7 +121,7 @@ int main (int nNumberofArgs,char *argv[])
 
   // Analysis
   bool_default_map["swath_my_ridge"] = false;
-  int_default_map["distance_from_ridge"] = 50;
+  int_default_map["distance_from_ridge"] = 500;
   bool_default_map["extract_my_sources"] = false;
 
 
@@ -373,9 +373,13 @@ int main (int nNumberofArgs,char *argv[])
     }
     else
     {
-      LSDBasin out_basin = basin_list[0];
-      perimeter = out_basin.get_Perimeter_nodes();
-      list_of_perimeters.push_back(perimeter);
+      for(size_t num = 0;num<basin_list.size();num++)
+      {
+        LSDBasin out_basin = basin_list[num];
+        perimeter = out_basin.get_Perimeter_nodes();
+        list_of_perimeters.push_back(perimeter);
+      }
+      
     }
 
     if(this_bool_map["extract_my_sources"])
@@ -454,6 +458,9 @@ int main (int nNumberofArgs,char *argv[])
         LSDRaster LightRaster_slopelev = SwathRaster_slopelev.RasterTrimmerPadded(50);
         LightRaster_slopelev.write_raster((DATA_DIR+DEM_ID+"_swath_ridges_slope_"+itoa(cpt)), raster_ext);
         cpt++;
+        X_coord.clear();
+        Y_coord.clear();
+        cout << cpt << endl;
       }
 
     }
