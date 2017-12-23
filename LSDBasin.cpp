@@ -1596,36 +1596,108 @@ vector<int> LSDBasin::get_source_node_from_perimeter(vector<int> perimeter, LSDF
 // THis compile some metrics for each side of a drainage divide across a serie of nodes: min,max,mean,median,std dev ...
 // You just have to feed it with a vector of nodes and a template raster. This last can be elevation, slope, a normalized swath and so on
 // return a map where the key is a string like "min_in" or ",min_out" as well as "n_node_in"... Ill list it when it will be done. 
-map<string,float> LSDBasin::get_metrics_both_side_divide(LSDRaster& rasterTemplate, vector<int> nodes_to_test)
+map<string,float> LSDBasin::get_metrics_both_side_divide(LSDRaster& rasterTemplate, LSDFlowInfo flowpy, vector<int> nodes_to_test)
 {
 
   map<string,float> mapout;
-  vector<int> node_in, node_out;
-  int n_nodes_in =0, n_nodes_out = 0;
+  vector<int> nodes_in, nodes_out;
+  vector<float> nodes_in_v, nodes_out_v, nodes_to_test_v;
+  int n_nodes_in =0, n_nodes_out = 0,row = 0, col = 0, nnd =0;
 
 
   // Now testing which nodes are in  and out of the basin
   for(vector<int>::iterator pudu_deer = nodes_to_test.begin(); pudu_deer != nodes_to_test.end(); pudu_deer++)
   {
-
-    if(is_node_in_basin(*pudu_deer) == 1)
+    // get row/col
+    flowpy.retrieve_current_row_and_col(*pudu_deer,row,col);
+    if(rasterTemplate.get_data_element(row,col) != NoDataValue ) 
     {
-      node_in.push_back(*pudu_deer);
-      n_nodes_in++;
+
+      if(is_node_in_basin(*pudu_deer) == 1)
+      {
+        nodes_in.push_back(*pudu_deer);
+        nodes_in_v.push_back(rasterTemplate.get_data_element(row,col));
+        n_nodes_in++;
+      }
+      else
+      {
+        nodes_out.push_back(*pudu_deer);
+        nodes_out_v.push_back(rasterTemplate.get_data_element(row,col));
+        n_nodes_out++;
+      }
+      nodes_to_test_v.push_back(rasterTemplate.get_data_element(row,col));
     }
     else
     {
-      node_out.push_back(*pudu_deer);
-      n_nodes_out++;
+      nnd++;
     }
   }
 
   mapout["n_nodes_in"] =  (float)n_nodes_in;
-
+  mapout["n_no_data"] = (float)nnd;
   mapout["n_nodes_out"] = (float)n_nodes_out;
   // done
-  //TODO: the rest
 
+  // compiling the stat using stat_tools
+  mapout["mean"] = get_mean_ignore_ndv(nodes_to_test_v, (float)NoDataValue);
+  mapout["mean_in"] = get_mean_ignore_ndv(nodes_in_v, (float)NoDataValue);
+  mapout["mean_out"] = get_mean_ignore_ndv(nodes_out_v, (float)NoDataValue);
+  mapout["median"] = get_median(nodes_to_test_v, (float)NoDataValue);
+  mapout["median_in"] = get_median(nodes_in_v, (float)NoDataValue);
+  mapout["median_out"] = get_median(nodes_out_v, (float)NoDataValue);
+  mapout["max"] = Get_Maximum(nodes_to_test_v, (float)NoDataValue);
+  mapout["max_in"] = Get_Maximum(nodes_in_v, (float)NoDataValue);
+  mapout["max_out"] = Get_Maximum(nodes_out_v, (float)NoDataValue);
+  mapout["min"] = Get_Minimum(nodes_to_test_v, (float)NoDataValue);
+  mapout["min_in"] = Get_Minimum(nodes_in_v, (float)NoDataValue);
+  mapout["min_out"] = Get_Minimum(nodes_out_v, (float)NoDataValue);
+  mapout["StdDev"] = get_standard_deviation(nodes_to_test_v, mapout["mean"], (float)NoDataValue);
+  mapout["StdDev_in"] = get_standard_deviation(nodes_in_v, mapout["mean_in"], (float)NoDataValue);
+  mapout["StdDev_out"] = get_standard_deviation(nodes_out_v, mapout["mean_out"], (float)NoDataValue);
+
+  return mapout;
+
+
+}
+
+
+// This move a square window along the drainage divide and compute the statistics in and out of the basin. Used to compare 
+// the slope/elevetion/lithology/... 
+// I'll code a non square version at some point! 
+// BG - work in progress (on this topic, not on myself, or maybe, what does that even mean?)
+
+void LSDBasin::square_window_stat_drainage_divide(LSDRaster rasterTemplate, LSDFlowInfo flowpy, int size_window)
+{
+  int row = 0, col = 0;
+  vector<int> nodes_to_test;
+  //first let me set the perimeter
+  set_Perimeter(flowpy);
+  
+  // loop through the perimeter
+  for(vector<int>::iterator noodle = Perimeter_nodes.begin(); noodle != Perimeter_nodes.end(); noodle++)
+  {
+    // get the row/col info
+    flowpy.retrieve_current_row_and_col(*noodle,row,col);
+    //loop through the window to gather the wanted node index
+    for(int i = row - size_window ; i< row + size_window; i++)
+    {
+      for(int j = col - size_window ; j< col + size_window; j++)
+      {
+        // check if the row/col are within the raster
+        if(i<rasterTemplate.get_NRows() && j<rasterTemplate.get_NCols() && i >= 0 && j >= 0 )
+        {
+          nodes_to_test.push_back(flowpy.retrieve_node_from_row_and_column(i,j));
+        }
+      }
+    }
+    // ok now I have the number of node to test, I'll just compute the stats
+    stats_around_perimeter_window[*noodle] = get_metrics_both_side_divide(rasterTemplate,flowpy, nodes_to_test);
+    // clearing the vector and start again
+    nodes_to_test.clear(); 
+  }
+
+// Done
+  cout << "I have computed statistics around a square window for this basin" << endl;
 
 }
 

@@ -437,6 +437,39 @@ float get_median(vector<float> y_data)
   return dMedian;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// gets the median, ignore the NoDataValue
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+float get_median(vector<float> y_data, float ndv)
+{
+
+  // First recasting the vector without ndv
+  vector<float> y_data_nndv;
+
+  for(vector<float>::iterator howl = y_data.begin(); howl != y_data.end(); howl ++)
+  {
+    if(*howl != ndv)
+    {
+      y_data_nndv.push_back(*howl);
+    }
+  }
+  int n_data_points = y_data_nndv.size();
+
+  sort(y_data_nndv.begin(),y_data_nndv.end());
+
+  float dMedian = 0.0;
+  if ( (n_data_points % 2) == 0)
+  {
+    dMedian = ( (y_data_nndv[n_data_points/2] + (y_data_nndv[(n_data_points/2) - 1]))/2.0 );
+  }
+  else
+  {
+    dMedian = (y_data_nndv[n_data_points/2]);
+  }
+
+  return dMedian;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // gets the median: uses a pre-sorted vector
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 float get_median_sorted(vector<float> sorted_y_data)
@@ -746,6 +779,35 @@ float get_standard_deviation(vector<float>& y_data, float mean)
   for (int i = 0; i< n_data_points; i++)
   {
     total+=(y_data[i]-mean)*(y_data[i]-mean);
+  }
+  return sqrt(total/float(n_data_points));
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// gets the standard deviation from a population of data, ignore no data
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+float get_standard_deviation(vector<float>& y_data, float mean,float ndv)
+{
+  // First recasting the vector without ndv
+  vector<float> y_data_nndv;
+
+  for(vector<float>::iterator howl = y_data.begin(); howl != y_data.end(); howl ++)
+  {
+    if(*howl != ndv)
+    {
+      y_data_nndv.push_back(*howl);
+    }
+  }
+
+
+  int n_data_points = y_data_nndv.size();
+
+
+  float total = 0;
+  for (int i = 0; i< n_data_points; i++)
+  {
+    total+=(y_data_nndv[i]-mean)*(y_data_nndv[i]-mean);
   }
   return sqrt(total/float(n_data_points));
 }

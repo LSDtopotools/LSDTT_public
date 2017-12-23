@@ -761,8 +761,16 @@ vector<int> get_source_node_from_perimeter(vector<int> perimeter, LSDFlowInfo& f
   /// @detail Ill detail when it will be done later
   /// @param rasterTemplate and the vector of node to test
   /// @author BG
-  /// @date 17/12/17
-  map<string,float> get_metrics_both_side_divide(LSDRaster& rasterTemplate, vector<int> nodes_to_test);
+  /// @date 23/12/17
+  map<string,float> get_metrics_both_side_divide(LSDRaster& rasterTemplate, LSDFlowInfo flowpy, vector<int> nodes_to_test);
+
+  /// @brief apply a square window around each perimeter nodes and extract statistics on each sides of the basin.
+  /// @detail Ill detail when it will be done later
+  /// @param rasterTemplate and the vector of node to test
+  /// @author BG
+  /// @date 23/12/17
+  void square_window_stat_drainage_divide(LSDRaster rasterTemplate, LSDFlowInfo flowpy, int size_window);
+
 
   protected:
 
@@ -863,6 +871,8 @@ vector<int> get_source_node_from_perimeter(vector<int> perimeter, LSDFlowInfo& f
   float Biomass;
   // Alternative index (e.g. lithology)
   int AlternativeIndex;
+  // map of stats around the drainage divide
+  map<int, map<string, float> > stats_around_perimeter_window;
 
   private:
   void create();
