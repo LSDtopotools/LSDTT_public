@@ -774,6 +774,7 @@ void LSDBasin::set_Perimeter(LSDFlowInfo& FlowInfo)
   Perimeter_j = J;
   Perimeter_nodes = B;
 
+
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1008,7 +1009,7 @@ LSDIndexRaster LSDBasin::write_raster_data_to_LSDIndexRaster(LSDIndexRaster Data
 int LSDBasin::is_node_in_basin(int test_node)
 {
   int node_checker = 0;
-  for (int i =0; i < int(BasinNodes.size()); i++)
+  for (int i =0; i < int(BasinNodes.size()) && node_checker == 0; i++)
   {
     if (test_node == BasinNodes[i])
     {
@@ -1596,7 +1597,7 @@ vector<int> LSDBasin::get_source_node_from_perimeter(vector<int> perimeter, LSDF
 // THis compile some metrics for each side of a drainage divide across a serie of nodes: min,max,mean,median,std dev ...
 // You just have to feed it with a vector of nodes and a template raster. This last can be elevation, slope, a normalized swath and so on
 // return a map where the key is a string like "min_in" or ",min_out" as well as "n_node_in"... Ill list it when it will be done. 
-map<string,float> LSDBasin::get_metrics_both_side_divide(LSDRaster& rasterTemplate, LSDFlowInfo flowpy, vector<int> nodes_to_test)
+map<string,float> LSDBasin::get_metrics_both_side_divide(LSDRaster& rasterTemplate, LSDFlowInfo& flowpy, vector<int>& nodes_to_test, map<int,bool>& raster_node_basin)
 {
 
   map<string,float> mapout;
@@ -1608,24 +1609,32 @@ map<string,float> LSDBasin::get_metrics_both_side_divide(LSDRaster& rasterTempla
   // Now testing which nodes are in  and out of the basin
   for(vector<int>::iterator pudu_deer = nodes_to_test.begin(); pudu_deer != nodes_to_test.end(); pudu_deer++)
   {
-    // get row/col
-    flowpy.retrieve_current_row_and_col(*pudu_deer,row,col);
-    if(rasterTemplate.get_data_element(row,col) != NoDataValue ) 
-    {
 
-      if(is_node_in_basin(*pudu_deer) == 1)
+    // get row/col
+    if(*pudu_deer != NoDataValue)
+    {
+      flowpy.retrieve_current_row_and_col(*pudu_deer,row,col);
+      if(rasterTemplate.get_data_element(row,col) != NoDataValue ) 
       {
-        nodes_in.push_back(*pudu_deer);
-        nodes_in_v.push_back(rasterTemplate.get_data_element(row,col));
-        n_nodes_in++;
+
+        if(raster_node_basin[*pudu_deer])
+        {
+          nodes_in.push_back(*pudu_deer);
+          nodes_in_v.push_back(rasterTemplate.get_data_element(row,col));
+          n_nodes_in++;
+        }
+        else
+        {
+          nodes_out.push_back(*pudu_deer);
+          nodes_out_v.push_back(rasterTemplate.get_data_element(row,col));
+          n_nodes_out++;
+        }
+        nodes_to_test_v.push_back(rasterTemplate.get_data_element(row,col));
       }
       else
       {
-        nodes_out.push_back(*pudu_deer);
-        nodes_out_v.push_back(rasterTemplate.get_data_element(row,col));
-        n_nodes_out++;
+        nnd++;
       }
-      nodes_to_test_v.push_back(rasterTemplate.get_data_element(row,col));
     }
     else
     {
@@ -1666,16 +1675,37 @@ map<string,float> LSDBasin::get_metrics_both_side_divide(LSDRaster& rasterTempla
 // I'll code a non square version at some point! 
 // BG - work in progress (on this topic, not on myself, or maybe, what does that even mean?)
 
-void LSDBasin::square_window_stat_drainage_divide(LSDRaster rasterTemplate, LSDFlowInfo flowpy, int size_window)
+void LSDBasin::square_window_stat_drainage_divide(LSDRaster& rasterTemplate, LSDFlowInfo& flowpy, int size_window)
 {
   int row = 0, col = 0,perimeter_index = 0;
   vector<int> nodes_to_test;
+  map<int, bool> raster_node_basin;
+
+  for(int i = 0; i<rasterTemplate.get_NRows();i++)
+  {
+    for(int j = 0; j<rasterTemplate.get_NCols();j++)
+    {
+      raster_node_basin[flowpy.retrieve_node_from_row_and_column(i,j)] = false;
+    }
+  }
+  //cout << "Initialization done" << endl;
+
+  for(vector<int>::iterator oisture = BasinNodes.begin(); oisture != BasinNodes.end();oisture++)
+  {
+    raster_node_basin[*oisture] = true;
+  }
+
+  //cout << "basination done" << endl;
+
+
   //first let me set the perimeter
   set_Perimeter(flowpy);
+
   
   // loop through the perimeter
   for(vector<int>::iterator noodle = Perimeter_nodes.begin(); noodle != Perimeter_nodes.end(); noodle++)
   {
+    //cout << "processing node " << *noodle << endl;
     // get the row/col info
     flowpy.retrieve_current_row_and_col(*noodle,row,col);
     //loop through the window to gather the wanted node index
@@ -1691,7 +1721,8 @@ void LSDBasin::square_window_stat_drainage_divide(LSDRaster rasterTemplate, LSDF
       }
     }
     // ok now I have the number of node to test, I'll just compute the stats
-    map<string, float>  temp_map = get_metrics_both_side_divide(rasterTemplate,flowpy, nodes_to_test);
+    map<string, float>  temp_map = get_metrics_both_side_divide(rasterTemplate,flowpy, nodes_to_test, raster_node_basin);
+
     temp_map["ID"] = perimeter_index; // I am adding an unique index to then sort the data in python by this index
     temp_map["value_at_DD"] = rasterTemplate.get_data_element(row,col);
     stats_around_perimeter_window[*noodle] = temp_map; 
@@ -1700,13 +1731,33 @@ void LSDBasin::square_window_stat_drainage_divide(LSDRaster rasterTemplate, LSDF
     perimeter_index++;
   }
 
+  // now just processing the distance map
+  float dist = 0, last_x = 0 , last_y = 0, this_x = 0, this_y = 0;
+  for(vector<int>::iterator titan = Perimeter_nodes.begin(); titan!= Perimeter_nodes.end(); titan ++)
+  {
+    flowpy.retrieve_current_row_and_col(*titan,row,col);
+    flowpy.get_x_and_y_locations(row, col, this_x, this_y);
+    if(titan == Perimeter_nodes.begin())
+    {
+      dist = 0;
+    }
+    else
+    {
+      dist = dist + sqrt(pow((this_x-last_x),2)+pow((this_y-last_y),2));
+    }
+    map_of_dist_perim[*titan] = dist;
+    last_x = this_x;
+    last_y = this_y;
+
+  }
+
 // Done
   cout << "I have computed statistics around a square window for this basin" << endl;
 
 }
 
 
-void LSDBasin::write_windowed_stats_around_drainage_divide_csv(string filename, LSDFlowInfo flowpy)
+void LSDBasin::write_windowed_stats_around_drainage_divide_csv(string filename, LSDFlowInfo& flowpy)
 {
   // these are for extracting element-wise data from the channel profiles.
   cout << "I am now writing your DD stat windowed file:" << endl;
@@ -1739,10 +1790,6 @@ void LSDBasin::write_windowed_stats_around_drainage_divide_csv(string filename, 
     flowpy.retrieve_current_row_and_col(this_node,row,col);
     flowpy.get_lat_and_long_locations(row, col, latitude, longitude, Converter);
     flowpy.get_x_and_y_locations(row, col, this_x, this_y);
-    if(iter != stats_around_perimeter_window.begin())
-    {
-      dist = dist + sqrt(pow((this_x - last_x),2)+pow((this_y - last_y),2));
-    }
       
       data_out.precision(9);
       data_out << this_x << ","
@@ -1750,7 +1797,7 @@ void LSDBasin::write_windowed_stats_around_drainage_divide_csv(string filename, 
                    << latitude << ","
                    << longitude << ",";
       data_out.precision(5); 
-      data_out << dist << ","
+      data_out << map_of_dist_perim[iter->first] << ","
                << this_map["value_at_DD"] << ","
                << this_map["mean"] << ","
                << this_map["mean_in"] << ","
@@ -1766,10 +1813,12 @@ void LSDBasin::write_windowed_stats_around_drainage_divide_csv(string filename, 
                << this_map["min_out"] << ","
                << this_map["max"] << ","
                << this_map["max_in"] << ","
-               << this_map["max_out"] << ","
+               << this_map["max_out"]
                << endl;
     }
     data_out.close();
+    //"X,Y,latitude,longitude,distance,value_at_DD,mean,mean_in,mean_out,median,median_in,median_out,
+    //StdDev,StdDev_in,StdDev_out,min,min_in,min_out,max,max_in,max_out"
 
 }
 

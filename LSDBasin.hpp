@@ -762,21 +762,21 @@ vector<int> get_source_node_from_perimeter(vector<int> perimeter, LSDFlowInfo& f
   /// @param rasterTemplate and the vector of node to test
   /// @author BG
   /// @date 23/12/17
-  map<string,float> get_metrics_both_side_divide(LSDRaster& rasterTemplate, LSDFlowInfo flowpy, vector<int> nodes_to_test);
+  map<string,float> get_metrics_both_side_divide(LSDRaster& rasterTemplate, LSDFlowInfo& flowpy, vector<int>& nodes_to_test, map<int,bool>& raster_node_basin);
 
   /// @brief apply a square window around each perimeter nodes and extract statistics on each sides of the basin.
   /// @detail Ill detail when it will be done later
   /// @param rasterTemplate and the vector of node to test
   /// @author BG
   /// @date 23/12/17
-  void square_window_stat_drainage_divide(LSDRaster rasterTemplate, LSDFlowInfo flowpy, int size_window);
+  void square_window_stat_drainage_divide(LSDRaster& rasterTemplate, LSDFlowInfo& flowpy, int size_window);
 
   /// write the csv file corresponding to the previously calculated windowed stTS
   /// @detail Ill detail when it will be done later
   /// @param 
   /// @author BG
   /// @date 23/12/17
-  void write_windowed_stats_around_drainage_divide_csv(string full_name, LSDFlowInfo flowpy);
+  void write_windowed_stats_around_drainage_divide_csv(string full_name, LSDFlowInfo& flowpy);
 
   protected:
 
@@ -879,6 +879,8 @@ vector<int> get_source_node_from_perimeter(vector<int> perimeter, LSDFlowInfo& f
   int AlternativeIndex;
   // map of stats around the drainage divide
   map<int, map<string, float> > stats_around_perimeter_window;
+  // map of distance from the origin of the perimeter, key is the node index
+  map<int,float> map_of_dist_perim;
 
   private:
   void create();

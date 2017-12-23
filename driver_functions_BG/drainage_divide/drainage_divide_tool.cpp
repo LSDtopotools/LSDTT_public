@@ -123,6 +123,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["swath_my_ridge"] = false;
   int_default_map["distance_from_ridge"] = 500;
   bool_default_map["extract_my_sources"] = false;
+  bool_default_map["ridges_stats"] = false;
 
 
 
@@ -408,7 +409,7 @@ int main (int nNumberofArgs,char *argv[])
       cout << "I printed the selected sources into " << sources_csv_name << endl;
     }
 
-
+    LSDRaster TestSwathRaster;
     if(this_bool_map["swath_my_ridge"])
     {
       cout<< "TO BUILD" << endl;
@@ -437,8 +438,7 @@ int main (int nNumberofArgs,char *argv[])
         cout << "I am now trying to reduce your raster, by removing part the NoDataValue" << endl;
         LSDRaster LightRaster = SwathRaster.RasterTrimmerPadded(50);
         LightRaster.write_raster((DATA_DIR+DEM_ID+"_swath_ridges_norm_"+itoa(cpt)), raster_ext);
-        TestSwath.write_RasterValues_along_swath_to_csv(FillRaster,0,(DATA_DIR+DEM_ID+"_swath_ridges_"+itoa(cpt)+".csv"));
-        TestSwath.write_RasterValues_along_swath_to_csv(FillRaster,1,(DATA_DIR+DEM_ID+"_swath_ridges_norm_"+itoa(cpt)+".csv"));
+        TestSwathRaster = TestSwath.get_raster_from_swath_profile(FillRaster, 1);
 
         // getting the elevation swath
         LSDRaster SwathRaster_elev = TestSwath.get_raster_from_swath_profile(FillRaster, 0);
@@ -471,6 +471,23 @@ int main (int nNumberofArgs,char *argv[])
         cout << cpt << endl;
       }
 
+    }
+
+    if(this_bool_map["ridges_stats"])
+    {
+
+      for(size_t th = 0; th<basin_list.size() ; th++ )
+      {
+
+        LSDBasin this_basin = basin_list[th];
+
+        this_basin.square_window_stat_drainage_divide(FillRaster, FlowInfo, 15);
+        this_basin.write_windowed_stats_around_drainage_divide_csv((OUT_DIR+OUT_ID+"_ridge_windowed_stat_"+itoa(th)+".csv"), FlowInfo);
+        // LSDFlowInfo FlowInfo2(boundary_conditions,TestSwathRaster);
+        // this_basin.square_window_stat_drainage_divide(TestSwathRaster, FlowInfo2, 15);
+        // this_basin.write_windowed_stats_around_drainage_divide_csv((OUT_DIR+OUT_ID+"_ridge_windowed_stat_test_norm"+itoa(th)+".csv"), FlowInfo);
+ 
+      }
     }
 
 
