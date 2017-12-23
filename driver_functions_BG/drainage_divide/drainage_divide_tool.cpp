@@ -437,6 +437,9 @@ int main (int nNumberofArgs,char *argv[])
         cout << "I am now trying to reduce your raster, by removing part the NoDataValue" << endl;
         LSDRaster LightRaster = SwathRaster.RasterTrimmerPadded(50);
         LightRaster.write_raster((DATA_DIR+DEM_ID+"_swath_ridges_norm_"+itoa(cpt)), raster_ext);
+        TestSwath.write_RasterValues_along_swath_to_csv(FillRaster,0,(DATA_DIR+DEM_ID+"_swath_ridges_"+itoa(cpt)+".csv"));
+        TestSwath.write_RasterValues_along_swath_to_csv(FillRaster,1,(DATA_DIR+DEM_ID+"_swath_ridges_norm_"+itoa(cpt)+".csv"));
+
         // getting the elevation swath
         LSDRaster SwathRaster_elev = TestSwath.get_raster_from_swath_profile(FillRaster, 0);
         cout << "I am now trying to reduce your raster, by removing part the NoDataValue" << endl;
@@ -450,14 +453,15 @@ int main (int nNumberofArgs,char *argv[])
         surface_fitting = topography_raster.calculate_polyfit_surface_metrics(30, raster_selection);
         // surface_fitting[1] is the slope raster
         LSDSwath TestSwath_slope(BaselinePoints, surface_fitting[1], this_int_map["distance_from_ridge"]);
+        TestSwath_slope.write_RasterValues_along_swath_to_csv(surface_fitting[1],0,(DATA_DIR+DEM_ID+"_swath_ridges_slope_"+itoa(cpt)+".csv"));
 
         cout << "\n\t Getting raster from swath" << endl;
-        LSDRaster SwathRaster_slope = TestSwath_slope.get_raster_from_swath_profile(FillRaster, 1);
+        LSDRaster SwathRaster_slope = TestSwath_slope.get_raster_from_swath_profile(surface_fitting[1], 1);
         cout << "I am now trying to reduce your raster, by removing part the NoDataValue" << endl;
         LSDRaster LightRaster_slope = SwathRaster_slope.RasterTrimmerPadded(50);
         LightRaster_slope.write_raster((DATA_DIR+DEM_ID+"_swath_ridges_slope_norm_"+itoa(cpt)), raster_ext);
         // getting the elevation swath
-        LSDRaster SwathRaster_slopelev = TestSwath_slope.get_raster_from_swath_profile(FillRaster, 0);
+        LSDRaster SwathRaster_slopelev = TestSwath_slope.get_raster_from_swath_profile(surface_fitting[1], 0);
         cout << "I am now trying to reduce your raster, by removing part the NoDataValue" << endl;
         LSDRaster LightRaster_slopelev = SwathRaster_slopelev.RasterTrimmerPadded(50);
         LightRaster_slopelev.write_raster((DATA_DIR+DEM_ID+"_swath_ridges_slope_"+itoa(cpt)), raster_ext);

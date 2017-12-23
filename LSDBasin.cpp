@@ -1592,6 +1592,43 @@ vector<int> LSDBasin::get_source_node_from_perimeter(vector<int> perimeter, LSDF
 } 
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// THis compile some metrics for each side of a drainage divide across a serie of nodes: min,max,mean,median,std dev ...
+// You just have to feed it with a vector of nodes and a template raster. This last can be elevation, slope, a normalized swath and so on
+// return a map where the key is a string like "min_in" or ",min_out" as well as "n_node_in"... Ill list it when it will be done. 
+map<string,float> LSDBasin::get_metrics_both_side_divide(LSDRaster& rasterTemplate, vector<int> nodes_to_test)
+{
+
+  map<string,float> mapout;
+  vector<int> node_in, node_out;
+  int n_nodes_in =0, n_nodes_out = 0;
+
+
+  // Now testing which nodes are in  and out of the basin
+  for(vector<int>::iterator pudu_deer = nodes_to_test.begin(); pudu_deer != nodes_to_test.end(); pudu_deer++)
+  {
+
+    if(is_node_in_basin(*pudu_deer) == 1)
+    {
+      node_in.push_back(*pudu_deer);
+      n_nodes_in++;
+    }
+    else
+    {
+      node_out.push_back(*pudu_deer);
+      n_nodes_out++;
+    }
+  }
+
+  mapout["n_nodes_in"] =  (float)n_nodes_in;
+
+  mapout["n_nodes_out"] = (float)n_nodes_out;
+  // done
+  //TODO: the rest
+
+
+}
+
 
 
 

@@ -757,6 +757,13 @@ vector<int> get_source_node_from_perimeter(vector<int> perimeter, LSDFlowInfo& f
   /// @date 10/10/17
   vector<int> merge_perimeter_nodes_adjacent_basins(vector<LSDBasin> budgerigar, LSDFlowInfo& flowpy);
 
+  /// @brief Compare metrics inside/out of a basin for a given vector of nodes.
+  /// @detail Ill detail when it will be done later
+  /// @param rasterTemplate and the vector of node to test
+  /// @author BG
+  /// @date 17/12/17
+  map<string,float> get_metrics_both_side_divide(LSDRaster& rasterTemplate, vector<int> nodes_to_test);
+
   protected:
 
   //These instance variables are set at initialisation
