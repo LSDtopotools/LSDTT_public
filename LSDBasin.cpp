@@ -1668,7 +1668,7 @@ map<string,float> LSDBasin::get_metrics_both_side_divide(LSDRaster& rasterTempla
 
 void LSDBasin::square_window_stat_drainage_divide(LSDRaster rasterTemplate, LSDFlowInfo flowpy, int size_window)
 {
-  int row = 0, col = 0;
+  int row = 0, col = 0,perimeter_index = 0;
   vector<int> nodes_to_test;
   //first let me set the perimeter
   set_Perimeter(flowpy);
@@ -1691,15 +1691,88 @@ void LSDBasin::square_window_stat_drainage_divide(LSDRaster rasterTemplate, LSDF
       }
     }
     // ok now I have the number of node to test, I'll just compute the stats
-    stats_around_perimeter_window[*noodle] = get_metrics_both_side_divide(rasterTemplate,flowpy, nodes_to_test);
+    map<string, float>  temp_map = get_metrics_both_side_divide(rasterTemplate,flowpy, nodes_to_test);
+    temp_map["ID"] = perimeter_index; // I am adding an unique index to then sort the data in python by this index
+    temp_map["value_at_DD"] = rasterTemplate.get_data_element(row,col);
+    stats_around_perimeter_window[*noodle] = temp_map; 
     // clearing the vector and start again
     nodes_to_test.clear(); 
+    perimeter_index++;
   }
 
 // Done
   cout << "I have computed statistics around a square window for this basin" << endl;
 
 }
+
+
+void LSDBasin::write_windowed_stats_around_drainage_divide_csv(string filename, LSDFlowInfo flowpy)
+{
+  // these are for extracting element-wise data from the channel profiles.
+  cout << "I am now writing your DD stat windowed file:" << endl;
+  int this_node, row,col;
+  double latitude,longitude, this_x, this_y,last_x,last_y;
+  float dist = 0;
+  map<string,float> this_map;
+  LSDCoordinateConverterLLandUTM Converter;
+
+
+
+  // open the data file
+  ofstream  data_out;
+  data_out.open(filename.c_str());
+  data_out << "X,Y,latitude,longitude,distance,value_at_DD,mean,mean_in,mean_out,median,median_in,median_out,StdDev,StdDev_in,StdDev_out,min,min_in,min_out,max,max_in,max_out";
+  data_out << endl;
+
+
+  map<int,map<string,float> >::iterator iter;
+
+  for (iter = stats_around_perimeter_window.begin(); iter != stats_around_perimeter_window.end(); iter++)
+  {
+    if(iter != stats_around_perimeter_window.begin())
+    {
+      last_x = this_x;
+      last_y = this_y;
+    }
+    this_node = iter->first;
+    this_map = iter->second;
+    flowpy.retrieve_current_row_and_col(this_node,row,col);
+    flowpy.get_lat_and_long_locations(row, col, latitude, longitude, Converter);
+    flowpy.get_x_and_y_locations(row, col, this_x, this_y);
+    if(iter != stats_around_perimeter_window.begin())
+    {
+      dist = dist + sqrt(pow((this_x - last_x),2)+pow((this_y - last_y),2));
+    }
+      
+      data_out.precision(9);
+      data_out << this_x << ","
+                   << this_y << ","
+                   << latitude << ","
+                   << longitude << ",";
+      data_out.precision(5); 
+      data_out << dist << ","
+               << this_map["value_at_DD"] << ","
+               << this_map["mean"] << ","
+               << this_map["mean_in"] << ","
+               << this_map["mean_out"] << ","
+               << this_map["median"] << ","
+               << this_map["median_in"] << ","
+               << this_map["median_out"] << ","
+               << this_map["StdDev"] << ","
+               << this_map["StdDev_in"] << ","
+               << this_map["StdDev_out"] << ","
+               << this_map["min"] << ","
+               << this_map["min_in"] << ","
+               << this_map["min_out"] << ","
+               << this_map["max"] << ","
+               << this_map["max_in"] << ","
+               << this_map["max_out"] << ","
+               << endl;
+    }
+    data_out.close();
+
+}
+
 
 
 

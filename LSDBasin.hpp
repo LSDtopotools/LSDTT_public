@@ -771,6 +771,12 @@ vector<int> get_source_node_from_perimeter(vector<int> perimeter, LSDFlowInfo& f
   /// @date 23/12/17
   void square_window_stat_drainage_divide(LSDRaster rasterTemplate, LSDFlowInfo flowpy, int size_window);
 
+  /// write the csv file corresponding to the previously calculated windowed stTS
+  /// @detail Ill detail when it will be done later
+  /// @param 
+  /// @author BG
+  /// @date 23/12/17
+  void write_windowed_stats_around_drainage_divide_csv(string full_name, LSDFlowInfo flowpy);
 
   protected:
 
