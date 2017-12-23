@@ -483,9 +483,9 @@ int main (int nNumberofArgs,char *argv[])
 
         this_basin.square_window_stat_drainage_divide(FillRaster, FlowInfo, 15);
         this_basin.write_windowed_stats_around_drainage_divide_csv((OUT_DIR+OUT_ID+"_ridge_windowed_stat_"+itoa(th)+".csv"), FlowInfo);
-        // LSDFlowInfo FlowInfo2(boundary_conditions,TestSwathRaster);
-        // this_basin.square_window_stat_drainage_divide(TestSwathRaster, FlowInfo2, 15);
-        // this_basin.write_windowed_stats_around_drainage_divide_csv((OUT_DIR+OUT_ID+"_ridge_windowed_stat_test_norm"+itoa(th)+".csv"), FlowInfo);
+        LSDFlowInfo FlowInfo2(boundary_conditions,TestSwathRaster);
+        this_basin.square_window_stat_drainage_divide(TestSwathRaster, FlowInfo2, 15);
+        this_basin.write_windowed_stats_around_drainage_divide_csv((OUT_DIR+OUT_ID+"_ridge_windowed_stat_test_norm"+itoa(th)+".csv"), FlowInfo2);
  
       }
     }
