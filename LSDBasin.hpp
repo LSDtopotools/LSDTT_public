@@ -885,12 +885,17 @@ vector<int> get_source_node_from_perimeter(vector<int> perimeter, LSDFlowInfo& f
   float Biomass;
   // Alternative index (e.g. lithology)
   int AlternativeIndex;
+
+  // Stuffs for DD purposes
+  bool DD_preprocessed;
   // map of stats around the drainage divide
   map<int, map<string, float> > stats_around_perimeter_window;
   // map of distance from the origin of the perimeter, key is the node index
   map<int,float> map_of_dist_perim;
   // map of the perimeter location and metrics information per node
   map<int,vector<float> > DD_map;
+  // map of xy location for each basin nodes. It fasten the process even if a bit memory-consuming.
+  map<int,vector<float> > BasinNodesMapOfXY;
 
   private:
   void create();

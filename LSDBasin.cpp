@@ -103,6 +103,7 @@ void LSDBasin::create()
   BedrockFraction = NoDataValue;
   Biomass = NoDataValue;
   AlternativeIndex=int(NoDataValue);
+  DD_preprocessed = false;
 
   //finished creating empty variables
 
@@ -209,6 +210,8 @@ void LSDBasin::create(int JunctionNumber, LSDFlowInfo& FlowInfo, LSDJunctionNetw
   BedrockFraction = NoDataValue;
   Biomass = NoDataValue;
   AlternativeIndex=int(NoDataValue);
+
+  DD_preprocessed = false;
   //finished creating empty variables
 
 }
@@ -1677,24 +1680,27 @@ map<string,float> LSDBasin::get_metrics_both_side_divide(LSDRaster& rasterTempla
 
 void LSDBasin::square_window_stat_drainage_divide(LSDRaster& rasterTemplate, LSDFlowInfo& flowpy, int size_window)
 {
-  int row = 0, col = 0,perimeter_index = 0;
-  vector<int> nodes_to_test;
-  map<int, bool> raster_node_basin;
-  //first let me set the perimeter
-  set_Perimeter(flowpy);
-
-  for(int i = 0; i<rasterTemplate.get_NRows();i++)
+  if(DD_preprocessed == false)
   {
-    for(int j = 0; j<rasterTemplate.get_NCols();j++)
-    {
-      raster_node_basin[flowpy.retrieve_node_from_row_and_column(i,j)] = false;
-    }
+    cout << "You need to use the function preprocess_DD_metrics(LSDFlowInfo FlowInfoCorrespondingToThisBasin) before being able to use this function" << endl;
+    exit(EXIT_FAILURE);
+  }
+
+
+  int row = 0, col = 0,perimeter_index = 0, this_node = 0;
+  vector<int> nodes_to_test, node_in_basin_new_index;
+  map<int, bool> raster_node_basin;
+
+  for(map<int,vector<float> >::iterator claus = BasinNodesMapOfXY.begin(); claus != BasinNodesMapOfXY.end(); claus ++)
+  {
+    raster_node_basin[flowpy.get_node_index_of_coordinate_point(claus->second[0],claus->second[1])] = false;
   }
   //cout << "Initialization done" << endl;
 
-  for(vector<int>::iterator oisture = BasinNodes.begin(); oisture != BasinNodes.end();oisture++)
+  for(map<int,vector<float> >::iterator oisture = DD_map.begin(); oisture != DD_map.end();oisture++)
   {
-    raster_node_basin[*oisture] = true;
+    this_node = flowpy.get_node_index_of_coordinate_point(oisture->second[0],oisture->second[1]);
+    raster_node_basin[this_node] = true;
   }
 
   //cout << "basination done" << endl;
@@ -1839,8 +1845,9 @@ void LSDBasin::preprocess_DD_metrics(LSDFlowInfo flowpy)
   int this_node = 0;
   float this_x = 0, this_y = 0;
   vector<float> info_DD;
+  vector<int>::iterator Santa;
 
-  for(vector<int>::iterator Santa = Perimeter_nodes.begin();Santa!=Perimeter_nodes.end();Santa++)
+  for(Santa = Perimeter_nodes.begin();Santa!=Perimeter_nodes.end();Santa++)
   {
     this_node = *Santa;
     flowpy.get_x_and_y_from_current_node(this_node,this_x,this_y);
@@ -1852,6 +1859,19 @@ void LSDBasin::preprocess_DD_metrics(LSDFlowInfo flowpy)
     info_DD.clear();
   }
 
+  // Setting a map [nodes_of_basins] = vector[x,y] to make an easier comparison with other raster
+  for(Santa = BasinNodes.begin();Santa!=BasinNodes.end();Santa++)
+  {
+    this_node = *Santa;
+    flowpy.get_x_and_y_from_current_node(this_node,this_x,this_y);
+    info_DD.push_back(this_x);
+    info_DD.push_back(this_y);
+    BasinNodesMapOfXY[this_node] = info_DD;
+    info_DD.clear();
+  }
+
+  // Setting the preprocess checker
+  DD_preprocessed = true;
   // done
 
 }
