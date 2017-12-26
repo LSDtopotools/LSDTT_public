@@ -1608,13 +1608,13 @@ map<string,float> LSDBasin::get_metrics_both_side_divide(LSDRaster& rasterTempla
   vector<float> nodes_in_v, nodes_out_v, nodes_to_test_v;
   int n_nodes_in =0, n_nodes_out = 0,row = 0, col = 0, nnd =0;
 
-
+  cout << "test 1" << endl;
   // Now testing which nodes are in  and out of the basin
   for(vector<int>::iterator pudu_deer = nodes_to_test.begin(); pudu_deer != nodes_to_test.end(); pudu_deer++)
   {
-
+    //cout << *pudu_deer << " - metrics calcnode" << endl;
     // get row/col
-    if(*pudu_deer != NoDataValue)
+    if(*pudu_deer != NoDataValue && raster_node_basin[*pudu_deer] != NoDataValue)
     {
       flowpy.retrieve_current_row_and_col(*pudu_deer,row,col);
       if(rasterTemplate.get_data_element(row,col) != NoDataValue ) 
@@ -1644,7 +1644,7 @@ map<string,float> LSDBasin::get_metrics_both_side_divide(LSDRaster& rasterTempla
       nnd++;
     }
   }
-
+  cout << "in: " << n_nodes_in << " out: " << n_nodes_out << " nodata: " << nnd << "/" << nodes_to_test.size() << endl;
   mapout["n_nodes_in"] =  (float)n_nodes_in;
   mapout["n_no_data"] = (float)nnd;
   mapout["n_nodes_out"] = (float)n_nodes_out;
@@ -1688,33 +1688,41 @@ void LSDBasin::square_window_stat_drainage_divide(LSDRaster& rasterTemplate, LSD
 
 
   int row = 0, col = 0,perimeter_index = 0, this_node = 0;
-  vector<int> nodes_to_test, node_in_basin_new_index;
+  vector<int> nodes_to_test;
   map<int, bool> raster_node_basin;
 
-  for(map<int,vector<float> >::iterator claus = BasinNodesMapOfXY.begin(); claus != BasinNodesMapOfXY.end(); claus ++)
+  for(int i = 0; i<rasterTemplate.get_NRows();i++)
+  //for(map<int,vector<float> >::iterator claus = BasinNodesMapOfXY.begin(); claus != BasinNodesMapOfXY.end(); claus ++)
   {
-    raster_node_basin[flowpy.get_node_index_of_coordinate_point(claus->second[0],claus->second[1])] = false;
+    for(int j = 0; j<rasterTemplate.get_NCols();j++)
+    {
+      raster_node_basin[flowpy.retrieve_node_from_row_and_column(i,j)] = false;
+    }
+   //raster_node_basin[flowpy.get_node_index_of_coordinate_point(claus->second[0],claus->second[1])] = false;
   }
-  //cout << "Initialization done" << endl;
 
-  for(map<int,vector<float> >::iterator oisture = DD_map.begin(); oisture != DD_map.end();oisture++)
+  for(map<int,vector<float> >::iterator oisture = BasinNodesMapOfXY.begin(); oisture != BasinNodesMapOfXY.end();oisture++)
   {
     this_node = flowpy.get_node_index_of_coordinate_point(oisture->second[0],oisture->second[1]);
     raster_node_basin[this_node] = true;
   }
 
-  //cout << "basination done" << endl;
+  // cout << "basination done" << endl;
 
+
+  // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- Not working after that
 
   
 
   
   // loop through the perimeter
-  for(vector<int>::iterator noodle = Perimeter_nodes.begin(); noodle != Perimeter_nodes.end(); noodle++)
+  for(map<int,vector<float> >::iterator noodle = DD_map.begin(); noodle != DD_map.end(); noodle++)
   {
-    //cout << "processing node " << *noodle << endl;
+    // cout << "processing node " << noodle -> first << endl;
     // get the row/col info
-    flowpy.retrieve_current_row_and_col(*noodle,row,col);
+    this_node = flowpy.get_node_index_of_coordinate_point(noodle->second[0],noodle->second[1]);
+    flowpy.retrieve_current_row_and_col(this_node,row,col);
+    // cout << row << "¬¬" << col << endl;
     //loop through the window to gather the wanted node index
     for(int i = row - size_window ; i< row + size_window; i++)
     {
@@ -1728,12 +1736,17 @@ void LSDBasin::square_window_stat_drainage_divide(LSDRaster& rasterTemplate, LSD
       }
     }
     // ok now I have the number of node to test, I'll just compute the stats
-    map<string, float>  temp_map = get_metrics_both_side_divide(rasterTemplate,flowpy, nodes_to_test, raster_node_basin);
-
-    temp_map["ID"] = perimeter_index; // I am adding an unique index to then sort the data in python by this index
-    temp_map["value_at_DD"] = rasterTemplate.get_data_element(row,col);
-    stats_around_perimeter_window[*noodle] = temp_map; 
-    // clearing the vector and start again
+    // cout<< "metrics " << endl;
+    if(nodes_to_test.size()>0)
+    {
+      map<string, float>  temp_map = get_metrics_both_side_divide(rasterTemplate,flowpy, nodes_to_test, raster_node_basin);
+    
+      // cout << "done"<< endl;
+      temp_map["ID"] = perimeter_index; // I am adding an unique index to then sort the data in python by this index
+      temp_map["value_at_DD"] = rasterTemplate.get_data_element(row,col);
+      stats_around_perimeter_window[this_node] = temp_map; 
+      // clearing the vector and start again
+    }
     nodes_to_test.clear(); 
     perimeter_index++;
   }

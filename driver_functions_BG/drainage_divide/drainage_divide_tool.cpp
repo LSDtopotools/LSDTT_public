@@ -446,29 +446,29 @@ int main (int nNumberofArgs,char *argv[])
         LSDRaster LightRaster_elev = SwathRaster_elev.RasterTrimmerPadded(50);
         LightRaster_elev.write_raster((DATA_DIR+DEM_ID+"_swath_ridges_"+itoa(cpt)), raster_ext);
 
-        // Now getting the slope raster
-        vector<int> raster_selection(8, 0);  // This controls which usrface fitting metrics to compute
-        raster_selection[1] = 1;
-        vector<LSDRaster> surface_fitting;
-        surface_fitting = topography_raster.calculate_polyfit_surface_metrics(30, raster_selection);
-        // surface_fitting[1] is the slope raster
-        LSDSwath TestSwath_slope(BaselinePoints, surface_fitting[1], this_int_map["distance_from_ridge"]);
-        TestSwath_slope.write_RasterValues_along_swath_to_csv(surface_fitting[1],0,(DATA_DIR+DEM_ID+"_swath_ridges_slope_"+itoa(cpt)+".csv"));
+        // // Now getting the slope raster
+        // vector<int> raster_selection(8, 0);  // This controls which usrface fitting metrics to compute
+        // raster_selection[1] = 1;
+        // vector<LSDRaster> surface_fitting;
+        // surface_fitting = topography_raster.calculate_polyfit_surface_metrics(30, raster_selection);
+        // // surface_fitting[1] is the slope raster
+        // LSDSwath TestSwath_slope(BaselinePoints, surface_fitting[1], this_int_map["distance_from_ridge"]);
+        // TestSwath_slope.write_RasterValues_along_swath_to_csv(surface_fitting[1],0,(DATA_DIR+DEM_ID+"_swath_ridges_slope_"+itoa(cpt)+".csv"));
 
-        cout << "\n\t Getting raster from swath" << endl;
-        LSDRaster SwathRaster_slope = TestSwath_slope.get_raster_from_swath_profile(surface_fitting[1], 1);
-        cout << "I am now trying to reduce your raster, by removing part the NoDataValue" << endl;
-        LSDRaster LightRaster_slope = SwathRaster_slope.RasterTrimmerPadded(50);
-        LightRaster_slope.write_raster((DATA_DIR+DEM_ID+"_swath_ridges_slope_norm_"+itoa(cpt)), raster_ext);
-        // getting the elevation swath
-        LSDRaster SwathRaster_slopelev = TestSwath_slope.get_raster_from_swath_profile(surface_fitting[1], 0);
-        cout << "I am now trying to reduce your raster, by removing part the NoDataValue" << endl;
-        LSDRaster LightRaster_slopelev = SwathRaster_slopelev.RasterTrimmerPadded(50);
-        LightRaster_slopelev.write_raster((DATA_DIR+DEM_ID+"_swath_ridges_slope_"+itoa(cpt)), raster_ext);
+        // cout << "\n\t Getting raster from swath" << endl;
+        // LSDRaster SwathRaster_slope = TestSwath_slope.get_raster_from_swath_profile(surface_fitting[1], 1);
+        // cout << "I am now trying to reduce your raster, by removing part the NoDataValue" << endl;
+        // LSDRaster LightRaster_slope = SwathRaster_slope.RasterTrimmerPadded(50);
+        // LightRaster_slope.write_raster((DATA_DIR+DEM_ID+"_swath_ridges_slope_norm_"+itoa(cpt)), raster_ext);
+        // // getting the elevation swath
+        // LSDRaster SwathRaster_slopelev = TestSwath_slope.get_raster_from_swath_profile(surface_fitting[1], 0);
+        // cout << "I am now trying to reduce your raster, by removing part the NoDataValue" << endl;
+        // LSDRaster LightRaster_slopelev = SwathRaster_slopelev.RasterTrimmerPadded(50);
+        // LightRaster_slopelev.write_raster((DATA_DIR+DEM_ID+"_swath_ridges_slope_"+itoa(cpt)), raster_ext);
         cpt++;
         X_coord.clear();
         Y_coord.clear();
-        cout << cpt << endl;
+        // cout << cpt << endl;
       }
 
     }
@@ -480,11 +480,16 @@ int main (int nNumberofArgs,char *argv[])
       {
 
         LSDBasin this_basin = basin_list[th];
+        // cout << "preprocessing basin" << endl;
         this_basin.preprocess_DD_metrics(FlowInfo); // this will set all the metrics you need for drainage divide calculation, Not automated when creating LSDBasin to avoid to many calculation 
+        // cout << "Done" << endl;
         this_basin.square_window_stat_drainage_divide(FillRaster, FlowInfo, 15);
         this_basin.write_windowed_stats_around_drainage_divide_csv((OUT_DIR+OUT_ID+"_ridge_windowed_stat_"+itoa(th)+".csv"), FlowInfo);
+        // cout << "regular square done " << endl ;
         LSDFlowInfo FlowInfo2(boundary_conditions,TestSwathRaster);
+        // cout << "Flow2 done" << endl ;
         this_basin.square_window_stat_drainage_divide(TestSwathRaster, FlowInfo2, 15);
+        // cout << "test on swath" << endl ;
         this_basin.write_windowed_stats_around_drainage_divide_csv((OUT_DIR+OUT_ID+"_ridge_windowed_stat_test_norm"+itoa(th)+".csv"), FlowInfo2);
  
       }
