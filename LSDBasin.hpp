@@ -778,6 +778,14 @@ vector<int> get_source_node_from_perimeter(vector<int> perimeter, LSDFlowInfo& f
   /// @date 23/12/17
   void write_windowed_stats_around_drainage_divide_csv(string full_name, LSDFlowInfo& flowpy);
 
+  /// @brief Preprocess the Drainage Divide tool driver required info
+  /// @detail Set the perimeter and set a map containing the corresponding x,y ...
+  /// @detail TODO: add distance from origin and other global parameters
+  /// @param FlowInfo object corresponding to the original raster where the Basin has been calculated
+  /// @author BG
+  /// @date 26/12/2017
+  void preprocess_DD_metrics(LSDFlowInfo flowpy);
+
   protected:
 
   //These instance variables are set at initialisation
@@ -881,6 +889,8 @@ vector<int> get_source_node_from_perimeter(vector<int> perimeter, LSDFlowInfo& f
   map<int, map<string, float> > stats_around_perimeter_window;
   // map of distance from the origin of the perimeter, key is the node index
   map<int,float> map_of_dist_perim;
+  // map of the perimeter location and metrics information per node
+  map<int,vector<float> > DD_map;
 
   private:
   void create();

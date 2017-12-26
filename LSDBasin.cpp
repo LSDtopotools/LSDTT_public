@@ -1680,6 +1680,8 @@ void LSDBasin::square_window_stat_drainage_divide(LSDRaster& rasterTemplate, LSD
   int row = 0, col = 0,perimeter_index = 0;
   vector<int> nodes_to_test;
   map<int, bool> raster_node_basin;
+  //first let me set the perimeter
+  set_Perimeter(flowpy);
 
   for(int i = 0; i<rasterTemplate.get_NRows();i++)
   {
@@ -1698,8 +1700,7 @@ void LSDBasin::square_window_stat_drainage_divide(LSDRaster& rasterTemplate, LSD
   //cout << "basination done" << endl;
 
 
-  //first let me set the perimeter
-  set_Perimeter(flowpy);
+  
 
   
   // loop through the perimeter
@@ -1822,11 +1823,82 @@ void LSDBasin::write_windowed_stats_around_drainage_divide_csv(string filename, 
 
 }
 
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// This preprocess Drainage Divide metrics to make sure everything is ready to be used for this basin:
+// setting the perimeter and calculating various info about it:
+// at the moment: x/y coordinates, to deal with later different rasters
+// TODO: find a way to sort the perimeter in a vector: each nodes should follow each other
+// BG - 26/12/2017 - "hon hon hon" (French Santa, unpublished)
+void LSDBasin::preprocess_DD_metrics(LSDFlowInfo flowpy)
+{
+  
+  // First setting the perimeter
+  set_Perimeter(flowpy);
+
+  // implementing a global map containing vector of info for each nodes atm <x,y> later on distance from origin
+  int this_node = 0;
+  float this_x = 0, this_y = 0;
+  vector<float> info_DD;
+
+  for(vector<int>::iterator Santa = Perimeter_nodes.begin();Santa!=Perimeter_nodes.end();Santa++)
+  {
+    this_node = *Santa;
+    flowpy.get_x_and_y_from_current_node(this_node,this_x,this_y);
+    info_DD.push_back(this_x);
+    info_DD.push_back(this_y);
+    // add some stuffs later
+
+    DD_map[this_node] = info_DD;
+    info_DD.clear();
+  }
+
+  // done
+
+}
 
 
 
 
 
+
+
+
+
+
+
+
+
+
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Added lines to separate with LSDCosmoBasin =-=-=-=-=-=-=-=-=- 
+// I got lost each time I try to find it =-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //  +++++++++++++++++

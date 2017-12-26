@@ -480,7 +480,7 @@ int main (int nNumberofArgs,char *argv[])
       {
 
         LSDBasin this_basin = basin_list[th];
-
+        this_basin.preprocess_DD_metrics(FlowInfo); // this will set all the metrics you need for drainage divide calculation, Not automated when creating LSDBasin to avoid to many calculation 
         this_basin.square_window_stat_drainage_divide(FillRaster, FlowInfo, 15);
         this_basin.write_windowed_stats_around_drainage_divide_csv((OUT_DIR+OUT_ID+"_ridge_windowed_stat_"+itoa(th)+".csv"), FlowInfo);
         LSDFlowInfo FlowInfo2(boundary_conditions,TestSwathRaster);
