@@ -1686,6 +1686,9 @@ void LSDBasin::square_window_stat_drainage_divide(LSDRaster& rasterTemplate, LSD
     exit(EXIT_FAILURE);
   }
 
+  // If you call this function, you want to reinitialize the potentially previously calculated map
+  stats_around_perimeter_window.clear();
+
 
   int row = 0, col = 0,perimeter_index = 0, this_node = 0;
   vector<int> nodes_to_test;

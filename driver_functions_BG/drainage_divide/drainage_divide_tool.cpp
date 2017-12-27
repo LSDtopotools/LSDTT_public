@@ -463,7 +463,7 @@ int main (int nNumberofArgs,char *argv[])
         // ### Associated Statistics
         LSDFlowInfo FlowInfotemp(boundary_conditions,eleSwath_norm); // This is required as the raster changed, and so the Indexes did!!!
         this_basin.square_window_stat_drainage_divide(eleSwath_norm, FlowInfotemp, this_int_map["square_window_radius"]);
-        this_basin.write_windowed_stats_around_drainage_divide_csv((OUT_DIR+OUT_ID+"_norm_ridge_windowed_stat_"+itoa(th)+".csv"), FlowInfo);
+        this_basin.write_windowed_stats_around_drainage_divide_csv((OUT_DIR+OUT_ID+"_norm_ridge_windowed_stat_"+itoa(th)+".csv"), FlowInfotemp);
 
 
         cout << "Processing basin " << th << "/" << basin_list.size() << " stage 5/6" << endl;
@@ -480,7 +480,7 @@ int main (int nNumberofArgs,char *argv[])
         // ### Associated Statistics
         FlowInfotemp = LSDFlowInfo(boundary_conditions,SlopeSwath); // This is required as the raster changed, and so the Indexes did!!!
         this_basin.square_window_stat_drainage_divide(SlopeSwath, FlowInfotemp, this_int_map["square_window_radius"]);
-        this_basin.write_windowed_stats_around_drainage_divide_csv((OUT_DIR+OUT_ID+"_slope_ridge_windowed_stat_"+itoa(th)+".csv"), FlowInfo);
+        this_basin.write_windowed_stats_around_drainage_divide_csv((OUT_DIR+OUT_ID+"_slope_ridge_windowed_stat_"+itoa(th)+".csv"), FlowInfotemp);
 
         cout << "Processing basin " << th << "/" << basin_list.size() << " stage 6/6" << endl;
         X_coord.clear();
