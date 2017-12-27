@@ -1896,21 +1896,68 @@ void LSDBasin::preprocess_DD_metrics(LSDFlowInfo flowpy)
 void LSDBasin::organise_perimeter(LSDFlowInfo& flowpy)
 {
   // Careful!!! This is a test function, I am definitely trying things here but it might not be ready yet
-  vector<int>::iterator YOP = Perimeter_nodes.begin();
+  vector<int>::iterator YOP = Perimeter_nodes.begin(), POY;
   vector<int> row_nodes_to_test, col_nodes_to_test;
+  // ### This array will simplify the looping through the perimeter
+  static const int arr[] = {-1,0,1};
+  vector<int> tester (arr, arr + sizeof(arr) / sizeof(arr[0]) );
+
   map<int,int> is_done; // check if a node has been processed or not
-  int row = Outlet_i, col = Outlet_j, node = 0, n_adj = 0;
+  int row = Outlet_i, col = Outlet_j,id = 0, node = 0, n_adj = 0, this_row,this_col;
   float x1 =0 ,x2 = 0, y1 = 0, y2 = 0;
+  bool ting = false;
 
   // preprocessing stage to get rid of some points
-  clean_perimeter( flowpy);
+  clean_perimeter(flowpy);
+  // Any perimeter nodes should only have 2 neightboors now
+
+  // first, let me indentify the outlet, aka the lowest point of the ridge
+  node = flowpy.get_NodeIndex_from_row_col(Outlet_i,Outlet_j);
+  is_done[node] = 1;
+  map_of_dist_perim[node] = 0;
+  Perimeter_nodes_sorted_id[node] = id;
+  Perimeter_nodes_sorted.push_back(node);
+    // ### Dealing with the first neighboors
+  while(Perimeter_nodes_sorted.size() != Perimeter_nodes.size())
+  {
+    id++;
+    for(YOP = tester.begin();YOP!= tester.end() && ting ; YOP++)
+    {
+      for(POY = tester.begin();POY != tester.end() && ting; POY++)
+      {
+        this_row = row+ *YOP;
+        this_col = col+ *POY;
+        if(this_row<flowpy.get_NRows() && this_col<flowpy.get_NCols() && this_row>=0 && this_col >= 0 && (this_row !=0 && this_col!=0))
+        {
+          node = retrieve_node_from_row_and_column(this_row,this_col);
+          if(Perimeter_nodes.count(node) != 1)
+          {
+            ting = true;
+            Perimeter_nodes_sorted.push_back(node);
+            is_done[node] = 1;
+            Perimeter_nodes_sorted_id[node] = id;
+            // distance stuffs
+            flowpy.get_x_and_y_from_current_node(Perimeter_nodes_sorted[Perimeter_nodes_sorted.size()-2],x1,y1);
+            flowpy.get_x_and_y_from_current_node(node,x2,y2);
+            map_of_dist_perim[node] = sqrt(pow((x2-x1),2) + pow((y2-y1),2));
+
+          }
+        }
+      }
+
+    }
+    row = this_row;
+    col = this_col;
+    ting = false;
+
+  }
+
+  // TESTING FUNCTION, DELETE IT AFTERWARDS BORIS!!!!
+  Perimeter_nodes = Perimeter_nodes_sorted;
+
+  print_perimeter_to_csv(flowpy, "/home/boris/Desktop/LSD/capture/sorbas/peritest.csv");
 
 
-  // // first, let me indentify the outlet, aka the lowest point of the ridge
-  // node = flowpy.get_NodeIndex_from_row_col(Outlet_i,Outlet_j);
-  // is_done[node] = 1;
-  // map_of_dist_perim[node] = 0;
-  // Perimeter_nodes_sorted.push_back(node);
 
   // // Now looping from this point while my perimeter_nodes_sorted is not full
   // while(Perimeter_nodes.size()!=Perimeter_nodes_sorted.size())
@@ -2051,7 +2098,7 @@ void LSDBasin::clean_perimeter(LSDFlowInfo& flowpy)
   }
 
   Perimeter_nodes = light_perimeter;
-  print_perimeter_to_csv(flowpy, "/home/boris/Desktop/LSD/capture/sorbas/peritest.csv");
+
 
 }
 
