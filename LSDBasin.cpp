@@ -1608,7 +1608,7 @@ map<string,float> LSDBasin::get_metrics_both_side_divide(LSDRaster& rasterTempla
   vector<float> nodes_in_v, nodes_out_v, nodes_to_test_v;
   int n_nodes_in =0, n_nodes_out = 0,row = 0, col = 0, nnd =0;
 
-  cout << "test 1" << endl;
+
   // Now testing which nodes are in  and out of the basin
   for(vector<int>::iterator pudu_deer = nodes_to_test.begin(); pudu_deer != nodes_to_test.end(); pudu_deer++)
   {
@@ -1644,7 +1644,7 @@ map<string,float> LSDBasin::get_metrics_both_side_divide(LSDRaster& rasterTempla
       nnd++;
     }
   }
-  cout << "in: " << n_nodes_in << " out: " << n_nodes_out << " nodata: " << nnd << "/" << nodes_to_test.size() << endl;
+  // cout << "in: " << n_nodes_in << " out: " << n_nodes_out << " nodata: " << nnd << "/" << nodes_to_test.size() << endl;
   mapout["n_nodes_in"] =  (float)n_nodes_in;
   mapout["n_no_data"] = (float)nnd;
   mapout["n_nodes_out"] = (float)n_nodes_out;
