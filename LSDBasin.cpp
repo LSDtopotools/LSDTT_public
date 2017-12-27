@@ -1896,7 +1896,7 @@ void LSDBasin::preprocess_DD_metrics(LSDFlowInfo flowpy)
 void LSDBasin::organise_perimeter(LSDFlowInfo& flowpy)
 {
   // Careful!!! This is a test function, I am definitely trying things here but it might not be ready yet
-  vector<int>::iterator YOP = Perimeter_nodes.begin(), POY;
+  vector<int>::iterator YOP = Perimeter_nodes.begin();
   vector<int> row_nodes_to_test, col_nodes_to_test;
   // ### This array will simplify the looping through the perimeter
   static const int arr[] = {-1,0,1};
@@ -1921,21 +1921,27 @@ void LSDBasin::organise_perimeter(LSDFlowInfo& flowpy)
 
   while(Perimeter_nodes_sorted.size() != Perimeter_nodes.size())
   {
-    //cout << "INSERT BAD WORD HERE" << endl;
+
     id++;
-    for(YOP = tester.begin();YOP!= tester.end() && ting ; YOP++)
+    for(vector<int>::iterator YOPL = tester.begin();YOPL!= tester.end() && ting ; YOPL++)
     {
-      for(POY = tester.begin();POY != tester.end() && ting; POY++)
+
+      for(vector<int>::iterator LPOY = tester.begin();LPOY != tester.end() && ting; LPOY++)
       {
-        this_row = row + *YOP;
-        this_col = col + *POY;
-        cout << this_row << " || " << this_col << endl;
-        if(this_row<flowpy.get_NRows() && this_col<flowpy.get_NCols() && this_row>=0 && this_col >= 0 && (*POY !=0 && *YOP !=0))
+        this_row = row + *YOPL;
+        this_col = col + *LPOY;
+        //cout << this_row << " || " << this_col << endl;
+        if(this_row<flowpy.get_NRows() && this_col<flowpy.get_NCols() && this_row>=0 && this_col >= 0)
         {
+          flowpy.get_x_and_y_from_current_node(node,x2,y2);
+          cout << Perimeter_nodes_sorted.size() << endl;
+          cout << node << endl;
+          cout << x2 << " " <<y2 <<endl;
+
           node = flowpy.retrieve_node_from_row_and_column(this_row,this_col);
-          if(Perimeter_nodes_map.count(node) != 1 && is_done.count(node) != 1)
+          if(Perimeter_nodes_map[node] == 1 && is_done[node] != 1 && node != NoDataValue && node != -9999)
           {
-            ting = true;
+            ting = false;
             Perimeter_nodes_sorted.push_back(node);
             is_done[node] = 1;
             Perimeter_nodes_sorted_id[node] = id;
@@ -1952,9 +1958,10 @@ void LSDBasin::organise_perimeter(LSDFlowInfo& flowpy)
     }
     row = this_row;
     col = this_col;
-    ting = false;
+    ting = true;
 
   }
+  cout << "fupal" << endl;
 
   // TESTING FUNCTION, DELETE IT AFTERWARDS BORIS!!!!
   Perimeter_nodes = Perimeter_nodes_sorted;
