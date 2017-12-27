@@ -1892,6 +1892,63 @@ void LSDBasin::preprocess_DD_metrics(LSDFlowInfo flowpy)
 
 }
 
+void LSDBasin::organise_perimeter(LSDFlowInfo& flowpy)
+{
+  // Careful!!! This is a test function, I am definitely trying things here but it might not be ready yet
+  vector<int>::iterator YOP = Perimeter_nodes.begin();
+  vector<int> row_nodes_to_test, col_nodes_to_test;
+  map<int,int> is_done; // check if a node has been processed or not
+  int row = Outlet_i, col = Outlet_j, node = 0, n_adj = 0;
+  float x1 =0 ,x2 = 0, y1 = 0, y2 = 0;
+
+
+  // first, let me indentify the outlet, aka the lowest point of the ridge
+  node = flowpy.get_NodeIndex_from_row_col(Outlet_i,Outlet_j);
+  is_done[node] = 1;
+  map_of_dist_perim[node] = 0;
+  Perimeter_nodes_sorted.push_back(node);
+
+  // Now looping from this point while my perimeter_nodes_sorted is not full
+  while(Perimeter_nodes.size()!=Perimeter_nodes_sorted.size())
+  {
+    // checking all the adjacent nodes (no diagonals on this perimeter)
+    for(int i = -1; i <=1; i++)
+    {
+      for (int j = -1; j<=1;j++)
+      {
+        // check the validity of the pointand if were not testing this specific point
+        if(i<flowpy.get_NRows() && j<flowpy.get_NCols() && i>=0 && j >= 0 && (i !=0 && j!=0))
+        {
+          if(is_done[flowpy.get_NodeIndex_from_row_col(row+i,col+j)] != 1)
+          {
+            n_adj++;
+            row_nodes_to_test.push_back(row+i);
+            col_nodes_to_test.push_back(col+j);
+          }
+        }
+      }
+    }
+
+    // Now we have the number of neighboors
+
+    if(n_adj == 1) // easy case
+    {
+      node = flowpy.get_NodeIndex_from_row_col(row_nodes_to_test[0],col_nodes_to_test[0]);
+      is_done[node] = 1;
+      Perimeter_nodes_sorted.push_back(node);
+      // distance cauculqtion
+      flowpy.get_x_and_y_from_current_node(Perimeter_nodes_sorted[Perimeter_nodes_sorted.size()-2],x1,y1);
+      flowpy.get_x_and_y_from_current_node(node,x2,y2);
+      map_of_dist_perim[node] = sqrt(pow((x2-x1),2) + pow((y2-y1),2));
+    }
+
+
+    // reinitialise everything
+    flowpy.retrieve_current_row_and_col(node,row,col);
+  }
+
+}
+
 
 
 

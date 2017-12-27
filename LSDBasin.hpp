@@ -786,6 +786,8 @@ vector<int> get_source_node_from_perimeter(vector<int> perimeter, LSDFlowInfo& f
   /// @date 26/12/2017
   void preprocess_DD_metrics(LSDFlowInfo flowpy);
 
+  void organise_perimeter(LSDFlowInfo& flowpy);
+
   protected:
 
   //These instance variables are set at initialisation
@@ -867,6 +869,8 @@ vector<int> get_source_node_from_perimeter(vector<int> perimeter, LSDFlowInfo& f
   vector<int> Perimeter_j;
   /// Basin Perimeter's node index
   vector<int> Perimeter_nodes;
+  /// Basin Perimeter's node index, sorted by followed order
+  vector<int> Perimeter_nodes_sorted;
   /// Cosmo erosion rate.
   float CosmoErosionRate;
   /// Other erosion rate.
