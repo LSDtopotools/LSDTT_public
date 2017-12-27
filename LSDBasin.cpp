@@ -1856,6 +1856,7 @@ void LSDBasin::preprocess_DD_metrics(LSDFlowInfo flowpy)
   
   // First setting the perimeter
   set_Perimeter(flowpy);
+  organise_perimeter(flowpy);
 
   // implementing a global map containing vector of info for each nodes atm <x,y> later on distance from origin
   int this_node = 0;
@@ -1901,51 +1902,156 @@ void LSDBasin::organise_perimeter(LSDFlowInfo& flowpy)
   int row = Outlet_i, col = Outlet_j, node = 0, n_adj = 0;
   float x1 =0 ,x2 = 0, y1 = 0, y2 = 0;
 
+  // preprocessing stage to get rid of some points
+  clean_perimeter( flowpy);
 
-  // first, let me indentify the outlet, aka the lowest point of the ridge
-  node = flowpy.get_NodeIndex_from_row_col(Outlet_i,Outlet_j);
-  is_done[node] = 1;
-  map_of_dist_perim[node] = 0;
-  Perimeter_nodes_sorted.push_back(node);
 
-  // Now looping from this point while my perimeter_nodes_sorted is not full
-  while(Perimeter_nodes.size()!=Perimeter_nodes_sorted.size())
+  // // first, let me indentify the outlet, aka the lowest point of the ridge
+  // node = flowpy.get_NodeIndex_from_row_col(Outlet_i,Outlet_j);
+  // is_done[node] = 1;
+  // map_of_dist_perim[node] = 0;
+  // Perimeter_nodes_sorted.push_back(node);
+
+  // // Now looping from this point while my perimeter_nodes_sorted is not full
+  // while(Perimeter_nodes.size()!=Perimeter_nodes_sorted.size())
+  // {
+  //   // checking all the adjacent nodes (no diagonals on this perimeter)
+  //   for(int i = -1; i <=1; i++)
+  //   {
+  //     for (int j = -1; j<=1;j++)
+  //     {
+  //       // check the validity of the pointand if were not testing this specific point
+  //       if(i<flowpy.get_NRows() && j<flowpy.get_NCols() && i>=0 && j >= 0 && (i !=0 && j!=0))
+  //       {
+  //         if(is_done[flowpy.get_NodeIndex_from_row_col(row+i,col+j)] != 1)
+  //         {
+  //           n_adj++;
+  //           row_nodes_to_test.push_back(row+i);
+  //           col_nodes_to_test.push_back(col+j);
+  //         }
+  //       }
+  //     }
+  //   }
+
+  //   // Now we have the number of neighboors
+
+  //   if(n_adj == 1) // easy case
+  //   {
+  //     node = flowpy.get_NodeIndex_from_row_col(row_nodes_to_test[0],col_nodes_to_test[0]);
+  //     is_done[node] = 1;
+  //     Perimeter_nodes_sorted.push_back(node);
+  //     // distance cauculqtion
+  //     flowpy.get_x_and_y_from_current_node(Perimeter_nodes_sorted[Perimeter_nodes_sorted.size()-2],x1,y1);
+  //     flowpy.get_x_and_y_from_current_node(node,x2,y2);
+  //     map_of_dist_perim[node] = sqrt(pow((x2-x1),2) + pow((y2-y1),2));
+  //   }
+  //   else if(n_adj>1)
+  //   {
+  //     vector<int> minindex = Get_Index_Minimum(row_nodes_to_test);
+  //     if(minindex.size() == 1)
+  //     {
+  //       node = flowpy.get_NodeIndex_from_row_col(row_nodes_to_test[minindex[0]],col_nodes_to_test[minindex[0]]);
+  //       is_done[node] = 1;
+  //       Perimeter_nodes_sorted.push_back(node);
+  //       // distance cauculqtion
+  //       flowpy.get_x_and_y_from_current_node(Perimeter_nodes_sorted[Perimeter_nodes_sorted.size()-2],x1,y1);
+  //       flowpy.get_x_and_y_from_current_node(node,x2,y2);
+  //       map_of_dist_perim[node] = sqrt(pow((x2-x1),2) + pow((y2-y1),2));
+  //     }
+
+  //   }
+
+
+  //   // reinitialise everything
+  //   flowpy.retrieve_current_row_and_col(node,row,col);
+  //   row_nodes_to_test.clear();
+  //   col_nodes_to_test.clear();
+  //   n_adj = 0;
+  // }
+
+}
+
+void LSDBasin::clean_perimeter(LSDFlowInfo& flowpy)
+{
+
+  vector<int> light_perimeter;
+  map<int,int> nodes_of_basins;
+  int row = 0, col = 0, cptndd = 0, cptndd_tot = 0, this_row = 0, this_col = 0, this_node = 0;
+  vector<int> tester;
+  tester.push_back(-1);
+  tester.push_back(1);
+
+
+  // filling a map of basin nodes to check the nobasin around each node
+  for(vector<int>::iterator yo = BasinNodes.begin(); yo!= BasinNodes.end(); yo++)
   {
-    // checking all the adjacent nodes (no diagonals on this perimeter)
-    for(int i = -1; i <=1; i++)
+    nodes_of_basins[*yo] = 1;
+  }
+
+  for(vector<int>::iterator uh = Perimeter_nodes.begin();uh != Perimeter_nodes.end(); uh++)
+  {
+    flowpy.retrieve_current_row_and_col(*uh,row,col);
+    for(int i = 0; i < 2; i++)
     {
-      for (int j = -1; j<=1;j++)
+      this_row = row+tester[i];
+      this_col = col;
+      if(this_row>=0 && this_row<get_NRows())
       {
-        // check the validity of the pointand if were not testing this specific point
-        if(i<flowpy.get_NRows() && j<flowpy.get_NCols() && i>=0 && j >= 0 && (i !=0 && j!=0))
+        this_node = flowpy.retrieve_node_from_row_and_column(this_row,this_col);
+        if(nodes_of_basins[this_node] !=1)
         {
-          if(is_done[flowpy.get_NodeIndex_from_row_col(row+i,col+j)] != 1)
+          cptndd++;
+          cptndd_tot++;
+        }
+      }
+      
+      
+    }
+    for(int i = 0; i < 2; i++)
+    {
+      this_row = row;
+      this_col = col+tester[i];
+      if(this_col>=0 && this_col<get_NCols())
+      {
+        this_node = flowpy.retrieve_node_from_row_and_column(this_row,this_col);
+        if(nodes_of_basins[this_node] !=1)
+        {
+          cptndd++;
+          cptndd_tot++;
+        }
+      }
+
+    }
+
+    for(int i = 0; i<2;i++)
+    {
+      for(int j =0; j<2 ; j++)
+      {
+        this_row = row+tester[i];
+        this_col = col+tester[j];
+        if(this_col>=0 && this_col<get_NCols())
+        {
+          this_node = flowpy.retrieve_node_from_row_and_column(this_row,this_col);
+          if(nodes_of_basins[this_node] !=1)
           {
-            n_adj++;
-            row_nodes_to_test.push_back(row+i);
-            col_nodes_to_test.push_back(col+j);
+            cptndd_tot++;
           }
         }
       }
     }
 
-    // Now we have the number of neighboors
 
-    if(n_adj == 1) // easy case
+    if(cptndd>0 && cptndd_tot < 6)
     {
-      node = flowpy.get_NodeIndex_from_row_col(row_nodes_to_test[0],col_nodes_to_test[0]);
-      is_done[node] = 1;
-      Perimeter_nodes_sorted.push_back(node);
-      // distance cauculqtion
-      flowpy.get_x_and_y_from_current_node(Perimeter_nodes_sorted[Perimeter_nodes_sorted.size()-2],x1,y1);
-      flowpy.get_x_and_y_from_current_node(node,x2,y2);
-      map_of_dist_perim[node] = sqrt(pow((x2-x1),2) + pow((y2-y1),2));
+      light_perimeter.push_back(flowpy.retrieve_node_from_row_and_column(row,col));
     }
 
-
-    // reinitialise everything
-    flowpy.retrieve_current_row_and_col(node,row,col);
+    cptndd = 0;
+    cptndd_tot = 0;
   }
+
+  Perimeter_nodes = light_perimeter;
+  print_perimeter_to_csv(flowpy, "/home/boris/Desktop/LSD/capture/sorbas/peritest.csv");
 
 }
 

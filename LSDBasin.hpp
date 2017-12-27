@@ -788,6 +788,8 @@ vector<int> get_source_node_from_perimeter(vector<int> perimeter, LSDFlowInfo& f
 
   void organise_perimeter(LSDFlowInfo& flowpy);
 
+  void clean_perimeter(LSDFlowInfo& flowpy);
+
   protected:
 
   //These instance variables are set at initialisation
