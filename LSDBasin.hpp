@@ -874,7 +874,9 @@ vector<int> get_source_node_from_perimeter(vector<int> perimeter, LSDFlowInfo& f
   /// Basin Perimeter's node index, sorted by followed order
   vector<int> Perimeter_nodes_sorted;
   /// corresponding map giving an index to the sorted perimeter. Mostly for testing and debugging purposes.
-  vector<int> Perimeter_nodes_sorted_id;
+  map<int,int> Perimeter_nodes_sorted_id;
+  /// increase the speed of checking whether a node is perimeter or not compare to find in a vector
+  map<int,int> Perimeter_nodes_map;
   /// Cosmo erosion rate.
   float CosmoErosionRate;
   /// Other erosion rate.

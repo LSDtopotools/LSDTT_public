@@ -1905,7 +1905,7 @@ void LSDBasin::organise_perimeter(LSDFlowInfo& flowpy)
   map<int,int> is_done; // check if a node has been processed or not
   int row = Outlet_i, col = Outlet_j,id = 0, node = 0, n_adj = 0, this_row,this_col;
   float x1 =0 ,x2 = 0, y1 = 0, y2 = 0;
-  bool ting = false;
+  bool ting = true;
 
   // preprocessing stage to get rid of some points
   clean_perimeter(flowpy);
@@ -1918,19 +1918,22 @@ void LSDBasin::organise_perimeter(LSDFlowInfo& flowpy)
   Perimeter_nodes_sorted_id[node] = id;
   Perimeter_nodes_sorted.push_back(node);
     // ### Dealing with the first neighboors
+
   while(Perimeter_nodes_sorted.size() != Perimeter_nodes.size())
   {
+    //cout << "INSERT BAD WORD HERE" << endl;
     id++;
     for(YOP = tester.begin();YOP!= tester.end() && ting ; YOP++)
     {
       for(POY = tester.begin();POY != tester.end() && ting; POY++)
       {
-        this_row = row+ *YOP;
-        this_col = col+ *POY;
-        if(this_row<flowpy.get_NRows() && this_col<flowpy.get_NCols() && this_row>=0 && this_col >= 0 && (this_row !=0 && this_col!=0))
+        this_row = row + *YOP;
+        this_col = col + *POY;
+        cout << this_row << " || " << this_col << endl;
+        if(this_row<flowpy.get_NRows() && this_col<flowpy.get_NCols() && this_row>=0 && this_col >= 0 && (*POY !=0 && *YOP !=0))
         {
-          node = retrieve_node_from_row_and_column(this_row,this_col);
-          if(Perimeter_nodes.count(node) != 1)
+          node = flowpy.retrieve_node_from_row_and_column(this_row,this_col);
+          if(Perimeter_nodes_map.count(node) != 1 && is_done.count(node) != 1)
           {
             ting = true;
             Perimeter_nodes_sorted.push_back(node);
@@ -1940,6 +1943,7 @@ void LSDBasin::organise_perimeter(LSDFlowInfo& flowpy)
             flowpy.get_x_and_y_from_current_node(Perimeter_nodes_sorted[Perimeter_nodes_sorted.size()-2],x1,y1);
             flowpy.get_x_and_y_from_current_node(node,x2,y2);
             map_of_dist_perim[node] = sqrt(pow((x2-x1),2) + pow((y2-y1),2));
+            cout << node << endl;
 
           }
         }
@@ -2090,7 +2094,9 @@ void LSDBasin::clean_perimeter(LSDFlowInfo& flowpy)
 
     if(cptndd>0 && cptndd_tot < 6)
     {
-      light_perimeter.push_back(flowpy.retrieve_node_from_row_and_column(row,col));
+      int truc = flowpy.retrieve_node_from_row_and_column(row,col);
+      light_perimeter.push_back(truc);
+      Perimeter_nodes_map[truc] = 1;
     }
 
     cptndd = 0;
