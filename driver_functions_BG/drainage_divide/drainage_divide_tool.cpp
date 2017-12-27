@@ -429,7 +429,7 @@ int main (int nNumberofArgs,char *argv[])
       int temp_row = 0, temp_col = 0;
       for(size_t th = 0; th<basin_list.size() ; th++ )
       {
-        cout << "Processing basin " << th << "/" << basin_list.size() << " stage 1/6" << endl;
+        cout << "Processing basin " << th+1 << "/" << basin_list.size() << " stage 1/6" << endl;
         LSDBasin this_basin = basin_list[th];
         this_basin.preprocess_DD_metrics(FlowInfo);
         this_drainage_divide = this_basin.get_Perimeter_nodes();
@@ -440,13 +440,13 @@ int main (int nNumberofArgs,char *argv[])
           X_coord.push_back(temp_X);
           Y_coord.push_back(temp_Y);
         }
-        cout << "Processing basin " << th << "/" << basin_list.size() << " stage 2/6" << endl;
+        cout << "Processing basin " << th+1 << "/" << basin_list.size() << " stage 2/6" << endl;
         // Creating the point line for the swath template 
         PointData BaselinePoints = get_point_data_from_coordinates(X_coord, Y_coord);
         // Generating the template
         LSDSwath SwathTemplate(BaselinePoints, FillRaster, this_int_map["distance_from_ridge"]);
         
-        cout << "Processing basin " << th << "/" << basin_list.size() << " stage 3/6" << endl;
+        cout << "Processing basin " << th+1 << "/" << basin_list.size() << " stage 3/6" << endl;
         // Generating elevation swath
         LSDRaster temp_swath = SwathTemplate.get_raster_from_swath_profile(FillRaster,0);
         LSDRaster eleSwath = temp_swath.RasterTrimmerPadded(50); // reducing the raster by removing NoData
@@ -455,7 +455,7 @@ int main (int nNumberofArgs,char *argv[])
         this_basin.square_window_stat_drainage_divide(FillRaster, FlowInfo, this_int_map["square_window_radius"]);
         this_basin.write_windowed_stats_around_drainage_divide_csv((OUT_DIR+OUT_ID+"_ridge_windowed_stat_"+itoa(th)+".csv"), FlowInfo);
 
-        cout << "Processing basin " << th << "/" << basin_list.size() << " stage 4/6" << endl;
+        cout << "Processing basin " << th+1 << "/" << basin_list.size() << " stage 4/6" << endl;
         // Generating normalized elevation swath
         temp_swath = SwathTemplate.get_raster_from_swath_profile(FillRaster,1);
         LSDRaster eleSwath_norm = temp_swath.RasterTrimmerPadded(50); // reducing the raster by removing NoData
@@ -466,7 +466,7 @@ int main (int nNumberofArgs,char *argv[])
         this_basin.write_windowed_stats_around_drainage_divide_csv((OUT_DIR+OUT_ID+"_norm_ridge_windowed_stat_"+itoa(th)+".csv"), FlowInfotemp);
 
 
-        cout << "Processing basin " << th << "/" << basin_list.size() << " stage 5/6" << endl;
+        cout << "Processing basin " << th+1 << "/" << basin_list.size() << " stage 5/6" << endl;
         // Generating Slope swath
         // ### First getting the Slope Raster
         vector<int> raster_selection(8, 0);  // This controls which usrface fitting metrics to compute
@@ -482,7 +482,7 @@ int main (int nNumberofArgs,char *argv[])
         this_basin.square_window_stat_drainage_divide(SlopeSwath, FlowInfotemp, this_int_map["square_window_radius"]);
         this_basin.write_windowed_stats_around_drainage_divide_csv((OUT_DIR+OUT_ID+"_slope_ridge_windowed_stat_"+itoa(th)+".csv"), FlowInfotemp);
 
-        cout << "Processing basin " << th << "/" << basin_list.size() << " stage 6/6" << endl;
+        cout << "Processing basin " << th+1 << "/" << basin_list.size() << " stage 6/6" << endl;
         X_coord.clear();
         Y_coord.clear();
       }
