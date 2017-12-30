@@ -1903,43 +1903,50 @@ void LSDBasin::organise_perimeter(LSDFlowInfo& flowpy)
   vector<int> tester (arr, arr + sizeof(arr) / sizeof(arr[0]) );
 
   map<int,int> is_done; // check if a node has been processed or not
-  int row = Outlet_i, col = Outlet_j,id = 0, node = 0, n_adj = 0, this_row,this_col;
-  float x1 =0 ,x2 = 0, y1 = 0, y2 = 0;
+  int row = 0, col = 0,id = 0, node = 0, n_adj = 0, this_row,this_col;
+  float x1 =0 ,x2 = 0, y1 = 0, y2 = 0, last_dist = 0;
   bool ting = true;
 
   // preprocessing stage to get rid of some points
   clean_perimeter(flowpy);
+  print_perimeter_to_csv(flowpy, "/home/boris/Desktop/LSD/capture/sorbas/peritest.csv");
+
+
   // Any perimeter nodes should only have 2 neightboors now
 
-  // first, let me indentify the outlet, aka the lowest point of the ridge
-  node = flowpy.get_NodeIndex_from_row_col(Outlet_i,Outlet_j);
+  // first, let me indentify the outlet (???), aka the lowest point of the ridge
+  node = Perimeter_nodes[0];
+  flowpy.retrieve_current_row_and_col(node,row,col);
   is_done[node] = 1;
   map_of_dist_perim[node] = 0;
   Perimeter_nodes_sorted_id[node] = id;
   Perimeter_nodes_sorted.push_back(node);
-    // ### Dealing with the first neighboors
+  // cout << is_done[5260475] << " " << node << " " << 5260475 << endl;
+  // exit(EXIT_SUCCESS);
 
-  while(Perimeter_nodes_sorted.size() != Perimeter_nodes.size())
+
+  while(Perimeter_nodes_sorted.size() != 736)
   {
 
     id++;
-    for(vector<int>::iterator YOPL = tester.begin();YOPL!= tester.end() && ting ; YOPL++)
+    for(vector<int>::iterator YOPL = tester.begin();YOPL!= tester.end() && ting == true ; YOPL++)
     {
 
-      for(vector<int>::iterator LPOY = tester.begin();LPOY != tester.end() && ting; LPOY++)
+      for(vector<int>::iterator LPOY = tester.begin();LPOY != tester.end() && ting == true; LPOY++)
       {
         this_row = row + *YOPL;
         this_col = col + *LPOY;
-        //cout << this_row << " || " << this_col << endl;
+
         if(this_row<flowpy.get_NRows() && this_col<flowpy.get_NCols() && this_row>=0 && this_col >= 0)
         {
           flowpy.get_x_and_y_from_current_node(node,x2,y2);
-          cout << Perimeter_nodes_sorted.size() << endl;
-          cout << node << endl;
-          cout << x2 << " " <<y2 <<endl;
+          // cout << Perimeter_nodes_sorted.size() << endl;
+          // cout << node << endl;
+          //cout << x2 << " " <<y2 <<endl;
 
           node = flowpy.retrieve_node_from_row_and_column(this_row,this_col);
-          if(Perimeter_nodes_map[node] == 1 && is_done[node] != 1 && node != NoDataValue && node != -9999)
+          // cout << Perimeter_nodes_map.count(node) << " || " << is_done.count(node) << " || " << x2 << " || " << y2  <<  endl;
+          if(Perimeter_nodes_map.count(node) > 0 && is_done.count(node) == 0 && node != NoDataValue && node != -9999 )
           {
             ting = false;
             Perimeter_nodes_sorted.push_back(node);
@@ -1948,16 +1955,26 @@ void LSDBasin::organise_perimeter(LSDFlowInfo& flowpy)
             // distance stuffs
             flowpy.get_x_and_y_from_current_node(Perimeter_nodes_sorted[Perimeter_nodes_sorted.size()-2],x1,y1);
             flowpy.get_x_and_y_from_current_node(node,x2,y2);
-            map_of_dist_perim[node] = sqrt(pow((x2-x1),2) + pow((y2-y1),2));
-            cout << node << endl;
+            map_of_dist_perim[node] = last_dist + sqrt(pow((x2-x1),2) + pow((y2-y1),2));
+            last_dist = map_of_dist_perim[node];
+            // cout << map_of_dist_perim[node] << endl;
+
+
+            flowpy.retrieve_current_row_and_col(node,row,col);
+
+
+            // debugf
+            flowpy.get_x_and_y_from_current_node(node,x2,y2);
+            cout << row << " || " << col << endl;
+            cout << x2 << " " <<y2 <<endl; 
+            cout << Perimeter_nodes_sorted.size() << endl;
 
           }
         }
       }
 
     }
-    row = this_row;
-    col = this_col;
+    
     ting = true;
 
   }
@@ -1965,8 +1982,8 @@ void LSDBasin::organise_perimeter(LSDFlowInfo& flowpy)
 
   // TESTING FUNCTION, DELETE IT AFTERWARDS BORIS!!!!
   Perimeter_nodes = Perimeter_nodes_sorted;
+    print_perimeter_to_csv(flowpy, "/home/boris/Desktop/LSD/capture/sorbas/peritest_AFTER.csv");
 
-  print_perimeter_to_csv(flowpy, "/home/boris/Desktop/LSD/capture/sorbas/peritest.csv");
 
 
 
@@ -2033,7 +2050,7 @@ void LSDBasin::clean_perimeter(LSDFlowInfo& flowpy)
 {
 
   vector<int> light_perimeter;
-  map<int,int> nodes_of_basins;
+  nodes_of_basins;
   int row = 0, col = 0, cptndd = 0, cptndd_tot = 0, this_row = 0, this_col = 0, this_node = 0;
   vector<int> tester;
   tester.push_back(-1);

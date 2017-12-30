@@ -813,6 +813,8 @@ vector<int> get_source_node_from_perimeter(vector<int> perimeter, LSDFlowInfo& f
   int Junction;
   ///Vector of all nodes in basin.
   vector<int> BasinNodes;
+  /// Map of nodes in the basin - faster to check if a node is in the basin due to a binary search tree for large maps
+  map<int,int> nodes_of_basins;
   /// Number of DEM cells.
   int NumberOfCells;
   /// Area in spatial units of the basin.
