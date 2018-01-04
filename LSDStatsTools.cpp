@@ -7451,4 +7451,82 @@ int PointInPolygon(int VertexCount, float XCoords[], float YCoords[], float XCoo
 }
 
 
+
+
+
+
+// Implementation of the Kernel Density estimation method from a vector of float
+// I am using this review paper about it for the implementation:
+// Sheather 2004 - DOI 10.1214/088342304000000297
+// I may try to find a recent one but this last is quite well cited and post 2000 and clear ( I don't want to be a SHEATER ahah, I am not sure if this can be consider as a joke but I am laugthing)
+// 
+// This is the fully automated version, an attempt to provide a non parametric KDE estimation
+//
+// Work in progress, like a lot
+// BG - 04/01/2018  - Bonne annee
+
+vector<float> auto_KDE(vector<float> vpoint)
+{
+
+  // first deal with the bandwith  - probably using the sheather-Jones plugin method
+  cout << "TODO::Code the auto-bandwith selection" << endl;
+  float h = 5;
+  cout << "You're bandwith is " << h << endl;
+
+  // then calling the KDE function
+  vector<float> vout = gaussian_KDE(vpoint,h);
+
+  return vout;
+
+}
+
+
+// KDE calculation for a vector of float using a gaussian kernel with a bandwith h
+// 
+// BG - 04/01/2018
+vector<float> gaussian_KDE(vector<float> vpoint, int h)
+{
+  vector<float> vout;
+
+  // get N
+  int n = vpoint.size();
+
+  // Calculate the sum
+  // ### This precision for PI should be acceptable
+  float sum = 0, X = 0, Xi = 0, PI = 3.14159;
+  vector<float>::iterator antidisestablishmentarianism, tuvalu; // Antidisestablishmentarianism is the longest word in English that is non-coined and non-technical. Also, this is a terible name for a variable.
+  for(antidisestablishmentarianism = vpoint.begin(); antidisestablishmentarianism != vpoint.end(); antidisestablishmentarianism++)
+  {
+    // Setting the sample for this run of the loop
+    X = *antidisestablishmentarianism; // this sample
+    sum = 0; // reinitializing the sum for each sample
+    // summing the elements
+    for(tuvalu = vpoint.begin(); tuvalu != vpoint.end(); tuvalu++)
+    {
+      // setting the testing for this run for this sum
+      Xi = *tuvalu;
+      float y = 0;
+      y = (X-Xi/h);
+      // incrementing the sum: using a gaussian kernel for each X - Xi
+      sum += 1/(sqrt(2*PI)) * exp(-pow(y,2)/2);
+    }
+    // saving the KDE
+    vout.push_back((1/(n*h)) * sum);
+  }
+
+  // Done, not that complicated after all
+  return vout;
+
+}
+
+
+
+
+
+
+
+
+
+
+
 #endif

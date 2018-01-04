@@ -703,4 +703,18 @@ Array2D<float> normalize_terrain_index(Array2D<float> Data, float lower_percenti
 //SWDG - 25/1/17
 int PointInPolygon(int VertexCount, float XCoords[], float YCoords[], float XCoord, float YCoord);
 
+
+// Implementation of the Kernel Density estimation method from a vector of float
+// I am using this review paper about it for the implementation:
+// Sheather 2004 - DOI 10.1214/088342304000000297
+// I may try to find a recent one but this last is quite well cited and post 2000 and clear ( I don't want to be a SHEATER ahah, I am not sure if this can be consider as a joke but I am laugthing)
+// 
+// This is the fully automated version, an attempt to provide a non parametric KDE estimation
+//
+// Work in progress, like a lot
+// BG - 04/01/2018  - Bonne annee
+
+vector<float> auto_KDE(vector<float> vpoint);
+vector<float> gaussian_KDE(vector<float> vpoint, int h);
+
 #endif
