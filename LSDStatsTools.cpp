@@ -7484,7 +7484,7 @@ vector<float> auto_KDE(vector<float> vpoint)
   float mean = get_mean(vpoint); 
   float S =  get_standard_deviation(vpoint,mean);
   int n = vpoint.size();
-  float h = 1.144 * S * pow(n, -0.2);
+  float h = 1.144 * S * pow(n, -0.2); // Terrel(1990) detailed and extracted Sheater (2004) section 3.1
 
   // then calling the KDE function
   vector<float> vout = gaussian_KDE(vpoint,h);
