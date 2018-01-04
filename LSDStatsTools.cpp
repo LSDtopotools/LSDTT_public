@@ -7478,9 +7478,13 @@ vector<float> auto_KDE(vector<float> vpoint)
 {
 
   // first deal with the bandwith  - probably using the sheather-Jones plugin method
-  cout << "TODO::Code the auto-bandwith selection" << endl;
-  float h = 5;
-  cout << "You're bandwith is " << h << endl;
+  // TODO :: This method
+  // However, let's try a more efficient method first
+  // Terrel (1990) - a rule of the thumb first estimation
+  float mean = get_mean(vpoint); 
+  float S =  get_standard_deviation(vpoint,mean);
+  int n = vpoint.size();
+  float h = 1.144 * S * pow(n, -0.2);
 
   // then calling the KDE function
   vector<float> vout = gaussian_KDE(vpoint,h);
