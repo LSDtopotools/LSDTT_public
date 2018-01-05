@@ -2027,6 +2027,9 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   ksn_kp_KDE();
   cout << " OK" << endl ;
 
+  cout << "TODO Outlier selection" << endl;
+  
+
   //printing the raw ksn knickpoint file
   string this_name = OUT_DIR + OUT_ID + "_ksnkp_raw.csv";
   cout << "Printing data into csv files ...";
@@ -2092,13 +2095,13 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int>& vecnode)
     if(this_ksn != last_ksn)
     {
       // deta ksn from bottom to top
-      dksn = this_ksn - last_ksn;
+      dksn = last_ksn - this_ksn;
       // delta chi from top to bottom to force positive value
       dchi = chi_data_map[last_node] - chi_data_map[this_node];
       // saving the value in the map
       raw_ksn_kp_map[this_node] =  dksn;
       // derivative of the absolute value of the ksn over chi
-      dkdc = abs(dksn)/dchi;
+      dkdc = (dksn)/dchi;
       raw_dksndchi_kp_map[this_node] = dkdc;
 
       // saving the node for later KDE calculation
@@ -2225,7 +2228,7 @@ void LSDChiTools::print_raw_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filenam
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "longitude,latitude,elevation,flow_distance,chi,drainage_area,delta_ksn,KDE,basin_key,source_key";
+  chi_data_out << "longitude,latitude,elevation,flow_distance,chi,drainage_area,delta_ksn,dksn/dchi,KDE,basin_key,source_key";
 
   chi_data_out << endl;
 
@@ -2253,6 +2256,7 @@ void LSDChiTools::print_raw_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filenam
                      << chi_data_map[this_node] << ","
                      << drainage_area_data_map[this_node] << ","
                      << this_kp << ","
+                     << raw_dksndchi_kp_map[this_node] << ","
                      << raw_KDE_kp_map[this_node] << ","
                      << baselevel_keys_map[this_node]<< ","
                      << source_keys_map[this_node];
