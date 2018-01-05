@@ -7474,7 +7474,7 @@ int PointInPolygon(int VertexCount, float XCoords[], float YCoords[], float XCoo
 // Work in progress, like a lot
 // BG - 04/01/2018  - Bonne annee
 
-vector<float> auto_KDE(vector<float> vpoint)
+pair<float,vector<float> > auto_KDE(vector<float> vpoint)
 {
 
   // first deal with the bandwith  - probably using the sheather-Jones plugin method
@@ -7489,7 +7489,9 @@ vector<float> auto_KDE(vector<float> vpoint)
   // then calling the KDE function
   vector<float> vout = gaussian_KDE(vpoint,h);
 
-  return vout;
+  pair<float,vector<float> > gat = make_pair(h,vout);
+
+  return gat;
 
 }
 
