@@ -1113,6 +1113,23 @@ class LSDChiTools
     /// @date 30/11/2017
     void print_intersources_mchi_map(string filename);
 
+
+    /// @brief set a map of each source_key with the corresponding vector fo node INCLUDING the first node of the 
+    /// receaving river if this abovementioned one does exist.
+    /// @param Flowinfo, a LSDFlowInfo object
+    /// @author BG
+    /// @date 05/01/2018
+    void set_map_of_source_and_node(LSDFlowInfo& FlowInfo);
+
+    /// @brief Main function for the knickpoint analysis that control the call of other function to keep it clear and up to date
+    /// @param FlowiInfo: a LSDFlowInfo object
+    /// @param OUT_DIR: string containing the output directory path
+    /// @param OUT_ID: string containing the output prefix
+    /// @author BG
+    /// @date 05/01/2018
+    void ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID);
+
+
   protected:
     ///Number of rows.
     int NRows;
@@ -1190,6 +1207,8 @@ class LSDChiTools
     map<int,int> map_source_key_receiver;
     /// map of m_chi precedant the source_key <source_key_of_river,previous_m_chi>
     map<int,float> map_source_key_receiver_mchi;
+    /// map of source key and associated vector of nodes
+    map<int,vector<int> > map_node_source_key;
 
 
 

@@ -2000,6 +2000,23 @@ void LSDChiTools::get_previous_mchi_for_all_sources(LSDFlowInfo& Flowinfo)
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+// Rather than recreating, changing and messing wiht knickpoints functions during developent,
+// Eveything will now be controlled from this function calling the adapted and up-to-date function
+// Leaving me time to develop what will be the final cleanest one and making easier the subdivision
+// in loads of little functions rather than one big script-like one. OBJECT ORIENTED POWER ˁ˚ᴥ˚ˀ
+// BG 
+void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID)
+{
+  // The first preprocessing step is to preselect the river we want to process
+  // Potentially data selection function to be added here, exempli gratia lenght threshold for tributaries
+  // this first function fill a map[source key] = vector<node for this rive including the receiver node>
+  set_map_of_source_and_node(FlowInfo);
+
+
+}
+
+
+
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2050,7 +2067,8 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
     // This usually give to Chi values between 0 and 20~30ish depending on the landscape. We keep this value for the ksn knickpoints calculation
     // However, to get a "natural" angle, we recast the Mchi to correspond to a Chi value comparable to the elevation, thus using a A0 to get a maximum chi similar to the maximum elevation.
 
-    // First we want to get the maximum elevation and the maximum chi
+    // First we want to get the maximum elevation and the maximum chi and the nodes per rivers
+    set_map_of_source_and_node(FlowInfo);
     for (int n = 0; n< n_nodes; n++)
     {
       if(elev_data_map[node_sequence[n]] > max_elev)
@@ -2244,6 +2262,54 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+void LSDChiTools::set_map_of_source_and_node(LSDFlowInfo& FlowInfo)
+{
+  // find the number of nodes
+
+  int n_nodes = (node_sequence.size()), last_SK = source_keys_map[node_sequence[0]], this_SK = source_keys_map[node_sequence[0]], this_node = node_sequence[0], temp_receiver_node = 0, last_node = 0;
+  if (n_nodes <= 0)
+  {
+    cout << "Cannot calculate segments since you have not calculated channel properties yet." << endl;
+    exit(EXIT_FAILURE);
+  }
+  else
+  {
+    vector<int> temp_node_SK;
+    temp_node_SK.push_back(this_node);
+    for (int n = 0; n< n_nodes; n++)
+    {
+      // Debug statement
+      // cout << n << " || " << node_sequence[n] << endl;
+      this_node = node_sequence[n];
+      this_SK = source_keys_map[this_node];
+      if(this_SK == last_SK)
+      {
+        // If the source key is the same than the previous one ---> incrementing the vector of node for each river
+        temp_node_SK.push_back(this_node);
+        cout << elev_data_map[this_node] << endl;
+      }
+      else
+      {
+        // if different source key: first getting the receiving node 
+        FlowInfo.retrieve_receiver_information(last_node,temp_receiver_node);
+        // pushing it back
+        temp_node_SK.push_back(temp_receiver_node);
+        // saving this source key
+        map_node_source_key[last_SK] = temp_node_SK;
+        // clearing the vector for the next source key and saving the current node in the new river
+        temp_node_SK.clear();
+        temp_node_SK.push_back(this_node);
+      }
+      // saving the last node info for next loop
+      last_SK = this_SK;
+      last_node = this_node;
+    }
+  }
+
+  // Debug stuff - ignore but keep pls - Boris
+  // exit(EXIT_FAILURE);
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Loop through all the knickzones to weight all the different combinations
