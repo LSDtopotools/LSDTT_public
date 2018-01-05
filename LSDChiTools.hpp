@@ -1144,6 +1144,13 @@ class LSDChiTools
     /// @date 05/01/2018
     void ksn_knickpoint_raw_river(int SK, vector<int>& vecnode);
 
+    /// @brief write a file with the raw knickpoint informations
+    /// @param FlowiInfo: a LSDFlowInfo object
+    /// @param filename: string with path+name+.csv
+    /// @author BG
+    /// @date 05/01/2018
+    void print_raw_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filename);
+
 
   protected:
     ///Number of rows.

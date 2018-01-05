@@ -2071,6 +2071,115 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int>& vecnode)
 
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// write a file with the raw ksn knickpoints
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+void LSDChiTools::print_raw_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filename)
+{
+  // these are for extracting element-wise data from the channel profiles.
+
+  int this_node,row,col;
+  float this_kp;
+  double latitude,longitude;
+  LSDCoordinateConverterLLandUTM Converter;
+
+  // find the number of nodes
+  int n_nodes = (node_sequence.size());
+
+  // open the data file
+  ofstream  chi_data_out;
+  chi_data_out.open(filename.c_str());
+  chi_data_out << "longitude,latitude,elevation,flow_distance,chi,drainage_area,delta_ksn,basin_key,source_key";
+
+  chi_data_out << endl;
+
+  if (n_nodes <= 0)
+  {
+    cout << "Cannot print since you have not calculated channel properties yet." << endl;
+  }
+  else
+  {
+    map<int,float>::iterator iter;
+
+    for (iter = raw_ksn_kp_map.begin(); iter != raw_ksn_kp_map.end(); iter++)
+    {
+        this_node = iter->first;
+        this_kp = iter->second;
+        FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+        get_lat_and_long_locations(row, col, latitude, longitude, Converter);
+        
+        chi_data_out.precision(9);
+        chi_data_out << latitude << ","
+                     << longitude << ",";
+        chi_data_out.precision(5);
+        chi_data_out << elev_data_map[this_node] << ","
+                     << flow_distance_data_map[this_node] << ","
+                     << chi_data_map[this_node] << ","
+                     << drainage_area_data_map[this_node] << ","
+                     << this_kp << ","
+                     << baselevel_keys_map[this_node]<< ","
+                     << source_keys_map[this_node];
+        chi_data_out << endl;
+    }
+  }
+
+  chi_data_out.close();
+  cout << "I am done, your file is:" << endl;
+  cout << filename << endl;
+
+
+}
+
+void LSDChiTools::set_map_of_source_and_node(LSDFlowInfo& FlowInfo)
+{
+  // find the number of nodes
+
+  int n_nodes = (node_sequence.size()), last_SK = source_keys_map[node_sequence[0]], this_SK = source_keys_map[node_sequence[0]], this_node = node_sequence[0], temp_receiver_node = 0, last_node = 0;
+  if (n_nodes <= 0)
+  {
+    cout << "Cannot calculate segments since you have not calculated channel properties yet." << endl;
+    exit(EXIT_FAILURE);
+  }
+  else
+  {
+    vector<int> temp_node_SK;
+    temp_node_SK.push_back(this_node);
+    for (int n = 0; n< n_nodes; n++)
+    {
+      // Debug statement
+      // cout << n << " || " << node_sequence[n] << endl;
+      this_node = node_sequence[n];
+      this_SK = source_keys_map[this_node];
+      if(this_SK == last_SK)
+      {
+        // If the source key is the same than the previous one ---> incrementing the vector of node for each river
+        temp_node_SK.push_back(this_node);
+        cout << elev_data_map[this_node] << endl;
+      }
+      else
+      {
+        // if different source key: first getting the receiving node 
+        FlowInfo.retrieve_receiver_information(last_node,temp_receiver_node);
+        // pushing it back
+        temp_node_SK.push_back(temp_receiver_node);
+        // saving this source key
+        map_node_source_key[last_SK] = temp_node_SK;
+        // clearing the vector for the next source key and saving the current node in the new river
+        temp_node_SK.clear();
+        temp_node_SK.push_back(this_node);
+      }
+      // saving the last node info for next loop
+      last_SK = this_SK;
+      last_node = this_node;
+    }
+  }
+
+  // Debug stuff - ignore but keep pls - Boris
+  // exit(EXIT_FAILURE);
+}
+
+
 
 
 
@@ -2318,53 +2427,6 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-void LSDChiTools::set_map_of_source_and_node(LSDFlowInfo& FlowInfo)
-{
-  // find the number of nodes
-
-  int n_nodes = (node_sequence.size()), last_SK = source_keys_map[node_sequence[0]], this_SK = source_keys_map[node_sequence[0]], this_node = node_sequence[0], temp_receiver_node = 0, last_node = 0;
-  if (n_nodes <= 0)
-  {
-    cout << "Cannot calculate segments since you have not calculated channel properties yet." << endl;
-    exit(EXIT_FAILURE);
-  }
-  else
-  {
-    vector<int> temp_node_SK;
-    temp_node_SK.push_back(this_node);
-    for (int n = 0; n< n_nodes; n++)
-    {
-      // Debug statement
-      // cout << n << " || " << node_sequence[n] << endl;
-      this_node = node_sequence[n];
-      this_SK = source_keys_map[this_node];
-      if(this_SK == last_SK)
-      {
-        // If the source key is the same than the previous one ---> incrementing the vector of node for each river
-        temp_node_SK.push_back(this_node);
-        cout << elev_data_map[this_node] << endl;
-      }
-      else
-      {
-        // if different source key: first getting the receiving node 
-        FlowInfo.retrieve_receiver_information(last_node,temp_receiver_node);
-        // pushing it back
-        temp_node_SK.push_back(temp_receiver_node);
-        // saving this source key
-        map_node_source_key[last_SK] = temp_node_SK;
-        // clearing the vector for the next source key and saving the current node in the new river
-        temp_node_SK.clear();
-        temp_node_SK.push_back(this_node);
-      }
-      // saving the last node info for next loop
-      last_SK = this_SK;
-      last_node = this_node;
-    }
-  }
-
-  // Debug stuff - ignore but keep pls - Boris
-  // exit(EXIT_FAILURE);
-}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Loop through all the knickzones to weight all the different combinations
