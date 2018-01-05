@@ -2166,7 +2166,7 @@ void LSDChiTools::set_map_of_source_and_node(LSDFlowInfo& FlowInfo)
       {
         // If the source key is the same than the previous one ---> incrementing the vector of node for each river
         temp_node_SK.push_back(this_node);
-        cout << elev_data_map[this_node] << endl;
+        // cout << elev_data_map[this_node] << endl;
       }
       else
       {
