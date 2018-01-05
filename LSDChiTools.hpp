@@ -1151,6 +1151,18 @@ class LSDChiTools
     /// @date 05/01/2018
     void print_raw_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filename);
 
+    /// @brief Calculate KDE over the river system using the dksn/dchi map previously calculated through ksn_knickpoint_automator
+    /// @author BG
+    /// @date 05/01/2018
+    void ksn_kp_KDE();
+
+    /// @brief communicate with LSDStatTools to get the KDE oer river, also register the bandwidth automatically calculated
+    /// @param vecnode: a vector of node index containing the data
+    /// @param SK: source key
+    /// @author BG
+    /// @date 05/01/2018
+    void KDE_vec_node_mchi(vector<int> vecnode, int SK);
+
 
   protected:
     ///Number of rows.
@@ -1240,7 +1252,8 @@ class LSDChiTools
     map<int,float> raw_dksndchi_kp_map;
     /// map of raw KDE, calculated using method/binning depending on the parameter file
     map<int,float> raw_KDE_kp_map;
-    ///
+    /// map of the automatically calculated bandwidth per source key
+    map<int,float> KDE_bandwidth_per_source_key;
 
 
 

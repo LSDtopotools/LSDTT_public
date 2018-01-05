@@ -2016,7 +2016,7 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
 
   cout << " OK" << endl ;
 
-  // main function that increment the map_of_knickpoints
+  // main function that increment the map_of_knickpoints by detecting the changes in ksn within rivers
   // /!\ Contain a cout statement
   ksn_knickpoint_detection_new(FlowInfo);
   cout << "Detecting knickpoint for source ... OK" << endl;
@@ -2028,7 +2028,8 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   cout << " OK" << endl ;
 
   // Now dealing with outlier detection
-
+  // first calculating the KDE
+  ksn_kp_KDE();
 
 
 }
@@ -2106,6 +2107,69 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int>& vecnode)
   map_node_source_key_kp[SK] = vecdif;
 
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Calculate the KDE over the knickpoint map
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::ksn_kp_KDE()
+{
+  // first setting the main iterator
+  map<int,vector<int> >::iterator jacques;
+
+  // function variables
+  int this_SK = 0;
+  vector<int> vecnode;
+
+  for(jacques = map_node_source_key_kp.begin(); jacques != map_node_source_key_kp.end(); jacques++)
+  {
+    this_SK = jacques->first;
+    vecnode = jacques->second;
+    KDE_vec_node_mchi(vecnode,this_SK);
+  }
+
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Calculate the KDE using the mchi value corresponding to a vector of node index
+// BG
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+void LSDChiTools::KDE_vec_node_mchi(vector<int> vecnode, int SK)
+{
+  // setting the iterator
+  vector<int>::iterator valachie = vecnode.begin();
+
+  // first getting the corresponding vector of values
+  vector<float> veksn, veKDE;
+  int this_node = 0;
+  for(;valachie != vecnode.end(); valachie++)
+  {
+    this_node = *valachie;
+    veksn.push_back(raw_dksndchi_kp_map[this_node]);
+  }
+
+  // now getting the KDE corresponding vector
+  pair<float,vector<float> > pagul = auto_KDE(veksn);
+
+  // incrementing the bandwidth map
+  KDE_bandwidth_per_source_key[SK] = pagul.first;
+
+  // dealing with retrieving the KDE per nodes
+  veKDE = pagul.second;
+  float this_KDE = 0;
+  for(size_t uip = 0; uip < veKDE.size(); uip++)
+  {
+    this_node = vecnode[uip];
+    this_KDE = veKDE[uip];
+    raw_KDE_kp_map[this_node] = this_KDE;
+  }
+
+
+
+}
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // write a file with the raw ksn knickpoints
