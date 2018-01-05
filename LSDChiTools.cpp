@@ -2015,6 +2015,10 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   // main function that increment the map_of_knickpoints
   ksn_knickpoint_detection_new(FlowInfo);
 
+  //printing the raw ksn knickpoint file
+  string this_name = OUT_DIR + OUT_ID + "_ksnkp_raw.csv";
+  print_raw_ksn_knickpoint(FlowInfo, this_name);
+
 
 }
 
@@ -2057,7 +2061,7 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int>& vecnode)
   float this_ksn = M_chi_data_map[this_node], last_ksn = M_chi_data_map[last_node]; // Setting last and this ksn
 
   // Looping through the nodes from the second one
-  for(node; node != vecnode.end(); node++)
+  for( ; node != vecnode.end(); node++)
   {
     // initializing the variables 
     this_node = *node;
@@ -5170,11 +5174,11 @@ int LSDChiTools::get_ending_node_of_source(LSDFlowInfo& FlowInfo,int source_key)
   int starting_node_index = get_starting_node_of_source(source_key);
   int node_indenter = starting_node_index;
   int temp1, temp2, temp_node_index = starting_node_index, temp_node = node_sequence[starting_node_index];
-
+  int n = node_sequence.size();
 
   
 
-  while(source_keys_map[temp_node] == source_key && temp_node_index < node_sequence.size())
+  while(source_keys_map[temp_node] == source_key && temp_node_index < n)
   {
 
     node_indenter ++;
