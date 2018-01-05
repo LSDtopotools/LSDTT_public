@@ -1600,6 +1600,9 @@ int main (int nNumberofArgs,char *argv[])
 
   if(this_bool_map["ksn_knickpoint_analysis"])
   {
+
+    // Recalculation of the m_chi
+    // Ill optimaize that later - Boris
     n_iterations = this_int_map["force_n_iteration_knickpoint_analysis"];
     skip = this_int_map["force_skip_knickpoint_analysis"];
     LSDChiTools ChiTool(FlowInfo);
@@ -1608,19 +1611,25 @@ int main (int nNumberofArgs,char *argv[])
                           DrainageArea, chi_coordinate, target_nodes,
                           n_iterations, skip, minimum_segment_length, sigma);
     ChiTool.segment_counter(FlowInfo, maximum_segment_length);
-    ChiTool.ksn_knickpoint_detection(FlowInfo);
-    string csv_full_fname_knockpoint = OUT_DIR+OUT_ID+"_KsnKn.csv";
-    ChiTool.print_knickpoint_to_csv(FlowInfo,csv_full_fname_knockpoint);
-    string csv_full_fname_knockzone = OUT_DIR+OUT_ID+"_KsnKz.csv";
-    ChiTool.print_knickzone_to_csv(FlowInfo,csv_full_fname_knockzone);
+ 
 
-    string csv_full_fname = OUT_DIR+OUT_ID+"_MChiSegmented_Ks.csv";
-    cout << "Let me print A Test File " << csv_full_fname << endl;
-    ChiTool.print_mchisegmented_knickpoint_version(FlowInfo, csv_full_fname);
-    cout << "I am printing a file containing the receiver of each sources" << endl;
-    ChiTool.get_previous_mchi_for_all_sources(FlowInfo);
-    string csv_intersource_fullname = OUT_DIR+OUT_ID+"_SourcesLinks.csv";
-    ChiTool.print_intersources_mchi_map(csv_intersource_fullname);
+    // Actual knickpoint calculation
+    ChiTool.ksn_knickpoint_automator(FlowInfo, OUT_DIR, OUT_ID);
+
+
+
+    // string csv_full_fname_knockpoint = OUT_DIR+OUT_ID+"_KsnKn.csv";
+    // ChiTool.print_knickpoint_to_csv(FlowInfo,csv_full_fname_knockpoint);
+    // string csv_full_fname_knockzone = OUT_DIR+OUT_ID+"_KsnKz.csv";
+    // ChiTool.print_knickzone_to_csv(FlowInfo,csv_full_fname_knockzone);
+
+    // string csv_full_fname = OUT_DIR+OUT_ID+"_MChiSegmented_Ks.csv";
+    // cout << "Let me print A Test File " << csv_full_fname << endl;
+    // ChiTool.print_mchisegmented_knickpoint_version(FlowInfo, csv_full_fname);
+    // cout << "I am printing a file containing the receiver of each sources" << endl;
+    // ChiTool.get_previous_mchi_for_all_sources(FlowInfo);
+    // string csv_intersource_fullname = OUT_DIR+OUT_ID+"_SourcesLinks.csv";
+    // ChiTool.print_intersources_mchi_map(csv_intersource_fullname);
     
   }
 
