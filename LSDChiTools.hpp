@@ -1163,6 +1163,13 @@ class LSDChiTools
     /// @date 05/01/2018
     void KDE_vec_node_mchi(vector<int> vecnode, int SK);
 
+    /// @brief write a file containing source key and bandwith calculated from the KDE
+    /// @param vecnode: a vector of node index containing the data
+    /// @param SK: source key
+    /// @author BG
+    /// @date 05/01/2018
+    void print_bandwidth_ksn_knickpoint(string filename);
+
 
   protected:
     ///Number of rows.

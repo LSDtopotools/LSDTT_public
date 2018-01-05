@@ -2021,15 +2021,21 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   ksn_knickpoint_detection_new(FlowInfo);
   cout << "Detecting knickpoint for source ... OK" << endl;
 
-  //printing the raw ksn knickpoint file
-  string this_name = OUT_DIR + OUT_ID + "_ksnkp_raw.csv";
-  cout << "Printing a raw knickpoint csv file ...";
-  print_raw_ksn_knickpoint(FlowInfo, this_name);
-  cout << " OK" << endl ;
-
   // Now dealing with outlier detection
   // first calculating the KDE
+  cout << "Kernel Density Estimation per river ...";
   ksn_kp_KDE();
+  cout << " OK" << endl ;
+
+  //printing the raw ksn knickpoint file
+  string this_name = OUT_DIR + OUT_ID + "_ksnkp_raw.csv";
+  cout << "Printing data into csv files ...";
+  print_raw_ksn_knickpoint(FlowInfo, this_name);
+  this_name = OUT_DIR + OUT_ID + "_ksnkp_bandwidth.csv";
+  print_bandwidth_ksn_knickpoint(this_name);
+  cout << " OK" << endl ;
+
+
 
 
 }
@@ -2165,7 +2171,36 @@ void LSDChiTools::KDE_vec_node_mchi(vector<int> vecnode, int SK)
     raw_KDE_kp_map[this_node] = this_KDE;
   }
 
+}
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// write a file with the source_key, basinkey and the associated bandwidth
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+void LSDChiTools::print_bandwidth_ksn_knickpoint(string filename)
+{
+  
+    // open the data file
+  ofstream  file_out;
+  file_out.open(filename.c_str());
+  file_out << "source_key,basin_key,bandwidth" << endl;
+
+  int this_source_key, this_basin_key, this_node = 0;
+  float this_bandwidth = 0;
+  map<int,vector<int> >::iterator OL;
+
+  for(OL = map_node_source_key.begin(); OL !=  map_node_source_key.end() ; OL++)
+  {
+    this_source_key = OL->first;
+    this_node = OL->second[0];
+    this_basin_key = baselevel_keys_map[this_node];
+    this_bandwidth = KDE_bandwidth_per_source_key[this_source_key];
+    file_out << this_source_key << ","
+             << this_basin_key << ","
+             << this_bandwidth << endl;
+  }
+  file_out.close();
 
 }
 
@@ -2190,7 +2225,7 @@ void LSDChiTools::print_raw_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filenam
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "longitude,latitude,elevation,flow_distance,chi,drainage_area,delta_ksn,basin_key,source_key";
+  chi_data_out << "longitude,latitude,elevation,flow_distance,chi,drainage_area,delta_ksn,KDE,basin_key,source_key";
 
   chi_data_out << endl;
 
@@ -2218,6 +2253,7 @@ void LSDChiTools::print_raw_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filenam
                      << chi_data_map[this_node] << ","
                      << drainage_area_data_map[this_node] << ","
                      << this_kp << ","
+                     << raw_KDE_kp_map[this_node] << ","
                      << baselevel_keys_map[this_node]<< ","
                      << source_keys_map[this_node];
         chi_data_out << endl;
