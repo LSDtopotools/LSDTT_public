@@ -716,7 +716,7 @@ int PointInPolygon(int VertexCount, float XCoords[], float YCoords[], float XCoo
 // BG - 04/01/2018  - Bonne annee
 
 pair<float,vector<float> > auto_KDE(vector<float> vpoint);
-vector<float> gaussian_KDE(vector<float> vpoint, int h);
+vector<float> gaussian_KDE(vector<float> vpoint, float h);
 
 
 

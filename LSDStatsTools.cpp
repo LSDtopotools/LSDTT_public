@@ -7477,6 +7477,13 @@ int PointInPolygon(int VertexCount, float XCoords[], float YCoords[], float XCoo
 pair<float,vector<float> > auto_KDE(vector<float> vpoint)
 {
 
+
+  if(vpoint.size() == 0)
+  {
+    cout<< endl << "FATAL ERROR LSDStatstools::autoKDE empty vector" << endl;
+    exit(EXIT_FAILURE);
+  }
+
   // first deal with the bandwith  - probably using the sheather-Jones plugin method
   // TODO :: This method
   // However, let's try a more efficient method first
@@ -7499,10 +7506,9 @@ pair<float,vector<float> > auto_KDE(vector<float> vpoint)
 // KDE calculation for a vector of float using a gaussian kernel with a bandwith h
 // 
 // BG - 04/01/2018
-vector<float> gaussian_KDE(vector<float> vpoint, int h)
+vector<float> gaussian_KDE(vector<float> vpoint, float h)
 {
   vector<float> vout;
-
   // get N
   int n = vpoint.size();
 
@@ -7525,10 +7531,10 @@ vector<float> gaussian_KDE(vector<float> vpoint, int h)
       // incrementing the sum: using a gaussian kernel for each X - Xi
       sum += 1/(sqrt(2*PI)) * exp(-pow(y,2)/2);
     }
+
     // saving the KDE
     vout.push_back((1/(n*h)) * sum);
   }
-
   // Done, not that complicated after all
   return vout;
 
