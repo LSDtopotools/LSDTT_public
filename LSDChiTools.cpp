@@ -2012,15 +2012,70 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   // this first function fill a map[source key] = vector<node for this rive including the receiver node>
   set_map_of_source_and_node(FlowInfo);
 
+  // main function that increment the map_of_knickpoints
+  ksn_knickpoint_detection_new(FlowInfo);
+
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// New function for the knickpoint detection
+// save the difference and ratio between m_chi values of each segments
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::ksn_knickpoint_detection_new(LSDFlowInfo& FlowInfo)
+{
+
+  // preparing the needed iterators
+  map<int,vector<int> >::iterator SK;
+  // Initializing some variables
+  int this_SK;
+  vector<int> vecnode;
+
+  // Looping through all the sources key
+  for(SK = map_node_source_key.begin(); SK != map_node_source_key.end(); SK++)
+  {
+    this_SK = SK->first;
+    vecnode = SK->second;
+    ksn_knickpoint_raw_river(this_SK,vecnode);
+  }
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Detect the knickpoint in one river and increment the global map
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int>& vecnode)
+{
+  // Setting the iterator(s)
+  vector<int>::iterator node = vecnode.begin(); // first node of the river -> the source
+
+  // Setting function variables
+  int last_node = *node; // last node is the first node
+  node++; // switching to the second node
+  int this_node = *node; // this node is the second one 
+
+  float this_ksn = M_chi_data_map[this_node], last_ksn = M_chi_data_map[last_node]; // Setting last and this ksn
+
+  // Looping through the nodes from the second one
+  for(node; node != vecnode.end(); node++)
+  {
+    // initializing the variables 
+    this_node = *node;
+    this_ksn = M_chi_data_map[this_node];
+    // if ksn has change, Implementing a raw knickpoint
+    if(this_ksn != last_ksn)
+    {
+      raw_ksn_kp_map[this_node] = this_ksn - last_ksn;
+    }
+  }
 
 }
 
 
 
 
-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// New function for the knickpoint detection
+// medium old function for the knickpoint detection
 // save the difference and ratio between m_chi values of each segments
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)

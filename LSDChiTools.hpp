@@ -1129,6 +1129,21 @@ class LSDChiTools
     /// @date 05/01/2018
     void ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID);
 
+    /// @brief Detection of the knickpoints by looping through the source keys
+    /// @param FlowiInfo: a LSDFlowInfo object
+    /// @param OUT_DIR: string containing the output directory path
+    /// @param OUT_ID: string containing the output prefix
+    /// @author BG
+    /// @date 05/01/2018
+    void ksn_knickpoint_detection_new(LSDFlowInfo& FlowInfo);
+
+    /// @brief increment the knickpoints for one river
+    /// @param SK: the source key
+    /// @param vecnode: a vector of the rive nodes
+    /// @author BG
+    /// @date 05/01/2018
+    void ksn_knickpoint_raw_river(int SK, vector<int>& vecnode);
+
 
   protected:
     ///Number of rows.
@@ -1207,8 +1222,11 @@ class LSDChiTools
     map<int,int> map_source_key_receiver;
     /// map of m_chi precedant the source_key <source_key_of_river,previous_m_chi>
     map<int,float> map_source_key_receiver_mchi;
+
     /// map of source key and associated vector of nodes
     map<int,vector<int> > map_node_source_key;
+    /// map of raw changes in ksn, key is node and value is delta ksn from bottom to top
+    map<int,float> raw_ksn_kp_map;
 
 
 
@@ -1254,6 +1272,7 @@ class LSDChiTools
     /// In this map the key is the basin key and the value is the node of the
     /// baselevel source
     map<int,int> source_node_of_mainstem_map;
+
 
   private:
     void create(LSDRaster& Raster);
