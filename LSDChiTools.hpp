@@ -1232,8 +1232,17 @@ class LSDChiTools
 
     /// map of source key and associated vector of nodes
     map<int,vector<int> > map_node_source_key;
+    /// map of source key and associated vector of nodes containing knickpoints used for the ksnkp calculation
+    map<int,vector<int> > map_node_source_key_kp;
     /// map of raw changes in ksn, key is node and value is delta ksn from bottom to top
     map<int,float> raw_ksn_kp_map;
+    /// map of raw derivative for the ksn value calculated per rivers
+    map<int,float> raw_dksndchi_kp_map;
+    /// map of raw KDE, calculated using method/binning depending on the parameter file
+    map<int,float> raw_KDE_kp_map;
+    ///
+
+
 
 
 

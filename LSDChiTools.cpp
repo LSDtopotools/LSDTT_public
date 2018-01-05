@@ -2019,12 +2019,17 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   // main function that increment the map_of_knickpoints
   // /!\ Contain a cout statement
   ksn_knickpoint_detection_new(FlowInfo);
+  cout << "Detecting knickpoint for source ... OK" << endl;
 
   //printing the raw ksn knickpoint file
   string this_name = OUT_DIR + OUT_ID + "_ksnkp_raw.csv";
   cout << "Printing a raw knickpoint csv file ...";
   print_raw_ksn_knickpoint(FlowInfo, this_name);
   cout << " OK" << endl ;
+
+  // Now dealing with outlier detection
+
+
 
 }
 
@@ -2049,6 +2054,7 @@ void LSDChiTools::ksn_knickpoint_detection_new(LSDFlowInfo& FlowInfo)
     vecnode = SK->second;
     ksn_knickpoint_raw_river(this_SK,vecnode);
   }
+
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2064,21 +2070,40 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int>& vecnode)
   int last_node = *node; // last node is the first node
   node++; // switching to the second node
   int this_node = *node; // this node is the second one 
-
-  float this_ksn = M_chi_data_map[this_node], last_ksn = M_chi_data_map[last_node]; // Setting last and this ksn
+  // vector that will contain the nodes having a knickpoint
+  vector<int> vecdif;
+  // Bunch of floats
+  float dkdc = 0, dchi = 0, dksn = 0, this_ksn = M_chi_data_map[this_node], last_ksn = M_chi_data_map[last_node]; // Setting last and this ksn
 
   // Looping through the nodes from the second one
-  for( ; node != vecnode.end(); node++)
+  for( ; node != vecnode.end(); node++) // the first ";" is normal: it states that I have no initial conditions 
   {
-    // initializing the variables 
+    // initializing the variables for this run
     this_node = *node;
     this_ksn = M_chi_data_map[this_node];
-    // if ksn has change, Implementing a raw knickpoint
+    // if ksn has change, Implementing a raw knickpoint and calculating the d|ksn|/dchi
     if(this_ksn != last_ksn)
     {
-      raw_ksn_kp_map[this_node] = this_ksn - last_ksn;
+      // deta ksn from bottom to top
+      dksn = this_ksn - last_ksn;
+      // delta chi from top to bottom to force positive value
+      dchi = chi_data_map[last_node] - chi_data_map[this_node];
+      // saving the value in the map
+      raw_ksn_kp_map[this_node] =  dksn;
+      // derivative of the absolute value of the ksn over chi
+      dkdc = abs(dksn)/dchi;
+      raw_dksndchi_kp_map[this_node] = dkdc;
+
+      // saving the node for later KDE calculation
+      vecdif.push_back(this_node);
     }
+    // setting the next last variables
+    last_node = this_node;
+    last_ksn = this_ksn;
   }
+
+  // implementing the global map
+  map_node_source_key_kp[SK] = vecdif;
 
 }
 
@@ -2136,10 +2161,7 @@ void LSDChiTools::print_raw_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filenam
   }
 
   chi_data_out.close();
-  cout << "I am done, your file is:" << endl;
-  cout << filename << endl;
-
-
+  
 }
 
 void LSDChiTools::set_map_of_source_and_node(LSDFlowInfo& FlowInfo)
@@ -2173,7 +2195,7 @@ void LSDChiTools::set_map_of_source_and_node(LSDFlowInfo& FlowInfo)
         // if different source key: first getting the receiving node 
         FlowInfo.retrieve_receiver_information(last_node,temp_receiver_node);
         // pushing it back
-        if(temp_receiver_node != -9999)
+        if(temp_receiver_node != -9999 || temp_receiver_node != NoDataValue || temp_receiver_node != 0)
         {
           temp_node_SK.push_back(temp_receiver_node);
         }
