@@ -2007,18 +2007,24 @@ void LSDChiTools::get_previous_mchi_for_all_sources(LSDFlowInfo& Flowinfo)
 // BG 
 void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID)
 {
+
+  cout << "Getting ready for the knickpoint detection algorithm ...";
   // The first preprocessing step is to preselect the river we want to process
   // Potentially data selection function to be added here, exempli gratia lenght threshold for tributaries
   // this first function fill a map[source key] = vector<node for this rive including the receiver node>
   set_map_of_source_and_node(FlowInfo);
 
+  cout << " OK" << endl ;
+
   // main function that increment the map_of_knickpoints
+  // /!\ Contain a cout statement
   ksn_knickpoint_detection_new(FlowInfo);
 
   //printing the raw ksn knickpoint file
   string this_name = OUT_DIR + OUT_ID + "_ksnkp_raw.csv";
+  cout << "Printing a raw knickpoint csv file ...";
   print_raw_ksn_knickpoint(FlowInfo, this_name);
-
+  cout << " OK" << endl ;
 
 }
 
@@ -2032,12 +2038,13 @@ void LSDChiTools::ksn_knickpoint_detection_new(LSDFlowInfo& FlowInfo)
   // preparing the needed iterators
   map<int,vector<int> >::iterator SK;
   // Initializing some variables
-  int this_SK;
+  int this_SK, n_sources = map_node_source_key.size(), current_n_source = 1;
   vector<int> vecnode;
 
   // Looping through all the sources key
   for(SK = map_node_source_key.begin(); SK != map_node_source_key.end(); SK++)
   {
+    cout << "Detecting knickpoint for source #"<< current_n_source <<"/" << n_sources  << '\r' << flush;
     this_SK = SK->first;
     vecnode = SK->second;
     ksn_knickpoint_raw_river(this_SK,vecnode);
@@ -2166,7 +2173,10 @@ void LSDChiTools::set_map_of_source_and_node(LSDFlowInfo& FlowInfo)
         // if different source key: first getting the receiving node 
         FlowInfo.retrieve_receiver_information(last_node,temp_receiver_node);
         // pushing it back
-        temp_node_SK.push_back(temp_receiver_node);
+        if(temp_receiver_node != -9999)
+        {
+          temp_node_SK.push_back(temp_receiver_node);
+        }
         // saving this source key
         map_node_source_key[last_SK] = temp_node_SK;
         // clearing the vector for the next source key and saving the current node in the new river
