@@ -204,6 +204,13 @@ class LSDFlowInfo
   /// @date 01/016/12
   void retrieve_receiver_information(int current_node,int& reveiver_node, int& receiver_row,
                                              int& receiver_col);
+  ///@brief Gives the reciever information for a given node.
+  ///@param current_node Integer
+  ///@param reveiver_node Empty integer to be assigned the index of the reciever
+  ///node.
+  /// @author BG
+  /// @date 06/01/2018
+  void retrieve_receiver_information(int current_node,int& reveiver_node);
 
   ///@brief Get the row and column indices of a given node.
   ///@param current_node Integer index of a given node.

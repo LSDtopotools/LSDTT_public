@@ -838,6 +838,23 @@ void LSDFlowInfo::retrieve_receiver_information(int current_node,
   receiver_col = rc;
 }
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// algorithms for searching the vectors
+// This gets the reciever of current_node, just its node version
+//
+// BG 05/01/2018
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDFlowInfo::retrieve_receiver_information(int current_node,
+                     int& receiver_node)
+{
+  int rn;
+  rn = ReceiverVector[current_node];
+  receiver_node = rn;
+}
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // algorithms for searching the vectors
