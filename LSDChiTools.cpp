@@ -2013,6 +2013,8 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   // Potentially data selection function to be added here, exempli gratia lenght threshold for tributaries
   // this first function fill a map[source key] = vector<node for this rive including the receiver node>
   set_map_of_source_and_node(FlowInfo);
+  // This will increment maps with source keys as key and various metrics such as river length, Chi lenght...
+  compute_basic_matrics_per_source_keys(FlowInfo);
 
   cout << " OK" << endl ;
 
@@ -2187,7 +2189,7 @@ void LSDChiTools::print_bandwidth_ksn_knickpoint(string filename)
     // open the data file
   ofstream  file_out;
   file_out.open(filename.c_str());
-  file_out << "source_key,basin_key,bandwidth" << endl;
+  file_out << "source_key,basin_key,length,chi,bandwidth" << endl;
 
   int this_source_key, this_basin_key, this_node = 0;
   float this_bandwidth = 0;
@@ -2201,6 +2203,8 @@ void LSDChiTools::print_bandwidth_ksn_knickpoint(string filename)
     this_bandwidth = KDE_bandwidth_per_source_key[this_source_key];
     file_out << this_source_key << ","
              << this_basin_key << ","
+             << map_flow_length_source_key[this_source_key] << ","
+             << map_chi_length_source_key[this_source_key] << ","
              << this_bandwidth << endl;
   }
   file_out.close();
@@ -2319,6 +2323,28 @@ void LSDChiTools::set_map_of_source_and_node(LSDFlowInfo& FlowInfo)
   // exit(EXIT_FAILURE);
 }
 
+
+void LSDChiTools::compute_basic_matrics_per_source_keys(LSDFlowInfo& FlowInfo)
+{
+
+  // setting the variables
+  map<int,vector<int> >::iterator valachie;
+  int this_SK =0;
+  float dist = 0 , chi_dist = 0;
+  vector<int> vecval;
+
+  // Looping through each source key and getting the length of river in meters and chi space.
+  // note: the first and last node of the vector are the extremes of each rivers plus the receiver node.
+  for(valachie = map_node_source_key.begin(); valachie != map_node_source_key.end(); valachie++)
+  {
+    this_SK = valachie->first;
+    vecval = valachie->second;
+    chi_dist = abs(chi_data_map[vecval[0]] - chi_data_map[vecval.back()]);
+    dist = abs(flow_distance_data_map[vecval[0]] - flow_distance_data_map[vecval.back()]);
+    map_flow_length_source_key[this_SK] = dist;
+    map_chi_length_source_key[this_SK] = chi_dist;
+  }
+}
 
 
 

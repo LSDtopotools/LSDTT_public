@@ -1170,6 +1170,12 @@ class LSDChiTools
     /// @date 05/01/2018
     void print_bandwidth_ksn_knickpoint(string filename);
 
+    /// @brief compute basics metrics per source keys: flow length, chi length plus more to come probably
+    /// @param FlowInfo: a LSDFlowInfo Object
+    /// @author BG
+    /// @date 08/01/2018
+    void compute_basic_matrics_per_source_keys(LSDFlowInfo& FlowInfo);
+
 
   protected:
     ///Number of rows.
@@ -1261,8 +1267,10 @@ class LSDChiTools
     map<int,float> raw_KDE_kp_map;
     /// map of the automatically calculated bandwidth per source key
     map<int,float> KDE_bandwidth_per_source_key;
-
-
+    /// Map[source_key] = flow_length_of_river (from source to base junction, not baselevel)
+    map<int,float> map_flow_length_source_key;
+    /// Map[source_key] = chi_length_of_river (from source to base junction, not baselevel)
+    map<int,float> map_chi_length_source_key;
 
 
 
