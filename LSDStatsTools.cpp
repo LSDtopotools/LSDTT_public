@@ -7563,7 +7563,7 @@ vector<int> is_outlier_MZS(vector<float> vecval, float NDV, float threshold)
   {
     this_val = *malme;
 
-    if(this_val>threshold)
+    if(this_val > threshold or this_val < -1 * threshold)
     {
       vecout.push_back(1);
     }
@@ -7658,6 +7658,9 @@ vector<float> gaussian_KDE(vector<float> vpoint, float h)
   return vout;
 
 }
+
+
+
 
 
 

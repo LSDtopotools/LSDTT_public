@@ -2005,7 +2005,7 @@ void LSDChiTools::get_previous_mchi_for_all_sources(LSDFlowInfo& Flowinfo)
 // Leaving me time to develop what will be the final cleanest one and making easier the subdivision
 // in loads of little functions rather than one big script-like one. OBJECT ORIENTED POWER ˁ˚ᴥ˚ˀ
 // BG 
-void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID)
+void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th)
 {
 
   cout << "Getting ready for the knickpoint detection algorithm ...";
@@ -2030,7 +2030,7 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   cout << " OK" << endl ;
 
   // Ok let's detect oultliers here
-  ksn_knickpoint_outlier_automator(FlowInfo);
+  ksn_knickpoint_outlier_automator(FlowInfo, MZS_th);
   
 
   //printing the raw ksn knickpoint file
@@ -2186,7 +2186,7 @@ void LSDChiTools::KDE_vec_node_mchi(vector<int> vecnode, int SK)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Automate the outlier detection - ATM I am testing a bunch ou method
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiTools::ksn_knickpoint_outlier_automator(LSDFlowInfo& FlowInfo)
+void LSDChiTools::ksn_knickpoint_outlier_automator(LSDFlowInfo& FlowInfo, float MZS_th)
 {
 
   // Ok looping through river
@@ -2201,7 +2201,7 @@ void LSDChiTools::ksn_knickpoint_outlier_automator(LSDFlowInfo& FlowInfo)
     vecnode = salazar->second;
     
     vecval = get_value_from_map_and_node(vecnode,raw_dksndchi_kp_map);
-    vecoutlier_MZS_dkdc = is_outlier_MZS(vecval, NoDataValue, 3.5);
+    vecoutlier_MZS_dkdc = is_outlier_MZS(vecval, NoDataValue, MZS_th);
 
     for(size_t hi = 0; hi < vecnode.size(); hi++)
     {
