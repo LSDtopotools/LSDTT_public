@@ -7460,6 +7460,24 @@ int PointInPolygon(int VertexCount, float XCoords[], float YCoords[], float XCoo
 }
 
 
+// this function vectrize part of a map from a vector of ordered key contained by the map.
+// This sounds fuzzy but it is useful as a map is more efficient to store/find unsorted elements
+// but you want a vector when you need to get element in a certain order
+// Anyway I will use it so well, at least I understand myself.
+// BG - 08/01/2018
+vector<float> get_value_from_map_and_node(vector<int> vecnode, map<int,float>& map_int_float)
+{
+  vector<float> vecout;
+  vector<int>::iterator gorg;
+
+  for(gorg = vecnode.begin(); gorg != vecnode.end() ; gorg ++)
+  {
+    vecout.push_back(map_int_float[*gorg]); 
+  }
+  return vecout;
+}
+
+
 // Absolute Deviation - Ignoring NoData
 // The Absolute Deviation is defined as follow for a population X of samples Xi:
 // ADi = |Xi - median(X)|
@@ -7532,7 +7550,7 @@ vector<float> get_modified_z_score(vector<float> vecval,float NDV)
 // However, It can vary quite a lot. I am investigating.
 // feed it with a vector of float, it will return 0 if not and 1 if outlier
 // BG - 08/01/2018
-vector<int> is_outlier_MZC(vector<float> vecval, float NDV, float threshold)
+vector<int> is_outlier_MZS(vector<float> vecval, float NDV, float threshold)
 {
   // first getting the modified z-score M
   vector<float> MZC = get_modified_z_score(vecval,NDV);
@@ -7544,6 +7562,7 @@ vector<int> is_outlier_MZC(vector<float> vecval, float NDV, float threshold)
   for(malme = MZC.begin(); malme != MZC.end() ; malme++)
   {
     this_val = *malme;
+
     if(this_val>threshold)
     {
       vecout.push_back(1);

@@ -2029,7 +2029,8 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   ksn_kp_KDE();
   cout << " OK" << endl ;
 
-  cout << "TODO Outlier selection" << endl;
+  // Ok let's detect oultliers here
+  ksn_knickpoint_outlier_automator(FlowInfo);
   
 
   //printing the raw ksn knickpoint file
@@ -2038,6 +2039,8 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   print_raw_ksn_knickpoint(FlowInfo, this_name);
   this_name = OUT_DIR + OUT_ID + "_ksnkp_bandwidth.csv";
   print_bandwidth_ksn_knickpoint(this_name);
+  this_name = OUT_DIR + OUT_ID + "_ksnkp_mchi.csv";
+  print_mchisegmented_knickpoint_version(FlowInfo, this_name);
   cout << " OK" << endl ;
 
 
@@ -2179,6 +2182,36 @@ void LSDChiTools::KDE_vec_node_mchi(vector<int> vecnode, int SK)
 }
 
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Automate the outlier detection - ATM I am testing a bunch ou method
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::ksn_knickpoint_outlier_automator(LSDFlowInfo& FlowInfo)
+{
+
+  // Ok looping through river
+  map<int,vector<int> >::iterator salazar;
+  vector<int> vecnode,vecoutlier_MZS_dkdc;
+  vector<float> vecval;
+  int this_SK;
+  for(salazar = map_node_source_key_kp.begin(); salazar!= map_node_source_key_kp.end(); salazar++)
+  {
+    
+    this_SK = salazar->first;
+    vecnode = salazar->second;
+    
+    vecval = get_value_from_map_and_node(vecnode,raw_dksndchi_kp_map);
+    vecoutlier_MZS_dkdc = is_outlier_MZS(vecval, NoDataValue, 3.5);
+
+    for(size_t hi = 0; hi < vecnode.size(); hi++)
+    {
+      map_outlier_MZS_dksndchi[vecnode[hi]] = vecoutlier_MZS_dkdc[hi];
+    }
+
+  }
+}
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // write a file with the source_key, basinkey and the associated bandwidth
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2232,7 +2265,7 @@ void LSDChiTools::print_raw_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filenam
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "longitude,latitude,elevation,flow_distance,chi,drainage_area,delta_ksn,dksn/dchi,KDE,basin_key,source_key";
+  chi_data_out << "longitude,latitude,elevation,flow_distance,chi,drainage_area,delta_ksn,dksn/dchi,KDE,basin_key,out_MZS,source_key";
 
   chi_data_out << endl;
 
@@ -2263,7 +2296,9 @@ void LSDChiTools::print_raw_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filenam
                      << raw_dksndchi_kp_map[this_node] << ","
                      << raw_KDE_kp_map[this_node] << ","
                      << baselevel_keys_map[this_node]<< ","
+                     << map_outlier_MZS_dksndchi[this_node] << ","
                      << source_keys_map[this_node];
+
         chi_data_out << endl;
     }
   }

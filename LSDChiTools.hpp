@@ -1129,6 +1129,9 @@ class LSDChiTools
     /// @date 05/01/2018
     void ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID);
 
+    void ksn_knickpoint_outlier_automator(LSDFlowInfo& FlowInfo);
+
+
     /// @brief Detection of the knickpoints by looping through the source keys
     /// @param FlowiInfo: a LSDFlowInfo object
     /// @param OUT_DIR: string containing the output directory path
@@ -1175,6 +1178,8 @@ class LSDChiTools
     /// @author BG
     /// @date 08/01/2018
     void compute_basic_matrics_per_source_keys(LSDFlowInfo& FlowInfo);
+
+
 
 
   protected:
@@ -1261,7 +1266,7 @@ class LSDChiTools
     map<int,vector<int> > map_node_source_key_kp;
     /// map of raw changes in ksn, key is node and value is delta ksn from bottom to top
     map<int,float> raw_ksn_kp_map;
-    /// map of raw derivative for the ksn value calculated per rivers
+    /// map of raw derivative for the ksn value calculated per rivers. map[nodeindex] = dksn/dchi
     map<int,float> raw_dksndchi_kp_map;
     /// map of raw KDE, calculated using method/binning depending on the parameter file
     map<int,float> raw_KDE_kp_map;
@@ -1271,6 +1276,8 @@ class LSDChiTools
     map<int,float> map_flow_length_source_key;
     /// Map[source_key] = chi_length_of_river (from source to base junction, not baselevel)
     map<int,float> map_chi_length_source_key;
+    // Map[node_index] = 0 if not outlier, 1 if outlier according to a simple Modified z score on dksn/dchi
+    map<int,int> map_outlier_MZS_dksndchi;
 
 
 

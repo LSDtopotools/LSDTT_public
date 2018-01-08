@@ -704,12 +704,16 @@ Array2D<float> normalize_terrain_index(Array2D<float> Data, float lower_percenti
 //SWDG - 25/1/17
 int PointInPolygon(int VertexCount, float XCoords[], float YCoords[], float XCoord, float YCoord);
 
+
+vector<float> get_value_from_map_and_node(vector<int> vecnode, map<int,float>& map_int_float);
+
+
 // Impementation of outlier detection algorithms based on the MAD
 // BG - 08/01/2018
 vector<float> get_absolute_deviation(vector<float> vecval, float NDV);
 float get_MAD(vector<float> vecval, float NDV);
 vector<float> get_modified_z_score(vector<float> vecval,float NDV);
-vector<int> is_outlier_MZC(vector<float> vecval, float NDV, float threshold);
+vector<int> is_outlier_MZS(vector<float> vecval, float NDV, float threshold);
 
 
 
