@@ -7460,6 +7460,75 @@ int PointInPolygon(int VertexCount, float XCoords[], float YCoords[], float XCoo
 }
 
 
+// Absolute Deviation - Ignoring NoData
+// The Absolute Deviation is defined as follow for a population X of samples Xi:
+// ADi = |Xi - median(X)|
+// BG - 08/01/2018
+
+vector<float> get_absolute_deviation(vector<float> vecval, float NDV)
+{
+  vector<float>::iterator bubulle;
+  vector<float> vecout;
+  float med = get_median(vecval,NDV), this_val = 0;
+
+  for(bubulle = vecval.begin(); bubulle != vecval.end(); bubulle ++)
+  {
+    this_val = *bubulle;
+    vecout.push_back(abs(this_val - med));
+  }
+
+  return vecout;
+
+}
+
+
+// Median Absolute Deviation - Ignoring nodata
+// The MAD represents the Median Absolute Deviation,
+// parameter often used to detect outliers in a sample population
+// define by: MAD = median(Absolute_deviation) - see get_absolute_devitaion for details
+// BG - 08/01/2018
+float get_MAD(vector<float> vecval, float NDV)
+{
+
+  // first getting the absolute deviation
+  vector<float> vecpre = get_absolute_deviation(vecval, NDV);
+  // then getting the MAD
+  float MAD = get_median(vecpre);
+  // done
+
+  return MAD;
+
+}
+
+// The modified z-score is a parameter used to extract outliers
+// Described in Iglewicz et Hoaglin, 1993
+// define by : Mi = ( 0.645*(Xi - median(X)) ) / MAD(X)
+// BG - 08/01/2018
+vector<float> get_modified_z_score(vector<float> vecval,float NDV)
+{
+  // first get the MAD and the median
+  float MAD = get_MAD(vecval,NDV);
+  float med = get_median(vecval,NDV);
+
+  // then loop through the vector to get the modifeied x score
+  vector<float>::iterator gorg = vecval.begin();
+  vector<float> vecout;
+  float Mi = 0, this_val = 0;
+
+  for(;gorg != vecval.end();gorg ++)
+  {
+    this_val = *gorg;
+    Mi = (0.6745 * (this_val - med)) / MAD;
+    vecout.push_back(Mi);
+  }
+
+  return vecout;
+
+}
+
+
+
+
 
 
 

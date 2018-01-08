@@ -704,6 +704,13 @@ Array2D<float> normalize_terrain_index(Array2D<float> Data, float lower_percenti
 //SWDG - 25/1/17
 int PointInPolygon(int VertexCount, float XCoords[], float YCoords[], float XCoord, float YCoord);
 
+// Impementation of outlier detection algorithms based on the MAD
+// BG - 08/01/2018
+vector<float> get_absolute_deviation(vector<float> vecval, float NDV);
+float get_MAD(vector<float> vecval, float NDV);
+vector<float> get_modified_z_score(vector<float> vecval,float NDV);
+
+
 
 // Implementation of the Kernel Density estimation method from a vector of float
 // I am using this review paper about it for the implementation:
@@ -717,7 +724,6 @@ int PointInPolygon(int VertexCount, float XCoords[], float YCoords[], float XCoo
 
 pair<float,vector<float> > auto_KDE(vector<float> vpoint);
 vector<float> gaussian_KDE(vector<float> vpoint, float h);
-
 
 
 //-------------------------------------------------------------------
