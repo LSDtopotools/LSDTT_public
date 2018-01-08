@@ -7527,6 +7527,37 @@ vector<float> get_modified_z_score(vector<float> vecval,float NDV)
 }
 
 
+// Detection of outlier based on the modified-z score
+// Iglewicz et hoaglin, 2013 suggests a threshold around 3.5
+// However, It can vary quite a lot. I am investigating.
+// feed it with a vector of float, it will return 0 if not and 1 if outlier
+// BG - 08/01/2018
+vector<int> is_outlier_MZC(vector<float> vecval, float NDV, float threshold)
+{
+  // first getting the modified z-score M
+  vector<float> MZC = get_modified_z_score(vecval,NDV);
+  // is outlier?
+  vector<float>::iterator malme;
+  vector<int> vecout;
+  float this_val =0;
+
+  for(malme = MZC.begin(); malme != MZC.end() ; malme++)
+  {
+    this_val = *malme;
+    if(this_val>threshold)
+    {
+      vecout.push_back(1);
+    }
+    else
+    {
+      vecout.push_back(0);
+    }
+  }
+
+  return vecout;
+}
+
+
 
 
 

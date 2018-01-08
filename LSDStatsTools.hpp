@@ -709,6 +709,8 @@ int PointInPolygon(int VertexCount, float XCoords[], float YCoords[], float XCoo
 vector<float> get_absolute_deviation(vector<float> vecval, float NDV);
 float get_MAD(vector<float> vecval, float NDV);
 vector<float> get_modified_z_score(vector<float> vecval,float NDV);
+vector<int> is_outlier_MZC(vector<float> vecval, float NDV, float threshold);
+
 
 
 
