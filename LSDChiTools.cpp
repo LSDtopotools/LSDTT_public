@@ -2012,10 +2012,11 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   // The first preprocessing step is to preselect the river we want to process
   // Potentially data selection function to be added here, exempli gratia lenght threshold for tributaries
   // this first function fill a map[source key] = vector<node for this rive including the receiver node>
-  set_map_of_source_and_node(FlowInfo,20);
+  set_map_of_source_and_node(FlowInfo,5);
 
   // Optional (?) lumping of the m_chi to get more deterministic segments
-  lump_my_ksn(20);
+  lump_my_ksn(5);
+  // TEST THE TOTAL VARIATION DENOISING FILTER
 
   // This will increment maps with source keys as key and various metrics such as river length, Chi lenght...
   compute_basic_matrics_per_source_keys(FlowInfo);
@@ -7028,7 +7029,7 @@ void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, 
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "node,Y,X,latitude,longitude,chi,elevation,flow_distance,drainage_area,m_chi,b_chi,source_key,basin_key";
+  chi_data_out << "node,Y,X,latitude,longitude,chi,elevation,flow_distance,drainage_area,m_chi,lumped_ksn,b_chi,source_key,basin_key";
   if(have_segmented_elevation)
   {
     chi_data_out << ",segmented_elevation";
@@ -7068,6 +7069,7 @@ void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, 
                    << flow_distance_data_map[this_node] << ","
                    << drainage_area_data_map[this_node] << ","
                    << M_chi_data_map[this_node] << ","
+                   << lumped_m_chi_map[this_node] << ","
                    << b_chi_data_map[this_node] << ","
                    << source_keys_map[this_node] << ","
                    << baselevel_keys_map[this_node];
