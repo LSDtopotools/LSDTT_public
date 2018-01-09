@@ -1117,9 +1117,10 @@ class LSDChiTools
     /// @brief set a map of each source_key with the corresponding vector fo node INCLUDING the first node of the 
     /// receaving river if this abovementioned one does exist.
     /// @param Flowinfo, a LSDFlowInfo object
+    /// @param int n_nodlump, the half lumping window
     /// @author BG
     /// @date 05/01/2018
-    void set_map_of_source_and_node(LSDFlowInfo& FlowInfo);
+    void set_map_of_source_and_node(LSDFlowInfo& FlowInfo, int n_nodlump);
 
     /// @brief Main function for the knickpoint analysis that control the call of other function to keep it clear and up to date
     /// @param FlowiInfo: a LSDFlowInfo object
@@ -1178,6 +1179,22 @@ class LSDChiTools
     /// @author BG
     /// @date 08/01/2018
     void compute_basic_matrics_per_source_keys(LSDFlowInfo& FlowInfo);
+
+
+    /// @brief lump the m_chi to average the MC noise
+    /// @param n_nodlump: the lumping half_window (number of nodes)
+    /// @author BG
+    /// @date 08/01/2018
+    void lump_my_ksn(int n_nodlump);
+
+
+    /// @brief lump m_chi for a specific vector of node index
+    /// @param this_vec: vector of int containing the node index
+    /// @param n_nodlump: the lumping half_window (number of nodes)
+    /// @author BG
+    /// @date 08/01/2018
+    void lump_this_vec(vector<int> this_vec, int n_nodlump);
+
 
 
 
@@ -1278,6 +1295,8 @@ class LSDChiTools
     map<int,float> map_chi_length_source_key;
     // Map[node_index] = 0 if not outlier, 1 if outlier according to a simple Modified z score on dksn/dchi
     map<int,int> map_outlier_MZS_dksndchi;
+    /// Map[node_index] = lumped m_chi
+    map<int,float> lumped_m_chi_map;
 
 
 

@@ -2012,7 +2012,11 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   // The first preprocessing step is to preselect the river we want to process
   // Potentially data selection function to be added here, exempli gratia lenght threshold for tributaries
   // this first function fill a map[source key] = vector<node for this rive including the receiver node>
-  set_map_of_source_and_node(FlowInfo);
+  set_map_of_source_and_node(FlowInfo,20);
+
+  // Optional (?) lumping of the m_chi to get more deterministic segments
+  lump_my_ksn(20);
+
   // This will increment maps with source keys as key and various metrics such as river length, Chi lenght...
   compute_basic_matrics_per_source_keys(FlowInfo);
 
@@ -2042,9 +2046,6 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   this_name = OUT_DIR + OUT_ID + "_ksnkp_mchi.csv";
   print_mchisegmented_knickpoint_version(FlowInfo, this_name);
   cout << " OK" << endl ;
-
-
-
 
 }
 
@@ -2088,14 +2089,14 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int>& vecnode)
   // vector that will contain the nodes having a knickpoint
   vector<int> vecdif;
   // Bunch of floats
-  float dkdc = 0, dchi = 0, dksn = 0, this_ksn = M_chi_data_map[this_node], last_ksn = M_chi_data_map[last_node]; // Setting last and this ksn
+  float dkdc = 0, dchi = 0, dksn = 0, this_ksn = lumped_m_chi_map[this_node], last_ksn = lumped_m_chi_map[last_node]; // Setting last and this ksn
 
   // Looping through the nodes from the second one
   for( ; node != vecnode.end(); node++) // the first ";" is normal: it states that I have no initial conditions 
   {
     // initializing the variables for this run
     this_node = *node;
-    this_ksn = M_chi_data_map[this_node];
+    this_ksn = lumped_m_chi_map[this_node];
     // if ksn has change, Implementing a raw knickpoint and calculating the d|ksn|/dchi
     if(this_ksn != last_ksn)
     {
@@ -2121,6 +2122,87 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int>& vecnode)
   map_node_source_key_kp[SK] = vecdif;
 
 }
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// lump the m_chi to detect outliers        =
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void LSDChiTools::lump_my_ksn(int n_nodlump)
+{
+
+  // Set the variables
+  map<int,vector<int> >::iterator chirac;
+  vector<int> this_vec;
+  for(chirac = map_node_source_key.begin(); chirac != map_node_source_key.end() ; chirac ++)
+  {
+    this_vec = chirac->second;
+    size_t testi = 2*n_nodlump;
+    if(this_vec.size() > testi)
+    {
+      lump_this_vec(this_vec,n_nodlump);
+    }
+    else
+    {
+      cout << "ignoring lumping on source " << chirac->first << ": not enough nodes." << endl;
+    }
+  }
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// lump m_chi for these specific nodes      =
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void LSDChiTools::lump_this_vec(vector<int> this_vec, int n_nodlump)
+{
+  // Set the variables
+  float this_mean = 0;
+  vector<int>::iterator tnode;
+  vector<float> this_val;
+  int this_node;
+
+  for(tnode = this_vec.begin(); tnode != this_vec.end() ; tnode ++)
+  {
+    this_node = *tnode;
+    this_val.push_back(M_chi_data_map[this_node]);
+  }
+
+  
+  
+  for(size_t op = 0 ; op < this_vec.size() ; op ++)
+  {
+    this_node = this_vec[op];
+    if(op < n_nodlump)
+    {
+      vector<float>::const_iterator beg = this_val.begin(), en = this_val.begin()+ n_nodlump + op;
+      vector<float> tvec(beg ,en );
+      this_mean = get_mean_ignore_ndv(tvec, NoDataValue);
+    }
+    else if(op < this_vec.size() - n_nodlump)
+    {
+      vector<float>::const_iterator beg = this_val.begin()+ op, en = this_val.begin()+ op + n_nodlump;
+      vector<float> tvec(beg ,en );
+
+      this_mean = get_mean_ignore_ndv(tvec, NoDataValue);
+
+    }
+    else
+    {
+      vector<float>::const_iterator beg = this_val.begin()+ op, en  = this_val.end();
+      vector<float> tvec(beg ,en );
+
+      this_mean = get_mean_ignore_ndv(tvec , NoDataValue);
+
+    }
+
+    lumped_m_chi_map[this_node] = this_mean;
+  }
+
+
+}
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Calculate the KDE over the knickpoint map
@@ -2307,7 +2389,7 @@ void LSDChiTools::print_raw_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filenam
   
 }
 
-void LSDChiTools::set_map_of_source_and_node(LSDFlowInfo& FlowInfo)
+void LSDChiTools::set_map_of_source_and_node(LSDFlowInfo& FlowInfo, int n_nodlump)
 {
   // find the number of nodes
 
@@ -2336,11 +2418,14 @@ void LSDChiTools::set_map_of_source_and_node(LSDFlowInfo& FlowInfo)
       else
       {
         // if different source key: first getting the receiving node 
-        FlowInfo.retrieve_receiver_information(last_node,temp_receiver_node);
-        // pushing it back
-        if(temp_receiver_node != -9999 || temp_receiver_node != NoDataValue || temp_receiver_node != 0)
+        for(int i = 0; i<n_nodlump; i++)
         {
-          temp_node_SK.push_back(temp_receiver_node);
+          FlowInfo.retrieve_receiver_information(last_node,temp_receiver_node);
+          // pushing it back
+          if(temp_receiver_node != -9999 || temp_receiver_node != NoDataValue || temp_receiver_node != 0)
+          {
+            temp_node_SK.push_back(temp_receiver_node);
+          }
         }
         // saving this source key
         map_node_source_key[last_SK] = temp_node_SK;
@@ -2433,7 +2518,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
     // However, to get a "natural" angle, we recast the Mchi to correspond to a Chi value comparable to the elevation, thus using a A0 to get a maximum chi similar to the maximum elevation.
 
     // First we want to get the maximum elevation and the maximum chi and the nodes per rivers
-    set_map_of_source_and_node(FlowInfo);
+    set_map_of_source_and_node(FlowInfo, 20);
     for (int n = 0; n< n_nodes; n++)
     {
       if(elev_data_map[node_sequence[n]] > max_elev)
