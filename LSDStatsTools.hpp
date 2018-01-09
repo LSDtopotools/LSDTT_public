@@ -96,6 +96,7 @@ float Get_Minimum(vector<float>& y_data, float ndv);
 int Get_Minimum(vector<int>& y_data, float ndv);
 vector<int> Get_Index_Minimum(vector<int>& y_data, float ndv);
 float Get_Maximum(vector<float>& y_data, float ndv);
+vector<int> Get_Index_Maximum(vector<float>& y_data, float ndv);
 float get_durbin_watson_statistic(vector<float> residuals);
 float get_standard_deviation(vector<float>& y_data, float mean);
 float get_standard_deviation(vector<float>& y_data, float mean, float ndv);
@@ -103,6 +104,15 @@ float get_standard_error(vector<float>& y_data, float standard_deviation);
 vector<float> get_common_statistics(vector<float>& y_data);
 vector<float> calculate_descriptive_stats(vector<float>& data);
 float get_percentile(vector<float>& data, float percentile);
+
+
+// sort a vector of vector in regards to a first vector, they all need the same number of element
+// BG - some days in Januray 2018
+vector<vector<float> > sort_vectors_from_one(vector<float> to_sort, vector<vector<float> > follow_the_sort);
+// reorganise a vector from a vector of new IDx
+vector<float> reorganize_vector_from_new_idx(vector<float> vecval, vector<int> vecid);
+
+
 
 // orthogonal regression
 // 01/04/2017 SMM No foolin

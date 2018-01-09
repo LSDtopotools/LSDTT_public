@@ -800,6 +800,29 @@ vector<int> Get_Index_Minimum(vector<int>& y_data, float ndv)
 }
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// gets the index maximum of a population of data
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+vector<int> Get_Index_Maximum(vector<float>& y_data, float ndv)
+{
+  float max = Get_Maximum(y_data,ndv);
+
+  vector<int> vidx;
+  for(size_t it = 0; it< y_data.size(); it++)
+  {
+    if(y_data[it] != ndv && y_data[it] == max)
+    {
+      vidx.push_back(it);
+    }
+  }
+
+  return vidx;
+
+}
+
+
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // gets the maximum of a population of data
@@ -7660,10 +7683,86 @@ vector<float> gaussian_KDE(vector<float> vpoint, float h)
 }
 
 
+// Detection of outlier based on the First Minimum on the KDE pdf
+// Testing it right now
+// feed it with a vector of float, it will a vector of int with 0 if not and 1 if outlier
+// BG - 08/01/2018
+// vector<int> is_outlier_FMKDE(vector<float>& veKDE, vector<float>& vedkdc, float ndv)
+// {
+//   // preparing an integer iterator
+//   size_t gorg = 0;
 
 
 
 
+// }
+
+
+// This function takes one vector of float that you wanna sort and sort in the same order all the other vector of float you give to him
+// can be useful and efficient for multivariate vector stuffs
+// BG - 09/01/2018
+vector<vector<float> > sort_vectors_from_one(vector<float> to_sort, vector<vector<float> > follow_the_sort)
+{
+  // first step is to create a vector of pair<value,idx>
+  vector<pair<float,int> > voult;
+  pair<float,int> this_pair;
+  
+  
+  for(size_t bagel = 0 ; bagel < to_sort.size() ; bagel++)
+  {
+    this_pair = make_pair(to_sort[bagel] , bagel);
+    voult.push_back(this_pair);
+  }
+
+  // Second step: sorting the vector
+  sort(voult.begin(), voult.end());
+  vector<pair<float,int> > sorted = voult;
+
+  // Third step: extracting the vector of int
+  vector<int> new_idx;
+  vector<float> new_val;
+  for(vector<pair<float,int> >::iterator kik = sorted.begin(); kik!= sorted.end() ; kik++)
+  {
+    this_pair = *kik;
+    new_idx.push_back(this_pair.second);
+
+  }
+
+  // Fourth step: sorting the other vector in the same way
+  vector<vector<float> >::iterator gorg;
+  vector<vector<float> > vout;
+  vector<float> this_vec;
+  vout.push_back(new_val);
+  for(gorg = follow_the_sort.begin(); gorg!= follow_the_sort.end(); gorg++)
+  {
+    this_vec = *gorg;
+    vout.push_back(reorganize_vector_from_new_idx(this_vec,new_idx));
+  }
+
+  // return a vector of vector allsorted on the model of the first vector in the vector of vector
+  // It is a kind of vectorsception
+
+  return vout;
+
+
+}
+
+
+// Reorganize a vector from a vector of ordered old idx
+vector<float> reorganize_vector_from_new_idx(vector<float> vecval, vector<int> vecid)
+{
+  vector<int>::iterator poisson_rouge;
+  vector<float> vecout;
+
+  for(poisson_rouge = vecid.begin(); poisson_rouge != vecid.end() ; poisson_rouge++)
+  {
+    int thisid = *poisson_rouge;
+    vecout.push_back(vecval[thisid]);
+
+  }
+
+  return vecout;
+}
 
 // #########################################################################################
 // ############# The following functions are adapted from Raykar et al., 2006 ##############
