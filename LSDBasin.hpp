@@ -392,6 +392,14 @@ class LSDBasin
   /// @date 26/04/2017
   void print_perimeter_to_csv(LSDFlowInfo& FlowInfo, string perimeter_fname);
 
+  /// @brief Prints the perimeter nodes to a csv file plus elevations
+  /// @param FlowInfo the LSDFlowInfo object
+  /// @param string perimeter_fname
+  /// @param ElevationRaster elevation raster
+  /// @author FJC
+  /// @date 10/01/18
+  void print_perimeter_hypsometry_to_csv(LSDFlowInfo& FlowInfo, string perimeter_fname, LSDRaster& ElevationRaster);
+
   /// @brief Set the four different hillslope length measurements for the basin.
   /// @param FlowInfo Flowinfo object.
   /// @param HillslopeLengths LSDRaster of hillslope lengths from the hilltop flow routing method.
@@ -534,7 +542,7 @@ class LSDBasin
   /// @date 18/03/2015
 LSDRaster TrimPaddedRasterToBasin(int padding_pixels, LSDFlowInfo& FlowInfo,
                                             LSDRaster& Raster_Data);
-  
+
   /// @brief This function check if two basin are adjacent
   /// @detail return true if the two basin are adjacent with at least one pixel
   ///  TODO add a minimum adjacent pixel parameter
@@ -773,7 +781,7 @@ vector<int> get_source_node_from_perimeter(vector<int> perimeter, LSDFlowInfo& f
 
   /// write the csv file corresponding to the previously calculated windowed stTS
   /// @detail Ill detail when it will be done later
-  /// @param 
+  /// @param
   /// @author BG
   /// @date 23/12/17
   void write_windowed_stats_around_drainage_divide_csv(string full_name, LSDFlowInfo& flowpy);

@@ -813,6 +813,47 @@ void LSDBasin::print_perimeter_to_csv(LSDFlowInfo& FlowInfo, string perimeter_fn
 
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prints the perimeter to csv. It can then be ingested to find
+// concave hull of the basin (or the basin outline)
+// Also prints the elevations so can investigate the perimeter hypsometry
+// FJC 10/01/18
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDBasin::print_perimeter_hypsometry_to_csv(LSDFlowInfo& FlowInfo, string perimeter_fname, LSDRaster& ElevationRaster)
+{
+  // make sure we have found the perimeter
+  if (int(Perimeter_nodes.size()) == 0)
+  {
+    set_Perimeter(FlowInfo);
+  }
+
+  // open the file
+  ofstream perim_out;
+  perim_out.open(perimeter_fname.c_str());
+  perim_out << "node,elevation,x,y,latitude,longitude" << endl;
+  perim_out.precision(9);
+
+  float curr_x,curr_y;
+  double curr_lat,curr_long;
+
+  LSDCoordinateConverterLLandUTM converter;
+  int n_nodes = int(Perimeter_nodes.size());
+  for(int i = 0; i< n_nodes; i++)
+  {
+    // get this elevation
+    int this_row, this_col;
+    FlowInfo.retrieve_current_row_and_col(Perimeter_nodes[i], this_row, this_col);
+    float this_elev = ElevationRaster.get_data_element(this_row, this_col);
+    // get the coordinates
+    FlowInfo.get_x_and_y_from_current_node(Perimeter_nodes[i], curr_x, curr_y);
+    FlowInfo.get_lat_and_long_from_current_node(Perimeter_nodes[i], curr_lat, curr_long,converter);
+    // write to csv
+    perim_out << Perimeter_nodes[i] << "," << this_elev << "," << curr_x << "," << curr_y <<"," << curr_lat << "," << curr_long << endl;
+  }
+  perim_out.close();
+
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Set the four different hillslope length measurements for the basin.
@@ -1396,7 +1437,7 @@ map<int,int> LSDBasin::count_unique_values_from_litho_raster(LSDIndexRaster& lit
     //cout << values[i] << endl;
 
   }
-  
+
   // Initializing the NoData as well
   // map initialized with all the values of lithology present on the map
 
@@ -1448,7 +1489,7 @@ bool LSDBasin::is_adjacent(LSDBasin& DifferentBasin, LSDFlowInfo& flowpy)
   // Perimeter nodes of the other basin + proceeding to a test if the other basin's perimeter has been calculated
   vector<int> DB_perimeter_nodes = DifferentBasin.get_Perimeter_nodes();
   if(DB_perimeter_nodes.size() == 1){DifferentBasin.set_Perimeter(flowpy); DB_perimeter_nodes =  DifferentBasin.get_Perimeter_nodes();}
-  // 
+  //
 
   // cout << Perimeter_nodes.size() << "|||||" << DB_perimeter_nodes.size() << endl;
   bool adjacenty = false;
@@ -1472,7 +1513,7 @@ bool LSDBasin::is_adjacent(LSDBasin& DifferentBasin, LSDFlowInfo& flowpy)
         }
     }
 
-  }  
+  }
   return adjacenty;
 }
 
@@ -1523,7 +1564,7 @@ vector<int> LSDBasin::merge_perimeter_nodes_adjacent_basins(vector<LSDBasin> bud
             tested_node = flowpy.retrieve_node_from_row_and_column(this_row-1,this_col);
             if(find(temp_perimeter.begin(), temp_perimeter.end(), tested_node) != temp_perimeter.end()){adjacenty=true;}
           }
-          
+
           if(!adjacenty){out_perimeter.push_back(temp_perimeter[flude]);}
           adjacenty = false;
         }
@@ -1550,7 +1591,7 @@ vector<int> LSDBasin::get_source_node_from_perimeter(vector<int> perimeter, LSDF
   vector<int> mangoose;
   mangoose.push_back(0);
   for(size_t coati = 1; coati<size_t(pixel_window); coati++)
-  {  
+  {
     mangoose.push_back(coati);
     mangoose.push_back(-coati);
   }
@@ -1559,14 +1600,14 @@ vector<int> LSDBasin::get_source_node_from_perimeter(vector<int> perimeter, LSDF
   //get all the sources
   vector<int> all_sources = junky.get_SourcesVector();
 
-  // creating an empty output vector 
+  // creating an empty output vector
   vector<int> selected_sources_nodes;
 
   //creating the temp variables
   int that_row = 0;
   int that_col = 0;
   int tested_node = 0;
-  
+
   //loop through the perimeter and neighbooring nodes in the window
   for(size_t coati = 0; coati<perimeter.size();coati++)
   {
@@ -1580,7 +1621,7 @@ vector<int> LSDBasin::get_source_node_from_perimeter(vector<int> perimeter, LSDF
           tested_node = flowpy.retrieve_node_from_row_and_column(that_row+mangoose[hogger],that_col+mangoose[hoggest]);
           if(find(all_sources.begin(), all_sources.end(), tested_node) != all_sources.end()){selected_sources_nodes.push_back(tested_node);}
         }
-        
+
 
       }
     }
@@ -1589,17 +1630,17 @@ vector<int> LSDBasin::get_source_node_from_perimeter(vector<int> perimeter, LSDF
   // now selecting the unique values
 
   sort( selected_sources_nodes.begin(), selected_sources_nodes.end() );
-  selected_sources_nodes.erase( unique( selected_sources_nodes.begin(), selected_sources_nodes.end() ), selected_sources_nodes.end() ); 
+  selected_sources_nodes.erase( unique( selected_sources_nodes.begin(), selected_sources_nodes.end() ), selected_sources_nodes.end() );
 
   // it should work
   return selected_sources_nodes;
-} 
+}
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // THis compile some metrics for each side of a drainage divide across a serie of nodes: min,max,mean,median,std dev ...
 // You just have to feed it with a vector of nodes and a template raster. This last can be elevation, slope, a normalized swath and so on
-// return a map where the key is a string like "min_in" or ",min_out" as well as "n_node_in"... Ill list it when it will be done. 
+// return a map where the key is a string like "min_in" or ",min_out" as well as "n_node_in"... Ill list it when it will be done.
 map<string,float> LSDBasin::get_metrics_both_side_divide(LSDRaster& rasterTemplate, LSDFlowInfo& flowpy, vector<int>& nodes_to_test, map<int,bool>& raster_node_basin)
 {
 
@@ -1617,7 +1658,7 @@ map<string,float> LSDBasin::get_metrics_both_side_divide(LSDRaster& rasterTempla
     if(*pudu_deer != NoDataValue && raster_node_basin[*pudu_deer] != NoDataValue)
     {
       flowpy.retrieve_current_row_and_col(*pudu_deer,row,col);
-      if(rasterTemplate.get_data_element(row,col) != NoDataValue ) 
+      if(rasterTemplate.get_data_element(row,col) != NoDataValue )
       {
 
         if(raster_node_basin[*pudu_deer])
@@ -1673,9 +1714,9 @@ map<string,float> LSDBasin::get_metrics_both_side_divide(LSDRaster& rasterTempla
 }
 
 
-// This move a square window along the drainage divide and compute the statistics in and out of the basin. Used to compare 
-// the slope/elevetion/lithology/... 
-// I'll code a non square version at some point! 
+// This move a square window along the drainage divide and compute the statistics in and out of the basin. Used to compare
+// the slope/elevetion/lithology/...
+// I'll code a non square version at some point!
 // BG - work in progress (on this topic, not on myself, or maybe, what does that even mean?)
 
 void LSDBasin::square_window_stat_drainage_divide(LSDRaster& rasterTemplate, LSDFlowInfo& flowpy, int size_window)
@@ -1715,9 +1756,9 @@ void LSDBasin::square_window_stat_drainage_divide(LSDRaster& rasterTemplate, LSD
 
   // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- Not working after that
 
-  
 
-  
+
+
   // loop through the perimeter
   for(map<int,vector<float> >::iterator noodle = DD_map.begin(); noodle != DD_map.end(); noodle++)
   {
@@ -1743,14 +1784,14 @@ void LSDBasin::square_window_stat_drainage_divide(LSDRaster& rasterTemplate, LSD
     if(nodes_to_test.size()>0)
     {
       map<string, float>  temp_map = get_metrics_both_side_divide(rasterTemplate,flowpy, nodes_to_test, raster_node_basin);
-    
+
       // cout << "done"<< endl;
       temp_map["ID"] = perimeter_index; // I am adding an unique index to then sort the data in python by this index
       temp_map["value_at_DD"] = rasterTemplate.get_data_element(row,col);
-      stats_around_perimeter_window[this_node] = temp_map; 
+      stats_around_perimeter_window[this_node] = temp_map;
       // clearing the vector and start again
     }
-    nodes_to_test.clear(); 
+    nodes_to_test.clear();
     perimeter_index++;
   }
 
@@ -1813,13 +1854,13 @@ void LSDBasin::write_windowed_stats_around_drainage_divide_csv(string filename, 
     flowpy.retrieve_current_row_and_col(this_node,row,col);
     flowpy.get_lat_and_long_locations(row, col, latitude, longitude, Converter);
     flowpy.get_x_and_y_locations(row, col, this_x, this_y);
-      
+
       data_out.precision(9);
       data_out << this_x << ","
                    << this_y << ","
                    << latitude << ","
                    << longitude << ",";
-      data_out.precision(5); 
+      data_out.precision(5);
       data_out << map_of_dist_perim[iter->first] << ","
                << this_map["value_at_DD"] << ","
                << this_map["mean"] << ","
@@ -1853,7 +1894,7 @@ void LSDBasin::write_windowed_stats_around_drainage_divide_csv(string filename, 
 // BG - 26/12/2017 - "hon hon hon" (French Santa, unpublished)
 void LSDBasin::preprocess_DD_metrics(LSDFlowInfo flowpy)
 {
-  
+
   // First setting the perimeter
   set_Perimeter(flowpy);
   organise_perimeter(flowpy);
@@ -1966,7 +2007,7 @@ void LSDBasin::organise_perimeter(LSDFlowInfo& flowpy)
             // debugf
             flowpy.get_x_and_y_from_current_node(node,x2,y2);
             cout << row << " || " << col << endl;
-            cout << x2 << " " <<y2 <<endl; 
+            cout << x2 << " " <<y2 <<endl;
             cout << Perimeter_nodes_sorted.size() << endl;
 
           }
@@ -1974,7 +2015,7 @@ void LSDBasin::organise_perimeter(LSDFlowInfo& flowpy)
       }
 
     }
-    
+
     ting = true;
 
   }
@@ -2079,8 +2120,8 @@ void LSDBasin::clean_perimeter(LSDFlowInfo& flowpy)
           cptndd_tot++;
         }
       }
-      
-      
+
+
     }
     for(int i = 0; i < 2; i++)
     {
@@ -2151,7 +2192,7 @@ void LSDBasin::clean_perimeter(LSDFlowInfo& flowpy)
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// Added lines to separate with LSDCosmoBasin =-=-=-=-=-=-=-=-=- 
+// Added lines to separate with LSDCosmoBasin =-=-=-=-=-=-=-=-=-
 // I got lost each time I try to find it =-=-=-=-=-=-=-=-=-=-=-=
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
