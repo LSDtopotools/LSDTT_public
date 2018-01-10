@@ -235,9 +235,23 @@ int main (int nNumberofArgs,char *argv[])
   // Now create the network
   LSDJunctionNetwork JunctionNetwork(sources, FlowInfo);
 
+  if (this_bool_map["print_junctions_to_csv"])
+  {
+    cout << "I am writing the junctions to csv." << endl;
+    string channel_csv_name = OUT_DIR+OUT_ID+"_JN.csv";
+    JunctionNetwork.print_junctions_to_csv(FlowInfo, channel_csv_name);
+
+    if ( this_bool_map["convert_csv_to_geojson"])
+    {
+      string gjson_name = OUT_DIR+OUT_ID+"_JN.geojson";
+      LSDSpatialCSVReader thiscsv(channel_csv_name);
+      thiscsv.print_data_to_geojson(gjson_name);
+    }
+  }
+
   // now get the basin perimeters - this is for getting the hypsometry
   // of the perimeter to look for drainage captures
-  if( this_bool_map["get_basin_perimeter"])
+  if (this_bool_map["get_basin_perimeter"])
   {
     cout << "I am getting the basin perimeters" << endl;
     string perimeter_name = OUT_DIR+OUT_ID+"_Perimeters.csv";
@@ -265,7 +279,13 @@ int main (int nNumberofArgs,char *argv[])
     }
   }
 
+  // get the channel profiles for each basin to look at the hypsometries
+  if ( this_bool_map["get_channel_profiles"])
+  {
 
+  }
+
+  // get all junction angles to test for captures.
   if( this_bool_map["print_junction_angles_to_csv"])
   {
     cout << "I am testing the junction angle code." << endl;
