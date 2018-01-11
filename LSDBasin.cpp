@@ -1945,7 +1945,9 @@ void LSDBasin::preprocess_DD_metrics(LSDFlowInfo flowpy)
 
   // First setting the perimeter
   set_Perimeter(flowpy);
-  organise_perimeter(flowpy);
+  clean_perimeter(flowpy);
+
+  //organise_perimeter(flowpy);
 
   // implementing a global map containing vector of info for each nodes atm <x,y> later on distance from origin
   int this_node = 0;
@@ -1997,7 +1999,6 @@ void LSDBasin::organise_perimeter(LSDFlowInfo& flowpy)
   bool ting = true;
 
   // preprocessing stage to get rid of some points
-  clean_perimeter(flowpy);
   print_perimeter_to_csv(flowpy, "/home/boris/Desktop/LSD/capture/sorbas/peritest.csv");
 
 
