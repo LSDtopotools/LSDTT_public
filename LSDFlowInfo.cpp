@@ -8222,6 +8222,7 @@ float LSDFlowInfo::get_Euclidian_distance(int node_A, int node_B)
 
   return dist;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Snap a given point to the nearest hilltop pixel, within a search radius.

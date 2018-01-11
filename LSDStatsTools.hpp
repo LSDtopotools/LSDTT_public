@@ -498,6 +498,9 @@ double deg(double radians);
 // Get the angle between two vectors
 float angle_between_vectors(float x1, float y1, float x2, float y2);
 
+// Get the clockwise angle between two vectors
+float clockwise_angle_between_vectors(float x1, float y1, float x2, float y2);
+
 // Get the angle between two vectors in radians
 // We need to calculate the (x1,y1) and (x2,y2) coordinates by moving
 // the vectors to intercept (0,0)
@@ -732,7 +735,7 @@ vector<int> is_outlier_MZS(vector<float> vecval, float NDV, float threshold);
 // I am using this review paper about it for the implementation:
 // Sheather 2004 - DOI 10.1214/088342304000000297
 // I may try to find a recent one but this last is quite well cited and post 2000 and clear ( I don't want to be a SHEATER ahah, I am not sure if this can be consider as a joke but I am laugthing)
-// 
+//
 // This is the fully automated version, an attempt to provide a non parametric KDE estimation
 //
 // Work in progress, like a lot
@@ -743,8 +746,8 @@ vector<float> gaussian_KDE(vector<float> vpoint, float h);
 
 
 //-------------------------------------------------------------------
-// The code was written by Vikas C. Raykar 
-// and is copyrighted under the Lessr GPL: 
+// The code was written by Vikas C. Raykar
+// and is copyrighted under the Lessr GPL:
 //
 // Copyright (C) 2006 Vikas C. Raykar
 //
@@ -753,14 +756,14 @@ vector<float> gaussian_KDE(vector<float> vpoint, float h);
 // published by the Free Software Foundation; version 2.1 or later.
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-// See the GNU Lesser General Public License for more details. 
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public
 // License along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, 
-// MA 02111-1307, USA.  
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+// MA 02111-1307, USA.
 //
-// The author may be contacted via email at: vikas(at)cs(.)umd(.)edu 
+// The author may be contacted via email at: vikas(at)cs(.)umd(.)edu
 //-------------------------------------------------------------------
 
 //-------------------------------------------------------------
@@ -772,18 +775,18 @@ vector<float> gaussian_KDE(vector<float> vpoint, float h);
 // Fast implementation of the r^{th} kernel density derivative
 // estimate based on the Gaussian kernel.
 // [HANDLES ONLY UNIVARIATE CASE]
-// 
+//
 // Data is assumed to be scaled to the unit interval [0 1].
 //
 // Implementation based on:
 //
-// V. C. Raykar and R. Duraiswami 'Very fast optimal bandwidth 
+// V. C. Raykar and R. Duraiswami 'Very fast optimal bandwidth
 // selection for univariate kernel density estimation'
-// Technical Report CS-TR-4774, Dept. of Computer 
+// Technical Report CS-TR-4774, Dept. of Computer
 // Science, University of Maryland, College Park.
 // ------------------------------------------------------------
 //
-// INPUTS [7] 
+// INPUTS [7]
 // ----------------
 // NSources     --> number of sources, N.
 // MTargets     --> number of targets, M.
@@ -795,7 +798,7 @@ vector<float> gaussian_KDE(vector<float> vpoint, float h);
 //
 // OUTPUTS [1]
 // ----------------
-// pDensityDerivative --> pointer the the evaluated Density 
+// pDensityDerivative --> pointer the the evaluated Density
 //             Derivative, pD(M).
 //-------------------------------------------------------------------
 
@@ -804,7 +807,7 @@ vector<float> gaussian_KDE(vector<float> vpoint, float h);
 
 class UnivariateDensityDerivative{
   public:
-    //constructor 
+    //constructor
     UnivariateDensityDerivative(int NSources,
       int MTargets,
       double *pSources,
@@ -820,7 +823,7 @@ class UnivariateDensityDerivative{
     //function to evaluate the Density Derivative
     void Evaluate();
 
-    
+
     //function to evaluate the Hermite polynomial.
     double hermite(double x, int r);
 
@@ -861,7 +864,7 @@ class UnivariateDensityDerivative{
     void compute_B();
 
 
-  
+
 };
 
 #endif

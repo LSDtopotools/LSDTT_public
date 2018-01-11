@@ -73,9 +73,9 @@ using namespace JAMA;
 #ifndef StatsTools_CPP
 #define StatsTools_CPP
 
-// Specific fpor KDE estimation implementation 
-#define  min_KDE(a,b) (((a)<(b))?(a):(b)) 
-#define  max_KDE(a,b) (((a)>(b))?(a):(b)) 
+// Specific fpor KDE estimation implementation
+#define  min_KDE(a,b) (((a)<(b))?(a):(b))
+#define  max_KDE(a,b) (((a)>(b))?(a):(b))
 #define  P_UL 500
 #define  R 1.0
 
@@ -5705,6 +5705,43 @@ float angle_between_vectors(float x1, float y1, float x2, float y2)
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Get the angle between the vector between points (x1, y1) and (x2, y2) and a reference vector pointing N in a clockwise direction
+// FJC 11/01/18
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float clockwise_angle_between_vectors(float x1, float y1, float x2, float y2)
+{
+  float pi = 3.14159265;
+  float angle;
+  float vector_x = x2-x1;
+  float vector_y = y2-y1;
+
+  float len_vector = hypot(vector_x, vector_y);
+
+  // no angle if len_vector = 0
+  if (len_vector == 0) { angle = 0; }
+
+  // normalise vector: v/||v||
+  float normalised_x = vector_x/len_vector;
+  float normalised_y = vector_y/len_vector;
+
+  // reference vector [0,1]
+  float ref_x = 0;
+  float ref_y = 1;
+
+  float dot = normalised_x*ref_x + normalised_y*ref_y;      // dot product
+  float det = normalised_x*ref_y - normalised_y*ref_x;      // determinant
+  angle = atan2(det, dot);
+
+  // counter clockwise, subtract from 2*pi (360 degrees)
+  if (angle < 0)
+  {
+    angle = (2*pi)+angle;
+  }
+
+  return angle;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Get the angle between two vectors in radians
 // We need to calculate the (x1,y1) and (x2,y2) coordinates by moving
 // the vectors to intercept (0,0)
@@ -7495,7 +7532,7 @@ vector<float> get_value_from_map_and_node(vector<int> vecnode, map<int,float>& m
 
   for(gorg = vecnode.begin(); gorg != vecnode.end() ; gorg ++)
   {
-    vecout.push_back(map_int_float[*gorg]); 
+    vecout.push_back(map_int_float[*gorg]);
   }
   return vecout;
 }
@@ -7610,7 +7647,7 @@ vector<int> is_outlier_MZS(vector<float> vecval, float NDV, float threshold)
 // I am using this review paper about it for the implementation:
 // Sheather 2004 - DOI 10.1214/088342304000000297
 // I may try to find a recent one but this last is quite well cited and post 2000 and clear ( I don't want to be a SHEATER ahah, I am not sure if this can be consider as a joke but I am laugthing)
-// 
+//
 // This is the fully automated version, an attempt to provide a non parametric KDE estimation
 //
 // Work in progress, like a lot
@@ -7630,7 +7667,7 @@ pair<float,vector<float> > auto_KDE(vector<float> vpoint)
   // TODO :: This method
   // However, let's try a more efficient method first
   // Terrel (1990) - a rule of the thumb first estimation
-  float mean = get_mean(vpoint); 
+  float mean = get_mean(vpoint);
   float S =  get_standard_deviation(vpoint,mean);
   int n = vpoint.size();
   float h = 1.144 * S * pow(n, -0.2); // Terrel(1990) detailed and extracted Sheater (2004) section 3.1
@@ -7646,7 +7683,7 @@ pair<float,vector<float> > auto_KDE(vector<float> vpoint)
 
 
 // KDE calculation for a vector of float using a gaussian kernel with a bandwith h
-// 
+//
 // BG - 04/01/2018
 vector<float> gaussian_KDE(vector<float> vpoint, float h)
 {
@@ -7706,8 +7743,8 @@ vector<vector<float> > sort_vectors_from_one(vector<float> to_sort, vector<vecto
   // first step is to create a vector of pair<value,idx>
   vector<pair<float,int> > voult;
   pair<float,int> this_pair;
-  
-  
+
+
   for(size_t bagel = 0 ; bagel < to_sort.size() ; bagel++)
   {
     this_pair = make_pair(to_sort[bagel] , bagel);
@@ -7773,7 +7810,7 @@ vector<float> reorganize_vector_from_new_idx(vector<float> vecval, vector<int> v
 // #########################################################################################
 //-------------------------------------------------------------------
 // The original code was written by Vikas C. Raykar
-// and is copyrighted under the Lesser GPL: 
+// and is copyrighted under the Lesser GPL:
 //
 // Copyright (C) 2006 Vikas C. Raykar
 //
@@ -7782,14 +7819,14 @@ vector<float> reorganize_vector_from_new_idx(vector<float> vecval, vector<int> v
 // published by the Free Software Foundation; version 2.1 or later.
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-// See the GNU Lesser General Public License for more details. 
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the GNU Lesser General Public License for more details.
 // You should have received a copy of the GNU Lesser General Public
 // License along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, 
-// MA 02111-1307, USA.  
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+// MA 02111-1307, USA.
 //
-// The author may be contacted via email at: vikas(at)cs(.)umd(.)edu 
+// The author may be contacted via email at: vikas(at)cs(.)umd(.)edu
 //-------------------------------------------------------------------
 
 //-------------------------------------------------------------
@@ -7808,25 +7845,25 @@ vector<float> reorganize_vector_from_new_idx(vector<float> vecval, vector<int> v
 //-------------------------------------------------------------------
 // Constructor.
 //
-// PURPOSE                                                    
-// -------   
-// Initialize the class. 
+// PURPOSE
+// -------
+// Initialize the class.
 // Read the parameters.
 // Choose the parameter for the algorithm.
 // Space subdivision.
 // Compute the constant a.
 // Compute B or all the clusters.
 //
-// PARAMETERS                                                      
+// PARAMETERS
 // ----------
 // NSources         --> number of sources, N.
 // MTargets         --> number of targets, M.
 // pSources         --> pointer to sources, px(N).
 // pTargets           --> pointer to the targets, py(M).
 // Bandwidth      --> the source bandwidth, h.
-// Order              --> order of the derivative, r.  
+// Order              --> order of the derivative, r.
 // epsilon            --> desired error, eps.
-// pDensityDerivative --> pointer the the evaluated Density 
+// pDensityDerivative --> pointer the the evaluated Density
 //-------------------------------------------------------------------
 
 
@@ -7838,7 +7875,7 @@ UnivariateDensityDerivative::UnivariateDensityDerivative(int NSources,
         int Order,
       double epsilon,
       double *pDensityDerivative)
-{ 
+{
   // Read the arguments.
 
   N=NSources;
@@ -7850,7 +7887,7 @@ UnivariateDensityDerivative::UnivariateDensityDerivative(int NSources,
   pD=pDensityDerivative;
   eps=epsilon;
 
-  
+
   h_square=h*h;
   two_h_square=2*h_square;
 
@@ -7858,7 +7895,7 @@ UnivariateDensityDerivative::UnivariateDensityDerivative(int NSources,
   q=(pow(-1,r))/(sqrt(2*pi)*N*(pow(h,(r+1))));
   //printf("q=%f \n",q);
 
-  
+
   // Choose the parameters for the algorithm.
 
   choose_parameters();
@@ -7897,7 +7934,7 @@ UnivariateDensityDerivative::~UnivariateDensityDerivative()
 
 int
 UnivariateDensityDerivative::factorial(int n){
-  
+
   int fact=1;
 
   for ( int i = 1; i <= n; i++){
@@ -7945,14 +7982,14 @@ UnivariateDensityDerivative::choose_parameters(){
   double error=1;
   double temp=1;
   double comp_eps=eps/r_term;
-    
+
   while((error > comp_eps) & (p <= P_UL)){
     p++;
     double b=min_KDE(((rx+sqrt((rx_square)+(8*p*h_square)))/2),ry);
     double c=rx-b;
     temp=temp*(((rx*b)/h_square)/p);
-    error=temp*(exp(-(c*c)/2*two_h_square));      
-  } 
+    error=temp*(exp(-(c*c)/2*two_h_square));
+  }
   p=p+1;
 
 
@@ -7990,7 +8027,7 @@ UnivariateDensityDerivative::space_sub_division(){
 //-------------------------------------------------------------------
 // Compute the contant term a_{lm}.
 // l=0...floor(r/2)
-// m=0...r-2l 
+// m=0...r-2l
 //-------------------------------------------------------------------
 
 void
@@ -8017,7 +8054,7 @@ UnivariateDensityDerivative::compute_a(){
 
   num_of_a_terms=0;
   for(int l=0; l <= (int)floor((double)r/2); l++){
-    for(int m=0; m <= r-(2*l); m++){      
+    for(int m=0; m <= r-(2*l); m++){
       num_of_a_terms++;
     }
   }
@@ -8030,7 +8067,7 @@ UnivariateDensityDerivative::compute_a(){
     for(int m=0; m <= r-(2*l); m++){
       a_terms[k]=(l_constant[l]*m_constant[m]*r_factorial)/((double)factorial(r-(2*l)-m));
       //printf("%f \n",a_terms[k]);
-      k++;      
+      k++;
     }
   }
   delete []l_constant;
@@ -8042,7 +8079,7 @@ UnivariateDensityDerivative::compute_a(){
 // Compute the contant term B^{n}_{km} for all the clusters.
 // n=0...K-1
 // k=0...p-1
-// m=0...r 
+// m=0...r
 //-------------------------------------------------------------------
 
 void
@@ -8107,7 +8144,7 @@ UnivariateDensityDerivative::compute_B(){
 
   delete []k_factorial;
   delete []temp3;
-  
+
 
 }
 
@@ -8129,7 +8166,7 @@ UnivariateDensityDerivative::Evaluate()
 
   for(int j=0; j<M; j++){
     pD[j]=0.0;
-    
+
     int target_cluster_number=min_KDE((int)floor(py[j]/rx),K-1);
     double temp1=py[j]-pClusterCenter[target_cluster_number];
     double dist=abs(temp1);
@@ -8154,7 +8191,7 @@ UnivariateDensityDerivative::Evaluate()
         }
       }
       //
-        
+
 
       target_cluster_number++;
       temp1=py[j]-pClusterCenter[target_cluster_number];
@@ -8193,7 +8230,7 @@ UnivariateDensityDerivative::Evaluate()
 
   }
 
-  
+
   delete []temp3;
 }
 

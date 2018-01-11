@@ -249,6 +249,13 @@ int main (int nNumberofArgs,char *argv[])
     }
   }
 
+  if (this_bool_map["print_stream_order_raster"])
+  {
+    LSDIndexRaster SOArray = JunctionNetwork.StreamOrderArray_to_LSDIndexRaster();
+    string SO_raster_name = OUT_DIR+OUT_ID+"_SO";
+    SOArray.write_raster(SO_raster_name,raster_ext);
+  }
+
   // now get the basin perimeters - this is for getting the hypsometry
   // of the perimeter to look for drainage captures
   if (this_bool_map["get_basin_perimeter"])
@@ -257,19 +264,19 @@ int main (int nNumberofArgs,char *argv[])
     string perimeter_name = OUT_DIR+OUT_ID+"_Perimeters.csv";
 
     // for now, just get one of the perimeters.
-    int JunctionNumber = 0;
+    int JunctionNumber = 8662;
 
     // get the node index of this junction
     int basin_node = JunctionNetwork.get_Node_of_Junction(JunctionNumber);
 
     // now get the perimeter
     vector<int> perimeter_vec = FlowInfo.basin_edge_extractor(basin_node, topography_raster);
-    FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(perimeter_vec, perimeter_name);
+    //FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(perimeter_vec, perimeter_name);
 
     LSDBasin ABasin(JunctionNumber, FlowInfo, JunctionNetwork);
     LSDRaster ThisBasin = ABasin.write_raster_data_to_LSDRaster(filled_topography, FlowInfo);
     ThisBasin.write_raster((OUT_DIR+OUT_ID+"_Perimeters"),"bil");
-    ABasin.print_perimeter_hypsometry_to_csv(FlowInfo, perimeter_name, filled_topography);
+    ABasin.print_perimeter_hypsometry_to_csv(FlowInfo, perimeter_vec, perimeter_name, filled_topography);
 
     if ( this_bool_map["convert_csv_to_geojson"])
     {

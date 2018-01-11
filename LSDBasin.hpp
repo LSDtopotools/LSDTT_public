@@ -395,10 +395,12 @@ class LSDBasin
   /// @brief Prints the perimeter nodes to a csv file plus elevations
   /// @param FlowInfo the LSDFlowInfo object
   /// @param string perimeter_fname
+  /// @param perimeter_nodes vector of perimeter nodes that can be passed. Pass an empty vector if you want to use
+  /// the default perimeter finder.
   /// @param ElevationRaster elevation raster
   /// @author FJC
   /// @date 10/01/18
-  void print_perimeter_hypsometry_to_csv(LSDFlowInfo& FlowInfo, string perimeter_fname, LSDRaster& ElevationRaster);
+  void print_perimeter_hypsometry_to_csv(LSDFlowInfo& FlowInfo, vector<int> perimeter_nodes, string perimeter_fname, LSDRaster& ElevationRaster);
 
   /// @brief Set the four different hillslope length measurements for the basin.
   /// @param FlowInfo Flowinfo object.

@@ -819,36 +819,84 @@ void LSDBasin::print_perimeter_to_csv(LSDFlowInfo& FlowInfo, string perimeter_fn
 // Also prints the elevations so can investigate the perimeter hypsometry
 // FJC 10/01/18
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDBasin::print_perimeter_hypsometry_to_csv(LSDFlowInfo& FlowInfo, string perimeter_fname, LSDRaster& ElevationRaster)
+void LSDBasin::print_perimeter_hypsometry_to_csv(LSDFlowInfo& FlowInfo, vector<int> perimeter_nodes, string perimeter_fname, LSDRaster& ElevationRaster)
 {
-  // make sure we have found the perimeter
-  if (int(Perimeter_nodes.size()) == 0)
+  if (int(perimeter_nodes.size()) == 0)
   {
-    set_Perimeter(FlowInfo);
+    // make sure we have found the perimeter
+    if (int(Perimeter_nodes.size()) == 0)
+    {
+      set_Perimeter(FlowInfo);
+    }
+  }
+  else
+  {
+    Perimeter_nodes = perimeter_nodes;
   }
 
   // open the file
   ofstream perim_out;
   perim_out.open(perimeter_fname.c_str());
-  perim_out << "node,elevation,x,y,latitude,longitude" << endl;
+  perim_out << "node_key,node,elevation,x,y,latitude,longitude,dist_from_outlet_node,angle_between_outlet_node" << endl;
   perim_out.precision(9);
 
-  float curr_x,curr_y;
   double curr_lat,curr_long;
 
   LSDCoordinateConverterLLandUTM converter;
   int n_nodes = int(Perimeter_nodes.size());
+  cout << "N perimeter nodes: " << n_nodes << endl;
+
+  vector<float> perimeter_x, perimeter_y;
+  vector<float> A; // vector to store angles between each point and the basin centroid
+  // get x and y of centroid
+  float Centroid_x = (Centroid_j * DataResolution) + XMinimum;
+  float Centroid_y = ((Centroid_i - NRows) * DataResolution) + YMinimum;
+
+  for(int i =0; i< n_nodes; i++)
+  {
+    float curr_x, curr_y;
+    // get the coordinates
+    FlowInfo.get_x_and_y_from_current_node(Perimeter_nodes[i], curr_x, curr_y);
+    perimeter_x.push_back(curr_x);
+    perimeter_y.push_back(curr_y);
+
+    // get angle between this and a reference vector going N from the centroid
+    float angle = clockwise_angle_between_vectors(Centroid_x, Centroid_y, curr_x, curr_y);
+    A.push_back(angle);
+
+  }
+
+  //sort the data by angle and reorder the coordinates based on the sort
+  vector<float> A_sorted;
+  vector<size_t> index_map;
+  vector<float> Reordered_X;
+  vector<float> Reordered_Y;
+  vector<int> Reordered_nodes;
+
+  matlab_float_sort(A, A_sorted, index_map);
+  matlab_float_reorder(perimeter_x, index_map, Reordered_X);
+  matlab_float_reorder(perimeter_y, index_map, Reordered_Y);
+  matlab_int_reorder(Perimeter_nodes, index_map, Reordered_nodes);
+
   for(int i = 0; i< n_nodes; i++)
   {
     // get this elevation
     int this_row, this_col;
-    FlowInfo.retrieve_current_row_and_col(Perimeter_nodes[i], this_row, this_col);
+    FlowInfo.retrieve_current_row_and_col(Reordered_nodes[i], this_row, this_col);
     float this_elev = ElevationRaster.get_data_element(this_row, this_col);
+
     // get the coordinates
-    FlowInfo.get_x_and_y_from_current_node(Perimeter_nodes[i], curr_x, curr_y);
-    FlowInfo.get_lat_and_long_from_current_node(Perimeter_nodes[i], curr_lat, curr_long,converter);
+    FlowInfo.get_lat_and_long_from_current_node(Reordered_nodes[i], curr_lat, curr_long,converter);
+
+    // get the euclidian distance from the outlet junction
+    int outlet_node = FlowInfo.retrieve_node_from_row_and_column(Outlet_i, Outlet_j);
+    float dist = FlowInfo.get_Euclidian_distance(outlet_node, Reordered_nodes[i]);
+
+    float outlet_x, outlet_y;
+    FlowInfo.get_x_and_y_from_current_node(outlet_node, outlet_x, outlet_y);
+
     // write to csv
-    perim_out << Perimeter_nodes[i] << "," << this_elev << "," << curr_x << "," << curr_y <<"," << curr_lat << "," << curr_long << endl;
+    perim_out << i << "," << Reordered_nodes[i] << "," << this_elev << "," << Reordered_X[i] << "," << Reordered_Y[i] <<"," << curr_lat << "," << curr_long << "," << dist << "," << A_sorted[i] << endl;
   }
   perim_out.close();
 
