@@ -22,7 +22,7 @@ int main (int nNumberofArgs,char *argv[])
 
 
 	// TVD
-	const double lambda = 12.6;
+	float lambda = 1;
 	mouss_TVD = TV1D_denoise_v2(mouss, lambda);
 
 	// checking the results

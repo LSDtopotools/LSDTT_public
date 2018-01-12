@@ -2005,7 +2005,7 @@ void LSDChiTools::get_previous_mchi_for_all_sources(LSDFlowInfo& Flowinfo)
 // Leaving me time to develop what will be the final cleanest one and making easier the subdivision
 // in loads of little functions rather than one big script-like one. OBJECT ORIENTED POWER ˁ˚ᴥ˚ˀ
 // BG 
-void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th)
+void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th, float lambda_TVD)
 {
 
   cout << "Getting ready for the knickpoint detection algorithm ...";
@@ -2018,7 +2018,7 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   lump_my_ksn(5);
 
   // Trying some preprocessing that may replace lumping
-  TVD_on_my_ksn(2);
+  TVD_on_my_ksn(lambda_TVD);
 
   // This will increment maps with source keys as key and various metrics such as river length, Chi lenght...
   compute_basic_matrics_per_source_keys(FlowInfo);
@@ -2132,7 +2132,7 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int>& vecnode)
 //            DOI: 10.1109/LSP.2013.2278339               =
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void  LSDChiTools::TVD_on_my_ksn(const float lambda)
+void  LSDChiTools::TVD_on_my_ksn( float lambda)
 {
   // Set the variables
   map<int,vector<int> >::iterator chirac;
@@ -2146,7 +2146,7 @@ void  LSDChiTools::TVD_on_my_ksn(const float lambda)
 }
 
 
-void  LSDChiTools::TVD_this_vec(vector<int> this_vec, const float lambda)
+void  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda)
 {
 
   vector<float> this_val;
@@ -2157,8 +2157,8 @@ void  LSDChiTools::TVD_this_vec(vector<int> this_vec, const float lambda)
     int this_node = *chirac;
     this_val.push_back(M_chi_data_map[this_node]);
   }
-
-  vector<float> this_val_TVDed = TV1D_denoise_v2(this_val, lambda);
+  const float clambda = lambda;
+  vector<float> this_val_TVDed = TV1D_denoise_v2(this_val, clambda);
 
   for(size_t plo = 0; plo < this_vec.size() ; plo++ )
   {

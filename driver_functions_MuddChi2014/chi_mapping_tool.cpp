@@ -155,7 +155,8 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["force_skip_knickpoint_analysis"] = 0;
   int_default_map["force_n_iteration_knickpoint_analysis"] = 1;
   float_default_map["MZS_threshold"] = 3.5;
-
+  float_default_map["TVD_lambda"] = 3;
+ 
   // basic parameters for calculating chi
   float_default_map["A_0"] = 1;
   float_default_map["m_over_n"] = 0.5;
@@ -1615,7 +1616,7 @@ int main (int nNumberofArgs,char *argv[])
  
 
     // Actual knickpoint calculation
-    ChiTool.ksn_knickpoint_automator(FlowInfo, OUT_DIR, OUT_ID,this_float_map["MZS_threshold"]);
+    ChiTool.ksn_knickpoint_automator(FlowInfo, OUT_DIR, OUT_ID,this_float_map["MZS_threshold"], this_float_map["TVD_lambda"]);
 
 
 
