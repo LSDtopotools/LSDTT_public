@@ -2016,7 +2016,9 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
 
   // Optional (?) lumping of the m_chi to get more deterministic segments
   lump_my_ksn(5);
-  // TEST THE TOTAL VARIATION DENOISING FILTER
+
+  // Trying some preprocessing that may replace lumping
+  TVD_on_my_ksn(2);
 
   // This will increment maps with source keys as key and various metrics such as river length, Chi lenght...
   compute_basic_matrics_per_source_keys(FlowInfo);
@@ -2042,7 +2044,7 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   string this_name = OUT_DIR + OUT_ID + "_ksnkp_raw.csv";
   cout << "Printing data into csv files ...";
   print_raw_ksn_knickpoint(FlowInfo, this_name);
-  this_name = OUT_DIR + OUT_ID + "_ksnkp_bandwidth.csv";
+  this_name = OUT_DIR + OUT_ID + "_ksnkp_SK.csv";
   print_bandwidth_ksn_knickpoint(this_name);
   this_name = OUT_DIR + OUT_ID + "_ksnkp_mchi.csv";
   print_mchisegmented_knickpoint_version(FlowInfo, this_name);
@@ -2122,6 +2124,48 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int>& vecnode)
   // implementing the global map
   map_node_source_key_kp[SK] = vecdif;
 
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//  Apply a Total Variation Denoising filter on the data  =
+//    Coded in LSDStatTools adapted from Condat L.2013    =
+//            DOI: 10.1109/LSP.2013.2278339               =
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void  LSDChiTools::TVD_on_my_ksn(const float lambda)
+{
+  // Set the variables
+  map<int,vector<int> >::iterator chirac;
+  vector<int> this_vec;
+  for(chirac = map_node_source_key.begin(); chirac != map_node_source_key.end() ; chirac ++)
+  {
+    this_vec = chirac->second;
+    TVD_this_vec(this_vec, lambda);
+  }
+
+}
+
+
+void  LSDChiTools::TVD_this_vec(vector<int> this_vec, const float lambda)
+{
+
+  vector<float> this_val;
+  vector<int>::iterator chirac = this_vec.begin();
+
+  for( ; chirac != this_vec.end() ; chirac++)
+  {
+    int this_node = *chirac;
+    this_val.push_back(M_chi_data_map[this_node]);
+  }
+
+  vector<float> this_val_TVDed = TV1D_denoise_v2(this_val, lambda);
+
+  for(size_t plo = 0; plo < this_vec.size() ; plo++ )
+  {
+    int this_node = this_vec[plo];
+    TVD_m_chi_map[this_node] = this_val_TVDed[plo];
+  }
+   
 }
 
 
@@ -7029,7 +7073,7 @@ void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, 
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "node,Y,X,latitude,longitude,chi,elevation,flow_distance,drainage_area,m_chi,lumped_ksn,b_chi,source_key,basin_key";
+  chi_data_out << "node,Y,X,latitude,longitude,chi,elevation,flow_distance,drainage_area,m_chi,lumped_ksn,TVD_ksn,b_chi,source_key,basin_key";
   if(have_segmented_elevation)
   {
     chi_data_out << ",segmented_elevation";
@@ -7070,6 +7114,7 @@ void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, 
                    << drainage_area_data_map[this_node] << ","
                    << M_chi_data_map[this_node] << ","
                    << lumped_m_chi_map[this_node] << ","
+                   << TVD_m_chi_map[this_node] << ","
                    << b_chi_data_map[this_node] << ","
                    << source_keys_map[this_node] << ","
                    << baselevel_keys_map[this_node];

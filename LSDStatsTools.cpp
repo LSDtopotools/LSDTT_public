@@ -8291,7 +8291,7 @@ The algorithm can operate in place, with output=input; in that case the input is
 
 See the Matlab code on my webpage for comments.
 */
-vector<float> TV1D_denoise_v2(vector<float> input,  const double lambda) {
+vector<float> TV1D_denoise_v2(vector<float> input,  const float lambda) {
   unsigned int width = input.size();
   vector<float> output(width);
   vector<float> indstart_low(width);

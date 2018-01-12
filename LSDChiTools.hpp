@@ -1195,6 +1195,9 @@ class LSDChiTools
     /// @date 08/01/2018
     void lump_this_vec(vector<int> this_vec, int n_nodlump);
 
+    void TVD_on_my_ksn(const float lambda);
+    void TVD_this_vec(vector<int> this_vec, const float lambda);
+
 
 
 
@@ -1297,6 +1300,8 @@ class LSDChiTools
     map<int,int> map_outlier_MZS_dksndchi;
     /// Map[node_index] = lumped m_chi
     map<int,float> lumped_m_chi_map;
+        /// Map[node_index] = TVDed m_chi
+    map<int,float> TVD_m_chi_map;
 
 
 
