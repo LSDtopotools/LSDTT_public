@@ -155,7 +155,7 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["force_skip_knickpoint_analysis"] = 0;
   int_default_map["force_n_iteration_knickpoint_analysis"] = 1;
   float_default_map["MZS_threshold"] = 3.5;
-  float_default_map["TVD_lambda"] = 3;
+  float_default_map["TVD_lambda"] = 10;
  
   // basic parameters for calculating chi
   float_default_map["A_0"] = 1;

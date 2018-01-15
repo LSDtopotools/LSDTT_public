@@ -8324,6 +8324,14 @@ The algorithm can operate in place, with output=input; in that case the input is
 See the Matlab code on my webpage for comments.
 */
 vector<float> TV1D_denoise_v2(vector<float> input,  float lambda) {
+
+
+  if(lambda == 0)
+  {
+    cout << "Lambda = 0, TVD will only be a minimization by the sum of squares" << endl ;
+  }
+
+
   unsigned int width = input.size();
   vector<float> output(width);
   vector<float> indstart_low(width);

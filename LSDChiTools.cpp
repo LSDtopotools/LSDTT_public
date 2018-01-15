@@ -2092,7 +2092,7 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int>& vecnode)
   // vector that will contain the nodes having a knickpoint
   vector<int> vecdif;
   // Bunch of floats
-  float dkdc = 0, dchi = 0, dksn = 0, this_ksn = lumped_m_chi_map[this_node], last_ksn = lumped_m_chi_map[last_node]; // Setting last and this ksn
+  float dkdc = 0, dchi = 0, dksn = 0, this_ksn = TVD_m_chi_map[this_node], last_ksn = TVD_m_chi_map[last_node]; // Setting last and this ksn
 
   // Looping through the nodes from the second one
   for( ; node != vecnode.end(); node++) // the first ";" is normal: it states that I have no initial conditions 
@@ -2157,7 +2157,7 @@ void  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda)
     int this_node = *chirac;
     this_val.push_back(M_chi_data_map[this_node]);
   }
-  const float clambda = lambda;
+  float clambda = lambda;
   vector<float> this_val_TVDed = TV1D_denoise_v2(this_val, clambda);
 
   for(size_t plo = 0; plo < this_vec.size() ; plo++ )
