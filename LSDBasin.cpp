@@ -852,6 +852,11 @@ void LSDBasin::print_perimeter_hypsometry_to_csv(LSDFlowInfo& FlowInfo, vector<i
   float Centroid_x = (Centroid_j * DataResolution) + XMinimum;
   float Centroid_y = ((Centroid_i - NRows) * DataResolution) + YMinimum;
 
+  // get outlet info
+  float outlet_x, outlet_y;
+  int outlet_node = FlowInfo.retrieve_node_from_row_and_column(Outlet_i, Outlet_j);
+  FlowInfo.get_x_and_y_from_current_node(outlet_node, outlet_x, outlet_y);
+
   for(int i =0; i< n_nodes; i++)
   {
     float curr_x, curr_y;
@@ -861,9 +866,9 @@ void LSDBasin::print_perimeter_hypsometry_to_csv(LSDFlowInfo& FlowInfo, vector<i
     perimeter_y.push_back(curr_y);
 
     // get angle between this and a reference vector going N from the centroid
-    float angle = clockwise_angle_between_vectors(Centroid_x, Centroid_y, curr_x, curr_y);
+    float angle = clockwise_angle_between_two_vectors(Centroid_x, Centroid_y, outlet_x, outlet_y, curr_x, curr_y);
     A.push_back(angle);
-
+    //cout << "ANGLE: " << angle << endl;
   }
 
   //sort the data by angle and reorder the coordinates based on the sort
@@ -889,11 +894,7 @@ void LSDBasin::print_perimeter_hypsometry_to_csv(LSDFlowInfo& FlowInfo, vector<i
     FlowInfo.get_lat_and_long_from_current_node(Reordered_nodes[i], curr_lat, curr_long,converter);
 
     // get the euclidian distance from the outlet junction
-    int outlet_node = FlowInfo.retrieve_node_from_row_and_column(Outlet_i, Outlet_j);
     float dist = FlowInfo.get_Euclidian_distance(outlet_node, Reordered_nodes[i]);
-
-    float outlet_x, outlet_y;
-    FlowInfo.get_x_and_y_from_current_node(outlet_node, outlet_x, outlet_y);
 
     // write to csv
     perim_out << i << "," << Reordered_nodes[i] << "," << this_elev << "," << Reordered_X[i] << "," << Reordered_Y[i] <<"," << curr_lat << "," << curr_long << "," << dist << "," << A_sorted[i] << endl;

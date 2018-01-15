@@ -5708,7 +5708,7 @@ float angle_between_vectors(float x1, float y1, float x2, float y2)
 // Get the angle between the vector between points (x1, y1) and (x2, y2) and a reference vector pointing N in a clockwise direction
 // FJC 11/01/18
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-float clockwise_angle_between_vectors(float x1, float y1, float x2, float y2)
+float clockwise_angle_between_vector_and_north(float x1, float y1, float x2, float y2)
 {
   float pi = 3.14159265;
   float angle;
@@ -5740,6 +5740,38 @@ float clockwise_angle_between_vectors(float x1, float y1, float x2, float y2)
 
   return angle;
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Get the angle between the vector between points (x1, y1) and (x2, y2) and a reference vector pointing N in a clockwise direction
+// FJC 11/01/18
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float clockwise_angle_between_two_vectors(float x0, float y0, float x1, float y1, float x2, float y2)
+{
+  float pi = 3.14159265;
+  float angle, new_angle;
+
+  float vector1_x = x1-x0;
+  float vector1_y = y1-y0;
+
+  float vector2_x = x2-x0;
+  float vector2_y = y2-y0;
+
+  if (vector1_x == vector2_x && vector1_y == vector2_y) { angle = 0; }
+
+  float dot = vector1_x*vector2_x + vector1_y*vector2_y;      // dot product
+  float det = vector1_x*vector2_y - vector1_y*vector2_x;      // determinant
+  angle = atan2(det, dot);
+
+  // counter clockwise, subtract from 2*pi (360 degrees)
+  if (angle < 0)
+  {
+    new_angle = (2*pi)+angle;
+  }
+  cout << "Angle: " << angle << " New angle: " << new_angle << endl;
+
+  return angle;
+}
+
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Get the angle between two vectors in radians
@@ -8242,9 +8274,9 @@ signal approximator, by Laurent Condat.
 
 Version 2.0, Aug. 30, 2017.
 
-Given a real vector y of length N and a real lambda>=0, the 
-goal is to compute the real vector x minimizing 
-    ||x-y||_2^2/2 + lambda.TV(x), 
+Given a real vector y of length N and a real lambda>=0, the
+goal is to compute the real vector x minimizing
+    ||x-y||_2^2/2 + lambda.TV(x),
 where ||x-y||_2^2 = sum_{n=1}^{N} (x[n]-y[n])^2 and
 TV(x) = sum_{n=1}^{N-1} |x[n+1]-x[n]|.
 
@@ -8255,19 +8287,19 @@ total variation denoising," IEEE Signal Proc. Letters, vol.
 It has worst case complexity O(N^2) but it is recognized as
 the fastest in practice (using the C code on my webpage).
 
-The present code is a C implementation of a NEW algorithm, 
-which combines the advantages of the v1 algorithm with the 
+The present code is a C implementation of a NEW algorithm,
+which combines the advantages of the v1 algorithm with the
 optimal O(N) complexity of the taut string algorithm.
 That is, it is exact, numerically robust (averages of values
 computed by Welford-Knuth running mean algorithm, not by sum
-divided by length), roughly as fast as the v1 algorithm, and 
+divided by length), roughly as fast as the v1 algorithm, and
 it has linear time complexity.
-Speed: the computation time of this C code is typically 
-85%-120% of the computation time of the C code of the v1. 
+Speed: the computation time of this C code is typically
+85%-120% of the computation time of the C code of the v1.
 
 In a nutshell, the algorithm is based on the classical Pool
-Adjacent Violators Algorithm for isotonic regression, to 
-maintain two nonincreasing and nondecreasing (instead of 
+Adjacent Violators Algorithm for isotonic regression, to
+maintain two nonincreasing and nondecreasing (instead of
 constant in the v1) lower and upper approximations of the
 signal.
 
@@ -8328,13 +8360,13 @@ vector<float> TV1D_denoise_v2(vector<float> input,  float lambda) {
               output_up_first=output_up_curr;
               indstart_up[j_up=jseg]=indjseg;
               } else output[indstart_up[j_up]]=output_up_curr;
-          } else 
+          } else
               output_up_curr=output[i]=input[indstart_up[++j_up]=i];
-            output_low_curr+=(input[i]-output_low_curr)/(i-indstart_low[j_low]+1);      
+            output_low_curr+=(input[i]-output_low_curr)/(i-indstart_low[j_low]+1);
             output[indjseg]=output_low_first;
             while ((j_low>jseg)&&(output_low_curr>=output[ind=indstart_low[j_low-1]]))
               output_low_curr+=(output[ind]-output_low_curr)*
-                  ((double)(indstart_low[j_low--]-ind)/(i-ind+1));              
+                  ((double)(indstart_low[j_low--]-ind)/(i-ind+1));
             if (j_low==jseg) {
               while ((output_low_curr>=output_up_first)&&(jseg<j_up)) {
               indjseg2=indstart_up[++jseg];
@@ -8344,7 +8376,7 @@ vector<float> TV1D_denoise_v2(vector<float> input,  float lambda) {
               output_up_first=output[indjseg];
               }
               if ((indstart_low[j_low=jseg]=indjseg)==i) output_low_first=output_up_first-twolambda;
-              else output_low_first=output_low_curr; 
+              else output_low_first=output_low_curr;
             } else output[indstart_low[j_low]]=output_low_curr;
         } else {
             output_up_curr+=((output_low_curr=output[i]=input[indstart_low[++j_low] = i])-
@@ -8384,11 +8416,11 @@ vector<float> TV1D_denoise_v2(vector<float> input,  float lambda) {
       while (indjseg<i) output[indjseg++]=output_up_first;
         output[indjseg]=input[i]-lambda;
     } else {
-          output_low_curr+=(input[i]+lambda-output_low_curr)/(i-indstart_low[j_low]+1);      
+          output_low_curr+=(input[i]+lambda-output_low_curr)/(i-indstart_low[j_low]+1);
           output[indjseg]=output_low_first;
           while ((j_low>jseg)&&(output_low_curr>=output[ind=indstart_low[j_low-1]]))
             output_low_curr+=(output[ind]-output_low_curr)*
-                  ((double)(indstart_low[j_low--]-ind)/(i-ind+1));              
+                  ((double)(indstart_low[j_low--]-ind)/(i-ind+1));
           if (j_low==jseg) {
             if (output_up_first>=output_low_curr)
               while (indjseg<=i) output[indjseg++]=output_low_curr;

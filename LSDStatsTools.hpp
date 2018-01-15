@@ -499,7 +499,10 @@ double deg(double radians);
 float angle_between_vectors(float x1, float y1, float x2, float y2);
 
 // Get the clockwise angle between two vectors
-float clockwise_angle_between_vectors(float x1, float y1, float x2, float y2);
+float clockwise_angle_between_vector_and_north(float x1, float y1, float x2, float y2);
+
+// get clockwise angle between two vectors specifying the origin
+float clockwise_angle_between_two_vectors(float x0, float y0, float x1, float y1, float x2, float y2);
 
 // Get the angle between two vectors in radians
 // We need to calculate the (x1,y1) and (x2,y2) coordinates by moving
