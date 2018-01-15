@@ -15,22 +15,27 @@ int main (int nNumberofArgs,char *argv[])
 	// generating random values
 	for (size_t it = 0; it <mouss.size(); it++)
 	{
-		float thisnumb  = ((double) rand() / (RAND_MAX)) + ((double) rand() / (RAND_MAX)) + 1 + ((double) rand() / (RAND_MAX)) *100  + ((double) rand() / (RAND_MAX)) *2000  ;
+		float thisnumb  =  ((double) rand() / (RAND_MAX)) *10  ;
 		// cout << thisnumb << endl;
 		mouss[it] = thisnumb;
 	}
 
 
 	// TVD
-	float lambda = 1;
+	float lambda = 0;
 	mouss_TVD = TV1D_denoise_v2(mouss, lambda);
 
+	ofstream  chi_data_out;
+	string filename = "test.csv";
+    chi_data_out.open(filename.c_str());
+    chi_data_out << "ID,original,TVD" << endl;
 	// checking the results
-	for (size_t it = 0; it <mouss.size(); it++)
+	for (int it = 0; it <mouss.size(); it++)
 	{
-		cout << mouss[it] << " -----> " << mouss_TVD[it] << endl;
+		//cout << mouss[it] << " -----> " << mouss_TVD[it] << endl;
+		chi_data_out << it << "," << mouss[it] << "," << mouss_TVD[it] << endl;
 
 	}
-
+    chi_data_out.close();
 	
 }
