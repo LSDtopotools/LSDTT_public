@@ -2099,7 +2099,7 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int>& vecnode)
   {
     // initializing the variables for this run
     this_node = *node;
-    this_ksn = lumped_m_chi_map[this_node];
+    this_ksn = TVD_m_chi_map[this_node];
     // if ksn has change, Implementing a raw knickpoint and calculating the d|ksn|/dchi
     if(this_ksn != last_ksn)
     {
@@ -2265,7 +2265,9 @@ void LSDChiTools::ksn_kp_KDE()
   {
     this_SK = jacques->first;
     vecnode = jacques->second;
-    KDE_vec_node_mchi(vecnode,this_SK);
+    if(vecnode.size()>0)
+     {KDE_vec_node_mchi(vecnode,this_SK);}
+
   }
 
 }
@@ -2326,13 +2328,15 @@ void LSDChiTools::ksn_knickpoint_outlier_automator(LSDFlowInfo& FlowInfo, float 
     
     this_SK = salazar->first;
     vecnode = salazar->second;
-    
-    vecval = get_value_from_map_and_node(vecnode,raw_dksndchi_kp_map);
-    vecoutlier_MZS_dkdc = is_outlier_MZS(vecval, NoDataValue, MZS_th);
-
-    for(size_t hi = 0; hi < vecnode.size(); hi++)
+    if(vecnode.size()>0)
     {
-      map_outlier_MZS_dksndchi[vecnode[hi]] = vecoutlier_MZS_dkdc[hi];
+      vecval = get_value_from_map_and_node(vecnode,raw_dksndchi_kp_map);
+      vecoutlier_MZS_dkdc = is_outlier_MZS(vecval, NoDataValue, MZS_th);
+
+      for(size_t hi = 0; hi < vecnode.size(); hi++)
+      {
+        map_outlier_MZS_dksndchi[vecnode[hi]] = vecoutlier_MZS_dkdc[hi];
+      }
     }
 
   }
