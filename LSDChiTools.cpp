@@ -2149,21 +2149,21 @@ void  LSDChiTools::TVD_on_my_ksn( float lambda)
 void  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda)
 {
 
-  vector<float> this_val;
+  vector<double> this_val;
   vector<int>::iterator chirac = this_vec.begin();
 
   for( ; chirac != this_vec.end() ; chirac++)
   {
     int this_node = *chirac;
-    this_val.push_back(M_chi_data_map[this_node]);
+    this_val.push_back((double)M_chi_data_map[this_node]);
   }
-  float clambda = lambda;
-  vector<float> this_val_TVDed = TV1D_denoise_v2(this_val, clambda);
+  double clambda = lambda;
+  vector<double> this_val_TVDed = TV1D_denoise_v2(this_val, clambda);
 
   for(size_t plo = 0; plo < this_vec.size() ; plo++ )
   {
     int this_node = this_vec[plo];
-    TVD_m_chi_map[this_node] = this_val_TVDed[plo];
+    TVD_m_chi_map[this_node] = (float)this_val_TVDed[plo];
   }
    
 }

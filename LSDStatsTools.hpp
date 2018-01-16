@@ -871,6 +871,6 @@ class UnivariateDensityDerivative{
 };
 
 
-vector<float> TV1D_denoise_v2(vector<float> input,  float lambda);
+vector<double> TV1D_denoise_v2(vector<double> input,  double lambda);
 
 #endif

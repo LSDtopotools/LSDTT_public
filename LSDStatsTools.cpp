@@ -8323,7 +8323,7 @@ The algorithm can operate in place, with output=input; in that case the input is
 
 See the Matlab code on my webpage for comments.
 */
-vector<float> TV1D_denoise_v2(vector<float> input,  float lambda) {
+vector<double> TV1D_denoise_v2(vector<double> input,  double lambda) {
 
 
   if(lambda == 0)
@@ -8333,15 +8333,15 @@ vector<float> TV1D_denoise_v2(vector<float> input,  float lambda) {
 
 
   unsigned int width = input.size();
-  vector<float> output(width);
-  vector<float> indstart_low(width);
-  vector<float> indstart_up(width);
+  vector<double> output(width);
+  vector<double> indstart_low(width);
+  vector<double> indstart_up(width);
   unsigned int j_low = 0, j_up = 0, jseg = 0, indjseg = 0, i=1, indjseg2, ind;
   double output_low_first = input[0]-lambda;
   double output_low_curr = output_low_first;
   double output_up_first = input[0]+lambda;
   double output_up_curr = output_up_first;
-  float twolambda=2.0*lambda;
+  double twolambda=2.0*lambda;
   if (width==1) {output = input;}
   else
   {
