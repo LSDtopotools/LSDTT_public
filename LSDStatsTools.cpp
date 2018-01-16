@@ -5767,7 +5767,6 @@ float clockwise_angle_between_two_vectors(float x0, float y0, float x1, float y1
   {
     new_angle = (2*pi)+angle;
   }
-  cout << "Angle: " << angle << " New angle: " << new_angle << endl;
 
   return angle;
 }

@@ -402,6 +402,13 @@ class LSDBasin
   /// @date 10/01/18
   void print_perimeter_hypsometry_to_csv(LSDFlowInfo& FlowInfo, vector<int> perimeter_nodes, string perimeter_fname, LSDRaster& ElevationRaster);
 
+  /// @brief Orders perimeter nodes from the outlet
+  /// @param FlowInfo the LSDFlowInfo object
+  /// @param perimeter_nodes vector of perimeter nodes
+  /// @author FJC
+  /// @date 16/01/18
+  vector<int> order_perimeter_nodes(LSDFlowInfo& FlowInfo, vector<int> perimeter_nodes);
+
   /// @brief Set the four different hillslope length measurements for the basin.
   /// @param FlowInfo Flowinfo object.
   /// @param HillslopeLengths LSDRaster of hillslope lengths from the hilltop flow routing method.
