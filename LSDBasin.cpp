@@ -846,61 +846,264 @@ void LSDBasin::print_perimeter_hypsometry_to_csv(LSDFlowInfo& FlowInfo, vector<i
   int n_nodes = int(Perimeter_nodes.size());
   cout << "N perimeter nodes: " << n_nodes << endl;
 
-  vector<float> perimeter_x, perimeter_y;
-  vector<float> A; // vector to store angles between each point and the basin centroid
-  // get x and y of centroid
-  float Centroid_x = (Centroid_j * DataResolution) + XMinimum;
-  float Centroid_y = ((Centroid_i - NRows) * DataResolution) + YMinimum;
+  // vector<float> perimeter_x, perimeter_y;
+  // vector<float> A; // vector to store angles between each point and the basin centroid
+  // // get x and y of centroid
+  // float Centroid_x = (Centroid_j * DataResolution) + XMinimum;
+  // float Centroid_y = ((Centroid_i - NRows) * DataResolution) + YMinimum;
+  //
+  // // get outlet info
+  // float outlet_x, outlet_y;
+  // int outlet_node = FlowInfo.retrieve_node_from_row_and_column(Outlet_i, Outlet_j);
+  // FlowInfo.get_x_and_y_from_current_node(outlet_node, outlet_x, outlet_y);
+  //
+  // float pi = 3.14159265;
+  //
+  // for(int i =0; i< n_nodes; i++)
+  // {
+  //   float curr_x, curr_y;
+  //   // get the coordinates
+  //   FlowInfo.get_x_and_y_from_current_node(Perimeter_nodes[i], curr_x, curr_y);
+  //   perimeter_x.push_back(curr_x);
+  //   perimeter_y.push_back(curr_y);
+  //
+  //   // get angle between this and a reference vector going N from the centroid
+  //   float angle = clockwise_angle_between_two_vectors(Centroid_x, Centroid_y, outlet_x, outlet_y, curr_x, curr_y);
+  //   A.push_back(angle);
+  //   cout << "curr_x: " << curr_x << " curr_y: " << curr_y << " ANGLE: " << angle* 180/pi << endl;
+  // }
+  //
+  // //sort the data by angle and reorder the coordinates based on the sort
+  // vector<float> A_sorted;
+  // vector<size_t> index_map;
+  // vector<float> Reordered_X;
+  // vector<float> Reordered_Y;
+  // vector<int> Reordered_nodes;
+  //
+  // matlab_float_sort(A, A_sorted, index_map);
+  // matlab_float_reorder(perimeter_x, index_map, Reordered_X);
+  // matlab_float_reorder(perimeter_y, index_map, Reordered_Y);
+  // matlab_int_reorder(Perimeter_nodes, index_map, Reordered_nodes);
 
-  // get outlet info
-  float outlet_x, outlet_y;
+  // sort perimeter nodes
+  vector<int> Reordered_nodes = order_perimeter_nodes(FlowInfo, Perimeter_nodes);
+
+  // sanity checks
+
+  cout << "n unordered nodes: " << n_nodes << " n sorted nodes: " << Reordered_nodes.size() << endl;
+
+  // for(int i = 0; i< n_nodes; i++)
+  // {
+  //   // get this elevation
+  //   int this_row, this_col;
+  //   FlowInfo.retrieve_current_row_and_col(Reordered_nodes[i], this_row, this_col);
+  //   float this_elev = ElevationRaster.get_data_element(this_row, this_col);
+  //
+  //   // get the coordinates
+  //   FlowInfo.get_lat_and_long_from_current_node(Reordered_nodes[i], curr_lat, curr_long,converter);
+  //
+  //   // get the euclidian distance from the outlet junction
+  //   float dist = FlowInfo.get_Euclidian_distance(outlet_node, Reordered_nodes[i]);
+  //
+  //   // write to csv
+  //   perim_out << i << "," << Reordered_nodes[i] << "," << this_elev << "," << Reordered_X[i] << "," << Reordered_Y[i] <<"," << curr_lat << "," << curr_long << "," << dist << "," << A_sorted[i] << endl;
+  // }
+  // perim_out.close();
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Order perimeter nodes from the outlet
+// FJC 16/01/18
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDBasin::order_perimeter_nodes(LSDFlowInfo& FlowInfo, vector<int> perimeter_nodes)
+{
+  cout << "Ordering the perimeter nodes..." << endl;
+  vector<int> sorted_nodes;
+  Array2D<int> PerimeterNodes(NRows,NCols,0);
+  Array2D<int> VisitedBefore(NRows,NCols,0);
+
+  // first get the outlet node
   int outlet_node = FlowInfo.retrieve_node_from_row_and_column(Outlet_i, Outlet_j);
-  FlowInfo.get_x_and_y_from_current_node(outlet_node, outlet_x, outlet_y);
 
-  for(int i =0; i< n_nodes; i++)
+  // get an array of perimeter nodes
+  for (int i = 0; i < int(perimeter_nodes.size()); i++)
   {
-    float curr_x, curr_y;
-    // get the coordinates
-    FlowInfo.get_x_and_y_from_current_node(Perimeter_nodes[i], curr_x, curr_y);
-    perimeter_x.push_back(curr_x);
-    perimeter_y.push_back(curr_y);
-
-    // get angle between this and a reference vector going N from the centroid
-    float angle = clockwise_angle_between_two_vectors(Centroid_x, Centroid_y, outlet_x, outlet_y, curr_x, curr_y);
-    A.push_back(angle);
-    //cout << "ANGLE: " << angle << endl;
-  }
-
-  //sort the data by angle and reorder the coordinates based on the sort
-  vector<float> A_sorted;
-  vector<size_t> index_map;
-  vector<float> Reordered_X;
-  vector<float> Reordered_Y;
-  vector<int> Reordered_nodes;
-
-  matlab_float_sort(A, A_sorted, index_map);
-  matlab_float_reorder(perimeter_x, index_map, Reordered_X);
-  matlab_float_reorder(perimeter_y, index_map, Reordered_Y);
-  matlab_int_reorder(Perimeter_nodes, index_map, Reordered_nodes);
-
-  for(int i = 0; i< n_nodes; i++)
-  {
-    // get this elevation
     int this_row, this_col;
-    FlowInfo.retrieve_current_row_and_col(Reordered_nodes[i], this_row, this_col);
-    float this_elev = ElevationRaster.get_data_element(this_row, this_col);
-
-    // get the coordinates
-    FlowInfo.get_lat_and_long_from_current_node(Reordered_nodes[i], curr_lat, curr_long,converter);
-
-    // get the euclidian distance from the outlet junction
-    float dist = FlowInfo.get_Euclidian_distance(outlet_node, Reordered_nodes[i]);
-
-    // write to csv
-    perim_out << i << "," << Reordered_nodes[i] << "," << this_elev << "," << Reordered_X[i] << "," << Reordered_Y[i] <<"," << curr_lat << "," << curr_long << "," << dist << "," << A_sorted[i] << endl;
+    FlowInfo.retrieve_current_row_and_col(perimeter_nodes[i], this_row, this_col);
+    PerimeterNodes[this_row][this_col] = 1;
   }
-  perim_out.close();
 
+  //find the nearest perimeter to the outlet node
+  VisitedBefore[Outlet_i][Outlet_j] = 1;
+  // push back the outlet node, node 0
+  sorted_nodes.push_back(outlet_node);
+  int next_i, next_j;
+
+  // West will always be the shortest distance, so do that one first
+  if (PerimeterNodes[Outlet_i][Outlet_j-1] == 1)
+  {
+    next_i = Outlet_i;
+    next_j = Outlet_j-1;
+    VisitedBefore[Outlet_i][Outlet_j-1] = 1;
+  }
+
+  else if (PerimeterNodes[Outlet_i-1][Outlet_j-1] == 1) // northwest
+  {
+    next_i = Outlet_i-1;
+    next_j = Outlet_j-1;
+    VisitedBefore[Outlet_i-1][Outlet_j-1] = 1;
+  }
+  else if (PerimeterNodes[Outlet_i-1][Outlet_j+1] == 1) // southwest
+  {
+    next_i = Outlet_i-1;
+    next_j = Outlet_j+1;
+    VisitedBefore[Outlet_i-1][Outlet_j+1] = 1;
+  }
+  else
+  {
+    cout << "None of these were perimeter nodes, oops" << endl;
+  }
+
+  // push back the next node to the sorted node vector
+  int next_node = FlowInfo.retrieve_node_from_row_and_column(next_i, next_j);
+  sorted_nodes.push_back(next_node);
+
+  bool reached_outlet = false;
+  int this_i, this_j;
+  // now start at the outlet node and find the nearest perimeter node.
+  while (reached_outlet == false)
+  {
+    // start at the next node and find the one with the closest distance that
+    // hasn't already been visited
+    this_i = next_i;
+    this_j = next_j;
+
+    // you've visited this node
+    VisitedBefore[this_i][this_j] = 1;
+
+    vector<float> Distances(8); // distances to each node in the order N, NE, E, SE, S, SW, W, NW
+
+    if (PerimeterNodes[this_i-1][this_j] == 1) // north
+    {
+      if (VisitedBefore[this_i-1][this_j] == 0)
+      {
+        // get the distance
+        Distances[0] = DataResolution;
+      }
+    }
+    if (PerimeterNodes[this_i-1][this_j+1] == 1) // northeast
+    {
+      if (VisitedBefore[this_i-1][this_j+1] == 0)
+      {
+        // get the distance
+        Distances[1] = sqrt(DataResolution*DataResolution+DataResolution*DataResolution);
+      }
+    }
+    if (PerimeterNodes[this_i][this_j+1] == 1) // east
+    {
+      if (VisitedBefore[this_i][this_j+1] == 0)
+      {
+        // get the distance
+        Distances[2] = DataResolution;
+      }
+    }
+    if (PerimeterNodes[this_i+1][this_j+1] == 1) // southeast
+    {
+      if (VisitedBefore[this_i+1][this_j+1] == 0)
+      {
+        // get the distance
+        Distances[3] = sqrt(DataResolution*DataResolution+DataResolution*DataResolution);
+      }
+    }
+    if (PerimeterNodes[this_i+1][this_j] == 1) //south
+    {
+      if (VisitedBefore[this_i+1][this_j] == 0)
+      {
+        // get the distance
+        Distances[4] = DataResolution;
+      }
+    }
+    if (PerimeterNodes[this_i+1][this_j-1] == 1) // southwest
+    {
+      if (VisitedBefore[this_i+1][this_j-1] == 0)
+      {
+        // get the distance
+        Distances[5] = sqrt(DataResolution*DataResolution+DataResolution*DataResolution);
+      }
+    }
+    if (PerimeterNodes[this_i][this_j-1] == 1) // west
+    {
+      if (VisitedBefore[this_i][this_j-1] == 0)
+      {
+        // get the distance
+        Distances[6] = DataResolution;
+      }
+    }
+    if (PerimeterNodes[this_i-1][this_j-1] == 1) // northwest
+    {
+      if (VisitedBefore[this_i-1][this_j-1] == 0)
+      {
+        // get the distance
+        Distances[7] = sqrt(DataResolution*DataResolution+DataResolution*DataResolution);
+      }
+    }
+    // now search the vector of distances for the one with the smallest distance.
+    int min_idx = distance(Distances.begin(), min_element(Distances.begin(), Distances.end()));
+    if ( min_idx == 0 )
+    {
+      next_i = this_i-1;
+      next_j = this_j;
+    }
+    else if ( min_idx == 1 )
+    {
+      next_i = this_i-1;
+      next_j = this_j+1;
+    }
+    else if ( min_idx == 2 )
+    {
+      next_i = this_i;
+      next_j = this_j+1;
+    }
+    else if ( min_idx == 3 )
+    {
+      next_i = this_i+1;
+      next_j = this_j+1;
+    }
+    else if ( min_idx == 4 )
+    {
+      next_i = this_i+1;
+      next_j = this_j;
+    }
+    else if ( min_idx == 5 )
+    {
+      next_i = this_i+1;
+      next_j = this_j-1;
+    }
+    else if ( min_idx == 6 )
+    {
+      next_i = this_i;
+      next_j = this_j-1;
+    }
+    else if ( min_idx == 7 )
+    {
+      next_i = this_i-1;
+      next_j = this_j-1;
+    }
+    // push back the node to the sorted vector
+
+    next_node = FlowInfo.retrieve_node_from_row_and_column(next_i, next_j);
+    if (next_node == outlet_node)
+    {
+      reached_outlet = true;
+    }
+    else
+    {
+      sorted_nodes.push_back(next_node);
+    }
+  }
+
+  return sorted_nodes;
 }
 
 
