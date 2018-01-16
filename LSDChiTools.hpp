@@ -1146,7 +1146,7 @@ class LSDChiTools
     /// @param vecnode: a vector of the rive nodes
     /// @author BG
     /// @date 05/01/2018
-    void ksn_knickpoint_raw_river(int SK, vector<int>& vecnode);
+    void ksn_knickpoint_raw_river(int SK, vector<int> vecnode);
 
     /// @brief write a file with the raw knickpoint informations
     /// @param FlowiInfo: a LSDFlowInfo object
@@ -1196,7 +1196,9 @@ class LSDChiTools
     void lump_this_vec(vector<int> this_vec, int n_nodlump);
 
     void TVD_on_my_ksn(const float lambda);
-    void TVD_this_vec(vector<int> this_vec, const float lambda);
+    vector<float> TVD_this_vec(vector<int> this_vec, const float lambda);
+    vector<double> correct_TVD_vec(vector<double> this_val);
+
 
 
 
@@ -1302,6 +1304,7 @@ class LSDChiTools
     map<int,float> lumped_m_chi_map;
         /// Map[node_index] = TVDed m_chi
     map<int,float> TVD_m_chi_map;
+    map<int,float>TVD_m_chi_map_non_corrected;
 
 
 

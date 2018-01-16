@@ -2080,7 +2080,7 @@ void LSDChiTools::ksn_knickpoint_detection_new(LSDFlowInfo& FlowInfo)
 // Detect the knickpoint in one river and increment the global map
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int>& vecnode)
+void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int> vecnode)
 {
   // Setting the iterator(s)
   vector<int>::iterator node = vecnode.begin(); // first node of the river -> the source
@@ -2139,14 +2139,27 @@ void  LSDChiTools::TVD_on_my_ksn( float lambda)
   vector<int> this_vec;
   for(chirac = map_node_source_key.begin(); chirac != map_node_source_key.end() ; chirac ++)
   {
+    int this_SK = chirac->first;
     this_vec = chirac->second;
-    TVD_this_vec(this_vec, lambda);
+    vector<float> gros_test;
+    gros_test = TVD_this_vec(this_vec, lambda);
+    
+    // DEBUG PART linked to the appearance of unexplained artifact while denoising, I am investigating.
+    // ofstream FILOUNET;
+    // string fname = "/home/s1675537/PhD/LSDTopoData/knickpoint/puerto_rico/test_vec_" + itoa(this_SK) + ".csv";
+    // FILOUNET.open(fname.c_str());
+    // FILOUNET <<"ID,val" << endl;
+    // for(size_t fe = 0; fe<gros_test.size(); fe++)
+    // {
+    //   FILOUNET << fe << "," << gros_test[fe] << endl;
+    // }
+    // FILOUNET.close();
   }
 
 }
 
 
-void  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda)
+vector<float>  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda)
 {
 
   vector<double> this_val;
@@ -2160,14 +2173,59 @@ void  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda)
   double clambda = lambda;
   vector<double> this_val_TVDed = TV1D_denoise_v2(this_val, clambda);
 
+  vector<double> this_val_TVDed_Corrected = correct_TVD_vec(this_val_TVDed);
+
   for(size_t plo = 0; plo < this_vec.size() ; plo++ )
   {
     int this_node = this_vec[plo];
-    TVD_m_chi_map[this_node] = (float)this_val_TVDed[plo];
+    TVD_m_chi_map[this_node] = (float)this_val_TVDed_Corrected[plo];
+    TVD_m_chi_map_non_corrected[this_node] = (float)this_val_TVDed[plo];
   }
+
+  vector<float> outtemp(this_val_TVDed.begin(),this_val_TVDed.end());
+  return outtemp;
    
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Correct some abberations in the TVD      =
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+vector<double> LSDChiTools::correct_TVD_vec(vector<double> this_val)
+{
+  // looping through the nodes, if the value of the nex node exactly equals the value of the previous node
+  // then this is an artifact of the TVD process for some reasons
+
+  size_t tuile = 1;
+  vector<double> this_val_out;
+  // first elements unchanged
+
+
+  this_val_out.push_back(this_val[0]);
+  size_t si = this_val.size();
+
+
+  for(;tuile < this_val.size() - 1 ; tuile++)
+  {
+    if(this_val[tuile-1] +2 < this_val[tuile]) {cout << this_val[tuile-1] << " || " << this_val[tuile] << " || " << this_val[tuile+1] << endl;}
+    if(this_val[tuile-1] == this_val[tuile+1])
+    {
+      
+      this_val_out.push_back(this_val[tuile-1]);
+    }
+    else
+    {
+      // cout << this_val[tuile-1] << " || " << this_val[tuile+1] << endl ;
+      this_val_out.push_back(this_val[tuile]);
+    }
+  }
+
+  // last elements unchanged as well
+
+  this_val_out.push_back(this_val[si-1]);
+
+
+  return this_val_out;
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // lump the m_chi to detect outliers        =
@@ -2246,6 +2304,8 @@ void LSDChiTools::lump_this_vec(vector<int> this_vec, int n_nodlump)
 
 
 }
+
+
 
 
 
@@ -2466,16 +2526,17 @@ void LSDChiTools::set_map_of_source_and_node(LSDFlowInfo& FlowInfo, int n_nodlum
       }
       else
       {
+        // ALRIGTH THIS IS CREATING SOME BUG - I AM TEMPORARY DELETING IT MEANING THAT I WONT HAVE ANYMORE THE MAIN STREAM-TRIB-COUPLING KNICKPOINTS
         // if different source key: first getting the receiving node 
-        for(int i = 0; i<n_nodlump; i++)
-        {
-          FlowInfo.retrieve_receiver_information(last_node,temp_receiver_node);
-          // pushing it back
-          if(temp_receiver_node != -9999 || temp_receiver_node != NoDataValue || temp_receiver_node != 0)
-          {
-            temp_node_SK.push_back(temp_receiver_node);
-          }
-        }
+        // for(int i = 0; i<n_nodlump; i++)
+        // {
+        //   FlowInfo.retrieve_receiver_information(last_node,temp_receiver_node);
+        //   // pushing it back
+        //   if(temp_receiver_node != -9999 || temp_receiver_node != NoDataValue || temp_receiver_node != 0)
+        //   {
+        //     temp_node_SK.push_back(temp_receiver_node);
+        //   }
+        // }
         // saving this source key
         map_node_source_key[last_SK] = temp_node_SK;
         // clearing the vector for the next source key and saving the current node in the new river
@@ -7077,7 +7138,7 @@ void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, 
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "node,Y,X,latitude,longitude,chi,elevation,flow_distance,drainage_area,m_chi,lumped_ksn,TVD_ksn,b_chi,source_key,basin_key";
+  chi_data_out << "node,Y,X,latitude,longitude,chi,elevation,flow_distance,drainage_area,m_chi,lumped_ksn,TVD_ksn,TVD_ksn_NC,b_chi,source_key,basin_key";
   if(have_segmented_elevation)
   {
     chi_data_out << ",segmented_elevation";
@@ -7119,6 +7180,7 @@ void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, 
                    << M_chi_data_map[this_node] << ","
                    << lumped_m_chi_map[this_node] << ","
                    << TVD_m_chi_map[this_node] << ","
+                   << TVD_m_chi_map_non_corrected[this_node] << ","
                    << b_chi_data_map[this_node] << ","
                    << source_keys_map[this_node] << ","
                    << baselevel_keys_map[this_node];
