@@ -249,6 +249,47 @@ void LSDChiTools::get_lat_and_long_locations(int row, int col, double& lat,
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
+// Function to convert a x/y position that is not necessarly a node into lat/long
+// and long coordinate
+//
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::get_lat_and_long_locations_from_coordinate(float X, float Y, double& lat,
+                   double& longitude, LSDCoordinateConverterLLandUTM Converter)
+{
+
+  // get the UTM zone of the node
+  int UTM_zone;
+  bool is_North;
+  get_UTM_information(UTM_zone, is_North);
+  //cout << endl << endl << "Line 1034, UTM zone is: " << UTM_zone << endl;
+
+
+  if(UTM_zone == NoDataValue)
+  {
+    lat = NoDataValue;
+    longitude = NoDataValue;
+  }
+  else
+  {
+    // set the default ellipsoid to WGS84
+    int eId = 22;
+
+    double xld = double(X);
+    double yld = double(Y);
+
+    // use the converter to convert to lat and long
+    double Lat,Long;
+    Converter.UTMtoLL(eId, yld, xld, UTM_zone, is_North, Lat, Long);
+
+
+    lat = Lat;
+    longitude = Long;
+  }
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+//
 // This function gets the UTM zone
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2052,7 +2093,11 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   print_bandwidth_ksn_knickpoint(this_name);
   this_name = OUT_DIR + OUT_ID + "_ksnkp_mchi.csv";
   print_mchisegmented_knickpoint_version(FlowInfo, this_name);
+  this_name = OUT_DIR + OUT_ID + "_ksnkp.csv";
+  print_final_ksn_knickpoint(FlowInfo, this_name);
   cout << " OK" << endl ;
+
+
 
 }
 
@@ -2166,6 +2211,8 @@ void LSDChiTools::ksn_knickpoints_combining(LSDFlowInfo& Flowinfo)
         ksn_centroid[this_node] = make_pair(this_x,this_y);
         // finally getting the ID of my 
         ksn_kp_ID[this_node] = id_kp;
+        nearest_node_centroid_kp[this_node] = this_node;
+        flow_distance_kp_centroid_map[this_node] = flow_distance_data_map[this_node];
         id_kp ++;
       }
       else if(this_vecnode.size() > 1)
@@ -2176,7 +2223,10 @@ void LSDChiTools::ksn_knickpoints_combining(LSDFlowInfo& Flowinfo)
         ksn_kp_map[this_node] = get_dksn_from_composite_kp(this_vecnode); // gobal value of the knickpoint
         sharpness_ksn_length[this_node] = get_kp_sharpness_length(this_vecnode, Flowinfo);
         ksn_extent[this_node] = make_pair(this_vecnode[0], this_vecnode.back()); // the extent nodes are the extreme of the DD
-        ksn_centroid[this_node] = get_ksn_centroid_coordinates(Flowinfo, this_vecnode); // get the x and y of the centroid.
+        pair<pair<int,float>,pair<float,float> > temp_pair = get_ksn_centroid_coordinates(Flowinfo, this_vecnode); // get the x and y of the centroid.
+        flow_distance_kp_centroid_map[this_node] = temp_pair.first.second;
+        ksn_centroid[this_node] = temp_pair.second; // get the x and y of the centroid.
+        nearest_node_centroid_kp[this_node] = temp_pair.first.first;
         ksn_kp_ID[this_node] = id_kp;
         id_kp++;
       }
@@ -2217,13 +2267,14 @@ float LSDChiTools::get_kp_sharpness_length(vector<int> vecnode, LSDFlowInfo& Flo
   return total_distance;
 }
 
-pair<float,float> LSDChiTools::get_ksn_centroid_coordinates(LSDFlowInfo& Flowinfo, vector<int> vecnode)
+pair<pair<int,float>,pair<float,float> > LSDChiTools::get_ksn_centroid_coordinates(LSDFlowInfo& Flowinfo, vector<int> vecnode)
 {
 
   pair<float,float> out_pair; // x,y coordinates
 
   // first, let's determine the centroid flow distance
   float c_fdist = (flow_distance_data_map[vecnode.back()] + flow_distance_data_map[vecnode[0]])/2;
+
 
   // then looping from bottom to top of nodes to get the boundary nodes of this last
   bool found_it = false;
@@ -2255,6 +2306,10 @@ pair<float,float> LSDChiTools::get_ksn_centroid_coordinates(LSDFlowInfo& Flowinf
 
   // getting the ratio 
   float ratio_d = d_centroid / d_node;
+  // getting the closest node
+  int nearnode = 0;
+  if(ratio_d >= 0.5){nearnode = nsup;}
+  else{nearnode = ninf;}
 
   // getting x and y
 
@@ -2263,7 +2318,11 @@ pair<float,float> LSDChiTools::get_ksn_centroid_coordinates(LSDFlowInfo& Flowinf
 
   out_pair = make_pair(x,y);
 
-  return out_pair;
+  pair<pair<int,float> , pair<float,float> > out_out_pair;
+  pair<int,float> tpair = make_pair(nearnode, c_fdist);
+  out_out_pair = make_pair(tpair, out_pair);
+
+  return out_out_pair;
 
 }
 
@@ -2686,6 +2745,70 @@ void LSDChiTools::print_raw_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filenam
                      << raw_KDE_kp_map[this_node] << ","
                      << baselevel_keys_map[this_node]<< ","
                      << map_outlier_MZS_dksndchi[this_node] << ","
+                     << source_keys_map[this_node];
+
+        chi_data_out << endl;
+    }
+  }
+
+  chi_data_out.close();
+  
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// write a file with the final knickpoint output
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filename)
+{
+  // these are for extracting element-wise data from the channel profiles.
+
+  int this_node,row,col;
+  float this_kp;
+  double latitude,longitude;
+  LSDCoordinateConverterLLandUTM Converter;
+
+  // find the number of nodes
+  int n_nodes = (node_sequence.size());
+
+  // open the data file
+  ofstream  chi_data_out;
+  chi_data_out.open(filename.c_str());
+  chi_data_out << "ID,longitude,latitude,elevation,flow_distance,chi,drainage_area,delta_ksn,sharpness,basin_key,source_key";
+
+  chi_data_out << endl;
+
+  if (n_nodes <= 0)
+  {
+    cout << "Cannot print since you have not calculated channel properties yet." << endl;
+  }
+  else
+  {
+    map<int,float>::iterator iter;
+
+    for (iter = ksn_kp_map.begin(); iter != ksn_kp_map.end(); iter++)
+    {
+        this_node = iter->first;
+        this_kp = iter->second;
+        int nearnode = nearest_node_centroid_kp[this_node];
+        // get the centroid location
+        float this_x = ksn_centroid[this_node].first, this_y = ksn_centroid[this_node].second;
+
+        get_lat_and_long_locations_from_coordinate(this_x, this_y, latitude, longitude, Converter);
+
+        
+        chi_data_out.precision(9);
+        chi_data_out << latitude << ","
+                     << longitude << ",";
+        chi_data_out.precision(5);
+        chi_data_out << elev_data_map[nearnode] << ","
+                     << flow_distance_kp_centroid_map[this_node] << ","
+                     << chi_data_map[nearnode] << ","
+                     << drainage_area_data_map[nearnode] << ","
+                     << this_kp << ","
+                     << sharpness_ksn_length[this_node] << ","
+                     << raw_KDE_kp_map[this_node] << ","
+                     << baselevel_keys_map[this_node]<< ","
                      << source_keys_map[this_node];
 
         chi_data_out << endl;

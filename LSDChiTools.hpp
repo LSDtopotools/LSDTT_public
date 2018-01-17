@@ -162,6 +162,23 @@ class LSDChiTools
     void get_lat_and_long_locations(int row, int col, double& lat,
                   double& longitude, LSDCoordinateConverterLLandUTM Converter);
 
+
+    /// @brief a function to get the lat and long of a coordinate point in the raster
+    /// @detail Assumes WGS84 ellipsiod - does not correspond necessarly to a node
+    /// @param row the row of the node
+    /// @param col the col of the node
+    /// @param lat the latitude of the node (in decimal degrees, replaced by function)
+    ///  Note: this is a double, because a float does not have sufficient precision
+    ///  relative to a UTM location (which is in metres)
+    /// @param long the longitude of the node (in decimal degrees, replaced by function)
+    ///  Note: this is a double, because a float does not have sufficient precision
+    ///  relative to a UTM location (which is in metres)
+    /// @param Converter a converter object (from LSDShapeTools)
+    /// @author SMM
+    /// @date 24/05/2015
+    void get_lat_and_long_locations_from_coordinate(float X, float Y, double& lat,
+                   double& longitude, LSDCoordinateConverterLLandUTM Converter);
+
     /// @brief this function gets the UTM_zone and a boolean that is true if
     /// the map is in the northern hemisphere
     /// @param UTM_zone the UTM zone. Replaced in function.
@@ -1205,8 +1222,12 @@ class LSDChiTools
     vector<double> correct_TVD_vec(vector<double> this_val);
     float get_dksn_from_composite_kp(vector<int> vecnode);
     float get_kp_sharpness_length(vector<int> vecnode, LSDFlowInfo& Flowinfo);
-    pair<float,float> get_ksn_centroid_coordinates(LSDFlowInfo& Flowinfo, vector<int> vecnode);
+    pair<pair<int,float>,pair<float,float> > get_ksn_centroid_coordinates(LSDFlowInfo& Flowinfo, vector<int> vecnode);
     vector<vector<int> > group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river,LSDFlowInfo& Flowinfo);
+    
+    
+    void print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filename);
+
 
 
 
@@ -1327,6 +1348,8 @@ class LSDChiTools
     map<int,pair<int,int> > ksn_extent;
     map<int,pair<float,float> > ksn_centroid;
     map<int,int> ksn_kp_ID;
+    map<int,float> flow_distance_kp_centroid_map;
+    map<int,int> nearest_node_centroid_kp;
 
 
 
