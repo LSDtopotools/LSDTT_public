@@ -108,10 +108,9 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_filled_raster"] = false;
   bool_default_map["print_junctions_to_csv"] = false;
   bool_default_map["print_junction_angles_to_csv"] = false;
-  bool_default_map["read_junctions_from_file"] = false;
   bool_default_map["print_junction_statistics_to_csv"] = false;
   bool_default_map["convert_csv_to_geojson"] = false;
-  bool_default_map["get_basin_perimeter"] = false;
+  bool_default_map["get_basin_perimeters"] = false;
 
 
   bool_default_map["print_basin_raster"] = false;
@@ -131,6 +130,7 @@ int main (int nNumberofArgs,char *argv[])
   string_default_map["basin_outlet_csv"] = "NULL";
   string_default_map["sample_ID_column_name"] = "IDs";
   string_default_map["parameter_file_for_spawning"] = "NULL";
+  string_default_map["BaselevelJunctions_file"] = "NULL";
 
   // turn on parameter
 
@@ -155,8 +155,39 @@ int main (int nNumberofArgs,char *argv[])
   string raster_ext =  LSDPP.get_dem_read_extension();
   vector<string> boundary_conditions = LSDPP.get_boundary_conditions();
   string CHeads_file = LSDPP.get_CHeads_file();
+  string BaselevelJunctions_file = LSDPP.get_BaselevelJunctions_file();
 
   cout << "Read filename is:" <<  DATA_DIR+DEM_ID << endl;
+
+  if(BaselevelJunctions_file == "NULL" || BaselevelJunctions_file == "Null" || BaselevelJunctions_file == "null" || BaselevelJunctions_file.empty() == true)
+  {
+    if(BaselevelJunctions_file.empty())
+    {
+      cout << "You have a null baselevel junctions file; the string is empty." << endl;
+    }
+    else
+    {
+      cout << "You have a null baselevel junctions file, it is: " << BaselevelJunctions_file << endl;
+    }
+  }
+  else
+  {
+    BaselevelJunctions_file = RemoveControlCharactersFromEndOfString(BaselevelJunctions_file);
+    BaselevelJunctions_file = DATA_DIR+BaselevelJunctions_file;
+    cout << "You have selected a baselevel junctions file, it is: " << BaselevelJunctions_file << endl;
+    cout << "Let me check if it exists..." << endl;
+
+    ifstream test_file;
+    test_file.open(BaselevelJunctions_file.c_str());
+    if( test_file.fail() )
+    {
+      cout << "\nWHOOPS the baselevel file: \"" << BaselevelJunctions_file
+         << "\" doesn't exist" << endl;
+      cout << "I am changing it to a NULL value!" << endl;
+      BaselevelJunctions_file = "NULL";
+    }
+    test_file.close();
+  }
 
     // check to see if the raster exists
   LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);
@@ -260,31 +291,60 @@ int main (int nNumberofArgs,char *argv[])
 
   // now get the basin perimeters - this is for getting the hypsometry
   // of the perimeter to look for drainage captures
-  if (this_bool_map["get_basin_perimeter"])
+  if (this_bool_map["get_basin_perimeters"])
   {
     cout << "I am getting the basin perimeters" << endl;
     string perimeter_name = OUT_DIR+OUT_ID+"_Perimeters.csv";
 
-    // for now, just get one of the perimeters.
-    int JunctionNumber = 199;
+    vector<int> JunctionsList;
 
-    // get the node index of this junction
-    int basin_node = JunctionNetwork.get_Node_of_Junction(JunctionNumber);
-
-    // now get the perimeter
-    vector<int> perimeter_vec = FlowInfo.basin_edge_extractor(basin_node, topography_raster);
-    FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(perimeter_vec, perimeter_name);
-
-    LSDBasin ABasin(JunctionNumber, FlowInfo, JunctionNetwork);
-    LSDRaster ThisBasin = ABasin.write_raster_data_to_LSDRaster(filled_topography, FlowInfo);
-    ThisBasin.write_raster((OUT_DIR+OUT_ID+"_Perimeters"),"bil");
-    ABasin.print_perimeter_hypsometry_to_csv(FlowInfo, perimeter_vec, perimeter_name, filled_topography);
-
-    if ( this_bool_map["convert_csv_to_geojson"])
+    if (BaselevelJunctions_file != "NULL" && BaselevelJunctions_file != "Null" && BaselevelJunctions_file != "null" && BaselevelJunctions_file.empty() == false)
     {
-      string gjson_name = OUT_DIR+OUT_ID+"_Perimeter.geojson";
-      LSDSpatialCSVReader thiscsv(perimeter_name);
-      thiscsv.print_data_to_geojson(gjson_name);
+      vector< int > BaseLevelJunctions;
+      vector< int > BaseLevelJunctions_Initial;
+
+      cout << "I am attempting to read base level junctions from a base level junction list." << endl;
+      cout << "If this is not a simple text file that only contains integers there will be problems!" << endl;
+
+      //specify junctions to work on from a list file
+      //string JunctionsFile = DATA_DIR+BaselevelJunctions_file;
+      cout << "The junctions file is: " << BaselevelJunctions_file << endl;
+
+      ifstream infile(BaselevelJunctions_file.c_str());
+      if (infile)
+      {
+        cout << "Junctions File " << BaselevelJunctions_file << " exists" << endl;;
+        int n;
+        while (infile >> n) BaseLevelJunctions_Initial.push_back(n);
+      }
+      else
+      {
+        cout << "Fatal Error: Junctions File " << BaselevelJunctions_file << " does not exist" << endl;
+        exit(EXIT_FAILURE);
+      }
+    }
+
+    for (int junc = 0; junc < int(JunctionsList.size()); junc++)
+    {
+      int JunctionNumber = JunctionsList[junc];
+      // get the node index of this junction
+      int basin_node = JunctionNetwork.get_Node_of_Junction(JunctionNumber);
+
+      // now get the perimeter
+      vector<int> perimeter_vec = FlowInfo.basin_edge_extractor(basin_node, topography_raster);
+      FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(perimeter_vec, perimeter_name);
+
+      LSDBasin ABasin(JunctionNumber, FlowInfo, JunctionNetwork);
+      LSDRaster ThisBasin = ABasin.write_raster_data_to_LSDRaster(filled_topography, FlowInfo);
+      ThisBasin.write_raster((OUT_DIR+OUT_ID+"_Perimeters"),"bil");
+      ABasin.print_perimeter_hypsometry_to_csv(FlowInfo, perimeter_vec, perimeter_name, filled_topography);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_Perimeter.geojson";
+        LSDSpatialCSVReader thiscsv(perimeter_name);
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
     }
   }
 
