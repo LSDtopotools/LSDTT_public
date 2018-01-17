@@ -834,10 +834,10 @@ void LSDBasin::print_perimeter_hypsometry_to_csv(LSDFlowInfo& FlowInfo, vector<i
     Perimeter_nodes = perimeter_nodes;
   }
 
-  // open the file
+//  open the file
   ofstream perim_out;
   perim_out.open(perimeter_fname.c_str());
-  perim_out << "node_key,node,elevation,x,y,latitude,longitude,dist_from_outlet_node,angle_between_outlet_node" << endl;
+  perim_out << "node_key,node,elevation,x,y,latitude,longitude,dist_from_outlet_node" << endl;
   perim_out.precision(9);
 
   double curr_lat,curr_long;
@@ -853,9 +853,9 @@ void LSDBasin::print_perimeter_hypsometry_to_csv(LSDFlowInfo& FlowInfo, vector<i
   // float Centroid_y = ((Centroid_i - NRows) * DataResolution) + YMinimum;
   //
   // // get outlet info
-  // float outlet_x, outlet_y;
-  // int outlet_node = FlowInfo.retrieve_node_from_row_and_column(Outlet_i, Outlet_j);
-  // FlowInfo.get_x_and_y_from_current_node(outlet_node, outlet_x, outlet_y);
+  //float outlet_x, outlet_y;
+  int outlet_node = FlowInfo.retrieve_node_from_row_and_column(Outlet_i, Outlet_j);
+  //FlowInfo.get_x_and_y_from_current_node(outlet_node, outlet_x, outlet_y);
   //
   // float pi = 3.14159265;
   //
@@ -892,23 +892,27 @@ void LSDBasin::print_perimeter_hypsometry_to_csv(LSDFlowInfo& FlowInfo, vector<i
 
   cout << "n unordered nodes: " << n_nodes << " n sorted nodes: " << Reordered_nodes.size() << endl;
 
-  // for(int i = 0; i< n_nodes; i++)
-  // {
-  //   // get this elevation
-  //   int this_row, this_col;
-  //   FlowInfo.retrieve_current_row_and_col(Reordered_nodes[i], this_row, this_col);
-  //   float this_elev = ElevationRaster.get_data_element(this_row, this_col);
-  //
-  //   // get the coordinates
-  //   FlowInfo.get_lat_and_long_from_current_node(Reordered_nodes[i], curr_lat, curr_long,converter);
-  //
-  //   // get the euclidian distance from the outlet junction
-  //   float dist = FlowInfo.get_Euclidian_distance(outlet_node, Reordered_nodes[i]);
-  //
-  //   // write to csv
-  //   perim_out << i << "," << Reordered_nodes[i] << "," << this_elev << "," << Reordered_X[i] << "," << Reordered_Y[i] <<"," << curr_lat << "," << curr_long << "," << dist << "," << A_sorted[i] << endl;
-  // }
-  // perim_out.close();
+  for(int i = 0; i< n_nodes; i++)
+  {
+    // get this elevation
+    int this_row, this_col;
+    FlowInfo.retrieve_current_row_and_col(Reordered_nodes[i], this_row, this_col);
+    float this_elev = ElevationRaster.get_data_element(this_row, this_col);
+
+    // get the x and y from this node
+    float curr_x, curr_y;
+    FlowInfo.get_x_and_y_from_current_node(Reordered_nodes[i], curr_x, curr_y);
+
+    // get the coordinates
+    FlowInfo.get_lat_and_long_from_current_node(Reordered_nodes[i], curr_lat, curr_long,converter);
+
+    // get the euclidian distance from the outlet junction
+    float dist = FlowInfo.get_Euclidian_distance(outlet_node, Reordered_nodes[i]);
+
+    // write to csv
+    perim_out << i << "," << Reordered_nodes[i] << "," << this_elev << "," << curr_x << "," << curr_y <<"," << curr_lat << "," << curr_long << "," << dist << endl;
+  }
+  perim_out.close();
 
 }
 
@@ -933,6 +937,7 @@ vector<int> LSDBasin::order_perimeter_nodes(LSDFlowInfo& FlowInfo, vector<int> p
     FlowInfo.retrieve_current_row_and_col(perimeter_nodes[i], this_row, this_col);
     PerimeterNodes[this_row][this_col] = 1;
   }
+  cout << "Got the array of perimeter nodes" << endl;
 
   //find the nearest perimeter to the outlet node
   VisitedBefore[Outlet_i][Outlet_j] = 1;
@@ -945,20 +950,23 @@ vector<int> LSDBasin::order_perimeter_nodes(LSDFlowInfo& FlowInfo, vector<int> p
   {
     next_i = Outlet_i;
     next_j = Outlet_j-1;
-    VisitedBefore[Outlet_i][Outlet_j-1] = 1;
+    //VisitedBefore[Outlet_i][Outlet_j-1] = 1;
+    cout << "The closest node is to the west" << endl;
   }
 
   else if (PerimeterNodes[Outlet_i-1][Outlet_j-1] == 1) // northwest
   {
     next_i = Outlet_i-1;
     next_j = Outlet_j-1;
-    VisitedBefore[Outlet_i-1][Outlet_j-1] = 1;
+    //VisitedBefore[Outlet_i-1][Outlet_j-1] = 1;
+    cout << "The closest node is to the NW" << endl;
   }
   else if (PerimeterNodes[Outlet_i-1][Outlet_j+1] == 1) // southwest
   {
     next_i = Outlet_i-1;
     next_j = Outlet_j+1;
-    VisitedBefore[Outlet_i-1][Outlet_j+1] = 1;
+    //VisitedBefore[Outlet_i-1][Outlet_j+1] = 1;
+    cout << "The closest node is to the SW" << endl;
   }
   else
   {
@@ -979,10 +987,16 @@ vector<int> LSDBasin::order_perimeter_nodes(LSDFlowInfo& FlowInfo, vector<int> p
     this_i = next_i;
     this_j = next_j;
 
-    // you've visited this node
-    VisitedBefore[this_i][this_j] = 1;
+    // check if you've already been to this node.
+    if (VisitedBefore[this_i][this_j] == 1)
+    {
+      cout << "Wait, you've been to this node before! STOP!" << endl;
+      break;
+    }
+    else { VisitedBefore[this_i][this_j] = 1; }
 
-    vector<float> Distances(8); // distances to each node in the order N, NE, E, SE, S, SW, W, NW
+
+    vector<float> Distances(8, 100); // distances to each node in the order N, NE, E, SE, S, SW, W, NW
 
     if (PerimeterNodes[this_i-1][this_j] == 1) // north
     {
@@ -1048,8 +1062,11 @@ vector<int> LSDBasin::order_perimeter_nodes(LSDFlowInfo& FlowInfo, vector<int> p
         Distances[7] = sqrt(DataResolution*DataResolution+DataResolution*DataResolution);
       }
     }
+    //cout << "Finding the closest perimeter node..." << endl;
+
     // now search the vector of distances for the one with the smallest distance.
     int min_idx = distance(Distances.begin(), min_element(Distances.begin(), Distances.end()));
+    cout << "Min IDX is: " << min_idx << " Distance is: " << *min_element(Distances.begin(), Distances.end()) << endl;
     if ( min_idx == 0 )
     {
       next_i = this_i-1;
@@ -1093,9 +1110,16 @@ vector<int> LSDBasin::order_perimeter_nodes(LSDFlowInfo& FlowInfo, vector<int> p
     // push back the node to the sorted vector
 
     next_node = FlowInfo.retrieve_node_from_row_and_column(next_i, next_j);
-    if (next_node == outlet_node)
+    cout << "The next node is: " << next_node << endl;
+    if (next_i == Outlet_i && next_j == Outlet_j)
     {
       reached_outlet = true;
+      cout << "You've reached the outlet, wooohooo" << endl;
+    }
+    else if ( Distances[min_idx] == 100)
+    {
+      reached_outlet = true;
+      cout << "I can't find a neighbouring perimeter node that you haven't been to." << endl;
     }
     else
     {

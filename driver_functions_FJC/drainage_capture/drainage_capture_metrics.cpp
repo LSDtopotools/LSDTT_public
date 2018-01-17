@@ -264,14 +264,14 @@ int main (int nNumberofArgs,char *argv[])
     string perimeter_name = OUT_DIR+OUT_ID+"_Perimeters.csv";
 
     // for now, just get one of the perimeters.
-    int JunctionNumber = 8662;
+    int JunctionNumber = 199;
 
     // get the node index of this junction
     int basin_node = JunctionNetwork.get_Node_of_Junction(JunctionNumber);
 
     // now get the perimeter
     vector<int> perimeter_vec = FlowInfo.basin_edge_extractor(basin_node, topography_raster);
-    //FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(perimeter_vec, perimeter_name);
+    FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(perimeter_vec, perimeter_name);
 
     LSDBasin ABasin(JunctionNumber, FlowInfo, JunctionNetwork);
     LSDRaster ThisBasin = ABasin.write_raster_data_to_LSDRaster(filled_topography, FlowInfo);
