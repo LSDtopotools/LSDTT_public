@@ -1132,6 +1132,11 @@ class LSDChiTools
 
     void ksn_knickpoint_outlier_automator(LSDFlowInfo& FlowInfo, float MZS_th);
 
+    /// @brief Dealing with composite knickpoints
+    /// @param FlowiInfo: a LSDFlowInfo object
+    /// @author BG
+    /// @date 17/01/2018
+    void ksn_knickpoints_combining(LSDFlowInfo& Flowinfo);
 
     /// @brief Detection of the knickpoints by looping through the source keys
     /// @param FlowiInfo: a LSDFlowInfo object
@@ -1198,6 +1203,11 @@ class LSDChiTools
     void TVD_on_my_ksn(const float lambda);
     vector<float> TVD_this_vec(vector<int> this_vec, const float lambda);
     vector<double> correct_TVD_vec(vector<double> this_val);
+    float get_dksn_from_composite_kp(vector<int> vecnode);
+    float get_kp_sharpness_length(vector<int> vecnode, LSDFlowInfo& Flowinfo);
+    pair<float,float> get_ksn_centroid_coordinates(LSDFlowInfo& Flowinfo, vector<int> vecnode);
+    vector<vector<int> > group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river,LSDFlowInfo& Flowinfo);
+
 
 
 
@@ -1218,6 +1228,9 @@ class LSDChiTools
     float DataResolution;
     ///No data value.
     int NoDataValue;
+
+    /// A general incrementer for knickpoints. It has to be global for some reason
+    int id_kp = 0;
 
     ///A map of strings for holding georeferencing information
     map<string,string> GeoReferencingStrings;
@@ -1304,7 +1317,17 @@ class LSDChiTools
     map<int,float> lumped_m_chi_map;
         /// Map[node_index] = TVDed m_chi
     map<int,float> TVD_m_chi_map;
+    /// Debugging map to check the TVD correctin (deprecated - I'll clean my code when I'll be sure I'll need it)
     map<int,float>TVD_m_chi_map_non_corrected;
+    /// Grouped and processed knickpoints
+    map<int,float> ksn_kp_map;
+    /// diffusion of a knickpoint, or sharpness of a knickpoint, I cannot decide which worf I prefer
+    map<int,float> sharpness_ksn_length;
+    /// cextent of composite knickpoints
+    map<int,pair<int,int> > ksn_extent;
+    map<int,pair<float,float> > ksn_centroid;
+    map<int,int> ksn_kp_ID;
+
 
 
 
