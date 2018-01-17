@@ -2430,13 +2430,13 @@ vector<float>  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda)
   double clambda = lambda;
   vector<double> this_val_TVDed = TV1D_denoise_v2(this_val, clambda);
 
-  vector<double> this_val_TVDed_Corrected = correct_TVD_vec(this_val_TVDed);
+  // vector<double> this_val_TVDed_Corrected = correct_TVD_vec(this_val_TVDed);
 
   for(size_t plo = 0; plo < this_vec.size() ; plo++ )
   {
     int this_node = this_vec[plo];
-    TVD_m_chi_map[this_node] = (float)this_val_TVDed_Corrected[plo];
-    TVD_m_chi_map_non_corrected[this_node] = (float)this_val_TVDed[plo];
+    TVD_m_chi_map[this_node] = (float)this_val_TVDed[plo];
+    // TVD_m_chi_map_non_corrected[this_node] = (float)this_val_TVDed[plo];
   }
 
   vector<float> outtemp(this_val_TVDed.begin(),this_val_TVDed.end());
@@ -2463,7 +2463,7 @@ vector<double> LSDChiTools::correct_TVD_vec(vector<double> this_val)
 
   for(;tuile < this_val.size() - 1 ; tuile++)
   {
-    if(this_val[tuile-1] +2 < this_val[tuile]) {cout << this_val[tuile-1] << " || " << this_val[tuile] << " || " << this_val[tuile+1] << endl;}
+    // if(this_val[tuile-1] +2 < this_val[tuile]) {cout << this_val[tuile-1] << " || " << this_val[tuile] << " || " << this_val[tuile+1] << endl;}
     if(this_val[tuile-1] == this_val[tuile+1])
     {
       
@@ -2796,7 +2796,7 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
 
         get_lat_and_long_locations_from_coordinate(this_x, this_y, latitude, longitude, Converter);
 
-        
+        chi_data_out << ksn_kp_ID[this_node] << ",";
         chi_data_out.precision(9);
         chi_data_out << latitude << ","
                      << longitude << ",";
@@ -2807,7 +2807,6 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
                      << drainage_area_data_map[nearnode] << ","
                      << this_kp << ","
                      << sharpness_ksn_length[this_node] << ","
-                     << raw_KDE_kp_map[this_node] << ","
                      << baselevel_keys_map[this_node]<< ","
                      << source_keys_map[this_node];
 
