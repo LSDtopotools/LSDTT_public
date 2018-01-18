@@ -6602,6 +6602,56 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_Largest(vector<int>& BaseLevelJu
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prunes a list of baselevel junctions by selecting only those junctions
+// that are above or below (depending on the bool keep_junctions_below_threshold)
+// a threshold elevation
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDJunctionNetwork::Prune_Junctions_Threshold_Elevation(vector<int>& BaseLevelJunctions_Initial,
+                                              LSDFlowInfo& FlowInfo, LSDRaster& Elev, 
+                                              float threshold_elevation, bool keep_junctions_below_threshold)
+{
+  vector<int> BL_Donor_junctions_pruned;
+  int current_row,current_col;
+  int N_BaseLevelJuncs = int(BaseLevelJunctions_Initial.size());
+
+  int row,col, current_node;
+  if(BaseLevelJunctions_Initial.size() <= 0)
+  {
+    cout << "I am afraid you have no junctions in your junction list. Exiting." << endl;
+    exit(0);
+  }
+
+
+  for(int i = 0; i < N_BaseLevelJuncs; ++i)
+  {
+    current_node = JunctionVector[BaseLevelJunctions_Initial[i]];
+    FlowInfo.retrieve_current_row_and_col(current_node,row,col);
+    
+    float this_elevation = Elev.get_data_element(current_row,current_col);
+    
+    if (keep_junctions_below_threshold)
+    {
+      if (this_elevation <= threshold_elevation)
+      {
+        BL_Donor_junctions_pruned.push_back(BaseLevelJunctions_Initial[i]);
+      }
+    }
+    else
+    {
+      if (this_elevation >= threshold_elevation)
+      {
+        BL_Donor_junctions_pruned.push_back(BaseLevelJunctions_Initial[i]);
+      }
+    }
+  }
+
+  return BL_Donor_junctions_pruned;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function returns a vector of the contributing pixels from a list
 // of junctions
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
