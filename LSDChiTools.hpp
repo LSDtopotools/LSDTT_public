@@ -1350,7 +1350,7 @@ class LSDChiTools
     map<int,int> ksn_kp_ID;
     map<int,float> flow_distance_kp_centroid_map;
     map<int,int> nearest_node_centroid_kp;
-
+    map<int,int> map_outlier_MZS_combined;
 
 
 

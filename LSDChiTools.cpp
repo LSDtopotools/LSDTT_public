@@ -2081,6 +2081,7 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
 
   ksn_knickpoints_combining(FlowInfo);
 
+
   // Ok let's detect oultliers here
   ksn_knickpoint_outlier_automator(FlowInfo, MZS_th);
   
@@ -2353,30 +2354,45 @@ vector<vector<int> > LSDChiTools::group_local_kp(vector<int> vecnode_kp, vector<
     }
     neightboors[this_node] = this_pair;
   }
+  // Done
 
   // Now looping through each nodes containing knickpoints to check if they have a direct neighboor
   vector<vector<int> > out_vector;
   vector<int> this_vecnode;
-
-
-  for(it = 0; it < vecnode_kp.size(); it++)
+  if(vecnode_kp.size()>0)
   {
-    // which one is our working node
-    int this_node = vecnode_kp[it], next_node = vecnode_kp[it+1];
-    this_vecnode.push_back(this_node);
-    if(it < (vecnode_kp.size()-1))
-    {
-      if( next_node != neightboors[this_node].second)
-      {
-        out_vector.push_back(this_vecnode);
-        this_vecnode.clear();
-      }   
-    }
-    else 
+    // cout << "DEBUG test 1" << endl;
+    // dealing with the first node
+    this_vecnode.push_back(vecnode_kp[0]);
+    if(vecnode_kp[0] != neightboors[0].second )
     {
       out_vector.push_back(this_vecnode);
       this_vecnode.clear();
     }
+    // cout << "DEBUG test 2" << endl;
+
+    //other nodes
+
+    for(it = 1; it < vecnode_kp.size(); it++)
+    {
+      // which one is our working node
+      int this_node = vecnode_kp[it], next_node = vecnode_kp[it+1], last_node = vecnode_kp[it-1] ;
+      this_vecnode.push_back(this_node);
+      if(it < (vecnode_kp.size()-1))
+      {
+        if( next_node != neightboors[this_node].second && last_node != neightboors[this_node].first)
+        {
+          out_vector.push_back(this_vecnode);
+          this_vecnode.clear();
+        }   
+      }
+      else 
+      {
+        out_vector.push_back(this_vecnode);
+        this_vecnode.clear();
+      }
+    }
+    // cout << "DEBUG test 3" << endl;
   }
 
   return out_vector;
@@ -2657,6 +2673,28 @@ void LSDChiTools::ksn_knickpoint_outlier_automator(LSDFlowInfo& FlowInfo, float 
     }
 
   }
+
+  // now dealing with the values after combining the knickpoints
+  vecval.clear();
+  vecnode.clear();
+
+  // getting all the final knickpoints
+  for(map<int,float>::iterator gorilla = ksn_kp_map.begin(); gorilla != ksn_kp_map.end(); gorilla ++)
+  {
+    vecnode.push_back(gorilla->first);
+    vecval.push_back(gorilla->second);
+  }
+
+  vector<int> vecoutlier_MZS_combined = is_outlier_MZS(vecval, NoDataValue, MZS_th);
+
+  for(size_t hi = 0; hi < vecnode.size(); hi++)
+  {
+    map_outlier_MZS_combined[vecnode[hi]] = vecoutlier_MZS_combined[hi];
+  }
+
+
+
+
 }
 
 
@@ -2774,7 +2812,7 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "ID,longitude,latitude,elevation,flow_distance,chi,drainage_area,delta_ksn,sharpness,basin_key,source_key";
+  chi_data_out << "ID,longitude,latitude,elevation,flow_distance,chi,drainage_area,delta_ksn,sharpness,out,basin_key,source_key";
 
   chi_data_out << endl;
 
@@ -2807,6 +2845,7 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
                      << drainage_area_data_map[nearnode] << ","
                      << this_kp << ","
                      << sharpness_ksn_length[this_node] << ","
+                     << map_outlier_MZS_combined[this_node] << ","
                      << baselevel_keys_map[this_node]<< ","
                      << source_keys_map[this_node];
 

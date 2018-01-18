@@ -7664,6 +7664,12 @@ vector<int> is_outlier_MZS(vector<float> vecval, float NDV, float threshold)
     }
   }
 
+  // DEBUG
+  // for(size_t u =0 ; u < MZC.size(); u++ )
+  // {
+  //   cout << vecval[u] << " ---> " << MZC[u] << " : " << vecout[u] << endl;
+  // }
+
   return vecout;
 }
 
