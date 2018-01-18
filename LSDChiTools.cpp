@@ -2193,43 +2193,46 @@ void LSDChiTools::ksn_knickpoints_combining(LSDFlowInfo& Flowinfo)
     // Now looping through the node for each rivers
     int this_SK = henri -> first;
     vector<int> vecnode_kp = henri->second, vecnode_river = map_node_source_key[this_SK];
-    // getting the groups of vector
-    vector<vector<int> > grouped_kp = group_local_kp(vecnode_kp,vecnode_river,Flowinfo);
-    // We have the group of vector now lets run through it to get the requested values
-    for(vector<vector<int> >::iterator vlad = grouped_kp.begin(); vlad != grouped_kp.end(); vlad ++)
+    if(vecnode_kp.size()>0)
     {
-      vector<int> this_vecnode = *vlad;
-      // Easy case: non composite knickpoint, let's just record the same info thatn the raw detection
-      if(this_vecnode.size() == 1)
+      // getting the groups of vector
+      vector<vector<int> > grouped_kp = group_local_kp(vecnode_kp,vecnode_river,Flowinfo);
+      // We have the group of vector now lets run through it to get the requested values
+      for(vector<vector<int> >::iterator vlad = grouped_kp.begin(); vlad != grouped_kp.end(); vlad ++)
       {
-        int this_node = this_vecnode[0];// node of the knickpoint
-        ksn_kp_map[this_node] = raw_ksn_kp_map[this_node]; // delta ksn of the knickpoint
-        sharpness_ksn_length[this_node] = 0; // sharpness = 0 as the knickpoint is a point
-        ksn_extent[this_node] = make_pair(this_node, this_node); // the extent nodes are the same
-        // Getting the coordinate of the centroid of the kp -> just regular x
-        float this_x = 0,this_y = 0;
-        Flowinfo.get_x_and_y_from_current_node(this_node, this_x, this_y);
-        ksn_centroid[this_node] = make_pair(this_x,this_y);
-        // finally getting the ID of my 
-        ksn_kp_ID[this_node] = id_kp;
-        nearest_node_centroid_kp[this_node] = this_node;
-        flow_distance_kp_centroid_map[this_node] = flow_distance_data_map[this_node];
-        id_kp ++;
-      }
-      else if(this_vecnode.size() > 1)
-      {
-        // harder case: several knickpoints, let's go step by step
-        // the identifying node of the kp is the first one
-        int this_node = this_vecnode[0];
-        ksn_kp_map[this_node] = get_dksn_from_composite_kp(this_vecnode); // gobal value of the knickpoint
-        sharpness_ksn_length[this_node] = get_kp_sharpness_length(this_vecnode, Flowinfo);
-        ksn_extent[this_node] = make_pair(this_vecnode[0], this_vecnode.back()); // the extent nodes are the extreme of the DD
-        pair<pair<int,float>,pair<float,float> > temp_pair = get_ksn_centroid_coordinates(Flowinfo, this_vecnode); // get the x and y of the centroid.
-        flow_distance_kp_centroid_map[this_node] = temp_pair.first.second;
-        ksn_centroid[this_node] = temp_pair.second; // get the x and y of the centroid.
-        nearest_node_centroid_kp[this_node] = temp_pair.first.first;
-        ksn_kp_ID[this_node] = id_kp;
-        id_kp++;
+        vector<int> this_vecnode = *vlad;
+        // Easy case: non composite knickpoint, let's just record the same info thatn the raw detection
+        if(this_vecnode.size() == 1)
+        {
+          int this_node = this_vecnode[0];// node of the knickpoint
+          ksn_kp_map[this_node] = raw_ksn_kp_map[this_node]; // delta ksn of the knickpoint
+          sharpness_ksn_length[this_node] = 0; // sharpness = 0 as the knickpoint is a point
+          ksn_extent[this_node] = make_pair(this_node, this_node); // the extent nodes are the same
+          // Getting the coordinate of the centroid of the kp -> just regular x
+          float this_x = 0,this_y = 0;
+          Flowinfo.get_x_and_y_from_current_node(this_node, this_x, this_y);
+          ksn_centroid[this_node] = make_pair(this_x,this_y);
+          // finally getting the ID of my 
+          ksn_kp_ID[this_node] = id_kp;
+          nearest_node_centroid_kp[this_node] = this_node;
+          flow_distance_kp_centroid_map[this_node] = flow_distance_data_map[this_node];
+          id_kp ++;
+        }
+        else if(this_vecnode.size() > 1)
+        {
+          // harder case: several knickpoints, let's go step by step
+          // the identifying node of the kp is the first one
+          int this_node = this_vecnode[0];
+          ksn_kp_map[this_node] = get_dksn_from_composite_kp(this_vecnode); // gobal value of the knickpoint
+          sharpness_ksn_length[this_node] = get_kp_sharpness_length(this_vecnode, Flowinfo);
+          ksn_extent[this_node] = make_pair(this_vecnode[0], this_vecnode.back()); // the extent nodes are the extreme of the DD
+          pair<pair<int,float>,pair<float,float> > temp_pair = get_ksn_centroid_coordinates(Flowinfo, this_vecnode); // get the x and y of the centroid.
+          flow_distance_kp_centroid_map[this_node] = temp_pair.first.second;
+          ksn_centroid[this_node] = temp_pair.second; // get the x and y of the centroid.
+          nearest_node_centroid_kp[this_node] = temp_pair.first.first;
+          ksn_kp_ID[this_node] = id_kp;
+          id_kp++;
+        }
       }
     }
 
@@ -2329,9 +2332,10 @@ pair<pair<int,float>,pair<float,float> > LSDChiTools::get_ksn_centroid_coordinat
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //  Group the adjacent local knickpoints from two vectors =
+//                  Old version                           =
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-vector<vector<int> > LSDChiTools::group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river,LSDFlowInfo& Flowinfo)
+vector<vector<int> > LSDChiTools::old_group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river,LSDFlowInfo& Flowinfo)
 {
   // creating a map of neightboors for each nodes of the river 
   size_t it;
@@ -2371,7 +2375,7 @@ vector<vector<int> > LSDChiTools::group_local_kp(vector<int> vecnode_kp, vector<
     }
     // cout << "DEBUG test 2" << endl;
 
-    //other nodes
+    // other nodes
 
     for(it = 1; it < vecnode_kp.size(); it++)
     {
@@ -2392,12 +2396,100 @@ vector<vector<int> > LSDChiTools::group_local_kp(vector<int> vecnode_kp, vector<
         this_vecnode.clear();
       }
     }
+
     // cout << "DEBUG test 3" << endl;
+
   }
 
   return out_vector;
 }
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//  Group the adjacent local knickpoints from two vectors =
+//                  New version                           =
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+vector<vector<int> > LSDChiTools::group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river,LSDFlowInfo& Flowinfo)
+{
+
+  // pixel window to check on the knickpoints
+  int HW = 5;
+  // cout << "DEBUG_1" << endl;
+  // getting the index of each knickpoint in the node vector
+  size_t iced_t =0;
+  vector<int> corresponding_index;
+  for(; iced_t < vecnode_kp.size(); iced_t++)
+  {
+    int idx =0;
+    bool found_it = false;
+    for (size_t yh =0; found_it == false; yh++)
+    {
+      if(vecnode_kp[iced_t] == vecnode_river[yh])
+      {
+        idx = yh; // corresponding index
+        found_it = true;
+      }
+    }
+    corresponding_index.push_back(idx);
+  }
+
+
+  // Now I have the corresponding index
+  // cout << "DEBUG_2 || " << corresponding_index.size() << endl;
+
+  // Now creating a vector of number of node between this kp node and the following
+  vector<int> n_node_to_next;
+
+  for(size_t it = 0; it<corresponding_index.size()-1; it++)
+  {
+    n_node_to_next.push_back(corresponding_index[it+1] - corresponding_index[it]);
+  }
+  n_node_to_next.push_back(0);
+
+  cout << n_node_to_next.size() << " || " << corresponding_index.size() << " || " << vecnode_kp.size() << endl;
+  // I got the number of node in between a knickpoint and the next
+  // cout << "DEBUG_3" << endl;
+
+  vector<vector<int> > out_vector;
+  vector<int> this_vec;
+
+  for(size_t it = 0; it<vecnode_kp.size(); it++)
+  {
+    // saving the node
+    bool save_the_raster = true;
+    int this_idx = corresponding_index[it];
+    this_vec.push_back(vecnode_kp[it]);
+
+    if(n_node_to_next[it] <= HW)
+    {
+
+      if(this_idx != vecnode_river.size()-1)
+      {
+        // cout << n_node_to_next[it] << endl;
+        float this_kp = raw_ksn_kp_map[vecnode_river[this_idx]], next_kp = raw_ksn_kp_map[vecnode_river[this_idx+n_node_to_next[it]]] ;
+        // Check if they are both the same polarity
+        // cout << this_kp << " || " << next_kp << endl;
+        if( (this_kp > 0 && next_kp > 0) || (this_kp <0 && next_kp<0) )
+        {
+
+          save_the_raster = false;
+        }
+      }
+    }
+    // if not of these, I am saving this vector of node and clearing it
+    if(save_the_raster)
+    {
+      out_vector.push_back(this_vec);
+      this_vec.clear();
+    }
+  }
+  
+
+
+  return out_vector;
+
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //  Apply a Total Variation Denoising filter on the data  =

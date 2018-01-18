@@ -1224,6 +1224,8 @@ class LSDChiTools
     float get_kp_sharpness_length(vector<int> vecnode, LSDFlowInfo& Flowinfo);
     pair<pair<int,float>,pair<float,float> > get_ksn_centroid_coordinates(LSDFlowInfo& Flowinfo, vector<int> vecnode);
     vector<vector<int> > group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river,LSDFlowInfo& Flowinfo);
+    vector<vector<int> > old_group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river,LSDFlowInfo& Flowinfo);
+
     
     
     void print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filename);
