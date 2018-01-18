@@ -131,6 +131,8 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["only_take_largest_basin"] = false;
   string_default_map["BaselevelJunctions_file"] = "NULL";
   bool_default_map["extend_channel_to_node_before_receiver_junction"] = true;
+  bool_default_map["remove_basins_by_outlet_elevation"] = true;
+  float_default_map["outlet_elevation_threshold"] = 25;
 
   // IMPORTANT: S-A analysis and chi analysis wont work if you have a truncated
   // basin. For this reason the default is to test for edge effects
@@ -226,6 +228,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_chi_coordinate_raster"] = false;
   bool_default_map["print_simple_chi_map_to_csv"] = false;
   bool_default_map["print_chi_data_maps"] = false;
+
 
   // these are routines that run segmentation
   bool_default_map["print_simple_chi_map_with_basins_to_csv"] = false;
@@ -764,6 +767,16 @@ int main (int nNumberofArgs,char *argv[])
     BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Largest(BaseLevelJunctions, FlowInfo, FlowAcc);
   }
 
+  // Finally, remove basins above or below a threshold if that is what the user wants. 
+  if (this_bool_map["remove_basins_by_outlet_elevation"])
+  {
+    cout << "I am only going to take the largest basin." << endl;
+    bool keep_junctions_below_threshold = true;
+    BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Threshold_Elevation(BaseLevelJunctions, FlowInfo, 
+                                  filled_topography, this_float_map["outlet_elevation_threshold"],
+                                  keep_junctions_below_threshold);
+  }
+
   // Correct number of base level junctions
   int N_BaseLevelJuncs = BaseLevelJunctions.size();
   cout << "The number of basins I will analyse is: " << N_BaseLevelJuncs << endl;
@@ -772,6 +785,8 @@ int main (int nNumberofArgs,char *argv[])
     cout << "I am stopping here since I don't have any basins to analyse." << endl;
     exit(EXIT_FAILURE);
   }
+  
+
 
   // This is for debugging
   //for (int BN = 0; BN< N_BaseLevelJuncs; BN++)

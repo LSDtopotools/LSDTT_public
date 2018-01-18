@@ -490,6 +490,21 @@ class LSDJunctionNetwork
   vector<int> Prune_Junctions_Largest(vector<int>& BaseLevelJunctions_Initial,LSDFlowInfo& FlowInfo,
                               LSDIndexRaster& FlowAcc);
 
+  /// @brief This function takes a list of junctions retains ONLY the junctions
+  ///  that have an outlet elevation greater or less than the threshold elevation
+  ///  Selevtion of greater or lower is determined by bool keep_junctions_below_threshold
+  /// @param BaseLevelJunctions_Initial a vector of integers containg an inital
+  ///  list of base level nodes
+  /// @param FlowInfo The LSDFlowInfo object
+  /// @param Elev an LSDRaster of elevation
+  /// @param threshold_elevation the threshold elevation to kepp
+  /// @param keep_junctions_below_threshold if true keep junctions below threshold
+  /// @return a pruned list of base level nodes
+  /// @author SMM
+  /// @date 18/01/18
+  vector<int> Prune_Junctions_Threshold_Elevation(vector<int>& BaseLevelJunctions_Initial,
+                                              LSDFlowInfo& FlowInfo, LSDRaster& Elev, 
+                                              float threshold_elevation, bool keep_junctions_below_threshold);
 
   /// @brief You give this a list of junction numbers and it returns the
   ///  number of upslope pixels
