@@ -225,8 +225,8 @@ int main (int nNumberofArgs,char *argv[])
 
   // switches for chi analysis
   // These just print simple chi maps
-
   bool_default_map["print_chi_coordinate_raster"] = false;
+  bool_default_map["mask_chi_coordinate_raster_with_basins"] = false;
   bool_default_map["print_simple_chi_map_to_csv"] = false;
   bool_default_map["print_chi_data_maps"] = false;
 
