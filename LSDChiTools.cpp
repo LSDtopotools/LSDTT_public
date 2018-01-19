@@ -2454,7 +2454,7 @@ vector<vector<int> > LSDChiTools::group_local_kp(vector<int> vecnode_kp, vector<
   vector<vector<int> > out_vector;
   vector<int> this_vec;
 
-  for(size_t it = 0; it<vecnode_kp.size(); it++)
+  for(size_t it = 0; it <= vecnode_kp.size(); it++)
   {
     // saving the node
     bool save_the_raster = true;
@@ -2485,8 +2485,6 @@ vector<vector<int> > LSDChiTools::group_local_kp(vector<int> vecnode_kp, vector<
     }
   }
   
-
-
   return out_vector;
 
 }
