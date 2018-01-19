@@ -132,7 +132,8 @@ int main (int nNumberofArgs,char *argv[])
   string_default_map["BaselevelJunctions_file"] = "NULL";
   bool_default_map["extend_channel_to_node_before_receiver_junction"] = true;
   bool_default_map["remove_basins_by_outlet_elevation"] = true;
-  float_default_map["outlet_elevation_threshold"] = 25;
+  float_default_map["lower_outlet_elevation_threshold"] = 0;
+  float_default_map["upper_outlet_elevation_threshold"] = 25;
 
   // IMPORTANT: S-A analysis and chi analysis wont work if you have a truncated
   // basin. For this reason the default is to test for edge effects
@@ -770,11 +771,11 @@ int main (int nNumberofArgs,char *argv[])
   // Finally, remove basins above or below a threshold if that is what the user wants. 
   if (this_bool_map["remove_basins_by_outlet_elevation"])
   {
-    cout << "I am only going to take the largest basin." << endl;
-    bool keep_junctions_below_threshold = true;
-    BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Threshold_Elevation(BaseLevelJunctions, FlowInfo, 
-                                  filled_topography, this_float_map["outlet_elevation_threshold"],
-                                  keep_junctions_below_threshold);
+    cout << "I am only going to take basins within an elevation window." << endl;
+    cout << "The upper and lower thresholds are: " <<  this_float_map["lower_outlet_elevation_threshold"] << " and: " << this_float_map["upper_outlet_elevation_threshold"] << endl;
+    BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Elevation_Window(BaseLevelJunctions, FlowInfo, 
+                                  filled_topography, this_float_map["lower_outlet_elevation_threshold"],
+                                  this_float_map["upper_outlet_elevation_threshold"]);
   }
 
   // Correct number of base level junctions

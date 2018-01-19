@@ -6611,7 +6611,6 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_Threshold_Elevation(vector<int>&
                                               float threshold_elevation, bool keep_junctions_below_threshold)
 {
   vector<int> BL_Donor_junctions_pruned;
-  int current_row,current_col;
   int N_BaseLevelJuncs = int(BaseLevelJunctions_Initial.size());
 
   int row,col, current_node;
@@ -6627,7 +6626,9 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_Threshold_Elevation(vector<int>&
     current_node = JunctionVector[BaseLevelJunctions_Initial[i]];
     FlowInfo.retrieve_current_row_and_col(current_node,row,col);
     
-    float this_elevation = Elev.get_data_element(current_row,current_col);
+    float this_elevation = Elev.get_data_element(row,col);
+    
+    cout << "Junction: " <<  BaseLevelJunctions_Initial[i] << " and elevation is: " << this_elevation << endl;
     
     if (keep_junctions_below_threshold)
     {
@@ -6649,7 +6650,48 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_Threshold_Elevation(vector<int>&
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This prunes a list of baselevel junctions by selecting only those junctions
+// that are within an elevation window
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<int> LSDJunctionNetwork::Prune_Junctions_Elevation_Window(vector<int>& BaseLevelJunctions_Initial,
+                                              LSDFlowInfo& FlowInfo, LSDRaster& Elev, 
+                                              float lower_threshold, float upper_threshold)
+{
+  vector<int> BL_Donor_junctions_pruned;
+  int N_BaseLevelJuncs = int(BaseLevelJunctions_Initial.size());
 
+  int row,col, current_node;
+  if(BaseLevelJunctions_Initial.size() <= 0)
+  {
+    cout << "I am afraid you have no junctions in your junction list. Exiting." << endl;
+    exit(0);
+  }
+
+
+  for(int i = 0; i < N_BaseLevelJuncs; ++i)
+  {
+    current_node = JunctionVector[BaseLevelJunctions_Initial[i]];
+    FlowInfo.retrieve_current_row_and_col(current_node,row,col);
+    
+    float this_elevation = Elev.get_data_element(row,col);
+    
+    cout << "Junction: " <<  BaseLevelJunctions_Initial[i] << " and elevation is: " << this_elevation;
+    
+    if (this_elevation >= lower_threshold && this_elevation <= upper_threshold)
+    {
+      cout << " KEEPING this one." << endl;
+      BL_Donor_junctions_pruned.push_back(BaseLevelJunctions_Initial[i]);
+    }
+    else
+    {
+      cout << " NOT keeping that one. " << endl;
+    }
+  }
+
+  return BL_Donor_junctions_pruned;
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function returns a vector of the contributing pixels from a list
