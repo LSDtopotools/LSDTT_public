@@ -1253,7 +1253,7 @@ class LSDChiTools
     int NoDataValue;
 
     /// A general incrementer for knickpoints. It has to be global for some reason
-    int id_kp = 0;
+    int id_kp;
 
     ///A map of strings for holding georeferencing information
     map<string,string> GeoReferencingStrings;

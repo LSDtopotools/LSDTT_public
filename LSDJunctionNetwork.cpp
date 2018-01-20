@@ -2208,6 +2208,51 @@ int LSDJunctionNetwork::get_Receiver_of_Junction(int junction) const
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+// Converting a junction list into a node list
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+vector<int> LSDJunctionNetwork::get_node_list_from_junction_list(vector<int> junction_list)
+{
+  int N_juncs = junction_list.size();
+  vector<int> node_list;
+  int this_junc;
+  
+  for (int i = 0; i< N_juncs; i++)
+  {
+    this_junc = junction_list[i];
+    if (this_junc >= 0 && this_junc < int(JunctionVector.size()))
+    {
+      node_list.push_back(JunctionVector[this_junc]);
+    }
+  }
+  
+  return node_list;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+// Converting a junction list into a node list
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
+vector<int> LSDJunctionNetwork::get_node_list_of_penultimate_node_from_junction_list(vector<int> junction_list, LSDFlowInfo& FlowInfo)
+{
+  int N_juncs = junction_list.size();
+  vector<int> node_list;
+  int this_junc;
+  
+  for (int i = 0; i< N_juncs; i++)
+  {
+    this_junc = junction_list[i];
+    if (this_junc >= 0 && this_junc < int(JunctionVector.size()))
+    {
+      int outlet_node = get_penultimate_node_from_stream_link(this_junc,FlowInfo);
+      node_list.push_back(outlet_node);
+    }
+  }
+  
+  return node_list;
+}
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=
 // Function to get the junction downstream of the next
 // Added by FJC 08/10/15
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=

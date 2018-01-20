@@ -1520,12 +1520,32 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
   /// @details Gets the node of a junction
   /// @param junction integer node index.
   /// @return Integer node of junction.
+  /// @author SMM
+  /// @date 01/01/2014
   int get_Node_of_Junction(int junction) const;
 
   /// @details Gets the receiver of a junction
   /// @param junction integer reciever index.
   /// @return Integer reciever of junction.
+  /// @author SMM
+  /// @date 01/01/2014
   int get_Receiver_of_Junction(int junction) const;
+
+  /// @details Gets a node list from a junction list
+  /// @param junction_list a vector of junctions
+  /// @return vector of nodes
+  /// @author SMM
+  /// @date 20/01/2018
+  vector<int> get_node_list_from_junction_list(vector<int> junction_list);
+
+
+  /// @details Gets a node list from a junction list. The nodes are the penultimate nodes before the reciever juctions
+  /// @param junction_list a vector of junctions
+  /// @param FlowInfo the LSDFlowInfo object
+  /// @return vector of nodes
+  /// @author SMM
+  /// @date 20/01/2018
+  vector<int> get_node_list_of_penultimate_node_from_junction_list(vector<int> junction_list, LSDFlowInfo& FlowInfo);
 
   /// @details Get downstream junction
   /// @param starting_junction starting junction

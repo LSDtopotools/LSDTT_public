@@ -2188,6 +2188,8 @@ void LSDChiTools::ksn_knickpoints_combining(LSDFlowInfo& Flowinfo)
   // First looping through the source keys
   map<int,vector<int> >::iterator henri;
 
+  id_kp = 0;
+
   for(henri = map_node_source_key_kp.begin(); henri != map_node_source_key_kp.end(); henri ++)
   {
     // Now looping through the node for each rivers

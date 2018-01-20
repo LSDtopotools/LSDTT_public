@@ -242,7 +242,6 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_sources_to_raster"] = false;
   bool_default_map["print_baselevel_keys"] = false;
 
-
   // These enable calculation of chi based on discharge
   bool_default_map["use_precipitation_raster_for_chi"] = false;
   bool_default_map["print_discharge_raster"] = false;
@@ -842,7 +841,33 @@ int main (int nNumberofArgs,char *argv[])
     {
       string chi_coord_string = OUT_DIR+OUT_ID+"_chi_coordQ";
       chi_coordinate.write_raster(chi_coord_string,raster_ext);
+      
+      // Now get the masked chi coordinate if you want it
+      if(this_bool_map["mask_chi_coordinate_raster_with_basins"])
+      {
+        // you need to get a differen chi raster
+        vector<int> BaseLevelNodeList;
+        
+        // See if the basins are extended to the penulimate node and get the appropriate
+        // node list
+        if(this_bool_map["extend_channel_to_node_before_receiver_junction"])
+        {
+          BaseLevelNodeList = JunctionNetwork.get_node_list_of_penultimate_node_from_junction_list(BaseLevelJunctions, FlowInfo);
+        }
+        else
+        {
+          BaseLevelNodeList = JunctionNetwork.get_node_list_from_junction_list(BaseLevelJunctions);
+        }
+        
+        // Now get the masked chi raster
+        LSDRaster MaskedChi = FlowInfo.get_upslope_chi_from_multiple_starting_nodes(BaseLevelNodeList,
+                                      movern,A_0,thresh_area_for_chi,Discharge);
+        string chi_coord_string_m = OUT_DIR+OUT_ID+"_Maskedchi_coordQ";
+        MaskedChi.write_raster(chi_coord_string_m,raster_ext);
+      }
     }
+    
+
 
 
   }
@@ -854,6 +879,31 @@ int main (int nNumberofArgs,char *argv[])
     {
       string chi_coord_string = OUT_DIR+OUT_ID+"_chi_coord";
       chi_coordinate.write_raster(chi_coord_string,raster_ext);
+      
+      // Now get the masked chi coordinate if you want it
+      if(this_bool_map["mask_chi_coordinate_raster_with_basins"])
+      {
+        // you need to get a different chi raster
+        vector<int> BaseLevelNodeList;
+        
+        // See if the basins are extended to the penulimate node and get the appropriate
+        // node list
+        if(this_bool_map["extend_channel_to_node_before_receiver_junction"])
+        {
+          BaseLevelNodeList = JunctionNetwork.get_node_list_of_penultimate_node_from_junction_list(BaseLevelJunctions, FlowInfo);
+        }
+        else
+        {
+          BaseLevelNodeList = JunctionNetwork.get_node_list_from_junction_list(BaseLevelJunctions);
+        }
+        
+        // Now get the masked chi raster
+        LSDRaster MaskedChi = FlowInfo.get_upslope_chi_from_multiple_starting_nodes(BaseLevelNodeList,
+                                      movern,A_0,thresh_area_for_chi);
+        string chi_coord_string_m = OUT_DIR+OUT_ID+"_Maskedchi";
+        MaskedChi.write_raster(chi_coord_string_m,raster_ext);
+      }
+      
     }
   }
 
