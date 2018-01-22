@@ -8,3 +8,4 @@ cmake .
 make
 mv get_elevation_profiles.out ../
 cd ..
+
