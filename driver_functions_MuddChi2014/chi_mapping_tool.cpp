@@ -131,7 +131,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["only_take_largest_basin"] = false;
   string_default_map["BaselevelJunctions_file"] = "NULL";
   bool_default_map["extend_channel_to_node_before_receiver_junction"] = true;
-  bool_default_map["remove_basins_by_outlet_elevation"] = true;
+  bool_default_map["remove_basins_by_outlet_elevation"] = false;
   float_default_map["lower_outlet_elevation_threshold"] = 0;
   float_default_map["upper_outlet_elevation_threshold"] = 25;
 
