@@ -155,8 +155,8 @@ int main (int nNumberofArgs,char *argv[])
 
   // knickpoint analysis. This is still under development.
   bool_default_map["ksn_knickpoint_analysis"] = false;
-  int_default_map["force_skip_knickpoint_analysis"] = 0;
-  int_default_map["force_n_iteration_knickpoint_analysis"] = 1;
+  int_default_map["force_skip_knickpoint_analysis"] = 2;
+  int_default_map["force_n_iteration_knickpoint_analysis"] = 20;
   float_default_map["MZS_threshold"] = 3.5;
   float_default_map["TVD_lambda"] = 10;
  
