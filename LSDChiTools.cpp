@@ -2078,13 +2078,16 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   cout << " OK" << endl ;
 
   // Processing the knickpoints to combine the composite knickpoints
-
+  cout << "Combining knickpoints ..." << endl;
   ksn_knickpoints_combining(FlowInfo);
+  cout << " OK" << endl ;
 
 
   // Ok let's detect oultliers here
+  cout << "Selecting the outliers ...";
   ksn_knickpoint_outlier_automator(FlowInfo, MZS_th);
-  
+  cout << " OK" << endl ;
+
 
   //printing the raw ksn knickpoint file
   string this_name = OUT_DIR + OUT_ID + "_ksnkp_raw.csv";
@@ -2449,7 +2452,7 @@ vector<vector<int> > LSDChiTools::group_local_kp(vector<int> vecnode_kp, vector<
   }
   n_node_to_next.push_back(0);
 
-  cout << n_node_to_next.size() << " || " << corresponding_index.size() << " || " << vecnode_kp.size() << endl;
+  // cout << n_node_to_next.size() << " || " << corresponding_index.size() << " || " << vecnode_kp.size() << endl;
   // I got the number of node in between a knickpoint and the next
   // cout << "DEBUG_3" << endl;
 
