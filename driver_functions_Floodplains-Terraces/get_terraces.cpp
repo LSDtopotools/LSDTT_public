@@ -248,7 +248,8 @@ int main (int nNumberofArgs,char *argv[])
 		string csv_fname = "_terrace_info.csv";
 		string full_csv_name = DATA_DIR+DEM_ID+csv_fname;
 		cout << "The full csv filename is: " << full_csv_name << endl;
-		Terraces.print_TerraceInfo_to_csv(full_csv_name, RasterTemplate, FlowInfo, TestSwath);
+		Terraces.print_TerraceInfo_to_csv(full_csv_name, RasterTemplate, SwathRaster, FlowInfo, TestSwath);
+		//(string csv_filename, LSDRaster& ElevationRaster, LSDRaster& ChannelRelief,  LSDFlowInfo& FlowInfo, LSDSwath& Swath)
 
 
 		// write raster of terrace elevations
