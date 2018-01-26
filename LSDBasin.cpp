@@ -983,7 +983,7 @@ vector<int> LSDBasin::order_perimeter_nodes(LSDFlowInfo& FlowInfo)
     // check if you've already been to this node.
     if (VisitedBefore[this_i][this_j] == 1)
     {
-      cout << "Wait, you've been to this node before! Is it an evil node?" << endl;
+      //cout << "Wait, you've been to this node before! Is it an evil node?" << endl;
       if (evil_node = false)
       {
         break;
@@ -1117,9 +1117,9 @@ vector<int> LSDBasin::order_perimeter_nodes(LSDFlowInfo& FlowInfo)
     }
     else if ( Distances[min_idx] == 100)
     {
-      cout << "I can't find a neighbouring perimeter node that you haven't been to." << endl;
+      //out << "I can't find a neighbouring perimeter node that you haven't been to." << endl;
       //reached_outlet = true;
-      cout << "I'll remove this node and go back one" << endl;
+      //cout << "I'll remove this node and go back one" << endl;
       VisitedBefore[next_i][next_j] = 1;
       next_i = last_i;
       next_j = last_j;

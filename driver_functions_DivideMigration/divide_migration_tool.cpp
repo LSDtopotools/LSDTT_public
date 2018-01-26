@@ -351,6 +351,13 @@ int main (int nNumberofArgs,char *argv[])
 
   }
 
+  if (this_bool_map["print_basin_raster"])
+  {
+    LSDIndexRaster Basins = JunctionNetwork.extract_basins_from_junction_vector(BaseLevelJunctions, FlowInfo);
+    string basins_name = "_basins";
+    Basins.write_raster((OUT_DIR+OUT_ID+basins_name), raster_ext);
+  }
+
   // now get the basin perimeters - this is for getting the hypsometry
   // of the perimeter to look for drainage captures
   if (this_bool_map["get_basin_perimeters"])
@@ -359,9 +366,10 @@ int main (int nNumberofArgs,char *argv[])
 
     for (int junc = 0; junc < int(BaseLevelJunctions.size()); junc++)
     {
+      cout << "This outlet junction is: " << BaseLevelJunctions[junc] << endl;
       int JunctionNumber = BaseLevelJunctions[junc];
       string jn_str = static_cast<ostringstream*>( &(ostringstream() << JunctionNumber) )->str();
-      string perimeter_name = OUT_DIR+OUT_ID+"_Perimeter"+jn_str+".csv";
+      string perimeter_name = OUT_DIR+OUT_ID+"_Perimeter_"+jn_str+".csv";
       // get the node index of this junction
       int basin_node = JunctionNetwork.get_Node_of_Junction(JunctionNumber);
 
@@ -374,7 +382,7 @@ int main (int nNumberofArgs,char *argv[])
 
       if ( this_bool_map["convert_csv_to_geojson"])
       {
-        string gjson_name = OUT_DIR+OUT_ID+"_Perimeter"+jn_str+".geojson";
+        string gjson_name = OUT_DIR+OUT_ID+"_Perimeter_"+jn_str+".geojson";
         LSDSpatialCSVReader thiscsv(perimeter_name);
         thiscsv.print_data_to_geojson(gjson_name);
       }
