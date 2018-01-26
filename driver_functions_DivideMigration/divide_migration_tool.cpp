@@ -333,13 +333,18 @@ int main (int nNumberofArgs,char *argv[])
         int basin_node = JunctionNetwork.get_Node_of_Junction(JunctionNumber);
 
         // now get the perimeter
-        vector<int> perimeter_vec = FlowInfo.basin_edge_extractor(basin_node, topography_raster);
-        FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(perimeter_vec, perimeter_name);
+        //vector<int> perimeter_vec = FlowInfo.basin_edge_extractor(basin_node, topography_raster);
+        //FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(perimeter_vec, perimeter_name);
 
         LSDBasin ABasin(JunctionNumber, FlowInfo, JunctionNetwork);
         LSDRaster ThisBasin = ABasin.write_raster_data_to_LSDRaster(filled_topography, FlowInfo);
+        // unordered perim for checking
+        ABasin.set_Perimeter(FlowInfo);
+        ABasin.print_perimeter_to_csv(FlowInfo, OUT_DIR+OUT_ID+"perim_check.csv");
+
+
         ThisBasin.write_raster((OUT_DIR+OUT_ID+"_Perimeters"),"bil");
-        ABasin.print_perimeter_hypsometry_to_csv(FlowInfo, perimeter_vec, perimeter_name, filled_topography);
+        ABasin.print_perimeter_hypsometry_to_csv(FlowInfo, perimeter_name, filled_topography);
 
         if ( this_bool_map["convert_csv_to_geojson"])
         {

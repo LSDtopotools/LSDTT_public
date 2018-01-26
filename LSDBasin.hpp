@@ -385,6 +385,13 @@ class LSDBasin
   /// @date 12/12/13
   void set_Perimeter(LSDFlowInfo& FlowInfo);
 
+  /// @brief Set the perimeter pixels by passing in
+  /// your own vector of perimeter nodes.
+  /// @param perimeter_nodes vector of perimeter nodes
+  /// @author FJC
+  /// @date 26/01/18
+  void set_perimeter_from_vector(vector<int> perimeter_nodes) { Perimeter_nodes = perimeter_nodes; }
+
   /// @brief Prints the perimeter nodes to a csv file
   /// @param FlowInfo the LSDFlowInfo object
   /// @param string perimeter_fname
@@ -400,14 +407,13 @@ class LSDBasin
   /// @param ElevationRaster elevation raster
   /// @author FJC
   /// @date 10/01/18
-  void print_perimeter_hypsometry_to_csv(LSDFlowInfo& FlowInfo, vector<int> perimeter_nodes, string perimeter_fname, LSDRaster& ElevationRaster);
+  void print_perimeter_hypsometry_to_csv(LSDFlowInfo& FlowInfo, string perimeter_fname, LSDRaster& ElevationRaster);
 
   /// @brief Orders perimeter nodes from the outlet
   /// @param FlowInfo the LSDFlowInfo object
-  /// @param perimeter_nodes vector of perimeter nodes
   /// @author FJC
   /// @date 16/01/18
-  vector<int> order_perimeter_nodes(LSDFlowInfo& FlowInfo, vector<int> perimeter_nodes);
+  vector<int> order_perimeter_nodes(LSDFlowInfo& FlowInfo);
 
   /// @brief Set the four different hillslope length measurements for the basin.
   /// @param FlowInfo Flowinfo object.
