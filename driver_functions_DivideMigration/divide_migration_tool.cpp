@@ -95,46 +95,35 @@ int main (int nNumberofArgs,char *argv[])
   map<string,bool> bool_default_map;
   map<string,string> string_default_map;
 
-  // set default float parameters
-  int_default_map["basin_order"] = 2;
+  // default channel extraction
   int_default_map["threshold_contributing_pixels"] = 2000;
-  int_default_map["search_radius_nodes"] = 10;
 
-  // set default in parameter
+  // filling
   float_default_map["min_slope_for_fill"] = 0.0001;
-
-  // set default methods
   bool_default_map["raster_is_filled"] = false;
+
+  // basin selection
+  bool_default_map["find_complete_basins_in_window"] = true;
+  bool_default_map["find_largest_complete_basins"] = false;
+  bool_default_map["test_drainage_boundaries"] = true;
+  int_default_map["minimum_basin_size_pixels"] = 5000;
+  int_default_map["maximum_basin_size_pixels"] = 500000;
+  string_default_map["BaselevelJunctions_file"] = "NULL";
+
+  // analysis that you want to do
+  bool_default_map["get_basin_perimeters"] = false;
+
+  // printing
+  bool_default_map["print_basin_raster"] = false;
   bool_default_map["print_filled_raster"] = false;
+  bool_default_map["print_stream_order_raster"] = false;
+  bool_default_map["print_stream_order_csv"] = false;
+  bool_default_map["print_channels_to_csv"] = false;
+  bool_default_map["write hillshade"] = false;
   bool_default_map["print_junctions_to_csv"] = false;
   bool_default_map["print_junction_angles_to_csv"] = false;
   bool_default_map["print_junction_statistics_to_csv"] = false;
   bool_default_map["convert_csv_to_geojson"] = false;
-  bool_default_map["get_basin_perimeters"] = false;
-
-
-  bool_default_map["print_basin_raster"] = false;
-  bool_default_map["print_stream_order_raster"] = false;
-  bool_default_map["print_stream_order_csv"] = false;
-  bool_default_map["get_basins_from_outlets"] = false;
-  bool_default_map["print_junction_csv"] = false;
-  bool_default_map["print_channels_to_csv"] = false;
-  bool_default_map["spawn_basins_from_outlets"] = false;
-  bool_default_map["spawn_csv_file_from_basin_spawn"] = false;
-  bool_default_map["spawn_parameter_files_from_basin_spawn"] = false;
-  bool_default_map["write hillshade"] = false;
-
-  // set default string method
-  string_default_map["slope method"] = "polynomial";
-  string_default_map["averaging_raster_vector"] = "NULL";
-  string_default_map["basin_outlet_csv"] = "NULL";
-  string_default_map["sample_ID_column_name"] = "IDs";
-  string_default_map["parameter_file_for_spawning"] = "NULL";
-  string_default_map["BaselevelJunctions_file"] = "NULL";
-
-  // turn on parameter
-
-
 
   // Use the parameter parser to get the maps of the parameters required for the
   // analysis
@@ -241,13 +230,14 @@ int main (int nNumberofArgs,char *argv[])
 
   // now deal with the channel network
   cout << "\t Loading Sources..." << endl;
+  // calculate the flow accumulation
+  cout << "\t Calculating flow accumulation (in pixels)..." << endl;
+  LSDIndexRaster FlowAcc = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+
   // load the sources
   vector<int> sources;
   if (CHeads_file == "NULL" || CHeads_file == "Null" || CHeads_file == "null")
   {
-    // calculate the flow accumulation
-    cout << "\t Calculating flow accumulation (in pixels)..." << endl;
-    LSDIndexRaster FlowAcc = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
 
     // Now get the sources from flow accumulation
     cout << endl << endl << endl << "==================================" << endl;
@@ -289,75 +279,107 @@ int main (int nNumberofArgs,char *argv[])
     SOArray.write_raster(SO_raster_name,raster_ext);
   }
 
+  // now get the junctions for analysis
+  vector< int > BaseLevelJunctions;
+  vector< int > BaseLevelJunctions_Initial;
+  //Check to see if a list of junctions for extraction exists
+  if (BaselevelJunctions_file == "NULL" || BaselevelJunctions_file == "Null" || BaselevelJunctions_file == "null" || BaselevelJunctions_file.empty() == true)
+  {
+    cout << "To reiterate, there is no base level junction file. I am going to select basins for you using an algorithm. " << endl;
+    // remove basins drainage from edge if that is what the user wants
+    if (this_bool_map["find_complete_basins_in_window"])
+    {
+      cout << "I am going to look for basins in a pixel window that are not influended by nodata." << endl;
+      cout << "I am also going to remove any nested basins." << endl;
+      BaseLevelJunctions = JunctionNetwork.Prune_Junctions_By_Contributing_Pixel_Window_Remove_Nested_And_Nodata(FlowInfo, filled_topography, FlowAcc,
+                                              this_int_map["minimum_basin_size_pixels"],this_int_map["maximum_basin_size_pixels"]);
+    }
+    else
+    {
+      //Get baselevel junction nodes from the whole network
+      BaseLevelJunctions_Initial = JunctionNetwork.get_BaseLevelJunctions();
+
+      // now prune these by drainage area
+      cout << "Removing basins with fewer than " << this_int_map["minimum_basin_size_pixels"] << " pixels" << endl;
+      BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Area(BaseLevelJunctions_Initial,
+                                              FlowInfo, FlowAcc, this_int_map["minimum_basin_size_pixels"]);
+      cout << "Now I have " << BaseLevelJunctions.size() << " baselelvel junctions left. " << endl;
+
+      if (this_bool_map["find_largest_complete_basins"])
+      {
+        cout << "I am looking for the largest basin not influenced by nodata within all baselevel nodes." << endl;
+        BaseLevelJunctions = JunctionNetwork.Prune_To_Largest_Complete_Basins(BaseLevelJunctions,FlowInfo, filled_topography, FlowAcc);
+      }
+      else
+      {
+        if (this_bool_map["test_drainage_boundaries"])     // now check for edge effects
+        {
+          cout << endl << endl << "I am going to remove basins draining to the edge." << endl;
+          BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions,FlowInfo, filled_topography);
+          //BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge(BaseLevelJunctions,FlowInfo);
+        }
+      }
+    }
+  }
+  else
+  {
+
+    cout << "I am attempting to read base level junctions from a base level junction list." << endl;
+    cout << "If this is not a simple text file that only contains integers there will be problems!" << endl;
+
+    //specify junctions to work on from a list file
+    //string JunctionsFile = DATA_DIR+BaselevelJunctions_file;
+    cout << "The junctions file is: " << BaselevelJunctions_file << endl;
+
+    ifstream infile(BaselevelJunctions_file.c_str());
+    if (infile)
+    {
+      cout << "Junctions File " << BaselevelJunctions_file << " exists" << endl;;
+      int n;
+      while (infile >> n) BaseLevelJunctions_Initial.push_back(n);
+    }
+    else
+    {
+      cout << "Fatal Error: Junctions File " << BaselevelJunctions_file << " does not exist" << endl;
+      exit(EXIT_FAILURE);
+    }
+
+    // Now make sure none of the basins drain to the edge
+    cout << "I am pruning junctions that are influenced by the edge of the DEM!" << endl;
+    cout << "This is necessary because basins draining to the edge will not have realistic perimeters" << endl;
+    BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions_Initial, FlowInfo, filled_topography);
+
+  }
+
   // now get the basin perimeters - this is for getting the hypsometry
   // of the perimeter to look for drainage captures
   if (this_bool_map["get_basin_perimeters"])
   {
     cout << "I am getting the basin perimeters" << endl;
-    string perimeter_name = OUT_DIR+OUT_ID+"_Perimeters.csv";
 
-    if (BaselevelJunctions_file != "NULL" && BaselevelJunctions_file != "Null" && BaselevelJunctions_file != "null" && BaselevelJunctions_file.empty() == false)
+    for (int junc = 0; junc < int(BaseLevelJunctions.size()); junc++)
     {
-      vector< int > BaseLevelJunctions;
-      vector< int > BaseLevelJunctions_Initial;
+      int JunctionNumber = BaseLevelJunctions[junc];
+      string jn_str = static_cast<ostringstream*>( &(ostringstream() << JunctionNumber) )->str();
+      string perimeter_name = OUT_DIR+OUT_ID+"_Perimeter"+jn_str+".csv";
+      // get the node index of this junction
+      int basin_node = JunctionNetwork.get_Node_of_Junction(JunctionNumber);
 
-      cout << "I am attempting to read base level junctions from a base level junction list." << endl;
-      cout << "If this is not a simple text file that only contains integers there will be problems!" << endl;
+      LSDBasin ABasin(JunctionNumber, FlowInfo, JunctionNetwork);
+      //LSDRaster ThisBasin = ABasin.write_raster_data_to_LSDRaster(filled_topography, FlowInfo);
+      // unordered perim for checking
+      ABasin.set_Perimeter(FlowInfo);
+      //ThisBasin.write_raster((OUT_DIR+OUT_ID+"_Perimeters"),"bil");
+      ABasin.print_perimeter_hypsometry_to_csv(FlowInfo, perimeter_name, filled_topography);
 
-      //specify junctions to work on from a list file
-      //string JunctionsFile = DATA_DIR+BaselevelJunctions_file;
-      cout << "The junctions file is: " << BaselevelJunctions_file << endl;
-
-      ifstream infile(BaselevelJunctions_file.c_str());
-      if (infile)
+      if ( this_bool_map["convert_csv_to_geojson"])
       {
-        cout << "Junctions File " << BaselevelJunctions_file << " exists" << endl;;
-        int n;
-        while (infile >> n) BaseLevelJunctions_Initial.push_back(n);
-      }
-      else
-      {
-        cout << "Fatal Error: Junctions File " << BaselevelJunctions_file << " does not exist" << endl;
-        exit(EXIT_FAILURE);
-      }
-
-      // Now make sure none of the basins drain to the edge
-      cout << "I am pruning junctions that are influenced by the edge of the DEM!" << endl;
-      cout << "This is necessary because basins draining to the edge will not have realistic perimeters" << endl;
-      BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions_Initial, FlowInfo, filled_topography);
-
-      for (int junc = 0; junc < int(BaseLevelJunctions.size()); junc++)
-      {
-        int JunctionNumber = BaseLevelJunctions[junc];
-        // get the node index of this junction
-        int basin_node = JunctionNetwork.get_Node_of_Junction(JunctionNumber);
-
-        // now get the perimeter
-        //vector<int> perimeter_vec = FlowInfo.basin_edge_extractor(basin_node, topography_raster);
-        //FlowInfo.print_vector_of_nodeindices_to_csv_file_with_latlong(perimeter_vec, perimeter_name);
-
-        LSDBasin ABasin(JunctionNumber, FlowInfo, JunctionNetwork);
-        LSDRaster ThisBasin = ABasin.write_raster_data_to_LSDRaster(filled_topography, FlowInfo);
-        // unordered perim for checking
-        ABasin.set_Perimeter(FlowInfo);
-        ABasin.print_perimeter_to_csv(FlowInfo, OUT_DIR+OUT_ID+"perim_check.csv");
-
-
-        ThisBasin.write_raster((OUT_DIR+OUT_ID+"_Perimeters"),"bil");
-        ABasin.print_perimeter_hypsometry_to_csv(FlowInfo, perimeter_name, filled_topography);
-
-        if ( this_bool_map["convert_csv_to_geojson"])
-        {
-          string gjson_name = OUT_DIR+OUT_ID+"_Perimeter.geojson";
-          LSDSpatialCSVReader thiscsv(perimeter_name);
-          thiscsv.print_data_to_geojson(gjson_name);
-        }
+        string gjson_name = OUT_DIR+OUT_ID+"_Perimeter"+jn_str+".geojson";
+        LSDSpatialCSVReader thiscsv(perimeter_name);
+        thiscsv.print_data_to_geojson(gjson_name);
       }
     }
-
-
-    }
-    else { cout << "Your junctions filename is null" << endl; }
+  }
 
   // get the channel profiles for each basin to look at the hypsometries
   if ( this_bool_map["get_channel_profiles"])
