@@ -2198,14 +2198,27 @@ void LSDChiTools::ksn_knickpoints_combining(LSDFlowInfo& Flowinfo)
     // Now looping through the node for each rivers
     int this_SK = henri -> first;
     vector<int> vecnode_kp = henri->second, vecnode_river = map_node_source_key[this_SK];
+    // cout << this_SK << endl;
     if(vecnode_kp.size()>0)
     {
       // getting the groups of vector
+      // cout << "SOURCE: "<< this_SK << " n kp before grouping = " << vecnode_kp.size() << endl;
       vector<vector<int> > grouped_kp = group_local_kp(vecnode_kp,vecnode_river,Flowinfo);
+
+      int sumdfsdfa = 0;
+      for(vector<vector<int> >::iterator vlad = grouped_kp.begin(); vlad != grouped_kp.end(); vlad ++)
+      {
+        vector<int> gyuyg = *vlad;
+        sumdfsdfa += gyuyg.size();
+      }
+      // cout << "SOURCE: "<< this_SK << " n kp contributing to grouping = " << sumdfsdfa << endl;
+
+      // cout <<"here" <<endl;
       // We have the group of vector now lets run through it to get the requested values
       for(vector<vector<int> >::iterator vlad = grouped_kp.begin(); vlad != grouped_kp.end(); vlad ++)
       {
         vector<int> this_vecnode = *vlad;
+        // cout << "there" << endl;
         // Easy case: non composite knickpoint, let's just record the same info thatn the raw detection
         if(this_vecnode.size() == 1)
         {
@@ -2415,11 +2428,11 @@ vector<vector<int> > LSDChiTools::old_group_local_kp(vector<int> vecnode_kp, vec
 //                  New version                           =
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-vector<vector<int> > LSDChiTools::group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river,LSDFlowInfo& Flowinfo)
+vector<vector<int> > LSDChiTools::group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river, LSDFlowInfo& Flowinfo)
 {
 
   // pixel window to check on the knickpoints
-  int HW = 5;
+  int HW = 10;
   // cout << "DEBUG_1" << endl;
   // getting the index of each knickpoint in the node vector
   size_t iced_t =0;
@@ -2441,55 +2454,90 @@ vector<vector<int> > LSDChiTools::group_local_kp(vector<int> vecnode_kp, vector<
 
 
   // Now I have the corresponding index
-  // cout << "DEBUG_2 || " << corresponding_index.size() << endl;
+  // cout << "DEBUG_2 || " << corresponding_index.back() << endl;
 
   // Now creating a vector of number of node between this kp node and the following
   vector<int> n_node_to_next;
 
-  for(size_t it = 0; it<corresponding_index.size()-1; it++)
+  for(size_t it = 0; it < corresponding_index.size()-1; it++)
   {
     n_node_to_next.push_back(corresponding_index[it+1] - corresponding_index[it]);
   }
   n_node_to_next.push_back(0);
 
-  // cout << n_node_to_next.size() << " || " << corresponding_index.size() << " || " << vecnode_kp.size() << endl;
+  // cout << (int)vecnode_river.size() << " || " << (int)n_node_to_next.size() << " || " << (int)corresponding_index.size() << " || " << (int)vecnode_kp.size() << endl;
+
   // I got the number of node in between a knickpoint and the next
   // cout << "DEBUG_3" << endl;
 
   vector<vector<int> > out_vector;
   vector<int> this_vec;
+  int counting_these_fucking_knickpoints = 0;
 
-  for(size_t it = 0; it <= vecnode_kp.size(); it++)
+  for(size_t it = 0; it < vecnode_kp.size(); it++)
   {
+
     // saving the node
     bool save_the_raster = true;
+    // cout << "DEBUG_3.1" << endl;
     int this_idx = corresponding_index[it];
+    // cout << "DEBUG_3.2" << endl;
     this_vec.push_back(vecnode_kp[it]);
+    counting_these_fucking_knickpoints++;
+    // cout << "THIS KP NODE = " << vecnode_kp[it] << endl;
 
     if(n_node_to_next[it] <= HW)
     {
+      // cout << "DEBUG_3.3" << endl;
+      // cout << this_idx << " || " << n_node_to_next[it] << " || " << vecnode_river.size()-1 << endl;
 
-      if(this_idx != vecnode_river.size()-1)
+      if((this_idx+n_node_to_next[it])>(vecnode_river.size()-1))
+      {
+        cout << "GP_KP::FATAL ERROR, This is a weird error, try to rerun the analysis, if it persists contact B.G." << endl;
+        exit(EXIT_FAILURE);
+      }
+
+      if((this_idx < vecnode_river.size()-1) && (this_idx+n_node_to_next[it]<(vecnode_river.size()-1)) && it != vecnode_kp.size()-1)
       {
         // cout << n_node_to_next[it] << endl;
+        // cout << "DEBUG_4" << endl;
         float this_kp = raw_ksn_kp_map[vecnode_river[this_idx]], next_kp = raw_ksn_kp_map[vecnode_river[this_idx+n_node_to_next[it]]] ;
+        // cout << "DEBUG_5" << endl;
         // Check if they are both the same polarity
-        // cout << this_kp << " || " << next_kp << endl;
+        // cout << this_idx << " || " << n_node_to_next[it] << " || " << vecnode_river.size()-1 << endl;
         if( (this_kp > 0 && next_kp > 0) || (this_kp <0 && next_kp<0) )
-        {
 
+        {
+          // cout << "DEBUG_5.5" << endl;
           save_the_raster = false;
         }
       }
     }
     // if not of these, I am saving this vector of node and clearing it
-    if(save_the_raster)
+    if(save_the_raster == true)
     {
+      // cout << "DEBUG_6" << endl;
+      if(this_vec.size() == 0)
+      {
+        cout <<"FATAL ERROR: void vector" << endl;
+        exit(EXIT_FAILURE);
+      }
+
       out_vector.push_back(this_vec);
+      // cout << "LAST NODE SAVED " << this_vec.back()  << endl;
       this_vec.clear();
+      // cout << "this_should be 0: " << this_vec.size() << " and this should not: " << out_vector.back().size() << endl;
     }
+    // cout << "DEBUG_7" << endl;
   }
-  
+
+  int sumdfsdfa = 0;
+  for(vector<vector<int> >::iterator vlad = out_vector.begin(); vlad != out_vector.end(); vlad ++)
+  {
+    vector<int> gyuyg = *vlad;
+    sumdfsdfa += gyuyg.size();
+  }
+  // cout<< "out: " << sumdfsdfa << " || in: " << vecnode_kp.size() << " || in_2: " << counting_these_fucking_knickpoints  << endl;  
   return out_vector;
 
 }
@@ -2864,7 +2912,9 @@ void LSDChiTools::print_raw_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filenam
         this_kp = iter->second;
         FlowInfo.retrieve_current_row_and_col(this_node,row,col);
         get_lat_and_long_locations(row, col, latitude, longitude, Converter);
-        
+
+
+
         chi_data_out.precision(9);
         chi_data_out << latitude << ","
                      << longitude << ",";
@@ -2907,7 +2957,7 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "ID,longitude,latitude,elevation,flow_distance,chi,drainage_area,delta_ksn,sharpness,out,basin_key,source_key";
+  chi_data_out << "ID,longitude,latitude,elevation,flow_distance,chi,drainage_area,delta_ksn,sharpness,sign,out,basin_key,source_key";
 
   chi_data_out << endl;
 
@@ -2929,6 +2979,10 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
 
         get_lat_and_long_locations_from_coordinate(this_x, this_y, latitude, longitude, Converter);
 
+        // Just adding sign column for plotting purposes
+        int this_sign = 0;
+        if(this_kp>0){this_sign = 1;}else{this_sign=(-1);}
+
         chi_data_out << ksn_kp_ID[this_node] << ",";
         chi_data_out.precision(9);
         chi_data_out << latitude << ","
@@ -2940,6 +2994,7 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
                      << drainage_area_data_map[nearnode] << ","
                      << this_kp << ","
                      << sharpness_ksn_length[this_node] << ","
+                     << this_sign << ","
                      << map_outlier_MZS_combined[this_node] << ","
                      << baselevel_keys_map[this_node]<< ","
                      << source_keys_map[this_node];
