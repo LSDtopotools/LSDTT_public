@@ -2957,7 +2957,7 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "ID,longitude,latitude,elevation,flow_distance,chi,drainage_area,delta_ksn,sharpness,sign,out,basin_key,source_key";
+  chi_data_out << "ID,latitude,longitude,elevation,flow_distance,chi,drainage_area,delta_ksn,sharpness,sign,out,basin_key,source_key";
 
   chi_data_out << endl;
 
