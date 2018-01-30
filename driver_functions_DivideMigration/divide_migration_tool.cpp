@@ -97,6 +97,7 @@ int main (int nNumberofArgs,char *argv[])
 
   // default channel extraction
   int_default_map["threshold_contributing_pixels"] = 2000;
+  string_default_map["CHeads_file"] = "NULL";
 
   // filling
   float_default_map["min_slope_for_fill"] = 0.0001;
@@ -121,6 +122,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_channels_to_csv"] = false;
   bool_default_map["write hillshade"] = false;
   bool_default_map["print_junctions_to_csv"] = false;
+  bool_default_map["print_node_index_raster"] = false;
   bool_default_map["print_junction_angles_to_csv"] = false;
   bool_default_map["print_junction_statistics_to_csv"] = false;
   bool_default_map["convert_csv_to_geojson"] = false;
@@ -278,6 +280,12 @@ int main (int nNumberofArgs,char *argv[])
     string SO_raster_name = OUT_DIR+OUT_ID+"_SO";
     SOArray.write_raster(SO_raster_name,raster_ext);
   }
+  if (this_bool_map["print_node_index_raster"])
+  {
+    LSDIndexRaster NIArray = FlowInfo.write_NodeIndex_to_LSDIndexRaster();
+    string NI_raster_name = OUT_DIR+OUT_ID+"_NI";
+    NIArray.write_raster(NI_raster_name,raster_ext);
+  }
 
   // now get the junctions for analysis
   vector< int > BaseLevelJunctions;
@@ -375,8 +383,13 @@ int main (int nNumberofArgs,char *argv[])
 
       LSDBasin ABasin(JunctionNumber, FlowInfo, JunctionNetwork);
       //LSDRaster ThisBasin = ABasin.write_raster_data_to_LSDRaster(filled_topography, FlowInfo);
-      // unordered perim for checking
-      ABasin.set_Perimeter(FlowInfo);
+      // // unordered perim for checking
+      // ABasin.set_Perimeter(FlowInfo);
+      // string perim_test = OUT_DIR+OUT_ID+"_Perimeter_"+jn_str+"_test.csv";
+      // ABasin.clean_perimeter(FlowInfo);
+      // vector<int> Perimeter_nodes = ABasin.get_Perimeter_nodes();
+      // cout << "First n perim nodes: " << Perimeter_nodes.size() << endl;
+      // ABasin.print_perimeter_to_csv(FlowInfo,perim_test);
       //ThisBasin.write_raster((OUT_DIR+OUT_ID+"_Perimeters"),"bil");
       ABasin.print_perimeter_hypsometry_to_csv(FlowInfo, perimeter_name, filled_topography);
 
