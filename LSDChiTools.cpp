@@ -2046,7 +2046,7 @@ void LSDChiTools::get_previous_mchi_for_all_sources(LSDFlowInfo& Flowinfo)
 // Leaving me time to develop what will be the final cleanest one and making easier the subdivision
 // in loads of little functions rather than one big script-like one. OBJECT ORIENTED POWER ˁ˚ᴥ˚ˀ
 // BG 
-void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th, float lambda_TVD)
+void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th, float lambda_TVD, int kp_node_search)
 {
 
   cout << "Getting ready for the knickpoint detection algorithm ...";
@@ -2079,7 +2079,7 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
 
   // Processing the knickpoints to combine the composite knickpoints
   cout << "Combining knickpoints ..." << endl;
-  ksn_knickpoints_combining(FlowInfo);
+  ksn_knickpoints_combining(FlowInfo, kp_node_search);
   cout << " OK" << endl ;
 
 
@@ -2184,7 +2184,7 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int> vecnode)
 //  Group the adjacent local knickpoints                  =
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void LSDChiTools::ksn_knickpoints_combining(LSDFlowInfo& Flowinfo)
+void LSDChiTools::ksn_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_node_search)
 {
   // this function will combine the composite knickpoints
 
@@ -2203,7 +2203,7 @@ void LSDChiTools::ksn_knickpoints_combining(LSDFlowInfo& Flowinfo)
     {
       // getting the groups of vector
       // cout << "SOURCE: "<< this_SK << " n kp before grouping = " << vecnode_kp.size() << endl;
-      vector<vector<int> > grouped_kp = group_local_kp(vecnode_kp,vecnode_river,Flowinfo);
+      vector<vector<int> > grouped_kp = group_local_kp(vecnode_kp,vecnode_river,Flowinfo, kp_node_search);
 
       int sumdfsdfa = 0;
       for(vector<vector<int> >::iterator vlad = grouped_kp.begin(); vlad != grouped_kp.end(); vlad ++)
@@ -2428,11 +2428,11 @@ vector<vector<int> > LSDChiTools::old_group_local_kp(vector<int> vecnode_kp, vec
 //                  New version                           =
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-vector<vector<int> > LSDChiTools::group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river, LSDFlowInfo& Flowinfo)
+vector<vector<int> > LSDChiTools::group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river, LSDFlowInfo& Flowinfo, int kp_node_search)
 {
 
   // pixel window to check on the knickpoints
-  int HW = 10;
+  int HW = kp_node_search;
   // cout << "DEBUG_1" << endl;
   // getting the index of each knickpoint in the node vector
   size_t iced_t =0;

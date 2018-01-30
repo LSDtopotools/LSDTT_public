@@ -1145,7 +1145,7 @@ class LSDChiTools
     /// @param OUT_ID: string containing the output prefix
     /// @author BG
     /// @date 05/01/2018
-    void ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th, float lambda_TVD);
+    void ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th, float lambda_TVD, int kp_node_search);
 
     void ksn_knickpoint_outlier_automator(LSDFlowInfo& FlowInfo, float MZS_th);
 
@@ -1153,7 +1153,7 @@ class LSDChiTools
     /// @param FlowiInfo: a LSDFlowInfo object
     /// @author BG
     /// @date 17/01/2018
-    void ksn_knickpoints_combining(LSDFlowInfo& Flowinfo);
+    void ksn_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_node_search);
 
     /// @brief Detection of the knickpoints by looping through the source keys
     /// @param FlowiInfo: a LSDFlowInfo object
@@ -1223,7 +1223,7 @@ class LSDChiTools
     float get_dksn_from_composite_kp(vector<int> vecnode);
     float get_kp_sharpness_length(vector<int> vecnode, LSDFlowInfo& Flowinfo);
     pair<pair<int,float>,pair<float,float> > get_ksn_centroid_coordinates(LSDFlowInfo& Flowinfo, vector<int> vecnode);
-    vector<vector<int> > group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river,LSDFlowInfo& Flowinfo);
+    vector<vector<int> > group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river,LSDFlowInfo& Flowinfo, int kp_node_search);
     vector<vector<int> > old_group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river,LSDFlowInfo& Flowinfo);
 
     
