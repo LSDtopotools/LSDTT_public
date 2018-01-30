@@ -2477,21 +2477,25 @@ void LSDBasin::organise_perimeter(LSDFlowInfo& flowpy)
 void LSDBasin::clean_perimeter(LSDFlowInfo& flowpy)
 {
 
-  vector<int> light_perimeter;
-  nodes_of_basins;
+  vector<int> light_perimeter; // output perimeter that should be thinned
+  // nodes_of_basins; map containing the nodes of the basin (global variable, but not initialized yet)
   int row = 0, col = 0, cptndd = 0, cptndd_tot = 0, this_row = 0, this_col = 0, this_node = 0;
+  // tester help to loop through neightboors
   vector<int> tester;
   tester.push_back(-1);
   tester.push_back(1);
 
-  // filling a map of basin nodes to check the nobasin around each node
+  // filling the map of basin nodes to check the nobasin around each node
   for(vector<int>::iterator yo = BasinNodes.begin(); yo!= BasinNodes.end(); yo++)
   {
     nodes_of_basins[*yo] = 1;
   }
 
+
+  // looping through the the perimeter nodes
   for(vector<int>::iterator uh = Perimeter_nodes.begin();uh != Perimeter_nodes.end(); uh++)
   {
+    // the first node is the outlet (I think it is all the time?) so I want it 
     if (*uh == BasinNodes[0])
     {
       light_perimeter.push_back(*uh);
@@ -2499,20 +2503,24 @@ void LSDBasin::clean_perimeter(LSDFlowInfo& flowpy)
     else
     {
       flowpy.retrieve_current_row_and_col(*uh,row,col);
+      // looping through the direct row neightboors and incrementing a counter if a direct neighboor is outside the basin
       for(int i = 0; i < 2; i++)
       {
-        this_row = row+tester[i];
+        this_row = row+tester[i]; // tester[0] = -1 and tester 1 = 1
         this_col = col;
         if(this_row>=0 && this_row<get_NRows())
         {
           this_node = flowpy.retrieve_node_from_row_and_column(this_row,this_col);
-          if(nodes_of_basins[this_node] !=1)
+          if(nodes_of_basins[this_node] !=1) // -> means not in the basin
           {
-            cptndd++;
-            cptndd_tot++;
+            cptndd++; // direct neighboors
+            cptndd_tot++; // all neighboors (include diagonal)
           }
         }
       }
+
+      // looping through the direct col neightboors and incrementing a counter if a direct neighboor is outside the basin
+
       for(int i = 0; i < 2; i++)
       {
         this_row = row;
