@@ -1227,7 +1227,7 @@ vector<int> LSDBasin::order_perimeter_nodes(LSDFlowInfo& FlowInfo)
       {
         cout << "This isn't even a perimeter node. WHAT THE FUCK" << endl;
       }
-      //break;
+      break;
     }
     else
     {
