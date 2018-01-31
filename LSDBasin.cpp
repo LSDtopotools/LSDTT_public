@@ -2519,7 +2519,7 @@ void LSDBasin::clean_perimeter(LSDFlowInfo& flowpy)
         }
       }
 
-      // looping through the direct col neightboors and incrementing a counter if a direct neighboor is outside the basin
+      // looping through the direct col neightboors and incrementing a counter if a direct neighboor is outside the basin, same process than above
 
       for(int i = 0; i < 2; i++)
       {
@@ -2537,29 +2537,39 @@ void LSDBasin::clean_perimeter(LSDFlowInfo& flowpy)
 
       }
 
+
+      // This is a crappy code I did not planned to share at the beginning to be honest ahah Sorry
+
+      // Ok now looping through the diagonal neighboors
       for(int i = 0; i<2;i++)
       {
         for(int j =0; j<2 ; j++)
         {
-          this_row = row+tester[i];
+          this_row = row+tester[i]; 
           this_col = col+tester[j];
+          // always -1/+1, -1/-1 or +1/+1 thus diagonalis
+          // raster boundary check
           if(this_col>=0 && this_col<get_NCols())
           {
             this_node = flowpy.retrieve_node_from_row_and_column(this_row,this_col);
             if(nodes_of_basins[this_node] !=1)
             {
-              cptndd_tot++;
+              cptndd_tot++; // incrementing no data neightboors
             }
           }
         }
       }
+
+      // If I have at least one direct neighboor BUT less than 6 total neighboor, I am a cleaned node for the perimeter
+      // A clean perimeter for December 2017 Boris is a thinned perimeter that will allow him to investigate some rectangular window staistics accross the perimeter using linear regressions of set of nodes
+
       if(cptndd>0 && cptndd_tot < 6)
       {
         int truc = flowpy.retrieve_node_from_row_and_column(row,col);
         light_perimeter.push_back(truc);
         Perimeter_nodes_map[truc] = 1;
       }
-
+      // reinitialization
       cptndd = 0;
       cptndd_tot = 0;
     }
@@ -2568,7 +2578,6 @@ void LSDBasin::clean_perimeter(LSDFlowInfo& flowpy)
   cout << "Cleaned perimeter, you used to have " << Perimeter_nodes.size() << " nodes, now you have " << light_perimeter.size() << " nodes." << endl;
 
   Perimeter_nodes = light_perimeter;
-
 
 }
 
