@@ -984,21 +984,6 @@ vector<int> LSDBasin::order_perimeter_nodes(LSDFlowInfo& FlowInfo)
     this_j = next_j;
     VisitedBefore[this_i][this_j] = 1;
 
-    // // check if you've already been to this node.
-    // if (VisitedBefore[this_i][this_j] == 1)
-    // {
-    // // cout << "Wait, you've been to this node before! Is it an evil node?" << endl;
-    //   if (evil_node == false)
-    //   {
-    //     cout << "This isn't an evil node, something went wrong" << endl;
-    //     break;
-    //   }
-    // }
-    // else
-    // {
-    //   VisitedBefore[this_i][this_j] = 1;
-    // }
-
     vector<float> Distances(8, 100); // distances to each node in the order N, NE, E, SE, S, SW, W, NW
 
     if (PerimeterNodes[this_i-1][this_j] == 1) // north
@@ -1153,11 +1138,9 @@ vector<int> LSDBasin::order_perimeter_nodes(LSDFlowInfo& FlowInfo)
         }
       }
     }
-    //cout << "Finding the closest perimeter node..." << endl;
 
     // now search the vector of distances for the one with the smallest distance.
     int min_idx = distance(Distances.begin(), min_element(Distances.begin(), Distances.end()));
-    //cout << "Min IDX is: " << min_idx << " Distance is: " << *min_element(Distances.begin(), Distances.end()) << endl;
     if ( min_idx == 0 )
     {
       next_i = this_i-1;
@@ -1199,10 +1182,7 @@ vector<int> LSDBasin::order_perimeter_nodes(LSDFlowInfo& FlowInfo)
       next_j = this_j-1;
     }
     // push back the node to the sorted vector
-
     next_node = FlowInfo.retrieve_node_from_row_and_column(next_i, next_j);
-    //cout << "The next node is: " << next_node << endl;
-    //cout << "This i: " << this_i << " this j: " << this_j << " next i: " << next_i << " next j: " << next_j << " last i: " << last_i << " last j: " << last_j << endl;
     if (next_node == outlet_node)
     {
       reached_outlet = true;
@@ -1212,14 +1192,9 @@ vector<int> LSDBasin::order_perimeter_nodes(LSDFlowInfo& FlowInfo)
     }
     else if ( Distances[min_idx] == 100)
     {
-      //cout << "I can't find a neighbouring perimeter node that you haven't been to." << endl;
-      //cout << "I'll remove this node and go back one" << endl;
       VisitedBefore[next_i][next_j] = 1;
       int last_node = sorted_nodes.back();
-      int last_i, last_j;
-      // cout << "The last node is: " << last_node << endl;
-      //cout << "Have I been to the west node?" << VisitedBefore[last_i][last_j-1] << endl;
-      //cout << "Is this a perimeter node? " << PerimeterNodes[last_i][last_j -1] << endl;
+      int last_i, last_j;;
       FlowInfo.retrieve_current_row_and_col(last_node, last_i, last_j);
       next_i = last_i;
       next_j = last_j;
@@ -2495,7 +2470,7 @@ void LSDBasin::clean_perimeter(LSDFlowInfo& flowpy)
   // looping through the the perimeter nodes
   for(vector<int>::iterator uh = Perimeter_nodes.begin();uh != Perimeter_nodes.end(); uh++)
   {
-    // the first node is the outlet (I think it is all the time?) so I want it 
+    // the first node is the outlet (I think it is all the time?) so I want it
     if (*uh == BasinNodes[0])
     {
       light_perimeter.push_back(*uh);
@@ -2519,7 +2494,7 @@ void LSDBasin::clean_perimeter(LSDFlowInfo& flowpy)
         }
       }
 
-      // looping through the direct col neightboors and incrementing a counter if a direct neighboor is outside the basin, same process than above
+      // looping through the direct col neightboors and incrementing a counter if a direct neighboor is outside the basin
 
       for(int i = 0; i < 2; i++)
       {
@@ -2537,39 +2512,29 @@ void LSDBasin::clean_perimeter(LSDFlowInfo& flowpy)
 
       }
 
-
-      // This is a crappy code I did not planned to share at the beginning to be honest ahah Sorry
-
-      // Ok now looping through the diagonal neighboors
       for(int i = 0; i<2;i++)
       {
         for(int j =0; j<2 ; j++)
         {
-          this_row = row+tester[i]; 
+          this_row = row+tester[i];
           this_col = col+tester[j];
-          // always -1/+1, -1/-1 or +1/+1 thus diagonalis
-          // raster boundary check
           if(this_col>=0 && this_col<get_NCols())
           {
             this_node = flowpy.retrieve_node_from_row_and_column(this_row,this_col);
             if(nodes_of_basins[this_node] !=1)
             {
-              cptndd_tot++; // incrementing no data neightboors
+              cptndd_tot++;
             }
           }
         }
       }
-
-      // If I have at least one direct neighboor BUT less than 6 total neighboor, I am a cleaned node for the perimeter
-      // A clean perimeter for December 2017 Boris is a thinned perimeter that will allow him to investigate some rectangular window staistics accross the perimeter using linear regressions of set of nodes
-
       if(cptndd>0 && cptndd_tot < 6)
       {
         int truc = flowpy.retrieve_node_from_row_and_column(row,col);
         light_perimeter.push_back(truc);
         Perimeter_nodes_map[truc] = 1;
       }
-      // reinitialization
+
       cptndd = 0;
       cptndd_tot = 0;
     }
@@ -2579,7 +2544,42 @@ void LSDBasin::clean_perimeter(LSDFlowInfo& flowpy)
 
   Perimeter_nodes = light_perimeter;
 
+
 }
+
+// //-------------------------------------------------------------------------//
+// // perimeter cleaning Fiona
+// // 30/01/18
+// //-------------------------------------------------------------------------//
+// void LSDBasin::clean_perimeter_fiona(LSDFlowInfo& FlowInfo)
+// {
+//   // this is another cleaning function. It looks for perimeter nodes which don't border any internal basin nodes and removes them.
+//
+//   // vector for new perimeter
+//   vector<int> thinned_perimeter;
+//
+//   // loop through each perimeter node and check for internal neighbours
+//   for (int i = 0; i < int(Perimeter_nodes.size()); i++)
+//   {
+//     int this_node = Perimeter_nodes[i];
+//
+//     // we need to keep the outlet node which should be the first one.
+//     if (this_node == BasinNodes[0])
+//     {
+//       thinned_perimeter.push_back(this_node);
+//     }
+//     else // not the outlet node
+//     {
+//
+//     }
+//
+//
+//   }
+//
+//
+// }
+
+
 
 
 
