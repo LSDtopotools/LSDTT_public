@@ -753,11 +753,17 @@ int main (int nNumberofArgs,char *argv[])
       cout << "Fatal Error: Junctions File " << BaselevelJunctions_file << " does not exist" << endl;
       exit(EXIT_FAILURE);
     }
-
+    if (this_bool_map["test_drainage_boundaries"])     // now check for edge effects
+    {
     // Now make sure none of the basins drain to the edge
-    cout << "I am pruning junctions that are influenced by the edge of the DEM!" << endl;
-    cout << "This is necessary because basins draining to the edge will have incorrect chi values." << endl;
-    BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions_Initial, FlowInfo, filled_topography);
+      cout << "I am pruning junctions that are influenced by the edge of the DEM!" << endl;
+      cout << "This is necessary because basins draining to the edge will have incorrect chi values." << endl;
+      BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions_Initial, FlowInfo, filled_topography);
+    }
+    else
+    {
+      BaseLevelJunctions = BaseLevelJunctions_Initial;
+    }
 
   }
 
