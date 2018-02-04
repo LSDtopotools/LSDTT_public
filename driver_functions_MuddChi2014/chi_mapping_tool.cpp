@@ -745,7 +745,7 @@ int main (int nNumberofArgs,char *argv[])
     if (infile)
     {
       cout << "Junctions File " << BaselevelJunctions_file << " exists" << endl;;
-      int n;
+      int n;                                                                                                                                                                                                                                                                                                                                                                                                                                                   
       while (infile >> n) BaseLevelJunctions_Initial.push_back(n);
     }
     else
