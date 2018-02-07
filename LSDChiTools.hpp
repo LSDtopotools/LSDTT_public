@@ -1145,7 +1145,7 @@ class LSDChiTools
     /// @param OUT_ID: string containing the output prefix
     /// @author BG
     /// @date 05/01/2018
-    void ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th, float lambda_TVD, int kp_node_search);
+    void ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th, float lambda_TVD, float lambda_TVD_bchi, int kp_node_search);
 
     void ksn_knickpoint_outlier_automator(LSDFlowInfo& FlowInfo, float MZS_th);
 
@@ -1217,15 +1217,15 @@ class LSDChiTools
     /// @date 08/01/2018
     void lump_this_vec(vector<int> this_vec, int n_nodlump);
 
-    void TVD_on_my_ksn(const float lambda);
-    vector<float> TVD_this_vec(vector<int> this_vec, const float lambda);
+    void TVD_on_my_ksn(const float lambda, float lambda_TVD_b_chi);
+    vector<float> TVD_this_vec(vector<int> this_vec, const float lambda, float lambda_TVD_b_chi );
     vector<double> correct_TVD_vec(vector<double> this_val);
     float get_dksn_from_composite_kp(vector<int> vecnode);
     float get_kp_sharpness_length(vector<int> vecnode, LSDFlowInfo& Flowinfo);
     pair<pair<int,float>,pair<float,float> > get_ksn_centroid_coordinates(LSDFlowInfo& Flowinfo, vector<int> vecnode);
     vector<vector<int> > group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river,LSDFlowInfo& Flowinfo, int kp_node_search);
     vector<vector<int> > old_group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river,LSDFlowInfo& Flowinfo);
-
+    void derive_the_segmented_elevation();
     
     
     void print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filename);
@@ -1340,6 +1340,8 @@ class LSDChiTools
     map<int,float> lumped_m_chi_map;
         /// Map[node_index] = TVDed m_chi
     map<int,float> TVD_m_chi_map;
+    /// Map[node_index] = TVDed m_chi
+    map<int,float> TVD_b_chi_map;
     /// Debugging map to check the TVD correctin (deprecated - I'll clean my code when I'll be sure I'll need it)
     map<int,float>TVD_m_chi_map_non_corrected;
     /// Grouped and processed knickpoints
@@ -1353,6 +1355,8 @@ class LSDChiTools
     map<int,float> flow_distance_kp_centroid_map;
     map<int,int> nearest_node_centroid_kp;
     map<int,int> map_outlier_MZS_combined;
+    map<int,float> kp_segdrop;
+    map<int,float> TVD_segelev_diff;
 
 
 

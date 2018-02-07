@@ -160,6 +160,7 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["force_n_iteration_knickpoint_analysis"] = 20;
   float_default_map["MZS_threshold"] = 0.5;
   float_default_map["TVD_lambda"] = 10;
+  float_default_map["TVD_lambda_bchi"] = 10;
   int_default_map["kp_node_combining"] = 10;
  
   // basic parameters for calculating chi
@@ -775,7 +776,7 @@ int main (int nNumberofArgs,char *argv[])
   {
     cout << "I am forcing all the basin to be analysed" << endl;
     BaseLevelJunctions = JunctionNetwork.get_BaseLevelJunctions();
-    BaseLevelJunctions = JunctionNetwork.Prune_Junctions_If_Nested(BaseLevelJunctions,FlowInfo,FlowAcc);
+    // BaseLevelJunctions = JunctionNetwork.Prune_Junctions_If_Nested(BaseLevelJunctions,FlowInfo,FlowAcc);
 
   }
 
@@ -1701,22 +1702,7 @@ int main (int nNumberofArgs,char *argv[])
  
 
     // Actual knickpoint calculation
-    ChiTool.ksn_knickpoint_automator(FlowInfo, OUT_DIR, OUT_ID,this_float_map["MZS_threshold"], this_float_map["TVD_lambda"], this_int_map["kp_node_combining"]);
-
-
-
-    // string csv_full_fname_knockpoint = OUT_DIR+OUT_ID+"_KsnKn.csv";
-    // ChiTool.print_knickpoint_to_csv(FlowInfo,csv_full_fname_knockpoint);
-    // string csv_full_fname_knockzone = OUT_DIR+OUT_ID+"_KsnKz.csv";
-    // ChiTool.print_knickzone_to_csv(FlowInfo,csv_full_fname_knockzone);
-
-    // string csv_full_fname = OUT_DIR+OUT_ID+"_MChiSegmented_Ks.csv";
-    // cout << "Let me print A Test File " << csv_full_fname << endl;
-    // ChiTool.print_mchisegmented_knickpoint_version(FlowInfo, csv_full_fname);
-    // cout << "I am printing a file containing the receiver of each sources" << endl;
-    // ChiTool.get_previous_mchi_for_all_sources(FlowInfo);
-    // string csv_intersource_fullname = OUT_DIR+OUT_ID+"_SourcesLinks.csv";
-    // ChiTool.print_intersources_mchi_map(csv_intersource_fullname);
+    ChiTool.ksn_knickpoint_automator(FlowInfo, OUT_DIR, OUT_ID,this_float_map["MZS_threshold"], this_float_map["TVD_lambda"], this_float_map["TVD_lambda_bchi"], this_int_map["kp_node_combining"]);
     
   }
 

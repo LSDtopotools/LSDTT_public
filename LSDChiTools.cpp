@@ -2046,7 +2046,7 @@ void LSDChiTools::get_previous_mchi_for_all_sources(LSDFlowInfo& Flowinfo)
 // Leaving me time to develop what will be the final cleanest one and making easier the subdivision
 // in loads of little functions rather than one big script-like one. OBJECT ORIENTED POWER ˁ˚ᴥ˚ˀ
 // BG 
-void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th, float lambda_TVD, int kp_node_search)
+void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th, float lambda_TVD, float lambda_TVD_b_chi, int kp_node_search)
 {
 
   cout << "Getting ready for the knickpoint detection algorithm ...";
@@ -2058,8 +2058,8 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   // Optional (?) lumping of the m_chi to get more deterministic segments
   lump_my_ksn(5);
 
-  // Trying some preprocessing that may replace lumping
-  TVD_on_my_ksn(lambda_TVD);
+  // Applying the Total_variation_denoising on m_chi. NEW: on b_chi as well 
+  TVD_on_my_ksn(lambda_TVD, lambda_TVD_b_chi);
 
   // This will increment maps with source keys as key and various metrics such as river length, Chi lenght...
   compute_basic_matrics_per_source_keys(FlowInfo);
@@ -2548,7 +2548,7 @@ vector<vector<int> > LSDChiTools::group_local_kp(vector<int> vecnode_kp, vector<
 //            DOI: 10.1109/LSP.2013.2278339               =
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void  LSDChiTools::TVD_on_my_ksn( float lambda)
+void  LSDChiTools::TVD_on_my_ksn( float lambda, float lambda_TVD_b_chi)
 {
   // Set the variables
   map<int,vector<int> >::iterator chirac;
@@ -2558,7 +2558,7 @@ void  LSDChiTools::TVD_on_my_ksn( float lambda)
     int this_SK = chirac->first;
     this_vec = chirac->second;
     vector<float> gros_test;
-    gros_test = TVD_this_vec(this_vec, lambda);
+    gros_test = TVD_this_vec(this_vec, lambda, lambda_TVD_b_chi);
     
     // DEBUG PART linked to the appearance of unexplained artifact while denoising, I am investigating.
     // ofstream FILOUNET;
@@ -2575,32 +2575,45 @@ void  LSDChiTools::TVD_on_my_ksn( float lambda)
 }
 
 
-vector<float>  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda)
+vector<float>  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda, float lambda_TVD_b_chi)
 {
 
-  vector<double> this_val;
+  // Creating the containers I will need for the denoising
+  vector<double> this_val_mchi, this_val_bchi, this_val_segelev; //TVD_segelev_diff
+  // this iterator will iterate through the vector of node you want to denoise
   vector<int>::iterator chirac = this_vec.begin();
 
   for( ; chirac != this_vec.end() ; chirac++)
   {
     int this_node = *chirac;
-    this_val.push_back((double)M_chi_data_map[this_node]);
+    this_val_mchi.push_back((double)M_chi_data_map[this_node]);
+    this_val_bchi.push_back((double)b_chi_data_map[this_node]);
+    this_val_segelev.push_back((double)TVD_segelev_diff[this_node]);
+
+
   }
-  double clambda = lambda;
-  vector<double> this_val_TVDed = TV1D_denoise_v2(this_val, clambda);
+
+  // Calling the actual denoising coded in Stat tools
+  double clambda = lambda, dlamda = lambda_TVD_b_chi;
+  vector<double> this_val_mchi_TVDed = TV1D_denoise_v2(this_val_mchi, clambda);
+  vector<double> this_val_bchi_TVDed = TV1D_denoise_v2(this_val_bchi, dlamda);
+  vector<double> this_val_segelev_TVDed = TV1D_denoise_v2(this_val_segelev, 20);
+
 
   // vector<double> this_val_TVDed_Corrected = correct_TVD_vec(this_val_TVDed);
 
   for(size_t plo = 0; plo < this_vec.size() ; plo++ )
   {
     int this_node = this_vec[plo];
-    TVD_m_chi_map[this_node] = (float)this_val_TVDed[plo];
+    TVD_m_chi_map[this_node] = (float)this_val_mchi_TVDed[plo];
+    TVD_b_chi_map[this_node] = (float)this_val_bchi_TVDed[plo];
+    kp_segdrop[this_node] = (float)this_val_segelev_TVDed[plo];
+
     // TVD_m_chi_map_non_corrected[this_node] = (float)this_val_TVDed[plo];
   }
 
-  vector<float> outtemp(this_val_TVDed.begin(),this_val_TVDed.end());
+  vector<float> outtemp(this_val_mchi_TVDed.begin(),this_val_mchi_TVDed.end());
   return outtemp;
-   
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -2721,6 +2734,55 @@ void LSDChiTools::lump_this_vec(vector<int> this_vec, int n_nodlump)
 
 }
 
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// deriv the segmented elevation            =
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+void LSDChiTools::derive_the_segmented_elevation()
+{
+
+  // Set the variables
+  map<int,vector<int> >::iterator chirac;
+  vector<int> this_vec;
+  vector<int>::iterator nonode;
+  int last_node = 0, this_node = 0;
+  float this_segelev = 0, last_segelev = 0;
+
+  // looping through each river
+  for(chirac = map_node_source_key.begin(); chirac != map_node_source_key.end() ; chirac ++)
+  {
+    this_vec = chirac->second;
+
+    // looping through each node in the river if the river has at least two nodes
+    if(this_vec.size() > 1)
+    {
+      for(nonode = this_vec.begin(); nonode != this_vec.end(); nonode++)
+      {
+        this_node = *nonode;
+        if(nonode != this_vec.begin())
+        {
+          // i derive if this is not the last node
+          this_node = *nonode;
+          this_segelev = segmented_elevation_map[this_node];
+          TVD_segelev_diff[this_node] = abs(segmented_elevation_map[this_node] - segmented_elevation_map[last_node]);
+        }
+        else
+        {
+          // the first derivative is 0
+          TVD_segelev_diff[this_node] = 0;
+          
+
+        }
+        // incrementing the rest
+        last_segelev = segmented_elevation_map[this_node];
+        last_node = this_node;
+      }
+    }
+
+  }
+
+}
 
 
 
@@ -7647,10 +7709,10 @@ void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, 
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "node,Y,X,latitude,longitude,chi,elevation,flow_distance,drainage_area,m_chi,lumped_ksn,TVD_ksn,TVD_ksn_NC,b_chi,source_key,basin_key";
+  chi_data_out << "node,Y,X,latitude,longitude,chi,elevation,flow_distance,drainage_area,m_chi,lumped_ksn,TVD_ksn,TVD_ksn_NC,b_chi,TVD_b_chi,source_key,basin_key";
   if(have_segmented_elevation)
   {
-    chi_data_out << ",segmented_elevation";
+    chi_data_out << ",segmented_elevation,TVD_segmented_elevation";
   }
   if (have_segments)
   {
@@ -7691,12 +7753,14 @@ void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, 
                    << TVD_m_chi_map[this_node] << ","
                    << TVD_m_chi_map_non_corrected[this_node] << ","
                    << b_chi_data_map[this_node] << ","
+                   << TVD_b_chi_map[this_node] << ","                   
                    << source_keys_map[this_node] << ","
                    << baselevel_keys_map[this_node];
 
       if(have_segmented_elevation)
       {
         chi_data_out << "," << segmented_elevation_map[this_node];
+        chi_data_out << "," << kp_segdrop[this_node];
       }
       if (have_segments)
       {
