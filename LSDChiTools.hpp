@@ -1221,6 +1221,7 @@ class LSDChiTools
     vector<float> TVD_this_vec(vector<int> this_vec, const float lambda, float lambda_TVD_b_chi );
     vector<double> correct_TVD_vec(vector<double> this_val);
     float get_dksn_from_composite_kp(vector<int> vecnode);
+    float get_dseg_drop_from_composite_kp(vector<int> vecnode);
     float get_kp_sharpness_length(vector<int> vecnode, LSDFlowInfo& Flowinfo);
     pair<pair<int,float>,pair<float,float> > get_ksn_centroid_coordinates(LSDFlowInfo& Flowinfo, vector<int> vecnode);
     vector<vector<int> > group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river,LSDFlowInfo& Flowinfo, int kp_node_search);
@@ -1229,6 +1230,7 @@ class LSDChiTools
     
     
     void print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filename);
+    void stepped_knickpoint_detection(int SK, vector<int> vecnode);
 
 
 
@@ -1320,6 +1322,8 @@ class LSDChiTools
 
     /// map of source key and associated vector of nodes
     map<int,vector<int> > map_node_source_key;
+        /// map of source key and associated vector of nodes
+    map<int,vector<int> > map_source_key_vecnode_of_receiver;
     /// map of source key and associated vector of nodes containing knickpoints used for the ksnkp calculation
     map<int,vector<int> > map_node_source_key_kp;
     /// map of raw changes in ksn, key is node and value is delta ksn from bottom to top
@@ -1350,13 +1354,17 @@ class LSDChiTools
     map<int,float> sharpness_ksn_length;
     /// cextent of composite knickpoints
     map<int,pair<int,int> > ksn_extent;
+    /// contains the centroid of each knickpoints
     map<int,pair<float,float> > ksn_centroid;
+    /// Unique ID for each knickpoints
     map<int,int> ksn_kp_ID;
     map<int,float> flow_distance_kp_centroid_map;
     map<int,int> nearest_node_centroid_kp;
     map<int,int> map_outlier_MZS_combined;
     map<int,float> kp_segdrop;
+    map<int,float> raw_segchange;
     map<int,float> TVD_segelev_diff;
+    map<int,float> segelev_diff;
 
 
 
