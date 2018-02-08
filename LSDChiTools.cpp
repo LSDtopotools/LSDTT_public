@@ -3141,7 +3141,7 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
                      << chi_data_map[this_node] << "," // NOTE -> nearnode is the centroid node, however the knickpoint info are stored in this node. I am still working on the centroidisation of the node
                      << drainage_area_data_map[this_node] << "," // NOTE -> nearnode is the centroid node, however the knickpoint info are stored in this node. I am still working on the centroidisation of the node
                      << this_kp << ","
-                     << kp_segdrop[this_node]
+                     << kp_segdrop[this_node] << ","
                      << sharpness_ksn_length[this_node] << ","
                      << this_sign << ","
                      << map_outlier_MZS_combined[this_node] << ","
