@@ -795,19 +795,21 @@ void LSDBasin::print_perimeter_to_csv(LSDFlowInfo& FlowInfo, string perimeter_fn
   // open the file
   ofstream perim_out;
   perim_out.open(perimeter_fname.c_str());
-  perim_out << "node,x,y,latitude,longitude" << endl;
+  perim_out << "node,x,y,latitude,longitude,row,col" << endl;
   perim_out.precision(9);
 
   float curr_x,curr_y;
   double curr_lat,curr_long;
+  int this_row =0, this_col =0 ;
 
   LSDCoordinateConverterLLandUTM converter;
   int n_nodes = int(Perimeter_nodes.size());
   for(int i = 0; i< n_nodes; i++)
   {
     FlowInfo.get_x_and_y_from_current_node(Perimeter_nodes[i], curr_x, curr_y);
+    FlowInfo.retrieve_current_row_and_col(Perimeter_nodes[i], this_row, this_col);
     FlowInfo.get_lat_and_long_from_current_node(Perimeter_nodes[i], curr_lat, curr_long,converter);
-    perim_out << Perimeter_nodes[i] << "," << curr_x << "," << curr_y <<"," << curr_lat << "," << curr_long << endl;
+    perim_out << Perimeter_nodes[i] << "," << curr_x << "," << curr_y <<"," << curr_lat << "," << curr_long << "," << this_row << "," << this_col << endl;
   }
   perim_out.close();
 
