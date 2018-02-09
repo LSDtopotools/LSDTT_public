@@ -154,6 +154,7 @@ int main (int nNumberofArgs,char *argv[])
 
   bool_default_map["print_sources_to_csv"] = true;
   bool_default_map["print_channels_to_csv"] = true;
+  bool_default_map["print_junctions_to_csv"] = false;
 
   bool_default_map["print_dinf_drainage_area_raster"] = false;
   bool_default_map["print_d8_drainage_area_raster"] = false;
