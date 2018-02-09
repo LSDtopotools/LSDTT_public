@@ -375,6 +375,21 @@ int main (int nNumberofArgs,char *argv[])
       }
 
     }
+
+    // print junctions
+    if( this_bool_map["print_junctions_to_csv"])
+    {
+      cout << "I am writing the junctions to csv." << endl;
+      string channel_csv_name = OUT_DIR+OUT_ID+"_AT_JN.csv";
+      ChanNetwork.print_junctions_to_csv(FlowInfo, channel_csv_name);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_AT_JN.geojson";
+        LSDSpatialCSVReader thiscsv(channel_csv_name);
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+    }
   }
 
   //===============================================================
@@ -485,6 +500,21 @@ int main (int nNumberofArgs,char *argv[])
         thiscsv.print_data_to_geojson(gjson_name);
       }
 
+    }
+
+    // print junctions
+    if( this_bool_map["print_junctions_to_csv"])
+    {
+      cout << "I am writing the junctions to csv." << endl;
+      string channel_csv_name = OUT_DIR+OUT_ID+"_D_JN.csv";
+      NewChanNetwork.print_junctions_to_csv(FlowInfo, channel_csv_name);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_D_JN.geojson";
+        LSDSpatialCSVReader thiscsv(channel_csv_name);
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
     }
 
   }
@@ -632,6 +662,21 @@ int main (int nNumberofArgs,char *argv[])
 
     }
 
+    // print junctions
+    if( this_bool_map["print_junctions_to_csv"])
+    {
+      cout << "I am writing the junctions to csv." << endl;
+      string channel_csv_name = OUT_DIR+OUT_ID+"_P_JN.csv";
+      NewChanNetwork.print_junctions_to_csv(FlowInfo, channel_csv_name);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_P_JN.geojson";
+        LSDSpatialCSVReader thiscsv(channel_csv_name);
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+    }
+
   }
 
   //===============================================================
@@ -727,6 +772,21 @@ int main (int nNumberofArgs,char *argv[])
       {
         string gjson_name = OUT_DIR+OUT_ID+"_W_CN.geojson";
         LSDSpatialCSVReader thiscsv(OUT_DIR+OUT_ID+"_W_CN.csv");
+        thiscsv.print_data_to_geojson(gjson_name);
+      }
+    }
+
+    // print junctions
+    if( this_bool_map["print_junctions_to_csv"])
+    {
+      cout << "I am writing the junctions to csv." << endl;
+      string channel_csv_name = OUT_DIR+OUT_ID+"_W_JN.csv";
+      ChanNetwork.print_junctions_to_csv(FlowInfo, channel_csv_name);
+
+      if ( this_bool_map["convert_csv_to_geojson"])
+      {
+        string gjson_name = OUT_DIR+OUT_ID+"_W_JN.geojson";
+        LSDSpatialCSVReader thiscsv(channel_csv_name);
         thiscsv.print_data_to_geojson(gjson_name);
       }
     }
