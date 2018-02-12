@@ -2167,8 +2167,9 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int> vecnode)
     // initializing the variables for this run
     this_node = *node;
     this_ksn = TVD_m_chi_map[this_node];
+    dsegelev = segelev_diff[this_node];
     // if ksn has change, Implementing a raw knickpoint and calculating the d|ksn|/dchi
-    if(this_ksn != last_ksn)
+    if((this_ksn != last_ksn) || (abs(dsegelev) > 5)) // NOTE: Here I am correcting a bug that happens when two segment have really really really similar ksn, the TVD then shut down the variation and the segelev is not saved
     {
       // deta ksn from bottom to top
       dksn = last_ksn - this_ksn;
@@ -2181,7 +2182,7 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int> vecnode)
       raw_dksndchi_kp_map[this_node] = dkdc;
 
       // segmented elevation diff
-      dsegelev = segelev_diff[this_node];
+      
 
       raw_segchange[this_node] = dsegelev;
 
