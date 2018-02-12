@@ -2314,14 +2314,24 @@ void LSDChiTools::ksn_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_node_s
           // harder case: several knickpoints, let's go step by step
           // the identifying node of the kp is the first one
           int this_node = this_vecnode[0];
+          
+          // summing the segelev and dksn for this group of node
           ksn_kp_map[this_node] = get_dksn_from_composite_kp(this_vecnode); // gobal ksn value of the knickpoint
           kp_segdrop[this_node] = get_dseg_drop_from_composite_kp(this_vecnode); // gobal segmentation elevation value of the knickpoint
+          
+          // Sharpness is the width of the combined knickpoints
           sharpness_ksn_length[this_node] = get_kp_sharpness_length(this_vecnode, Flowinfo);
           ksn_extent[this_node] = make_pair(this_vecnode[0], this_vecnode.back()); // the extent nodes are the extreme of the DD
-          pair<pair<int,float>,pair<float,float> > temp_pair = get_ksn_centroid_coordinates(Flowinfo, this_vecnode); // get the x and y of the centroid.
-          flow_distance_kp_centroid_map[this_node] = temp_pair.first.second;
-          ksn_centroid[this_node] = temp_pair.second; // get the x and y of the centroid.
-          nearest_node_centroid_kp[this_node] = temp_pair.first.first;
+
+          // The neirest node from the centre of the knickpoint (in regards to chi distance)
+          int nearnode = get_ksn_centroid_coordinates(Flowinfo, this_vecnode,ksn_kp_map[this_node]); // get the weighted x and y of the centroid.
+          flow_distance_kp_centroid_map[this_node] = flow_distance_data_map[nearnode];
+          // getting the 
+          float this_x = 0,this_y = 0;
+          Flowinfo.get_x_and_y_from_current_node(nearnode, this_x, this_y);
+          ksn_centroid[this_node] = make_pair(this_x,this_y);
+
+          nearest_node_centroid_kp[this_node] = nearnode;
           ksn_kp_ID[this_node] = id_kp;
           id_kp++;
         }
@@ -2375,14 +2385,40 @@ float LSDChiTools::get_kp_sharpness_length(vector<int> vecnode, LSDFlowInfo& Flo
   return total_distance;
 }
 
-pair<pair<int,float>,pair<float,float> > LSDChiTools::get_ksn_centroid_coordinates(LSDFlowInfo& Flowinfo, vector<int> vecnode)
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//  get the centroid node of grouped knickpoints          =
+//                  Current version                       =
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+int LSDChiTools::get_ksn_centroid_coordinates(LSDFlowInfo& Flowinfo, vector<int> vecnode, float total_dksn)
 {
 
   pair<float,float> out_pair; // x,y coordinates
 
-  // first, let's determine the centroid flow distance
-  float c_fdist = (flow_distance_data_map[vecnode.back()] + flow_distance_data_map[vecnode[0]])/2;
+  // first, let's get the chi, the dksn and the weighted distance of each nodes
+  vector<float> chi_vec , dksn_vec;
+  
+  // looping through each nodes to group, and getting the info in the same order that the original vector of nodes
+  for(size_t iter = 0; iter < vecnode.size(); iter++)
+  {
+    chi_vec.push_back(chi_data_map[vecnode[iter]]);
+    dksn_vec.push_back(raw_ksn_kp_map[vecnode[iter]]); // I am using the raw map, that host the values before combining
+  }
 
+
+  // Applying a barycenter-like centering of the data to get the chi barycentre
+  float M = total_dksn, chi_center = 0, sum_of_mi_ri = 0;
+  // Summing the weighted chi distance by dksn
+  for(size_t iter = 0; iter < vecnode.size(); iter++)
+  {
+    float mi = dksn_vec[iter], ri = chi_vec[iter];
+    sum_of_mi_ri += mi*ri;
+  }
+
+  // applying the weight
+  chi_center = (1/M)*sum_of_mi_ri;
+
+  // *cymbal and trumbet noise* we have our chi center
 
   // then looping from bottom to top of nodes to get the boundary nodes of this last
   bool found_it = false;
@@ -2390,7 +2426,7 @@ pair<pair<int,float>,pair<float,float> > LSDChiTools::get_ksn_centroid_coordinat
   for(vector<int>::iterator hibou = vecnode.begin(); found_it == false; hibou ++)
   {
     int this_node = *hibou;
-    if(flow_distance_data_map[this_node] > c_fdist)
+    if(chi_data_map[this_node] > chi_center)
     {
       found_it = true;
       ninf = last_node;
@@ -2400,37 +2436,21 @@ pair<pair<int,float>,pair<float,float> > LSDChiTools::get_ksn_centroid_coordinat
   }
 
   // now getting the distance between nodes
-  float d_node = flow_distance_data_map[nsup] - flow_distance_data_map[ninf];
-  // now getting the distance between the first node and the centroid
-  float d_centroid = c_fdist - flow_distance_data_map[ninf];
-  // getting the x and y distance
-    float xninf =0, yninf = 0, xnsup = 0, ynsup = 0;
-  Flowinfo.get_x_and_y_from_current_node(ninf,xninf,yninf);
-  Flowinfo.get_x_and_y_from_current_node(nsup,xnsup,ynsup);
-  float d_x = xnsup - xninf, d_y = ynsup - yninf;
+  int centre_node = 0;
 
+  float up_chi_diff = abs(chi_data_map[nsup] - chi_center);
+  float down_chi_diff = abs(chi_data_map[ninf] - chi_center);
 
+  if(up_chi_diff<=down_chi_diff)
+  {
+    centre_node = nsup;
+  }
+  else
+  {
+    centre_node = ninf;
+  }
 
-
-  // getting the ratio 
-  float ratio_d = d_centroid / d_node;
-  // getting the closest node
-  int nearnode = 0;
-  if(ratio_d >= 0.5){nearnode = nsup;}
-  else{nearnode = ninf;}
-
-  // getting x and y
-
-
-  float x = xninf + ratio_d * d_x, y = yninf + ratio_d * d_y;  // getting the new x and y 
-
-  out_pair = make_pair(x,y);
-
-  pair<pair<int,float> , pair<float,float> > out_out_pair;
-  pair<int,float> tpair = make_pair(nearnode, c_fdist);
-  out_out_pair = make_pair(tpair, out_pair);
-
-  return out_out_pair;
+  return centre_node;
 
 }
 
@@ -2602,27 +2622,24 @@ vector<vector<int> > LSDChiTools::group_local_kp(vector<int> vecnode_kp, vector<
     // if not of these, I am saving this vector of node and clearing it
     if(save_the_raster == true)
     {
-      // cout << "DEBUG_6" << endl;
+      // this should not happen, it helps me to debug
       if(this_vec.size() == 0)
       {
-        cout <<"FATAL ERROR: void vector" << endl;
+        cout <<"FATAL ERROR: void vector while combining (ERROR #45)" << endl;
         exit(EXIT_FAILURE);
       }
-
       out_vector.push_back(this_vec);
-      // cout << "LAST NODE SAVED " << this_vec.back()  << endl;
       this_vec.clear();
-      // cout << "this_should be 0: " << this_vec.size() << " and this should not: " << out_vector.back().size() << endl;
     }
-    // cout << "DEBUG_7" << endl;
   }
 
-  int sumdfsdfa = 0;
-  for(vector<vector<int> >::iterator vlad = out_vector.begin(); vlad != out_vector.end(); vlad ++)
-  {
-    vector<int> gyuyg = *vlad;
-    sumdfsdfa += gyuyg.size();
-  }
+  // DEBUGGING to keep
+  // int sumdfsdfa = 0;
+  // for(vector<vector<int> >::iterator vlad = out_vector.begin(); vlad != out_vector.end(); vlad ++)
+  // {
+  //   vector<int> gyuyg = *vlad;
+  //   sumdfsdfa += gyuyg.size();
+  // }
   // cout<< "out: " << sumdfsdfa << " || in: " << vecnode_kp.size() << " || in_2: " << counting_these_fucking_knickpoints  << endl;  
   return out_vector;
 
@@ -3123,7 +3140,10 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
         this_kp = iter->second;
         int nearnode = nearest_node_centroid_kp[this_node];
         // get the centroid location
-        float this_x = ksn_centroid[this_node].first, this_y = ksn_centroid[this_node].second;
+        // float this_x = ksn_centroid[this_node].first, this_y = ksn_centroid[this_node].second; // BUGGY AT THE MOMENT
+        float this_x = 0, this_y =0;
+        FlowInfo.retrieve_current_row_and_col(nearnode,row,col);
+        get_x_and_y_locations(row, col, this_x, this_y);
 
         get_lat_and_long_locations_from_coordinate(this_x, this_y, latitude, longitude, Converter);
 
@@ -3136,10 +3156,11 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
         chi_data_out << latitude << ","
                      << longitude << ",";
         chi_data_out.precision(5);
-        chi_data_out << elev_data_map[this_node] << "," // NOTE -> nearnode is the centroid node, however the knickpoint info are stored in this node. I am still working on the centroidisation of the node
-                     << flow_distance_kp_centroid_map[this_node] << ","
-                     << chi_data_map[this_node] << "," // NOTE -> nearnode is the centroid node, however the knickpoint info are stored in this node. I am still working on the centroidisation of the node
-                     << drainage_area_data_map[this_node] << "," // NOTE -> nearnode is the centroid node, however the knickpoint info are stored in this node. I am still working on the centroidisation of the node
+        // NOTE: The IDENTIFYING NODE on the knickpoint map is the first of a knickpoint group - On the global map it provide the nearest node to get the coordinates of the centroid
+        chi_data_out << elev_data_map[nearnode] << "," // NOTE -> nearnode is the centroid node, however the knickpoint info are stored in this node. I am still working on the centroidisation of the node
+                     << flow_distance_data_map[nearnode] << ","
+                     << chi_data_map[nearnode] << "," // NOTE -> nearnode is the centroid node, however the knickpoint info are stored in this node. I am still working on the centroidisation of the node
+                     << drainage_area_data_map[nearnode] << "," // NOTE -> nearnode is the centroid node, however the knickpoint info are stored in this node. I am still working on the centroidisation of the node
                      << this_kp << ","
                      << kp_segdrop[this_node] << ","
                      << sharpness_ksn_length[this_node] << ","

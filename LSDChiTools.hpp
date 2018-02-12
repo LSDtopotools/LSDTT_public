@@ -1223,7 +1223,7 @@ class LSDChiTools
     float get_dksn_from_composite_kp(vector<int> vecnode);
     float get_dseg_drop_from_composite_kp(vector<int> vecnode);
     float get_kp_sharpness_length(vector<int> vecnode, LSDFlowInfo& Flowinfo);
-    pair<pair<int,float>,pair<float,float> > get_ksn_centroid_coordinates(LSDFlowInfo& Flowinfo, vector<int> vecnode);
+    int get_ksn_centroid_coordinates(LSDFlowInfo& Flowinfo, vector<int> vecnode, float total_dksn);
     vector<vector<int> > group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river,LSDFlowInfo& Flowinfo, int kp_node_search);
     vector<vector<int> > old_group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river,LSDFlowInfo& Flowinfo);
     void derive_the_segmented_elevation();
