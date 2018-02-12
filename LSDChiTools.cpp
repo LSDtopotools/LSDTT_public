@@ -2277,6 +2277,7 @@ void LSDChiTools::ksn_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_node_s
       // cout << "SOURCE: "<< this_SK << " n kp before grouping = " << vecnode_kp.size() << endl;
       vector<vector<int> > grouped_kp = group_local_kp(vecnode_kp,vecnode_river,Flowinfo, kp_node_search);
 
+
       int sumdfsdfa = 0;
       for(vector<vector<int> >::iterator vlad = grouped_kp.begin(); vlad != grouped_kp.end(); vlad ++)
       {
@@ -2324,7 +2325,7 @@ void LSDChiTools::ksn_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_node_s
           ksn_extent[this_node] = make_pair(this_vecnode[0], this_vecnode.back()); // the extent nodes are the extreme of the DD
 
           // The neirest node from the centre of the knickpoint (in regards to chi distance)
-          int nearnode = get_ksn_centroid_coordinates(Flowinfo, this_vecnode,ksn_kp_map[this_node]); // get the weighted x and y of the centroid.
+          int nearnode = get_ksn_centroid_coordinates(Flowinfo, this_vecnode, vecnode_river,ksn_kp_map[this_node]); // get the weighted x and y of the centroid.
           flow_distance_kp_centroid_map[this_node] = flow_distance_data_map[nearnode];
           // getting the 
           float this_x = 0,this_y = 0;
@@ -2390,42 +2391,55 @@ float LSDChiTools::get_kp_sharpness_length(vector<int> vecnode, LSDFlowInfo& Flo
 //  get the centroid node of grouped knickpoints          =
 //                  Current version                       =
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-int LSDChiTools::get_ksn_centroid_coordinates(LSDFlowInfo& Flowinfo, vector<int> vecnode, float total_dksn)
+int LSDChiTools::get_ksn_centroid_coordinates(LSDFlowInfo& Flowinfo, vector<int> vecnode,vector<int> vecnode_river, float total_dksn)
 {
 
   pair<float,float> out_pair; // x,y coordinates
+
+  vector<int> this_vecnode_river = get_vecnode_river_from_extent(vecnode[0], vecnode.back(), vecnode_river);
 
   // first, let's get the chi, the dksn and the weighted distance of each nodes
   vector<float> chi_vec , dksn_vec;
   
   // looping through each nodes to group, and getting the info in the same order that the original vector of nodes
-  for(size_t iter = 0; iter < vecnode.size(); iter++)
+  for(size_t iter = 0; iter < this_vecnode_river.size(); iter++)
   {
-    chi_vec.push_back(chi_data_map[vecnode[iter]]);
-    dksn_vec.push_back(raw_ksn_kp_map[vecnode[iter]]); // I am using the raw map, that host the values before combining
+    chi_vec.push_back(chi_data_map[this_vecnode_river[iter]]);
+    if (raw_ksn_kp_map.count(this_vecnode_river[iter]) != 0)
+    {
+      dksn_vec.push_back(abs(raw_ksn_kp_map[this_vecnode_river[iter]])); // I am using the raw map, that host the values before combining
+    }
+    else
+    {
+      dksn_vec.push_back(0);
+    }
   }
 
 
   // Applying a barycenter-like centering of the data to get the chi barycentre
   float M = total_dksn, chi_center = 0, sum_of_mi_ri = 0;
   // Summing the weighted chi distance by dksn
-  for(size_t iter = 0; iter < vecnode.size(); iter++)
+
+  for(size_t iter = 0; iter < this_vecnode_river.size(); iter++)
   {
     float mi = dksn_vec[iter], ri = chi_vec[iter];
     sum_of_mi_ri += mi*ri;
+    // cout << sum_of_mi_ri << " || " << ri << " || " << mi <<  " || " << M << endl;
   }
 
   // applying the weight
-  chi_center = (1/M)*sum_of_mi_ri;
+  chi_center = abs(sum_of_mi_ri/M);
+  // cout << chi_center << endl;
 
   // *cymbal and trumbet noise* we have our chi center
 
   // then looping from bottom to top of nodes to get the boundary nodes of this last
   bool found_it = false;
   int ninf = 0, nsup = 0, this_node = 0, last_node = 0 ;
-  for(vector<int>::iterator hibou = vecnode.begin(); found_it == false; hibou ++)
+  for(vector<int>::iterator hibou = this_vecnode_river.begin(); found_it == false; hibou ++)
   {
     int this_node = *hibou;
+    // cout << this_node << " || " << chi_center << " || " << chi_data_map[this_node] << endl ;
     if(chi_data_map[this_node] > chi_center)
     {
       found_it = true;
@@ -2451,6 +2465,38 @@ int LSDChiTools::get_ksn_centroid_coordinates(LSDFlowInfo& Flowinfo, vector<int>
   }
 
   return centre_node;
+
+}
+
+
+vector<int> LSDChiTools::get_vecnode_river_from_extent(int first_node, int last_node, vector<int> vecnode_river)
+{
+
+  // first_node is bottom node and last node is the upper node inb term of elevation
+        // cout << endl << elev_data_map[vecnode_river[0]] << " || " << elev_data_map[vecnode_river.back()] << endl;
+        // cout <<  elev_data_map[first_node] << " || " << elev_data_map[last_node] << endl;
+
+
+        // exit(EXIT_FAILURE);
+
+  vector<int> out_node;
+  bool pushit = false;
+
+  // looping through the river nodes
+  for(vector<int>::iterator uter = vecnode_river.begin(); uter != vecnode_river.end(); uter++)
+  {
+    int this_node = *uter;
+    // Checking if I need to begin the push-in
+    if(this_node == first_node){pushit  = true;}
+    // push when relevant
+    if(pushit){out_node.push_back(this_node);}
+    // Checking if I need to stop pushing
+    if(this_node == last_node){pushit = false;}
+  }
+  // cout << endl << out_node.size() << endl;
+
+
+  return out_node;
 
 }
 
