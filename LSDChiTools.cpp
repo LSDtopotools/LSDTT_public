@@ -7864,7 +7864,7 @@ void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, 
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "node,Y,X,latitude,longitude,chi,elevation,flow_distance,drainage_area,m_chi,lumped_ksn,TVD_ksn,TVD_ksn_NC,b_chi,TVD_b_chi,source_key,basin_key";
+  chi_data_out << "node,Y,X,latitude,longitude,chi,elevation,flow_distance,drainage_area,m_chi,lumped_ksn,TVD_ksn,TVD_ksn_NC,b_chi,TVD_b_chi,ksnkp,segelevkp,source_key,basin_key";
   if(have_segmented_elevation)
   {
     chi_data_out << ",segmented_elevation,segmented_elevation_diff,segdrop";
@@ -7891,6 +7891,29 @@ void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, 
       FlowInfo.retrieve_current_row_and_col(this_node,row,col);
       get_lat_and_long_locations(row, col, latitude, longitude, Converter);
       get_x_and_y_locations(row, col, this_x, this_y);
+      int ksnkp = 0, segelevkp = 0; // 0 = no knickpoint, -1 negative, 1 positive
+      // checking if there is a raw knickpoint here
+      if(raw_ksn_kp_map.count(this_node)!=0) 
+      {
+        if(raw_ksn_kp_map[this_node]>0)
+        {
+          ksnkp = 1;
+        }
+        else if(raw_ksn_kp_map[this_node]<0)
+        {
+          ksnkp = -1;
+        }
+
+        if(segelev_diff[this_node]>0)
+        {
+          segelevkp = 1;
+        }
+        if(segelev_diff[this_node]>0)
+        {
+          segelevkp = -1;
+        }
+
+      }
 
       chi_data_out << this_node << ","
                    << this_y << ","
@@ -7908,7 +7931,9 @@ void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, 
                    << TVD_m_chi_map[this_node] << ","
                    << TVD_m_chi_map_non_corrected[this_node] << ","
                    << b_chi_data_map[this_node] << ","
-                   << TVD_b_chi_map[this_node] << ","                   
+                   << TVD_b_chi_map[this_node] << ","
+                   << ksnkp << ","
+                   << segelevkp << ","                  
                    << source_keys_map[this_node] << ","
                    << baselevel_keys_map[this_node];
 
