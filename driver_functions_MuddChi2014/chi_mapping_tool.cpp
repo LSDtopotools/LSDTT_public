@@ -159,7 +159,7 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["force_skip_knickpoint_analysis"] = 2;
   int_default_map["force_n_iteration_knickpoint_analysis"] = 20;
   float_default_map["MZS_threshold"] = 0.5;
-  float_default_map["TVD_lambda"] = 10;
+  float_default_map["TVD_lambda"] = -1;
   float_default_map["TVD_lambda_bchi"] = 10000; // Really high, the main variations are extracted with TVD M_chi
   int_default_map["kp_node_combining"] = 10;
  
@@ -272,6 +272,7 @@ int main (int nNumberofArgs,char *argv[])
   map<string,int> this_int_map = LSDPP.get_int_parameters();
   map<string,bool> this_bool_map = LSDPP.get_bool_parameters();
   map<string,string> this_string_map = LSDPP.get_string_parameters();
+
 
   // catch some stupid parameters
   cout << endl << endl << "=====================================" << endl;
@@ -1688,7 +1689,7 @@ int main (int nNumberofArgs,char *argv[])
 
   if(this_bool_map["ksn_knickpoint_analysis"])
   {
-
+    cout << "I am beginning the knickpoint detection and quantification: my first step is too use Mudd et al., 2014 segmentation algorithm" << endl;
     // Recalculation of the m_chi
     // Ill optimaize that later - Boris
     n_iterations = this_int_map["force_n_iteration_knickpoint_analysis"];
@@ -1701,8 +1702,33 @@ int main (int nNumberofArgs,char *argv[])
     ChiTool.segment_counter(FlowInfo, maximum_segment_length);
  
 
+    float TVD_lambda = this_float_map["TVD_lambda"];
+    if( this_float_map["TVD_lambda"] < 0)
+    {
+      cout << "You choose a negative lambda for the total variations denoising. I am going to determine it automatically based of your m/n value. Why? read the paper and its supplementary material for explanations" << endl;
+      TVD_lambda = 0;
+      if(this_float_map["m_over_n"] <= 0.1){ TVD_lambda = 0.1;}
+      else if(this_float_map["m_over_n"] <= 0.15){ TVD_lambda = 0.3;}
+      else if(this_float_map["m_over_n"] <= 0.2){ TVD_lambda = 0.5;}
+      else if(this_float_map["m_over_n"] <= 0.3){ TVD_lambda = 2;}
+      else if(this_float_map["m_over_n"] <= 0.35){ TVD_lambda = 3;}
+      else if(this_float_map["m_over_n"] <= 0.4){ TVD_lambda = 5;}
+      else if(this_float_map["m_over_n"] <= 0.45){ TVD_lambda = 10;}
+      else if(this_float_map["m_over_n"] <= 0.5){ TVD_lambda = 20;}
+      else if(this_float_map["m_over_n"] <= 0.55){ TVD_lambda = 40;}
+      else if(this_float_map["m_over_n"] <= 0.6){ TVD_lambda = 100;}
+      else if(this_float_map["m_over_n"] <= 0.65){ TVD_lambda = 200;}
+      else if(this_float_map["m_over_n"] <= 0.7){ TVD_lambda = 300;}
+      else if(this_float_map["m_over_n"] <= 0.75){ TVD_lambda = 500;}
+      else if(this_float_map["m_over_n"] <= 0.80){ TVD_lambda = 1000;}
+      else{TVD_lambda = 2000;}
+    }
+    else
+    {
+      TVD_lambda = this_float_map["TVD_lambda"];
+    }
     // Actual knickpoint calculation
-    ChiTool.ksn_knickpoint_automator(FlowInfo, OUT_DIR, OUT_ID,this_float_map["MZS_threshold"], this_float_map["TVD_lambda"], this_float_map["TVD_lambda_bchi"], this_int_map["kp_node_combining"]);
+    ChiTool.ksn_knickpoint_automator(FlowInfo, OUT_DIR, OUT_ID,this_float_map["MZS_threshold"], TVD_lambda, this_float_map["TVD_lambda_bchi"], this_int_map["kp_node_combining"]);
     
   }
 
