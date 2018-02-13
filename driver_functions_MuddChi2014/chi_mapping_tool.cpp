@@ -160,7 +160,7 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["force_n_iteration_knickpoint_analysis"] = 20;
   float_default_map["MZS_threshold"] = 0.5;
   float_default_map["TVD_lambda"] = 10;
-  float_default_map["TVD_lambda_bchi"] = 10;
+  float_default_map["TVD_lambda_bchi"] = 10000; // Really high, the main variations are extracted with TVD M_chi
   int_default_map["kp_node_combining"] = 10;
  
   // basic parameters for calculating chi
