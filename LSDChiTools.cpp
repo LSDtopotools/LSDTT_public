@@ -3169,7 +3169,7 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "ID,latitude,longitude,elevation,flow_distance,chi,drainage_area,delta_ksn,delta_segelev,sharpness,sign,out,basin_key,source_key";
+  chi_data_out << "node,latitude,longitude,elevation,flow_distance,chi,drainage_area,delta_ksn,delta_segelev,sharpness,sign,out,basin_key,source_key";
 
   chi_data_out << endl;
 
@@ -3198,7 +3198,7 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
         int this_sign = 0;
         if(this_kp>0){this_sign = 1;}else{this_sign=(-1);}
 
-        chi_data_out << ksn_kp_ID[this_node] << ",";
+        chi_data_out << this_node << ",";
         chi_data_out.precision(9);
         chi_data_out << latitude << ","
                      << longitude << ",";
