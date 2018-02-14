@@ -353,6 +353,15 @@ int main (int nNumberofArgs,char *argv[])
     this_bool_map["segment_slope_area_data"] = true;
   }
 
+  //----------------------------------------------------------------------------//
+  // turn on the appropriate parameter for knickpint analysis
+  //----------------------------------------------------------------------------//
+  if(this_bool_map["ksn_knickpoint_analysis"])
+  {
+    this_bool_map["write_hillshade"] = true;
+    this_bool_map["print_basin_raster"] = true;
+  }
+
   cout << "Read filename is: " <<  DATA_DIR+DEM_ID << endl;
   cout << "Write filename is: " << OUT_DIR+OUT_ID << endl;
 
