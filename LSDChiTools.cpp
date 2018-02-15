@@ -2181,11 +2181,16 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int> vecnode)
       dkdc = (dksn)/dchi;
       raw_dksndchi_kp_map[this_node] = dkdc;
 
-      // segmented elevation diff
+      // segmented elevation diff, I am here trying to isolate ONLY the main ones, to avoid False detection when combining node
       
-
-      raw_segchange[this_node] = dsegelev;
-
+      if((TVD_b_chi_map[this_node] != TVD_b_chi_map[last_node]))
+      {
+        raw_segchange[this_node] = dsegelev;
+      }
+      else
+      {
+        raw_segchange[this_node] = 0;
+      }
 
       // saving the node for later KDE calculation
       vecdif.push_back(this_node);
