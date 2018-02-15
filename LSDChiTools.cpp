@@ -2285,7 +2285,6 @@ void LSDChiTools::ksn_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_node_s
         vector<int> gyuyg = *vlad;
         sumdfsdfa += gyuyg.size();
       }
-      // cout << "SOURCE: "<< this_SK << " n kp contributing to grouping = " << sumdfsdfa << endl;
 
       // cout <<"here" <<endl;
       // We have the group of vector now lets run through it to get the requested values
@@ -2319,20 +2318,25 @@ void LSDChiTools::ksn_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_node_s
           
           // summing the segelev and dksn for this group of node
           ksn_kp_map[this_node] = get_dksn_from_composite_kp(this_vecnode); // gobal ksn value of the knickpoint
+
           kp_segdrop[this_node] = get_dseg_drop_from_composite_kp(this_vecnode); // gobal segmentation elevation value of the knickpoint
+
           
           // Sharpness is the width of the combined knickpoints
           sharpness_ksn_length[this_node] = get_kp_sharpness_length(this_vecnode, Flowinfo);
+
           ksn_extent[this_node] = make_pair(this_vecnode[0], this_vecnode.back()); // the extent nodes are the extreme of the DD
+
 
           // The neirest node from the centre of the knickpoint (in regards to chi distance)
           int nearnode = get_ksn_centroid_coordinates(Flowinfo, this_vecnode, vecnode_river,ksn_kp_map[this_node]); // get the weighted x and y of the centroid.
+
           flow_distance_kp_centroid_map[this_node] = flow_distance_data_map[nearnode];
           // getting the 
           float this_x = 0,this_y = 0;
           Flowinfo.get_x_and_y_from_current_node(nearnode, this_x, this_y);
-          ksn_centroid[this_node] = make_pair(this_x,this_y);
 
+          ksn_centroid[this_node] = make_pair(this_x,this_y);
           nearest_node_centroid_kp[this_node] = nearnode;
           ksn_kp_ID[this_node] = id_kp;
           id_kp++;
@@ -2440,8 +2444,8 @@ int LSDChiTools::get_ksn_centroid_coordinates(LSDFlowInfo& Flowinfo, vector<int>
   for(vector<int>::iterator hibou = this_vecnode_river.begin(); found_it == false; hibou ++)
   {
     int this_node = *hibou;
-    // cout << this_node << " || " << chi_center << " || " << chi_data_map[this_node] << endl ;
-    if(chi_data_map[this_node] > chi_center)
+    // cout << this_node << " || " << this_vecnode_river.back() << endl ;
+    if((chi_data_map[this_node] > chi_center )|| ( this_node == this_vecnode_river.back()))
     {
       found_it = true;
       ninf = last_node;
