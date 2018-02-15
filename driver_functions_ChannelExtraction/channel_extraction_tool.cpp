@@ -122,7 +122,13 @@ int main (int nNumberofArgs,char *argv[])
   map<string,float> float_default_map;
   map<string,bool> bool_default_map;
   map<string,string> string_default_map;
-
+  
+  // Basic DEM preprocessing
+  float_default_map["minimum_elevation"] = 0.0;
+  float_default_map["maximum_elevation"] = 30000;
+  bool_default_map["raster_is_filled"] = false; // assume base raster is already filled
+  bool_default_map["remove_seas"] = true; // elevations above minimum and maximum will be changed to nodata
+  
   // set default float parameters
   int_default_map["threshold_contributing_pixels"] = 1000;
   int_default_map["connected_components_threshold"] = 100;
@@ -193,17 +199,55 @@ int main (int nNumberofArgs,char *argv[])
   // check to see if the raster exists
   LSDRasterInfo RI((DATA_DIR+DEM_ID), raster_ext);
 
-  // load the base raster
-  LSDRaster topography_raster((DATA_DIR+DEM_ID), raster_ext);
+  // load the  DEM
+  LSDRaster topography_raster;
+  if (this_bool_map["remove_seas"])
+  {
+    cout << "I am removing high and low values to get rid of things that should be nodata." << endl;
+    LSDRaster start_raster((DATA_DIR+DEM_ID), raster_ext);
+    // now get rid of the low and high values
+    float lower_threshold = this_float_map["minimum_elevation"];
+    float upper_threshold = this_float_map["maximum_elevation"];
+    bool belowthresholdisnodata = true;
+    LSDRaster Flooded = start_raster.mask_to_nodata_using_threshold(lower_threshold,belowthresholdisnodata);
+    belowthresholdisnodata = false;
+    topography_raster = Flooded.mask_to_nodata_using_threshold(upper_threshold,belowthresholdisnodata);
+
+    if (this_bool_map["print_raster_without_seas"])
+    {
+      cout << "I'm replacing your raster with a raster without seas." << endl;
+      string this_raster_name = OUT_DIR+OUT_ID;
+      topography_raster.write_raster(this_raster_name,raster_ext);
+    }
+  }
+  else
+  {
+    LSDRaster start_raster((DATA_DIR+DEM_ID), raster_ext);
+    topography_raster = start_raster;
+  }
   cout << "Got the dem: " <<  DATA_DIR+DEM_ID << endl;
+
 
 
   //============================================================================
   // Start gathering necessary rasters
   //============================================================================
-  // Get the fill
-  cout << "Filling topography." << endl;
-  LSDRaster filled_topography = topography_raster.fill(this_float_map["min_slope_for_fill"]);
+  
+  LSDRaster filled_topography;
+  // now get the flow info object
+  if ( this_bool_map["raster_is_filled"] )
+  {
+    cout << "You have chosen to use a filled raster." << endl;
+    filled_topography = topography_raster;
+  }
+  else
+  {
+    cout << "Let me fill that raster for you, the min slope is: "
+         << this_float_map["min_slope_for_fill"] << endl;
+    filled_topography = topography_raster.fill(this_float_map["min_slope_for_fill"]);
+  }
+
+
 
   if (this_bool_map["print_fill_raster"])
   {

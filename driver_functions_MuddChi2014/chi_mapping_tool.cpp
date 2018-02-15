@@ -462,8 +462,7 @@ int main (int nNumberofArgs,char *argv[])
   }
 
 
-  // Checking the burning stuffs
-
+  // Checking the logic for the burning of secondary rasters (used mostly to combine lithology with other metrics)
   //Loading the lithologic raster - This need to be done now to adjust some burning parameters
   LSDIndexRaster geolithomap;
   if(this_bool_map["print_litho_info"])
