@@ -889,6 +889,8 @@ void LSDSwath::get_transverse_swath_profile(LSDRaster& Raster, vector<float> des
 // and second profiles in the container are ALWAYS the mean and standard
 // deviation respectively.  The following profiles contain the desired
 // percentile profiles indicated in the input vector "desired_percentiles".
+//
+// SMM notes: BinWidth is the distance along the swath where you want the points. 
 void LSDSwath::get_longitudinal_swath_profile(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth,
        vector<float>& mid_points, vector<float>& mean_profile, vector<float>& sd_profile, vector< vector<float> >& output_percentile_profiles,
        int NormaliseToBaseline)
