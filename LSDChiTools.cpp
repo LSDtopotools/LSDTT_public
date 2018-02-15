@@ -2182,15 +2182,19 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int> vecnode)
       raw_dksndchi_kp_map[this_node] = dkdc;
 
       // segmented elevation diff, I am here trying to isolate ONLY the main ones, to avoid False detection when combining node
+      // TEST1: trying to isolate the main variations      
+      // if((TVD_b_chi_map[this_node] != TVD_b_chi_map[last_node]))
+      // {
+      //   raw_segchange[this_node] = dsegelev;
+      // }
+      // else
+      // {
+      //   raw_segchange[this_node] = 0;
+      //}
+
+      raw_segchange[this_node] = dsegelev;
       
-      if((TVD_b_chi_map[this_node] != TVD_b_chi_map[last_node]))
-      {
-        raw_segchange[this_node] = dsegelev;
-      }
-      else
-      {
-        raw_segchange[this_node] = 0;
-      }
+      //TEST2 save all
 
       // saving the node for later KDE calculation
       vecdif.push_back(this_node);
@@ -2372,7 +2376,9 @@ float LSDChiTools::get_dksn_from_composite_kp(vector<int> vecnode)
 
 float LSDChiTools::get_dseg_drop_from_composite_kp(vector<int> vecnode)
 {
-  float out_value = 0;
+  // I'll get the segelev augmentation NORMALIZED by the chi distance
+  // I have to find a way to normalize
+  float out_value = 0, chi_min = 0, chi_max =0;
   for(vector<int>::iterator bob = vecnode.begin(); bob!= vecnode.end(); bob++)
   {
     int this_node = *bob;
