@@ -70,10 +70,12 @@ class LSDSwath
   ///
   LSDSwath(vector<float>& Y_X_points, LSDRaster& RasterTemplate, float& HalfWidth, float d_space) { create(Y_X_points, RasterTemplate, HalfWidth, d_space); }
 
+  /// @brief I sure wish dave had documented this
   void get_transverse_swath_profile(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth,
        vector<float>& mid_points, vector<float>& mean_profile, vector<float>& sd_profile, vector< vector<float> >& output_percentile_profiles,
        int NormaliseToBaseline);
 
+  /// @brief I sure wish dave had documented this
   void get_longitudinal_swath_profile(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth,
        vector<float>& mid_points, vector<float>& mean_profile, vector<float>& sd_profile, vector< vector<float> >& output_percentile_profiles,
        int NormaliseToBaseline);
@@ -122,7 +124,8 @@ class LSDSwath
 
   ///@details Wrapper to write raster values along swath to csv
   /// @param RasterTemplate raster of values to write
-  /// @param NormaliseToBaseline int, if 1 then will be noramlised to the baseline value
+  /// @param NormaliseToBaseline int, if 1 then will be noramlised to the baseline value.
+  ///     if 0 then you just get the raw underlying data
   /// @param csv_filename file name of output csv
   ///@author FJC
   ///@date 20/11/17
@@ -153,7 +156,15 @@ class LSDSwath
   // write profiles to file
   void write_transverse_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix, int NormaliseToBaseline);
   void write_longitudinal_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix, int NormaliseToBaseline);
+  
+  
+  ///@details This prints the baseline to a csv file
+  ///@param ElevationRaster the raster
+  ///@param csv_filename The name of the file out
+  ///@author FJC
+  ///@date 12/10/17
   void print_baseline_to_csv(LSDRaster& ElevationRaster, string csv_filename);
+  
   // get functions
   // these get data elements
   int get_NPtsInProfile() const {return NPtsInProfile;}
