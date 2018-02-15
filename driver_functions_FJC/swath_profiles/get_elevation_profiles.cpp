@@ -5,6 +5,11 @@
 // along the shapefile.
 // Writes the values to a csv file for visualisation.
 //
+// Notes: You need the shapefile to be a points file. 
+// The point file needs to be in UTM coordinates. 
+// It prints a raster and a csv
+// I am not sure what the csv does. I get almost all nodata
+//
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 //
 // Fiona Clubb
@@ -29,7 +34,7 @@ int main (int nNumberofArgs,char *argv[])
 
 	if (nNumberofArgs != 3)
   {
-    cout << "FATAL ERROR: wrong number inputs. The program needs the path name and the driver file name" << endl;
+    cout << "FATAL ERROR: wrong number inputs. The program needs the path name and the driver file name." << endl;
     exit(EXIT_SUCCESS);
   }
   string path_name = argv[1];
@@ -42,7 +47,7 @@ int main (int nNumberofArgs,char *argv[])
 	file_info_in.open(full_name.c_str());
 	if (file_info_in.fail())
 	{
-		cout << "\nFATAL ERROR: the header file\"" << full_name
+		cout << "\nFATAL ERROR: The parameter file\"" << full_name
 				 << "\" doesn't exist" << endl;
 	}
 
