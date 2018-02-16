@@ -125,21 +125,21 @@ int main (int nNumberofArgs,char *argv[])
   if(  this_bool_map["print_DistanceToBaseline_raster"])
   {
     cout << "I am printing the distance to baseline raster." << endl;
-    string of_name = DATA_DIR+DEM_ID+"_DistToBL";
+    string of_name = OUT_DIR+OUT_ID+"_DistToBL";
     LSDRaster SR = TestSwath.get_raster_DistanceToBaselineArray(RasterTemplate);
     SR.write_raster(of_name,raster_ext);
   }
   if(  this_bool_map["print_DistanceAlongBaseline_raster"])
   {
     cout << "I am printing the distance along baseline raster." << endl;
-    string of_name = DATA_DIR+DEM_ID+"_DistAlBL";
+    string of_name = OUT_DIR+OUT_ID+"_DistAlBL";
     LSDRaster SR = TestSwath.get_raster_DistanceAlongBaselineArray(RasterTemplate);
     SR.write_raster(of_name,raster_ext);
   }
   if(  this_bool_map["print_BaselineValue_raster"])
   {
     cout << "I am printing the baseline value raster." << endl;
-    string of_name = DATA_DIR+DEM_ID+"BLV";
+    string of_name = OUT_DIR+OUT_ID+"BLV";
     LSDRaster SR = TestSwath.get_raster_BaselineValueArray(RasterTemplate);
     SR.write_raster(of_name,raster_ext);
   }
@@ -170,7 +170,7 @@ int main (int nNumberofArgs,char *argv[])
     // push back results to file for plotting
     ofstream output_file;
     string output_fname = "_swath_elevations.csv";
-    output_file.open((DATA_DIR+DEM_ID+output_fname).c_str());
+    output_file.open((OUT_DIR+OUT_ID+output_fname).c_str());
     output_file << "Distance,Mean,Min,Max" << endl;
     for (int i = 0; i < int(mid_points.size()); ++i)
     {
@@ -182,7 +182,7 @@ int main (int nNumberofArgs,char *argv[])
   if(this_bool_map["print_longitudinal_swath_profile"])
   {
     string output_fname3 = "_baseline.csv";
-    output_fname3 = DATA_DIR+DEM_ID+output_fname3;  
+    output_fname3 = OUT_DIR+OUT_ID+output_fname3;  
     TestSwath.print_baseline_to_csv(RasterTemplate,output_fname3);
   }
 
