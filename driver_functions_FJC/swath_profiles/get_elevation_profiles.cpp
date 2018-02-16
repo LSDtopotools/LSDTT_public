@@ -65,10 +65,20 @@ int main (int nNumberofArgs,char *argv[])
   // set default parameters
   float_default_map["HalfWidth"] = 500;
   int_default_map["NormaliseToBaseline"] = 0;
+  
+  // Some parameters for the profiles
+  float_default_map["swath_bin_spacing"] = 500;
 
   // set default string parameters
   string_default_map["Baseline_file"] = "Swath_points.shp";
   string_default_map["CHeads_format"] = "csv";
+  
+  // The analyses you want
+  bool_default_map["print_DistanceToBaseline_raster"] = false;
+  bool_default_map["print_DistanceAlongBaseline_raster"] = false;
+  bool_default_map["print_BaselineValue_raster"] = false;
+  bool_default_map["print_longitudinal_swath_profile"] = false;
+  bool_default_map["print_baseline_csv"] = false;
 
   // Use the parameter parser to get the maps of the parameters required for the
   // analysis
@@ -111,65 +121,70 @@ int main (int nNumberofArgs,char *argv[])
   cout << "\t creating swath template" << endl;
   LSDSwath TestSwath(BaselinePoints, RasterTemplate, this_float_map["HalfWidth"]);
 
-  //cout << "\n\t Getting raster from swath" << endl;
-  //LSDRaster SwathRaster = TestSwath.get_raster_from_swath_profile(RasterTemplate, NormaliseToBaseline);
-  //string swath_ext = "_swath_raster";
-  //SwathRaster.write_raster((path_name+DEM_ID+swath_ext), DEM_extension);
+
+  if(  this_bool_map["print_DistanceToBaseline_raster"])
+  {
+    cout << "I am printing the distance to baseline raster." << endl;
+    string of_name = DATA_DIR+DEM_ID+"_DistToBL";
+    LSDRaster SR = TestSwath.get_raster_DistanceToBaselineArray(RasterTemplate);
+    SR.write_raster(of_name,raster_ext);
+  }
+  if(  this_bool_map["print_DistanceAlongBaseline_raster"])
+  {
+    cout << "I am printing the distance along baseline raster." << endl;
+    string of_name = DATA_DIR+DEM_ID+"_DistAlBL";
+    LSDRaster SR = TestSwath.get_raster_DistanceAlongBaselineArray(RasterTemplate);
+    SR.write_raster(of_name,raster_ext);
+  }
+  if(  this_bool_map["print_BaselineValue_raster"])
+  {
+    cout << "I am printing the baseline value raster." << endl;
+    string of_name = DATA_DIR+DEM_ID+"BLV";
+    LSDRaster SR = TestSwath.get_raster_BaselineValueArray(RasterTemplate);
+    SR.write_raster(of_name,raster_ext);
+  }
 
 
-  /*
-  // get the raster values along the swath
-	vector <vector <float> > ElevationValues = TestSwath.get_RasterValues_along_swath(RasterTemplate, NormaliseToBaseline);
 
-	// push back results to file for plotting
-	ofstream output_file;
-	string output_fname = "_swath_elevations.csv";
-	output_file.open((path_name+DEM_ID+output_fname).c_str());
-	output_file << "Distance,Mean,Min,Max" << endl;
-	for (int i = 0; i < int(ElevationValues[0].size()); ++i)
-	{
-		output_file << ElevationValues[0][i] << "," << ElevationValues[1][i] << "," << ElevationValues[2][i] << "," << ElevationValues[3][i] << endl;
-	}
-	output_file.close();
-  */
+  if(this_bool_map["print_longitudinal_swath_profile"])
+  {
+    cout << "I am printing the longitudianl swath profile." << endl;
+    // try to get the longitudunal swath profile
+    vector<float> desired_percentiles;
+    desired_percentiles.push_back(0);
+    desired_percentiles.push_back(25);
+    desired_percentiles.push_back(50);
+    desired_percentiles.push_back(75);
+    desired_percentiles.push_back(100);
+    float BinWidth = 500;
+    vector<float> mid_points;
+    vector<float> mean_profile;
+    vector<float> sd_profile;
+    vector< vector<float> > output_percentile_profiles;
   
-  // try t get the longitudunal swath profile
-  vector<float> desired_percentiles;
-  desired_percentiles.push_back(0);
-  desired_percentiles.push_back(25);
-  desired_percentiles.push_back(50);
-  desired_percentiles.push_back(75);
-  desired_percentiles.push_back(100);
-  float BinWidth = 500;
-  vector<float> mid_points;
-  vector<float> mean_profile;
-  vector<float> sd_profile;
-  vector< vector<float> > output_percentile_profiles;
-  
-  // this gets the longitudinal swath
-  TestSwath.get_longitudinal_swath_profile(RasterTemplate, desired_percentiles, BinWidth,
+    // this gets the longitudinal swath
+    TestSwath.get_longitudinal_swath_profile(RasterTemplate, desired_percentiles, this_float_map["swath_bin_spacing"],
                                             mid_points, mean_profile, sd_profile, 
                                             output_percentile_profiles,this_int_map["NormaliseToBaseline"]);
   
-  // push back results to file for plotting
-  ofstream output_file;
-  string output_fname = "_swath_elevations.csv";
-  output_file.open((DATA_DIR+DEM_ID+output_fname).c_str());
-  output_file << "Distance,Mean,Min,Max" << endl;
-  for (int i = 0; i < int(mid_points.size()); ++i)
-  {
-    output_file << mid_points[i] << "," << mean_profile[i] << "," << output_percentile_profiles[0][i] << "," << output_percentile_profiles[4][i] << endl;
+    // push back results to file for plotting
+    ofstream output_file;
+    string output_fname = "_swath_elevations.csv";
+    output_file.open((DATA_DIR+DEM_ID+output_fname).c_str());
+    output_file << "Distance,Mean,Min,Max" << endl;
+    for (int i = 0; i < int(mid_points.size()); ++i)
+    {
+      output_file << mid_points[i] << "," << mean_profile[i] << "," << output_percentile_profiles[0][i] << "," << output_percentile_profiles[4][i] << endl;
+    }
+    output_file.close();
   }
-  output_file.close();
 
-  // Now try the raster plotter
-  string output_fname2 = "_swath_elevations2.csv";
-  output_fname2 = DATA_DIR+DEM_ID+output_fname2;
-  TestSwath.write_RasterValues_along_swath_to_csv(RasterTemplate,this_int_map["NormaliseToBaseline"],output_fname2);
-
-  string output_fname3 = "_baseline.csv";
-  output_fname3 = DATA_DIR+DEM_ID+output_fname3;  
-  TestSwath.print_baseline_to_csv(RasterTemplate,output_fname3);
+  if(this_bool_map["print_longitudinal_swath_profile"])
+  {
+    string output_fname3 = "_baseline.csv";
+    output_fname3 = DATA_DIR+DEM_ID+output_fname3;  
+    TestSwath.print_baseline_to_csv(RasterTemplate,output_fname3);
+  }
 
   // Done, check how long it took
   clock_t end = clock();
