@@ -1217,7 +1217,13 @@ class LSDChiTools
     /// @date 08/01/2018
     void lump_this_vec(vector<int> this_vec, int n_nodlump);
 
+    /// @brief Apply the TVD filter () L.Condat 2013 on the m_chi and b_chi signals
+    /// @param this_vec: vector of int containing the node index
+    /// @param n_nodlump: the lumping half_window (number of nodes)
+    /// @author BG
+    /// @date 08/01/2018
     void TVD_on_my_ksn(const float lambda, float lambda_TVD_b_chi);
+
     vector<float> TVD_this_vec(vector<int> this_vec, const float lambda, float lambda_TVD_b_chi );
     vector<double> correct_TVD_vec(vector<double> this_val);
     float get_dksn_from_composite_kp(vector<int> vecnode);
@@ -1231,7 +1237,8 @@ class LSDChiTools
     
     
     void print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filename);
-    void stepped_knickpoint_detection(int SK, vector<int> vecnode);
+    void raw_stepped_knickpoint_detection(int SK, vector<int> vecnode);
+    void stepped_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_node_search);
 
 
 
@@ -1351,21 +1358,32 @@ class LSDChiTools
     map<int,float>TVD_m_chi_map_non_corrected;
     /// Grouped and processed knickpoints
     map<int,float> ksn_kp_map;
-    /// diffusion of a knickpoint, or sharpness of a knickpoint, I cannot decide which worf I prefer
+    /// diffusion of a knickpoint, or sharpness of a knickpoint, I cannot decide which word I prefer
     map<int,float> sharpness_ksn_length;
+    /// diffusion of a knickpoint, or sharpness of a stepped knickpoint, I cannot decide which word I prefer
+    map<int,float> sharpness_stepped_length;
     /// cextent of composite knickpoints
     map<int,pair<int,int> > ksn_extent;
+    map<int,pair<int,int> > stepped_extent;
     /// contains the centroid of each knickpoints
     map<int,pair<float,float> > ksn_centroid;
+    /// contains the centroid of each stepped knickpoints
+    map<int,pair<float,float> > stepped_centroid;
     /// Unique ID for each knickpoints
     map<int,int> ksn_kp_ID;
     map<int,float> flow_distance_kp_centroid_map;
+    map<int,float> flow_distance_stepped_kp_centroid_map;
     map<int,int> nearest_node_centroid_kp;
+    map<int,int> nearest_node_centroid_kp_stepped;
+
     map<int,int> map_outlier_MZS_combined;
     map<int,float> kp_segdrop;
     map<int,float> raw_segchange;
     map<int,float> TVD_segelev_diff;
     map<int,float> segelev_diff;
+    map<int,float> raw_delta_segelev_from_TVDb_chi;
+    map<int,vector<int> > map_node_source_key_kp_stepped;
+
 
 
 
