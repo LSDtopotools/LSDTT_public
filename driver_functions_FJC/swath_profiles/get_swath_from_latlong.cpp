@@ -25,18 +25,18 @@
 
 int main (int nNumberofArgs,char *argv[])
 {
-	//start the clock
-	clock_t begin = clock();
+  //start the clock
+  clock_t begin = clock();
 
-	//Test for correct input arguments
+  //Test for correct input arguments
   if (nNumberofArgs!=3)
   {
     cout << "=========================================================" << endl;
     cout << "|| Welcome to the swath tool!  					              ||" << endl;
     cout << "|| This program takes in a csv file with latitude and  ||" << endl;
-		cout << "|| longitude of the upstream and downstream points of  ||" << endl;
-		cout << "|| a series of channels. It runs a swath profile       ||" << endl;
-		cout << "|| between the points								      						||" << endl;
+    cout << "|| longitude of the upstream and downstream points of  ||" << endl;
+    cout << "|| a series of channels. It runs a swath profile       ||" << endl;
+    cout << "|| between the points								      						||" << endl;
     cout << "|| This program was developed by                       ||" << endl;
     cout << "|| Fiona J. Clubb												              ||" << endl;
     cout << "||  at the University of Edinburgh                     ||" << endl;
@@ -54,50 +54,50 @@ int main (int nNumberofArgs,char *argv[])
   string path_name = argv[1];
   string f_name = argv[2];
 
-	// maps for setting default parameters
-	map<string,int> int_default_map;
-	map<string,float> float_default_map;
-	map<string,bool> bool_default_map;
-	map<string,string> string_default_map;
+  // maps for setting default parameters
+  map<string,int> int_default_map;
+  map<string,float> float_default_map;
+  map<string,bool> bool_default_map;
+  map<string,string> string_default_map;
 
-	// set default int parameters
-	int_default_map["search_radius"] = 50;
-	int_default_map["HalfWidth"] = 500;
-	int_default_map["NormaliseToBaseline"] = 0;
-	int_default_map["threshold_contributing_pixels"] = 1000;
+  // set default int parameters
+  int_default_map["search_radius"] = 50;
+  int_default_map["HalfWidth"] = 500;
+  int_default_map["NormaliseToBaseline"] = 0;
+  int_default_map["threshold_contributing_pixels"] = 1000;
 
-	// set default string parameters
-	string_default_map["csv_file"] = "Merapi_swath_points.csv";
-	string_default_map["CHeads_format"] = "csv";
+  // set default string parameters
+  string_default_map["csv_file"] = "Merapi_swath_points.csv";
+  string_default_map["CHeads_format"] = "csv";
 
-	bool_default_map["trim_raster"] = true;
+  bool_default_map["trim_raster"] = true;
 
-	// set default float parameters
-	float_default_map["Minimum_Slope"] = 0.0001;
+  // set default float parameters
+  float_default_map["Minimum_Slope"] = 0.0001;
 
-	// Use the parameter parser to get the maps of the parameters required for the
-	// analysis
-	// load parameter parser object
-	LSDParameterParser LSDPP(path_name,f_name);
-	LSDPP.force_bil_extension();
+  // Use the parameter parser to get the maps of the parameters required for the
+  // analysis
+  // load parameter parser object
+  LSDParameterParser LSDPP(path_name,f_name);
+  LSDPP.force_bil_extension();
 
-	LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
-	map<string,float> this_float_map = LSDPP.get_float_parameters();
-	map<string,int> this_int_map = LSDPP.get_int_parameters();
-	map<string,bool> this_bool_map = LSDPP.get_bool_parameters();
-	map<string,string> this_string_map = LSDPP.get_string_parameters();
+  LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
+  map<string,float> this_float_map = LSDPP.get_float_parameters();
+  map<string,int> this_int_map = LSDPP.get_int_parameters();
+  map<string,bool> this_bool_map = LSDPP.get_bool_parameters();
+  map<string,string> this_string_map = LSDPP.get_string_parameters();
 
-	// Now print the parameters for bug checking
-	LSDPP.print_parameters();
+  // Now print the parameters for bug checking
+  LSDPP.print_parameters();
 
-	// location of the files
-	string DATA_DIR =  LSDPP.get_read_path();
-	string DEM_ID =  LSDPP.get_read_fname();
-	string OUT_DIR = LSDPP.get_write_path();
-	string OUT_ID = LSDPP.get_write_fname();
-	string raster_ext =  LSDPP.get_dem_read_extension();
-	vector<string> boundary_conditions = LSDPP.get_boundary_conditions();
-	string CHeads_file = LSDPP.get_CHeads_file();
+  // location of the files
+  string DATA_DIR =  LSDPP.get_read_path();
+  string DEM_ID =  LSDPP.get_read_fname();
+  string OUT_DIR = LSDPP.get_write_path();
+  string OUT_ID = LSDPP.get_write_fname();
+  string raster_ext =  LSDPP.get_dem_read_extension();
+  vector<string> boundary_conditions = LSDPP.get_boundary_conditions();
+  string CHeads_file = LSDPP.get_CHeads_file();
 
   //string Swath_ext = "_swath_trans";
   //string Long_Swath_ext = "_swath_long";

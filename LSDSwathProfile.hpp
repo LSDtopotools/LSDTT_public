@@ -10,7 +10,7 @@
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
-// Version 0.0.1		17/02/2014
+// Version 0.0.2		16/02/2018
 // Prerequisite software packages: TNT, PCL and liblas
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -70,12 +70,38 @@ class LSDSwath
   ///
   LSDSwath(vector<float>& Y_X_points, LSDRaster& RasterTemplate, float& HalfWidth, float d_space) { create(Y_X_points, RasterTemplate, HalfWidth, d_space); }
 
-  /// @brief I sure wish dave had documented this
+  /// @brief This moves perpendicular to the swath and gets statisics from bins of distance from the swath
+  ///  you can tell it what widths you want and returns a series of swaths at the mean and then percentiles you want
+  /// @param Raster The raster from which you extract data
+  /// @param desired_percentiles A float vector that contains the percentiles of the data you want to calculate for your output profiles
+  /// @param BinWidth The width of each bin 
+  /// @param mid_points A vector of the mid points, in terms of distance along, of the bins. This is overwritten during computation.
+  /// @param mean_profile A vector with the mean profile values. This is overwritten during computation.
+  /// @param sd_profile A vector with the standard deviation values. This is overwritten during computation.
+  /// @param output_percentile_profiles A vec vector where each vector is the profile at the precentile determined in the desired_percentiles vector. 
+  ///    This is overwritten during computation.
+  /// @param NormaliseToBaseline 0 if you want the raw data, 1 if you want the data normalised to the value at the baseline. 
+  /// @author DTM
+  /// @date 01/01/2015
   void get_transverse_swath_profile(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth,
        vector<float>& mid_points, vector<float>& mean_profile, vector<float>& sd_profile, vector< vector<float> >& output_percentile_profiles,
        int NormaliseToBaseline);
 
-  /// @brief I sure wish dave had documented this
+  /// @brief This moves along the swath and gets statisics from bins of distance along the swath
+  ///  you can tell it what widths you want and returns a series of swaths at the mean and then percentiles you want
+  /// @param Raster The raster from which you extract data
+  /// @param desired_percentiles A float vector that contains the percentiles of the data you want to calculate for your output profiles
+  /// @param BinWidth The width of each bin 
+  /// @param mid_points A vector of the mid points, in terms of distance along, of the bins. This is overwritten during computation.
+  /// @param mean_profile A vector with the mean profile values. This is overwritten during computation.
+  /// @param sd_profile A vector with the standard deviation values. This is overwritten during computation.
+  /// @param output_percentile_profiles A vec vector where each vector is the profile at the precentile determined in the desired_percentiles vector. 
+  ///    This is overwritten during computation.
+  /// @param NormaliseToBaseline 0 if you want the raw data, 1 if you want the data normalised to the value at the baseline. 
+  ///  In general 1 is used to see the value along the baseline relative to that baseline so good for looking at things like
+  ///   terraces along a river. 
+  /// @author DTM
+  /// @date 01/01/2015
   void get_longitudinal_swath_profile(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth,
        vector<float>& mid_points, vector<float>& mean_profile, vector<float>& sd_profile, vector< vector<float> >& output_percentile_profiles,
        int NormaliseToBaseline);
@@ -88,12 +114,12 @@ class LSDSwath
   ///@date 16/10/15
   LSDRaster get_raster_from_swath_profile(LSDRaster& Raster, int NormaliseToBaseline);
 
-	///@brief fill in the baseline raster value with the average value of the pixels along the transverse swath profile
-	///@param Raster Raster template
-	///@return LSDRaster with filled in values along the baseline
-	///@author FJC
-	///@date 16/01/17
-	LSDRaster fill_in_channels_swath(LSDRaster& Raster);
+  ///@brief fill in the baseline raster value with the average value of the pixels along the transverse swath profile
+  ///@param Raster Raster template
+  ///@return LSDRaster with filled in values along the baseline
+  ///@author FJC
+  ///@date 16/01/17
+  LSDRaster fill_in_channels_swath(LSDRaster& Raster);
 
   ///@brief Get information about connected components along the swath profile
   ///@details This function takes in a connected components raster and returns the average
@@ -109,7 +135,7 @@ class LSDSwath
   ///@date 24/01/17
   vector <vector <float> > get_connected_components_along_swath(LSDIndexRaster& ConnectedComponents, LSDRaster& RasterTemplate, int NormaliseToBaseline);
 
-  ///@details This function takes in a raster and returns the mean, min and max values of the raster
+  ///@brief  This function takes in a raster and returns the mean, min and max values of the raster
   /// at each point along the swath
   /// vector of vectors has the format:
   /// 0 = distance along swath
@@ -122,7 +148,7 @@ class LSDSwath
   ///@date 15/02/17
   vector <vector <float> > get_RasterValues_along_swath(LSDRaster& RasterTemplate, int NormaliseToBaseline);
 
-  ///@details Wrapper to write raster values along swath to csv
+  /// @brief  Wrapper to write raster values along swath to csv
   /// @param RasterTemplate raster of values to write
   /// @param NormaliseToBaseline int, if 1 then will be noramlised to the baseline value.
   ///     if 0 then you just get the raw underlying data
@@ -131,14 +157,14 @@ class LSDSwath
   ///@date 20/11/17
   void write_RasterValues_along_swath_to_csv(LSDRaster& RasterTemplate, int NormaliseToBaseline, string csv_filename);
 
-  ///@details This function takes in a connected components raster and returns an array
+  ///@brief  This function takes in a connected components raster and returns an array
   ///@param ConnectedComponents connected components raster
   ///@return array with baseline components
   ///@author FJC
   ///@date 28/09/17
   Array2D<float> get_BaselineDist_ConnectedComponents(LSDIndexRaster& ConnectedComponents);
 
-  ///@details This function takes in a connected components raster and returns an array
+  ///@brief  This function takes in a connected components raster and returns an array
   /// of the distance to the baseline for each pixl in the raster
   ///@param ConnectedComponents connected components raster
   ///@return array with baseline components
@@ -146,7 +172,7 @@ class LSDSwath
   ///@date 12/10/17
   Array2D<float> get_DistanceToBaseline_ConnectedComponents(LSDIndexRaster& ConnectedComponents);
 
-  ///@details This function takes in a raster for analysis and gets the width of pixels in that raster
+  ///@brief  This function takes in a raster for analysis and gets the width of pixels in that raster
   ///@param RasterForAnalysis analysis index raster
   ///@return vector with widths along baseline
   ///@author FJC
@@ -157,14 +183,40 @@ class LSDSwath
   void write_transverse_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix, int NormaliseToBaseline);
   void write_longitudinal_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix, int NormaliseToBaseline);
   
-  
-  ///@details This prints the baseline to a csv file
+  ///@brief This prints the baseline to a csv file
   ///@param ElevationRaster the raster
   ///@param csv_filename The name of the file out
   ///@author FJC
   ///@date 12/10/17
   void print_baseline_to_csv(LSDRaster& ElevationRaster, string csv_filename);
   
+  
+  /// @brief This finds locations of points along a baseline
+  /// @param A vector of distances along the baseline
+  /// @author SMM
+  /// @date 16/02/2018
+  void get_locations_of_points_along_baseline(vector<float> distance_along_baseline);
+  
+  /// @brief This prints the DistanceToBaselineArray to a raster
+  /// @param Raster a raster to which the values will be printed to its geometry 
+  /// @author SMM
+  /// @date 16/02/2018
+  LSDRaster get_raster_DistanceToBaselineArray(LSDRaster& Raster);
+  
+  /// @brief This prints the DistanceAlongBaselineArray to a raster
+  /// @param Raster a raster to which the values will be printed to its geometry 
+  /// @author SMM
+  /// @date 16/02/2018
+  LSDRaster get_raster_DistanceAlongBaselineArray(LSDRaster& Raster);
+  
+  /// @brief This prints the BaselineValueArray to a raster
+  /// @param Raster a raster to which the values will be printed to its geometry 
+  /// @author SMM
+  /// @date 16/02/2018
+  LSDRaster get_raster_BaselineValueArray(LSDRaster& Raster);
+  
+  
+    
   // get functions
   // these get data elements
   int get_NPtsInProfile() const {return NPtsInProfile;}
@@ -179,14 +231,14 @@ class LSDSwath
   float get_YMin() const { return YMin; }
   float get_ProfileHalfWidth() const { return ProfileHalfWidth; }
 
-	protected:
+  protected:
 
   // Swath template
   vector<float> DistanceAlongBaseline;
   vector<float> BaselineValue;
-	vector<int> BaselineRows;  // rows of the baseline points
-	vector<int> BaselineCols;  // cols of the baseline points
-	Array2D<float> DistanceToBaselineArray;
+  vector<int> BaselineRows;  // rows of the baseline points
+  vector<int> BaselineCols;  // cols of the baseline points
+  Array2D<float> DistanceToBaselineArray;
   Array2D<float> DistanceAlongBaselineArray;
   Array2D<float> BaselineValueArray;
 
@@ -203,7 +255,7 @@ class LSDSwath
   float YMax;
   float YMin;
 
-	private:
+  private:
   void create();
   void create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float ProfileHalfWidth);
   void create(vector<float>& Y_X_points, LSDRaster& RasterTemplate, float& ProfileHalfWidth, float d_space);

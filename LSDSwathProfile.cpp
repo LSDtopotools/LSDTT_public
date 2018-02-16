@@ -100,8 +100,8 @@ bool test_point_left(vector<float> V_a, vector<float> V_b, vector<float> V_p)
 // the create function. This is default and throws an error
 void LSDSwath::create()
 {
-	cout << "LSDSwathProfile line 102 You need to supply a PointData container of profile coordinates, a raster template and the half width of the profile" << endl;
-	exit(EXIT_FAILURE);
+  cout << "LSDSwathProfile line 102 You need to supply a PointData container of profile coordinates, a raster template and the half width of the profile" << endl;
+  exit(EXIT_FAILURE);
 }
 // This function creates the swath profile template for creating a swath profile
 // of a raster dataset.
@@ -117,8 +117,8 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
   // with each iteration
   vector<float> DistanceAlongBaseline_temp(NPtsInProfile,NoDataValue);
   vector<float> BaselineValue_temp(NPtsInProfile,NoDataValue);
-	vector<int> BaselineRows_temp(NPtsInProfile,NoDataValue);
-	vector<int> BaselineCols_temp(NPtsInProfile,NoDataValue);
+  vector<int> BaselineRows_temp(NPtsInProfile,NoDataValue);
+  vector<int> BaselineCols_temp(NPtsInProfile,NoDataValue);
   float cumulative_distance = 0;
   DistanceAlongBaseline_temp[0]=cumulative_distance;
   // Retrieve baseline value at each point - sample closest pixel in template raster
@@ -129,11 +129,11 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
   int row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/Resolution));
   if(col_point < 0 || col_point > NCols-1 || row_point < 0 || row_point > NRows) BaselineValue_temp[0]=NoDataValue;
   else
-	{
-		BaselineValue_temp[0] = RasterTemplate.get_data_element(row_point,col_point);
-		BaselineRows_temp[0] = row_point;
-		BaselineCols_temp[0] = col_point;
-	}
+  {
+    BaselineValue_temp[0] = RasterTemplate.get_data_element(row_point,col_point);
+    BaselineRows_temp[0] = row_point;
+    BaselineCols_temp[0] = col_point;
+  }
 
 
   for(int i = 1; i<NPtsInProfile; ++i)
@@ -152,11 +152,11 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
     row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/Resolution));
     if(col_point < 0 || col_point > NCols-1 || row_point < 0 || row_point > NRows) BaselineValue_temp[i]=NoDataValue;
     else
-		{
-			BaselineValue_temp[i] = RasterTemplate.get_data_element(row_point,col_point);
-			BaselineRows_temp[i] = row_point;
-			BaselineCols_temp[i] = col_point;
-		}
+    {
+      BaselineValue_temp[i] = RasterTemplate.get_data_element(row_point,col_point);
+      BaselineRows_temp[i] = row_point;
+      BaselineCols_temp[i] = col_point;
+    }
   }
 
   DistanceAlongBaseline = DistanceAlongBaseline_temp;
@@ -488,11 +488,11 @@ void LSDSwath::create(vector<float>& Y_X_points, LSDRaster& RasterTemplate, floa
   int row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/Resolution));
   if(col_point < 0 || col_point > NCols-1 || row_point < 0 || row_point > NRows) BaselineValue_temp[0]=NoDataValue;
   else
-	{
-		BaselineValue_temp[0] = RasterTemplate.get_data_element(row_point,col_point);
-		BaselineRows_temp[0] = row_point;
-		BaselineCols_temp[0] = col_point;
-	}
+  {
+    BaselineValue_temp[0] = RasterTemplate.get_data_element(row_point,col_point);
+    BaselineRows_temp[0] = row_point;
+    BaselineCols_temp[0] = col_point;
+  }
 
 
   for(int i = 1; i<NPtsInProfile; ++i)
@@ -511,11 +511,11 @@ void LSDSwath::create(vector<float>& Y_X_points, LSDRaster& RasterTemplate, floa
     row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/Resolution));
     if(col_point < 0 || col_point > NCols-1 || row_point < 0 || row_point > NRows) BaselineValue_temp[i]=NoDataValue;
     else
-		{
-			BaselineValue_temp[i] = RasterTemplate.get_data_element(row_point,col_point);
-			BaselineRows_temp[i] = row_point;
-			BaselineCols_temp[i] = col_point;
-		}
+    {
+      BaselineValue_temp[i] = RasterTemplate.get_data_element(row_point,col_point);
+      BaselineRows_temp[i] = row_point;
+      BaselineCols_temp[i] = col_point;
+    }
   }
 
   DistanceAlongBaseline = DistanceAlongBaseline_temp;
@@ -1623,6 +1623,144 @@ void LSDSwath::print_baseline_to_csv(LSDRaster& ElevationRaster, string csv_file
     output_file << DistanceAlongBaseline[i] << "," << BaselineValue[i] << "," << x_loc << "," << y_loc << "," << latitude << "," << longitude << "," << BaselineRows[i] << "," << BaselineCols[i] << endl;
   }
   output_file.close();
+}
+
+
+
+void get_locations_of_points_along_baseline(vector<float> distance_along_baseline)
+{
+  int N_distances = int(distance_along_baseline.size());
+  float this_distance;
+  for (int i = 0; i< N_distances; i++)
+  {
+    this_distance = distance_along_baseline[i];
+    
+    // now loop through baseline finding rows and columns
+  
+  }
+}
+
+
+
+LSDRaster LSDSwath::get_raster_DistanceToBaselineArray(LSDRaster& Raster)
+{
+  vector<float> TransverseDistance, RasterValues;
+  Array2D<float> RasterValues_temp(NRows,NCols,NoDataValue);
+  float Resolution = Raster.get_DataResolution();
+  float XMinimum = Raster.get_XMinimum();
+  float YMinimum = Raster.get_YMinimum();
+  map<string,string> GeoReferencingStrings = Raster.get_GeoReferencingStrings();
+
+  // Define bounding box of swath profile
+  int ColStart = int(floor((XMin)/Resolution));
+  int ColEnd = ColStart + int(ceil((XMax-XMin)/Resolution));
+  ColStart = ColStart - int(ceil(ProfileHalfWidth/Resolution));
+  ColEnd = ColEnd + int(ceil(ProfileHalfWidth/Resolution));
+  if (ColStart < 0) ColStart = 0;
+  if (ColEnd > NCols) ColEnd = NCols;
+
+  int RowEnd = NRows - 1 - int(floor(YMin/Resolution));
+  int RowStart = RowEnd - int(ceil((YMax-YMin)/Resolution));
+  RowStart = RowStart - int(ceil(ProfileHalfWidth/Resolution));
+  RowEnd = RowEnd + int(ceil(ProfileHalfWidth/Resolution));
+  if (RowEnd > NRows) RowEnd = NRows;
+  if (RowStart < 0) RowStart = 0;
+
+  for(int i = RowStart; i<RowEnd; ++i)
+  {
+    for(int j = ColStart; j<ColEnd; ++j)
+    {
+      if(DistanceToBaselineArray[i][j]!=NoDataValue)
+      {
+        RasterValues_temp[i][j] = DistanceToBaselineArray[i][j];
+      }
+    }
+  }
+  LSDRaster SwathRaster(NRows, NCols, XMinimum, YMinimum, Resolution,
+                   NoDataValue, RasterValues_temp, GeoReferencingStrings);
+
+  return SwathRaster;
+}
+
+
+LSDRaster LSDSwath::get_raster_DistanceAlongBaselineArray(LSDRaster& Raster)
+{
+  vector<float> TransverseDistance, RasterValues;
+  Array2D<float> RasterValues_temp(NRows,NCols,NoDataValue);
+  float Resolution = Raster.get_DataResolution();
+  float XMinimum = Raster.get_XMinimum();
+  float YMinimum = Raster.get_YMinimum();
+  map<string,string> GeoReferencingStrings = Raster.get_GeoReferencingStrings();
+
+  // Define bounding box of swath profile
+  int ColStart = int(floor((XMin)/Resolution));
+  int ColEnd = ColStart + int(ceil((XMax-XMin)/Resolution));
+  ColStart = ColStart - int(ceil(ProfileHalfWidth/Resolution));
+  ColEnd = ColEnd + int(ceil(ProfileHalfWidth/Resolution));
+  if (ColStart < 0) ColStart = 0;
+  if (ColEnd > NCols) ColEnd = NCols;
+
+  int RowEnd = NRows - 1 - int(floor(YMin/Resolution));
+  int RowStart = RowEnd - int(ceil((YMax-YMin)/Resolution));
+  RowStart = RowStart - int(ceil(ProfileHalfWidth/Resolution));
+  RowEnd = RowEnd + int(ceil(ProfileHalfWidth/Resolution));
+  if (RowEnd > NRows) RowEnd = NRows;
+  if (RowStart < 0) RowStart = 0;
+
+  for(int i = RowStart; i<RowEnd; ++i)
+  {
+    for(int j = ColStart; j<ColEnd; ++j)
+    {
+      if(DistanceAlongBaselineArray[i][j]!=NoDataValue)
+      {
+        RasterValues_temp[i][j] = DistanceAlongBaselineArray[i][j];
+      }
+    }
+  }
+  LSDRaster SwathRaster(NRows, NCols, XMinimum, YMinimum, Resolution,
+                   NoDataValue, RasterValues_temp, GeoReferencingStrings);
+
+  return SwathRaster;
+}
+
+LSDRaster LSDSwath::get_raster_BaselineValueArray(LSDRaster& Raster)
+{
+  vector<float> TransverseDistance, RasterValues;
+  Array2D<float> RasterValues_temp(NRows,NCols,NoDataValue);
+  float Resolution = Raster.get_DataResolution();
+  float XMinimum = Raster.get_XMinimum();
+  float YMinimum = Raster.get_YMinimum();
+  map<string,string> GeoReferencingStrings = Raster.get_GeoReferencingStrings();
+
+  // Define bounding box of swath profile
+  int ColStart = int(floor((XMin)/Resolution));
+  int ColEnd = ColStart + int(ceil((XMax-XMin)/Resolution));
+  ColStart = ColStart - int(ceil(ProfileHalfWidth/Resolution));
+  ColEnd = ColEnd + int(ceil(ProfileHalfWidth/Resolution));
+  if (ColStart < 0) ColStart = 0;
+  if (ColEnd > NCols) ColEnd = NCols;
+
+  int RowEnd = NRows - 1 - int(floor(YMin/Resolution));
+  int RowStart = RowEnd - int(ceil((YMax-YMin)/Resolution));
+  RowStart = RowStart - int(ceil(ProfileHalfWidth/Resolution));
+  RowEnd = RowEnd + int(ceil(ProfileHalfWidth/Resolution));
+  if (RowEnd > NRows) RowEnd = NRows;
+  if (RowStart < 0) RowStart = 0;
+
+  for(int i = RowStart; i<RowEnd; ++i)
+  {
+    for(int j = ColStart; j<ColEnd; ++j)
+    {
+      if(BaselineValueArray[i][j]!=NoDataValue)
+      {
+        RasterValues_temp[i][j] = BaselineValueArray[i][j];
+      }
+    }
+  }
+  LSDRaster SwathRaster(NRows, NCols, XMinimum, YMinimum, Resolution,
+                   NoDataValue, RasterValues_temp, GeoReferencingStrings);
+
+  return SwathRaster;
 }
 
 #endif
