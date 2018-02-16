@@ -26,44 +26,74 @@
 #include "../../LSDSwathProfile.hpp"
 #include "../../LSDShapeTools.hpp"
 #include "../../LSDJunctionNetwork.hpp"
+#include "../../LSDParameterParser.hpp"
 
 int main (int nNumberofArgs,char *argv[])
 {
-	//start the clock
-	clock_t begin = clock();
+  //start the clock
+  clock_t begin = clock();
 
-	if (nNumberofArgs != 3)
+  //Test for correct input arguments
+  if (nNumberofArgs!=3)
   {
-    cout << "FATAL ERROR: wrong number inputs. The program needs the path name and the driver file name." << endl;
+    cout << "=========================================================" << endl;
+    cout << "|| Welcome to the swath tool!  					              ||" << endl;
+    cout << "|| This program was developed by                       ||" << endl;
+    cout << "|| Fiona J. Clubb												              ||" << endl;
+    cout << "|| and Simon M Mudd                                    ||" << endl;
+    cout << "||  at the University of Edinburgh                     ||" << endl;
+    cout << "=========================================================" << endl;
+    cout << "This program requires two inputs: " << endl;
+    cout << "* First the path to the parameter file." << endl;
+    cout << "* Second the name of the param file (see below)." << endl;
+    cout << "---------------------------------------------------------" << endl;
+    cout << "Then the command line argument will be, for example: " << endl;
+    cout << "In linux:" << endl;
+    cout << "./swath_profiler.out /LSDTopoTools/Topographic_projects/Test_data/ LSDTT_Swath.param" << endl;
+    cout << "=========================================================" << endl;
     exit(EXIT_SUCCESS);
   }
   string path_name = argv[1];
   string f_name = argv[2];
-  cout << "The path name is: " << path_name << " and the filename is: " << f_name << endl;
 
-	string full_name = path_name+f_name;
+  // maps for setting default parameters
+  map<string,int> int_default_map;
+  map<string,float> float_default_map;
+  map<string,bool> bool_default_map;
+  map<string,string> string_default_map;
 
-	ifstream file_info_in;
-	file_info_in.open(full_name.c_str());
-	if (file_info_in.fail())
-	{
-		cout << "\nFATAL ERROR: The parameter file\"" << full_name
-				 << "\" doesn't exist" << endl;
-	}
+  // set default parameters
+  float_default_map["HalfWidth"] = 500;
+  int_default_map["NormaliseToBaseline"] = 0;
 
-	string DEM_ID, Baseline_file, temp;
-	int NormaliseToBaseline;
-	float HalfWidth;
-	string DEM_extension = "bil";
-	string csv_extension = "csv";
+  // set default string parameters
+  string_default_map["Baseline_file"] = "Swath_points.shp";
+  string_default_map["CHeads_format"] = "csv";
 
-	// read in the parameters. need to have an input string before each parameter in the input file. I will update this with the parameter parser at some point when I have time...
-	file_info_in >> temp >> DEM_ID
-						   >> temp >> Baseline_file
-							 >> temp >> HalfWidth
-							 >> temp >> NormaliseToBaseline;
+  // Use the parameter parser to get the maps of the parameters required for the
+  // analysis
+  // load parameter parser object
+  LSDParameterParser LSDPP(path_name,f_name);
+  LSDPP.force_bil_extension();
 
-  file_info_in.close();
+  LSDPP.parse_all_parameters(float_default_map, int_default_map, bool_default_map,string_default_map);
+  map<string,float> this_float_map = LSDPP.get_float_parameters();
+  map<string,int> this_int_map = LSDPP.get_int_parameters();
+  map<string,bool> this_bool_map = LSDPP.get_bool_parameters();
+  map<string,string> this_string_map = LSDPP.get_string_parameters();
+
+  // Now print the parameters for bug checking
+  LSDPP.print_parameters();
+
+  // location of the files
+  string DATA_DIR =  LSDPP.get_read_path();
+  string DEM_ID =  LSDPP.get_read_fname();
+  string OUT_DIR = LSDPP.get_write_path();
+  string OUT_ID = LSDPP.get_write_fname();
+  string raster_ext =  LSDPP.get_dem_read_extension();
+  vector<string> boundary_conditions = LSDPP.get_boundary_conditions();
+  string CHeads_file = LSDPP.get_CHeads_file();
+
 
   //string Swath_ext = "_swath_trans";
   //string Long_Swath_ext = "_swath_long";
@@ -72,14 +102,14 @@ int main (int nNumberofArgs,char *argv[])
 
   // load the DEM
   cout << "Loading the DEM..." << endl;
-  LSDRaster RasterTemplate((path_name+DEM_ID), DEM_extension);
+  LSDRaster RasterTemplate((DATA_DIR+DEM_ID), raster_ext);
 
   cout << "\t loading baseline points" << endl;
-  PointData BaselinePoints = LoadShapefile(path_name+Baseline_file.c_str());
+  PointData BaselinePoints = LoadShapefile(DATA_DIR+this_string_map["Baseline_file"].c_str());
 
   // get the swath
   cout << "\t creating swath template" << endl;
-  LSDSwath TestSwath(BaselinePoints, RasterTemplate, HalfWidth);
+  LSDSwath TestSwath(BaselinePoints, RasterTemplate, this_float_map["HalfWidth"]);
 
   //cout << "\n\t Getting raster from swath" << endl;
   //LSDRaster SwathRaster = TestSwath.get_raster_from_swath_profile(RasterTemplate, NormaliseToBaseline);
@@ -119,12 +149,12 @@ int main (int nNumberofArgs,char *argv[])
   // this gets the longitudinal swath
   TestSwath.get_longitudinal_swath_profile(RasterTemplate, desired_percentiles, BinWidth,
                                             mid_points, mean_profile, sd_profile, 
-                                            output_percentile_profiles,NormaliseToBaseline);
+                                            output_percentile_profiles,this_int_map["NormaliseToBaseline"]);
   
   // push back results to file for plotting
   ofstream output_file;
   string output_fname = "_swath_elevations.csv";
-  output_file.open((path_name+DEM_ID+output_fname).c_str());
+  output_file.open((DATA_DIR+DEM_ID+output_fname).c_str());
   output_file << "Distance,Mean,Min,Max" << endl;
   for (int i = 0; i < int(mid_points.size()); ++i)
   {
@@ -134,10 +164,12 @@ int main (int nNumberofArgs,char *argv[])
 
   // Now try the raster plotter
   string output_fname2 = "_swath_elevations2.csv";
-  output_fname2 = path_name+DEM_ID+output_fname2;
-  TestSwath.write_RasterValues_along_swath_to_csv(RasterTemplate,NormaliseToBaseline,output_fname2);
-  
+  output_fname2 = DATA_DIR+DEM_ID+output_fname2;
+  TestSwath.write_RasterValues_along_swath_to_csv(RasterTemplate,this_int_map["NormaliseToBaseline"],output_fname2);
 
+  string output_fname3 = "_baseline.csv";
+  output_fname3 = DATA_DIR+DEM_ID+output_fname3;  
+  TestSwath.print_baseline_to_csv(RasterTemplate,output_fname3);
 
   // Done, check how long it took
   clock_t end = clock();
