@@ -2046,7 +2046,7 @@ void LSDChiTools::get_previous_mchi_for_all_sources(LSDFlowInfo& Flowinfo)
 // Leaving me time to develop what will be the final cleanest one and making easier the subdivision
 // in loads of little functions rather than one big script-like one. OBJECT ORIENTED POWER ˁ˚ᴥ˚ˀ
 // BG 
-void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th, float lambda_TVD, float lambda_TVD_b_chi,float lambda_TVD_segdiff, int kp_node_search)
+void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th, float lambda_TVD, float lambda_TVD_b_chi,float stepped_combining_window, int kp_node_search)
 {
 
   cout << "Getting ready for the knickpoint detection algorithm ...";
@@ -2066,7 +2066,7 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
 
   cout << "Denoising the ksn/M_chi and the differential segmenting elevation (Total Variation Denoising adapted from Condat, 2013) ...";
   // Applying the Total_variation_denoising on m_chi. NEW: on b_chi as well 
-  TVD_on_my_ksn(lambda_TVD, lambda_TVD_b_chi, lambda_TVD_segdiff);
+  TVD_on_my_ksn(lambda_TVD, lambda_TVD_b_chi);
   cout << " OK" << endl ;
 
 
@@ -2096,7 +2096,7 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   cout << " OK" << endl ;
 
   cout << "Combining stepped knickpoints ..." << endl;
-  stepped_knickpoints_combining(FlowInfo,2);
+  stepped_knickpoints_combining(FlowInfo,stepped_combining_window);
   cout << " OK" << endl ;
 
 
@@ -2787,7 +2787,7 @@ vector<vector<int> > LSDChiTools::group_local_kp(vector<int> vecnode_kp, vector<
 //            DOI: 10.1109/LSP.2013.2278339               =
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void  LSDChiTools::TVD_on_my_ksn( float lambda, float lambda_TVD_b_chi, float lambda_TVD_segdiff)
+void  LSDChiTools::TVD_on_my_ksn( float lambda, float lambda_TVD_b_chi)
 {
   // Set the variables
   map<int,vector<int> >::iterator chirac;
@@ -2797,14 +2797,14 @@ void  LSDChiTools::TVD_on_my_ksn( float lambda, float lambda_TVD_b_chi, float la
     // int this_SK = chirac->first;
     this_vec = chirac->second;
     vector<float> gros_test;
-    gros_test = TVD_this_vec(this_vec, lambda, lambda_TVD_b_chi,lambda_TVD_segdiff);
+    gros_test = TVD_this_vec(this_vec, lambda, lambda_TVD_b_chi);
 
   }
 
 }
 
 
-vector<float>  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda, float lambda_TVD_b_chi, float lambda_TVD_segdiff)
+vector<float>  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda, float lambda_TVD_b_chi)
 {
 
   // Creating the containers I will need for the denoising
@@ -2826,7 +2826,7 @@ vector<float>  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda, flo
   double clambda = lambda, dlamda = lambda_TVD_b_chi;
   vector<double> this_val_mchi_TVDed = TV1D_denoise_v2(this_val_mchi, clambda);
   vector<double> this_val_bchi_TVDed = TV1D_denoise_v2(this_val_bchi, dlamda);
-  vector<double> this_val_segelev_TVDed = TV1D_denoise_v2(this_val_segelev, lambda_TVD_segdiff);
+  vector<double> this_val_segelev_TVDed = TV1D_denoise_v2(this_val_segelev, 5);
 
 
   // vector<double> this_val_TVDed_Corrected = correct_TVD_vec(this_val_TVDed);
@@ -2994,7 +2994,7 @@ void LSDChiTools::derive_the_segmented_elevation()
           // i derive if this is not the last node
           this_node = *nonode;
           this_segelev = segmented_elevation_map[this_node];
-          segelev_diff[this_node] = (segmented_elevation_map[last_node] - segmented_elevation_map[this_node]) / (chi_data_map[last_node] - chi_data_map[this_node]);
+          segelev_diff[this_node] = (segmented_elevation_map[last_node] - segmented_elevation_map[this_node]); // / (chi_data_map[last_node] - chi_data_map[this_node]);
           segelev_diff_second[this_node] = segelev_diff_second[last_node] - segelev_diff_second[this_node] ;
         }
         else
