@@ -162,6 +162,7 @@ int main (int nNumberofArgs,char *argv[])
   float_default_map["TVD_lambda"] = -1;
   float_default_map["TVD_lambda_bchi"] = 10000; // Really high, the main variations are extracted with TVD M_chi
   int_default_map["kp_node_combining"] = 10;
+  float_default_map["lambda_TVD_segdiff"] = 5;
  
   // basic parameters for calculating chi
   float_default_map["A_0"] = 1;
@@ -1736,7 +1737,7 @@ int main (int nNumberofArgs,char *argv[])
       TVD_lambda = this_float_map["TVD_lambda"];
     }
     // Actual knickpoint calculation
-    ChiTool.ksn_knickpoint_automator(FlowInfo, OUT_DIR, OUT_ID,this_float_map["MZS_threshold"], TVD_lambda, this_float_map["TVD_lambda_bchi"], this_int_map["kp_node_combining"]);
+    ChiTool.ksn_knickpoint_automator(FlowInfo, OUT_DIR, OUT_ID,this_float_map["MZS_threshold"], TVD_lambda, this_float_map["TVD_lambda_bchi"], this_float_map["lambda_TVD_segdiff"], this_int_map["kp_node_combining"]);
     
   }
 

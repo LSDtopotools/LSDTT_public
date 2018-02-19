@@ -2046,7 +2046,7 @@ void LSDChiTools::get_previous_mchi_for_all_sources(LSDFlowInfo& Flowinfo)
 // Leaving me time to develop what will be the final cleanest one and making easier the subdivision
 // in loads of little functions rather than one big script-like one. OBJECT ORIENTED POWER ˁ˚ᴥ˚ˀ
 // BG 
-void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th, float lambda_TVD, float lambda_TVD_b_chi, int kp_node_search)
+void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th, float lambda_TVD, float lambda_TVD_b_chi,float lambda_TVD_segdiff, int kp_node_search)
 {
 
   cout << "Getting ready for the knickpoint detection algorithm ...";
@@ -2056,7 +2056,7 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   set_map_of_source_and_node(FlowInfo,5);
 
   // Optional (?) lumping of the m_chi to get more deterministic segments
-  lump_my_ksn(5);
+  // lump_my_ksn(5);
 
   // We need to set the dSegmented_elevation to get the steped knickpoints
   derive_the_segmented_elevation();
@@ -2066,7 +2066,7 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
 
   cout << "Denoising the ksn/M_chi and the differential segmenting elevation (Total Variation Denoising adapted from Condat, 2013) ...";
   // Applying the Total_variation_denoising on m_chi. NEW: on b_chi as well 
-  TVD_on_my_ksn(lambda_TVD, lambda_TVD_b_chi);
+  TVD_on_my_ksn(lambda_TVD, lambda_TVD_b_chi, lambda_TVD_segdiff);
   cout << " OK" << endl ;
 
 
@@ -2096,7 +2096,7 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   cout << " OK" << endl ;
 
   cout << "Combining stepped knickpoints ..." << endl;
-  // stepped_knickpoints_combining(FlowInfo);
+  stepped_knickpoints_combining(FlowInfo,2);
   cout << " OK" << endl ;
 
 
@@ -2197,7 +2197,7 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int> vecnode)
       // }
 
       // TEMPORARY METHOD
-      raw_segchange[this_node] = dsegelev;
+      // raw_delta_segelev_from_TVDb_chi[this_node] = dsegelev;
       
       
 
@@ -2238,10 +2238,14 @@ void LSDChiTools::raw_stepped_knickpoint_detection(int SK, vector<int> vecnode)
     // initializing the variables for this run
     this_node = *node;
     this_TVD_b_chi = TVD_b_chi_map[this_node];
+   
     // if b_chi has change, Implementing a raw knickpoint and calculating the d|ksn|/dchi
-    if(this_TVD_b_chi != last_TVD_b_chi)
+    if(this_TVD_b_chi != last_TVD_b_chi || TVD_m_chi_map[last_node] != TVD_m_chi_map[this_node])
     {
-      raw_delta_segelev_from_TVDb_chi[this_node] = segelev_diff[this_node];
+      raw_delta_segelev_from_TVDb_chi[this_node] = segelev_diff[this_node]; 
+      // testing something here
+      // float this_segdiff = (TVD_m_chi_map[last_node] * chi_data_map[last_node] + TVD_b_chi_map[last_node]) - (TVD_m_chi_map[this_node] * chi_data_map[this_node] + TVD_b_chi_map[this_node]);
+      // raw_delta_segelev_from_TVDb_chi[this_node] = this_segdiff;
       vecdif.push_back(this_node);
     }
     // setting the next last variables
@@ -2301,7 +2305,6 @@ void LSDChiTools::ksn_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_node_s
         {
           int this_node = this_vecnode[0];// node of the knickpoint
           ksn_kp_map[this_node] = raw_ksn_kp_map[this_node]; // delta ksn of the knickpoint
-          // kp_segdrop[this_node] = raw_segchange[this_node];
           sharpness_ksn_length[this_node] = 0; // sharpness = 0 as the knickpoint is a point
           ksn_extent[this_node] = make_pair(this_node, this_node); // the extent nodes are the same
           // Getting the coordinate of the centroid of the kp -> just regular x
@@ -2323,9 +2326,6 @@ void LSDChiTools::ksn_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_node_s
           // summing the segelev and dksn for this group of node
           ksn_kp_map[this_node] = get_dksn_from_composite_kp(this_vecnode); // gobal ksn value of the knickpoint
 
-          // kp_segdrop[this_node] = get_dseg_drop_from_composite_kp(this_vecnode); // gobal segmentation elevation value of the knickpoint
-
-          
           // Sharpness is the width of the combined knickpoints
           sharpness_ksn_length[this_node] = get_kp_sharpness_length(this_vecnode, Flowinfo);
 
@@ -2377,7 +2377,7 @@ float LSDChiTools::get_dseg_drop_from_composite_kp(vector<int> vecnode)
   for(vector<int>::iterator bob = vecnode.begin(); bob!= vecnode.end(); bob++)
   {
     int this_node = *bob;
-    out_value += raw_segchange[this_node];
+    out_value += raw_delta_segelev_from_TVDb_chi[this_node];
   }
 
   return out_value;
@@ -2537,13 +2537,13 @@ void LSDChiTools::stepped_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_no
       // We have the group of vector now lets run through it to get the requested values
       for(vector<vector<int> >::iterator vlad = grouped_kp.begin(); vlad != grouped_kp.end(); vlad ++)
       {
+        // getting the vector of node we need: the nodes containing 
         vector<int> this_vecnode = *vlad;
-        // cout << "there" << endl;
         // Easy case: non composite knickpoint, let's just record the same info thatn the raw detection
         if(this_vecnode.size() == 1)
         {
           int this_node = this_vecnode[0];// node of the knickpoint
-          kp_segdrop[this_node] = raw_segchange[this_node];
+          kp_segdrop[this_node] = raw_delta_segelev_from_TVDb_chi[this_node];
           sharpness_stepped_length[this_node] = 0; // sharpness = 0 as the knickpoint is a point
           stepped_extent[this_node] = make_pair(this_node, this_node); // the extent nodes are the same
           // Getting the coordinate of the centroid of the kp -> just regular x
@@ -2556,7 +2556,7 @@ void LSDChiTools::stepped_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_no
         }
         else if(this_vecnode.size() > 1)
         {
-          // harder case: several knickpoints, let's go step by step
+          // Second case: several knickpoints to group, let's go step by step
           // the identifying node of the kp is the first one
           int this_node = this_vecnode[0];
           
@@ -2582,7 +2582,7 @@ void LSDChiTools::stepped_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_no
           stepped_centroid[this_node] = make_pair(this_x,this_y);
           nearest_node_centroid_kp_stepped[this_node] = nearnode;
 
-          // HERE WE NEED TO NOW QUANTIFY THE KNICKPOINTS -> TODO NEXT WEEK BORIS
+
 
         }
       }
@@ -2787,7 +2787,7 @@ vector<vector<int> > LSDChiTools::group_local_kp(vector<int> vecnode_kp, vector<
 //            DOI: 10.1109/LSP.2013.2278339               =
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-void  LSDChiTools::TVD_on_my_ksn( float lambda, float lambda_TVD_b_chi)
+void  LSDChiTools::TVD_on_my_ksn( float lambda, float lambda_TVD_b_chi, float lambda_TVD_segdiff)
 {
   // Set the variables
   map<int,vector<int> >::iterator chirac;
@@ -2797,24 +2797,14 @@ void  LSDChiTools::TVD_on_my_ksn( float lambda, float lambda_TVD_b_chi)
     // int this_SK = chirac->first;
     this_vec = chirac->second;
     vector<float> gros_test;
-    gros_test = TVD_this_vec(this_vec, lambda, lambda_TVD_b_chi);
-    
-    // DEBUG PART linked to the appearance of unexplained artifact while denoising, I am investigating.
-    // ofstream FILOUNET;
-    // string fname = "/home/s1675537/PhD/LSDTopoData/knickpoint/puerto_rico/test_vec_" + itoa(this_SK) + ".csv";
-    // FILOUNET.open(fname.c_str());
-    // FILOUNET <<"ID,val" << endl;
-    // for(size_t fe = 0; fe<gros_test.size(); fe++)
-    // {
-    //   FILOUNET << fe << "," << gros_test[fe] << endl;
-    // }
-    // FILOUNET.close();
+    gros_test = TVD_this_vec(this_vec, lambda, lambda_TVD_b_chi,lambda_TVD_segdiff);
+
   }
 
 }
 
 
-vector<float>  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda, float lambda_TVD_b_chi)
+vector<float>  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda, float lambda_TVD_b_chi, float lambda_TVD_segdiff)
 {
 
   // Creating the containers I will need for the denoising
@@ -2836,7 +2826,7 @@ vector<float>  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda, flo
   double clambda = lambda, dlamda = lambda_TVD_b_chi;
   vector<double> this_val_mchi_TVDed = TV1D_denoise_v2(this_val_mchi, clambda);
   vector<double> this_val_bchi_TVDed = TV1D_denoise_v2(this_val_bchi, dlamda);
-  vector<double> this_val_segelev_TVDed = TV1D_denoise_v2(this_val_segelev, 0.01);
+  vector<double> this_val_segelev_TVDed = TV1D_denoise_v2(this_val_segelev, lambda_TVD_segdiff);
 
 
   // vector<double> this_val_TVDed_Corrected = correct_TVD_vec(this_val_TVDed);
@@ -3004,12 +2994,14 @@ void LSDChiTools::derive_the_segmented_elevation()
           // i derive if this is not the last node
           this_node = *nonode;
           this_segelev = segmented_elevation_map[this_node];
-          segelev_diff[this_node] = (segmented_elevation_map[last_node] - segmented_elevation_map[this_node]);
+          segelev_diff[this_node] = (segmented_elevation_map[last_node] - segmented_elevation_map[this_node]) / (chi_data_map[last_node] - chi_data_map[this_node]);
+          segelev_diff_second[this_node] = segelev_diff_second[last_node] - segelev_diff_second[this_node] ;
         }
         else
         {
           // the first derivative is 0
           segelev_diff[this_node] = 0;
+          segelev_diff_second[this_node] = 0;
           
 
         }
@@ -3253,6 +3245,8 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
   // find the number of nodes
   int n_nodes = (node_sequence.size());
 
+  // Map to check if a node has already been processed or not when adding the stepped component later
+  map<int,bool> is_done;
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
@@ -3273,6 +3267,14 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
         this_node = iter->first;
         this_kp = iter->second;
         int nearnode = nearest_node_centroid_kp[this_node];
+        int nearnode_stepped = nearest_node_centroid_kp_stepped[this_node];
+        float this_segelev = 0;
+
+        if(nearnode == nearnode_stepped && sharpness_ksn_length[this_node] == sharpness_stepped_length[this_node])
+        {
+          is_done[this_node] = true;
+          this_segelev = kp_segdrop[this_node];
+        }
         // get the centroid location
         // float this_x = ksn_centroid[this_node].first, this_y = ksn_centroid[this_node].second; // BUGGY AT THE MOMENT
         float this_x = 0, this_y =0;
@@ -3296,7 +3298,7 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
                      << chi_data_map[nearnode] << "," // NOTE -> nearnode is the centroid node, however the knickpoint info are stored in this node. I am still working on the centroidisation of the node
                      << drainage_area_data_map[nearnode] << "," // NOTE -> nearnode is the centroid node, however the knickpoint info are stored in this node. I am still working on the centroidisation of the node
                      << this_kp << ","
-                     << kp_segdrop[this_node] << ","
+                     << this_segelev << ","
                      << sharpness_ksn_length[this_node] << ","
                      << this_sign << ","
                      << map_outlier_MZS_combined[this_node] << ","
@@ -3305,11 +3307,192 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
 
         chi_data_out << endl;
     }
-  }
 
+    // I have printed the ksn knickpoints to the file, and the stepped knickpoints when located at the same location. I have recorded the one I've already written.
+    // Now I'll complete the writing with the knickpoints that are only stepped
+
+    for (iter = kp_segdrop.begin(); iter != kp_segdrop.end(); iter++)
+    {
+        this_node = iter->first;
+        float this_segelev = iter->second;
+        int nearnode = nearest_node_centroid_kp_stepped[this_node];
+        float this_kp = 0; // All the ksn knickpoints have been written, these one only have a segelev component
+
+        // if(chi_data_map[this_node] == 0)
+        // {
+        //   cout << "This node is screwed" <<endl;
+        // }
+        // if(chi_data_map[nearnode] == 0)
+        // {
+        //   cout << "nearnode is screwed" <<endl ;
+        // }
+
+        if(is_done.count(this_node) != 1 && chi_data_map[nearnode] != 0)
+        {
+          // cout << "Tbg 45b" << endl;
+          // get the centroid location
+          // float this_x = ksn_centroid[this_node].first, this_y = ksn_centroid[this_node].second; // BUGGY AT THE MOMENT
+          float this_x = 0, this_y =0;
+          FlowInfo.retrieve_current_row_and_col(nearnode,row,col);
+          get_x_and_y_locations(row, col, this_x, this_y);
+
+          get_lat_and_long_locations_from_coordinate(this_x, this_y, latitude, longitude, Converter);
+
+          // Just adding sign column for plotting purposes
+          int this_sign = 1;
+          chi_data_out << this_node << ",";
+          chi_data_out.precision(9);
+          chi_data_out << latitude << ","
+                       << longitude << ",";
+          chi_data_out.precision(5);
+          // NOTE: The IDENTIFYING NODE on the knickpoint map is the first of a knickpoint group - On the global map it provide the nearest node to get the coordinates of the centroid
+          chi_data_out << elev_data_map[nearnode] << "," // NOTE -> nearnode is the centroid node, however the knickpoint info are stored in this node. I am still working on the centroidisation of the node
+                       << flow_distance_data_map[nearnode] << ","
+                       << chi_data_map[nearnode] << "," // NOTE -> nearnode is the centroid node, however the knickpoint info are stored in this node. I am still working on the centroidisation of the node
+                       << drainage_area_data_map[nearnode] << "," // NOTE -> nearnode is the centroid node, however the knickpoint info are stored in this node. I am still working on the centroidisation of the node
+                       << this_kp << ","
+                       << this_segelev << ","
+                       << sharpness_ksn_length[this_node] << ","
+                       << this_sign << ","
+                       << map_outlier_MZS_combined[this_node] << ","
+                       << baselevel_keys_map[this_node]<< ","
+                       << source_keys_map[this_node];
+
+          chi_data_out << endl;
+        }
+    }
+
+  }
+  // done, let me close the file correctly
   chi_data_out.close();
   
 }
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Print data maps to file for the knickpoint algorithm
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, string filename)
+{
+
+  // these are for extracting element-wise data from the channel profiles.
+  int this_node, row, col;
+  double latitude,longitude;
+  double this_x,this_y;
+  LSDCoordinateConverterLLandUTM Converter;
+
+  // find the number of nodes
+  int n_nodes = (node_sequence.size());
+
+  // test to see if there is segment numbering
+  bool have_segments = false;
+  if( segment_counter_map.size() == node_sequence.size())
+  {
+    have_segments = true;
+  }
+
+  // test to see if the fitted elevations have been calculated
+  bool have_segmented_elevation = false;
+  have_segmented_elevation = true;
+  
+
+
+  // open the data file
+  ofstream  chi_data_out;
+  chi_data_out.open(filename.c_str());
+  chi_data_out << "node,Y,X,latitude,longitude,chi,elevation,flow_distance,drainage_area,m_chi,lumped_ksn,TVD_ksn,TVD_segelev_diff,b_chi,TVD_b_chi,ksnkp,segelevkp,source_key,basin_key";
+  if(have_segmented_elevation)
+  {
+    chi_data_out << ",segmented_elevation,TVD_elevation,segdrop";
+  }
+  if (have_segments)
+  {
+    chi_data_out << ",segment_number";
+    cout << "I added the segment number in the csv file"<< endl;
+  }
+  chi_data_out << endl;
+
+
+
+
+  if (n_nodes <= 0)
+  {
+    cout << "Cannot print since you have not calculated channel properties yet." << endl;
+  }
+  else
+  {
+    for (int n = 0; n< n_nodes; n++)
+    {
+      this_node = node_sequence[n];
+      FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+      get_lat_and_long_locations(row, col, latitude, longitude, Converter);
+      get_x_and_y_locations(row, col, this_x, this_y);
+      int ksnkp = 0, segelevkp = 0; // 0 = no knickpoint, -1 negative, 1 positive
+      // checking if there is a raw knickpoint here
+      if(raw_ksn_kp_map.count(this_node)!=0) 
+      {
+        if(raw_ksn_kp_map[this_node]>0)
+        {
+          ksnkp = 1;
+        }
+        else if(raw_ksn_kp_map[this_node]<0)
+        {
+          ksnkp = -1;
+        }
+
+        if(segelev_diff[this_node]>0)
+        {
+          segelevkp = 1;
+        }
+        if(segelev_diff[this_node]>0)
+        {
+          segelevkp = -1;
+        }
+
+      }
+
+      chi_data_out << this_node << ","
+                   << this_y << ","
+                   << this_x << ",";
+      chi_data_out.precision(9);
+      chi_data_out << latitude << ","
+                   << longitude << ",";
+      chi_data_out.precision(5);
+      chi_data_out << chi_data_map[this_node] << ","
+                   << elev_data_map[this_node] << ","
+                   << flow_distance_data_map[this_node] << ","
+                   << drainage_area_data_map[this_node] << ","
+                   << M_chi_data_map[this_node] << ","
+                   << lumped_m_chi_map[this_node] << ","
+                   << TVD_m_chi_map[this_node] << ","
+                   << TVD_segelev_diff[this_node] << ","
+                   << b_chi_data_map[this_node] << ","
+                   << TVD_b_chi_map[this_node] << ","
+                   << ksnkp << ","
+                   << segelevkp << ","                  
+                   << source_keys_map[this_node] << ","
+                   << baselevel_keys_map[this_node];
+
+      if(have_segmented_elevation)
+      {
+        chi_data_out << "," << segmented_elevation_map[this_node];
+        chi_data_out << "," << (b_chi_data_map[this_node]/M_chi_data_map[this_node]);
+        chi_data_out << "," << kp_segdrop[this_node];
+
+      }
+      if (have_segments)
+      {
+        chi_data_out << "," << segment_counter_map[this_node];
+      }
+      chi_data_out << endl;
+    }
+  }
+
+  chi_data_out.close();
+
+}
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 void LSDChiTools::set_map_of_source_and_node(LSDFlowInfo& FlowInfo, int n_node_downstream)
 {
@@ -7920,129 +8103,6 @@ void LSDChiTools::print_data_maps_to_file_full(LSDFlowInfo& FlowInfo, string fil
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Print data maps to file for the knickpoint algorithm
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, string filename)
-{
-
-  // these are for extracting element-wise data from the channel profiles.
-  int this_node, row, col;
-  double latitude,longitude;
-  double this_x,this_y;
-  LSDCoordinateConverterLLandUTM Converter;
-
-  // find the number of nodes
-  int n_nodes = (node_sequence.size());
-
-  // test to see if there is segment numbering
-  bool have_segments = false;
-  if( segment_counter_map.size() == node_sequence.size())
-  {
-    have_segments = true;
-  }
-
-  // test to see if the fitted elevations have been calculated
-  bool have_segmented_elevation = false;
-  have_segmented_elevation = true;
-  
-
-
-  // open the data file
-  ofstream  chi_data_out;
-  chi_data_out.open(filename.c_str());
-  chi_data_out << "node,Y,X,latitude,longitude,chi,elevation,flow_distance,drainage_area,m_chi,lumped_ksn,TVD_ksn,TVD_ksn_NC,b_chi,TVD_b_chi,ksnkp,segelevkp,source_key,basin_key";
-  if(have_segmented_elevation)
-  {
-    chi_data_out << ",segmented_elevation,segmented_elevation_diff,segdrop";
-  }
-  if (have_segments)
-  {
-    chi_data_out << ",segment_number";
-    cout << "I added the segment number in the csv file"<< endl;
-  }
-  chi_data_out << endl;
-
-
-
-
-  if (n_nodes <= 0)
-  {
-    cout << "Cannot print since you have not calculated channel properties yet." << endl;
-  }
-  else
-  {
-    for (int n = 0; n< n_nodes; n++)
-    {
-      this_node = node_sequence[n];
-      FlowInfo.retrieve_current_row_and_col(this_node,row,col);
-      get_lat_and_long_locations(row, col, latitude, longitude, Converter);
-      get_x_and_y_locations(row, col, this_x, this_y);
-      int ksnkp = 0, segelevkp = 0; // 0 = no knickpoint, -1 negative, 1 positive
-      // checking if there is a raw knickpoint here
-      if(raw_ksn_kp_map.count(this_node)!=0) 
-      {
-        if(raw_ksn_kp_map[this_node]>0)
-        {
-          ksnkp = 1;
-        }
-        else if(raw_ksn_kp_map[this_node]<0)
-        {
-          ksnkp = -1;
-        }
-
-        if(segelev_diff[this_node]>0)
-        {
-          segelevkp = 1;
-        }
-        if(segelev_diff[this_node]>0)
-        {
-          segelevkp = -1;
-        }
-
-      }
-
-      chi_data_out << this_node << ","
-                   << this_y << ","
-                   << this_x << ",";
-      chi_data_out.precision(9);
-      chi_data_out << latitude << ","
-                   << longitude << ",";
-      chi_data_out.precision(5);
-      chi_data_out << chi_data_map[this_node] << ","
-                   << elev_data_map[this_node] << ","
-                   << flow_distance_data_map[this_node] << ","
-                   << drainage_area_data_map[this_node] << ","
-                   << M_chi_data_map[this_node] << ","
-                   << lumped_m_chi_map[this_node] << ","
-                   << TVD_m_chi_map[this_node] << ","
-                   << TVD_m_chi_map_non_corrected[this_node] << ","
-                   << b_chi_data_map[this_node] << ","
-                   << TVD_b_chi_map[this_node] << ","
-                   << ksnkp << ","
-                   << segelevkp << ","                  
-                   << source_keys_map[this_node] << ","
-                   << baselevel_keys_map[this_node];
-
-      if(have_segmented_elevation)
-      {
-        chi_data_out << "," << segmented_elevation_map[this_node];
-        chi_data_out << "," << segelev_diff[this_node];
-        chi_data_out << "," << kp_segdrop[this_node];
-
-      }
-      if (have_segments)
-      {
-        chi_data_out << "," << segment_counter_map[this_node];
-      }
-      chi_data_out << endl;
-    }
-  }
-
-  chi_data_out.close();
-
-}
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

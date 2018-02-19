@@ -1145,7 +1145,7 @@ class LSDChiTools
     /// @param OUT_ID: string containing the output prefix
     /// @author BG
     /// @date 05/01/2018
-    void ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th, float lambda_TVD, float lambda_TVD_bchi, int kp_node_search);
+    void ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th, float lambda_TVD, float lambda_TVD_bchi,float lambda_TVD_segdiff, int kp_node_search);
 
     void ksn_knickpoint_outlier_automator(LSDFlowInfo& FlowInfo, float MZS_th);
 
@@ -1222,9 +1222,9 @@ class LSDChiTools
     /// @param n_nodlump: the lumping half_window (number of nodes)
     /// @author BG
     /// @date 08/01/2018
-    void TVD_on_my_ksn(const float lambda, float lambda_TVD_b_chi);
+    void TVD_on_my_ksn(const float lambda, float lambda_TVD_b_chi, float lambda_TVD_segdiff);
 
-    vector<float> TVD_this_vec(vector<int> this_vec, const float lambda, float lambda_TVD_b_chi );
+    vector<float> TVD_this_vec(vector<int> this_vec, const float lambda, float lambda_TVD_b_chi,float  lambda_TVD_segdiff );
     vector<double> correct_TVD_vec(vector<double> this_val);
     float get_dksn_from_composite_kp(vector<int> vecnode);
     float get_dseg_drop_from_composite_kp(vector<int> vecnode);
@@ -1381,6 +1381,7 @@ class LSDChiTools
     map<int,float> raw_segchange;
     map<int,float> TVD_segelev_diff;
     map<int,float> segelev_diff;
+    map<int,float> segelev_diff_second;
     map<int,float> raw_delta_segelev_from_TVDb_chi;
     map<int,vector<int> > map_node_source_key_kp_stepped;
 
