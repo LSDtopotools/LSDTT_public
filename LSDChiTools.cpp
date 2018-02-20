@@ -2046,7 +2046,7 @@ void LSDChiTools::get_previous_mchi_for_all_sources(LSDFlowInfo& Flowinfo)
 // Leaving me time to develop what will be the final cleanest one and making easier the subdivision
 // in loads of little functions rather than one big script-like one. OBJECT ORIENTED POWER ˁ˚ᴥ˚ˀ
 // BG 
-void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th, float lambda_TVD, float lambda_TVD_b_chi,float stepped_combining_window, int kp_node_search)
+void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th, float lambda_TVD, float lambda_TVD_b_chi,int stepped_combining_window,int window_stepped, float n_std_dev, int kp_node_search)
 {
 
   cout << "Getting ready for the knickpoint detection algorithm ...";
@@ -2095,8 +2095,9 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   ksn_knickpoints_combining(FlowInfo,kp_node_search);
   cout << " OK" << endl ;
 
-  cout << "Combining stepped knickpoints ..." << endl;
-  stepped_knickpoints_combining(FlowInfo,stepped_combining_window);
+  cout << "Getting the stepped_knickpoints ..." << endl;
+  stepped_knickpoints_detection_v2(FlowInfo,window_stepped,n_std_dev);
+  // stepped_knickpoints_combining(FlowInfo, stepped_combining_window);
   cout << " OK" << endl ;
 
 
@@ -2141,7 +2142,6 @@ void LSDChiTools::ksn_knickpoint_detection_new(LSDFlowInfo& FlowInfo)
     this_SK = SK->first;
     vecnode = SK->second;
     ksn_knickpoint_raw_river(this_SK,vecnode);
-    raw_stepped_knickpoint_detection(this_SK,vecnode);
   }
 
 }
@@ -2215,8 +2215,108 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int> vecnode)
 
 }
 
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Detection of stepped kncikpoints
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::stepped_knickpoints_detection_v2(LSDFlowInfo& Flowinfo, int window, float n_std_dev)
+{
+    // preparing the needed iterators
+  map<int,vector<int> >::iterator SK;
+  // Initializing some variables
+  int this_SK;
+  vector<int> vecnode;
+  int HW = int(window/2);
+
+  // Looping through all the sources key
+  for(SK = map_node_source_key.begin(); SK != map_node_source_key.end(); SK++)
+  {
+    
+    // the source key
+    this_SK = SK->first;
+    // the vector containing the river nodes
+    vecnode = SK->second;
+    // first check if the size is over the window
+    if(vecnode.size() > window)
+    { 
+      map<string,vector<float> > these_stats = get_windowed_stats_for_knickpoints(vecnode,HW);
+
+      for(size_t it = 0; it< vecnode.size(); it++)
+      {
+        int this_node = vecnode[it];
+        float this_std = these_stats["std_dev"][it], this_mean = these_stats["mean"][it];
+        mean_for_kp[this_node] = this_mean;
+        std_for_kp[this_node] = this_std;
+
+        if(segelev_diff[this_node] >= (n_std_dev * this_std))
+        {
+          kp_segdrop[this_node] = segelev_diff[this_node];
+        }
+      }
+    }
+  }
+}
+
+
+map<string,vector<float> > LSDChiTools::get_windowed_stats_for_knickpoints(vector<int> vecnode,int HW)
+{
+  // first get the general vector of value
+  vector<float> vecval, window_vecval_mean, window_vecval_std;
+
+  for(vector<int>::iterator it = vecnode.begin(); it != vecnode.end(); it ++)
+  {
+    int this_node = *it;
+    vecval.push_back(segelev_diff[this_node]);
+  }
+
+  for(size_t it = 0;it<vecnode.size(); it++)
+  {
+    if(it<HW)
+    {
+      vector<float> this_vecval;
+      for(size_t o = 0; o < (2*HW) ; o++ )
+      {
+        this_vecval.push_back(vecval[o]);
+      }
+      float this_mean = get_mean(this_vecval);
+      window_vecval_mean.push_back(this_mean);
+      window_vecval_std.push_back(get_standard_deviation(this_vecval,this_mean));
+    }
+    else if (it < (vecnode.size()-HW))
+    {
+      vector<float> this_vecval;
+      for(size_t o = it; o < (it+(2*HW)) ; o++ )
+      {
+        this_vecval.push_back(vecval[o]);
+      }
+      float this_mean =get_mean(this_vecval);
+      window_vecval_mean.push_back(this_mean);
+      window_vecval_std.push_back(get_standard_deviation(this_vecval,this_mean));
+    }
+    else if (it >= (vecnode.size()-HW))
+    {
+      vector<float> this_vecval;
+      for(size_t o = (vecnode.size()-2*HW); o < (vecnode.size()) ; o++ )
+      {
+        this_vecval.push_back(vecval[o]);
+      }
+      float this_mean = get_mean(this_vecval);
+      window_vecval_mean.push_back(this_mean);
+      window_vecval_std.push_back(get_standard_deviation(this_vecval,this_mean));
+    }
+  }
+
+  // generating the outputs
+  map<string,vector<float> > map_of_stats;
+  map_of_stats["mean"] = window_vecval_mean;
+  map_of_stats["std_dev"] = window_vecval_std;
+
+  return map_of_stats;
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Detection of stepped kncikpoints - old version
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::raw_stepped_knickpoint_detection(int SK, vector<int> vecnode)
 {
@@ -2792,6 +2892,7 @@ void  LSDChiTools::TVD_on_my_ksn( float lambda, float lambda_TVD_b_chi)
   // Set the variables
   map<int,vector<int> >::iterator chirac;
   vector<int> this_vec;
+  int max_node = 500;
   for(chirac = map_node_source_key.begin(); chirac != map_node_source_key.end() ; chirac ++)
   {
     // int this_SK = chirac->first;
@@ -2799,6 +2900,55 @@ void  LSDChiTools::TVD_on_my_ksn( float lambda, float lambda_TVD_b_chi)
     vector<float> gros_test;
     gros_test = TVD_this_vec(this_vec, lambda, lambda_TVD_b_chi);
 
+    // I am planning a test -> TO KEEP it would be an improvment of the denoising
+    // if(int(this_vec.size()) <= max_node)
+    // {
+    
+    //   gros_test = TVD_this_vec(this_vec, lambda, lambda_TVD_b_chi);
+
+    // }
+    // else
+    // {
+    //   //testing here a TVD improvement 
+    //   int n_nodes_processed = 0, threshold_node_to_end = this_vec.size()-int(0.4*max_node);
+    //   vector<float> intermediate_values;
+    //   // Setting the first vector and the last one
+    //   vector<int>::const_iterator first = this_vec.begin() + max_node, last = this_vec.end() - max_node, begin = this_vec.begin(),ending = this_vec.end();
+      
+    //   vector<int> first_vec(begin, first), last_vec(last,ending);
+
+
+    //   // processing to a first TVD
+    //   while(n_nodes_processed<this_vec.size())
+    //   {
+    //     if(n_nodes_processed == 0)
+    //     {
+    //       TVD_this_vec_v2(first_vec, lambda, lambda_TVD_b_chi, max_node, "begin");
+    //     }
+    //     else if(n_nodes_processed < (threshold_node_to_end))
+    //     {
+    //       int slider = (n_nodes_processed - int(( 0.2 * n_nodes_processed)));
+    //       vector<int>::const_iterator beg = this_vec.begin() + slider;
+    //       slider += max_node ;
+    //       vector<int>::const_iterator  end = this_vec.begin() + slider;
+    //       vector<int> interm_vec(beg,end);
+    //       TVD_this_vec_v2(interm_vec, lambda, lambda_TVD_b_chi, max_node, "middle");
+    //     }
+    //     else if(n_nodes_processed >= (threshold_node_to_end))
+    //     {
+    //       TVD_this_vec_v2(last_vec, lambda, lambda_TVD_b_chi, max_node, "end");
+
+    //     }
+    //     else
+    //     {
+    //       cout << "Something went wrong during the TVD segmentation, I am aborting. Contact Boris if this happens to you twice on a row" << endl;
+    //       exit(EXIT_FAILURE);
+    //     }
+
+    //     n_nodes_processed += 0.6 * max_node;
+
+    //   }
+    // }
   }
 
 }
@@ -2811,6 +2961,7 @@ vector<float>  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda, flo
   vector<double> this_val_mchi, this_val_bchi, this_val_segelev; //TVD_segelev_diff
   // this iterator will iterate through the vector of node you want to denoise
   vector<int>::iterator chirac = this_vec.begin();
+
 
   for( ; chirac != this_vec.end() ; chirac++)
   {
@@ -2843,6 +2994,72 @@ vector<float>  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda, flo
 
   vector<float> outtemp(this_val_mchi_TVDed.begin(),this_val_mchi_TVDed.end());
   return outtemp;
+}
+
+void  LSDChiTools::TVD_this_vec_v2(vector<int> this_vec, float lambda, float lambda_TVD_b_chi, int max_node, string type)
+{
+
+  // Creating the containers I will need for the denoising
+  vector<double> this_val_mchi, this_val_bchi, this_val_segelev; //TVD_segelev_diff
+  // this iterator will iterate through the vector of node you want to denoise
+  vector<int>::iterator chirac = this_vec.begin();
+
+
+  for( ; chirac != this_vec.end() ; chirac++)
+  {
+    int this_node = *chirac;
+    this_val_mchi.push_back((double)M_chi_data_map[this_node]);
+    this_val_bchi.push_back((double)b_chi_data_map[this_node]);
+    this_val_segelev.push_back((double)segelev_diff[this_node]);
+
+
+  }
+
+  // Calling the actual denoising coded in Stat tools
+  double clambda = lambda, dlamda = lambda_TVD_b_chi;
+  vector<double> this_val_mchi_TVDed = TV1D_denoise_v2(this_val_mchi, clambda);
+  vector<double> this_val_bchi_TVDed = TV1D_denoise_v2(this_val_bchi, dlamda);
+  vector<double> this_val_segelev_TVDed = TV1D_denoise_v2(this_val_segelev, 5);
+
+
+  // vector<double> this_val_TVDed_Corrected = correct_TVD_vec(this_val_TVDed);
+  vector<int> vecnode_to_save;
+  int beginning_index;
+  if(type == "begin")
+  {
+    int slider = int(0.6*max_node);
+    // vector<int>::const_iterator cons = this_vec.begin() + slider;
+    vector<int> temp_vecta(this_vec.begin(), this_vec.begin()+ slider );
+    vecnode_to_save = temp_vecta;
+    beginning_index = 0;
+  }
+  else if(type == "middle")
+  {
+    int beg = int(0.2*max_node);
+    vector<int> temp_vecta(this_vec.begin()+beg,this_vec.end()-beg);
+    vecnode_to_save = temp_vecta;
+    beginning_index = int(0.2*max_node);
+
+  }
+  else
+  {
+    int slider = int(0.4 * max_node);
+    vector<int> temp_vecta(this_vec.begin()+ slider,this_vec.end());
+    vecnode_to_save = temp_vecta;
+    beginning_index = int(0.4 * max_node);
+
+  }
+
+  for(vector<int>::iterator plo = vecnode_to_save.begin(); plo != vecnode_to_save.end() ; plo++ )
+  {
+    // to switch to intermediate after test
+    int this_node = *plo;
+    TVD_m_chi_map[this_node] = (float)this_val_mchi_TVDed[beginning_index];
+    TVD_b_chi_map[this_node] = (float)this_val_bchi_TVDed[beginning_index];
+    TVD_segelev_diff[this_node] = (float)this_val_segelev_TVDed[beginning_index];
+
+    // TVD_m_chi_map_non_corrected[this_node] = (float)this_val_TVDed[plo];
+  }
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -3270,10 +3487,10 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
         int nearnode_stepped = nearest_node_centroid_kp_stepped[this_node];
         float this_segelev = 0;
 
-        if(nearnode == nearnode_stepped && sharpness_ksn_length[this_node] == sharpness_stepped_length[this_node])
+        if(kp_segdrop.count(nearnode) == 1)
         {
-          is_done[this_node] = true;
-          this_segelev = kp_segdrop[this_node];
+          is_done[nearnode] = true;
+          this_segelev = kp_segdrop[nearnode];
         }
         // get the centroid location
         // float this_x = ksn_centroid[this_node].first, this_y = ksn_centroid[this_node].second; // BUGGY AT THE MOMENT
@@ -3315,7 +3532,7 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
     {
         this_node = iter->first;
         float this_segelev = iter->second;
-        int nearnode = nearest_node_centroid_kp_stepped[this_node];
+        // int nearnode = nearest_node_centroid_kp_stepped[this_node];
         float this_kp = 0; // All the ksn knickpoints have been written, these one only have a segelev component
 
         // if(chi_data_map[this_node] == 0)
@@ -3327,13 +3544,13 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
         //   cout << "nearnode is screwed" <<endl ;
         // }
 
-        if(is_done.count(this_node) != 1 && chi_data_map[nearnode] != 0)
+        if(is_done.count(this_node) != 1 && chi_data_map[this_node] != 0)
         {
           // cout << "Tbg 45b" << endl;
           // get the centroid location
           // float this_x = ksn_centroid[this_node].first, this_y = ksn_centroid[this_node].second; // BUGGY AT THE MOMENT
           float this_x = 0, this_y =0;
-          FlowInfo.retrieve_current_row_and_col(nearnode,row,col);
+          FlowInfo.retrieve_current_row_and_col(this_node,row,col);
           get_x_and_y_locations(row, col, this_x, this_y);
 
           get_lat_and_long_locations_from_coordinate(this_x, this_y, latitude, longitude, Converter);
@@ -3346,10 +3563,10 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
                        << longitude << ",";
           chi_data_out.precision(5);
           // NOTE: The IDENTIFYING NODE on the knickpoint map is the first of a knickpoint group - On the global map it provide the nearest node to get the coordinates of the centroid
-          chi_data_out << elev_data_map[nearnode] << "," // NOTE -> nearnode is the centroid node, however the knickpoint info are stored in this node. I am still working on the centroidisation of the node
-                       << flow_distance_data_map[nearnode] << ","
-                       << chi_data_map[nearnode] << "," // NOTE -> nearnode is the centroid node, however the knickpoint info are stored in this node. I am still working on the centroidisation of the node
-                       << drainage_area_data_map[nearnode] << "," // NOTE -> nearnode is the centroid node, however the knickpoint info are stored in this node. I am still working on the centroidisation of the node
+          chi_data_out << elev_data_map[this_node] << "," // NOTE -> this_node is the centroid node, however the knickpoint info are stored in this node. I am still working on the centroidisation of the node
+                       << flow_distance_data_map[this_node] << ","
+                       << chi_data_map[this_node] << "," // NOTE -> this_node is the centroid node, however the knickpoint info are stored in this node. I am still working on the centroidisation of the node
+                       << drainage_area_data_map[this_node] << "," // NOTE -> this_node is the centroid node, however the knickpoint info are stored in this node. I am still working on the centroidisation of the node
                        << this_kp << ","
                        << this_segelev << ","
                        << sharpness_ksn_length[this_node] << ","
@@ -3403,7 +3620,7 @@ void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, 
   chi_data_out << "node,Y,X,latitude,longitude,chi,elevation,flow_distance,drainage_area,m_chi,lumped_ksn,TVD_ksn,TVD_segelev_diff,b_chi,TVD_b_chi,ksnkp,segelevkp,source_key,basin_key";
   if(have_segmented_elevation)
   {
-    chi_data_out << ",segmented_elevation,TVD_elevation,segdrop";
+    chi_data_out << ",segmented_elevation,mean_segdiff,std_segdiff,segdiff";
   }
   if (have_segments)
   {
@@ -3476,8 +3693,10 @@ void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, 
       if(have_segmented_elevation)
       {
         chi_data_out << "," << segmented_elevation_map[this_node];
-        chi_data_out << "," << (b_chi_data_map[this_node]/M_chi_data_map[this_node]);
-        chi_data_out << "," << kp_segdrop[this_node];
+        chi_data_out << "," << mean_for_kp[this_node];
+        chi_data_out << "," << std_for_kp[this_node];
+        chi_data_out << "," << segelev_diff[this_node];
+
 
       }
       if (have_segments)

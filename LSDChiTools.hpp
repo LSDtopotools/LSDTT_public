@@ -1145,7 +1145,7 @@ class LSDChiTools
     /// @param OUT_ID: string containing the output prefix
     /// @author BG
     /// @date 05/01/2018
-    void ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th, float lambda_TVD, float lambda_TVD_bchi,float stepped_combining_window, int kp_node_search);
+    void ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th, float lambda_TVD, float lambda_TVD_b_chi,int stepped_combining_window,int window_stepped, float n_std_dev, int kp_node_search);
 
     void ksn_knickpoint_outlier_automator(LSDFlowInfo& FlowInfo, float MZS_th);
 
@@ -1239,6 +1239,9 @@ class LSDChiTools
     void print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filename);
     void raw_stepped_knickpoint_detection(int SK, vector<int> vecnode);
     void stepped_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_node_search);
+    void TVD_this_vec_v2(vector<int> this_vec, float lambda, float lambda_TVD_b_chi, int max_node, string type);
+    void stepped_knickpoints_detection_v2(LSDFlowInfo& Flowinfo, int window, float n_std_dev);
+    map<string,vector<float> > get_windowed_stats_for_knickpoints(vector<int> vecnode,int HW);
 
 
 
@@ -1384,6 +1387,13 @@ class LSDChiTools
     map<int,float> segelev_diff_second;
     map<int,float> raw_delta_segelev_from_TVDb_chi;
     map<int,vector<int> > map_node_source_key_kp_stepped;
+
+    /// Map of intermediate values for each node during TVD segmentation
+    map<int,float> intermediate_TVD_m_chi;
+    map<int,float> intermediate_TVD_b_chi;
+    map<int,float> mean_for_kp;
+    map<int,float> std_for_kp;
+
 
 
 
