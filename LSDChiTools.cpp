@@ -2056,16 +2056,19 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   set_map_of_source_and_node(FlowInfo,5);
 
   // Optional (?) lumping of the m_chi to get more deterministic segments
+  // I let that here but we gave up on this option, the signal is to smooth
   // lump_my_ksn(5);
 
-  // We need to set the dSegmented_elevation to get the steped knickpoints
+  // We need to set the d(Segmented_elevation) to get the stepped knickpoints
   derive_the_segmented_elevation();
-
   cout << " OK" << endl ;
+
+  // We preprocessed the metrics we need, let's get into the Data!
 
 
   cout << "Denoising the ksn/M_chi and the differential segmenting elevation (Total Variation Denoising adapted from Condat, 2013) ...";
-  // Applying the Total_variation_denoising on m_chi. NEW: on b_chi as well 
+  // Applying the Total_variation_denoising on m_chi.
+  // This is really efficient Algorithm, I am denoising the b_chi as well, for testing purposes
   TVD_on_my_ksn(lambda_TVD, lambda_TVD_b_chi);
   cout << " OK" << endl ;
 
@@ -2084,11 +2087,13 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   cout << " OK" << endl;
 
 
-  // Now dealing with outlier detection
-  // first calculating the KDE
-  cout << "Kernel Density Estimation per river (Deprecated, but I keep it for some debugging purposes) ...";
-  ksn_kp_KDE();
-  cout << " OK" << endl ;
+  // As proud as I was to have implement that, I unfortunately don't need it anymore...
+  // // Now dealing with outlier detection
+  // // first calculating the KDE
+  // cout << "Kernel Density Estimation per river (Deprecated, but I keep it for some debugging purposes) ...";
+  // ksn_kp_KDE();
+  // cout << " OK" << endl ;
+  // I just keep it for latter purposes, RIP AGU method.
 
   // Processing the knickpoints to combine the composite knickpoints
   cout << "Combining ksn knickpoints ..." << endl;
@@ -2140,7 +2145,7 @@ void LSDChiTools::ksn_knickpoint_detection_new(LSDFlowInfo& FlowInfo)
   for(SK = map_node_source_key.begin(); SK != map_node_source_key.end(); SK++)
   {
     this_SK = SK->first;
-    vecnode = SK->second;
+    vecnode = SK->second; // getting the vector of river node to check
     ksn_knickpoint_raw_river(this_SK,vecnode);
   }
 
@@ -2149,7 +2154,6 @@ void LSDChiTools::ksn_knickpoint_detection_new(LSDFlowInfo& FlowInfo)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Detect the knickpoint in one river and increment the global map
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int> vecnode)
 {
   // Setting the iterator(s)
@@ -2162,7 +2166,7 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int> vecnode)
   // vector that will contain the nodes having a knickpoint
   vector<int> vecdif;
   // Bunch of floats
-  float dsegelev = 0, dkdc = 0, dchi = 0, dksn = 0, this_ksn = TVD_m_chi_map[this_node], last_ksn = TVD_m_chi_map[last_node]; // Setting last and this ksn
+  float dkdc = 0, dchi = 0, dksn = 0, this_ksn = TVD_m_chi_map[this_node], last_ksn = TVD_m_chi_map[last_node]; // Setting last and this ksn
 
   // Looping through the nodes from the second one
   for( ; node != vecnode.end(); node++) // the first ";" is normal: it states that I have no initial conditions 
@@ -2170,38 +2174,15 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int> vecnode)
     // initializing the variables for this run
     this_node = *node;
     this_ksn = TVD_m_chi_map[this_node];
-    dsegelev = segelev_diff[this_node];
-    // if ksn has change, Implementing a raw knickpoint and calculating the d|ksn|/dchi
-    if((this_ksn != last_ksn) )//  || (TVD_b_chi_map[this_node] != TVD_b_chi_map[last_node])) // NOTE: Here I WAS correcting a bug that happens when two segment have really really really similar ksn, the TVD then shut down the variation and the segelev is not saved
+    // dsegelev = segelev_diff[this_node];
+    // if ksn has change, Implementing a raw knickpoint, quantifying it with delta ksn
+    if((this_ksn != last_ksn) )
     {
       // deta ksn from bottom to top
       dksn = last_ksn - this_ksn;
-      // delta chi from top to bottom to force positive value
-      dchi = chi_data_map[last_node] - chi_data_map[this_node];
-      // saving the value in the map
+      // saving the value in the global raw_ksn_kp map
       raw_ksn_kp_map[this_node] =  dksn;
-      // derivative of the absolute value of the ksn over chi
-      dkdc = (dksn)/dchi;
-      raw_dksndchi_kp_map[this_node] = dkdc;
-
-      // segmented elevation diff, I am here trying to isolate ONLY the main ones, to avoid False detection when combining node
-
-      // TEST1: trying to isolate the main variations      
-      // if((TVD_b_chi_map[this_node] != TVD_b_chi_map[last_node]))
-      // {
-      //   raw_segchange[this_node] = dsegelev;
-      // }
-      // else
-      // {
-      //   raw_segchange[this_node] = 0;
-      // }
-
-      // TEMPORARY METHOD
-      // raw_delta_segelev_from_TVDb_chi[this_node] = dsegelev;
-      
-      
-
-      // saving the node for later KDE calculation
+      // saving the node to get the vector of ksn knickpoints per source, for later grouping purpose for example
       vecdif.push_back(this_node);
     }
     // setting the next last variables
@@ -2216,8 +2197,9 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int> vecnode)
 }
 
 
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// Detection of stepped kncikpoints
+// Detection of stepped kncikpoints - NEW
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::stepped_knickpoints_detection_v2(LSDFlowInfo& Flowinfo, int window, float n_std_dev)
 {
@@ -2239,6 +2221,7 @@ void LSDChiTools::stepped_knickpoints_detection_v2(LSDFlowInfo& Flowinfo, int wi
     // first check if the size is over the window
     if(vecnode.size() > window)
     { 
+      // first step is to get the windowed stats, the moving window will gather informations across the vector of nodes 
       map<string,vector<float> > these_stats = get_windowed_stats_for_knickpoints(vecnode,HW);
 
       for(size_t it = 0; it< vecnode.size(); it++)
@@ -2258,52 +2241,76 @@ void LSDChiTools::stepped_knickpoints_detection_v2(LSDFlowInfo& Flowinfo, int wi
 }
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Apply a moving window on the river nodes to get the mean and std-dev on each nodes
+// HW is the HalfWidth
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 map<string,vector<float> > LSDChiTools::get_windowed_stats_for_knickpoints(vector<int> vecnode,int HW)
 {
   // first get the general vector of value
   vector<float> vecval, window_vecval_mean, window_vecval_std;
+  int window = HW*2;
 
+  // looping through the node of the river and getting the corresponding delta segmented elevation
   for(vector<int>::iterator it = vecnode.begin(); it != vecnode.end(); it ++)
   {
     int this_node = *it;
     vecval.push_back(segelev_diff[this_node]);
   }
+  // Vecval is now implemented with the values
 
+  // Now moving window along the delta segelev profile
   for(size_t it = 0;it<vecnode.size(); it++)
   {
+    // we are in the first nodes boundary: we cannot loop before so the same value will be applied everywhere in this case
     if(it<HW)
     {
       vector<float> this_vecval;
-      for(size_t o = 0; o < (2*HW) ; o++ )
+      // getting the value for the window
+      for(size_t o = 0; o < window ; o++ )
       {
         this_vecval.push_back(vecval[o]);
       }
+      // getting the stats
       float this_mean = get_mean(this_vecval);
+      // implemeting
       window_vecval_mean.push_back(this_mean);
-      window_vecval_std.push_back(get_standard_deviation(this_vecval,this_mean));
+      float this_std = get_standard_deviation(this_vecval,this_mean);
+      window_vecval_std.push_back(this_std);
+
+      this_vecval.clear();    
     }
+    // we are in the middle of the river nodes
     else if (it < (vecnode.size()-HW))
     {
       vector<float> this_vecval;
-      for(size_t o = it; o < (it+(2*HW)) ; o++ )
+      for(size_t o = it; o < (it+window) ; o++ )
       {
         this_vecval.push_back(vecval[o]);
       }
       float this_mean =get_mean(this_vecval);
       window_vecval_mean.push_back(this_mean);
-      window_vecval_std.push_back(get_standard_deviation(this_vecval,this_mean));
+      float this_std = get_standard_deviation(this_vecval,this_mean);
+      window_vecval_std.push_back(this_std);
+
+      this_vecval.clear();    
     }
+    //we are in the last part
     else if (it >= (vecnode.size()-HW))
     {
       vector<float> this_vecval;
-      for(size_t o = (vecnode.size()-2*HW); o < (vecnode.size()) ; o++ )
+      for(size_t o = (vecnode.size()-window); o < (vecnode.size()) ; o++ )
       {
         this_vecval.push_back(vecval[o]);
       }
       float this_mean = get_mean(this_vecval);
       window_vecval_mean.push_back(this_mean);
-      window_vecval_std.push_back(get_standard_deviation(this_vecval,this_mean));
+      float this_std = get_standard_deviation(this_vecval,this_mean);
+      window_vecval_std.push_back(this_std);
+
+      this_vecval.clear();    
     }
+
   }
 
   // generating the outputs
@@ -2371,52 +2378,46 @@ void LSDChiTools::ksn_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_node_s
 
   // First looping through the source keys
   map<int,vector<int> >::iterator henri;
-
+  // saaving an ID for each knickpoints
   id_kp = 0;
 
   for(henri = map_node_source_key_kp.begin(); henri != map_node_source_key_kp.end(); henri ++)
   {
     // Now looping through the node for each rivers
     int this_SK = henri -> first;
+    // Getting the vector of node per river AND vector of ksn knickpoints nodes per river
     vector<int> vecnode_kp = henri->second, vecnode_river = map_node_source_key[this_SK];
-    // cout << this_SK << endl;
     if(vecnode_kp.size()>0)
     {
-      // getting the groups of vector
-      // cout << "SOURCE: "<< this_SK << " n kp before grouping = " << vecnode_kp.size() << endl;
+      // getting the groups of vector depending on your combination window
       vector<vector<int> > grouped_kp = group_local_kp(vecnode_kp,vecnode_river,Flowinfo, kp_node_search);
 
-
-      int sumdfsdfa = 0;
-      for(vector<vector<int> >::iterator vlad = grouped_kp.begin(); vlad != grouped_kp.end(); vlad ++)
-      {
-        vector<int> gyuyg = *vlad;
-        sumdfsdfa += gyuyg.size();
-      }
-
-      // cout <<"here" <<endl;
       // We have the group of vector now lets run through it to get the requested values
       for(vector<vector<int> >::iterator vlad = grouped_kp.begin(); vlad != grouped_kp.end(); vlad ++)
       {
+        // Investigating the first node
         vector<int> this_vecnode = *vlad;
-        // cout << "there" << endl;
+
         // Easy case: non composite knickpoint, let's just record the same info thatn the raw detection
         if(this_vecnode.size() == 1)
         {
           int this_node = this_vecnode[0];// node of the knickpoint
           ksn_kp_map[this_node] = raw_ksn_kp_map[this_node]; // delta ksn of the knickpoint
           sharpness_ksn_length[this_node] = 0; // sharpness = 0 as the knickpoint is a point
-          ksn_extent[this_node] = make_pair(this_node, this_node); // the extent nodes are the same
+          ksn_extent[this_node] = make_pair(this_node, this_node); // the "extent" nodes are the same
+
           // Getting the coordinate of the centroid of the kp -> just regular x
           float this_x = 0,this_y = 0;
           Flowinfo.get_x_and_y_from_current_node(this_node, this_x, this_y);
-          ksn_centroid[this_node] = make_pair(this_x,this_y);
-          // finally getting the ID of my 
+          ksn_centroid[this_node] = make_pair(this_x,this_y); // centroid does not move as well
+
+          // finally getting the ID of my kp and its location (It is not relevant in this case, but we need to implement the maps)
           ksn_kp_ID[this_node] = id_kp;
           nearest_node_centroid_kp[this_node] = this_node;
           flow_distance_kp_centroid_map[this_node] = flow_distance_data_map[this_node];
           id_kp ++;
         }
+
         else if(this_vecnode.size() > 1)
         {
           // harder case: several knickpoints, let's go step by step
@@ -2424,22 +2425,21 @@ void LSDChiTools::ksn_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_node_s
           int this_node = this_vecnode[0];
           
           // summing the segelev and dksn for this group of node
-          ksn_kp_map[this_node] = get_dksn_from_composite_kp(this_vecnode); // gobal ksn value of the knickpoint
+          ksn_kp_map[this_node] = get_dksn_from_composite_kp(this_vecnode); // gobal ksn value of the knickpoint, simple sum
 
           // Sharpness is the width of the combined knickpoints
           sharpness_ksn_length[this_node] = get_kp_sharpness_length(this_vecnode, Flowinfo);
-
-          ksn_extent[this_node] = make_pair(this_vecnode[0], this_vecnode.back()); // the extent nodes are the extreme of the DD
+          ksn_extent[this_node] = make_pair(this_vecnode[0], this_vecnode.back()); // the extent nodes are the extreme of the grouping vector
 
 
           // The neirest node from the centre of the knickpoint (in regards to chi distance)
           int nearnode = get_ksn_centroid_coordinates(Flowinfo, this_vecnode, vecnode_river,ksn_kp_map[this_node]); // get the weighted x and y of the centroid.
 
           flow_distance_kp_centroid_map[this_node] = flow_distance_data_map[nearnode];
-          // getting the 
+          // getting the Flow dist at the weighted distance
           float this_x = 0,this_y = 0;
           Flowinfo.get_x_and_y_from_current_node(nearnode, this_x, this_y);
-
+          // implementing the global maps
           ksn_centroid[this_node] = make_pair(this_x,this_y);
           nearest_node_centroid_kp[this_node] = nearnode;
           ksn_kp_ID[this_node] = id_kp;
@@ -2469,6 +2469,9 @@ float LSDChiTools::get_dksn_from_composite_kp(vector<int> vecnode)
   return out_value;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//  get the delta segelev value for a composite knickpoint - OLD    =
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 float LSDChiTools::get_dseg_drop_from_composite_kp(vector<int> vecnode)
 {
   // I'll get the segelev augmentation NORMALIZED by the chi distance
@@ -2892,12 +2895,14 @@ void  LSDChiTools::TVD_on_my_ksn( float lambda, float lambda_TVD_b_chi)
   // Set the variables
   map<int,vector<int> >::iterator chirac;
   vector<int> this_vec;
-  int max_node = 500;
+  // int max_node = 500;
+  // Looping through the source key and getting the associated vector of river nodes
   for(chirac = map_node_source_key.begin(); chirac != map_node_source_key.end() ; chirac ++)
   {
-    // int this_SK = chirac->first;
-    this_vec = chirac->second;
-    vector<float> gros_test;
+    // int this_SK = chirac->first; // we don't need it, but maybe at some points
+    this_vec = chirac->second; // the vector of node
+    vector<float> gros_test; // Debugging purposes
+    // this next function Apply the TVD on the vector. It directly save the results in a global map and return general informations for debugging
     gros_test = TVD_this_vec(this_vec, lambda, lambda_TVD_b_chi);
 
     // I am planning a test -> TO KEEP it would be an improvment of the denoising
@@ -2954,6 +2959,11 @@ void  LSDChiTools::TVD_on_my_ksn( float lambda, float lambda_TVD_b_chi)
 }
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+//  Apply a Total Variation Denoising filter on a specific vector =
+//    Coded in LSDStatTools adapted from Condat L.2013            =
+//            DOI: 10.1109/LSP.2013.2278339                       =
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 vector<float>  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda, float lambda_TVD_b_chi)
 {
 
@@ -2962,14 +2972,14 @@ vector<float>  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda, flo
   // this iterator will iterate through the vector of node you want to denoise
   vector<int>::iterator chirac = this_vec.begin();
 
-
+  // Loop through the data to gather the vector we want to TVD
   for( ; chirac != this_vec.end() ; chirac++)
   {
     int this_node = *chirac;
     this_val_mchi.push_back((double)M_chi_data_map[this_node]);
     this_val_bchi.push_back((double)b_chi_data_map[this_node]);
     this_val_segelev.push_back((double)segelev_diff[this_node]);
-
+    // NOTE: We recast everythin to double, floating points somehow generate bugs, in rare cases.
 
   }
 
@@ -2979,21 +2989,19 @@ vector<float>  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda, flo
   vector<double> this_val_bchi_TVDed = TV1D_denoise_v2(this_val_bchi, dlamda);
   vector<double> this_val_segelev_TVDed = TV1D_denoise_v2(this_val_segelev, 5);
 
-
-  // vector<double> this_val_TVDed_Corrected = correct_TVD_vec(this_val_TVDed);
-
+  // Our data is Denoised, yaaaay. Let's implement the global map to save it.
   for(size_t plo = 0; plo < this_vec.size() ; plo++ )
   {
     int this_node = this_vec[plo];
     TVD_m_chi_map[this_node] = (float)this_val_mchi_TVDed[plo];
     TVD_b_chi_map[this_node] = (float)this_val_bchi_TVDed[plo];
     TVD_segelev_diff[this_node] = (float)this_val_segelev_TVDed[plo];
-
-    // TVD_m_chi_map_non_corrected[this_node] = (float)this_val_TVDed[plo];
   }
 
+  // Formatting a debugging vector that I sometime use. Ignore that.
   vector<float> outtemp(this_val_mchi_TVDed.begin(),this_val_mchi_TVDed.end());
   return outtemp;
+  // Done, EZPZ
 }
 
 void  LSDChiTools::TVD_this_vec_v2(vector<int> this_vec, float lambda, float lambda_TVD_b_chi, int max_node, string type)
@@ -3181,10 +3189,9 @@ void LSDChiTools::lump_this_vec(vector<int> this_vec, int n_nodlump)
 }
 
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// deriv the segmented elevation            =
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// derive the segmented elevation to get it ready for the stepped knickpints quantification =
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 void LSDChiTools::derive_the_segmented_elevation()
 {
 
@@ -3193,7 +3200,6 @@ void LSDChiTools::derive_the_segmented_elevation()
   vector<int> this_vec;
   vector<int>::iterator nonode;
   int last_node = 0, this_node = 0;
-  float this_segelev = 0, last_segelev = 0;
   
   // looping through each river
   for(chirac = map_node_source_key.begin(); chirac != map_node_source_key.end() ; chirac ++)
@@ -3210,9 +3216,8 @@ void LSDChiTools::derive_the_segmented_elevation()
         {
           // i derive if this is not the last node
           this_node = *nonode;
-          this_segelev = segmented_elevation_map[this_node];
-          segelev_diff[this_node] = (segmented_elevation_map[last_node] - segmented_elevation_map[this_node]); // / (chi_data_map[last_node] - chi_data_map[this_node]);
-          segelev_diff_second[this_node] = segelev_diff_second[last_node] - segelev_diff_second[this_node] ;
+          segelev_diff[this_node] = (segmented_elevation_map[last_node] - segmented_elevation_map[this_node]); // ---> to had if we derive it to chi (chi_data_map[last_node] - chi_data_map[this_node]); 
+          segelev_diff_second[this_node] = segelev_diff_second[last_node] - segelev_diff_second[this_node];
         }
         else
         {
@@ -3223,7 +3228,6 @@ void LSDChiTools::derive_the_segmented_elevation()
 
         }
         // incrementing the rest
-        last_segelev = segmented_elevation_map[this_node];
         last_node = this_node;
       }
     }
@@ -3716,7 +3720,7 @@ void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, 
 void LSDChiTools::set_map_of_source_and_node(LSDFlowInfo& FlowInfo, int n_node_downstream)
 {
   // find the number of nodes
-
+  // setting the initilal condition
   int n_nodes = (node_sequence.size()), last_SK = source_keys_map[node_sequence[0]], this_SK = source_keys_map[node_sequence[0]], this_node = node_sequence[0], temp_receiver_node = 0, last_node = 0;
   if (n_nodes <= 0)
   {
@@ -3725,19 +3729,20 @@ void LSDChiTools::set_map_of_source_and_node(LSDFlowInfo& FlowInfo, int n_node_d
   }
   else
   {
+    // setting temporary vector that I may need
     vector<int> temp_node_SK;
     temp_node_SK.push_back(this_node);
+
+    // Now looping through all the node, gathering the one in the same river
     for (int n = 0; n< n_nodes; n++)
     {
-      // Debug statement
-      // cout << n << " || " << node_sequence[n] << endl;
+      // getting each nodes information
       this_node = node_sequence[n];
       this_SK = source_keys_map[this_node];
       if(this_SK == last_SK)
       {
         // If the source key is the same than the previous one ---> incrementing the vector of node for each river
         temp_node_SK.push_back(this_node);
-        // cout << elev_data_map[this_node] << endl;
       }
       else
       {
@@ -3765,12 +3770,12 @@ void LSDChiTools::set_map_of_source_and_node(LSDFlowInfo& FlowInfo, int n_node_d
       last_node = this_node;
     }
   }
-
-  // Debug stuff - ignore but keep pls - Boris
-  // exit(EXIT_FAILURE);
+// Done
 }
 
-
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Just get the length, number of nodes and other basic metrics about the river
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::compute_basic_matrics_per_source_keys(LSDFlowInfo& FlowInfo)
 {
 
