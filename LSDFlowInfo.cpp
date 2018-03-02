@@ -4637,9 +4637,14 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
   ofs << "easting,northing,i,j,hilltop_id,Cht,S,R,Lh,BasinID,a,b,StreamID,HilltopSlope,DivergentCount,PlanarCountFlag,E_Star,R_Star,EucDist\n";
 
   //calculate northing and easting
+  cout << "XMinimum is " << XMinimum << endl;
+  cout << "YMinimum is " << YMinimum << endl;
+  cout << "ymax is " << ymax << endl;
+  
   for (i=0;i<NRows;++i) northing.push_back(ymax - DataResolution*(i - 0.5));
   for (j=0;j<NCols;++j) easting.push_back(XMinimum + DataResolution*(j + 0.5));
 
+    
   //convert aspects to radians with east as theta = 0/2*pi
   for (i=0; i<NRows; ++i)
   {
@@ -5026,8 +5031,8 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
 
             ++s_count;
 
-            X = XMinimum + j*DataResolution;
-            Y = YMinimum - (NRows-i)*DataResolution;
+            X = easting[j];
+            Y = northing[i];
             relief = zeta[i][j] - zeta[a][b];
             mean_slope = relief/(length * DataResolution);
 
