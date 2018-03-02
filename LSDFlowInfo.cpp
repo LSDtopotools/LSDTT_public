@@ -4634,7 +4634,7 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
     cout << "\nFATAL ERROR: unable to write to " << ss_filename.str() << endl;
     exit(EXIT_FAILURE);
   }
-  ofs << "X,Y,i,j,hilltop_id,Cht,S,R,Lh,BasinID,a,b,StreamID,HilltopSlope,DivergentCount,PlanarCountFlag,E_Star,R_Star,EucDist\n";
+  ofs << "easting,northing,i,j,hilltop_id,Cht,S,R,Lh,BasinID,a,b,StreamID,HilltopSlope,DivergentCount,PlanarCountFlag,E_Star,R_Star,EucDist\n";
 
   //calculate northing and easting
   for (i=0;i<NRows;++i) northing.push_back(ymax - DataResolution*(i - 0.5));
