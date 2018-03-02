@@ -3471,7 +3471,7 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "node,latitude,longitude,elevation,flow_distance,chi,drainage_area,delta_ksn,delta_segelev,sharpness,sign,out,basin_key,source_key";
+  chi_data_out << "node,X,Y,latitude,longitude,elevation,flow_distance,chi,drainage_area,delta_ksn,delta_segelev,sharpness,sign,out,basin_key,source_key";
 
   chi_data_out << endl;
 
@@ -3509,6 +3509,8 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
         if(this_kp>0){this_sign = 1;}else{this_sign=(-1);}
 
         chi_data_out << this_node << ",";
+        chi_data_out << this_x << ",";
+        chi_data_out << this_y << ",";
         chi_data_out.precision(9);
         chi_data_out << latitude << ","
                      << longitude << ",";
@@ -3621,7 +3623,7 @@ void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, 
   // open the data file
   ofstream  chi_data_out;
   chi_data_out.open(filename.c_str());
-  chi_data_out << "node,Y,X,latitude,longitude,chi,elevation,flow_distance,drainage_area,m_chi,lumped_ksn,TVD_ksn,TVD_segelev_diff,b_chi,TVD_b_chi,ksnkp,segelevkp,source_key,basin_key";
+  chi_data_out << "node,Y,X,row,col,latitude,longitude,chi,elevation,flow_distance,drainage_area,m_chi,lumped_ksn,TVD_ksn,TVD_segelev_diff,b_chi,TVD_b_chi,ksnkp,segelevkp,source_key,basin_key";
   if(have_segmented_elevation)
   {
     chi_data_out << ",segmented_elevation,mean_segdiff,std_segdiff,segdiff";
@@ -3674,7 +3676,10 @@ void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, 
 
       chi_data_out << this_node << ","
                    << this_y << ","
-                   << this_x << ",";
+                   << this_x << ","
+                   << row << ","
+                   << col << ",";
+
       chi_data_out.precision(9);
       chi_data_out << latitude << ","
                    << longitude << ",";
