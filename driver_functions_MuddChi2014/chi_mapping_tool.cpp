@@ -134,6 +134,10 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["remove_basins_by_outlet_elevation"] = false;
   float_default_map["lower_outlet_elevation_threshold"] = 0;
   float_default_map["upper_outlet_elevation_threshold"] = 25;
+  bool_default_map["get_basins_from_outlets"] = false;
+  string_default_map["basin_outlet_csv"] = "NULL";
+  string_default_map["sample_ID_column_name"] = "IDs";
+  int_default_map["search_radius_nodes"] = 100;
 
   // IMPORTANT: S-A analysis and chi analysis wont work if you have a truncated
   // basin. For this reason the default is to test for edge effects
@@ -340,7 +344,14 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["estimate_best_fit_movern"])
   {
     // we need to make sure we select basins the correct way
-    this_bool_map["find_complete_basins_in_window"] = true;
+    if(this_bool_map["get_basins_from_outlets"] == false)
+    {
+      this_bool_map["find_complete_basins_in_window"] = true;
+    }
+    else
+    {
+      this_bool_map["test_drainage_boundaries"] = true;
+    }
     this_bool_map["print_basin_raster"] = true;
     this_bool_map["write_hillshade"] = true;
     this_bool_map["print_chi_data_maps"] = true;
@@ -707,14 +718,65 @@ int main (int nNumberofArgs,char *argv[])
   vector< int > BaseLevelJunctions;
   vector< int > BaseLevelJunctions_Initial;
 
-  if(this_bool_map["force_all_basins"] == false)
+  if(this_bool_map["force_all_basins"] == false )
   {
     //Check to see if a list of junctions for extraction exists
     if (BaselevelJunctions_file == "NULL" || BaselevelJunctions_file == "Null" || BaselevelJunctions_file == "null" || BaselevelJunctions_file.empty() == true)
     {
       cout << "To reiterate, there is no base level junction file. I am going to select basins for you using an algorithm. " << endl;
       // remove basins drainage from edge if that is what the user wants
-      if (this_bool_map["find_complete_basins_in_window"])
+      if(this_bool_map["get_basins_from_outlets"])
+      {
+        cout << "I am getting your basins from a list of nodes. " << endl;
+        
+        // first we see if the nodes file exists
+        string basin_outlet_fname = DATA_DIR+this_string_map["basin_outlet_csv"];
+        vector<string> IDs;
+        cout << "The basin file is: " << basin_outlet_fname << endl;
+        LSDSpatialCSVReader Outlet_CSV_data(RI,basin_outlet_fname);
+        IDs = Outlet_CSV_data.get_data_column(this_string_map["sample_ID_column_name"]);
+        
+        cout << "I am reading the following samples: " << endl;
+        vector<double> latitude = Outlet_CSV_data.get_latitude();
+        vector<double> longitude = Outlet_CSV_data.get_longitude();
+        int n_samples = int(latitude.size());
+
+        for(int samp = 0; samp<n_samples; samp++)
+        {
+          cout << "ID: " << IDs[samp] << " lat: " << latitude[samp] << " long: " << longitude[samp] << endl;
+        }
+        
+        // now get the junction network
+        vector<float> fUTM_easting;
+        vector<float> fUTM_northing;
+        Outlet_CSV_data.get_x_and_y_from_latlong(fUTM_easting,fUTM_northing);
+        
+        int threshold_stream_order = 2;
+        vector<int> valid_cosmo_points;         // a vector to hold the valid nodes
+        vector<int> snapped_node_indices;       // a vector to hold the valid node indices
+        vector<int> snapped_junction_indices;   // a vector to hold the valid junction indices
+        cout << "The search radius is: " << this_int_map["search_radius_nodes"] << endl;
+        JunctionNetwork.snap_point_locations_to_channels(fUTM_easting, fUTM_northing, 
+                    this_int_map["search_radius_nodes"], threshold_stream_order, FlowInfo, 
+                    valid_cosmo_points, snapped_node_indices, snapped_junction_indices);
+          
+        cout << "The number of valid points is: " << int(valid_cosmo_points.size()) << endl;
+        
+        // Now get the basin rasters
+        // HEY HEY| |LOOK HERE: I don't think we really need this since basins are
+        // printed at a later stage with the flag "print_basin_raster"
+        //string basin_raster_name = OUT_DIR+OUT_ID+"_AllBasins";
+        //print_basins(basin_raster_name, FlowInfo, JunctionNetwork,
+        //               snapped_junction_indices);
+        BaseLevelJunctions = snapped_junction_indices;
+        if(BaseLevelJunctions.size() == 0)
+        {
+          cout << "I did not find any valid basins from your outlet. Check your latitude and longitude (WGS84) columns." << endl;
+          exit(EXIT_FAILURE);
+        }
+
+      }
+      else if (this_bool_map["find_complete_basins_in_window"])
       {
         cout << "I am going to look for basins in a pixel window that are not influended by nodata." << endl;
         cout << "I am also going to remove any nested basins." << endl;
