@@ -769,11 +769,21 @@ int main (int nNumberofArgs,char *argv[])
         //print_basins(basin_raster_name, FlowInfo, JunctionNetwork,
         //               snapped_junction_indices);
         BaseLevelJunctions = snapped_junction_indices;
+        if (this_bool_map["test_drainage_boundaries"])     // now check for edge effects
+        {
+          cout << endl << endl << "I am going to remove basins draining to the edge." << endl;
+          BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge_Ignore_Outlet_Reach(BaseLevelJunctions,FlowInfo, filled_topography);
+        
+         //BaseLevelJunctions = JunctionNetwork.Prune_Junctions_Edge(BaseLevelJunctions,FlowInfo);
+        }
         if(BaseLevelJunctions.size() == 0)
         {
           cout << "I did not find any valid basins from your outlet. Check your latitude and longitude (WGS84) columns." << endl;
           exit(EXIT_FAILURE);
         }
+
+        BaseLevelJunctions = JunctionNetwork.Prune_To_Largest_Complete_Basins(BaseLevelJunctions,FlowInfo, filled_topography, FlowAcc);
+        BaseLevelJunctions = JunctionNetwork.Prune_Junctions_If_Nested(BaseLevelJunctions,FlowInfo, FlowAcc);
 
       }
       else if (this_bool_map["find_complete_basins_in_window"])
