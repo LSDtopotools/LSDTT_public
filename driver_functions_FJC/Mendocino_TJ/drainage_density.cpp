@@ -119,7 +119,7 @@ int main (int nNumberofArgs,char *argv[])
 	//create stream network from mapped sources
 	cout << "\t Loading Sources..." << endl;
 	vector<int> sources;
-	string CHeads_file = path_name+DEM_name+"_ATsources";
+	string CHeads_file = path_name+DEM_name+"_Wsources";
 	string CHeads_file_ext = CHeads_file + ".csv";
 	if (ifstream(CHeads_file_ext.c_str()))
 	{
@@ -161,7 +161,7 @@ int main (int nNumberofArgs,char *argv[])
 	Basin_Raster.write_raster((path_name+DEM_name+basin_name), FileExtension);
 
 	// get the SO array
-	string SO_ext = "_SO";
+	string SO_ext = "_W_SO";
 	LSDIndexRaster SOArray((path_name+DEM_name+SO_ext), FileExtension);
 
 	//get metrics for each basin for plotting
@@ -169,7 +169,7 @@ int main (int nNumberofArgs,char *argv[])
 	int junction_number;
 	string OutputFile;
 
-	OutputFile = DEM_name+"_basin_dd.csv";
+	OutputFile = path_name+DEM_name+"_basin_dd.csv";
   	ofstream OutputStream;
 	OutputStream.open(OutputFile.c_str());
 	OutputStream 	<< "junction_number,drainage_density" << endl;
