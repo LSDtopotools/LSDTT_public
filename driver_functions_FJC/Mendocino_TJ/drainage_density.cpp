@@ -79,8 +79,7 @@ int main (int nNumberofArgs,char *argv[])
 	cout << "The path is: " << path_name << " and the DEM name is: " << DEM_name << endl;
 
   // get some file names
-	string fill_ext = "_Fill";
-	string DEM_f_name = path_name+DEM_name+fill_ext;
+	string DEM_f_name = path_name+DEM_name;
 	string FileExtension = "bil";
 
   // Get list of junctions into a vector - this file is produced by ./drainage_density_step1_junctions.out
@@ -103,8 +102,12 @@ int main (int nNumberofArgs,char *argv[])
 
 	// load in rasters
 
-	// get the filled file
-	LSDRaster filled_topo_test((path_name+DEM_name+fill_ext), FileExtension);
+	// get the file
+	LSDRaster topo_test((path_name+DEM_name), FileExtension);
+
+	// fill the raster
+	float min_slope = 0.0001;
+	LSDRaster filled_topo_test = topo_test.fill(min_slope);
 
 	// Set the no flux boundary conditions
 	vector<string> boundary_conditions(4);
