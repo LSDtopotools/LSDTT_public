@@ -1236,6 +1236,7 @@ vector<float> LSDJunctionNetwork::calculate_junction_angle_statistics_upstream_o
 {
   // get all the upslope junctions
   vector<int> JunctionList = get_upslope_junctions(target_junction);
+  cout << "There are " << JunctionList.size() << " upslope junctions that I'll analyse" << endl;
   vector<float> JI_stats;
 
   // now get all the
@@ -2215,7 +2216,7 @@ vector<int> LSDJunctionNetwork::get_node_list_from_junction_list(vector<int> jun
   int N_juncs = junction_list.size();
   vector<int> node_list;
   int this_junc;
-  
+
   for (int i = 0; i< N_juncs; i++)
   {
     this_junc = junction_list[i];
@@ -2224,7 +2225,7 @@ vector<int> LSDJunctionNetwork::get_node_list_from_junction_list(vector<int> jun
       node_list.push_back(JunctionVector[this_junc]);
     }
   }
-  
+
   return node_list;
 }
 
@@ -2236,7 +2237,7 @@ vector<int> LSDJunctionNetwork::get_node_list_of_penultimate_node_from_junction_
   int N_juncs = junction_list.size();
   vector<int> node_list;
   int this_junc;
-  
+
   for (int i = 0; i< N_juncs; i++)
   {
     this_junc = junction_list[i];
@@ -2246,7 +2247,7 @@ vector<int> LSDJunctionNetwork::get_node_list_of_penultimate_node_from_junction_
       node_list.push_back(outlet_node);
     }
   }
-  
+
   return node_list;
 }
 
@@ -6652,7 +6653,7 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_Largest(vector<int>& BaseLevelJu
 // a threshold elevation
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 vector<int> LSDJunctionNetwork::Prune_Junctions_Threshold_Elevation(vector<int>& BaseLevelJunctions_Initial,
-                                              LSDFlowInfo& FlowInfo, LSDRaster& Elev, 
+                                              LSDFlowInfo& FlowInfo, LSDRaster& Elev,
                                               float threshold_elevation, bool keep_junctions_below_threshold)
 {
   vector<int> BL_Donor_junctions_pruned;
@@ -6670,11 +6671,11 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_Threshold_Elevation(vector<int>&
   {
     current_node = JunctionVector[BaseLevelJunctions_Initial[i]];
     FlowInfo.retrieve_current_row_and_col(current_node,row,col);
-    
+
     float this_elevation = Elev.get_data_element(row,col);
-    
+
     cout << "Junction: " <<  BaseLevelJunctions_Initial[i] << " and elevation is: " << this_elevation << endl;
-    
+
     if (keep_junctions_below_threshold)
     {
       if (this_elevation <= threshold_elevation)
@@ -6700,7 +6701,7 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_Threshold_Elevation(vector<int>&
 // that are within an elevation window
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 vector<int> LSDJunctionNetwork::Prune_Junctions_Elevation_Window(vector<int>& BaseLevelJunctions_Initial,
-                                              LSDFlowInfo& FlowInfo, LSDRaster& Elev, 
+                                              LSDFlowInfo& FlowInfo, LSDRaster& Elev,
                                               float lower_threshold, float upper_threshold)
 {
   vector<int> BL_Donor_junctions_pruned;
@@ -6718,11 +6719,11 @@ vector<int> LSDJunctionNetwork::Prune_Junctions_Elevation_Window(vector<int>& Ba
   {
     current_node = JunctionVector[BaseLevelJunctions_Initial[i]];
     FlowInfo.retrieve_current_row_and_col(current_node,row,col);
-    
+
     float this_elevation = Elev.get_data_element(row,col);
-    
+
     cout << "Junction: " <<  BaseLevelJunctions_Initial[i] << " and elevation is: " << this_elevation;
-    
+
     if (this_elevation >= lower_threshold && this_elevation <= upper_threshold)
     {
       cout << " KEEPING this one." << endl;
@@ -7961,7 +7962,7 @@ void LSDJunctionNetwork::print_junctions_to_csv(LSDFlowInfo& FlowInfo, vector<in
 // It then sorts these according to length
 // Starting with the longest channel it moves down marking channels as read
 // For all but the longest channel, it will eventually come upon a channel that has
-// already been visited. So it will stop there. 
+// already been visited. So it will stop there.
 // BUT we want to keep a few chi nodes downslope (to make sure there are not
 // big jumps in chi at tributary junctions)
 // so it follows the visited channel down a few nodes. It does this using the
