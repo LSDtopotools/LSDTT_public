@@ -784,7 +784,7 @@ int main (int nNumberofArgs,char *argv[])
         }
         if(BaseLevelJunctions.size()>1)
         {
-          BaseLevelJunctions = JunctionNetwork.Prune_To_Largest_Complete_Basins(BaseLevelJunctions,FlowInfo, filled_topography, FlowAcc);
+          //BaseLevelJunctions = JunctionNetwork.Prune_To_Largest_Complete_Basins(BaseLevelJunctions,FlowInfo, filled_topography, FlowAcc);
           BaseLevelJunctions = JunctionNetwork.Prune_Junctions_If_Nested(BaseLevelJunctions,FlowInfo, FlowAcc);
         }
 
