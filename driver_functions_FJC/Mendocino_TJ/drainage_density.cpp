@@ -175,7 +175,7 @@ int main (int nNumberofArgs,char *argv[])
 	OutputFile = path_name+DEM_name+"_basin_dd.csv";
   	ofstream OutputStream;
 	OutputStream.open(OutputFile.c_str());
-	OutputStream 	<< "junction_number,drainage_density" << endl;
+	OutputStream 	<< "junction_number,drainage_density,junction_angle_mean,junction_angle_stats" << endl;
 
 	for (int i = 0; i < int(junction_list.size()); i++)
 	{
@@ -191,8 +191,12 @@ int main (int nNumberofArgs,char *argv[])
 		// get the drainage density of the catchment
 		DD = Basin.get_DrainageDensity();
 
+		// test the junction angles just for fun
+		vector<float> junction_angle_stats = ChanNetwork.calculate_junction_angle_statistics_upstream_of_junction(junction_number, FlowInfo);
+
+
 		//write to file
-		OutputStream << junction_number << "," << DD << endl;
+		OutputStream << junction_number << "," << DD << "," << junction_angle_stats[0] << "," << junction_angle_stats[1] << endl;
 
 	}
 }
