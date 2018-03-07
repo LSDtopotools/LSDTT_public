@@ -1250,8 +1250,13 @@ vector<float> LSDJunctionNetwork::calculate_junction_angle_statistics_upstream_o
   for(iter = JuncInfo.begin(); iter != JuncInfo.end(); ++iter)
   {
     this_JI = iter->second;
-    junc_angles.push_back(this_JI[0]);
+    if (isnan(this_JI[0]) == false)
+    {
+      cout << "This JI: " << this_JI[0] << endl;
+      junc_angles.push_back(this_JI[0]);
+    }
   }
+  cout << "N Junction angles: " << junc_angles.size() << endl;
 
   // now get the stats
   float mean = get_mean_ignore_ndv(junc_angles,NoDataValue);
