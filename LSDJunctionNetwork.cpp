@@ -1254,8 +1254,8 @@ vector<float> LSDJunctionNetwork::calculate_junction_angle_statistics_upstream_o
   }
 
   // now get the stats
-  float mean = get_mean(junc_angles);
-  float stddev = get_standard_deviation(junc_angles,mean);
+  float mean = get_mean_ignore_ndv(junc_angles,NoDataValue);
+  float stddev = get_standard_deviation(junc_angles,mean,NoDataValue);
   float stderr =  get_standard_error(junc_angles,stddev);
 
   JI_stats.push_back(mean);
