@@ -130,6 +130,15 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_tangential_curvature"]= false;
   bool_default_map["print_point_classification"]= false;
   
+  // Roughness calculations
+  float_default_map["REI_critical_slope"] = 1.0;
+  float_default_map["REI_window_radius"] = 10;
+  bool_default_map["print_REI_raster"] = false;
+  
+  bool_default_map["print_roughness_rasters"] = false;
+  float_default_map["roughness_radius"];
+  
+  
 
   // filling and drainage area
   bool_default_map["print_dinf_drainage_area_raster"] = false;
@@ -321,7 +330,7 @@ int main (int nNumberofArgs,char *argv[])
   //============================================================================
   // The surface fitting metrics
   //============================================================================
-  vector<int> raster_selection(8, 0);  // This controls which usrface fitting metrics to compute
+  vector<int> raster_selection(8, 0);  // This controls which surface fitting metrics to compute
   if(this_bool_map["print_smoothed_elevation"])
   {
     raster_selection[0] = 1;
@@ -405,6 +414,27 @@ int main (int nNumberofArgs,char *argv[])
     surface_fitting[7].write_raster(this_raster_name,raster_ext);
   }
   
+  //============================================================================
+  // Print the roughness rasters
+  //============================================================================
+  if(this_bool_map["print_REI_raster"])
+  {
+    LSDRaster REI_raster = topography_raster.calculate_REI(this_float_map["REI_window_radius"], this_float_map["REI_critical_slope"]);
+    string this_raster_name = OUT_DIR+OUT_ID+"_REI";
+    REI_raster.write_raster(this_raster_name,raster_ext);
+  }
+  
+  if(this_bool_map["print_roughness_rasters"])
+  {
+    // This just ensures all three roughness rasters are printed
+    vector<int> file_code;
+    file_code.push_back(1);  file_code.push_back(1); file_code.push_back(1);
+    string file_prefix = OUT_DIR+OUT_ID;
+    topography_raster.calculate_roughness_rasters(this_float_map["surface_fitting_radius"], this_float_map["roughness_radius"],
+                    file_prefix, file_code);
+  }
+
+
 
   //============================================================================
   // Print the wiener filtered raster if that is what you want
