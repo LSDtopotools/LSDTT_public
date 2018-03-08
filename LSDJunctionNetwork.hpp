@@ -253,6 +253,16 @@ class LSDJunctionNetwork
   /// @date 23/04/2017
   vector<float> calculate_junction_angle_statistics_upstream_of_junction(int target_junction, LSDFlowInfo& FlowInfo);
 
+  /// @brief Overloaded function similar to above but removes any junctions not greater than
+  /// threshold SO
+  /// @param target_junction The target junction
+  /// @param FlowInfo an LSDFlowInfo object
+  /// @param threshold_SO threshold stream order to keep junctions (greater than this)
+  /// @return A vector of that has the stats of the upslope junction angles
+  /// @author FJC
+  /// @date 08/03/18
+  vector<float> calculate_junction_angle_statistics_upstream_of_junction(int target_junction, LSDFlowInfo& FlowInfo, int threshold_SO);
+
   /// @brief This takes the junction angle statistics for all basins of a given order
   /// @param FlowInfo the LSDFlowInfo object
   /// @param BasinOrder the basin order of interest
@@ -503,7 +513,7 @@ class LSDJunctionNetwork
   /// @author SMM
   /// @date 18/01/18
   vector<int> Prune_Junctions_Threshold_Elevation(vector<int>& BaseLevelJunctions_Initial,
-                                              LSDFlowInfo& FlowInfo, LSDRaster& Elev, 
+                                              LSDFlowInfo& FlowInfo, LSDRaster& Elev,
                                               float threshold_elevation, bool keep_junctions_below_threshold);
 
   /// @brief This function takes a list of junctions retains ONLY the junctions
@@ -518,7 +528,7 @@ class LSDJunctionNetwork
   /// @author SMM
   /// @date 19/01/18
   vector<int> Prune_Junctions_Elevation_Window(vector<int>& BaseLevelJunctions_Initial,
-                                              LSDFlowInfo& FlowInfo, LSDRaster& Elev, 
+                                              LSDFlowInfo& FlowInfo, LSDRaster& Elev,
                                               float lower_threshold, float upper_threshold);
 
 

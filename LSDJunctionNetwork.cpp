@@ -1284,6 +1284,69 @@ vector<float> LSDJunctionNetwork::calculate_junction_angle_statistics_upstream_o
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function gets the stats of all the junction angles greater than a specified
+// stream order upstream of a given junction
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<float> LSDJunctionNetwork::calculate_junction_angle_statistics_upstream_of_junction(int target_junction, LSDFlowInfo& FlowInfo, int threshold_SO)
+{
+  // get all the upslope junctions
+  vector<int> JunctionList = get_upslope_junctions(target_junction);
+  cout << "There are " << JunctionList.size() << " upslope junctions that I'll analyse" << endl;
+  vector<float> JI_stats;
+
+  // check if these junctions are greater than the threshold SO
+  vector<int> NewJunctionList;
+  for (int i = 0; i < int(JunctionList.size()); i++)
+  {
+    int this_SO = get_StreamOrder_of_Junction(FlowInfo, JunctionList[i]);
+    if (this_SO > threshold_SO) { NewJunctionList.push_back(JunctionList[i]); }
+  }
+
+  // now get all the angles
+  map<int, vector<float> >::iterator iter;
+  map<int, vector<float> > JuncInfo = calculate_junction_angles(JunctionList,FlowInfo);
+
+  // now get statistics from these
+  vector<float> junc_angles;
+  vector<float> this_JI;
+
+  for(iter = JuncInfo.begin(); iter != JuncInfo.end(); ++iter)
+  {
+    this_JI = iter->second;
+    if (isnan(this_JI[0]) == false)
+    {
+      cout << "This JI: " << this_JI[0] << endl;
+      junc_angles.push_back(this_JI[0]);
+    }
+  }
+  cout << "N Junction angles: " << junc_angles.size() << endl;
+
+  // now get the stats
+  float mean = get_mean_ignore_ndv(junc_angles,NoDataValue);
+  float stddev = get_standard_deviation(junc_angles,mean,NoDataValue);
+  float stderr =  get_standard_error(junc_angles,stddev);
+  // sort the data so we can get the median and percentiles
+  vector<size_t> index_map;
+  vector<float> junc_angles_sorted;
+  matlab_float_sort(junc_angles, junc_angles_sorted, index_map);
+  float median = get_median_sorted(junc_angles_sorted);
+  float p25 = get_percentile(junc_angles_sorted, 25);
+  float p75 = get_percentile(junc_angles_sorted, 75);
+  float mad = get_median_absolute_deviation(junc_angles_sorted,median);
+
+  JI_stats.push_back(mean);
+  JI_stats.push_back(stderr);
+  JI_stats.push_back(float(junc_angles.size()));
+  JI_stats.push_back(median);
+  JI_stats.push_back(p25);
+  JI_stats.push_back(p75);
+  JI_stats.push_back(mad);
+
+  return JI_stats;
+
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
 // This gets the junction angle stats for all basins of a given size
 //
