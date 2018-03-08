@@ -192,7 +192,8 @@ int main (int nNumberofArgs,char *argv[])
 		DD = Basin.get_DrainageDensity();
 
 		// test the junction angles just for fun
-		vector<float> junction_angle_stats = ChanNetwork.calculate_junction_angle_statistics_upstream_of_junction(junction_number, FlowInfo);
+		int threshold_SO = 1;
+		vector<float> junction_angle_stats = ChanNetwork.calculate_junction_angle_statistics_upstream_of_junction(junction_number, FlowInfo, threshold_SO);
 
 
 		//write to file
