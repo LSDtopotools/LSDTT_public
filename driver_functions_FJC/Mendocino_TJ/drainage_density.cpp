@@ -175,7 +175,7 @@ int main (int nNumberofArgs,char *argv[])
 	OutputFile = path_name+DEM_name+"_basin_dd.csv";
   	ofstream OutputStream;
 	OutputStream.open(OutputFile.c_str());
-	OutputStream 	<< "junction_number,drainage_density,junction_angle_mean,junction_angle_std" << endl;
+	OutputStream 	<< "junction_number,drainage_density,junction_angle_mean,junction_angle_sterr,junction_angle_median,junction_angle_25thP,junction_angle_75thP,junction_angle_mad" << endl;
 
 	for (int i = 0; i < int(junction_list.size()); i++)
 	{
@@ -196,7 +196,7 @@ int main (int nNumberofArgs,char *argv[])
 
 
 		//write to file
-		OutputStream << junction_number << "," << DD << "," << deg(junction_angle_stats[0]) << "," << deg(junction_angle_stats[1]) << endl;
+		OutputStream << junction_number << "," << DD << "," << deg(junction_angle_stats[0]) << "," << deg(junction_angle_stats[1]) << "," << deg(junction_angle_stats[3]) << "," << deg(junction_angle_stats[4]) << "," << deg(junction_angle_stats[5]) << "," << deg(junction_angle_stats[6]) << endl;
 
 	}
 }

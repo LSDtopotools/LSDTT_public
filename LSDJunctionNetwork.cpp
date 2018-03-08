@@ -1262,10 +1262,22 @@ vector<float> LSDJunctionNetwork::calculate_junction_angle_statistics_upstream_o
   float mean = get_mean_ignore_ndv(junc_angles,NoDataValue);
   float stddev = get_standard_deviation(junc_angles,mean,NoDataValue);
   float stderr =  get_standard_error(junc_angles,stddev);
+  // sort the data so we can get the median and percentiles
+  vector<size_t> index_map;
+  vector<float> junc_angles_sorted;
+  matlab_float_sort(junc_angles, junc_angles_sorted, index_map);
+  float median = get_median_sorted(junc_angles_sorted);
+  float p25 = get_percentile(junc_angles_sorted, 25);
+  float p75 = get_percentile(junc_angles_sorted, 75);
+  float mad = get_median_absolute_deviation(junc_angles_sorted,median);
 
   JI_stats.push_back(mean);
   JI_stats.push_back(stderr);
   JI_stats.push_back(float(junc_angles.size()));
+  JI_stats.push_back(median);
+  JI_stats.push_back(p25);
+  JI_stats.push_back(p75);
+  JI_stats.push_back(mad);
 
   return JI_stats;
 
