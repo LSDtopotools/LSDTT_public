@@ -282,6 +282,15 @@ class LSDJunctionNetwork
                              vector<float>& junction_angle_stderr,
                              vector<int>& N_junctions);
 
+  /// @brief This function takes a vector of basin junctions and prints statistics of all the junctions
+  /// upstream of each basin junction to a CSV.  The statstics are separated by stream order.
+  /// @param JunctionList list of basin junctions
+  /// @param FlowInfo LSDFlowInfo object
+  /// @param csv_outname name of output csv
+  /// @author FJC
+  /// @date 08/03/18
+  void print_junction_angles_from_basin_list(vector<int> JunctionList, LSDFlowInfo& FlowInfo, string csv_outname);
+
 
   /// @brief This prints the junction angles to a csv file
   /// @param JunctionList The list of junctions to analyze. If this is an empty vector,

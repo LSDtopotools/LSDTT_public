@@ -1252,7 +1252,6 @@ vector<float> LSDJunctionNetwork::calculate_junction_angle_statistics_upstream_o
     this_JI = iter->second;
     if (isnan(this_JI[0]) == false)
     {
-      cout << "This JI: " << this_JI[0] << endl;
       junc_angles.push_back(this_JI[0]);
     }
   }
@@ -1284,66 +1283,91 @@ vector<float> LSDJunctionNetwork::calculate_junction_angle_statistics_upstream_o
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// This function gets the stats of all the junction angles greater than a specified
-// stream order upstream of a given junction
+// This function prints a csv of statistics of the junction angles from a series
+// of basins.
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-vector<float> LSDJunctionNetwork::calculate_junction_angle_statistics_upstream_of_junction(int target_junction, LSDFlowInfo& FlowInfo, int threshold_SO)
+void LSDJunctionNetwork::print_junction_angles_from_basin_list(vector<int> JunctionList, LSDFlowInfo& FlowInfo, string csv_outname)
 {
-  // get all the upslope junctions
-  vector<int> JunctionList = get_upslope_junctions(target_junction);
-  cout << "There are " << JunctionList.size() << " upslope junctions that I'll analyse" << endl;
-  vector<float> JI_stats;
 
-  // check if these junctions are greater than the threshold SO
-  vector<int> NewJunctionList;
+  ofstream csv_out;
+  csv_out.open(csv_outname.c_str());
+  csv_out.precision(9);
+
+  csv_out << "BasinJunction,StreamOrder,Median,25th_percentile,75th_percentile,MAD" << endl;
+
+  // loop through each basin and get the stats
   for (int i = 0; i < int(JunctionList.size()); i++)
   {
-    int this_SO = get_StreamOrder_of_Junction(FlowInfo, JunctionList[i]);
-    if (this_SO > threshold_SO) { NewJunctionList.push_back(JunctionList[i]); }
-  }
+    // get all the upslope junctions
+    vector<int> upslope_junctions = get_upslope_junctions(JunctionList[i]);
+    cout << "There are " << upslope_junctions.size() << " upslope junctions that I'll analyse" << endl;
+    vector<float> JI_stats;
 
-  // now get all the angles
-  map<int, vector<float> >::iterator iter;
-  map<int, vector<float> > JuncInfo = calculate_junction_angles(JunctionList,FlowInfo);
+    // now get all the angles
+    map<int, vector<float> >::iterator iter;
+    map<int, vector<float> > JuncInfo = calculate_junction_angles(JunctionList,FlowInfo);
 
-  // now get statistics from these
-  vector<float> junc_angles;
-  vector<float> this_JI;
+    // now get statistics from these
+    vector<float> junc_angles;
+    vector<int> stream_order;
+    vector<float> this_JI;
 
-  for(iter = JuncInfo.begin(); iter != JuncInfo.end(); ++iter)
-  {
-    this_JI = iter->second;
-    if (isnan(this_JI[0]) == false)
+    for(iter = JuncInfo.begin(); iter != JuncInfo.end(); ++iter)
     {
-      cout << "This JI: " << this_JI[0] << endl;
-      junc_angles.push_back(this_JI[0]);
+      this_JI = iter->second;
+      if (isnan(this_JI[0]) == false)
+      {
+        junc_angles.push_back(this_JI[0]);
+        stream_order.push_back(int(this_JI[1]));
+      }
+    }
+    cout << "N Junction angles: " << junc_angles.size() << endl;
+
+    // now sort the vector by stream order. We want to get individual stats
+    // for each order
+    vector<size_t> index_map;
+    vector<int> stream_order_sorted;
+    vector<float> junc_angles_sorted;
+    matlab_int_sort(stream_order, stream_order_sorted, index_map);
+    matlab_float_reorder(junc_angles, index_map, junc_angles_sorted);
+
+    // get the max stream order for this basin = the SO of the junction you're at
+    int max_order = get_StreamOrder_of_Junction(JunctionList[i]);
+
+    // declare a map to store the results.  This has the format:
+    // vector<float> medians, vector<float> 25th_percentiles, vector<float> 75th_percentiles, vector<float> median_absolute_deviation
+    // then you can get the stream orders by indexing the individual vectors.  E.g. the median
+    // of the 3rd stream order would be junction_angle_stats[0][2]
+    //map<vector<float>, vector<float>, vector<float>, vector<float>> junction_angle_stats;
+
+    for (int i = 0; i < max_order; i++)
+    {
+      vector<float> these_angles;
+      // find the angles of this stream order
+      for (int j = 0; j < int(stream_order_sorted.size()); j++)
+      {
+        if (stream_order_sorted[j] == (i+1))
+        {
+          these_angles.push_back(junc_angles_sorted[j]);
+        }
+      }
+
+      // now get the stats
+      matlab_float_sort(these_angles, these_angles, index_map);
+      float median = get_median_sorted(these_angles);
+      float p25 = get_percentile(these_angles, 25);
+      float p75 = get_percentile(these_angles, 75);
+      float mad = get_median_absolute_deviation(these_angles,median);
+
+      // junction_angle_stats[0].push_back(median);
+      // junction_angle_stats[1].push_back(p25);
+      // junction_angle_stats[2].push_back(p75);
+      // junction_angle_stats[3].push_back(mad);
+
+      csv_out << JunctionList[i] << "," << i << "," << deg(median) << "," << deg(p25) << "," << deg(p75) << "," << deg(mad) << endl;
     }
   }
-  cout << "N Junction angles: " << junc_angles.size() << endl;
-
-  // now get the stats
-  float mean = get_mean_ignore_ndv(junc_angles,NoDataValue);
-  float stddev = get_standard_deviation(junc_angles,mean,NoDataValue);
-  float stderr =  get_standard_error(junc_angles,stddev);
-  // sort the data so we can get the median and percentiles
-  vector<size_t> index_map;
-  vector<float> junc_angles_sorted;
-  matlab_float_sort(junc_angles, junc_angles_sorted, index_map);
-  float median = get_median_sorted(junc_angles_sorted);
-  float p25 = get_percentile(junc_angles_sorted, 25);
-  float p75 = get_percentile(junc_angles_sorted, 75);
-  float mad = get_median_absolute_deviation(junc_angles_sorted,median);
-
-  JI_stats.push_back(mean);
-  JI_stats.push_back(stderr);
-  JI_stats.push_back(float(junc_angles.size()));
-  JI_stats.push_back(median);
-  JI_stats.push_back(p25);
-  JI_stats.push_back(p75);
-  JI_stats.push_back(mad);
-
-  return JI_stats;
-
+  csv_out.close();
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
