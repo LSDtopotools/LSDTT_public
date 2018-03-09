@@ -191,13 +191,12 @@ int main (int nNumberofArgs,char *argv[])
 		// get the drainage density of the catchment
 		DD = Basin.get_DrainageDensity();
 
-		// test the junction angles just for fun
-		int threshold_SO = 1;
-		vector<float> junction_angle_stats = ChanNetwork.calculate_junction_angle_statistics_upstream_of_junction(junction_number, FlowInfo, threshold_SO);
-
-
 		//write to file
-		OutputStream << junction_number << "," << DD << "," << deg(junction_angle_stats[0]) << "," << deg(junction_angle_stats[1]) << "," << deg(junction_angle_stats[3]) << "," << deg(junction_angle_stats[4]) << "," << deg(junction_angle_stats[5]) << "," << deg(junction_angle_stats[6]) << endl;
+		OutputStream << junction_number << "," << DD << endl;
 
 	}
+	// test the junction angles just for fun
+	string junction_angle_csv = path_name+DEM_name+"junc_angles.csv";
+	ChanNetwork.print_junction_angles_from_basin_list(junction_list, FlowInfo, junction_angle_csv);
+	cout << "Done!" << endl;
 }
