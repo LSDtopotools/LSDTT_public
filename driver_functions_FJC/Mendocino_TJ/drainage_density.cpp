@@ -196,7 +196,7 @@ int main (int nNumberofArgs,char *argv[])
 
 	}
 	// test the junction angles just for fun
-	string junction_angle_csv = path_name+DEM_name+"junc_angles.csv";
+	string junction_angle_csv = path_name+DEM_name+"_junc_angles.csv";
 	ChanNetwork.print_junction_angles_from_basin_list(junction_list, FlowInfo, junction_angle_csv);
 	cout << "Done!" << endl;
 }

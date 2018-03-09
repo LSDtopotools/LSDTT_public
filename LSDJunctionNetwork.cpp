@@ -1298,14 +1298,15 @@ void LSDJunctionNetwork::print_junction_angles_from_basin_list(vector<int> Junct
   // loop through each basin and get the stats
   for (int i = 0; i < int(JunctionList.size()); i++)
   {
+    int outlet_jn = JunctionList[i];
     // get all the upslope junctions
-    vector<int> upslope_junctions = get_upslope_junctions(JunctionList[i]);
+    vector<int> upslope_junctions = get_upslope_junctions(outlet_jn);
     cout << "There are " << upslope_junctions.size() << " upslope junctions that I'll analyse" << endl;
     vector<float> JI_stats;
 
     // now get all the angles
     map<int, vector<float> >::iterator iter;
-    map<int, vector<float> > JuncInfo = calculate_junction_angles(JunctionList,FlowInfo);
+    map<int, vector<float> > JuncInfo = calculate_junction_angles(upslope_junctions,FlowInfo);
 
     // now get statistics from these
     vector<float> junc_angles;
@@ -1332,7 +1333,7 @@ void LSDJunctionNetwork::print_junction_angles_from_basin_list(vector<int> Junct
     matlab_float_reorder(junc_angles, index_map, junc_angles_sorted);
 
     // get the max stream order for this basin = the SO of the junction you're at
-    int max_order = get_StreamOrder_of_Junction(JunctionList[i]);
+    int max_order = get_StreamOrder_of_Junction(outlet_jn);
 
     // declare a map to store the results.  This has the format:
     // vector<float> medians, vector<float> 25th_percentiles, vector<float> 75th_percentiles, vector<float> median_absolute_deviation
@@ -1340,13 +1341,15 @@ void LSDJunctionNetwork::print_junction_angles_from_basin_list(vector<int> Junct
     // of the 3rd stream order would be junction_angle_stats[0][2]
     //map<vector<float>, vector<float>, vector<float>, vector<float>> junction_angle_stats;
 
-    for (int i = 0; i < max_order; i++)
+    for (int SO = 2; SO < max_order; SO++)
     {
+      cout << "This stream order is: " << SO << endl;
       vector<float> these_angles;
       // find the angles of this stream order
       for (int j = 0; j < int(stream_order_sorted.size()); j++)
       {
-        if (stream_order_sorted[j] == (i+1))
+        cout << "This SO is: " << stream_order_sorted[j] << endl;
+        if (stream_order_sorted[j] == (SO))
         {
           these_angles.push_back(junc_angles_sorted[j]);
         }
@@ -1363,8 +1366,9 @@ void LSDJunctionNetwork::print_junction_angles_from_basin_list(vector<int> Junct
       // junction_angle_stats[1].push_back(p25);
       // junction_angle_stats[2].push_back(p75);
       // junction_angle_stats[3].push_back(mad);
+      cout << "Got the stats, writing to csv" << endl;
 
-      csv_out << JunctionList[i] << "," << i << "," << deg(median) << "," << deg(p25) << "," << deg(p75) << "," << deg(mad) << endl;
+      csv_out << outlet_jn << "," << SO << "," << deg(median) << "," << deg(p25) << "," << deg(p75) << "," << deg(mad) << endl;
     }
   }
   csv_out.close();
