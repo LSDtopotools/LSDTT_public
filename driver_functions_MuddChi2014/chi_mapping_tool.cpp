@@ -1786,7 +1786,7 @@ int main (int nNumberofArgs,char *argv[])
     skip = this_int_map["force_skip_knickpoint_analysis"];
 
 
-    chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,this_float_map["force_A0_knickpoint_analysis"],thresh_area_for_chi,Discharge);
+    chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,this_float_map["force_A0_knickpoint_analysis"],thresh_area_for_chi);
 
 
     LSDChiTools ChiTool(FlowInfo);
