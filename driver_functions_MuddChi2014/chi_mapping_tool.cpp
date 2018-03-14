@@ -162,6 +162,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["ksn_knickpoint_analysis"] = false;
   int_default_map["force_skip_knickpoint_analysis"] = 2;
   int_default_map["force_n_iteration_knickpoint_analysis"] = 20;
+  float_default_map["force_A0_knickpoint_analysis"] = 1;
   float_default_map["MZS_threshold"] = 0.5;
   float_default_map["TVD_lambda"] = -1;
   float_default_map["TVD_lambda_bchi"] = 10000; // Really high, the main variations are extracted with TVD M_chi
@@ -1783,6 +1784,11 @@ int main (int nNumberofArgs,char *argv[])
     // Ill optimaize that later - Boris
     n_iterations = this_int_map["force_n_iteration_knickpoint_analysis"];
     skip = this_int_map["force_skip_knickpoint_analysis"];
+
+
+    chi_coordinate = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern,this_float_map["force_A0_knickpoint_analysis"],thresh_area_for_chi,Discharge);
+
+
     LSDChiTools ChiTool(FlowInfo);
     ChiTool.chi_map_automator(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
                           filled_topography, DistanceFromOutlet,
