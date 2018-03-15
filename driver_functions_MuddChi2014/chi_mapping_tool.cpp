@@ -1816,6 +1816,11 @@ int main (int nNumberofArgs,char *argv[])
       else if(this_float_map["m_over_n"] <= 0.7){ TVD_lambda = 300;}
       else if(this_float_map["m_over_n"] <= 0.75){ TVD_lambda = 500;}
       else if(this_float_map["m_over_n"] <= 0.80){ TVD_lambda = 1000;}
+      else if(this_float_map["m_over_n"] <= 0.85){ TVD_lambda = 2000;}
+      else if(this_float_map["m_over_n"] <= 0.90){ TVD_lambda = 5000;}
+      else if(this_float_map["m_over_n"] <= 0.95){ TVD_lambda = 10000;}
+
+
       else{TVD_lambda = 2000;}
     }
     else
