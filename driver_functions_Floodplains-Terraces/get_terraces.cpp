@@ -88,6 +88,10 @@ int main (int nNumberofArgs,char *argv[])
 
 	// set default bool parameters
 	bool_default_map["Filter topography"] = true;
+	bool_default_map["print_stream_order_raster"] = false;
+	bool_default_map["print_junction_index_raster"] = false;
+	bool_default_map["print_junctions_to_csv"] = false;
+	bool_default_map["convert_csv_to_geojson"] = false;
 
 	// set default string parameters
 	string_default_map["coords_csv_file"] = "NULL";
@@ -176,6 +180,33 @@ int main (int nNumberofArgs,char *argv[])
 	// now get the junction network
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
   cout << "\t Got the channel network" << endl;
+
+	if (this_bool_map["print_stream_order_raster"])
+	{
+		LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
+		string SO_raster_name = DATA_DIR+DEM_ID+"_SO";
+		SOArray.write_raster(SO_raster_name,DEM_extension);
+	}
+	if (this_bool_map["print_junction_index_raster"])
+	{
+		LSDIndexRaster JIArray = ChanNetwork.JunctionIndexArray_to_LSDIndexRaster();
+		string JI_raster_name = DATA_DIR+DEM_ID+"_JI";
+		JIArray.write_raster(JI_raster_name,DEM_extension);
+	}
+	// print junctions
+	if( this_bool_map["print_junctions_to_csv"])
+	{
+		cout << "I am writing the junctions to csv." << endl;
+		string channel_csv_name = DATA_DIR+DEM_ID+"_JN.csv";
+		ChanNetwork.print_junctions_to_csv(FlowInfo, channel_csv_name);
+
+		if ( this_bool_map["convert_csv_to_geojson"])
+		{
+			string gjson_name = DATA_DIR+DEM_ID+"_JN.geojson";
+			LSDSpatialCSVReader thiscsv(channel_csv_name);
+			thiscsv.print_data_to_geojson(gjson_name);
+		}
+	}
 
 	// read in the upstream and downstream latitude and longitude coordinates
 	if (this_string_map["coords_csv_file"] != "NULL")
