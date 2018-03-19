@@ -170,7 +170,7 @@ int main (int nNumberofArgs,char *argv[])
 
 	// now get the junction network
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
-  cout << "\t Got the channel network" << endl;
+  	cout << "\t Got the channel network" << endl;
 
 	// reading in the csv file with the lat long points
 	cout << "\t Reading in the csv file" << endl;
