@@ -77,7 +77,7 @@ int main (int nNumberofArgs,char *argv[])
 	int_default_map["Chan area threshold"] = 1000;
 
 	// option to read in list of junctions
-  string_default_map["BaselevelJunctions_file"] = "NULL";
+  string_default_map["BaseLevelJunctions_file"] = "NULL";
 	bool_default_map["parallel"] = false;
 
 	// set default float parameters
