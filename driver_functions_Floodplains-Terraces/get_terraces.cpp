@@ -178,7 +178,7 @@ int main (int nNumberofArgs,char *argv[])
   cout << "\t Got the channel network" << endl;
 
 	// read in the upstream and downstream latitude and longitude coordinates
-	if (this_string_map["coords_csv_file"] != "NULL" && this_string_map["BaseLevelJunctions_file"] == "NULL")
+	if (this_string_map["coords_csv_file"] != "NULL")
 	{
 		// reading in the csv file with the lat long points
 		cout << "\t Reading in the csv file" << endl;
@@ -272,7 +272,7 @@ int main (int nNumberofArgs,char *argv[])
 	}
 
 	// read in the list of junctions
-	if (this_string_map["BaseLevelJunctions_file"] != "NULL")
+	else if (this_string_map["BaseLevelJunctions_file"] != "NULL")
 	{
 		cout << "I found a baselevel junctions file. I'm going to run the terrace algorithm on each basin." << endl;
 		cout << "If this is not a simple text file that only contains itegers there will be problems!" << endl;
