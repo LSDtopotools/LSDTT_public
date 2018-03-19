@@ -15,6 +15,7 @@
 #include <vector>
 #include <fstream>
 #include <ctime>
+#include <omp.h>
 #include "../LSDRaster.hpp"
 #include "../LSDSwathProfile.hpp"
 #include "../LSDShapeTools.hpp"
@@ -77,6 +78,7 @@ int main (int nNumberofArgs,char *argv[])
 
 	// option to read in list of junctions
   string_default_map["BaselevelJunctions_file"] = "NULL";
+	bool_default_map["parallel"] = false;
 
 	// set default float parameters
 	float_default_map["surface_fitting_window_radius"] = 6;
@@ -301,6 +303,7 @@ int main (int nNumberofArgs,char *argv[])
 		// get the longest channel for each basins
 		vector<int> SourcesList = ChanNetwork.get_basin_sources_from_outlet_vector(JunctionsList, FlowInfo, DistanceFromOutlet);
 
+	  #pragma omp parallel for if(this_bool_map["parallel"] == true)
 		for (int i = 0; i < int(JunctionsList.size()); i++)
 		{
 			// get the channel between the outlet and the upstream junction
@@ -309,6 +312,11 @@ int main (int nNumberofArgs,char *argv[])
 			vector<double> X_coords;
 			vector<double> Y_coords;
 			BaselineChannel.get_coordinates_of_channel_nodes(X_coords, Y_coords);
+
+			// get the junction number as a string for labelling outputs
+			string jn_name = itoa(JunctionsList[i]);
+			string uscore = "_";
+			jn_name = uscore+jn_name;
 
 			// get the point data from the BaselineChannel
 			PointData BaselinePoints = get_point_data_from_coordinates(X_coords, Y_coords);
@@ -350,14 +358,14 @@ int main (int nNumberofArgs,char *argv[])
 			LSDTerrace Terraces(SwathRaster, Slope_new, ChanNetwork, FlowInfo, relief_threshold_from_qq, slope_threshold_from_qq, this_int_map["Min patch size"], this_int_map["Threshold_SO"], this_int_map["Min terrace height"]);
 			LSDIndexRaster ConnectedComponents = Terraces.print_ConnectedComponents_to_Raster();
 			string CC_ext = "_terrace_IDs";
-			ConnectedComponents.write_raster((DATA_DIR+DEM_ID+CC_ext), DEM_extension);
+			ConnectedComponents.write_raster((DATA_DIR+DEM_ID+CC_ext+jn_name), DEM_extension);
 
 			cout << "\t Testing connected components" << endl;
 			vector <vector <float> > CC_vector = TestSwath.get_connected_components_along_swath(ConnectedComponents, RasterTemplate, this_int_map["NormaliseToBaseline"]);
 
 			// print the terrace information to a csv
-			string csv_fname = "_terrace_info.csv";
-			string full_csv_name = DATA_DIR+DEM_ID+csv_fname;
+			string csv_fname = "_terrace_info";
+			string full_csv_name = DATA_DIR+DEM_ID+jn_name+".csv";
 			cout << "The full csv filename is: " << full_csv_name << endl;
 			Terraces.print_TerraceInfo_to_csv(full_csv_name, RasterTemplate, SwathRaster, FlowInfo, TestSwath);
 			//(string csv_filename, LSDRaster& ElevationRaster, LSDRaster& ChannelRelief,  LSDFlowInfo& FlowInfo, LSDSwath& Swath)
@@ -365,7 +373,7 @@ int main (int nNumberofArgs,char *argv[])
 			// write raster of terrace elevations
 			LSDRaster ChannelRelief = Terraces.get_Terraces_RasterValues(SwathRaster);
 			string relief_ext = "_terrace_relief_final";
-			ChannelRelief.write_raster((DATA_DIR+DEM_ID+relief_ext), DEM_extension);
+			ChannelRelief.write_raster((DATA_DIR+DEM_ID+relief_ext+jn_name), DEM_extension);
 		}
 	}
 
