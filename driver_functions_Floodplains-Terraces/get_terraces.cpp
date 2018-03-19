@@ -179,7 +179,7 @@ int main (int nNumberofArgs,char *argv[])
 
 	// now get the junction network
 	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
-  cout << "\t Got the channel network" << endl;
+  	cout << "\t Got the channel network" << endl;
 
 	if (this_bool_map["print_stream_order_raster"])
 	{
