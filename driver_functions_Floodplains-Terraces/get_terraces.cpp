@@ -370,7 +370,7 @@ int main (int nNumberofArgs,char *argv[])
 			BaselineChannel.write_channel_to_csv(DATA_DIR, DEM_ID, FlowInfo);
 			vector<float> X_coords;
 			vector<float> Y_coords;
-			BaselineChannel.get_coordinates_of_channel_nodes(X_coords, Y_coords);
+			BaselineChannel.get_coordinates_of_channel_nodes(X_coords, Y_coords, FlowInfo);
 
 			// get the point data from the BaselineChannel
 			PointData BaselinePoints = get_point_data_from_coordinates(X_coords, Y_coords);
