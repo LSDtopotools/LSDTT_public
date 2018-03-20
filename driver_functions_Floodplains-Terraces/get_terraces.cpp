@@ -249,7 +249,7 @@ int main (int nNumberofArgs,char *argv[])
 			cout << "Got channel nodes: " << snapped_nodes[0] << ", " << snapped_nodes[1] << endl;
 			LSDIndexChannel BaselineChannel(snapped_nodes[0], snapped_nodes[1], FlowInfo);
 			// print for bug checking
-			BaselineChannel.write_channel_to_csv(DATA_DIR, DEM_ID, FlowInfo, DistanceFromOutlet);
+			BaselineChannel.write_channel_to_csv(DATA_DIR, DEM_ID, FlowInfo, DistanceFromOutlet, RasterTemplate);
 			vector<float> X_coords;
 			vector<float> Y_coords;
 			BaselineChannel.get_coordinates_of_channel_nodes(X_coords, Y_coords, FlowInfo);
@@ -367,7 +367,7 @@ int main (int nNumberofArgs,char *argv[])
 			jn_name = uscore+jn_name;
 
 			// print channel for bug checking
-			BaselineChannel.write_channel_to_csv(DATA_DIR, DEM_ID+jn_name, FlowInfo, DistanceFromOutlet);
+			BaselineChannel.write_channel_to_csv(DATA_DIR, DEM_ID+jn_name, FlowInfo, DistanceFromOutlet, RasterTemplate);
 			vector<float> X_coords;
 			vector<float> Y_coords;
 			BaselineChannel.get_coordinates_of_channel_nodes(X_coords, Y_coords, FlowInfo);
