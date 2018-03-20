@@ -562,27 +562,32 @@ void LSDIndexChannel::append_index_channel_to_index_raster(LSDIndexRaster& old_r
 // FJC 17/02/17
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDIndexChannel::get_coordinates_of_channel_nodes(vector<double>& X_coordinates, vector<double>& Y_coordinates)
+void LSDIndexChannel::get_coordinates_of_channel_nodes(vector<float>& X_coordinates, vector<float>& Y_coordinates, LSDFlowInfo& FlowInfo)
 {
-  vector<double> X_coords_temp;
-  vector<double> Y_coords_temp;
+	// these are for extracting element-wise data from the channel profiles.
+	int this_node, row,col;
+	double latitude,longitude;
+	float x_loc,y_loc;
+	LSDCoordinateConverterLLandUTM Converter;
 
-  int n_nodes_in_channel = int(NodeSequence.size());
+	// find the number of nodes
+	int n_nodes = int(NodeSequence.size());
 
-  for (int i = 0; i < n_nodes_in_channel; ++i)
-  {
-    // get the x and y coords for this row and col
-    int row = RowSequence[i];
-    int col = ColSequence[i];
-    double x = XMinimum + float(col)*DataResolution + 0.5 * DataResolution;
-    double y = YMinimum + float(NRows - row)*DataResolution - 0.5*DataResolution;
-    X_coords_temp.push_back(x);
-    Y_coords_temp.push_back(y);
-  }
+	if (n_nodes <= 0)
+	{
+		cout << "Cannot print since you have not calculated channel properties yet." << endl;
+	}
 
-  // copy to vectors
-  X_coordinates = X_coords_temp;
-  Y_coordinates = Y_coords_temp;
+	for (int n = 0; n<n_nodes; n++)
+	{
+		this_node = NodeSequence[n];
+		FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+		FlowInfo.get_lat_and_long_locations(row, col, latitude, longitude, Converter);
+		FlowInfo.get_x_and_y_locations(row, col, x_loc, y_loc);
+
+		X_coordinates.push_back(x_loc);
+		Y_coordinates.push_back(y_loc);
+	}
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
