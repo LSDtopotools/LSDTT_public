@@ -236,10 +236,11 @@ class LSDIndexChannel
   /// @detail Similar to above but mimics code in other objects to ensure you get the same channels
   /// @param path the path name
   /// @param filename prefix for the csv file
-  /// @param FlowIno
+  /// @param FlowInfo
+  /// @param FlowDistance 
   /// @author SMM
   /// @date 20/03/18
-  void write_channel_to_csv(string path, string filename, LSDFlowInfo& FlowInfo);
+  void write_channel_to_csv(string path, string filename, LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance);
 
   protected:
 

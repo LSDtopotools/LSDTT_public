@@ -249,7 +249,7 @@ int main (int nNumberofArgs,char *argv[])
 			cout << "Got channel nodes: " << snapped_nodes[0] << ", " << snapped_nodes[1] << endl;
 			LSDIndexChannel BaselineChannel(snapped_nodes[0], snapped_nodes[1], FlowInfo);
 			// print for bug checking
-			BaselineChannel.write_channel_to_csv(DATA_DIR, DEM_ID+"_chan_check.csv");
+			BaselineChannel.write_channel_to_csv(DATA_DIR, DEM_ID, FlowInfo, DistanceFromOutlet);
 			vector<float> X_coords;
 			vector<float> Y_coords;
 			BaselineChannel.get_coordinates_of_channel_nodes(X_coords, Y_coords, FlowInfo);
@@ -367,7 +367,7 @@ int main (int nNumberofArgs,char *argv[])
 			jn_name = uscore+jn_name;
 
 			// print channel for bug checking
-			BaselineChannel.write_channel_to_csv(DATA_DIR, DEM_ID, FlowInfo);
+			BaselineChannel.write_channel_to_csv(DATA_DIR, DEM_ID+jn_name, FlowInfo, DistanceFromOutlet);
 			vector<float> X_coords;
 			vector<float> Y_coords;
 			BaselineChannel.get_coordinates_of_channel_nodes(X_coords, Y_coords, FlowInfo);
@@ -426,7 +426,7 @@ int main (int nNumberofArgs,char *argv[])
 
 			//print the information about the baseline channel to csv
 			string channel_csv_fname = "_baseline_channel_info.csv";
-			cout << "The channel csv filename is" << DATA_DIR+DEM_ID+channel_csv_fname << endl;
+			cout << "The channel csv filename is" << DATA_DIR+DEM_ID+jn_name+channel_csv_fname << endl;
 			TestSwath.print_baseline_to_csv(RasterTemplate, DATA_DIR+DEM_ID+jn_name+channel_csv_fname, FlowInfo, DistanceFromOutlet);
 
 			// write raster of terrace elevations
