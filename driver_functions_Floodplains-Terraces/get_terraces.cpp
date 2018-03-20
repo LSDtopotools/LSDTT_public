@@ -419,7 +419,7 @@ int main (int nNumberofArgs,char *argv[])
 
 			// print the terrace information to a csv
 			string csv_fname = "_terrace_info";
-			string full_csv_name = DATA_DIR+DEM_ID+jn_name+".csv";
+			string full_csv_name = DATA_DIR+DEM_ID+jn_name+csv_fname+".csv";
 			cout << "The full csv filename is: " << full_csv_name << endl;
 			Terraces.print_TerraceInfo_to_csv(full_csv_name, RasterTemplate, SwathRaster, FlowInfo, TestSwath);
 			//(string csv_filename, LSDRaster& ElevationRaster, LSDRast
