@@ -74,13 +74,13 @@ class LSDSwath
   ///  you can tell it what widths you want and returns a series of swaths at the mean and then percentiles you want
   /// @param Raster The raster from which you extract data
   /// @param desired_percentiles A float vector that contains the percentiles of the data you want to calculate for your output profiles
-  /// @param BinWidth The width of each bin 
+  /// @param BinWidth The width of each bin
   /// @param mid_points A vector of the mid points, in terms of distance along, of the bins. This is overwritten during computation.
   /// @param mean_profile A vector with the mean profile values. This is overwritten during computation.
   /// @param sd_profile A vector with the standard deviation values. This is overwritten during computation.
-  /// @param output_percentile_profiles A vec vector where each vector is the profile at the precentile determined in the desired_percentiles vector. 
+  /// @param output_percentile_profiles A vec vector where each vector is the profile at the precentile determined in the desired_percentiles vector.
   ///    This is overwritten during computation.
-  /// @param NormaliseToBaseline 0 if you want the raw data, 1 if you want the data normalised to the value at the baseline. 
+  /// @param NormaliseToBaseline 0 if you want the raw data, 1 if you want the data normalised to the value at the baseline.
   /// @author DTM
   /// @date 01/01/2015
   void get_transverse_swath_profile(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth,
@@ -91,15 +91,15 @@ class LSDSwath
   ///  you can tell it what widths you want and returns a series of swaths at the mean and then percentiles you want
   /// @param Raster The raster from which you extract data
   /// @param desired_percentiles A float vector that contains the percentiles of the data you want to calculate for your output profiles
-  /// @param BinWidth The width of each bin 
+  /// @param BinWidth The width of each bin
   /// @param mid_points A vector of the mid points, in terms of distance along, of the bins. This is overwritten during computation.
   /// @param mean_profile A vector with the mean profile values. This is overwritten during computation.
   /// @param sd_profile A vector with the standard deviation values. This is overwritten during computation.
-  /// @param output_percentile_profiles A vec vector where each vector is the profile at the precentile determined in the desired_percentiles vector. 
+  /// @param output_percentile_profiles A vec vector where each vector is the profile at the precentile determined in the desired_percentiles vector.
   ///    This is overwritten during computation.
-  /// @param NormaliseToBaseline 0 if you want the raw data, 1 if you want the data normalised to the value at the baseline. 
+  /// @param NormaliseToBaseline 0 if you want the raw data, 1 if you want the data normalised to the value at the baseline.
   ///  In general 1 is used to see the value along the baseline relative to that baseline so good for looking at things like
-  ///   terraces along a river. 
+  ///   terraces along a river.
   /// @author DTM
   /// @date 01/01/2015
   void get_longitudinal_swath_profile(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth,
@@ -182,41 +182,41 @@ class LSDSwath
   // write profiles to file
   void write_transverse_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix, int NormaliseToBaseline);
   void write_longitudinal_profile_to_file(LSDRaster& Raster, vector<float> desired_percentiles, float BinWidth, string prefix, int NormaliseToBaseline);
-  
+
   ///@brief This prints the baseline to a csv file
   ///@param ElevationRaster the raster
   ///@param csv_filename The name of the file out
   ///@author FJC
   ///@date 12/10/17
-  void print_baseline_to_csv(LSDRaster& ElevationRaster, string csv_filename);
-  
-  
+  void print_baseline_to_csv(LSDRaster& ElevationRaster, string csv_filename, LSDFlowInfo& FlowInfo, LSDRaster& DistanceFromOutlet);
+
+
   /// @brief This finds locations of points along a baseline
   /// @param A vector of distances along the baseline
   /// @author SMM
   /// @date 16/02/2018
   void get_locations_of_points_along_baseline(vector<float> distance_along_baseline);
-  
+
   /// @brief This prints the DistanceToBaselineArray to a raster
-  /// @param Raster a raster to which the values will be printed to its geometry 
+  /// @param Raster a raster to which the values will be printed to its geometry
   /// @author SMM
   /// @date 16/02/2018
   LSDRaster get_raster_DistanceToBaselineArray(LSDRaster& Raster);
-  
+
   /// @brief This prints the DistanceAlongBaselineArray to a raster
-  /// @param Raster a raster to which the values will be printed to its geometry 
+  /// @param Raster a raster to which the values will be printed to its geometry
   /// @author SMM
   /// @date 16/02/2018
   LSDRaster get_raster_DistanceAlongBaselineArray(LSDRaster& Raster);
-  
+
   /// @brief This prints the BaselineValueArray to a raster
-  /// @param Raster a raster to which the values will be printed to its geometry 
+  /// @param Raster a raster to which the values will be printed to its geometry
   /// @author SMM
   /// @date 16/02/2018
   LSDRaster get_raster_BaselineValueArray(LSDRaster& Raster);
-  
-  
-    
+
+
+
   // get functions
   // these get data elements
   int get_NPtsInProfile() const {return NPtsInProfile;}

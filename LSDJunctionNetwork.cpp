@@ -1702,11 +1702,12 @@ vector<int> LSDJunctionNetwork::get_basin_sources_from_outlet_vector(vector<int>
   for (int i = 0; i < int(basin_junctions.size()); i++)
   {
     int basin_junction = basin_junctions[i];
-    if (basin_junction >= int(JunctionVector.size()))
-    {
-      cout << "LSDJunctionNetwork::generate_longest_index_channel_in_basin junction not in list" << endl;
-      exit(EXIT_FAILURE);
-    }
+    cout << "This junction is: " << basin_junction << endl;
+    // if (basin_junction >= int(JunctionVector.size()))
+    // {
+    //   cout << "LSDJunctionNetwork::generate_longest_index_channel_in_basin junction not in list" << endl;
+    //   exit(EXIT_FAILURE);
+    // }
     // first get the number of junctions upslope of the junction
     vector<int> us_junctions = get_upslope_junctions(basin_junction);
 
