@@ -376,7 +376,7 @@ int main (int nNumberofArgs,char *argv[])
 			cout << "\n\t Getting raster from swath" << endl;
 			LSDRaster SwathRaster = TestSwath.get_raster_from_swath_profile(RasterTemplate, this_int_map["NormaliseToBaseline"]);
 			string swath_ext = "_swath_raster";
-			SwathRaster.write_raster((DATA_DIR+DEM_ID+swath_ext), DEM_extension);
+			SwathRaster.write_raster((DATA_DIR+DEM_ID+jn_name+swath_ext), DEM_extension);
 
 			// get the slope
 			cout << "\t Getting the slope" << endl;
