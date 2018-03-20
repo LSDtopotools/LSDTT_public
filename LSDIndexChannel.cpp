@@ -653,7 +653,7 @@ void LSDIndexChannel::write_channel_to_csv(string path, string filename)
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function writes an index channel to a CSV file
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-void LSDIndexChannel::write_channel_to_csv(string path, string filename, LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance)
+void LSDIndexChannel::write_channel_to_csv(string path, string filename, LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance, LSDRaster& Elevation)
 {
 
   // these are for extracting element-wise data from the channel profiles.
@@ -669,7 +669,7 @@ void LSDIndexChannel::write_channel_to_csv(string path, string filename, LSDFlow
   ofstream chan_out;
   string chan_fname = path+filename+"_index_chan.csv";
   chan_out.open(chan_fname.c_str());
-  chan_out << "id,row,column,flow_distance,latitude,longitude,x,y" << endl;
+  chan_out << "id,row,column,flow_distance,elevation,latitude,longitude,x,y" << endl;
   if (n_nodes <= 0)
   {
     cout << "Cannot print since you have not calculated channel properties yet." << endl;
@@ -685,7 +685,8 @@ void LSDIndexChannel::write_channel_to_csv(string path, string filename, LSDFlow
     chan_out << this_node << ","
                    << row << ","
                    << col << ","
-									 << FlowDistance.get_data_element(row,col) << ",";
+									 << FlowDistance.get_data_element(row,col) << ","
+									 << Elevation.get_data_element(row,col) << ",";
     chan_out.precision(9);
     chan_out << latitude << ","
              << longitude << ",";

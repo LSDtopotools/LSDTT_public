@@ -237,10 +237,10 @@ class LSDIndexChannel
   /// @param path the path name
   /// @param filename prefix for the csv file
   /// @param FlowInfo
-  /// @param FlowDistance 
+  /// @param FlowDistance
   /// @author SMM
   /// @date 20/03/18
-  void write_channel_to_csv(string path, string filename, LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance);
+  void write_channel_to_csv(string path, string filename, LSDFlowInfo& FlowInfo, LSDRaster& FlowDistance, LSDRaster& Elevation);
 
   protected:
 
