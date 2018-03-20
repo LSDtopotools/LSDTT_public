@@ -163,52 +163,64 @@ int main (int nNumberofArgs,char *argv[])
 	// calcualte the distance from outlet
 	LSDRaster DistanceFromOutlet = FlowInfo.distance_from_outlet();
 
+	// calculate the flow accumulation
+	cout << "\t Calculating flow accumulation (in pixels)..." << endl;
+	LSDIndexRaster FlowAcc = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
+	int threshold_contributing_pixels = this_int_map["Chan area threshold"];
+
 	// some error checking
-	vector<int> sources;
-	if (CHeads_file == "NULL")
-	{
-		cout << "I can't find your channel heads file so I'm going to use an area threshold to extract the sources" << endl;
-		LSDIndexRaster ContributingPixels = FlowInfo.write_NContributingNodes_to_LSDIndexRaster();
-		sources = FlowInfo.get_sources_index_threshold(ContributingPixels, this_int_map["Chan_area_threshold"]);
-	}
+	// load the sources
+  vector<int> sources;
+  if (CHeads_file == "NULL" || CHeads_file == "Null" || CHeads_file == "null")
+  {
+    cout << endl << endl << endl << "==================================" << endl;
+    cout << "The channel head file is null. " << endl;
+    cout << "Getting sources from a threshold of "<< threshold_contributing_pixels << " pixels." <<endl;
+    sources = FlowInfo.get_sources_index_threshold(FlowAcc, threshold_contributing_pixels);
+
+    cout << "The number of sources is: " << sources.size() << endl;
+  }
 	else
-	{
-		cout << "\t Loading the sources" << endl;
-		// load the sources
-		vector<int> sources = FlowInfo.Ingest_Channel_Heads((DATA_DIR+CHeads_file), "csv", 2);
-		cout << "\t Got sources!" << endl;
-	}
+  {
+    cout << "Loading channel heads from the file: " << DATA_DIR+CHeads_file << endl;
+    sources = FlowInfo.Ingest_Channel_Heads((DATA_DIR+CHeads_file), "csv",2);
+    cout << "\t Got sources!" << endl;
+  }
 
-	// now get the junction network
-	LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
-  	cout << "\t Got the channel network" << endl;
+  // now get the junction network
+  LSDJunctionNetwork ChanNetwork(sources, FlowInfo);
 
-	if (this_bool_map["print_stream_order_raster"])
-	{
-		LSDIndexRaster SOArray = ChanNetwork.StreamOrderArray_to_LSDIndexRaster();
-		string SO_raster_name = DATA_DIR+DEM_ID+"_SO";
-		SOArray.write_raster(SO_raster_name,DEM_extension);
-	}
-	if (this_bool_map["print_junction_index_raster"])
-	{
-		LSDIndexRaster JIArray = ChanNetwork.JunctionIndexArray_to_LSDIndexRaster();
-		string JI_raster_name = DATA_DIR+DEM_ID+"_JI";
-		JIArray.write_raster(JI_raster_name,DEM_extension);
-	}
-	// print junctions
-	if( this_bool_map["print_junctions_to_csv"])
-	{
-		cout << "I am writing the junctions to csv." << endl;
-		string channel_csv_name = DATA_DIR+DEM_ID+"_JN.csv";
-		ChanNetwork.print_junctions_to_csv(FlowInfo, channel_csv_name);
+  // Print channels and junctions if you want them.
+  if( this_bool_map["print_channels_to_csv"])
+  {
+    cout << "I am going to print the channel network." << endl;
+    string channel_csv_name = DATA_DIR+DEM_ID+"_CN";
+    ChanNetwork.PrintChannelNetworkToCSV(FlowInfo, channel_csv_name);
 
-		if ( this_bool_map["convert_csv_to_geojson"])
-		{
-			string gjson_name = DATA_DIR+DEM_ID+"_JN.geojson";
-			LSDSpatialCSVReader thiscsv(channel_csv_name);
-			thiscsv.print_data_to_geojson(gjson_name);
-		}
-	}
+    // convert to geojson if that is what the user wants
+    // It is read more easily by GIS software but has bigger file size
+    if ( this_bool_map["convert_csv_to_geojson"])
+    {
+      string gjson_name = DATA_DIR+DEM_ID+"_CN.geojson";
+      LSDSpatialCSVReader thiscsv(DATA_DIR+DEM_ID+"_CN.csv");
+      thiscsv.print_data_to_geojson(gjson_name);
+    }
+  }
+
+  // print junctions
+  if( this_bool_map["print_junctions_to_csv"])
+  {
+    cout << "I am writing the junctions to csv." << endl;
+    string channel_csv_name = DATA_DIR+DEM_ID+"_JN.csv";
+    ChanNetwork.print_junctions_to_csv(FlowInfo, channel_csv_name);
+
+    if ( this_bool_map["convert_csv_to_geojson"])
+    {
+      string gjson_name = DATA_DIR+DEM_ID+"_JN.geojson";
+      LSDSpatialCSVReader thiscsv(channel_csv_name);
+      thiscsv.print_data_to_geojson(gjson_name);
+    }
+  }
 
 	// read in the upstream and downstream latitude and longitude coordinates
 	if (this_string_map["coords_csv_file"] != "NULL")
@@ -410,7 +422,7 @@ int main (int nNumberofArgs,char *argv[])
 			// print the information about the baseline channel to csv
 			string channel_csv_fname = "_baseline_channel_info.csv";
 			cout << "The channel csv filename is" << DATA_DIR+DEM_ID+channel_csv_fname << endl;
-			TestSwath.print_baseline_to_csv(RasterTemplate, DATA_DIR+DEM_ID+jn_name+channel_csv_fname, FlowInfo, DistanceFromOutlet);er& ChannelRelief,  LSDFlowInfo& FlowInfo, LSDSwath& Swath)
+			TestSwath.print_baseline_to_csv(RasterTemplate, DATA_DIR+DEM_ID+jn_name+channel_csv_fname, FlowInfo, DistanceFromOutlet);
 
 			// write raster of terrace elevations
 			LSDRaster ChannelRelief = Terraces.get_Terraces_RasterValues(SwathRaster);
