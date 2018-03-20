@@ -248,9 +248,11 @@ int main (int nNumberofArgs,char *argv[])
 			// get the channel between these points
 			cout << "Got channel nodes: " << snapped_nodes[0] << ", " << snapped_nodes[1] << endl;
 			LSDIndexChannel BaselineChannel(snapped_nodes[0], snapped_nodes[1], FlowInfo);
-			vector<double> X_coords;
-			vector<double> Y_coords;
-			BaselineChannel.get_coordinates_of_channel_nodes(X_coords, Y_coords);
+			// print for bug checking
+			BaselineChannel.write_channel_to_csv(DATA_DIR, DEM_ID+"_chan_check.csv");
+			vector<float> X_coords;
+			vector<float> Y_coords;
+			BaselineChannel.get_coordinates_of_channel_nodes(X_coords, Y_coords, FlowInfo);
 
 			// get the point data from the BaselineChannel
 			PointData BaselinePoints = get_point_data_from_coordinates(X_coords, Y_coords);
@@ -358,14 +360,17 @@ int main (int nNumberofArgs,char *argv[])
 			// get the channel between the outlet and the upstream junction
 			int downstream_node = ChanNetwork.get_Node_of_Junction(JunctionsList[i]);
 			LSDIndexChannel BaselineChannel(SourcesList[i], downstream_node, FlowInfo);
-			vector<double> X_coords;
-			vector<double> Y_coords;
-			BaselineChannel.get_coordinates_of_channel_nodes(X_coords, Y_coords);
 
 			// get the junction number as a string for labelling outputs
 			string jn_name = itoa(JunctionsList[i]);
 			string uscore = "_";
 			jn_name = uscore+jn_name;
+
+			// print channel for bug checking
+			BaselineChannel.write_channel_to_csv(DATA_DIR, DEM_ID, FlowInfo);
+			vector<float> X_coords;
+			vector<float> Y_coords;
+			BaselineChannel.get_coordinates_of_channel_nodes(X_coords, Y_coords);
 
 			// get the point data from the BaselineChannel
 			PointData BaselinePoints = get_point_data_from_coordinates(X_coords, Y_coords);
@@ -419,7 +424,7 @@ int main (int nNumberofArgs,char *argv[])
 			Terraces.print_TerraceInfo_to_csv(full_csv_name, RasterTemplate, SwathRaster, FlowInfo, TestSwath);
 			//(string csv_filename, LSDRaster& ElevationRaster, LSDRast
 
-			// print the information about the baseline channel to csv
+			//print the information about the baseline channel to csv
 			string channel_csv_fname = "_baseline_channel_info.csv";
 			cout << "The channel csv filename is" << DATA_DIR+DEM_ID+channel_csv_fname << endl;
 			TestSwath.print_baseline_to_csv(RasterTemplate, DATA_DIR+DEM_ID+jn_name+channel_csv_fname, FlowInfo, DistanceFromOutlet);
