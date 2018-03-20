@@ -2549,6 +2549,32 @@ void LSDBasin::clean_perimeter(LSDFlowInfo& flowpy)
 
 }
 
+
+ void LSDBasin::write_elevation_csv(string output_name, LSDFlowInfo& flowpy, LSDRaster& filled)
+ {
+
+  
+    // open the file
+  ofstream perim_out;
+  perim_out.open(output_name.c_str());
+  perim_out << "x,y,z" << endl;
+  perim_out.precision(5);
+  for(vector<int>::iterator Santa = BasinNodes.begin();Santa!=BasinNodes.end();Santa++)
+  {
+    float this_x,this_y,this_z;
+    int this_node;
+    this_node = *Santa;
+    flowpy.get_x_and_y_from_current_node(this_node,this_x,this_y);
+    this_z = filled.get_value_of_point(this_x,this_y);
+    perim_out << this_x << ","<< this_y << ","<< this_z << endl;
+  }
+  perim_out.close();
+
+
+
+
+ }
+
 // //-------------------------------------------------------------------------//
 // // perimeter cleaning Fiona
 // // 30/01/18

@@ -128,6 +128,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["spawn_csv_file_from_basin_spawn"] = false;
   bool_default_map["spawn_parameter_files_from_basin_spawn"] = false;
   bool_default_map["remove_edge_basins"] = false;
+  bool_default_map["spawn_elevation_to_csv"] = false;
 
   // simple plotting options
   bool_default_map["write hillshade"] = false;
@@ -409,6 +410,14 @@ int main (int nNumberofArgs,char *argv[])
       string DEMnewname = OUT_DIR+OUT_ID+"_Spawned_"+itoa(samp);
       cout << "Writing a new basin to: " << DEMnewname << endl;
       BasinRaster.write_raster(DEMnewname,"bil");
+
+      if(this_bool_map["spawn_elevation_to_csv"])
+      {
+        string csv_elevation = OUT_DIR+OUT_ID+"_elevation_"+itoa(samp)+".csv";
+        cout << "Writing a new basin to: " << csv_elevation << endl;
+        thisBasin.write_elevation_csv(csv_elevation,FlowInfo,FillRaster);
+
+      }
       
       
       if(this_bool_map["spawn_csv_file_from_basin_spawn"])
