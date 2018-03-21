@@ -93,6 +93,8 @@ int main (int nNumberofArgs,char *argv[])
 	bool_default_map["print_junctions_to_csv"] = false;
 	bool_default_map["convert_csv_to_geojson"] = false;
 	bool_default_map["snap_mchi_to_baseline"] = false;
+	bool_default_map["print_channels_to_csv"] = false;
+	bool_default_map["print_stream_order_raster"] = false;
 
 	// set default string parameters
 	string_default_map["coords_csv_file"] = "NULL";

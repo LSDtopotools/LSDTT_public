@@ -558,6 +558,8 @@ Array2D<int> LSDTerrace::get_ChannelNodeArray(LSDSwath& Swath, Array2D<float> Ba
 	vector<float> BaselineValue = Swath.get_BaselineValue();
 	vector<float> BaselineDistance = Swath.get_DistanceAlongBaseline();
 
+	cout << "N baseline rows: " << BaselineRows.size() << " N baseline cols: " << BaselineCols.size() << " baseline distance vector length: " << BaselineDistance.size() << endl;
+
 	// loop through the terrace nodes, and find their position on the channel.
 	for (int i = 0; i < NRows; i++)
 	{
@@ -567,12 +569,14 @@ Array2D<int> LSDTerrace::get_ChannelNodeArray(LSDSwath& Swath, Array2D<float> Ba
 			if (ConnectedComponents_Array[i][j] != NoDataValue)
 			{
 				float this_dist = BaselineDistanceArray[i][j];
+				//cout << this_dist << endl;
 				vector<float>::iterator find_it;
 				find_it = find(BaselineDistance.begin(), BaselineDistance.end(), this_dist);
 				if (find_it != BaselineDistance.end())
 				{
 					int idx = distance(BaselineDistance.begin(), find_it);
 					int BaselineNode = FlowInfo.retrieve_node_from_row_and_column(BaselineRows[idx], BaselineCols[idx]);
+					//cout << "baseline node: " << BaselineNode << endl;
 					BaselineNodes[i][j] = BaselineNode;
 				}
 			}

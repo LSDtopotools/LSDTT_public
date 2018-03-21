@@ -1251,7 +1251,7 @@ Array2D<float> LSDSwath::get_BaselineDist_ConnectedComponents(LSDIndexRaster& Co
       if (CC_array[row][col] != NoDataValue)
       {
         // get the baseline value
-        BaselineDistance[row][col] = BaselineValueArray[row][col];
+        BaselineDistance[row][col] = DistanceAlongBaselineArray[row][col];
       }
     }
   }
