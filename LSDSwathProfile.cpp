@@ -122,11 +122,11 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
   float cumulative_distance = 0;
   DistanceAlongBaseline_temp[0]=cumulative_distance;
   // Retrieve baseline value at each point - sample closest pixel in template raster
-  float X_coordinate_shifted_origin = ProfilePoints.X[0] - RasterTemplate.get_XMinimum();
-  float Y_coordinate_shifted_origin = ProfilePoints.Y[0] - RasterTemplate.get_YMinimum();
+  float X_coordinate_shifted_origin = ProfilePoints.X[0] - RasterTemplate.get_XMinimum() - 0.5*Resolution;
+  float Y_coordinate_shifted_origin = ProfilePoints.Y[0] - RasterTemplate.get_YMinimum() + 0.5*Resolution;
   // Get row and column of point
   int col_point = int(round(X_coordinate_shifted_origin/Resolution));
-  int row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/Resolution));
+  int row_point = (NRows) - int(round(Y_coordinate_shifted_origin/Resolution));
   if(col_point < 0 || col_point > NCols-1 || row_point < 0 || row_point > NRows) BaselineValue_temp[0]=NoDataValue;
   else
   {
@@ -144,12 +144,12 @@ void LSDSwath::create(PointData& ProfilePoints, LSDRaster& RasterTemplate, float
     DistanceAlongBaseline_temp[i]=cumulative_distance;
 
     // Retrieve baseline value at each point - sample closest pixel in template raster
-    X_coordinate_shifted_origin = ProfilePoints.X[i] - RasterTemplate.get_XMinimum();
-    Y_coordinate_shifted_origin = ProfilePoints.Y[i] - RasterTemplate.get_YMinimum();
+    X_coordinate_shifted_origin = ProfilePoints.X[i] - RasterTemplate.get_XMinimum() - 0.5*Resolution;
+    Y_coordinate_shifted_origin = ProfilePoints.Y[i] - RasterTemplate.get_YMinimum() + 0.5*Resolution;
 
     // Get row and column of point
     col_point = int(round(X_coordinate_shifted_origin/Resolution));
-    row_point = (NRows - 1) - int(round(Y_coordinate_shifted_origin/Resolution));
+    row_point = (NRows) - int(round(Y_coordinate_shifted_origin/Resolution));
     if(col_point < 0 || col_point > NCols-1 || row_point < 0 || row_point > NRows) BaselineValue_temp[i]=NoDataValue;
     else
     {

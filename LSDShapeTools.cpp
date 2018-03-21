@@ -663,6 +663,19 @@ PointData get_point_data_from_coordinates(vector<float>& X_coordinates, vector<f
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Get point data from vectors of X and Y coordinates
+// FJC 17/02/17
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+PointData get_point_data_from_coordinates(vector<double>& X_coordinates, vector<double>& Y_coordinates)
+{
+  PointData Points;
+  Points.X = X_coordinates;
+  Points.Y = Y_coordinates;
+
+  return Points;
+}
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // The create function, sets up some vectors for holding
 // ellipses and datums
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

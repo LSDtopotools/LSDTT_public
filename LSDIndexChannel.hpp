@@ -215,7 +215,7 @@ class LSDIndexChannel
   /// @param Y_coordinates vector to write Y_coords
   /// @author FJC
   /// @date 17/02/17
-  void get_coordinates_of_channel_nodes(vector<float>& X_coordinates, vector<float>& Y_coordinates, LSDFlowInfo& FlowInfo);
+  void get_coordinates_of_channel_nodes(vector<double>& X_coordinates, vector<double>& Y_coordinates, LSDFlowInfo& FlowInfo);
 
   /// @brief Function to get vectors with the X and Y coordinates of nodes in the channel
   /// @param X_coordinates vector to write X_coords

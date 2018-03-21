@@ -252,8 +252,8 @@ int main (int nNumberofArgs,char *argv[])
 			LSDIndexChannel BaselineChannel(snapped_nodes[0], snapped_nodes[1], FlowInfo);
 			// print for bug checking
 			BaselineChannel.write_channel_to_csv(DATA_DIR, DEM_ID, FlowInfo, DistanceFromOutlet, RasterTemplate);
-			vector<float> X_coords;
-			vector<float> Y_coords;
+			vector<double> X_coords;
+			vector<double> Y_coords;
 			BaselineChannel.get_coordinates_of_channel_nodes(X_coords, Y_coords, FlowInfo);
 
 			// get the point data from the BaselineChannel
@@ -370,8 +370,8 @@ int main (int nNumberofArgs,char *argv[])
 
 			// print channel for bug checking
 			BaselineChannel.write_channel_to_csv(DATA_DIR, DEM_ID+jn_name, FlowInfo, DistanceFromOutlet, RasterTemplate);
-			vector<float> X_coords;
-			vector<float> Y_coords;
+			vector<double> X_coords;
+			vector<double> Y_coords;
 			BaselineChannel.get_coordinates_of_channel_nodes(X_coords, Y_coords, FlowInfo);
 
 			// get the point data from the BaselineChannel

@@ -562,12 +562,12 @@ void LSDIndexChannel::append_index_channel_to_index_raster(LSDIndexRaster& old_r
 // FJC 17/02/17
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-void LSDIndexChannel::get_coordinates_of_channel_nodes(vector<float>& X_coordinates, vector<float>& Y_coordinates, LSDFlowInfo& FlowInfo)
+void LSDIndexChannel::get_coordinates_of_channel_nodes(vector<double>& X_coordinates, vector<double>& Y_coordinates, LSDFlowInfo& FlowInfo)
 {
 	// these are for extracting element-wise data from the channel profiles.
 	int this_node, row,col;
 	double latitude,longitude;
-	float x_loc,y_loc;
+	double x_loc,y_loc;
 	LSDCoordinateConverterLLandUTM Converter;
 
 	// find the number of nodes
@@ -659,7 +659,7 @@ void LSDIndexChannel::write_channel_to_csv(string path, string filename, LSDFlow
   // these are for extracting element-wise data from the channel profiles.
   int this_node, row,col;
   double latitude,longitude;
-  float x_loc,y_loc;
+  double x_loc,y_loc;
   LSDCoordinateConverterLLandUTM Converter;
 
   // find the number of nodes
@@ -690,7 +690,7 @@ void LSDIndexChannel::write_channel_to_csv(string path, string filename, LSDFlow
     chan_out.precision(9);
     chan_out << latitude << ","
              << longitude << ",";
-    chan_out.precision(5);
+    chan_out.precision(9);
     chan_out << x_loc << "," << y_loc << endl;
   }
 }
