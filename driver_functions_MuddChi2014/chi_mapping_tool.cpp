@@ -205,6 +205,9 @@ int main (int nNumberofArgs,char *argv[])
 
   // and this is the residuals test
   bool_default_map["movern_residuals_test"] = false;
+  
+  // This is the disorder test
+  bool_default_map["movern_disorder_test"] = false; 
 
   bool_default_map["MCMC_movern_analysis"] = false;
   float_default_map["MCMC_movern_minimum"] = 0.05;
@@ -1079,7 +1082,9 @@ int main (int nNumberofArgs,char *argv[])
         || this_bool_map["print_basin_raster"]
         || this_bool_map["MCMC_movern_analysis"]
         || this_bool_map["print_chi_data_maps"]
-        || this_bool_map["ksn_knickpoint_analysis"])
+        || this_bool_map["ksn_knickpoint_analysis"]
+        || this_bool_map["movern_residuals_test"]
+        || this_bool_map["movenn_disorder_test"])
   {
     cout << "I am getting the source and outlet nodes for the overlapping channels" << endl;
     cout << "The n_nodes to visit are: " << n_nodes_to_visit << endl;
@@ -1408,11 +1413,26 @@ int main (int nNumberofArgs,char *argv[])
   }
 
 
+  if (this_bool_map["movern_disorder_test"])
+  {
+    cout << "I am going to explore m/n using the disorder method" << endl;
+    // Lets make a new chi tool: this won't be segmented since we only
+    // need it for m/n
+    LSDChiTools ChiTool_disorder(FlowInfo);
+    ChiTool_disorder.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
+                            filled_topography, DistanceFromOutlet,
+                            DrainageArea, chi_coordinate);
 
+    // Calculate and print results
+    string residuals_name = OUT_DIR+OUT_ID+"_disorder_movernstats";
+    //ChiTool_residuals.calculate_goodness_of_fit_collinearity_fxn_movern_using_median_residuals(FlowInfo, JunctionNetwork,
+    //                  this_float_map["start_movern"], this_float_map["delta_movern"],
+    //                  this_int_map["n_movern"],
+    //                  this_bool_map["only_use_mainstem_as_reference"],
+    //                  residuals_name);                  
+    cout << "I haven't written this routine yet!" << endl;
 
-
-
-
+  }
 
 
   if (this_bool_map["movern_residuals_test"])
