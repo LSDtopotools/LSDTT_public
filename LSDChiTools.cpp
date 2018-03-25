@@ -5105,7 +5105,7 @@ float LSDChiTools::test_collinearity_by_basin_disorder(LSDFlowInfo& FlowInfo,
 {
   float disorder_stat = -9999;
   
-  cout << "Testing the segment collinearity for basin key " << baselevel_key << endl;
+  //cout << "Testing the segment collinearity for basin key " << baselevel_key << endl;
   // get some information about the number of basins
   int n_basins = int(ordered_baselevel_nodes.size());
   if (baselevel_key >= n_basins)
@@ -5151,7 +5151,7 @@ float LSDChiTools::test_collinearity_by_basin_disorder(LSDFlowInfo& FlowInfo,
   // sort the vectors
   matlab_float_sort(this_basin_elevation, elev_sorted, index_map);
   matlab_float_reorder(this_basin_chi, index_map, chi_sorted);
-
+  
   // now calculate disorder
   float chi_max = 0;
   float chi_min = 10000;
@@ -5161,7 +5161,7 @@ float LSDChiTools::test_collinearity_by_basin_disorder(LSDFlowInfo& FlowInfo,
   int n_nodes_this_basin = int(chi_sorted.size());
   for(int i = 0; i<n_nodes_this_basin-1; i++)
   {
-    this_delta_chi = chi_sorted[i+1]-chi_sorted[i];
+    this_delta_chi = fabs(chi_sorted[i+1]-chi_sorted[i]);
     sum_delta_chi+=this_delta_chi;
     if(chi_sorted[i] > chi_max)
     {
@@ -6193,7 +6193,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
   {
     // get the m over n value
     movern.push_back( float(i)*delta_movern+start_movern );
-    cout << "i: " << i << " and m over n: " << movern[i] << " ";
+    //cout << "i: " << i << " and m over n: " << movern[i] << " ";
 
     // open the outfile
     string filename_fullstats = file_prefix+"_"+dtoa(movern[i])+"_fullstats_disorder.csv";
@@ -6213,11 +6213,13 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
     // now run the collinearity test
     float disorder_stat;
 
+    //for(int basin_key = 0; basin_key<1; basin_key++)
     for(int basin_key = 0; basin_key<n_basins; basin_key++)
     {
       //disorder_stat = test_all_segment_collinearity_by_basin_using_disorder(FlowInfo, basin_key);
-      cout << "basin: " << basin_key << endl;
-      //" and disorder_stat is: " << disorder_stat << endl;
+      
+      disorder_stat = test_collinearity_by_basin_disorder(FlowInfo, basin_key);
+      cout << "basin: " << basin_key << " and m/n is: " << movern[i] << " and disorder stat is: " << disorder_stat << endl;
     }
   }
 }
