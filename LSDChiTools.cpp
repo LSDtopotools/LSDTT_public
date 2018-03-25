@@ -5093,6 +5093,79 @@ float LSDChiTools::test_all_segment_collinearity_by_basin_using_points(LSDFlowIn
 
 
 
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function test the collinearity of all segments compared to a reference
+// segment
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDChiTools::test_collinearity_by_basin_disorder(LSDFlowInfo& FlowInfo,
+                                                 int baselevel_key)
+{
+  float disorder_stat = -9999;
+  
+  cout << "Testing the segment collinearity for basin key " << baselevel_key << endl;
+  // get some information about the number of basins
+  int n_basins = int(ordered_baselevel_nodes.size());
+  if (baselevel_key >= n_basins)
+  {
+    cout << "Fatal error LSDChiTools::test_all_segment_collinearity_by_basin_disorder" <<endl;
+    cout << "You have selected a basin that doesn't exist!" << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  
+  // Drop out if there is only a single channel in the basin
+  //if (n_channels == 1)
+  //{
+  //  cout << "This basin only has one channel." << endl;
+  //  return 1.0;
+  //}
+
+
+  // This is a brute force way to get the complete chi data map
+  
+  vector<float> this_basin_chi;
+  vector<float> this_basin_elevation;
+  int n_nodes = int(node_sequence.size());
+  int this_node;
+  for (int n = 0; n< n_nodes; n++)
+  {
+    this_node = node_sequence[n];
+
+    if (baselevel_keys_map[this_node] == baselevel_key)
+    {
+
+      this_basin_chi.push_back(chi_data_map[this_node]);
+      this_basin_elevation.push_back(elev_data_map[this_node]);
+    }
+  }
+
+
+
+  //cout << "Let me tell you all about the MLE values " << endl;
+  // for debugging
+  bool print_results = false;
+  if(print_results)
+  {
+    cout << "I need to code this up." << endl;
+  }
+
+  return disorder_stat;
+
+}
+
+
+
+
+
+
+
+
+
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function test the collinearity of all segments compared to a reference
 // segment
@@ -5800,11 +5873,6 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
 
 
 
-
-
-
-
-
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function test the collinearity of all segments compared to a reference
 // segment
@@ -6051,7 +6119,72 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_points
 
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This functions test the goodness of fit for the m/n ratio using the 
+// disorder method propsoed by Hergarten et al 2016
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disorder(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JN,
+                        float start_movern, float delta_movern, int n_movern,
+                        string file_prefix)
+{
+  cout << "I am now entering the disorder loop." << endl;
+  
 
+  string filename_bstats = file_prefix+"_basinstats_disorder.csv";
+  //ofstream stats_by_basin_out;
+  //stats_by_basin_out.open(filename_bstats.c_str());
+
+  int n_basins = int(ordered_baselevel_nodes.size());
+  
+  // some parameters to be stored in vectors
+  cout << "LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disorder" << endl;
+  cout << "I am defaulting to A_0 = 1." << endl;
+  vector<int> outlet_jns;
+  vector<float> movern;
+  float A_0 = 1;  
+  
+
+  // get the outlet junction of each basin key
+  for (int basin_key = 0; basin_key < n_basins; basin_key++)
+  {
+    int outlet_node = ordered_baselevel_nodes[basin_key];
+    int outlet_jn = JN.get_Junction_of_Node(outlet_node, FlowInfo);
+    outlet_jns.push_back(outlet_jn);
+  }
+
+  cout << endl << endl << "==========================" << endl;
+  for(int i = 0; i< n_movern; i++)
+  {
+    // get the m over n value
+    movern.push_back( float(i)*delta_movern+start_movern );
+    cout << "i: " << i << " and m over n: " << movern[i] << " ";
+
+    // open the outfile
+    string filename_fullstats = file_prefix+"_"+dtoa(movern[i])+"_fullstats_disorder.csv";
+    //ofstream movern_stats_out;
+    //movern_stats_out.open(filename_fullstats.c_str());
+
+    // calculate chi
+    float area_threshold = 0;
+
+    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern[i], A_0,
+                                 area_threshold);
+    update_chi_data_map(FlowInfo, this_chi);
+
+    // these are the vectors that will hold the information about the disorder by basin
+    vector<float> tot_MLE_vec;
+
+    // now run the collinearity test
+    float disorder_stat;
+
+    for(int basin_key = 0; basin_key<n_basins; basin_key++)
+    {
+      //disorder_stat = test_all_segment_collinearity_by_basin_using_disorder(FlowInfo, basin_key);
+      cout << "basin: " << basin_key << endl;
+      //" and disorder_stat is: " << disorder_stat << endl;
+    }
+  }
+}
 
 
 

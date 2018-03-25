@@ -440,10 +440,13 @@ class LSDChiTools
                                         vector<float>& MLE_values, vector<float>& RMSE_values,
                                         float sigma, vector<float> chi_distances_to_test);
 
-
-
-
-
+    /// @brief This computes a the disorder metric of Hergarten et al 2016 by basin
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param basin_key The key into the basin you want to test all collinearity of.
+    /// @author SMM
+    /// @date 24/03/2018
+    float test_collinearity_by_basin_disorder(LSDFlowInfo& FlowInfo, 
+                                        int basin_key);
 
     /// @brief This wraps the collinearity tester, looping through different m over n
     ///  values and calculating goodness of fit statistics.
@@ -593,7 +596,19 @@ class LSDChiTools
 
 
 
-
+    /// @brief This wraps the disorder collinearity tester, looping through different m over n
+    ///  values and calculating disorder statistics.
+    /// @detail Uses the disorder metric of Hergarten et al ESURF 2016
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param start_movern the starting m/n ratio
+    /// @param delta_movern the change in m/n
+    /// @param n_novern the number of m/n values to use
+    /// @param The file prefix for the data files
+    /// @author SMM
+    /// @date 24/03/2018
+    void calculate_goodness_of_fit_collinearity_fxn_movern_using_disorder(LSDFlowInfo& FlowInfo,
+                        LSDJunctionNetwork& JN, float start_movern, float delta_movern, int n_movern,
+                        string file_prefix);
 
 
 
