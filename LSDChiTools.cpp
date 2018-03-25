@@ -5141,8 +5141,44 @@ float LSDChiTools::test_collinearity_by_basin_disorder(LSDFlowInfo& FlowInfo,
       this_basin_elevation.push_back(elev_data_map[this_node]);
     }
   }
+  
+  // now sort these vectors
+    // initiate the sorted vectors
+  vector<float> chi_sorted;
+  vector<float> elev_sorted;
+  vector<size_t> index_map;
 
+  // sort the vectors
+  matlab_float_sort(this_basin_elevation, elev_sorted, index_map);
+  matlab_float_reorder(this_basin_chi, index_map, chi_sorted);
 
+  // now calculate disorder
+  float chi_max = 0;
+  float chi_min = 10000;
+  float this_delta_chi = 0;
+  float sum_delta_chi = 0;
+  
+  int n_nodes_this_basin = int(chi_sorted.size());
+  for(int i = 0; i<n_nodes_this_basin-1; i++)
+  {
+    this_delta_chi = chi_sorted[i+1]-chi_sorted[i];
+    sum_delta_chi+=this_delta_chi;
+    if(chi_sorted[i] > chi_max)
+    {
+      chi_max = chi_sorted[i];
+    }
+    if(chi_sorted[i] < chi_min)
+    {
+      chi_min = chi_sorted[i];
+    }
+  }
+  if(chi_sorted[n_nodes_this_basin-1] > chi_max)
+  {
+    chi_max = chi_sorted[n_nodes_this_basin-1];
+  }
+  float chi_range = chi_max-chi_min;
+  
+  disorder_stat = (sum_delta_chi - chi_range)/chi_range;
 
   //cout << "Let me tell you all about the MLE values " << endl;
   // for debugging
