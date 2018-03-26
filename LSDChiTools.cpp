@@ -6164,11 +6164,6 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
                         string file_prefix)
 {
   cout << "I am now entering the disorder loop." << endl;
-  
-
-  string filename_bstats = file_prefix+"_basinstats_disorder.csv";
-  //ofstream stats_by_basin_out;
-  //stats_by_basin_out.open(filename_bstats.c_str());
 
   int n_basins = int(ordered_baselevel_nodes.size());
   
@@ -6179,6 +6174,8 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
   vector<float> movern;
   float A_0 = 1;  
   
+  vector< vector<float> > disorder_vecvec;
+  
 
   // get the outlet junction of each basin key
   for (int basin_key = 0; basin_key < n_basins; basin_key++)
@@ -6188,12 +6185,14 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
     outlet_jns.push_back(outlet_jn);
   }
 
-  cout << endl << endl << "==========================" << endl;
+  vector<float> emptyvec;
   for(int i = 0; i< n_movern; i++)
   {
     // get the m over n value
     movern.push_back( float(i)*delta_movern+start_movern );
     //cout << "i: " << i << " and m over n: " << movern[i] << " ";
+
+    vector<float> these_disorders;
 
     // open the outfile
     string filename_fullstats = file_prefix+"_"+dtoa(movern[i])+"_fullstats_disorder.csv";
@@ -6220,8 +6219,37 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
       
       disorder_stat = test_collinearity_by_basin_disorder(FlowInfo, basin_key);
       cout << "basin: " << basin_key << " and m/n is: " << movern[i] << " and disorder stat is: " << disorder_stat << endl;
+      these_disorders.push_back(disorder_stat);
     }
+    disorder_vecvec.push_back(these_disorders);
   }
+  
+
+  // open the file that contains the basin stats
+  string filename_bstats = file_prefix+"_disorder_basinstats.csv";
+  ofstream stats_by_basin_out;
+  stats_by_basin_out.open(filename_bstats.c_str());
+
+  stats_by_basin_out << "basin_key,outlet_jn";
+  stats_by_basin_out.precision(4);
+  for(int i = 0; i< n_movern; i++)
+  {
+    stats_by_basin_out << ",m_over_n = "<<movern[i];
+  }
+  stats_by_basin_out << endl;
+  stats_by_basin_out.precision(9);
+  for(int basin_key = 0; basin_key<n_basins; basin_key++)
+  {
+    stats_by_basin_out << basin_key << "," << outlet_jns[basin_key];
+    for(int i = 0; i< n_movern; i++)
+    {
+      stats_by_basin_out << "," <<disorder_vecvec[i][basin_key];
+    }
+    stats_by_basin_out << endl;
+  }
+
+  stats_by_basin_out.close();  
+  
 }
 
 
