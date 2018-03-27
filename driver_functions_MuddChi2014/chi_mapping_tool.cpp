@@ -1084,7 +1084,7 @@ int main (int nNumberofArgs,char *argv[])
         || this_bool_map["print_chi_data_maps"]
         || this_bool_map["ksn_knickpoint_analysis"]
         || this_bool_map["movern_residuals_test"]
-        || this_bool_map["movenn_disorder_test"])
+        || this_bool_map["movern_disorder_test"])
   {
     cout << "I am getting the source and outlet nodes for the overlapping channels" << endl;
     cout << "The n_nodes to visit are: " << n_nodes_to_visit << endl;
