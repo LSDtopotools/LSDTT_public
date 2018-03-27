@@ -1075,6 +1075,7 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["print_segmented_M_chi_map_to_csv"]
         || this_bool_map["print_basic_M_chi_map_to_csv"]
         || this_bool_map["calculate_MLE_collinearity"]
+        || this_bool_map["calculate_MLE_collinearity_with_points_MC"]
         || this_bool_map["print_profiles_fxn_movern_csv"]
         || this_bool_map["print_slope_area_data"]
         || this_bool_map["print_source_keys"]
@@ -1084,7 +1085,9 @@ int main (int nNumberofArgs,char *argv[])
         || this_bool_map["print_chi_data_maps"]
         || this_bool_map["ksn_knickpoint_analysis"]
         || this_bool_map["movern_residuals_test"]
-        || this_bool_map["movern_disorder_test"])
+        || this_bool_map["movern_disorder_test"]
+        || this_bool_map["estimate_best_fit_movern"]
+        )
   {
     cout << "I am getting the source and outlet nodes for the overlapping channels" << endl;
     cout << "The n_nodes to visit are: " << n_nodes_to_visit << endl;
