@@ -8380,4 +8380,52 @@ vector<int> LSDJunctionNetwork::get_channel_pixels_along_line(vector<int> line_r
   return outlet_nodes;
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function takes a vector of basin outlet junctions and writes data about
+// the longest channel in each to a csv.
+// FJC 06/05/18
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDJunctionNetwork::write_river_profiles_to_csv(vector<int>& BasinJunctions, LSDFlowInfo& FlowInfo, LSDRaster& DistanceFromOutlet, LSDRaster& Elevation, string csv_filename)
+{
+  int this_node, row, col;
+  double latitude, longitude, x_loc, y_loc;
+  LSDCoordinateConverterLLandUTM Converter;
+
+  // open the csv
+  ofstream chan_out;
+  chan_out.open(csv_filename.c_str());
+
+  chan_out << "id,node,row,column,distance_from_outlet,elevation,latitude,longitude,x,y" << endl;
+
+  // for each basin, get the profile
+  for (int i = 0; i < int(BasinJunctions.size()); i++)
+  {
+    // get the longest channel in this basin
+    LSDIndexChannel ThisChannel = generate_longest_index_channel_in_basin(BasinJunctions[i],FlowInfo,DistanceFromOutlet);
+    vector<int> NodeSequence = ThisChannel.get_NodeSequence();
+    for (int n = 0; n < int(NodeSequence.size()); n++)
+    {
+      this_node = NodeSequence[n];
+      FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+      FlowInfo.get_lat_and_long_locations(row, col, latitude, longitude, Converter);
+      FlowInfo.get_x_and_y_locations(row, col, x_loc, y_loc);
+
+      chan_out << BasinJunctions[i] << ","
+               << this_node << ","
+               << row << ","
+               << col << ","
+               << DistanceFromOutlet.get_data_element(row,col) << ","
+               << Elevation.get_data_element(row,col) << ",";
+      chan_out.precision(9);
+      chan_out << latitude << ","
+               << longitude << ",";
+      chan_out.precision(9);
+      chan_out << x_loc << "," << y_loc << endl;
+    }
+  }
+
+  chan_out.close();
+
+}
+
 #endif

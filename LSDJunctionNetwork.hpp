@@ -1789,6 +1789,16 @@ vector<int> GetChannelHeadsChiMethodFromValleys(vector<int> ValleyNodes,
 /// @date 17/04/17
 vector<int> get_channel_pixels_along_line(vector<int> line_rows, vector<int> line_cols, int threshold_SO, LSDFlowInfo& FlowInfo);
 
+/// @brief function to take a vector of basin outlet junctions and write data about the longest channel in each to csv.
+/// @param BasinJunctions vector of basin junctions
+/// @param FlowInfo
+/// @param DistanceFromOutlet
+/// @param Elevation elev raster
+/// @param csv_filename the output csv file name
+/// @author FJC
+/// @date 06/05/18
+void write_river_profiles_to_csv(vector<int>& BasinJunctions, LSDFlowInfo& FlowInfo, LSDRaster& DistanceFromOutlet, LSDRaster& Elevation, string csv_filename);
+
   protected:
 
   ///Number of rows.
