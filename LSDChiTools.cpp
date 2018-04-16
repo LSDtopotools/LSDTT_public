@@ -5195,7 +5195,107 @@ float LSDChiTools::test_collinearity_by_basin_disorder(LSDFlowInfo& FlowInfo,
 
 
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function test the collinearity of all segments compared to a reference
+// segment
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFlowInfo& FlowInfo,
+                                                 int baselevel_key)
+{
+  vector<float> disorder_stat_vec;
+  
+  //cout << "Testing the segment collinearity for basin key " << baselevel_key << endl;
+  // get some information about the number of basins
+  int n_basins = int(ordered_baselevel_nodes.size());
+  if (baselevel_key >= n_basins)
+  {
+    cout << "Fatal error LSDChiTools::test_all_segment_collinearity_by_basin_disorder" <<endl;
+    cout << "You have selected a basin that doesn't exist!" << endl;
+    exit(EXIT_FAILURE);
+  }
 
+  
+  // Drop out if there is only a single channel in the basin
+  //if (n_channels == 1)
+  //{
+  //  cout << "This basin only has one channel." << endl;
+  //  return 1.0;
+  //}
+  
+  
+  // HERE WE NEED TO ADD A COMBINATIONS FUNCTION
+
+
+  // This is a brute force way to get the complete chi data map
+  
+  vector<float> this_basin_chi;
+  vector<float> this_basin_elevation;
+  vector<int> this_basin_source;
+  int n_nodes = int(node_sequence.size());
+  int this_node;
+  for (int n = 0; n< n_nodes; n++)
+  {
+    this_node = node_sequence[n];
+
+    if (baselevel_keys_map[this_node] == baselevel_key)
+    {
+
+      this_basin_chi.push_back(chi_data_map[this_node]);
+      this_basin_elevation.push_back(elev_data_map[this_node]);
+      this_basin_source.push_back(source_keys_map[this_node]);
+    }
+  }
+  
+  // now sort these vectors
+    // initiate the sorted vectors
+  vector<float> chi_sorted;
+  vector<float> elev_sorted;
+  vector<size_t> index_map;
+
+  // sort the vectors
+  matlab_float_sort(this_basin_elevation, elev_sorted, index_map);
+  matlab_float_reorder(this_basin_chi, index_map, chi_sorted);
+  
+  // now calculate disorder
+  float chi_max = 0;
+  float chi_min = 10000;
+  float this_delta_chi = 0;
+  float sum_delta_chi = 0;
+  
+  int n_nodes_this_basin = int(chi_sorted.size());
+  for(int i = 0; i<n_nodes_this_basin-1; i++)
+  {
+    this_delta_chi = fabs(chi_sorted[i+1]-chi_sorted[i]);
+    sum_delta_chi+=this_delta_chi;
+    if(chi_sorted[i] > chi_max)
+    {
+      chi_max = chi_sorted[i];
+    }
+    if(chi_sorted[i] < chi_min)
+    {
+      chi_min = chi_sorted[i];
+    }
+  }
+  if(chi_sorted[n_nodes_this_basin-1] > chi_max)
+  {
+    chi_max = chi_sorted[n_nodes_this_basin-1];
+  }
+  float chi_range = chi_max-chi_min;
+  
+  float disorder_stat = (sum_delta_chi - chi_range)/chi_range;
+
+  disorder_stat_vec.push_back(disorder_stat);
+  //cout << "Let me tell you all about the MLE values " << endl;
+  // for debugging
+  bool print_results = false;
+  if(print_results)
+  {
+    cout << "I need to code this up." << endl;
+  }
+
+  return disorder_stat_vec;
+
+}
 
 
 

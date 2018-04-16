@@ -448,6 +448,17 @@ class LSDChiTools
     float test_collinearity_by_basin_disorder(LSDFlowInfo& FlowInfo, 
                                         int basin_key);
 
+
+    /// @brief This computes a the disorder metric of Hergarten et al 2016 by basin.
+    /// It uses a permutation algorithm to find all combinations of tributary channels
+    /// and computes the disorder statistic of each of these
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param basin_key The key into the basin you want to test all collinearity of.
+    /// @author SMM
+    /// @date 13/04/2018
+    vector<float> test_collinearity_by_basin_disorder_with_uncert(LSDFlowInfo& FlowInfo, 
+                                        int basin_key);
+
     /// @brief This wraps the collinearity tester, looping through different m over n
     ///  values and calculating goodness of fit statistics.
     /// @detail This gets the median residual. The best fit will have a median residual
