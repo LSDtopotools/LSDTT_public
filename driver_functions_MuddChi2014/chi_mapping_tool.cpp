@@ -208,6 +208,7 @@ int main (int nNumberofArgs,char *argv[])
   
   // This is the disorder test
   bool_default_map["movern_disorder_test"] = false; 
+  bool_default_map["disorder_use_uncert"] = false; 
 
   bool_default_map["MCMC_movern_analysis"] = false;
   float_default_map["MCMC_movern_minimum"] = 0.05;
@@ -1425,12 +1426,14 @@ int main (int nNumberofArgs,char *argv[])
     ChiTool_disorder.chi_map_automator_chi_only(FlowInfo, source_nodes, outlet_nodes, baselevel_node_of_each_basin,
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_coordinate);
-
-    // Calculate and print results
+                            
     string residuals_name = OUT_DIR+OUT_ID+"_disorder_movernstats";
+
+    // Calculate and print results with uncertainty
+    cout << "I am calculating the disorder stat." << endl;
     ChiTool_disorder.calculate_goodness_of_fit_collinearity_fxn_movern_using_disorder(FlowInfo,  JunctionNetwork,
                       this_float_map["start_movern"], this_float_map["delta_movern"],
-                      this_int_map["n_movern"], residuals_name);
+                      this_int_map["n_movern"], residuals_name, this_bool_map["disorder_use_uncert"]);
   }
 
 

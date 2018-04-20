@@ -615,11 +615,12 @@ class LSDChiTools
     /// @param delta_movern the change in m/n
     /// @param n_novern the number of m/n values to use
     /// @param The file prefix for the data files
+    /// @param use_uncert a bool that if true triggers the uncertainty algorithms
     /// @author SMM
     /// @date 24/03/2018
     void calculate_goodness_of_fit_collinearity_fxn_movern_using_disorder(LSDFlowInfo& FlowInfo,
                         LSDJunctionNetwork& JN, float start_movern, float delta_movern, int n_movern,
-                        string file_prefix);
+                        string file_prefix, bool use_uncert);
 
 
 
