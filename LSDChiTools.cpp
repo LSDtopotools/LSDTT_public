@@ -5204,6 +5204,9 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
 {
   vector<float> disorder_stat_vec;
   
+  //override the baselevel key
+  baselevel_key = 2;
+  
   //cout << "Testing the segment collinearity for basin key " << baselevel_key << endl;
   // get some information about the number of basins
   int n_basins = int(ordered_baselevel_nodes.size());
@@ -5214,25 +5217,38 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
     exit(EXIT_FAILURE);
   }
 
-  
-  // Drop out if there is only a single channel in the basin
-  //if (n_channels == 1)
-  //{
-  //  cout << "This basin only has one channel." << endl;
-  //  return 1.0;
-  //}
-  
-  
-  // HERE WE NEED TO ADD A COMBINATIONS FUNCTION
 
+  // get the combinations
+  cout << "Let me get some combinations for you." << endl;
+  int n_elements = 6;
+  int n_in_each_combo = 3;
+  bool zero_indexed = false;
+  vector< vector<int> > combo_vecvec = combinations(n_elements, n_in_each_combo, zero_indexed);
+  
+  for (int i = 0; i< int(combo_vecvec.size()); i++)
+  {
+    for (int j = 0; j< int(combo_vecvec[i].size()); j++)
+    {
+      cout << combo_vecvec[i][j] << " ";
+    }
+    cout << endl;
+  }
+  int n_combinations = int(combo_vecvec.size());
 
   // This is a brute force way to get the complete chi data map
+  
+  // this map will hold references to the sources. There are two of them
+  // because the first has the sources as the keys and the second has the
+  // combination index as the keys. 
+  map<int,int> sources_are_keys;
+  map<int,int> comboindex_are_keys;
   
   vector<float> this_basin_chi;
   vector<float> this_basin_elevation;
   vector<int> this_basin_source;
   int n_nodes = int(node_sequence.size());
   int this_node;
+  int comboindex = 0;     // this is used to store an index into the combinations
   for (int n = 0; n< n_nodes; n++)
   {
     this_node = node_sequence[n];
@@ -5243,8 +5259,46 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
       this_basin_chi.push_back(chi_data_map[this_node]);
       this_basin_elevation.push_back(elev_data_map[this_node]);
       this_basin_source.push_back(source_keys_map[this_node]);
+      
+      // if the key doesn't exist, add a source key counter
+      if ( sources_are_keys.find( source_keys_map[this_node] ) == sources_are_keys.end() )
+      {
+        sources_are_keys[ source_keys_map[this_node] ] = comboindex;
+        comboindex++;
+      }
     }
   }
+  
+  // now do the second map by inverting the first map
+  for(map<int,int>::iterator iter =sources_are_keys.begin(); iter != sources_are_keys.end(); ++iter)
+  {
+    int k =  iter->first;
+    int v = iter->second;
+    comboindex_are_keys[v] = k;
+  }
+  
+  int n_sources = int(comboindex_are_keys.size());
+  cout << "The number of channels are: " << n_sources << endl;
+  
+  
+  // now you enter the combinations loop
+  int n_data_points = int(this_basin_source.size());
+  cout << "Checking the combinations" << endl;
+  for (int combo = 0; combo<n_combinations; combo++)
+  {
+    vector<int> these_combos = combo_vecvec[combo];
+    vector<int> these_combo_sources; 
+    
+    for (int source_key = 0 ; source_key < int(these_combos.size()); source_key++)
+    {
+      these_combo_sources.push_back( comboindex_are_keys[ these_combos[source_key] ] );
+      cout << these_combos[source_key] <<":" << comboindex_are_keys[ these_combos[source_key] ] << " ";
+    }
+    cout << endl;
+  }
+  
+  
+  
   
   // now sort these vectors
     // initiate the sorted vectors
@@ -6288,8 +6342,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
   
   if (use_uncert)
   {
-    cout << "I am going to test the uncertainty tool!" << endl;
-    
+
     float test_movern = 0.5;
     
     // calculate chi
@@ -6299,6 +6352,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
                                  area_threshold);
                                  
     int this_basin_key = 0;
+    cout << "Testing uncert the basin number is 0" << endl;
     vector<float> disorder_stats = test_collinearity_by_basin_disorder_with_uncert(FlowInfo, this_basin_key);
   }
   else
