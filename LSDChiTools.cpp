@@ -6371,18 +6371,73 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
   
   if (use_uncert)
   {
-
+    // settings for chi
     float test_movern = 0.5;
-    
-    // calculate chi
     float area_threshold = 0;
+    
+    // first initiate the vectors for holding the combination vecs.
+    // the key is the basin number. Each element will hold the m over n value
+    // with the lowest disorder
+    map<int, vector<float> > best_fit_movern_for_basins;
+    map<int, vector<float> > lowest_disorder_for_basins;
 
-    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(test_movern, A_0,
-                                 area_threshold);
-                                 
-    int this_basin_key = 0;
-    cout << "Testing uncert the basin number is 0" << endl;
-    vector<float> disorder_stats = test_collinearity_by_basin_disorder_with_uncert(FlowInfo, this_basin_key);
+    for(int i = 0; i< n_movern; i++)
+    {
+      // get the m over n value
+      float this_movern = float(i)*delta_movern+start_movern;
+      movern.push_back( this_movern );
+      //cout << "i: " << i << " and m over n: " << movern[i] << " ";
+
+      // open the outfile
+      string filename_fullstats = file_prefix+"_"+dtoa(movern[i])+"_fullstats_disorder_uncert.csv";
+
+      // calculate chi
+      float area_threshold = 0;
+  
+      LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern[i], A_0,
+                                   area_threshold);
+      update_chi_data_map(FlowInfo, this_chi);
+      
+      // now loop through basins
+      //for(int basin_key = 0; basin_key<1; basin_key++)
+      for(int basin_key = 0; basin_key<n_basins; basin_key++)
+      {
+        cout << "Testing uncert the basin number is 0" << endl;
+        vector<float> disorder_stats = test_collinearity_by_basin_disorder_with_uncert(FlowInfo, basin_key);
+        
+        // if the basin key is zero, initiate the data maps
+        if (basin_key == 0)
+        {
+          lowest_disorder_for_basins[basin_key] = disorder_stats;
+          
+          int n_combos_this_basin = int(disorder_stats.size());
+          vector<float> best_fit_movern;
+          for(int bf = 0; bf < n_combos_this_basin; bf++)
+          {
+            best_fit_movern.push_back( this_movern );
+          }
+          best_fit_movern_for_basins[basin_key] = best_fit_movern;
+        }
+        else
+        {
+          // loop through all the combos and get the best fit movern
+          vector<float> existing_lowest_disorder = lowest_disorder_for_basins[basin_key];
+          vector<float> existing_best_fit_movern = best_fit_movern_for_basins[basin_key];
+          int n_combos_this_basin = int(disorder_stats.size());
+          
+          for(int bf = 0; bf < n_combos_this_basin; bf++)
+          {
+            if (existing_lowest_disorder[bf] < disorder_stats[bf] )
+            {
+              existing_lowest_disorder[bf] = disorder_stats[bf];
+              existing_best_fit_movern[bf] = this_movern;
+            }
+          }
+          lowest_disorder_for_basins[basin_key] = existing_lowest_disorder;
+          best_fit_movern_for_basins[basin_key] = existing_best_fit_movern;
+        }
+      }  // end basin loop
+    }    // end m/n loop
   }
   else
   {
