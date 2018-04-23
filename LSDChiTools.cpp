@@ -5204,9 +5204,6 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
 {
   vector<float> disorder_stat_vec;
   
-  //override the baselevel key
-  baselevel_key = 17;
-  
   //cout << "Testing the segment collinearity for basin key " << baselevel_key << endl;
   // get some information about the number of basins
   int n_basins = int(ordered_baselevel_nodes.size());
@@ -5278,13 +5275,17 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
     bool zero_indexed = false;
     vector< vector<int> > combo_vecvec = combinations(n_elements, n_in_each_combo, zero_indexed);
     
-    for (int i = 0; i< int(combo_vecvec.size()); i++)
+    bool print_combinations = false;
+    if(print_combinations)
     {
-      for (int j = 0; j< int(combo_vecvec[i].size()); j++)
+      for (int i = 0; i< int(combo_vecvec.size()); i++)
       {
-        cout << combo_vecvec[i][j] << " ";
+        for (int j = 0; j< int(combo_vecvec[i].size()); j++)
+        {
+          cout << combo_vecvec[i][j] << " ";
+        }
+        cout << endl;
       }
-      cout << endl;
     }
     int n_combinations = int(combo_vecvec.size());
   
@@ -5298,14 +5299,14 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
       
       // add the trunk channel source
       these_combo_sources.push_back(comboindex_are_keys[0]); 
-      cout << 0 <<":" << comboindex_are_keys[0] << " ";
+      //cout << 0 <<":" << comboindex_are_keys[0] << " ";
       
       for (int source_key = 0 ; source_key < int(these_combos.size()); source_key++)
       {
         these_combo_sources.push_back( comboindex_are_keys[ these_combos[source_key] ] );
-        cout << these_combos[source_key] <<":" << comboindex_are_keys[ these_combos[source_key] ] << " ";
+        //cout << these_combos[source_key] <<":" << comboindex_are_keys[ these_combos[source_key] ] << " ";
       }
-      cout << endl;
+      //cout << endl;
       
       
       // now we sample and sort these vectors
@@ -5375,6 +5376,7 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
     }
     cout << endl;
   }
+  cout << "I'm returning the disorder stat vector." << endl;
 
   return disorder_stat_vec;
 
@@ -6388,9 +6390,6 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
       movern.push_back( this_movern );
       //cout << "i: " << i << " and m over n: " << movern[i] << " ";
 
-      // open the outfile
-      string filename_fullstats = file_prefix+"_"+dtoa(movern[i])+"_fullstats_disorder_uncert.csv";
-
       // calculate chi
       float area_threshold = 0;
   
@@ -6402,11 +6401,11 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
       //for(int basin_key = 0; basin_key<1; basin_key++)
       for(int basin_key = 0; basin_key<n_basins; basin_key++)
       {
-        cout << "Testing uncert the basin number is 0" << endl;
+        cout << "Testing uncert the basin key is " << basin_key << endl;
         vector<float> disorder_stats = test_collinearity_by_basin_disorder_with_uncert(FlowInfo, basin_key);
         
-        // if the basin key is zero, initiate the data maps
-        if (basin_key == 0)
+        // if this is the first m over n value, then initiate the vectors for this basin key
+        if (i == 0)
         {
           lowest_disorder_for_basins[basin_key] = disorder_stats;
           
@@ -6438,6 +6437,39 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
         }
       }  // end basin loop
     }    // end m/n loop
+    
+
+    // open the outfile
+    string filename_fullstats = file_prefix+"_fullstats_disorder_uncert.csv";
+    ofstream stats_by_basin_out;
+    stats_by_basin_out.open(filename_fullstats.c_str());
+  
+    stats_by_basin_out << "basin_key,N_combinations,minimum,first_quartile,median,third_quartile,maximum,mean,standard_deviation,standard_error,MAD" << endl;
+    stats_by_basin_out.precision(8);
+    for(int basin_key = 0; basin_key<n_basins; basin_key++)
+    {
+      vector<float> these_movern = best_fit_movern_for_basins[basin_key];
+      int n_combinations =  int(these_movern.size());
+      
+      vector<float> these_stats = calculate_descriptive_stats(these_movern);
+      stats_by_basin_out << basin_key << ",";
+      stats_by_basin_out << n_combinations << ",";
+      stats_by_basin_out << these_stats[0] <<",";
+      stats_by_basin_out << these_stats[1] <<",";
+      stats_by_basin_out << these_stats[2] <<",";
+      stats_by_basin_out << these_stats[3] <<",";
+      stats_by_basin_out << these_stats[4] <<",";
+      stats_by_basin_out << these_stats[5] <<",";
+      stats_by_basin_out << these_stats[6] <<",";
+      stats_by_basin_out << these_stats[7] <<",";
+      stats_by_basin_out << these_stats[8] <<",";
+      stats_by_basin_out << these_stats[0] <<endl;
+    }
+    
+    stats_by_basin_out.close();
+
+
+    
   }
   else
   {
