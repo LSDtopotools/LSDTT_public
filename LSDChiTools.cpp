@@ -6372,6 +6372,93 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
   }
   
   
+  // We do the full disorder statistic first
+  cout << "I am calculating the disorder statistic!" << endl;
+  
+  vector<float> emptyvec;
+  for(int i = 0; i< n_movern; i++)
+  {
+    // get the m over n value
+    movern.push_back( float(i)*delta_movern+start_movern );
+    //cout << "i: " << i << " and m over n: " << movern[i] << " ";
+
+    vector<float> these_disorders;
+
+    // open the outfile
+    string filename_fullstats = file_prefix+"_"+dtoa(movern[i])+"_fullstats_disorder.csv";
+    //ofstream movern_stats_out;
+    //movern_stats_out.open(filename_fullstats.c_str());
+
+    // calculate chi
+    float area_threshold = 0;
+
+    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern[i], A_0,
+                                 area_threshold);
+    update_chi_data_map(FlowInfo, this_chi);
+
+    // these are the vectors that will hold the information about the disorder by basin
+    vector<float> tot_MLE_vec;
+
+    // now run the collinearity test
+    float disorder_stat;
+
+    //for(int basin_key = 0; basin_key<1; basin_key++)
+    for(int basin_key = 0; basin_key<n_basins; basin_key++)
+    {
+      //disorder_stat = test_all_segment_collinearity_by_basin_using_disorder(FlowInfo, basin_key);
+      disorder_stat = test_collinearity_by_basin_disorder(FlowInfo, basin_key);
+      cout << "basin: " << basin_key << " and m/n is: " << movern[i] << " and disorder stat is: " << disorder_stat << endl;
+      these_disorders.push_back(disorder_stat);
+    }
+    disorder_vecvec.push_back(these_disorders);
+    
+  }
+  
+  // now we need to loop through the vecvec getting the minimum disorder for each basin
+  map<int,float> best_fit_movern_disorder_map;
+  for(int basin_key = 0; basin_key<n_basins; basin_key++)
+  {
+    vector<float> these_disorders;
+    float min_disorder = 1000000000000; // a big number since the disorder needs to be smaller than this.  
+    best_fit_movern_disorder_map[basin_key] = -9999; 
+    for(int i = 0; i< n_movern; i++)
+    {
+      // check to see if this disorder is a minimum for this basin
+      if (disorder_vecvec[i][basin_key] < min_disorder)
+      {
+        min_disorder = disorder_vecvec[i][basin_key];
+        best_fit_movern_disorder_map[basin_key] = movern[i]; 
+      }
+    }
+  }
+  
+
+  // open the file that contains the basin stats
+  string filename_bstats = file_prefix+"_disorder_basinstats.csv";
+  ofstream stats_by_basin_out;
+  stats_by_basin_out.open(filename_bstats.c_str());
+
+  stats_by_basin_out << "basin_key,outlet_jn";
+  stats_by_basin_out.precision(4);
+  for(int i = 0; i< n_movern; i++)
+  {
+    stats_by_basin_out << ",m_over_n = "<<movern[i];
+  }
+  stats_by_basin_out << endl;
+  stats_by_basin_out.precision(9);
+  for(int basin_key = 0; basin_key<n_basins; basin_key++)
+  {
+    stats_by_basin_out << basin_key << "," << outlet_jns[basin_key];
+    for(int i = 0; i< n_movern; i++)
+    {
+      stats_by_basin_out << "," <<disorder_vecvec[i][basin_key];
+    }
+    stats_by_basin_out << endl;
+  }
+  stats_by_basin_out.close();
+  
+  
+  // Now if the use uncertainty flag is true, calculate the disorder statistics. 
   if (use_uncert)
   {
     // first initiate the vectors for holding the combination vecs.
@@ -6441,7 +6528,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
     ofstream stats_by_basin_out;
     stats_by_basin_out.open(filename_fullstats.c_str());
   
-    stats_by_basin_out << "basin_key,N_combinations,minimum,first_quartile,median,third_quartile,maximum,mean,standard_deviation,standard_error,MAD" << endl;
+    stats_by_basin_out << "basin_key,N_combinations,minimum,first_quartile,median,third_quartile,maximum,mean,standard_deviation,standard_error,MAD, best_fit_for_all_tribs" << endl;
     stats_by_basin_out.precision(8);
     for(int basin_key = 0; basin_key<n_basins; basin_key++)
     {
@@ -6459,87 +6546,12 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
       stats_by_basin_out << these_stats[5] <<",";
       stats_by_basin_out << these_stats[6] <<",";
       stats_by_basin_out << these_stats[7] <<",";
-      stats_by_basin_out << these_stats[8] <<endl;
+      stats_by_basin_out << these_stats[8] <<",";
+      stats_by_basin_out << best_fit_movern_disorder_map[basin_key] << endl;
     }
-    
     stats_by_basin_out.close();
-
-
-    
-  }
-  else
-  {
-    cout << "I am not using the uncertainty tool!" << endl;
-    
-    vector<float> emptyvec;
-    for(int i = 0; i< n_movern; i++)
-    {
-      // get the m over n value
-      movern.push_back( float(i)*delta_movern+start_movern );
-      //cout << "i: " << i << " and m over n: " << movern[i] << " ";
-  
-      vector<float> these_disorders;
-  
-      // open the outfile
-      string filename_fullstats = file_prefix+"_"+dtoa(movern[i])+"_fullstats_disorder.csv";
-      //ofstream movern_stats_out;
-      //movern_stats_out.open(filename_fullstats.c_str());
-  
-      // calculate chi
-      float area_threshold = 0;
-  
-      LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern[i], A_0,
-                                   area_threshold);
-      update_chi_data_map(FlowInfo, this_chi);
-  
-      // these are the vectors that will hold the information about the disorder by basin
-      vector<float> tot_MLE_vec;
-  
-      // now run the collinearity test
-      float disorder_stat;
-  
-      //for(int basin_key = 0; basin_key<1; basin_key++)
-      for(int basin_key = 0; basin_key<n_basins; basin_key++)
-      {
-        //disorder_stat = test_all_segment_collinearity_by_basin_using_disorder(FlowInfo, basin_key);
-        disorder_stat = test_collinearity_by_basin_disorder(FlowInfo, basin_key);
-        cout << "basin: " << basin_key << " and m/n is: " << movern[i] << " and disorder stat is: " << disorder_stat << endl;
-        these_disorders.push_back(disorder_stat);
-      }
-      disorder_vecvec.push_back(these_disorders);
-    }
-    
-  
-    // open the file that contains the basin stats
-    string filename_bstats = file_prefix+"_disorder_basinstats.csv";
-    ofstream stats_by_basin_out;
-    stats_by_basin_out.open(filename_bstats.c_str());
-  
-    stats_by_basin_out << "basin_key,outlet_jn";
-    stats_by_basin_out.precision(4);
-    for(int i = 0; i< n_movern; i++)
-    {
-      stats_by_basin_out << ",m_over_n = "<<movern[i];
-    }
-    stats_by_basin_out << endl;
-    stats_by_basin_out.precision(9);
-    for(int basin_key = 0; basin_key<n_basins; basin_key++)
-    {
-      stats_by_basin_out << basin_key << "," << outlet_jns[basin_key];
-      for(int i = 0; i< n_movern; i++)
-      {
-        stats_by_basin_out << "," <<disorder_vecvec[i][basin_key];
-      }
-      stats_by_basin_out << endl;
-    }
-    stats_by_basin_out.close();  
   }
 }
-
-
-
-
-
 
 
 
