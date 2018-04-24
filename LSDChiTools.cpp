@@ -5255,12 +5255,12 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
   }
   
   int n_sources = int(comboindex_are_keys.size());
-  cout << "The number of channels are: " << n_sources << endl;
-  cout << "The source node is: " << comboindex_are_keys[0] << endl;
+  //cout << "The number of channels are: " << n_sources << endl;
+  //cout << "The source node is: " << comboindex_are_keys[0] << endl;
   
   
   // get the combinations
-  cout << "Let me get some combinations for you." << endl;
+  //cout << "Let me get some combinations for you." << endl;
   int n_elements = n_sources-1;
   int n_in_each_combo = 3;
   
@@ -5290,8 +5290,8 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
     int n_combinations = int(combo_vecvec.size());
   
     // now you enter the combinations loop
-    int n_data_points = int(this_basin_source.size());
-    cout << "Checking the combinations" << endl;
+    //int n_data_points = int(this_basin_source.size());
+    //cout << "Checking the combinations" << endl;
     for (int combo = 0; combo<n_combinations; combo++)
     {
       vector<int> these_combos = combo_vecvec[combo];
@@ -5366,7 +5366,7 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
 
 
   // for debugging
-  bool print_results = true;
+  bool print_results = false;
   if(print_results)
   {
     cout << "Disorder stats for all the combinations are: " << endl;
@@ -5375,8 +5375,9 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
       cout << disorder_stat_vec[i] << " ";
     }
     cout << endl;
+    cout << "I'm returning the disorder stat vector." << endl;
   }
-  cout << "I'm returning the disorder stat vector." << endl;
+  
 
   return disorder_stat_vec;
 
@@ -6373,10 +6374,6 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
   
   if (use_uncert)
   {
-    // settings for chi
-    float test_movern = 0.5;
-    float area_threshold = 0;
-    
     // first initiate the vectors for holding the combination vecs.
     // the key is the basin number. Each element will hold the m over n value
     // with the lowest disorder
@@ -6388,7 +6385,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
       // get the m over n value
       float this_movern = float(i)*delta_movern+start_movern;
       movern.push_back( this_movern );
-      //cout << "i: " << i << " and m over n: " << movern[i] << " ";
+      cout << "i: " << i << " and m over n: " << movern[i] << endl;
 
       // calculate chi
       float area_threshold = 0;
@@ -6426,7 +6423,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
           
           for(int bf = 0; bf < n_combos_this_basin; bf++)
           {
-            if (existing_lowest_disorder[bf] < disorder_stats[bf] )
+            if (existing_lowest_disorder[bf] > disorder_stats[bf] )
             {
               existing_lowest_disorder[bf] = disorder_stats[bf];
               existing_best_fit_movern[bf] = this_movern;
@@ -6462,8 +6459,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
       stats_by_basin_out << these_stats[5] <<",";
       stats_by_basin_out << these_stats[6] <<",";
       stats_by_basin_out << these_stats[7] <<",";
-      stats_by_basin_out << these_stats[8] <<",";
-      stats_by_basin_out << these_stats[0] <<endl;
+      stats_by_basin_out << these_stats[8] <<endl;
     }
     
     stats_by_basin_out.close();
