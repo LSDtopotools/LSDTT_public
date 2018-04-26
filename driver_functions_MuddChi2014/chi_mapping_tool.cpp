@@ -1427,7 +1427,7 @@ int main (int nNumberofArgs,char *argv[])
                             filled_topography, DistanceFromOutlet,
                             DrainageArea, chi_coordinate);
                             
-    string residuals_name = OUT_DIR+OUT_ID+"_disorder_movernstats";
+    string residuals_name = OUT_DIR+OUT_ID;
 
     // Calculate and print results with uncertainty
     cout << "I am calculating the disorder stat." << endl;
