@@ -1616,10 +1616,20 @@ int main (int nNumberofArgs,char *argv[])
 
     if(this_bool_map["use_precipitation_raster_for_chi"])
     {
-      cout << "The Monte Carlo points routine does not have precipitaiton implemented yet." << endl;
+      cout << "Using the bootstrap point method with discharge" << endl;
+      string movern_name = OUT_DIR+OUT_ID+"_MCpointQ";
+      ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge_using_points_MC(FlowInfo, JunctionNetwork,
+                      this_float_map["start_movern"], this_float_map["delta_movern"],
+                      this_int_map["n_movern"],
+                      this_bool_map["only_use_mainstem_as_reference"],
+                      movern_name, this_sigma,
+                      this_int_map["MC_point_fractions"],
+                      this_int_map["MC_point_iterations"],
+                      this_float_map["max_MC_point_fraction"], Discharge);
     }
     else
     {
+      cout << "Using the bootstrap point method" << endl;
       string movern_name = OUT_DIR+OUT_ID+"_MCpoint";
       ChiTool_movern.calculate_goodness_of_fit_collinearity_fxn_movern_using_points_MC(FlowInfo, JunctionNetwork,
                       this_float_map["start_movern"], this_float_map["delta_movern"],
