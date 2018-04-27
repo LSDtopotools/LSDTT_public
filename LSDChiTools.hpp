@@ -550,35 +550,6 @@ class LSDChiTools
                         string file_prefix, float sigma,
                         vector<float> chi_distance_fractions);
 
-
-    /// @brief This wraps the collinearity tester, looping through different m over n
-    ///  values and calculating goodness of fit statistics.
-    /// @detail Uses discrete points rather than all the tributary data. It uses monte carlo
-    ///   sampling to get the points, so one can repeatedly sample the MLE values for
-    ///   a fixed number of points
-    /// @param FlowInfo an LSDFlowInfo object
-    /// @param JN an LSDJunctionNetwork object
-    /// @param start_movern the starting m/n ratio
-    /// @param delta_movern the change in m/n
-    /// @param n_novern the number of m/n values to use
-    /// @param only_use_mainstem_as_reference a boolean, if true only compare channels to mainstem .
-    /// @param The file prefix for the data files
-    /// @param sigma The uncertainty for the MLE calculation. In practice this simply scales MLE.
-    /// @param n_fracs the number of chi distance fractions you want to use
-    /// @param MC_iteration The number of iteration you want to use
-    /// @param max_frac the maximum chi fraction you want to examine.
-    /// @author SMM
-    /// @date 28/08/2017
-    void calculate_goodness_of_fit_collinearity_fxn_movern_using_points_MC(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JN,
-                        float start_movern, float delta_movern, int n_movern,
-                        bool only_use_mainstem_as_reference,
-                        string file_prefix, float sigma,
-                        int n_fracs,
-                        int MC_iterations,
-                        float max_frac);
-
-
-
     /// @brief This wraps the collinearity tester, looping through different m over n
     ///  values and calculating goodness of fit statistics.
     ///  Same as above but can use a discharge raster to calculate chi
@@ -607,7 +578,62 @@ class LSDChiTools
 
 
 
-    /// @brief This wraps the disorder collinearity tester, looping through different m over n
+    /// @brief This wraps the collinearity tester, looping through different m over n
+    ///  values and calculating goodness of fit statistics. 
+    /// @detail Uses discrete points rather than all the tributary data. It uses monte carlo
+    ///   sampling to get the points, so one can repeatedly sample the MLE values for
+    ///   a fixed number of points
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param JN an LSDJunctionNetwork object
+    /// @param start_movern the starting m/n ratio
+    /// @param delta_movern the change in m/n
+    /// @param n_novern the number of m/n values to use
+    /// @param only_use_mainstem_as_reference a boolean, if true only compare channels to mainstem .
+    /// @param The file prefix for the data files
+    /// @param sigma The uncertainty for the MLE calculation. In practice this simply scales MLE.
+    /// @param n_fracs the number of chi distance fractions you want to use
+    /// @param MC_iteration The number of iteration you want to use
+    /// @param max_frac the maximum chi fraction you want to examine.
+    /// @author SMM
+    /// @date 24/03/2017
+    void calculate_goodness_of_fit_collinearity_fxn_movern_using_points_MC(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JN,
+                        float start_movern, float delta_movern, int n_movern,
+                        bool only_use_mainstem_as_reference,
+                        string file_prefix, float sigma,
+                        int n_fracs,
+                        int MC_iterations,
+                        float max_frac);
+
+
+    /// @brief This wraps the collinearity tester, looping through different m over n
+    ///  values and calculating goodness of fit statistics. This one uses discharge
+    /// @detail Uses discrete points rather than all the tributary data. It uses monte carlo
+    ///   sampling to get the points, so one can repeatedly sample the MLE values for
+    ///   a fixed number of points
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param JN an LSDJunctionNetwork object
+    /// @param start_movern the starting m/n ratio
+    /// @param delta_movern the change in m/n
+    /// @param n_novern the number of m/n values to use
+    /// @param only_use_mainstem_as_reference a boolean, if true only compare channels to mainstem .
+    /// @param The file prefix for the data files
+    /// @param sigma The uncertainty for the MLE calculation. In practice this simply scales MLE.
+    /// @param n_fracs the number of chi distance fractions you want to use
+    /// @param MC_iteration The number of iteration you want to use
+    /// @param max_frac the maximum chi fraction you want to examine.
+    /// @param Discharge A discharge raster
+    /// @author SMM
+    /// @date 27/04/2018
+    void calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge_using_points_MC(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JN,
+                        float start_movern, float delta_movern, int n_movern,
+                        bool only_use_mainstem_as_reference,
+                        string file_prefix, float sigma,
+                        int n_fracs,
+                        int MC_iterations,
+                        float max_frac, LSDRaster& Discharge);
+
+
+    /// @brief This wraps the disorder collinearity tester, looping through different concavity
     ///  values and calculating disorder statistics.
     /// @detail Uses the disorder metric of Hergarten et al ESURF 2016
     /// @param FlowInfo an LSDFlowInfo object
@@ -622,7 +648,21 @@ class LSDChiTools
                         LSDJunctionNetwork& JN, float start_movern, float delta_movern, int n_movern,
                         string file_prefix, bool use_uncert);
 
-
+    /// @brief This wraps the disorder collinearity tester, looping through different concavity
+    ///  values and calculating disorder statistics.
+    /// @detail Uses the disorder metric of Hergarten et al ESURF 2016. Uses a discharge raster to calculate chi
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param start_movern the starting m/n ratio
+    /// @param delta_movern the change in m/n
+    /// @param n_novern the number of m/n values to use
+    /// @param The file prefix for the data files
+    /// @param use_uncert a bool that if true triggers the uncertainty algorithms
+    /// @param Discharge and LSDRaster with the discharge. 
+    /// @author SMM
+    /// @date 27/04/2018
+    void calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge_using_disorder(LSDFlowInfo& FlowInfo,
+                        LSDJunctionNetwork& JN, float start_movern, float delta_movern, int n_movern,
+                        string file_prefix, bool use_uncert, LSDRaster& Discharge);
 
     /// @brief This function drives a Monte Carlo-Markov chain model It wraps
     /// the dmovern tuning and the main chain.

@@ -2167,7 +2167,11 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int> vecnode)
   // vector that will contain the nodes having a knickpoint
   vector<int> vecdif;
   // Bunch of floats
-  float dkdc = 0, dchi = 0, dksn = 0, this_ksn = TVD_m_chi_map[this_node], last_ksn = TVD_m_chi_map[last_node]; // Setting last and this ksn
+  //float dkdc = 0;     // Don't seem to need these (SMM)
+  //float dchi = 0;     // Don't seem to need these (SMM)
+  float dksn = 0;
+  float this_ksn = TVD_m_chi_map[this_node];
+  float last_ksn = TVD_m_chi_map[last_node]; // Setting last and this ksn
 
   // Looping through the nodes from the second one
   for( ; node != vecnode.end(); node++) // the first ";" is normal: it states that I have no initial conditions 
@@ -2207,7 +2211,7 @@ void LSDChiTools::stepped_knickpoints_detection_v2(LSDFlowInfo& Flowinfo, int wi
     // preparing the needed iterators
   map<int,vector<int> >::iterator SK;
   // Initializing some variables
-  int this_SK;
+  // int this_SK;             // This doens't seem to be used (SMM)
   vector<int> vecnode;
   int HW = int(window/2);
 
@@ -2216,11 +2220,12 @@ void LSDChiTools::stepped_knickpoints_detection_v2(LSDFlowInfo& Flowinfo, int wi
   {
     
     // the source key
-    this_SK = SK->first;
+    //this_SK = SK->first;       // This doens't seem to be used (SMM)
+    
     // the vector containing the river nodes
     vecnode = SK->second;
     // first check if the size is over the window
-    if(vecnode.size() > window)
+    if(int(vecnode.size()) > window)
     { 
       // first step is to get the windowed stats, the moving window will gather informations across the vector of nodes 
       map<string,vector<float> > these_stats = get_windowed_stats_for_knickpoints(vecnode,HW);
@@ -2266,11 +2271,11 @@ map<string,vector<float> > LSDChiTools::get_windowed_stats_for_knickpoints(vecto
   for(size_t it = 0;it<vecnode.size(); it++)
   {
     // we are in the first nodes boundary: we cannot loop before so the same value will be applied everywhere in this case
-    if(it<HW)
+    if(int(it)<HW)
     {
       vector<float> this_vecval;
       // getting the value for the window
-      for(size_t o = 0; o < window ; o++ )
+      for(int o = 0; o < window ; o++ )
       {
         this_vecval.push_back(vecval[o]);
       }
@@ -3500,7 +3505,7 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
         this_node = iter->first;
         this_kp = iter->second;
         int nearnode = nearest_node_centroid_kp[this_node];
-        int nearnode_stepped = nearest_node_centroid_kp_stepped[this_node];
+        // int nearnode_stepped = nearest_node_centroid_kp_stepped[this_node];    // not used (SMM)
         float this_segelev = 0;
 
         if(kp_segdrop.count(nearnode) == 1)
@@ -6107,6 +6112,9 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
 
 
 
+
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This function test the collinearity of all segments compared to a reference
 // segment
@@ -6353,6 +6361,265 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_points
 
 
 
+
+
+
+
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This function test the collinearity of all segments compared to a reference
+// segment
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge_using_points_MC(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JN,
+                        float start_movern, float delta_movern, int n_movern,
+                        bool only_use_mainstem_as_reference,
+                        string file_prefix, float sigma,
+                        int n_fracs,
+                        int MC_iterations,
+                        float max_frac, LSDRaster& Discharge)
+{
+  // these vectors store all the values which are then used for printing
+  vector< vector<float> > min_MLE, first_quartile_MLE, median_MLE, third_quartile_MLE, max_MLE;
+
+  // open the file that contains the basin stats
+  string filename_bstats = file_prefix+"_points_MC_basinstats_Q.csv";
+  ofstream stats_by_basin_out;
+  stats_by_basin_out.open(filename_bstats.c_str());
+
+  // get the see for the random number generator
+  long seed = time(NULL);
+
+  vector< vector<float> > RMSE_vecvec;
+  vector< vector<float> > MLE_vecvec;
+  vector< vector<float> > total_MLE_vecvec;
+  vector<int> reference_keys;
+  vector<int> test_keys;
+  vector<int> outlet_jns;
+
+  //cout << "LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern" << endl;
+  //cout << "I am defaulting to A_0 = 1." << endl;
+  vector<float> movern;
+  float A_0 = 1;
+
+  int n_basins = int(ordered_baselevel_nodes.size());
+
+  // get the outlet junction of each basin key
+  for (int basin_key = 0; basin_key < n_basins; basin_key++)
+  {
+    int outlet_node = ordered_baselevel_nodes[basin_key];
+    int outlet_jn = JN.get_Junction_of_Node(outlet_node, FlowInfo);
+    outlet_jns.push_back(outlet_jn);
+  }
+
+  cout << endl << endl << "==========================" << endl;
+  for(int i = 0; i< n_movern; i++)
+  {
+    // get the m over n value
+    movern.push_back( float(i)*delta_movern+start_movern );
+    cout << "i: " << i << " and m over n: " << movern[i] << " ";
+
+    // calculate chi
+    float area_threshold = 0;
+    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern[i], A_0,
+                                 area_threshold, Discharge);
+    update_chi_data_map(FlowInfo, this_chi);
+
+    // get some vecvecs for storing information about the sources, MLEs, etc
+    // for each iteration
+    vector<int> master_reference_sources, master_test_sources, master_basin_keys;
+    vector< vector<float> > total_MLE_iteration;
+
+    for (int iteration = 0; iteration < MC_iterations; iteration++)
+    {
+
+      // these are the vectors that will hold the information about the
+      // comparison between channels.
+      // the _all vectors are one of all the basins
+      // reference source is the source key of the reference channel
+      vector<int> reference_source, all_reference_source;
+      // test source is the source key of the test channel
+      vector<int> test_source, all_test_source;
+      // MLE the maximum liklihood estimator
+      vector<float> MLE_values, all_MLE_values;
+      // RMSE is the root mean square error
+      vector<float> RMSE_values, all_RMSE_values;
+
+      vector<float> tot_MLE_vec;
+      // basin keys
+      vector<int> all_basin_keys;
+
+      // now run the collinearity test
+      float tot_MLE;
+
+      // here we need the logic for the chi_fractions
+      float partition_size = max_frac/float(n_fracs);
+      vector<float> chi_fractions_vector;
+      for(int partition = 0; partition < n_fracs; partition++)
+      {
+        float this_part = ran3(&seed)*partition_size;
+        //cout << "This part is: " << this_part << endl;
+
+        chi_fractions_vector.push_back( float(partition)*partition_size + this_part );
+        //cout << "Partion["<< partition << "]: " << chi_fractions_vector[partition] << endl;
+      }
+
+
+      for(int basin_key = 0; basin_key<n_basins; basin_key++)
+      {
+        //cout << "The sigma is: " << sigma << endl;
+        tot_MLE = test_all_segment_collinearity_by_basin_using_points(FlowInfo, only_use_mainstem_as_reference,
+                                    basin_key,
+                                    reference_source, test_source, MLE_values, RMSE_values, sigma,
+                                    chi_fractions_vector);
+        // concatenate the vectors to the "all" vectors
+        all_reference_source.insert(all_reference_source.end(), reference_source.begin(), reference_source.end() );
+        all_test_source.insert(all_test_source.end(), test_source.begin(), test_source.end() );
+        all_MLE_values.insert(all_MLE_values.end(), MLE_values.begin(), MLE_values.end() );
+        all_RMSE_values.insert(all_RMSE_values.end(), RMSE_values.begin(), RMSE_values.end() );
+        all_basin_keys.insert(all_basin_keys.end(), reference_source.size(), basin_key);
+
+        tot_MLE_vec.push_back(tot_MLE);
+        //cout << "basin: " << basin_key << " and tot_MLE: " << tot_MLE << endl;
+      }
+
+      // so we end up with vectors containing the MLE values for each source,
+      // the RMSE, the reference and test sources, and the basin keys.
+
+      // add the data to the vecvecs
+      MLE_vecvec.push_back(all_MLE_values);
+      RMSE_vecvec.push_back(all_RMSE_values);
+      total_MLE_vecvec.push_back(tot_MLE_vec);
+      reference_keys = all_reference_source;
+      test_keys = all_test_source;
+
+      // if this is the first iteration, push the reference, test, and basin keys vector
+      // into the master vector
+      if(iteration == 0)
+      {
+        master_reference_sources = all_reference_source;
+        master_test_sources = all_test_source;
+        master_basin_keys = master_basin_keys;
+      }
+      else
+      {
+        // check to see if the sources vectors are the same size
+        if (master_reference_sources != all_reference_source)
+        {
+          cout << "LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge_using_points_MC" << endl;
+          cout << "We have a problem with the source vector, buddy!" << endl;
+        }
+      }
+
+      // in this space we will need logic for storing all the MLE data and RMSE data
+      // for each iteration and each basin. I'll save that work for later.
+
+
+      // now get the total MLE vec for each iteration
+      total_MLE_iteration.push_back(tot_MLE_vec);
+    }
+
+    // now for this m/n, we need to calculate the stats of the MLEs
+    // this is a little slow since we need to reorganise the data in vecotrs
+    // by repeatedly looping over the vecvec
+    vector<float> this_movern_min_MLE;
+    vector<float> this_movern_first_quartile_MLE;
+    vector<float> this_movern_median_MLE;
+    vector<float> this_movern_third_quartile_MLE;
+    vector<float> this_movern_max_MLE;
+
+    for(int basin_key = 0; basin_key<n_basins; basin_key++)
+    {
+      vector<float> this_basins_MLE;
+      for(int iteration = 0; iteration < MC_iterations; iteration ++)
+      {
+        this_basins_MLE.push_back( total_MLE_iteration[iteration][basin_key] );
+      }
+
+      vector<float> descriptive_stats_MLE =  calculate_descriptive_stats(this_basins_MLE);
+
+      this_movern_min_MLE.push_back(descriptive_stats_MLE[0]);
+      this_movern_first_quartile_MLE.push_back(descriptive_stats_MLE[1]);
+      this_movern_median_MLE.push_back(descriptive_stats_MLE[2]);
+      this_movern_third_quartile_MLE.push_back(descriptive_stats_MLE[3]);
+      this_movern_max_MLE.push_back(descriptive_stats_MLE[4]);
+    }
+
+    // push the data for this m/n into the vecvecs
+    min_MLE.push_back(this_movern_min_MLE);
+    first_quartile_MLE.push_back(this_movern_first_quartile_MLE);
+    median_MLE.push_back(this_movern_median_MLE);
+    third_quartile_MLE.push_back(this_movern_third_quartile_MLE);
+    max_MLE.push_back(this_movern_max_MLE);
+
+    // open the outfile
+    string filename_fullstats = file_prefix+"_"+dtoa(movern[i])+"_pointsMC_Q.csv";
+    ofstream movern_stats_out;
+    movern_stats_out.open(filename_fullstats.c_str());
+
+    // now print the data to the file
+    movern_stats_out << "basin_number,minimum_MLE,first_quartile_MLE,median_MLE,third_quartile_MLE,maximum_MLE" << endl;
+    for(int basin_key = 0; basin_key<n_basins; basin_key++)
+    {
+      movern_stats_out << basin_key << ","
+                       << this_movern_min_MLE[basin_key] << ","
+                       << this_movern_first_quartile_MLE[basin_key] << ","
+                       << this_movern_median_MLE[basin_key] << ","
+                       << this_movern_third_quartile_MLE[basin_key] << ","
+                       << this_movern_max_MLE[basin_key] << endl;
+    }
+    movern_stats_out.close();
+  }
+
+
+  stats_by_basin_out << "basin_key,outlet_jn";
+  stats_by_basin_out.precision(4);
+  for(int i = 0; i< n_movern; i++)
+  {
+    stats_by_basin_out << ",median_MLE_m_over_n="<<movern[i];
+  }
+  for(int i = 0; i< n_movern; i++)
+  {
+    stats_by_basin_out << ",FQ_MLE_m_over_n="<<movern[i];
+  }
+  for(int i = 0; i< n_movern; i++)
+  {
+    stats_by_basin_out << ",TQ_MLE_m_over_n="<<movern[i];
+  }
+  stats_by_basin_out << endl;
+  stats_by_basin_out.precision(9);
+  for(int basin_key = 0; basin_key<n_basins; basin_key++)
+  {
+    stats_by_basin_out << basin_key << "," << outlet_jns[basin_key];
+    for(int i = 0; i< n_movern; i++)
+    {
+      stats_by_basin_out << "," <<median_MLE[i][basin_key];
+    }
+    for(int i = 0; i< n_movern; i++)
+    {
+      stats_by_basin_out << "," <<first_quartile_MLE[i][basin_key];
+    }
+    for(int i = 0; i< n_movern; i++)
+    {
+      stats_by_basin_out << "," <<third_quartile_MLE[i][basin_key];
+    }
+    stats_by_basin_out << endl;
+  }
+
+  stats_by_basin_out.close();
+
+}
+
+
+
+
+
+
+
+
+
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // This functions test the goodness of fit for the m/n ratio using the 
 // disorder method propsoed by Hergarten et al 2016
@@ -6564,6 +6831,232 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
     stats_by_basin_out.close();
   }
 }
+
+
+
+
+
+
+
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// This functions test the goodness of fit for the concavity using the 
+// disorder method propsoed by Hergarten et al 2016
+// Uses a discharge raster
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge_using_disorder(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JN,
+                        float start_movern, float delta_movern, int n_movern,
+                        string file_prefix, bool use_uncert, LSDRaster& Discharge)
+{
+  cout << "I am now entering the disorder loop." << endl;
+
+  int n_basins = int(ordered_baselevel_nodes.size());
+  
+  // some parameters to be stored in vectors
+  cout << "LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disorder" << endl;
+  cout << "I am defaulting to A_0 = 1." << endl;
+  vector<int> outlet_jns;
+  vector<float> movern;
+  float A_0 = 1;  
+  
+  vector< vector<float> > disorder_vecvec;
+  
+
+  // get the outlet junction of each basin key
+  for (int basin_key = 0; basin_key < n_basins; basin_key++)
+  {
+    int outlet_node = ordered_baselevel_nodes[basin_key];
+    int outlet_jn = JN.get_Junction_of_Node(outlet_node, FlowInfo);
+    outlet_jns.push_back(outlet_jn);
+  }
+  
+  
+  // We do the full disorder statistic first
+  cout << "I am calculating the disorder statistic!" << endl;
+  
+  vector<float> emptyvec;
+  for(int i = 0; i< n_movern; i++)
+  {
+    // get the m over n value
+    movern.push_back( float(i)*delta_movern+start_movern );
+    //cout << "i: " << i << " and m over n: " << movern[i] << " ";
+
+    vector<float> these_disorders;
+
+    // open the outfile
+    string filename_fullstats = file_prefix+"_"+dtoa(movern[i])+"_fullstatsq_disorder.csv";
+    //ofstream movern_stats_out;
+    //movern_stats_out.open(filename_fullstats.c_str());
+
+    // calculate chi
+    float area_threshold = 0;
+    LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern[i], A_0,
+                                 area_threshold, Discharge);
+    update_chi_data_map(FlowInfo, this_chi);
+
+    // these are the vectors that will hold the information about the disorder by basin
+    vector<float> tot_MLE_vec;
+
+    // now run the collinearity test
+    float disorder_stat;
+
+    //for(int basin_key = 0; basin_key<1; basin_key++)
+    for(int basin_key = 0; basin_key<n_basins; basin_key++)
+    {
+      //disorder_stat = test_all_segment_collinearity_by_basin_using_disorder(FlowInfo, basin_key);
+      disorder_stat = test_collinearity_by_basin_disorder(FlowInfo, basin_key);
+      cout << "basin: " << basin_key << " and m/n is: " << movern[i] << " and disorder stat is: " << disorder_stat << endl;
+      these_disorders.push_back(disorder_stat);
+    }
+    disorder_vecvec.push_back(these_disorders);
+    
+  }
+  
+  // now we need to loop through the vecvec getting the minimum disorder for each basin
+  map<int,float> best_fit_movern_disorder_map;
+  for(int basin_key = 0; basin_key<n_basins; basin_key++)
+  {
+    vector<float> these_disorders;
+    float min_disorder = 1000000000000; // a big number since the disorder needs to be smaller than this.  
+    best_fit_movern_disorder_map[basin_key] = -9999; 
+    for(int i = 0; i< n_movern; i++)
+    {
+      // check to see if this disorder is a minimum for this basin
+      if (disorder_vecvec[i][basin_key] < min_disorder)
+      {
+        min_disorder = disorder_vecvec[i][basin_key];
+        best_fit_movern_disorder_map[basin_key] = movern[i]; 
+      }
+    }
+  }
+  
+
+  // open the file that contains the basin stats
+  string filename_bstats = file_prefix+"_disorder_basinstats.csv";
+  ofstream stats_by_basin_out;
+  stats_by_basin_out.open(filename_bstats.c_str());
+
+  stats_by_basin_out << "basin_key,outlet_jn";
+  stats_by_basin_out.precision(4);
+  for(int i = 0; i< n_movern; i++)
+  {
+    stats_by_basin_out << ",m_over_n = "<<movern[i];
+  }
+  stats_by_basin_out << endl;
+  stats_by_basin_out.precision(9);
+  for(int basin_key = 0; basin_key<n_basins; basin_key++)
+  {
+    stats_by_basin_out << basin_key << "," << outlet_jns[basin_key];
+    for(int i = 0; i< n_movern; i++)
+    {
+      stats_by_basin_out << "," <<disorder_vecvec[i][basin_key];
+    }
+    stats_by_basin_out << endl;
+  }
+  stats_by_basin_out.close();
+  
+  
+  // Now if the use uncertainty flag is true, calculate the disorder statistics. 
+  if (use_uncert)
+  {
+    // first initiate the vectors for holding the combination vecs.
+    // the key is the basin number. Each element will hold the m over n value
+    // with the lowest disorder
+    map<int, vector<float> > best_fit_movern_for_basins;
+    map<int, vector<float> > lowest_disorder_for_basins;
+
+    for(int i = 0; i< n_movern; i++)
+    {
+      // get the m over n value
+      float this_movern = float(i)*delta_movern+start_movern;
+      movern.push_back( this_movern );
+      cout << "i: " << i << " and m over n: " << movern[i] << endl;
+
+      // calculate chi
+      float area_threshold = 0;
+  
+      LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern[i], A_0,
+                                   area_threshold);
+      update_chi_data_map(FlowInfo, this_chi);
+      
+      // now loop through basins
+      //for(int basin_key = 0; basin_key<1; basin_key++)
+      for(int basin_key = 0; basin_key<n_basins; basin_key++)
+      {
+        cout << "Testing uncert the basin key is " << basin_key << endl;
+        vector<float> disorder_stats = test_collinearity_by_basin_disorder_with_uncert(FlowInfo, basin_key);
+        
+        // if this is the first m over n value, then initiate the vectors for this basin key
+        if (i == 0)
+        {
+          lowest_disorder_for_basins[basin_key] = disorder_stats;
+          
+          int n_combos_this_basin = int(disorder_stats.size());
+          vector<float> best_fit_movern;
+          for(int bf = 0; bf < n_combos_this_basin; bf++)
+          {
+            best_fit_movern.push_back( this_movern );
+          }
+          best_fit_movern_for_basins[basin_key] = best_fit_movern;
+        }
+        else
+        {
+          // loop through all the combos and get the best fit movern
+          vector<float> existing_lowest_disorder = lowest_disorder_for_basins[basin_key];
+          vector<float> existing_best_fit_movern = best_fit_movern_for_basins[basin_key];
+          int n_combos_this_basin = int(disorder_stats.size());
+          
+          for(int bf = 0; bf < n_combos_this_basin; bf++)
+          {
+            if (existing_lowest_disorder[bf] > disorder_stats[bf] )
+            {
+              existing_lowest_disorder[bf] = disorder_stats[bf];
+              existing_best_fit_movern[bf] = this_movern;
+            }
+          }
+          lowest_disorder_for_basins[basin_key] = existing_lowest_disorder;
+          best_fit_movern_for_basins[basin_key] = existing_best_fit_movern;
+        }
+      }  // end basin loop
+    }    // end m/n loop
+    
+
+    // open the outfile
+    string filename_fullstats = file_prefix+"_fullstats_disorder_uncert.csv";
+    ofstream stats_by_basin_out;
+    stats_by_basin_out.open(filename_fullstats.c_str());
+  
+    stats_by_basin_out << "basin_key,N_combinations,minimum,first_quartile,median,third_quartile,maximum,mean,standard_deviation,standard_error,MAD, best_fit_for_all_tribs" << endl;
+    stats_by_basin_out.precision(8);
+    for(int basin_key = 0; basin_key<n_basins; basin_key++)
+    {
+      vector<float> these_movern = best_fit_movern_for_basins[basin_key];
+      int n_combinations =  int(these_movern.size());
+      
+      vector<float> these_stats = calculate_descriptive_stats(these_movern);
+      stats_by_basin_out << basin_key << ",";
+      stats_by_basin_out << n_combinations << ",";
+      stats_by_basin_out << these_stats[0] <<",";
+      stats_by_basin_out << these_stats[1] <<",";
+      stats_by_basin_out << these_stats[2] <<",";
+      stats_by_basin_out << these_stats[3] <<",";
+      stats_by_basin_out << these_stats[4] <<",";
+      stats_by_basin_out << these_stats[5] <<",";
+      stats_by_basin_out << these_stats[6] <<",";
+      stats_by_basin_out << these_stats[7] <<",";
+      stats_by_basin_out << these_stats[8] <<",";
+      stats_by_basin_out << best_fit_movern_disorder_map[basin_key] << endl;
+    }
+    stats_by_basin_out.close();
+  }
+}
+
+
+
+
+
+
 
 
 
@@ -7818,8 +8311,8 @@ void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_inte
   //float midpoint_area;
   float upstream_elevation;
   float upstream_flow_distance;
-  float downstream_elevation;
-  float downstream_flow_distance;
+  float downstream_elevation = 0;  // need to set these to avoid compiler warning
+  float downstream_flow_distance = 0;
   float midpoint_node;
   float target_end_interval_elevation;
   float target_midpoint_interval_elevation;
