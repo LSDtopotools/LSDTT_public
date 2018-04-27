@@ -6420,7 +6420,6 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
     vector<int> master_reference_sources, master_test_sources, master_basin_keys;
     vector< vector<float> > total_MLE_iteration;
 
-
     for (int iteration = 0; iteration < MC_iterations; iteration++)
     {
 

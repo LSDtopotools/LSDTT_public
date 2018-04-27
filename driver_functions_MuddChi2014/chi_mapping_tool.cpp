@@ -348,6 +348,15 @@ int main (int nNumberofArgs,char *argv[])
   //----------------------------------------------------------------------------//
   if (this_bool_map["estimate_best_fit_movern"])
   {
+    cout << endl << endl << "=======================================" << endl;
+    cout << "You have set the full concavity analysis in motion!"  << endl;
+    cout << "This can take a while. If you justy want a basic, efficient calculation," << endl;
+    cout << "Just use the disorder metric. " << endl;
+    cout << "Set: " << endl;
+    cout << "movern_disorder_test: true" << endl; 
+    cout << "disorder_use_uncert = true" << endl;
+    cout << "=======================================" << endl << endl << endl;
+    
     // we need to make sure we select basins the correct way
     if(this_bool_map["get_basins_from_outlets"] == false)
     {
@@ -366,7 +375,10 @@ int main (int nNumberofArgs,char *argv[])
     this_bool_map["calculate_MLE_collinearity"] = true;
     this_bool_map["calculate_MLE_collinearity_with_points_MC"] = true;
     this_bool_map["print_profiles_fxn_movern_csv"] = true;
-    this_bool_map["movern_residuals_test"] = true;
+    // this_bool_map["movern_residuals_test"] = true;   This is useless
+    
+    this_bool_map["movern_disorder_test"] = true; 
+    this_bool_map["disorder_use_uncert"] = true; 
 
     // run the SA methods of estimating best fit m/n
     this_bool_map["print_slope_area_data"] = true;
