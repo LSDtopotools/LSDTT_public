@@ -2066,14 +2066,15 @@ void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR
   // We preprocessed the metrics we need, let's get into the Data!
 
 
-  cout << "Denoising the ksn/M_chi and the differential segmenting elevation (Total Variation Denoising adapted from Condat, 2013) ...";
+
+  cout << " Denoising the ksn or mchi and the differential segmenting elevation (Total Variation Denoising adapted from Condat, 2013) ..." << endl;
   // Applying the Total_variation_denoising on m_chi.
   // This is really efficient Algorithm, I am denoising the b_chi as well, for testing purposes
   TVD_on_my_ksn(lambda_TVD, lambda_TVD_b_chi);
   cout << " OK" << endl ;
 
 
-  cout << "Extracting general metrics for rivers ...";
+  cout << " Extracting general metrics for rivers ...";
   // This will increment maps with source keys as key and various metrics such as river length, Chi lenght...
   compute_basic_matrics_per_source_keys(FlowInfo);
   cout << " OK" << endl ;
@@ -2905,7 +2906,10 @@ void  LSDChiTools::TVD_on_my_ksn( float lambda, float lambda_TVD_b_chi)
     this_vec = chirac->second; // the vector of node
     vector<float> gros_test; // Debugging purposes
     // this next function Apply the TVD on the vector. It directly save the results in a global map and return general informations for debugging
-    gros_test = TVD_this_vec(this_vec, lambda, lambda_TVD_b_chi);
+    if(this_vec.size()>20){
+      gros_test = TVD_this_vec(this_vec, lambda, lambda_TVD_b_chi);
+    }
+
 
     // I am planning a test -> TO KEEP it would be an improvment of the denoising
     // if(int(this_vec.size()) <= max_node)
@@ -2979,6 +2983,7 @@ vector<float>  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda, flo
   {
     int this_node = *chirac;
     if(chi_data_map[this_node] != -9999){ //  Checking if there are no data
+
 
       this_val_mchi.push_back((double)M_chi_data_map[this_node]);
       this_val_bchi.push_back((double)b_chi_data_map[this_node]);

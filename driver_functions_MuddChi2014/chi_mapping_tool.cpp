@@ -1855,4 +1855,7 @@ int main (int nNumberofArgs,char *argv[])
   }
 
 
+
+  //important for some external use
+  exit(EXIT_SUCCESS);
 }
