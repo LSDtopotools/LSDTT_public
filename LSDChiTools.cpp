@@ -2166,7 +2166,11 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int> vecnode)
   // vector that will contain the nodes having a knickpoint
   vector<int> vecdif;
   // Bunch of floats
-  float dkdc = 0, dchi = 0, dksn = 0, this_ksn = TVD_m_chi_map[this_node], last_ksn = TVD_m_chi_map[last_node]; // Setting last and this ksn
+  //float dkdc = 0;     // Don't seem to need these (SMM)
+  //float dchi = 0;     // Don't seem to need these (SMM)
+  float dksn = 0;
+  float this_ksn = TVD_m_chi_map[this_node];
+  float last_ksn = TVD_m_chi_map[last_node]; // Setting last and this ksn
 
   // Looping through the nodes from the second one
   for( ; node != vecnode.end(); node++) // the first ";" is normal: it states that I have no initial conditions 
@@ -2206,7 +2210,7 @@ void LSDChiTools::stepped_knickpoints_detection_v2(LSDFlowInfo& Flowinfo, int wi
     // preparing the needed iterators
   map<int,vector<int> >::iterator SK;
   // Initializing some variables
-  int this_SK;
+  // int this_SK;             // This doens't seem to be used (SMM)
   vector<int> vecnode;
   int HW = int(window/2);
 
@@ -2215,11 +2219,12 @@ void LSDChiTools::stepped_knickpoints_detection_v2(LSDFlowInfo& Flowinfo, int wi
   {
     
     // the source key
-    this_SK = SK->first;
+    //this_SK = SK->first;       // This doens't seem to be used (SMM)
+    
     // the vector containing the river nodes
     vecnode = SK->second;
     // first check if the size is over the window
-    if(vecnode.size() > window)
+    if(int(vecnode.size()) > window)
     { 
       // first step is to get the windowed stats, the moving window will gather informations across the vector of nodes 
       map<string,vector<float> > these_stats = get_windowed_stats_for_knickpoints(vecnode,HW);
@@ -2263,11 +2268,11 @@ map<string,vector<float> > LSDChiTools::get_windowed_stats_for_knickpoints(vecto
   for(size_t it = 0;it<vecnode.size(); it++)
   {
     // we are in the first nodes boundary: we cannot loop before so the same value will be applied everywhere in this case
-    if(it<HW)
+    if(int(it)<HW)
     {
       vector<float> this_vecval;
       // getting the value for the window
-      for(size_t o = 0; o < window ; o++ )
+      for(int o = 0; o < window ; o++ )
       {
         this_vecval.push_back(vecval[o]);
       }
@@ -3488,7 +3493,7 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
         this_node = iter->first;
         this_kp = iter->second;
         int nearnode = nearest_node_centroid_kp[this_node];
-        int nearnode_stepped = nearest_node_centroid_kp_stepped[this_node];
+        // int nearnode_stepped = nearest_node_centroid_kp_stepped[this_node];    // not used (SMM)
         float this_segelev = 0;
 
         if(kp_segdrop.count(nearnode) == 1)
@@ -8033,8 +8038,8 @@ void LSDChiTools::get_slope_area_data(LSDFlowInfo& FlowInfo, float vertical_inte
   //float midpoint_area;
   float upstream_elevation;
   float upstream_flow_distance;
-  float downstream_elevation;
-  float downstream_flow_distance;
+  float downstream_elevation = 0;  // need to set these to avoid compiler warning
+  float downstream_flow_distance = 0;
   float midpoint_node;
   float target_end_interval_elevation;
   float target_midpoint_interval_elevation;
