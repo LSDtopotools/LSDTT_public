@@ -607,7 +607,7 @@ class LSDChiTools
 
 
 
-    /// @brief This wraps the disorder collinearity tester, looping through different m over n
+    /// @brief This wraps the disorder collinearity tester, looping through different concavity
     ///  values and calculating disorder statistics.
     /// @detail Uses the disorder metric of Hergarten et al ESURF 2016
     /// @param FlowInfo an LSDFlowInfo object
@@ -622,7 +622,21 @@ class LSDChiTools
                         LSDJunctionNetwork& JN, float start_movern, float delta_movern, int n_movern,
                         string file_prefix, bool use_uncert);
 
-
+    /// @brief This wraps the disorder collinearity tester, looping through different concavity
+    ///  values and calculating disorder statistics.
+    /// @detail Uses the disorder metric of Hergarten et al ESURF 2016. Uses a discharge raster to calculate chi
+    /// @param FlowInfo an LSDFlowInfo object
+    /// @param start_movern the starting m/n ratio
+    /// @param delta_movern the change in m/n
+    /// @param n_novern the number of m/n values to use
+    /// @param The file prefix for the data files
+    /// @param use_uncert a bool that if true triggers the uncertainty algorithms
+    /// @param Discharge and LSDRaster with the discharge. 
+    /// @author SMM
+    /// @date 24/03/2018
+    void calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge_using_disorder(LSDFlowInfo& FlowInfo,
+                        LSDJunctionNetwork& JN, float start_movern, float delta_movern, int n_movern,
+                        string file_prefix, bool use_uncert, LSDRaster& Discharge);
 
     /// @brief This function drives a Monte Carlo-Markov chain model It wraps
     /// the dmovern tuning and the main chain.

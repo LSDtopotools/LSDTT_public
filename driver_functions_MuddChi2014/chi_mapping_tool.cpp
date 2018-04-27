@@ -981,10 +981,6 @@ int main (int nNumberofArgs,char *argv[])
         MaskedChi.write_raster(chi_coord_string_m,raster_ext);
       }
     }
-    
-
-
-
   }
   else
   {
@@ -1032,7 +1028,7 @@ int main (int nNumberofArgs,char *argv[])
   //============================================================================
 
 
-
+  // This is an old function that has been superceded by the print_chi_data_maps
   if (this_bool_map["print_simple_chi_map_to_csv"])
   {
     cout <<"I am printing a simple chi map for you to csv." << endl;
@@ -1371,16 +1367,11 @@ int main (int nNumberofArgs,char *argv[])
           cout << "The raster you asked me to burn doesn't exist. I am not burning." << endl;
         }
       }
-
-
       if ( this_bool_map["convert_csv_to_geojson"])
       {
         string gjson_name = OUT_DIR+OUT_ID+"_chi_data_map.geojson";
         LSDSpatialCSVReader thiscsv(chi_data_maps_string);
         thiscsv.print_data_to_geojson(gjson_name);
-
-
-
       }
     }
   }
@@ -1388,7 +1379,11 @@ int main (int nNumberofArgs,char *argv[])
 
 
 
-
+  // This was an attempt to use a monte carlo markov chain method to calculate uncertainty
+  // but it doesn't really work: very computationally expensive and to get the correct 
+  // acceptance rate on the metropolis algorithm (25-33%) you need a sigma value so high that it
+  // just ranbomly jumps across the entirety of concavity test space. 
+  // More or less useless, really. I (SMM) spent over a week screwing around with this, sadly...
   if (this_bool_map["MCMC_movern_analysis"])
   {
     cout << "I am going to explore m/n using the MCMC method" << endl;
@@ -1430,13 +1425,36 @@ int main (int nNumberofArgs,char *argv[])
     string residuals_name = OUT_DIR+OUT_ID;
 
     // Calculate and print results with uncertainty
-    cout << "I am calculating the disorder stat." << endl;
-    ChiTool_disorder.calculate_goodness_of_fit_collinearity_fxn_movern_using_disorder(FlowInfo,  JunctionNetwork,
+    if(this_bool_map["use_precipitation_raster_for_chi"])
+    {
+      cout << "I am calculating the disorder stat using discharge." << endl;
+      ChiTool_disorder.calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge_using_disorder(FlowInfo,  JunctionNetwork,
+                      this_float_map["start_movern"], this_float_map["delta_movern"],
+                      this_int_map["n_movern"], residuals_name, this_bool_map["disorder_use_uncert"], Discharge);
+    }
+    else
+    {
+      cout << "I am calculating the disorder stat." << endl;
+      ChiTool_disorder.calculate_goodness_of_fit_collinearity_fxn_movern_using_disorder(FlowInfo,  JunctionNetwork,
                       this_float_map["start_movern"], this_float_map["delta_movern"],
                       this_int_map["n_movern"], residuals_name, this_bool_map["disorder_use_uncert"]);
+    }
   }
 
 
+  // This test was based on the idea that the most collinear is when the residuals are 
+  // distributed evenly above and below the main stem. But actually the disorder metric does
+  // something similar and is much better. 
+  // Another method I (SMM) leave in as a monument to all the rabbit holes I went 
+  // down in writing this code. 
+  //
+  // Also, as an aside, I am on a train journey between Edinburgh and Manchester and
+  // the section between Carlisle and Oxenholme is superb. There are a series of small 
+  // catcements that show signs of recent incision and there are loads of landslide
+  // scars and gravel beds. I should do a study there one day.
+  // Another observation since I am at it: why does the British Society for Geomorphology
+  // generate so much paperwork! I'm on my way to a meeting: there are 11 papers. 
+  // We meet 3 times a year on the executive committee. 
   if (this_bool_map["movern_residuals_test"])
   {
     cout << "I am going to explore m/n using the residuals method" << endl;
@@ -1461,11 +1479,7 @@ int main (int nNumberofArgs,char *argv[])
 
 
 
-
-
-
-
-
+  // This is just the straight collinearity test
   if (this_bool_map["calculate_MLE_collinearity"])
   {
 
@@ -1565,7 +1579,6 @@ int main (int nNumberofArgs,char *argv[])
                       movern_name, this_sigma,
                       chi_fracs_to_test);
     }
-
   }
 
 
@@ -1573,7 +1586,11 @@ int main (int nNumberofArgs,char *argv[])
 
 
 
-
+  // This is the "Monte Carlo points" method. Liran Goren suggested we call this
+  // a "bootstrap" method. She is correct, it really is a bootstrap method, and we will 
+  // call it that in the paper. But the code keeps the "MC" name. 
+  // One of the first albums I (SMM) ever bought was MC young in around '89: 
+  // y'all should check him out. 
   if(this_bool_map["calculate_MLE_collinearity_with_points_MC"])
   {
     cout << "I am going to test the MLE collinearity functions using points with Monte Carlo sampling." << endl;
