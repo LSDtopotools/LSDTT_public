@@ -2176,7 +2176,7 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int> vecnode)
     this_ksn = TVD_m_chi_map[this_node];
     // dsegelev = segelev_diff[this_node];
     // if ksn has change, Implementing a raw knickpoint, quantifying it with delta ksn
-    if((this_ksn != last_ksn) )
+    if((this_ksn != last_ksn) && this_ksn != -9999 && last_ksn != -9999 )
     {
       // deta ksn from bottom to top
       dksn = last_ksn - this_ksn;
@@ -2255,7 +2255,9 @@ map<string,vector<float> > LSDChiTools::get_windowed_stats_for_knickpoints(vecto
   for(vector<int>::iterator it = vecnode.begin(); it != vecnode.end(); it ++)
   {
     int this_node = *it;
-    vecval.push_back(segelev_diff[this_node]);
+    if(chi_data_map[this_node] != -9999){
+      vecval.push_back(segelev_diff[this_node]);
+    }
   }
   // Vecval is now implemented with the values
 
@@ -2976,10 +2978,14 @@ vector<float>  LSDChiTools::TVD_this_vec(vector<int> this_vec, float lambda, flo
   for( ; chirac != this_vec.end() ; chirac++)
   {
     int this_node = *chirac;
-    this_val_mchi.push_back((double)M_chi_data_map[this_node]);
-    this_val_bchi.push_back((double)b_chi_data_map[this_node]);
-    this_val_segelev.push_back((double)segelev_diff[this_node]);
-    // NOTE: We recast everythin to double, floating points somehow generate bugs, in rare cases.
+    if(chi_data_map[this_node] != -9999){ //  Checking if there are no data
+
+      this_val_mchi.push_back((double)M_chi_data_map[this_node]);
+      this_val_bchi.push_back((double)b_chi_data_map[this_node]);
+      this_val_segelev.push_back((double)segelev_diff[this_node]);
+      // NOTE: We recast everythin to double, floating points somehow generate bugs, in rare cases.
+    }
+
 
   }
 
@@ -3016,10 +3022,11 @@ void  LSDChiTools::TVD_this_vec_v2(vector<int> this_vec, float lambda, float lam
   for( ; chirac != this_vec.end() ; chirac++)
   {
     int this_node = *chirac;
-    this_val_mchi.push_back((double)M_chi_data_map[this_node]);
-    this_val_bchi.push_back((double)b_chi_data_map[this_node]);
-    this_val_segelev.push_back((double)segelev_diff[this_node]);
-
+    if(chi_data_map[this_node] != -9999){
+      this_val_mchi.push_back((double)M_chi_data_map[this_node]);
+      this_val_bchi.push_back((double)b_chi_data_map[this_node]);
+      this_val_segelev.push_back((double)segelev_diff[this_node]);
+    }
 
   }
 
