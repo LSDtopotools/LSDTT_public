@@ -1162,6 +1162,9 @@ int main (int nNumberofArgs,char *argv[])
   }
 
 
+  // This does all the segmenting. 
+  // It uses a chi coordinate raster that has been inherited from earlier in this
+  // program and takes into account discharge if that option is flagged. 
   if (this_bool_map["print_segmented_M_chi_map_to_csv"])
   {
     cout << "I am calculating the segmented channels" << endl;
