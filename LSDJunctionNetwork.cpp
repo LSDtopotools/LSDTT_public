@@ -8389,7 +8389,7 @@ void LSDJunctionNetwork::write_river_profiles_to_csv(vector<int>& BasinJunctions
 {
   int this_node, row, col;
   double latitude, longitude, x_loc, y_loc;
-  float TotalLength;
+  float TotalLength, ThisLength;
   LSDCoordinateConverterLLandUTM Converter;
 
   // open the csv
@@ -8404,19 +8404,22 @@ void LSDJunctionNetwork::write_river_profiles_to_csv(vector<int>& BasinJunctions
     // get the longest channel in this basin
     LSDIndexChannel ThisChannel = generate_longest_index_channel_in_basin(BasinJunctions[i],FlowInfo,DistanceFromOutlet);
     vector<int> NodeSequence = ThisChannel.get_NodeSequence();
+    int UpstreamNode = NodeSequence[0];
+    int DownstreamNode = NodeSequence.back();
     for (int n = 0; n < int(NodeSequence.size()); n++)
     {
       this_node = NodeSequence[n];
       FlowInfo.retrieve_current_row_and_col(this_node,row,col);
       FlowInfo.get_lat_and_long_locations(row, col, latitude, longitude, Converter);
       FlowInfo.get_x_and_y_locations(row, col, x_loc, y_loc);
+      ThisLength = FlowInfo.get_flow_length_between_nodes(this_node, DownstreamNode);
       TotalLength = GetTotalChannelLengthUpstream(this_node, FlowInfo);
 
       chan_out << BasinJunctions[i] << ","
                << this_node << ","
                << row << ","
                << col << ","
-               << DistanceFromOutlet.get_data_element(row,col) << ","
+               << ThisLength << ","
                << Elevation.get_data_element(row,col) << ","
                << TotalLength << ",";
       chan_out.precision(9);
@@ -8440,7 +8443,7 @@ float LSDJunctionNetwork::GetTotalChannelLengthUpstream(int this_node, LSDFlowIn
 {
   // get the nodes upslope of this node
   float TotalLength = 0;
-  float two_times_root2 = 2.828427;
+  float root2 = 1.41421356;
   vector<int> UpslopeNodes = FlowInfo.get_upslope_nodes(this_node);
 
   for (int i = 0; i < int(UpslopeNodes.size()); i++)
@@ -8457,7 +8460,7 @@ float LSDJunctionNetwork::GetTotalChannelLengthUpstream(int this_node, LSDFlowIn
       }
       else if (FlowLengthCode == 2)
       {
-        TotalLength += DataResolution * two_times_root2; // Diagonal
+        TotalLength += DataResolution * root2; // Diagonal
       }
     }
   }
