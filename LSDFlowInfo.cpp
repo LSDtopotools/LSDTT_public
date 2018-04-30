@@ -4640,11 +4640,11 @@ vector< Array2D<float> > LSDFlowInfo::HilltopFlowRouting(LSDRaster Elevation, LS
   cout << "XMinimum is " << XMinimum << endl;
   cout << "YMinimum is " << YMinimum << endl;
   cout << "ymax is " << ymax << endl;
-  
+
   for (i=0;i<NRows;++i) northing.push_back(ymax - DataResolution*(i - 0.5));
   for (j=0;j<NCols;++j) easting.push_back(XMinimum + DataResolution*(j + 0.5));
 
-    
+
   //convert aspects to radians with east as theta = 0/2*pi
   for (i=0; i<NRows; ++i)
   {
@@ -8323,6 +8323,7 @@ void LSDFlowInfo::snap_to_hilltops(vector<float> x_locs, vector<float> y_locs, i
     }
   }
 }
+
 
 
 #endif

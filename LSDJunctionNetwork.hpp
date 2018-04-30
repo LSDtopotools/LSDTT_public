@@ -1799,6 +1799,13 @@ vector<int> get_channel_pixels_along_line(vector<int> line_rows, vector<int> lin
 /// @date 06/05/18
 void write_river_profiles_to_csv(vector<int>& BasinJunctions, LSDFlowInfo& FlowInfo, LSDRaster& DistanceFromOutlet, LSDRaster& Elevation, string csv_filename);
 
+/// @brief function get the total length of channels upstream of a node
+/// @param this_node node of interest
+/// @param FlowInfo LSDFlowInfo object
+/// @author FJC
+/// @date 30/04/18
+float GetTotalChannelLengthUpstream(int this_node, LSDFlowInfo& FlowInfo);
+
   protected:
 
   ///Number of rows.

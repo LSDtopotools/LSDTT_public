@@ -8389,13 +8389,14 @@ void LSDJunctionNetwork::write_river_profiles_to_csv(vector<int>& BasinJunctions
 {
   int this_node, row, col;
   double latitude, longitude, x_loc, y_loc;
+  float TotalLength;
   LSDCoordinateConverterLLandUTM Converter;
 
   // open the csv
   ofstream chan_out;
   chan_out.open(csv_filename.c_str());
 
-  chan_out << "id,node,row,column,distance_from_outlet,elevation,latitude,longitude,x,y" << endl;
+  chan_out << "id,node,row,column,distance_from_outlet,elevation,total_length_upstream,latitude,longitude,x,y" << endl;
 
   // for each basin, get the profile
   for (int i = 0; i < int(BasinJunctions.size()); i++)
@@ -8409,13 +8410,15 @@ void LSDJunctionNetwork::write_river_profiles_to_csv(vector<int>& BasinJunctions
       FlowInfo.retrieve_current_row_and_col(this_node,row,col);
       FlowInfo.get_lat_and_long_locations(row, col, latitude, longitude, Converter);
       FlowInfo.get_x_and_y_locations(row, col, x_loc, y_loc);
+      TotalLength = GetTotalChannelLengthUpstream(this_node, FlowInfo);
 
       chan_out << BasinJunctions[i] << ","
                << this_node << ","
                << row << ","
                << col << ","
                << DistanceFromOutlet.get_data_element(row,col) << ","
-               << Elevation.get_data_element(row,col) << ",";
+               << Elevation.get_data_element(row,col) << ","
+               << TotalLength << ",";
       chan_out.precision(9);
       chan_out << latitude << ","
                << longitude << ",";
@@ -8426,6 +8429,40 @@ void LSDJunctionNetwork::write_river_profiles_to_csv(vector<int>& BasinJunctions
 
   chan_out.close();
 
+}
+
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Function to get total length of channels upstream of a node
+// FJC 30/04/18
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+float LSDJunctionNetwork::GetTotalChannelLengthUpstream(int this_node, LSDFlowInfo& FlowInfo)
+{
+  // get the nodes upslope of this node
+  float TotalLength = 0;
+  float two_times_root2 = 2.828427;
+  vector<int> UpslopeNodes = FlowInfo.get_upslope_nodes(this_node);
+
+  for (int i = 0; i < int(UpslopeNodes.size()); i++)
+  {
+    // check if this upslope node is part of the stream network
+    int this_SO = get_StreamOrder_of_Node(FlowInfo, UpslopeNodes[i]);
+    if (this_SO != NoDataValue)
+    {
+      // if it's a channel, get the flow length code
+      int FlowLengthCode = FlowInfo.retrieve_flow_length_code_of_node(UpslopeNodes[i]);
+      if (FlowLengthCode == 1)
+      {
+        TotalLength += DataResolution; // cardinal
+      }
+      else if (FlowLengthCode == 2)
+      {
+        TotalLength += DataResolution * two_times_root2; // Diagonal
+      }
+    }
+  }
+
+  return TotalLength;
 }
 
 #endif
