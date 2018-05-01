@@ -1177,6 +1177,17 @@ float LSDFlowInfo::get_DrainageArea_square_km(int this_node)
 
   return DrainageAreaKm;
 }
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// get the drainage area of a node in m^2
+// FJC 01/05/18
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDFlowInfo::get_DrainageArea_square_m(int this_node)
+{
+  int NContributingPixels = NContributingNodes[this_node];
+  float DrainageArea = NContributingPixels*DataResolution*DataResolution;
+
+  return DrainageArea;
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // recursive add_to_stack routine, from Braun and Willett eq. 12 and 13
