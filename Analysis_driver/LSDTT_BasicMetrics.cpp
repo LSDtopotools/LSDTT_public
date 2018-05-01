@@ -185,7 +185,8 @@ int main (int nNumberofArgs,char *argv[])
   string_default_map["burn_data_csv_column_header"] = "burned_data";
   string_default_map["csv_to_burn_name"] = "NULL";
 
-
+  // This is for junction angles
+  bool_default_map["print_junction_angles_to_csv"] = false;
 
   // Use the parameter parser to get the maps of the parameters required for the
   // analysis
@@ -477,7 +478,8 @@ int main (int nNumberofArgs,char *argv[])
         || this_bool_map["print_junction_index_raster"]
         || this_bool_map["print_junctions_to_csv"]
         || this_bool_map["find_basins"]
-        || this_bool_map["print_chi_data_map"])
+        || this_bool_map["print_chi_data_map"]
+        || this_bool_map["print_junction_angles_to_csv"])
   {
     cout << "I will need to compute flow information, because you are getting drainage area or channel networks." << endl;
     //==========================================================================
@@ -578,7 +580,8 @@ int main (int nNumberofArgs,char *argv[])
         || this_bool_map["print_junctions_to_csv"]
         || this_bool_map["print_sources_to_csv"]
         || this_bool_map["find_basins"] 
-        || this_bool_map["print_chi_data_maps"])
+        || this_bool_map["print_chi_data_maps"]
+        || this_bool_map["print_junction_angles_to_csv"])
     {
       // calculate the flow accumulation
       cout << "\t Calculating flow accumulation (in pixels)..." << endl;
@@ -640,6 +643,23 @@ int main (int nNumberofArgs,char *argv[])
           thiscsv.print_data_to_geojson(gjson_name);
         }
       }
+      
+      // print the junction angles
+      if( this_bool_map["print_junction_angles_to_csv"])
+      {
+        cout << "I am testing the junction angle code." << endl;
+        string JAngles_csv_name = OUT_DIR+OUT_ID+"_JAngles.csv";
+        vector<int> JunctionList;
+        JunctionNetwork.print_junction_angles_to_csv(JunctionList, FlowInfo, JAngles_csv_name);
+
+        if ( this_bool_map["convert_csv_to_geojson"])
+        {
+          string gjson_name = OUT_DIR+OUT_ID+"_JAngles.geojson";
+          LSDSpatialCSVReader thiscsv(JAngles_csv_name);
+          thiscsv.print_data_to_geojson(gjson_name);
+        }
+      }
+      
     
       // Print sources
       if( this_bool_map["print_sources_to_csv"])
