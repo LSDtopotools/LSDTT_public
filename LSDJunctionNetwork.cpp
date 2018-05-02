@@ -8453,8 +8453,8 @@ void LSDJunctionNetwork::write_river_profiles_to_csv_all_tributaries(vector<int>
     // open the csv
     ofstream chan_out;
     string jn_name = itoa(BasinJunctions[i]);
-    string this_fname = csv_filename+"_"+jn_name;
-    chan_out.open(csv_filename.c_str());
+    string this_fname = csv_filename+"_"+jn_name+".csv";
+    chan_out.open(this_fname.c_str());
 
     chan_out << "basin_id,source_id,node,row,column,distance_from_outlet,elevation,total_length_upstream,latitude,longitude,x,y" << endl;
 
@@ -8543,5 +8543,77 @@ float LSDJunctionNetwork::GetTotalChannelLengthUpstream(int this_node, LSDFlowIn
 
   return TotalLength;
 }
+
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// Function to write profiles from the channel head to a certain flow distance downstream
+// This writes profiles for every source in the network!
+// FJC  02/05/18
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+void LSDJunctionNetwork::write_river_profiles_to_csv_all_sources(float channel_length, LSDFlowInfo& FlowInfo, LSDRaster& Elevation, string csv_filename)
+{
+  int this_node, row, col;
+  double latitude, longitude, x_loc, y_loc;
+  float ThisLength, drainage_area;
+  LSDCoordinateConverterLLandUTM Converter;
+
+  // open the csv
+  ofstream chan_out;
+  string this_fname = csv_filename+".csv";
+  chan_out.open(this_fname.c_str());
+
+  chan_out << "source_id,node,row,column,distance_from_source,elevation,drainage_area,latitude,longitude,x,y" << endl;
+
+  for (int i = 0; i < int(SourcesVector.size()); i++)
+  {
+      bool reached_end = false;
+      int start_node = SourcesVector[i];
+      int start_jn = get_Junction_of_Node(start_node, FlowInfo);
+      this_node = start_node;
+      // now go downstream until you are at the threshold channel length
+      while (reached_end == false)
+      {
+        FlowInfo.retrieve_current_row_and_col(this_node,row,col);
+        FlowInfo.get_lat_and_long_locations(row, col, latitude, longitude, Converter);
+        FlowInfo.get_x_and_y_locations(row, col, x_loc, y_loc);
+        ThisLength = FlowInfo.get_flow_length_between_nodes(start_node,this_node);
+        drainage_area = FlowInfo.get_DrainageArea_square_m(this_node);
+
+        if (ThisLength <= channel_length)
+        {
+          // write to csv
+          chan_out << start_jn << ","
+                   << this_node << ","
+                   << row << ","
+                   << col << ","
+                   << ThisLength << ","
+                   << Elevation.get_data_element(row,col) << ","
+                   << drainage_area << ",";
+          chan_out.precision(9);
+          chan_out << latitude << ","
+                   << longitude << ",";
+          chan_out.precision(9);
+          chan_out << x_loc << "," << y_loc << endl;
+
+          // find the receiver node
+          int receiver_node;
+          FlowInfo.retrieve_receiver_information(this_node, receiver_node);
+          if (receiver_node == this_node)
+          {
+            cout << "I've reached a base level before the defined channel length, exiting" << endl;
+            reached_end = true;
+          }
+          cout << "This node: " << this_node << " receiver node: " << receiver_node << endl;
+          this_node = receiver_node;
+        }
+        else
+        {
+          reached_end = true;
+        }
+      }
+    }
+
+    chan_out.close();
+}
+
 
 #endif

@@ -1796,8 +1796,18 @@ vector<int> get_channel_pixels_along_line(vector<int> line_rows, vector<int> lin
 /// @param Elevation elev raster
 /// @param csv_filename the output csv file name
 /// @author FJC
-/// @date 06/05/18
+/// @date 06/04/18
 void write_river_profiles_to_csv(vector<int>& BasinJunctions, LSDFlowInfo& FlowInfo, LSDRaster& DistanceFromOutlet, LSDRaster& Elevation, string csv_filename);
+
+/// @brief function to take a vector of basin outlet junctions and write data about all tribs to csv
+/// @param BasinJunctions vector of basin junctions
+/// @param FlowInfo
+/// @param DistanceFromOutlet
+/// @param Elevation elev raster
+/// @param csv_filename the output csv file name
+/// @author FJC
+/// @date 02/05/18
+void write_river_profiles_to_csv_all_tributaries(vector<int>& BasinJunctions, LSDFlowInfo& FlowInfo, LSDRaster& DistanceFromOutlet, LSDRaster& Elevation, string csv_filename);
 
 /// @brief function get the total length of channels upstream of a node
 /// @param this_node node of interest
@@ -1805,6 +1815,15 @@ void write_river_profiles_to_csv(vector<int>& BasinJunctions, LSDFlowInfo& FlowI
 /// @author FJC
 /// @date 30/04/18
 float GetTotalChannelLengthUpstream(int this_node, LSDFlowInfo& FlowInfo);
+
+/// @brief function to write data about channels downstream of all channel heads for a specified length
+/// @param channel_length length downstream to stop writing info
+/// @param FlowInfo
+/// @param Elevation elev raster
+/// @param csv_filename the output csv file name
+/// @author FJC
+/// @date 02/05/18
+void write_river_profiles_to_csv_all_sources(float channel_length, LSDFlowInfo& FlowInfo, LSDRaster& Elevation, string csv_filename);
 
   protected:
 
