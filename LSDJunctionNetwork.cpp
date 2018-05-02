@@ -8452,7 +8452,8 @@ void LSDJunctionNetwork::write_river_profiles_to_csv_all_tributaries(vector<int>
   {
     // open the csv
     ofstream chan_out;
-    string this_fname = csv_filename+"_"+to_string(BasinJunctions[i]);
+    string jn_name = itoa(BasinJunctions[i]);
+    string this_fname = csv_filename+"_"+jn_name;
     chan_out.open(csv_filename.c_str());
 
     chan_out << "basin_id,source_id,node,row,column,distance_from_outlet,elevation,total_length_upstream,latitude,longitude,x,y" << endl;
