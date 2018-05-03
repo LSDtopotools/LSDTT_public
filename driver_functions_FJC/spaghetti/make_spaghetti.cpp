@@ -105,6 +105,7 @@ int main (int nNumberofArgs,char *argv[])
   bool_default_map["print_all_tributaries_to_csv"] = false;
   bool_default_map["print_channels_all_sources_to_csv"] = false;
   float_default_map["channel_length"] = 1000;
+  int_default_map["slope_window_size"] = 1;
 
   // Use the parameter parser to get the maps of the parameters required for the
   // analysis
@@ -259,7 +260,7 @@ int main (int nNumberofArgs,char *argv[])
   if( this_bool_map["print_channels_all_sources_to_csv"])
   {
     string csv_filename = OUT_DIR+OUT_ID+"_all_sources"+itoa(this_float_map["channel_length"]);
-    JunctionNetwork.write_river_profiles_to_csv_all_sources(this_float_map["channel_length"], FlowInfo, filled_topography, csv_filename);
+    JunctionNetwork.write_river_profiles_to_csv_all_sources(this_float_map["channel_length"], this_int_map["slope_window_size"], FlowInfo, filled_topography, csv_filename);
   }
 
   if( this_bool_map["print_basin_raster"])

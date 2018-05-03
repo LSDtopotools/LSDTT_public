@@ -1823,7 +1823,7 @@ float GetTotalChannelLengthUpstream(int this_node, LSDFlowInfo& FlowInfo);
 /// @param csv_filename the output csv file name
 /// @author FJC
 /// @date 02/05/18
-void write_river_profiles_to_csv_all_sources(float channel_length, LSDFlowInfo& FlowInfo, LSDRaster& Elevation, string csv_filename);
+void write_river_profiles_to_csv_all_sources(float channel_length, int slope_window_size, LSDFlowInfo& FlowInfo, LSDRaster& Elevation, string csv_filename);
 
   protected:
 

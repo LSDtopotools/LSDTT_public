@@ -1203,6 +1203,15 @@ void get_nodeindices_from_csv(string csv_filename, vector<int>& NIs, vector<floa
   /// @date 29/09/2016
 	float get_flow_length_between_nodes(int UpstreamNode, int DownstreamNode);
 
+  /// @brief This function gets the slope between two nodes based on flow length
+  /// @param upslope_node the upstream node
+  /// @param downslope_node the downstream node
+  /// @param Elevation elevation raster
+  /// @return slope between the nodes
+  /// @author FJC
+  /// @date 04/05/18
+  float get_slope_between_nodes(int upslope_node, int downslope_node, LSDRaster& Elevation);
+
   /// @brief This function gets the Euclidian distance between two nodes
   /// @param node_A the first node
   /// @param node_B the second node

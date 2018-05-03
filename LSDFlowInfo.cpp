@@ -8335,6 +8335,31 @@ void LSDFlowInfo::snap_to_hilltops(vector<float> x_locs, vector<float> y_locs, i
   }
 }
 
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+// Get slope between nodes
+// FJC 03/05/18
+//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+float LSDFlowInfo::get_slope_between_nodes(int upslope_node, int downslope_node, LSDRaster& Elevation)
+{
+  float slope = NoDataValue;
+  int upslope_row, upslope_col, downslope_row, downslope_col;
+  bool us_node = is_node_upstream(downslope_node, upslope_node);
+  if (us_node == false)
+  {
+    cout << "Warning! Your downslope node is not downslope of the upslope one. Returning NDV." << endl;
+  }
+  else
+  {
+    retrieve_current_row_and_col(upslope_node, upslope_row, upslope_col);
+    retrieve_current_row_and_col(downslope_node, downslope_row, downslope_col);
+    float upslope_elev = Elevation.get_data_element(upslope_row, upslope_col);
+    float downslope_elev = Elevation.get_data_element(downslope_row, downslope_col);
+    float FlowDist = get_flow_length_between_nodes(upslope_node, downslope_node);
+
+    slope = (upslope_elev - downslope_elev)/FlowDist;
+  }
+  return slope;
+}
 
 
 #endif
