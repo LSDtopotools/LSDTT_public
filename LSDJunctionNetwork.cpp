@@ -8389,14 +8389,14 @@ void LSDJunctionNetwork::write_river_profiles_to_csv(vector<int>& BasinJunctions
 {
   int this_node, row, col;
   double latitude, longitude, x_loc, y_loc;
-  float total_length, this_length, drainage_area;
+  float this_length, drainage_area;
   LSDCoordinateConverterLLandUTM Converter;
 
   // open the csv
   ofstream chan_out;
   chan_out.open(csv_filename.c_str());
 
-  chan_out << "id,node,row,column,distance_from_outlet,elevation,total_length_upstream,drainage_area,latitude,longitude,x,y" << endl;
+  chan_out << "id,node,row,column,distance_from_source,elevation,drainage_area,latitude,longitude,x,y" << endl;
 
   // for each basin, get the profile
   for (int i = 0; i < int(BasinJunctions.size()); i++)
@@ -8404,15 +8404,14 @@ void LSDJunctionNetwork::write_river_profiles_to_csv(vector<int>& BasinJunctions
     // get the longest channel in this basin
     LSDIndexChannel ThisChannel = generate_longest_index_channel_in_basin(BasinJunctions[i],FlowInfo,DistanceFromOutlet);
     vector<int> NodeSequence = ThisChannel.get_NodeSequence();
-    int DownstreamNode = NodeSequence.back();
+    int UpstreamNode = NodeSequence.front();
     for (int n = 0; n < int(NodeSequence.size()); n++)
     {
       this_node = NodeSequence[n];
       FlowInfo.retrieve_current_row_and_col(this_node,row,col);
       FlowInfo.get_lat_and_long_locations(row, col, latitude, longitude, Converter);
       FlowInfo.get_x_and_y_locations(row, col, x_loc, y_loc);
-      this_length = FlowInfo.get_flow_length_between_nodes(this_node, DownstreamNode);
-      total_length = GetTotalChannelLengthUpstream(this_node, FlowInfo);
+      this_length = FlowInfo.get_flow_length_between_nodes(UpstreamNode,this_node);
       drainage_area = FlowInfo.get_DrainageArea_square_m(this_node);
 
       chan_out << BasinJunctions[i] << ","
@@ -8421,7 +8420,6 @@ void LSDJunctionNetwork::write_river_profiles_to_csv(vector<int>& BasinJunctions
                << col << ","
                << this_length << ","
                << Elevation.get_data_element(row,col) << ","
-               << total_length << ","
                << drainage_area << ",";
       chan_out.precision(9);
       chan_out << latitude << ","
