@@ -8561,7 +8561,7 @@ void LSDJunctionNetwork::write_river_profiles_to_csv_all_sources(float channel_l
   string this_fname = csv_filename+".csv";
   chan_out.open(this_fname.c_str());
 
-  chan_out << "source_id,node,row,column,distance_from_source,elevation,slope,drainage_area,latitude,longitude,x,y" << endl;
+  chan_out << "source_id,node,row,column,distance_from_source,elevation,drainage_area,latitude,longitude,x,y" << endl;
 
   for (int i = 0; i < int(SourcesVector.size()); i++)
   {
@@ -8569,9 +8569,7 @@ void LSDJunctionNetwork::write_river_profiles_to_csv_all_sources(float channel_l
       bool reached_end = false;
       int start_node = SourcesVector[i];
       int start_jn = get_Junction_of_Node(start_node, FlowInfo);
-      float slope = NoDataValue;
       this_node = start_node;
-      int counter = 0;
       // now go downstream until you are at the threshold channel length
       while (reached_end == false)
       {
@@ -8587,24 +8585,6 @@ void LSDJunctionNetwork::write_river_profiles_to_csv_all_sources(float channel_l
           int receiver_node;
           FlowInfo.retrieve_receiver_information(this_node, receiver_node);
 
-          // get the slope
-          if (counter > slope_window_size)
-          {
-            int upslope_node = channel_nodes[counter-slope_window_size];
-            int downslope_node = receiver_node;
-            if (slope_window_size > 1)
-            {
-              for (int j = 0; j < slope_window_size-1; j++)
-              {
-                int next_node;
-                FlowInfo.retrieve_receiver_information(downslope_node, next_node);
-                downslope_node = next_node;
-              }
-            }
-            //cout << "upslope_node: " << upslope_node << endl;
-            slope = FlowInfo.get_slope_between_nodes(upslope_node, downslope_node, Elevation);
-          }
-
           // write to csv
           chan_out << start_jn << ","
                    << this_node << ","
@@ -8612,7 +8592,6 @@ void LSDJunctionNetwork::write_river_profiles_to_csv_all_sources(float channel_l
                    << col << ","
                    << ThisLength << ","
                    << Elevation.get_data_element(row,col) << ","
-                   << slope << ","
                    << drainage_area << ",";
           chan_out.precision(9);
           chan_out << latitude << ","
@@ -8629,7 +8608,6 @@ void LSDJunctionNetwork::write_river_profiles_to_csv_all_sources(float channel_l
           //cout << "This node: " << this_node << " receiver node: " << receiver_node << endl;
           channel_nodes.push_back(this_node);
           this_node = receiver_node;
-          counter++;
         }
         else
         {
