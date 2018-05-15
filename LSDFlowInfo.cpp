@@ -8172,11 +8172,7 @@ float LSDFlowInfo::get_flow_length_between_nodes(int UpstreamNode, int Downstrea
 	float length = 0;
 	float root_2 = 1.4142135623;
 
-  if (UpstreamNode == DownstreamNode)
-  {
-    cout << "You've picked the same node! Flow Length is 0." << endl;
-  }
-  else
+  if (UpstreamNode != DownstreamNode)
   {
   	int upstream_test = is_node_upstream(DownstreamNode, UpstreamNode);
   	if (upstream_test != 1)
