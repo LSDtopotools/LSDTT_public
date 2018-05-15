@@ -8454,7 +8454,7 @@ void LSDJunctionNetwork::write_river_profiles_to_csv_all_tributaries(vector<int>
     string this_fname = csv_filename+"_"+jn_name+".csv";
     chan_out.open(this_fname.c_str());
 
-    chan_out << "basin_id,source_id,node,row,column,distance_from_outlet,elevation,total_length_upstream,latitude,longitude,x,y" << endl;
+    chan_out << "basin_id,id,node,row,column,distance_from_outlet,elevation,total_length_upstream,latitude,longitude,x,y" << endl;
 
     // get all the channel heads upstream of this junction
     vector<int> SourceNodes, SourceJunctions;
