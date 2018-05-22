@@ -6,11 +6,15 @@
 // The driver file has a number of options that allow the user to calculate
 // different kinds of chi analysis.
 //
+// The code includes segmentation of channels in chi space, mapping of landscapes 
+// with the chi coordinate, determining the best for concavity for landscapes, 
+// and a number of other features. 
+//
 // The documentation is here:
-// https://lsdtopotools.github.io/LSDTopoTools_ChiMudd2014/
+// https://lsdtopotools.github.io/LSDTT_documentation/LSDTT_chi_analysis.html
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
-// Copyright (C) 2016 Simon M. Mudd 2016
+// Copyright (C) 2018 Simon M. Mudd 2018
 //
 // Developer can be contacted by simon.m.mudd _at_ ed.ac.uk
 //
@@ -74,7 +78,9 @@ int main (int nNumberofArgs,char *argv[])
     cout << "|| This program has a number of options to make chi    ||" << endl;
     cout << "|| plots and to map out slopes in chi space.           ||" << endl;
     cout << "|| This program was developed by Simon M. Mudd         ||" << endl;
+    cout << "|| Fiona J. Clubb and Boris Gailleton                  ||" << endl;
     cout << "||  at the University of Edinburgh                     ||" << endl;
+    cout << "|| and Martin D Hurst at the University of Glasgow.    ||" << endl;
     cout << "=========================================================" << endl;
     cout << "This program requires two inputs: " << endl;
     cout << "* First the path to the parameter file." << endl;
@@ -92,7 +98,7 @@ int main (int nNumberofArgs,char *argv[])
     cout << "=========================================================" << endl;
     cout << "For more documentation on the parameter file, " << endl;
     cout << " see readme and online documentation." << endl;
-    cout << " https://lsdtopotools.github.io/LSDTopoTools_ChiMudd2014/" << endl;
+    cout << " https://lsdtopotools.github.io/LSDTT_documentation/LSDTT_chi_analysis.html" << endl;
     cout << "=========================================================" << endl;
     exit(EXIT_SUCCESS);
   }
@@ -171,7 +177,6 @@ int main (int nNumberofArgs,char *argv[])
   int_default_map["window_stepped_kp_detection"] = 100;
   float_default_map["std_dev_coeff_stepped_kp"] = 4;
 
- 
   // basic parameters for calculating chi
   float_default_map["A_0"] = 1;
   float_default_map["m_over_n"] = 0.5;
