@@ -356,7 +356,7 @@ int main (int nNumberofArgs,char *argv[])
     cout << endl << endl << "=======================================" << endl;
     cout << "You have set the full concavity analysis in motion!"  << endl;
     cout << "This can take a while. If you justy want a basic, efficient calculation," << endl;
-    cout << "Just use the disorder metric. " << endl;
+    cout << "use the disorder metric. " << endl;
     cout << "Set: " << endl;
     cout << "movern_disorder_test: true" << endl; 
     cout << "disorder_use_uncert = true" << endl;
@@ -881,7 +881,6 @@ int main (int nNumberofArgs,char *argv[])
       {
         BaseLevelJunctions = BaseLevelJunctions_Initial;
       }
-
     }
   }
   else
@@ -1407,7 +1406,8 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["MCMC_movern_analysis"])
   {
     cout << "I am going to explore m/n using the MCMC method" << endl;
-    cout << "WARNING!!! This could take a while." << endl;
+    cout << "THIS DOESN'T WORK!!! IT IS FOR TESTING ONLY!!!!" << endl;
+    cout << "ALSO THIS METHOD THAT DOESN'T WORK WILL TAKE FOREVER!!!" << endl;
     // Lets make a new chi tool: this won't be segmented since we only
     // need it for m/n
     LSDChiTools ChiTool_MCMC(FlowInfo);
@@ -1478,6 +1478,9 @@ int main (int nNumberofArgs,char *argv[])
   if (this_bool_map["movern_residuals_test"])
   {
     cout << "I am going to explore m/n using the residuals method" << endl;
+    cout << "THIS DOENS'T WORK!!! IT IS HERE FOR TESTING ONLY!!!" << endl;
+    cout << "The disorder test follows similar rationale but actually works." << endl;
+    cout << "Turn it on with movern_disorder_test:true" << endl;
     // Lets make a new chi tool: this won't be segmented since we only
     // need it for m/n
     LSDChiTools ChiTool_residuals(FlowInfo);
