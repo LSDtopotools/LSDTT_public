@@ -1,26 +1,23 @@
-# make with make -f basin_grabber.make
-
 CC=g++
-CFLAGS=-c -Wall -O3
-OFLAGS = -Wall -O3
+CFLAGS=-c -Wall -O3 -pg -g
+OFLAGS = -Wall -O3 -pg -g
 LDFLAGS= -Wall
-SOURCES=basin_grabber.cpp \
+SOURCES= LH_Driver.cpp \
         ../LSDMostLikelyPartitionsFinder.cpp \
         ../LSDIndexRaster.cpp \
         ../LSDRaster.cpp \
-        ../LSDShapeTools.cpp \
         ../LSDFlowInfo.cpp \
         ../LSDJunctionNetwork.cpp \
         ../LSDIndexChannel.cpp \
         ../LSDChannel.cpp \
-        ../LSDIndexChannelTree.cpp \
         ../LSDStatsTools.cpp \
         ../LSDBasin.cpp \
+        ../LSDShapeTools.cpp \
         ../LSDParticle.cpp \
-        ../LSDCRNParameters.cpp \
-        ../LSDRasterInfo.cpp
+        ../LSDCRNParameters.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=basin_grabber.exe
+
+EXECUTABLE= LH_Driver.out
 
 all: $(SOURCES) $(EXECUTABLE)
 
