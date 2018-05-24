@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-offsetof")
+project(LSDTopoTools)
+include_directories(/TNT)
+add_executable(Analysis_driver/LSDTT_BasicMetrics.exe Analysis_driver/LSDTT_BasicMetrics.cpp LSDRaster.cpp LSDIndexRaster.cpp LSDFlowInfo.cpp LSDStatsTools.cpp LSDCloudRaster.cpp LSDSwathProfile.cpp LSDShapeTools.cpp LSDJunctionNetwork.cpp LSDTerrace.cpp LSDIndexChannel.cpp LSDChannel.cpp LSDMostLikelyPartitionsFinder.cpp LSDParameterParser.cpp LSDSpatialCSVReader.cpp)
+target_link_libraries(get_terraces.out)
