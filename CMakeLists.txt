@@ -7,17 +7,58 @@ project(LSDTopoTools)
 # TODO: issue FFTW3LibraryDepends.cmake missing in most fftw3 installs
 # https://github.com/FFTW/fftw3/issues/130
 #find_package(fftw3 REQUIRED)
-#message(STATUS "Found fttw3: ${FFTW3_INCLUDE_DIRS}/fftw3")
+#message(STATUS "Found fttw3: ${FFTW3_LIBRARY_DIRS}/fftw3")
+
+# TODO: check which components are needed (+ not working with pcl conda-forge)
+#find_package(pcl REQUIRED COMPONENTS)
+#message(STATUS "Found pcl: ${PCL_LIBRARY_DIRS}/pcl")
 
 
 # Build
 # =====
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-offsetof")
 
+set(LIB_HEADERS
+  LSDRaster.hpp
+  LSDRasterSpectral.hpp
+  LSDRasterInfo.hpp
+  LSDIndexRaster.hpp
+  LSDFlowInfo.hpp
+  LSDStatsTools.hpp
+  LSDShapeTools.hpp
+  LSDJunctionNetwork.hpp
+  LSDIndexChannel.hpp
+  LSDChannel.hpp
+  LSDMostLikelyPartitionsFinder.hpp
+  LSDParameterParser.hpp
+  LSDSpatialCSVReader.hpp
+  LSDIndexChannelTree.hpp
+  LSDChiTools.hpp
+  LSDChiNetwork.hpp
+  LSDBasin.hpp
+  LSDParticle.hpp
+  LSDCRNParameters.hpp
+)
 
-include_directories(/TNT)
-add_executable(LSDTT_BasicMetrics.exe Analysis_driver/LSDTT_BasicMetrics.cpp LSDRaster.cpp LSDIndexRaster.cpp LSDFlowInfo.cpp LSDStatsTools.cpp LSDShapeTools.cpp LSDJunctionNetwork.cpp LSDIndexChannel.cpp LSDChannel.cpp LSDMostLikelyPartitionsFinder.cpp LSDParameterParser.cpp LSDSpatialCSVReader.cpp LSDRasterSpectral.cpp LSDRasterInfo.cpp LSDIndexChannelTree.cpp LSDChiTools.cpp LSDChiNetwork.cpp LSDBasin.cpp LSDParticle.cpp LSDCRNParameters.cpp)
-target_link_libraries(LSDTT_BasicMetrics.exe fftw3)
+string(REGEX REPLACE "([^;]+).hpp" "\\1.cpp" LIB_SOURCES "${LIB_HEADERS}")
+
+set(EXE_SOURCES
+  Analysis_driver/LSDTT_BasicMetrics.cpp
+  driver_functions_ChannelExtraction/channel_extraction_tool.cpp
+  driver_functions_MuddChi2014/chi_mapping_tool.cpp
+)
+
+set(EXE_FILES)
+
+add_library(${PROJECT_NAME} ${LIB_SOURCES} ${LIB_HEADERS} )
+
+foreach(src_file ${EXE_SOURCES})
+  string(REGEX REPLACE "([^;]+)/([^;]+).cpp" "\\2" exe_file ${src_file})
+  list(APPEND EXE_FILES ${exe_file})
+  add_executable(${exe_file} ${src_file})
+  target_link_libraries(${exe_file} ${PROJECT_NAME} fftw3)
+endforeach(src_file ${EXE_SOURCES})
+
 
 # Install
 # =======
@@ -26,6 +67,6 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 install(
-  PROGRAMS LSDTT_BasicMetrics.exe
+  PROGRAMS ${EXE_FILES}
   DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
