@@ -1,5 +1,0 @@
-RasterFile /home/s1143956/DTMDataStore/data/SurfaceRoughness/BaldRock/br_dem
-OutputRasterFile /home/s1143956/DTMDataStore/data/SurfaceRoughness/BaldRock/br_channel_mask
-QQFile /home/s1143956/DTMDataStore/data/SurfaceRoughness/BaldRock/br_qq_
-sigma 4
-threshold 100

@@ -1,6 +1,0 @@
-RasterFile /home/s1143956/DTMDataStore/data/FR/HillslopeAnalysis/fr_ne_dem
-OutputRasterFile /home/s1143956/DTMDataStore/data/FR/HillslopeAnalysis/fr_ne_channel_mask
-QQFile /home/s1143956/DTMDataStore/data/FR/HillslopeAnalysis/fr_ne_qq_
-window_radius_for_surface_fitting 3
-threshold_drainage_area 1000
-connected_components_threshold 50
