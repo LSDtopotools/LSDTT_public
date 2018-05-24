@@ -1,0 +1,29 @@
+package:
+  name: lsdtopotools
+  version: "0.1"
+
+source:
+  path: ../..
+  # git_url: https://github.com/LSDtopotools/LSDTT_public.git
+  # git_rev: master
+
+requirements:
+  build:
+    - cmake
+    - gcc
+    - fftw
+  run:
+    - fftw
+
+build:
+  number: 1
+
+about:
+  home: https://github.com/LSDtopotools/LSDTT_public
+  license: GPLv3
+  summary: 'Software for topographic analysis'
+
+# install conda-build (in root environment)
+# and then run
+# $ conda build lsdtopotools -c conda-forge
+# from the conda-recipe directory
