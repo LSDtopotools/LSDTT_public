@@ -26,6 +26,6 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 install(
-  FILES LSDTT_BasicMetrics.exe
+  PROGRAMS LSDTT_BasicMetrics.exe
   DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
