@@ -65,9 +65,6 @@
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-//-----------------------------------------------------------------
-//DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
-//-----------------------------------------------------------------
 
 #include <vector>
 #include <list>
@@ -208,9 +205,9 @@ void LSDChiNetwork::create(string channel_network_fname)
 
   // close the infile
   channel_data_in.close();
-  
+
   I_should_calculate_chi = true;
-  
+
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -244,13 +241,13 @@ void LSDChiNetwork::create(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode
   vector<float> elev_vec;
   vector<float> drain_area_vec;
   vector<float> chi_vec;
-  
+
   // we start from the top, accumulating data along the way
   FlowInfo.retrieve_current_row_and_col(SourceNode,row,col);
   flow_dist = FlowDistance.get_data_element(row,col);
   elev = Elevation.get_data_element(row,col);
   drain_area = DrainageArea.get_data_element(row,col);
-  
+
   // now push back the data
   node_vec.push_back(SourceNode);
   row_vec.push_back(row);
@@ -259,15 +256,15 @@ void LSDChiNetwork::create(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode
   elev_vec.push_back(elev);
   drain_area_vec.push_back(drain_area);
   chi_vec.push_back(0.0);
-  
-  
+
+
   current_node = SourceNode;
-  
+
   // now move downstream
   while(current_node != OutletNode)
   {
     FlowInfo.retrieve_receiver_information(current_node,reciever_node, row, col);
-    
+
     // catch the loop if the OutletNode is not on the flow path
     if(current_node == reciever_node)
     {
@@ -281,21 +278,21 @@ void LSDChiNetwork::create(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode
       flow_dist = FlowDistance.get_data_element(row,col);
       elev = Elevation.get_data_element(row,col);
       drain_area = DrainageArea.get_data_element(row,col);
-      
+
       node_vec.push_back(reciever_node);
       row_vec.push_back(row);
       col_vec.push_back(col);
       flow_dist_vec.push_back(flow_dist);
       elev_vec.push_back(elev);
       drain_area_vec.push_back(drain_area);
-      chi_vec.push_back(0.0);         // in this version the chi vec is calculated seperately. 
-      
+      chi_vec.push_back(0.0);         // in this version the chi vec is calculated seperately.
+
     }
-    
+
     // set the current node to the reciever
     current_node = reciever_node;
   }
-  
+
   // update the data elements
   node_indices.push_back(node_vec);
   row_indices.push_back(row_vec);
@@ -306,7 +303,7 @@ void LSDChiNetwork::create(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode
   node_on_receiver_channel.push_back(OutletNode);
   chis.push_back(chi_vec);
   receiver_channel.push_back(0);
-  
+
   I_should_calculate_chi = true;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -314,12 +311,12 @@ void LSDChiNetwork::create(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 //
-// This version of the create function only creates a single channel, but this time 
+// This version of the create function only creates a single channel, but this time
 // it uses existing chi data
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiNetwork::create(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode, LSDRaster& Elevation,
-                           LSDRaster& FlowDistance, LSDRaster& DrainageArea, 
+                           LSDRaster& FlowDistance, LSDRaster& DrainageArea,
                            LSDRaster& Chi)
 {
   int current_node, reciever_node;
@@ -345,14 +342,14 @@ void LSDChiNetwork::create(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode
   vector<float> elev_vec;
   vector<float> drain_area_vec;
   vector<float> chi_vec;
-  
+
   // we start from the top, accumulating data along the way
   FlowInfo.retrieve_current_row_and_col(SourceNode,row,col);
   flow_dist = FlowDistance.get_data_element(row,col);
   elev = Elevation.get_data_element(row,col);
   drain_area = DrainageArea.get_data_element(row,col);
   chi = Chi.get_data_element(row,col);
-  
+
   // now push back the data
   node_vec.push_back(SourceNode);
   row_vec.push_back(row);
@@ -361,14 +358,14 @@ void LSDChiNetwork::create(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode
   elev_vec.push_back(elev);
   drain_area_vec.push_back(drain_area);
   chi_vec.push_back(chi);
-  
+
   current_node = SourceNode;
-  
+
   // now move downstream
   while(current_node != OutletNode)
   {
     FlowInfo.retrieve_receiver_information(current_node,reciever_node, row, col);
-    
+
     // catch the loop if the OutletNode is not on the flow path
     if(current_node == reciever_node)
     {
@@ -383,7 +380,7 @@ void LSDChiNetwork::create(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode
       elev = Elevation.get_data_element(row,col);
       drain_area = DrainageArea.get_data_element(row,col);
       chi = Chi.get_data_element(row,col);
-      
+
       node_vec.push_back(reciever_node);
       row_vec.push_back(row);
       col_vec.push_back(col);
@@ -392,11 +389,11 @@ void LSDChiNetwork::create(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode
       drain_area_vec.push_back(drain_area);
       chi_vec.push_back(chi);
     }
-    
+
     // set the current node to the reciever
     current_node = reciever_node;
   }
-  
+
   // update the data elements
   node_indices.push_back(node_vec);
   row_indices.push_back(row_vec);
@@ -407,9 +404,9 @@ void LSDChiNetwork::create(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode
   chis.push_back(chi_vec);
   node_on_receiver_channel.push_back(OutletNode);
   receiver_channel.push_back(0);
-  
+
   //cout << "I got chi from a raster, DUDE!" << endl;
-  
+
   I_should_calculate_chi = false;
 }
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -511,7 +508,7 @@ void LSDChiNetwork::print_channel_details_to_file(string fname, float A_0, float
 
   ofstream channel_profile_out;
   channel_profile_out.open(fname.c_str());
-  
+
   if (I_should_calculate_chi)
   {
     calculate_chi(A_0, m_over_n);
@@ -1855,12 +1852,12 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit(float A_0, flo
 {
 
   int n_channels = chis.size();
-  
+
   if (I_should_calculate_chi)
   {
     calculate_chi(A_0, m_over_n);
   }
-  
+
   m_over_n_for_fitted_data = m_over_n;    // store this m_over_n value
   A_0_for_fitted_data = A_0;
 
@@ -2128,7 +2125,7 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit(float A_0, flo
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// this function gets the vector of m_means for the chi network. Only to be used after 
+// this function gets the vector of m_means for the chi network. Only to be used after
 // monte_carlo_sample_river_network_for_best_fit_after_breaks function
 //
 // FJC 04/08/14
@@ -2137,7 +2134,7 @@ void LSDChiNetwork::monte_carlo_sample_river_network_for_best_fit(float A_0, flo
 vector< vector<float> > LSDChiNetwork::get_m_means()
 {
   return chi_m_means;
-  
+
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -2179,7 +2176,7 @@ void LSDChiNetwork::monte_carlo_split_channel(float A_0, float m_over_n, int n_i
   {
     calculate_chi(A_0, m_over_n);
   }
-  
+
   m_over_n_for_fitted_data = m_over_n;    // store this m_over_n value
   A_0_for_fitted_data = A_0;
 
@@ -2200,7 +2197,7 @@ void LSDChiNetwork::monte_carlo_split_channel(float A_0, float m_over_n, int n_i
   {
     max_nodes_in_section = (target_nodes*(-target_skip+2))/(-target_skip+1);
   }
-  
+
 
   // get the data from the channel
   vector<float> reverse_Chi = chis[chan];
@@ -2821,7 +2818,7 @@ void LSDChiNetwork::split_all_channels(float A_0, float m_over_n, int n_iteratio
   int n_channels = chis.size();
   vector<int> break_nodes;
   vector< vector<int> > this_break_vecvecvec;
-  
+
   //cout << "The number of channels is: " << n_channels << endl;
 
   // loop through the channels, breaking into smaller bits
@@ -4203,7 +4200,7 @@ float LSDChiNetwork::search_for_best_fit_m_over_n_dchi(float A_0, int n_movern, 
   vector<int> n_data_nodes_vec(n_channels);
   vector<float> AICc_vec(n_channels, 9999);
   vector<float> best_m_over_n(n_channels);
-  
+
   // data structures to hold information about segments from all channels
   // these are the best fit data for the cumulative channels
   vector< vector<float> > cum_b_vecvec(n_channels);
@@ -4322,7 +4319,7 @@ float LSDChiNetwork::search_for_best_fit_m_over_n_dchi(float A_0, int n_movern, 
     thismn_AICc =  thismn_AIC + 2*n_total_segments*(n_total_segments+1)/(n_total_nodes-n_total_segments-1);
     AICc_combined_vec[movn] = thismn_AICc;
     m_over_n_vec[movn] = m_over_n;
-  
+
      //cout << "m_over_n: " << m_over_n << " and combined AICc: " << thismn_AICc << endl;
     //cout << "this cumulative MLE: " << cumulative_MLE << " n_segs: " << n_total_segments << " and n_nodes: " << n_total_nodes << endl;
 
@@ -5854,5 +5851,3 @@ Array2D<float> LSDChiNetwork::calculate_channel_heads(int min_seg_length_for_cha
   return channel_head_locations;
 }
 #endif
-
-

@@ -65,10 +65,6 @@
 // and chi (the transformed coordiante for integral analysis of
 // channel profiles
 
-//-----------------------------------------------------------------
-//DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
-//-----------------------------------------------------------------
-
 
 #include <vector>
 #include <fstream>

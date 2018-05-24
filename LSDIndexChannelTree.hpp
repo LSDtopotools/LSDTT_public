@@ -67,9 +67,6 @@ LSDFlowInfo or LSDJunctionNetwork object
 @date 30/09/2012
 */
 
-//-----------------------------------------------------------------
-//DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
-//-----------------------------------------------------------------
 
 #include <vector>
 #include "TNT/tnt.h"
@@ -128,7 +125,7 @@ class LSDIndexChannelTree
   /// pruning_switch == 2	channels are only added if the ratio between them and the area of the
   ///						mainstem _at the junction_ exceeds a certain value \n
   /// @param FlowInfo LSDFlowInfo object.
-  /// @param ChannelNetwork LSDJunctionNetwork object.           
+  /// @param ChannelNetwork LSDJunctionNetwork object.
   /// @param starting_junction Starting junction.
   /// @param org_switch Organization switch.
   /// @param DistanceFromOutlet LSDRaster of distances from the outlet.
@@ -260,7 +257,7 @@ class LSDIndexChannelTree
   /// @param Elevation_Raster LSDRaster of elevation.
   /// @param FlowDistance LSDRaster of flow length.
   /// @param fname Output filename.
-  /// @param Discharge The discharge raster. Can be calculated using the 
+  /// @param Discharge The discharge raster. Can be calculated using the
   ///  LSDFlowInfo upslope_variable_accumulator function
   /// @author SMM
   /// @date 07/05/15
@@ -275,7 +272,7 @@ class LSDIndexChannelTree
   /// @param drainagearea a raster of the drainage area, assumed to be m^2
   /// @param Discharge a raster of the discharge, assumed to be in m^3/yr
   /// @author SMM
-  /// @date 07/05/2015                   
+  /// @date 07/05/2015
   void convert_chan_file_for_ArcMap_ingestion(string fname, LSDRaster& DrainageArea, LSDRaster& Discharge);
 
   /// @brief This takes a .chan file and converts it into a comma seperated file with

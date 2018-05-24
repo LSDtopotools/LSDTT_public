@@ -62,10 +62,6 @@
 // Simon M. Mudd, University of Edinburgh
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//-----------------------------------------------------------------
-//DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
-//-----------------------------------------------------------------
-
 
 
 #ifndef LSDChiTools_HPP
@@ -445,7 +441,7 @@ class LSDChiTools
     /// @param basin_key The key into the basin you want to test all collinearity of.
     /// @author SMM
     /// @date 24/03/2018
-    float test_collinearity_by_basin_disorder(LSDFlowInfo& FlowInfo, 
+    float test_collinearity_by_basin_disorder(LSDFlowInfo& FlowInfo,
                                         int basin_key);
 
 
@@ -456,7 +452,7 @@ class LSDChiTools
     /// @param basin_key The key into the basin you want to test all collinearity of.
     /// @author SMM
     /// @date 13/04/2018
-    vector<float> test_collinearity_by_basin_disorder_with_uncert(LSDFlowInfo& FlowInfo, 
+    vector<float> test_collinearity_by_basin_disorder_with_uncert(LSDFlowInfo& FlowInfo,
                                         int basin_key);
 
     /// @brief This wraps the collinearity tester, looping through different m over n
@@ -579,7 +575,7 @@ class LSDChiTools
 
 
     /// @brief This wraps the collinearity tester, looping through different m over n
-    ///  values and calculating goodness of fit statistics. 
+    ///  values and calculating goodness of fit statistics.
     /// @detail Uses discrete points rather than all the tributary data. It uses monte carlo
     ///   sampling to get the points, so one can repeatedly sample the MLE values for
     ///   a fixed number of points
@@ -657,7 +653,7 @@ class LSDChiTools
     /// @param n_novern the number of m/n values to use
     /// @param The file prefix for the data files
     /// @param use_uncert a bool that if true triggers the uncertainty algorithms
-    /// @param Discharge and LSDRaster with the discharge. 
+    /// @param Discharge and LSDRaster with the discharge.
     /// @author SMM
     /// @date 27/04/2018
     void calculate_goodness_of_fit_collinearity_fxn_movern_with_discharge_using_disorder(LSDFlowInfo& FlowInfo,
@@ -1181,13 +1177,13 @@ class LSDChiTools
     /// @brief fill maps containing information of receiving rivers
     /// @param FlowInfo: a FlowInfo object
     /// @author BG
-    /// @date 30/11/2017 
+    /// @date 30/11/2017
     void get_previous_mchi_for_all_sources(LSDFlowInfo& Flowinfo);
 
-    /// @brief It should find the ending (aka downstair) node 
+    /// @brief It should find the ending (aka downstair) node
     /// @param FlowInfo: a FlowInfo object
     /// @author BG
-    /// @date 30/11/2017 
+    /// @date 30/11/2017
     int get_ending_node_of_source(LSDFlowInfo& FlowInfo, int source_key);
 
     /// @brief print a csv file with the receiver of each source and the corresponding source with the m_chi
@@ -1198,7 +1194,7 @@ class LSDChiTools
     void print_intersources_mchi_map(string filename);
 
 
-    /// @brief set a map of each source_key with the corresponding vector fo node INCLUDING the first node of the 
+    /// @brief set a map of each source_key with the corresponding vector fo node INCLUDING the first node of the
     /// receaving river if this abovementioned one does exist.
     /// @param Flowinfo, a LSDFlowInfo object
     /// @param int n_nodlump, the half lumping window
@@ -1301,8 +1297,8 @@ class LSDChiTools
     vector<vector<int> > old_group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river,LSDFlowInfo& Flowinfo);
     void derive_the_segmented_elevation();
     vector<int> get_vecnode_river_from_extent(int first_node, int last_node, vector<int> vecnode_river);
-    
-    
+
+
     void print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filename);
     void raw_stepped_knickpoint_detection(int SK, vector<int> vecnode);
     void stepped_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_node_search);

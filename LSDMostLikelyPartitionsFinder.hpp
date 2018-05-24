@@ -65,9 +65,6 @@
 @date 03/01/2013
 */
 
-//-----------------------------------------------------------------
-//DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
-//-----------------------------------------------------------------
 
 #include <vector>
 #include "LSDStatsTools.hpp"
@@ -193,8 +190,8 @@ class LSDMostLikelyPartitionsFinder
     /// @param node index into the sigma vector. This requires a bit of explantion:
     ///   because sigma can be extracted from the product that calculates MLE as a constant
     ///   we can have multiple values of sigma and recalculate MLE for any given sigma
-    ///   When this code was written we added a function to modify the sigma values. 
-    ///   In this case there are no normalisation values applied so if you use 
+    ///   When this code was written we added a function to modify the sigma values.
+    ///   In this case there are no normalisation values applied so if you use
     ///   a random sigma here you will get the base sigma (supplied to the main
     ///   computation function)
     /// @param sigma_values
@@ -204,7 +201,7 @@ class LSDMostLikelyPartitionsFinder
     /// @param DW_values A vector containing the durbin-watson value of each segment
     /// @param fitted_y A vector containing the y value of each segment
     /// @param seg_lengths A vector with the lengths of each segment
-    /// @param this_MLE The MLE of the best fit. 
+    /// @param this_MLE The MLE of the best fit.
     /// @param this_n_segments The number of segments
     /// @param this_n_nodes The number of total nodes
     /// @param this_AIC The Aikake information criterion
