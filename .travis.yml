@@ -8,30 +8,34 @@ compiler:
 # Blacklist
 branches:
   only:
-    - master
-
-before_install:
-  #- sudo apt-get install -y libfftw3-dev
+    - travis
 
 script:
-  # Run your build commands next
-  - sh build_docs.sh
+  - conda install conda-build
+  - cd conda-recipe
+  - conda build lsdtopotools -c conda-forge
+  - conda create -n lsdtt lsdtopotools -c conda-forge --use-local
+  - LSDTT_BasicMetrics
 
-# Install dependencies
-addons:
-  apt:
-    packages:
-      - doxygen
-      - doxygen-doc
-      - doxygen-latex
-      - doxygen-gui
-      - graphviz
-
-# Deploy using travis builtin GitHub Pages support
-deploy:
-  provider: pages
-  skip_cleanup: true
-  local_dir: html/
-  github_token: $GITHUB_API_KEY
-  on:
-    branch: master
+# script:
+#   # Run your build commands next
+#   - sh build_docs.sh
+#
+# # Install dependencies
+# addons:
+#   apt:
+#     packages:
+#       - doxygen
+#       - doxygen-doc
+#       - doxygen-latex
+#       - doxygen-gui
+#       - graphviz
+#
+# # Deploy using travis builtin GitHub Pages support
+# deploy:
+#   provider: pages
+#   skip_cleanup: true
+#   local_dir: html/
+#   github_token: $GITHUB_API_KEY
+#   on:
+#     branch: master
