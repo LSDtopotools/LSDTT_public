@@ -24,6 +24,7 @@ script:
   - cd conda-recipe
   - conda build lsdtopotools -c conda-forge
   - conda create -n lsdtt lsdtopotools -c conda-forge --use-local
+  - conda activate lsdtt
   - LSDTT_BasicMetrics
 
 # script:
