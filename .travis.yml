@@ -24,9 +24,10 @@ script:
   - cd conda-recipe
   - conda build lsdtopotools -c conda-forge
   - conda create -n lsdtt lsdtopotools -c conda-forge --use-local
-  - cat ~/.bashrc
-  - echo ". /home/travis/miniconda/etc/profile.d/conda.sh" >> ~/.bashrc
-  - cat ~/.bashrc
+  - sudo ln -s /home/travis/miniconda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
+  # - cat ~/.bashrc
+  # - echo ". /home/travis/miniconda/etc/profile.d/conda.sh" >> ~/.bashrc
+  # - cat ~/.bashrc
   - conda activate
   - conda activate lsdtt
   - LSDTT_BasicMetrics
