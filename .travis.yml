@@ -29,7 +29,8 @@ install:
   - conda create -n lsdtt lsdtopotools -c conda-forge --use-local
   # Needed to run the tests
   - conda install git pip pytest numpy
-  - pip install git+https://github.com/mapbox/rasterio.git # this will be replaced by a conda install once version 1.0 is released next month
+  - conda config --add channels conda-forge
+  - conda install rasterio
 
 # Activate the venv and run a driver
 script:
