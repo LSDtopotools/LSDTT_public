@@ -17,7 +17,6 @@ addons:
 
 # Use conda to install LSDTT and create a virual environment
 install:
-
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
@@ -35,7 +34,11 @@ script:
   - LSDTT_BasicMetrics
 
 after_success:
+  on:
+    branch: travis
   # Build the docs
+  - pwd
+  - cd ..
   - sh build_docs.sh
 
 # Deploy using travis builtin GitHub Pages support - only for changes to master
