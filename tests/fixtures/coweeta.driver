@@ -1,0 +1,11 @@
+read path: fixtures/
+write path: results/
+read fname: coweeta
+write fname: coweeta_output
+channel heads fname: NULL
+surface_fitting_radius: 20
+print_slope: true
+print_aspect: false
+print_curvature: false
+print_tangential_curvature: false
+write extension: bil
