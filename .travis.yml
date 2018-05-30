@@ -28,9 +28,13 @@ install:
   - conda build lsdtopotools -c conda-forge
   - conda create -n lsdtt lsdtopotools -c conda-forge --use-local
   # Needed to run the tests
-  - conda install git pip pytest numpy
-  - conda config --add channels conda-forge
-  - conda install rasterio
+  - conda install git pip pytest #numpy
+  #- conda config --add channels conda-forge
+  #- conda install rasterio
+  - sudo add-apt-repository ppa:ubuntugis/ppa
+  - sudo apt-get update
+  - sudo apt-get install python-numpy gdal-bin libgdal-dev
+  - pip install rasterio
 
 # Activate the venv and run a driver
 script:
