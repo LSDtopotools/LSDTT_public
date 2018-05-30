@@ -34,8 +34,6 @@ script:
   - LSDTT_BasicMetrics
 
 after_success:
-  on:
-    branch: travis
   # Build the docs
   - pwd
   - cd ..
