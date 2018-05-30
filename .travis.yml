@@ -35,13 +35,14 @@ install:
 # Activate the venv and run a driver
 script:
   - source activate lsdtt
+  - cd ..
   - cd tests/
   - mkdir results
   - cd fixtures
   - wget https://github.com/LSDtopotools/ExampleTopoDatasets/raw/master/coweeta.bil
-  - wget wget https://github.com/LSDtopotools/ExampleTopoDatasets/raw/master/coweeta.hdr
-  -
-  -
+  - wget https://github.com/LSDtopotools/ExampleTopoDatasets/raw/master/coweeta.hdr
+  - wget https://github.com/LSDtopotools/RegressionData/raw/master/coweeta_output_SLOPE.bil
+  - wget https://github.com/LSDtopotools/RegressionData/raw/master/coweeta_output_SLOPE.hdr
   - cd ..
   - LSDTT_BasicMetrics fixtures/ coweeta.driver
   - pytest
