@@ -29,8 +29,7 @@ install:
   - conda create -n lsdtt lsdtopotools -c conda-forge --use-local
   # Needed to run the tests
   - conda install git pip pytest numpy
-  #- conda config --add channels conda-forge
-  #- conda install rasterio
+  # From the rasterio docs
   - sudo add-apt-repository ppa:ubuntugis/ppa -y
   - sudo apt-get update -y
   - sudo apt-get install gdal-bin libgdal-dev -y
