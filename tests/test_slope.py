@@ -3,7 +3,7 @@ import rasterio
 
 @pytest.fixture
 def original_data():
-    out_data = rasterio.open('fixtures/coweeta.bil')
+    out_data = rasterio.open('fixtures/coweeta_output_SLOPE.bil')
     return out_data.read(1)
 
 
