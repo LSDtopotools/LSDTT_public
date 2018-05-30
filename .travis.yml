@@ -27,11 +27,23 @@ install:
   - cd conda-recipe
   - conda build lsdtopotools -c conda-forge
   - conda create -n lsdtt lsdtopotools -c conda-forge --use-local
+  # Needed to run the tests
+  - conda install git pip pytest numpy
+  - pip install git+https://github.com/mapbox/rasterio.git # this will be replaced by a conda install once version 1.0 is released next month
 
 # Activate the venv and run a driver
 script:
   - source activate lsdtt
-  - LSDTT_BasicMetrics
+  - cd tests/
+  - mkdir results
+  - cd fixtures
+  - wget https://github.com/LSDtopotools/ExampleTopoDatasets/raw/master/coweeta.bil
+  - wget wget https://github.com/LSDtopotools/ExampleTopoDatasets/raw/master/coweeta.hdr
+  -
+  -
+  - cd ..
+  - LSDTT_BasicMetrics fixtures/ coweeta.driver
+  - pytest
 
 after_success:
   # Build the docs
