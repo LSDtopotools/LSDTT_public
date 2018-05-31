@@ -31,4 +31,4 @@ def params():
 class TestingLSD():
     @pytest.mark.parametrize('result,expected', params())
     def test_basic_metrics(self, result, expected):
-        ntest.assert_allclose(result, expected)
+        ntest.assert_allclose(result, expected, rtol=1e-03)
