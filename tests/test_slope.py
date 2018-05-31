@@ -1,6 +1,7 @@
 import pytest
 import json
 import rasterio
+import numpy.testing as ntest
 
 
 def raster(filename):
@@ -30,4 +31,4 @@ def params():
 class TestingLSD():
     @pytest.mark.parametrize('result,expected', params())
     def test_basic_metrics(self, result, expected):
-        assert (result == expected).all()
+        ntest.assert_allclose(result, expected)
