@@ -1,18 +1,33 @@
 import pytest
+import json
 import rasterio
 
-@pytest.fixture
-def original_data():
-    out_data = rasterio.open('fixtures/coweeta_output_SLOPE.bil')
+
+def raster(filename):
+    '''
+    Helper function to load a raster from a filename into a numpy array.
+    '''
+    out_data = rasterio.open(filename)
     return out_data.read(1)
 
 
 @pytest.fixture
-def new_data():
-    out_data = rasterio.open('results/coweeta_output_SLOPE.bil')
-    return out_data.read(1)
+def params():
+    '''
+    Fixture to build parameter sets based on the paths.json file.
+    '''
+    with open('fixtures/paths.json') as f:
+        fixtures = json.loads(f.read())
+    params = []
+
+    for fix in fixtures:
+        params.append(pytest.param(raster(fixtures[fix]['result']),
+                                   raster(fixtures[fix]['expected']),
+                                   id=fix))
+    return params
 
 
 class TestingLSD():
-    def test_slope(self, original_data, new_data):
-        assert (original_data == new_data).all()
+    @pytest.mark.parametrize('result,expected', params())
+    def test_basic_metrics(self, result, expected):
+        assert (result == expected).all()
