@@ -9,3 +9,9 @@ driver_functions_Floodplains-Terraces/build/Makefile
 driver_functions_Floodplains-Terraces/build/cmake_install.cmake
 boost/*
 build/*
+tests/results/*
+.pytest_cache
+.cache
+__pycache__
+tests/fixtures/*.hdr
+tests/fixtures/*.bil
