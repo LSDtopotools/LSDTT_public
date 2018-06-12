@@ -70,9 +70,6 @@ junctions or simply nodes downstream of a given node and upstream
 @date 30/08/2012
 */
 
-//-----------------------------------------------------------------
-//DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
-//-----------------------------------------------------------------
 
 #include <vector>
 #include "TNT/tnt.h"

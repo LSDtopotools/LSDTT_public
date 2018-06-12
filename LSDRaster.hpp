@@ -92,11 +92,6 @@ Tools are included to:
 
 */
 
-//-----------------------------------------------------------------
-//DOCUMENTATION URL: http://lsdtopotools.github.io/LSDTT_public/
-//-----------------------------------------------------------------
-
-
 
 #ifndef LSDRaster_H
 #define LSDRaster_H

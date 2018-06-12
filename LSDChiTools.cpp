@@ -62,10 +62,6 @@
 // Simon M. Mudd, University of Edinburgh
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-//-----------------------------------------------------------------
-//DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
-//-----------------------------------------------------------------
-
 
 
 #ifndef LSDChiTools_CPP
@@ -1820,7 +1816,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
 
 
 
-    
+
 
 
     if(false)
@@ -1984,7 +1980,7 @@ void LSDChiTools::segment_counter_knickpoint(LSDFlowInfo& FlowInfo, float thresh
 void LSDChiTools::get_previous_mchi_for_all_sources(LSDFlowInfo& Flowinfo)
 {
   // setting the variables for extracting the knickpoints
-  
+
    // find the number of nodes
   int n_nodes = (node_sequence.size());
   if (n_nodes <= 0)
@@ -1997,16 +1993,16 @@ void LSDChiTools::get_previous_mchi_for_all_sources(LSDFlowInfo& Flowinfo)
     int working_source = source_keys_map[node_sequence[0]]; // This is the working source key, the one you already have extracted the information
     int current_source = source_keys_map[node_sequence[0]]; // this is the currently tested source_key that will become the working key is different than previous key
     int starting_node_of_source_key = get_ending_node_of_source(Flowinfo ,working_source); // This store the starting node of the river with this source_key
-    
+
     // Now getting the receiving node of the river with this source
     int receiving_node_of_source_key, temp_row, temp_col;
     Flowinfo.retrieve_receiver_information(starting_node_of_source_key, receiving_node_of_source_key, temp_row,temp_col);
 
-    //Finally getting the 
+    //Finally getting the
     float m_chi_receiving_river = M_chi_data_map[receiving_node_of_source_key];
-    
+
     // Creating temp data_map to save everything
-    map<int,int> this_map_source_key_receiver; // 
+    map<int,int> this_map_source_key_receiver; //
     map<int,float> this_map_source_key_receiver_mchi;
     this_map_source_key_receiver[working_source] = source_keys_map[receiving_node_of_source_key];
     this_map_source_key_receiver_mchi[working_source] = m_chi_receiving_river;
@@ -2026,7 +2022,7 @@ void LSDChiTools::get_previous_mchi_for_all_sources(LSDFlowInfo& Flowinfo)
         m_chi_receiving_river = M_chi_data_map[receiving_node_of_source_key];
         this_map_source_key_receiver[working_source] = source_keys_map[receiving_node_of_source_key];
         this_map_source_key_receiver_mchi[working_source] = m_chi_receiving_river;
-      }  
+      }
 
     }
 
@@ -2045,7 +2041,7 @@ void LSDChiTools::get_previous_mchi_for_all_sources(LSDFlowInfo& Flowinfo)
 // Eveything will now be controlled from this function calling the adapted and up-to-date function
 // Leaving me time to develop what will be the final cleanest one and making easier the subdivision
 // in loads of little functions rather than one big script-like one. OBJECT ORIENTED POWER ˁ˚ᴥ˚ˀ
-// BG 
+// BG
 void LSDChiTools::ksn_knickpoint_automator(LSDFlowInfo& FlowInfo, string OUT_DIR, string OUT_ID, float MZS_th, float lambda_TVD, float lambda_TVD_b_chi,int stepped_combining_window,int window_stepped, float n_std_dev, int kp_node_search)
 {
 
@@ -2163,7 +2159,7 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int> vecnode)
   // Setting function variables
   int last_node = *node; // last node is the first node
   node++; // switching to the second node
-  int this_node = *node; // this node is the second one 
+  int this_node = *node; // this node is the second one
   // vector that will contain the nodes having a knickpoint
   vector<int> vecdif;
   // Bunch of floats
@@ -2174,7 +2170,7 @@ void LSDChiTools::ksn_knickpoint_raw_river(int SK, vector<int> vecnode)
   float last_ksn = TVD_m_chi_map[last_node]; // Setting last and this ksn
 
   // Looping through the nodes from the second one
-  for( ; node != vecnode.end(); node++) // the first ";" is normal: it states that I have no initial conditions 
+  for( ; node != vecnode.end(); node++) // the first ";" is normal: it states that I have no initial conditions
   {
     // initializing the variables for this run
     this_node = *node;
@@ -2218,16 +2214,16 @@ void LSDChiTools::stepped_knickpoints_detection_v2(LSDFlowInfo& Flowinfo, int wi
   // Looping through all the sources key
   for(SK = map_node_source_key.begin(); SK != map_node_source_key.end(); SK++)
   {
-    
+
     // the source key
     //this_SK = SK->first;       // This doens't seem to be used (SMM)
-    
+
     // the vector containing the river nodes
     vecnode = SK->second;
     // first check if the size is over the window
     if(int(vecnode.size()) > window)
-    { 
-      // first step is to get the windowed stats, the moving window will gather informations across the vector of nodes 
+    {
+      // first step is to get the windowed stats, the moving window will gather informations across the vector of nodes
       map<string,vector<float> > these_stats = get_windowed_stats_for_knickpoints(vecnode,HW);
 
       for(size_t it = 0; it< vecnode.size(); it++)
@@ -2286,7 +2282,7 @@ map<string,vector<float> > LSDChiTools::get_windowed_stats_for_knickpoints(vecto
       float this_std = get_standard_deviation(this_vecval,this_mean);
       window_vecval_std.push_back(this_std);
 
-      this_vecval.clear();    
+      this_vecval.clear();
     }
     // we are in the middle of the river nodes
     else if (it < (vecnode.size()-HW))
@@ -2301,7 +2297,7 @@ map<string,vector<float> > LSDChiTools::get_windowed_stats_for_knickpoints(vecto
       float this_std = get_standard_deviation(this_vecval,this_mean);
       window_vecval_std.push_back(this_std);
 
-      this_vecval.clear();    
+      this_vecval.clear();
     }
     //we are in the last part
     else if (it >= (vecnode.size()-HW))
@@ -2316,7 +2312,7 @@ map<string,vector<float> > LSDChiTools::get_windowed_stats_for_knickpoints(vecto
       float this_std = get_standard_deviation(this_vecval,this_mean);
       window_vecval_std.push_back(this_std);
 
-      this_vecval.clear();    
+      this_vecval.clear();
     }
 
   }
@@ -2341,23 +2337,23 @@ void LSDChiTools::raw_stepped_knickpoint_detection(int SK, vector<int> vecnode)
   // Setting function variables
   int last_node = *node; // last node is the first node
   node++; // switching to the second node
-  int this_node = *node; // this node is the second one 
+  int this_node = *node; // this node is the second one
   // vector that will contain the nodes having a knickpoint
   vector<int> vecdif;
   // Bunch of floats
   float this_TVD_b_chi = TVD_b_chi_map[this_node], last_TVD_b_chi = TVD_b_chi_map[last_node]; // Setting last and this segmented elevation change
 
   // Looping through the nodes from the second one
-  for( ; node != vecnode.end(); node++) // the first ";" is normal: it states that I have no initial conditions 
+  for( ; node != vecnode.end(); node++) // the first ";" is normal: it states that I have no initial conditions
   {
     // initializing the variables for this run
     this_node = *node;
     this_TVD_b_chi = TVD_b_chi_map[this_node];
-   
+
     // if b_chi has change, Implementing a raw knickpoint and calculating the d|ksn|/dchi
     if(this_TVD_b_chi != last_TVD_b_chi || TVD_m_chi_map[last_node] != TVD_m_chi_map[this_node])
     {
-      raw_delta_segelev_from_TVDb_chi[this_node] = segelev_diff[this_node]; 
+      raw_delta_segelev_from_TVDb_chi[this_node] = segelev_diff[this_node];
       // testing something here
       // float this_segdiff = (TVD_m_chi_map[last_node] * chi_data_map[last_node] + TVD_b_chi_map[last_node]) - (TVD_m_chi_map[this_node] * chi_data_map[this_node] + TVD_b_chi_map[this_node]);
       // raw_delta_segelev_from_TVDb_chi[this_node] = this_segdiff;
@@ -2431,7 +2427,7 @@ void LSDChiTools::ksn_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_node_s
           // harder case: several knickpoints, let's go step by step
           // the identifying node of the kp is the first one
           int this_node = this_vecnode[0];
-          
+
           // summing the segelev and dksn for this group of node
           ksn_kp_map[this_node] = get_dksn_from_composite_kp(this_vecnode); // gobal ksn value of the knickpoint, simple sum
 
@@ -2522,7 +2518,7 @@ int LSDChiTools::get_ksn_centroid_coordinates(LSDFlowInfo& Flowinfo, vector<int>
 
   // first, let's get the chi, the dksn and the weighted distance of each nodes
   vector<float> chi_vec , dksn_vec;
-  
+
   // looping through each nodes to group, and getting the info in the same order that the original vector of nodes
   for(size_t iter = 0; iter < this_vecnode_river.size(); iter++)
   {
@@ -2648,7 +2644,7 @@ void LSDChiTools::stepped_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_no
       // We have the group of vector now lets run through it to get the requested values
       for(vector<vector<int> >::iterator vlad = grouped_kp.begin(); vlad != grouped_kp.end(); vlad ++)
       {
-        // getting the vector of node we need: the nodes containing 
+        // getting the vector of node we need: the nodes containing
         vector<int> this_vecnode = *vlad;
         // Easy case: non composite knickpoint, let's just record the same info thatn the raw detection
         if(this_vecnode.size() == 1)
@@ -2661,7 +2657,7 @@ void LSDChiTools::stepped_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_no
           float this_x = 0,this_y = 0;
           Flowinfo.get_x_and_y_from_current_node(this_node, this_x, this_y);
           stepped_centroid[this_node] = make_pair(this_x,this_y);
-          
+
           nearest_node_centroid_kp_stepped[this_node] = this_node;
           flow_distance_stepped_kp_centroid_map[this_node] = flow_distance_data_map[this_node];
         }
@@ -2670,23 +2666,23 @@ void LSDChiTools::stepped_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_no
           // Second case: several knickpoints to group, let's go step by step
           // the identifying node of the kp is the first one
           int this_node = this_vecnode[0];
-          
+
           // summing the segelev for this group of node
           kp_segdrop[this_node] = get_dseg_drop_from_composite_kp(this_vecnode); // gobal segmentation elevation value of the knickpoint
 
-          
+
           // Sharpness is the width of the combined knickpoints
           sharpness_stepped_length[this_node] = get_kp_sharpness_length(this_vecnode, Flowinfo);
           stepped_extent[this_node] = make_pair(this_vecnode[0], this_vecnode.back()); // the extent nodes are the extreme of the DD
 
 
           // The neirest node from the centre of the knickpoint (in regards to chi distance)
-          
+
           // TO SORT, NOT ADAPTED TO THAT  -> TODO NEXT WEEK BORIS
           int nearnode = get_ksn_centroid_coordinates(Flowinfo, this_vecnode, vecnode_river,kp_segdrop[this_node]); // get the weighted x and y of the centroid.
 
           flow_distance_stepped_kp_centroid_map[this_node] = flow_distance_data_map[nearnode];
-          // getting the 
+          // getting the
           float this_x = 0,this_y = 0;
           Flowinfo.get_x_and_y_from_current_node(nearnode, this_x, this_y);
 
@@ -2708,7 +2704,7 @@ void LSDChiTools::stepped_knickpoints_combining(LSDFlowInfo& Flowinfo, int kp_no
 
 vector<vector<int> > LSDChiTools::old_group_local_kp(vector<int> vecnode_kp, vector<int> vecnode_river,LSDFlowInfo& Flowinfo)
 {
-  // creating a map of neightboors for each nodes of the river 
+  // creating a map of neightboors for each nodes of the river
   size_t it;
   map<int,pair<int,int> > neightboors;
   for(it = 0; it< vecnode_river.size(); it ++)
@@ -2759,9 +2755,9 @@ vector<vector<int> > LSDChiTools::old_group_local_kp(vector<int> vecnode_kp, vec
         {
           out_vector.push_back(this_vecnode);
           this_vecnode.clear();
-        }   
+        }
       }
-      else 
+      else
       {
         out_vector.push_back(this_vecnode);
         this_vecnode.clear();
@@ -2887,7 +2883,7 @@ vector<vector<int> > LSDChiTools::group_local_kp(vector<int> vecnode_kp, vector<
   //   vector<int> gyuyg = *vlad;
   //   sumdfsdfa += gyuyg.size();
   // }
-  // cout<< "out: " << sumdfsdfa << " || in: " << vecnode_kp.size() << " || in_2: " << counting_these_fucking_knickpoints  << endl;  
+  // cout<< "out: " << sumdfsdfa << " || in: " << vecnode_kp.size() << " || in_2: " << counting_these_fucking_knickpoints  << endl;
   return out_vector;
 
 }
@@ -2919,18 +2915,18 @@ void  LSDChiTools::TVD_on_my_ksn( float lambda, float lambda_TVD_b_chi)
     // I am planning a test -> TO KEEP it would be an improvment of the denoising
     // if(int(this_vec.size()) <= max_node)
     // {
-    
+
     //   gros_test = TVD_this_vec(this_vec, lambda, lambda_TVD_b_chi);
 
     // }
     // else
     // {
-    //   //testing here a TVD improvement 
+    //   //testing here a TVD improvement
     //   int n_nodes_processed = 0, threshold_node_to_end = this_vec.size()-int(0.4*max_node);
     //   vector<float> intermediate_values;
     //   // Setting the first vector and the last one
     //   vector<int>::const_iterator first = this_vec.begin() + max_node, last = this_vec.end() - max_node, begin = this_vec.begin(),ending = this_vec.end();
-      
+
     //   vector<int> first_vec(begin, first), last_vec(last,ending);
 
 
@@ -3109,7 +3105,7 @@ vector<double> LSDChiTools::correct_TVD_vec(vector<double> this_val)
     // if(this_val[tuile-1] +2 < this_val[tuile]) {cout << this_val[tuile-1] << " || " << this_val[tuile] << " || " << this_val[tuile+1] << endl;}
     if(this_val[tuile-1] == this_val[tuile+1])
     {
-      
+
       this_val_out.push_back(this_val[tuile-1]);
     }
     else
@@ -3171,8 +3167,8 @@ void LSDChiTools::lump_this_vec(vector<int> this_vec, int n_nodlump)
     this_val.push_back(M_chi_data_map[this_node]);
   }
 
-  
-  
+
+
   for(size_t op = 0 ; op < this_vec.size() ; op ++)
   {
     this_node = this_vec[op];
@@ -3217,7 +3213,7 @@ void LSDChiTools::derive_the_segmented_elevation()
   vector<int> this_vec;
   vector<int>::iterator nonode;
   int last_node = 0, this_node = 0;
-  
+
   // looping through each river
   for(chirac = map_node_source_key.begin(); chirac != map_node_source_key.end() ; chirac ++)
   {
@@ -3233,7 +3229,7 @@ void LSDChiTools::derive_the_segmented_elevation()
         {
           // i derive if this is not the last node
           this_node = *nonode;
-          segelev_diff[this_node] = (segmented_elevation_map[last_node] - segmented_elevation_map[this_node]); // ---> to had if we derive it to chi (chi_data_map[last_node] - chi_data_map[this_node]); 
+          segelev_diff[this_node] = (segmented_elevation_map[last_node] - segmented_elevation_map[this_node]); // ---> to had if we derive it to chi (chi_data_map[last_node] - chi_data_map[this_node]);
           segelev_diff_second[this_node] = segelev_diff_second[last_node] - segelev_diff_second[this_node];
         }
         else
@@ -3241,7 +3237,7 @@ void LSDChiTools::derive_the_segmented_elevation()
           // the first derivative is 0
           segelev_diff[this_node] = 0;
           segelev_diff_second[this_node] = 0;
-          
+
 
         }
         // incrementing the rest
@@ -3376,7 +3372,7 @@ void LSDChiTools::ksn_knickpoint_outlier_automator(LSDFlowInfo& FlowInfo, float 
 
 void LSDChiTools::print_bandwidth_ksn_knickpoint(string filename)
 {
-  
+
     // open the data file
   ofstream  file_out;
   file_out.open(filename.c_str());
@@ -3464,7 +3460,7 @@ void LSDChiTools::print_raw_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filenam
   }
 
   chi_data_out.close();
-  
+
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -3607,7 +3603,7 @@ void LSDChiTools::print_final_ksn_knickpoint(LSDFlowInfo& FlowInfo, string filen
   }
   // done, let me close the file correctly
   chi_data_out.close();
-  
+
 }
 
 
@@ -3636,7 +3632,7 @@ void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, 
   // test to see if the fitted elevations have been calculated
   bool have_segmented_elevation = false;
   have_segmented_elevation = true;
-  
+
 
 
   // open the data file
@@ -3671,7 +3667,7 @@ void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, 
       get_x_and_y_locations(row, col, this_x, this_y);
       int ksnkp = 0, segelevkp = 0; // 0 = no knickpoint, -1 negative, 1 positive
       // checking if there is a raw knickpoint here
-      if(raw_ksn_kp_map.count(this_node)!=0) 
+      if(raw_ksn_kp_map.count(this_node)!=0)
       {
         if(raw_ksn_kp_map[this_node]>0)
         {
@@ -3714,7 +3710,7 @@ void LSDChiTools::print_mchisegmented_knickpoint_version(LSDFlowInfo& FlowInfo, 
                    << b_chi_data_map[this_node] << ","
                    << TVD_b_chi_map[this_node] << ","
                    << ksnkp << ","
-                   << segelevkp << ","                  
+                   << segelevkp << ","
                    << source_keys_map[this_node] << ","
                    << baselevel_keys_map[this_node];
 
@@ -3772,7 +3768,7 @@ void LSDChiTools::set_map_of_source_and_node(LSDFlowInfo& FlowInfo, int n_node_d
       {
         // Investigating the knickpoints between the tributaries and the main stem. I am saving that in a different file.
         // if different source key: first getting the receiving node
-        vector<int> vector_of_nodes_dowstream_for_this_source_key; 
+        vector<int> vector_of_nodes_dowstream_for_this_source_key;
         for(int i = 0; i<n_node_downstream; i++)
         {
           FlowInfo.retrieve_receiver_information(last_node,temp_receiver_node);
@@ -3846,7 +3842,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
   int last_node = 0; // store the last investigated node to investigate
   int number_of_0 = 0; // debug storage of the number of knickpoint ratio recasted to avoid x/0
   int n_knp = 0; // hum ... probably the number of knickpoint, I have no recognition of this
-  float max_elev = 0; // used to recast the M_chi value for angle determination 
+  float max_elev = 0; // used to recast the M_chi value for angle determination
   float max_chi = 0; // used to recast the M_chi value for angle determination
   float natural_coeff = 0;  // used to recast the M_chi value for angle determination
   map<int,vector<int> > this_node_kp_per_source_key; // this map store the node of each river knickpoint, the key is the source_key
@@ -3920,7 +3916,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         // If this condition is satisfied, we change segment and the knickpoint will be saved
         // -> first thing to do is to save the node into the map of knickpoint per river
         this_node_kp_per_source_key[source_keys_map[this_node]].push_back(this_node);
-       
+
 
         // Calculation of the arctan of the M_Chi to get angle of M_chi segment, We want the absolute value, atan can have some sign issue. Uses of atan2 solve this quadrant issue, however require the x/y value that would be painful to get here
         // We use the natural coeff to adjust M_chi
@@ -3944,7 +3940,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         // Determination of the sign
         if(delta_mchi<=0){knickpoint_sign = -1;} else {knickpoint_sign = 1;} // Assign the knickpoint sign value
 
-        // Delta between the radian angle 
+        // Delta between the radian angle
         delta_atan = (last_M_atan - this_M_atan); // note that the minus is because we loop up to bottom, in fact no, no minus, my bad
 
         // Allocate the values to local maps
@@ -3959,19 +3955,19 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
 
     // Now calculating the cumulation of angle and ksn, we could incorporate that in the last loop, but it is clearer that way I think. The loss of efficienty isn't too bad
 
-    // Iteration over each river, 
+    // Iteration over each river,
     map<int,vector<int> >::iterator marten; //I quite like the map<...>::iterator
     int begining_node = 0, ending_node = 0, last_node_tapir = 0; // temporaries integers
     vector<int> node_to_implement_for_the_knickzone_cumulation;
-    vector<int> node_per_knickzones; 
+    vector<int> node_per_knickzones;
     pair<int,int> temp_knickzone (0,0);
     for(marten = (this_node_kp_per_source_key.begin());marten != this_node_kp_per_source_key.end();marten++)
     {
 
-      for(vector<int>::reverse_iterator tapir = marten->second.rbegin(); tapir!= marten->second.rend(); ++tapir) // The iterator can be reversed to loop backward !! I love iterators. 
+      for(vector<int>::reverse_iterator tapir = marten->second.rbegin(); tapir!= marten->second.rend(); ++tapir) // The iterator can be reversed to loop backward !! I love iterators.
       {
         // Now looping through the knickpoint of each river, *tapir is the pointer that refers to node number. /!\ Note that I am loooing using a reverse_iterator to go from the bottom to the top of each river
-        
+
         // now calculating the cumulation for each methods
         // # First case, the node is the first of the river, we want to save the value as the first to be cumulated
         if(tapir == marten->second.rbegin())
@@ -3981,7 +3977,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
         // Getting the requested ratio ksn values
         rksn_cumul_knickpoint_map[*tapir] = this_kickpoint_ratio_map[*tapir]; // cumulating the rksn value
         // Getting the radian values
-        rad_cumul_knickpoint_map[*tapir] = this_knickpoint_rad[*tapir]; // cumulating the rad value 
+        rad_cumul_knickpoint_map[*tapir] = this_knickpoint_rad[*tapir]; // cumulating the rad value
 
         node_to_implement_for_the_knickzone_cumulation.push_back(*tapir); // saving the node for completion
         begining_node = *tapir; //this will be a beginning node whatever happense
@@ -4042,7 +4038,7 @@ void LSDChiTools::ksn_knickpoint_detection(LSDFlowInfo& FlowInfo)
           // reinitializing vector
           node_to_implement_for_the_knickzone_cumulation.clear();
           node_to_implement_for_the_knickzone_cumulation.push_back(*tapir);
-        } 
+        }
 
         // Here lies the remianing of my beloved derivation code that diseapeared after realizing how useless it was
 
@@ -4081,7 +4077,7 @@ void LSDChiTools::knickzone_weighting_completion(map<pair<int,int>, vector<int> 
   // I'll begin by declaring all the variables I'll need for this purpose
   int begining_node = 0, ending_node = 0, this_knickzone_ID = 0;
   vector<int> working_nodes; //  temporary vector to store the working nodes
-  float chi_size = 0, weighted_sum_ksn = 0, weighted_sum_rksn = 0, weighted_sum_rad = 0, weighter_coeff = 1, weighter = 0, ksn_sum = 0, rksn_sum = 0, rad_sum = 0 ; 
+  float chi_size = 0, weighted_sum_ksn = 0, weighted_sum_rksn = 0, weighted_sum_rad = 0, weighter_coeff = 1, weighter = 0, ksn_sum = 0, rksn_sum = 0, rad_sum = 0 ;
   pair<int,int> temp_pair;
 
 
@@ -4098,7 +4094,7 @@ void LSDChiTools::knickzone_weighting_completion(map<pair<int,int>, vector<int> 
     //Ok, now I am looping through the nodes of each knickzones
     for(size_t ity = 0; ity!= working_nodes.size();ity ++)
     {
-      //I am letting this typical debug statement to check if I am in a ascending mode or not. It can be consufing depending How I looped before 
+      //I am letting this typical debug statement to check if I am in a ascending mode or not. It can be consufing depending How I looped before
       // cout << elev_data_map[Dwarf_epauletted_fruit_bat->second[ity]] << "||" << ity << endl;
       // I am in an ascending node mode
 
@@ -4106,17 +4102,17 @@ void LSDChiTools::knickzone_weighting_completion(map<pair<int,int>, vector<int> 
       // Note that I don't know yet If I will use that but anyway let's code
 
       // The difficulty here is too loop through all the knickzone combinations:
-      // We need to loop through all the i to n combinations with 0 <= i <= n 
+      // We need to loop through all the i to n combinations with 0 <= i <= n
 
       // Each knickzone will be store in the global knickzone_WP_ksn maps
 
       begining_node = working_nodes[ity];
       ending_node = working_nodes[working_nodes.size()-1];
 
-      // Checking if the knickzone does have 
+      // Checking if the knickzone does have
       if(begining_node != ending_node)
       {
-        chi_size = chi_data_map[ending_node]-chi_data_map[begining_node]; 
+        chi_size = chi_data_map[ending_node]-chi_data_map[begining_node];
         weighter_coeff = 1;
         // second iteration through the knickzone
         for(size_t frutbat = ity; frutbat != working_nodes.size(); frutbat ++)
@@ -4160,13 +4156,13 @@ void LSDChiTools::knickzone_weighting_completion(map<pair<int,int>, vector<int> 
       ksn_sum = 0;
       rksn_sum = 0;
       rad_sum = 0;
-      
+
 
     }
   this_knickzone_ID ++;
   }
   cout << "I am done testing all your knickzones combinations" << endl;
-} 
+}
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 // Print data maps to file - knickpoint version
@@ -4206,8 +4202,8 @@ void LSDChiTools::print_knickzone_to_csv(LSDFlowInfo& FlowInfo, string filename)
         get_lat_and_long_locations(row, col, Alatitude, Alongitude, Converter);
         FlowInfo.retrieve_current_row_and_col(B_node,row,col);
         get_lat_and_long_locations(row, col, Blatitude, Blongitude, Converter);
-        // cout << "printing node " << this_node << " with diff " << ksn_diff_knickpoint_map[this_node] << endl; 
-        
+        // cout << "printing node " << this_node << " with diff " << ksn_diff_knickpoint_map[this_node] << endl;
+
         chi_data_out.precision(9);
         chi_data_out << Alatitude << ","
                      << Alongitude << ","
@@ -4283,7 +4279,7 @@ void LSDChiTools::print_knickpoint_to_csv(LSDFlowInfo& FlowInfo, string filename
         FlowInfo.retrieve_current_row_and_col(this_node,row,col);
         get_lat_and_long_locations(row, col, latitude, longitude, Converter);
         get_x_and_y_locations(row, col, this_x, this_y);
-        
+
         chi_data_out.precision(9);
         chi_data_out << this_y << ","
                      << this_x << ","
@@ -5121,7 +5117,7 @@ float LSDChiTools::test_collinearity_by_basin_disorder(LSDFlowInfo& FlowInfo,
                                                  int baselevel_key)
 {
   float disorder_stat = -9999;
-  
+
   //cout << "Testing the segment collinearity for basin key " << baselevel_key << endl;
   // get some information about the number of basins
   int n_basins = int(ordered_baselevel_nodes.size());
@@ -5132,7 +5128,7 @@ float LSDChiTools::test_collinearity_by_basin_disorder(LSDFlowInfo& FlowInfo,
     exit(EXIT_FAILURE);
   }
 
-  
+
   // Drop out if there is only a single channel in the basin
   //if (n_channels == 1)
   //{
@@ -5142,7 +5138,7 @@ float LSDChiTools::test_collinearity_by_basin_disorder(LSDFlowInfo& FlowInfo,
 
 
   // This is a brute force way to get the complete chi data map
-  
+
   vector<float> this_basin_chi;
   vector<float> this_basin_elevation;
   int n_nodes = int(node_sequence.size());
@@ -5158,7 +5154,7 @@ float LSDChiTools::test_collinearity_by_basin_disorder(LSDFlowInfo& FlowInfo,
       this_basin_elevation.push_back(elev_data_map[this_node]);
     }
   }
-  
+
   // now sort these vectors
     // initiate the sorted vectors
   vector<float> chi_sorted;
@@ -5168,13 +5164,13 @@ float LSDChiTools::test_collinearity_by_basin_disorder(LSDFlowInfo& FlowInfo,
   // sort the vectors
   matlab_float_sort(this_basin_elevation, elev_sorted, index_map);
   matlab_float_reorder(this_basin_chi, index_map, chi_sorted);
-  
+
   // now calculate disorder
   float chi_max = 0;
   float chi_min = 10000;
   float this_delta_chi = 0;
   float sum_delta_chi = 0;
-  
+
   int n_nodes_this_basin = int(chi_sorted.size());
   for(int i = 0; i<n_nodes_this_basin-1; i++)
   {
@@ -5194,7 +5190,7 @@ float LSDChiTools::test_collinearity_by_basin_disorder(LSDFlowInfo& FlowInfo,
     chi_max = chi_sorted[n_nodes_this_basin-1];
   }
   float chi_range = chi_max-chi_min;
-  
+
   disorder_stat = (sum_delta_chi - chi_range)/chi_range;
 
   //cout << "Let me tell you all about the MLE values " << endl;
@@ -5220,7 +5216,7 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
                                                  int baselevel_key)
 {
   vector<float> disorder_stat_vec;
-  
+
   //cout << "Testing the segment collinearity for basin key " << baselevel_key << endl;
   // get some information about the number of basins
   int n_basins = int(ordered_baselevel_nodes.size());
@@ -5233,10 +5229,10 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
 
   // this map will hold references to the sources. There are two of them
   // because the first has the sources as the keys and the second has the
-  // combination index as the keys. 
+  // combination index as the keys.
   map<int,int> sources_are_keys;
   map<int,int> comboindex_are_keys;
-  
+
   vector<float> this_basin_chi;
   vector<float> this_basin_elevation;
   vector<int> this_basin_source;
@@ -5253,7 +5249,7 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
       this_basin_chi.push_back(chi_data_map[this_node]);
       this_basin_elevation.push_back(elev_data_map[this_node]);
       this_basin_source.push_back(source_keys_map[this_node]);
-      
+
       // if the key doesn't exist, add a source key counter
       if ( sources_are_keys.find( source_keys_map[this_node] ) == sources_are_keys.end() )
       {
@@ -5262,7 +5258,7 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
       }
     }
   }
-  
+
   // now do the second map by inverting the first map
   for(map<int,int>::iterator iter =sources_are_keys.begin(); iter != sources_are_keys.end(); ++iter)
   {
@@ -5270,17 +5266,17 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
     int v = iter->second;
     comboindex_are_keys[v] = k;
   }
-  
+
   int n_sources = int(comboindex_are_keys.size());
   //cout << "The number of channels are: " << n_sources << endl;
   //cout << "The source node is: " << comboindex_are_keys[0] << endl;
-  
-  
+
+
   // get the combinations
   //cout << "Let me get some combinations for you." << endl;
   int n_elements = n_sources-1;
   int n_in_each_combo = 3;
-  
+
   if (n_sources < n_in_each_combo)
   {
     cout << "Not enough channels in this basin! I am returning a nodata vector." << endl;
@@ -5291,7 +5287,7 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
     // this gets the combinations
     bool zero_indexed = false;
     vector< vector<int> > combo_vecvec = combinations(n_elements, n_in_each_combo, zero_indexed);
-    
+
     bool print_combinations = false;
     if(print_combinations)
     {
@@ -5305,7 +5301,7 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
       }
     }
     int n_combinations = int(combo_vecvec.size());
-  
+
     // now you enter the combinations loop
     //int n_data_points = int(this_basin_source.size());
     //cout << "Checking the combinations" << endl;
@@ -5313,49 +5309,49 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
     {
       vector<int> these_combos = combo_vecvec[combo];
       vector<int> these_combo_sources;
-      
+
       // add the trunk channel source
-      these_combo_sources.push_back(comboindex_are_keys[0]); 
+      these_combo_sources.push_back(comboindex_are_keys[0]);
       //cout << 0 <<":" << comboindex_are_keys[0] << " ";
-      
+
       for (int source_key = 0 ; source_key < int(these_combos.size()); source_key++)
       {
         these_combo_sources.push_back( comboindex_are_keys[ these_combos[source_key] ] );
         //cout << these_combos[source_key] <<":" << comboindex_are_keys[ these_combos[source_key] ] << " ";
       }
       //cout << endl;
-      
-      
+
+
       // now we sample and sort these vectors
       vector<float> chi_combo;
       vector<float> elev_combo;
       vector<float> source_combo;
-      
+
       for(int node = 0; node< int(this_basin_chi.size()); node++)
       {
-        if(find(these_combo_sources.begin(), these_combo_sources.end(), this_basin_source[node]) != these_combo_sources.end()) 
+        if(find(these_combo_sources.begin(), these_combo_sources.end(), this_basin_source[node]) != these_combo_sources.end())
         {
           chi_combo.push_back(this_basin_chi[node]);
           elev_combo.push_back(this_basin_elevation[node]);
         }
       }
-        
+
       // now you have the elevation and chi for this combination, sort them
       // initiate the sorted vectors
       vector<float> chi_sorted;
       vector<float> elev_sorted;
-      vector<size_t> index_map;    
-  
+      vector<size_t> index_map;
+
       // sort the vectors
       matlab_float_sort(elev_combo, elev_sorted, index_map);
       matlab_float_reorder(chi_combo, index_map, chi_sorted);
-        
+
       // now calculate disorder
       float chi_max = 0;
       float chi_min = 10000;
       float this_delta_chi = 0;
       float sum_delta_chi = 0;
-      
+
       int n_nodes_this_basin = int(chi_sorted.size());
       for(int i = 0; i<n_nodes_this_basin-1; i++)
       {
@@ -5375,7 +5371,7 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
         chi_max = chi_sorted[n_nodes_this_basin-1];
       }
       float chi_range = chi_max-chi_min;
-        
+
       float disorder_stat = (sum_delta_chi - chi_range)/chi_range;
       disorder_stat_vec.push_back(disorder_stat);
     }
@@ -5394,7 +5390,7 @@ vector<float> LSDChiTools::test_collinearity_by_basin_disorder_with_uncert(LSDFl
     cout << endl;
     cout << "I'm returning the disorder stat vector." << endl;
   }
-  
+
 
   return disorder_stat_vec;
 
@@ -5469,7 +5465,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_median
     {
       these_residuals = retrieve_all_residuals_by_basin(FlowInfo, only_use_mainstem_as_reference,
                                                         basin_key);
-      // BUg HERE WHEN FEEDING VOID VECTOR - TO FIX - Boris                                                  
+      // BUg HERE WHEN FEEDING VOID VECTOR - TO FIX - Boris
       vector<float> these_stats = calculate_descriptive_stats(these_residuals);
       Q1_values.push_back(these_stats[1]);
       median_values.push_back(these_stats[2]);
@@ -6621,7 +6617,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// This functions test the goodness of fit for the m/n ratio using the 
+// This functions test the goodness of fit for the m/n ratio using the
 // disorder method propsoed by Hergarten et al 2016
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disorder(LSDFlowInfo& FlowInfo, LSDJunctionNetwork& JN,
@@ -6631,16 +6627,16 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
   cout << "I am now entering the disorder loop." << endl;
 
   int n_basins = int(ordered_baselevel_nodes.size());
-  
+
   // some parameters to be stored in vectors
   cout << "LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disorder" << endl;
   cout << "I am defaulting to A_0 = 1." << endl;
   vector<int> outlet_jns;
   vector<float> movern;
-  float A_0 = 1;  
-  
+  float A_0 = 1;
+
   vector< vector<float> > disorder_vecvec;
-  
+
 
   // get the outlet junction of each basin key
   for (int basin_key = 0; basin_key < n_basins; basin_key++)
@@ -6649,11 +6645,11 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
     int outlet_jn = JN.get_Junction_of_Node(outlet_node, FlowInfo);
     outlet_jns.push_back(outlet_jn);
   }
-  
-  
+
+
   // We do the full disorder statistic first
   cout << "I am calculating the disorder statistic!" << endl;
-  
+
   vector<float> emptyvec;
   for(int i = 0; i< n_movern; i++)
   {
@@ -6690,27 +6686,27 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
       these_disorders.push_back(disorder_stat);
     }
     disorder_vecvec.push_back(these_disorders);
-    
+
   }
-  
+
   // now we need to loop through the vecvec getting the minimum disorder for each basin
   map<int,float> best_fit_movern_disorder_map;
   for(int basin_key = 0; basin_key<n_basins; basin_key++)
   {
     vector<float> these_disorders;
-    float min_disorder = 1000000000000; // a big number since the disorder needs to be smaller than this.  
-    best_fit_movern_disorder_map[basin_key] = -9999; 
+    float min_disorder = 1000000000000; // a big number since the disorder needs to be smaller than this.
+    best_fit_movern_disorder_map[basin_key] = -9999;
     for(int i = 0; i< n_movern; i++)
     {
       // check to see if this disorder is a minimum for this basin
       if (disorder_vecvec[i][basin_key] < min_disorder)
       {
         min_disorder = disorder_vecvec[i][basin_key];
-        best_fit_movern_disorder_map[basin_key] = movern[i]; 
+        best_fit_movern_disorder_map[basin_key] = movern[i];
       }
     }
   }
-  
+
 
   // open the file that contains the basin stats
   string filename_bstats = file_prefix+"_disorder_basinstats.csv";
@@ -6735,9 +6731,9 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
     stats_by_basin_out << endl;
   }
   stats_by_basin_out.close();
-  
-  
-  // Now if the use uncertainty flag is true, calculate the disorder statistics. 
+
+
+  // Now if the use uncertainty flag is true, calculate the disorder statistics.
   if (use_uncert)
   {
     // first initiate the vectors for holding the combination vecs.
@@ -6755,23 +6751,23 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
 
       // calculate chi
       float area_threshold = 0;
-  
+
       LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern[i], A_0,
                                    area_threshold);
       update_chi_data_map(FlowInfo, this_chi);
-      
+
       // now loop through basins
       //for(int basin_key = 0; basin_key<1; basin_key++)
       for(int basin_key = 0; basin_key<n_basins; basin_key++)
       {
         cout << "Testing uncert the basin key is " << basin_key << endl;
         vector<float> disorder_stats = test_collinearity_by_basin_disorder_with_uncert(FlowInfo, basin_key);
-        
+
         // if this is the first m over n value, then initiate the vectors for this basin key
         if (i == 0)
         {
           lowest_disorder_for_basins[basin_key] = disorder_stats;
-          
+
           int n_combos_this_basin = int(disorder_stats.size());
           vector<float> best_fit_movern;
           for(int bf = 0; bf < n_combos_this_basin; bf++)
@@ -6786,7 +6782,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
           vector<float> existing_lowest_disorder = lowest_disorder_for_basins[basin_key];
           vector<float> existing_best_fit_movern = best_fit_movern_for_basins[basin_key];
           int n_combos_this_basin = int(disorder_stats.size());
-          
+
           for(int bf = 0; bf < n_combos_this_basin; bf++)
           {
             if (existing_lowest_disorder[bf] > disorder_stats[bf] )
@@ -6800,20 +6796,20 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
         }
       }  // end basin loop
     }    // end m/n loop
-    
+
 
     // open the outfile
     string filename_fullstats = file_prefix+"_fullstats_disorder_uncert.csv";
     ofstream stats_by_basin_out;
     stats_by_basin_out.open(filename_fullstats.c_str());
-  
+
     stats_by_basin_out << "basin_key,N_combinations,minimum,first_quartile,median,third_quartile,maximum,mean,standard_deviation,standard_error,MAD, best_fit_for_all_tribs" << endl;
     stats_by_basin_out.precision(8);
     for(int basin_key = 0; basin_key<n_basins; basin_key++)
     {
       vector<float> these_movern = best_fit_movern_for_basins[basin_key];
       int n_combinations =  int(these_movern.size());
-      
+
       vector<float> these_stats = calculate_descriptive_stats(these_movern);
       stats_by_basin_out << basin_key << ",";
       stats_by_basin_out << n_combinations << ",";
@@ -6841,7 +6837,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disord
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-// This functions test the goodness of fit for the concavity using the 
+// This functions test the goodness of fit for the concavity using the
 // disorder method propsoed by Hergarten et al 2016
 // Uses a discharge raster
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -6852,16 +6848,16 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
   cout << "I am now entering the disorder loop." << endl;
 
   int n_basins = int(ordered_baselevel_nodes.size());
-  
+
   // some parameters to be stored in vectors
   cout << "LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_using_disorder" << endl;
   cout << "I am defaulting to A_0 = 1." << endl;
   vector<int> outlet_jns;
   vector<float> movern;
-  float A_0 = 1;  
-  
+  float A_0 = 1;
+
   vector< vector<float> > disorder_vecvec;
-  
+
 
   // get the outlet junction of each basin key
   for (int basin_key = 0; basin_key < n_basins; basin_key++)
@@ -6870,11 +6866,11 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
     int outlet_jn = JN.get_Junction_of_Node(outlet_node, FlowInfo);
     outlet_jns.push_back(outlet_jn);
   }
-  
-  
+
+
   // We do the full disorder statistic first
   cout << "I am calculating the disorder statistic!" << endl;
-  
+
   vector<float> emptyvec;
   for(int i = 0; i< n_movern; i++)
   {
@@ -6910,27 +6906,27 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
       these_disorders.push_back(disorder_stat);
     }
     disorder_vecvec.push_back(these_disorders);
-    
+
   }
-  
+
   // now we need to loop through the vecvec getting the minimum disorder for each basin
   map<int,float> best_fit_movern_disorder_map;
   for(int basin_key = 0; basin_key<n_basins; basin_key++)
   {
     vector<float> these_disorders;
-    float min_disorder = 1000000000000; // a big number since the disorder needs to be smaller than this.  
-    best_fit_movern_disorder_map[basin_key] = -9999; 
+    float min_disorder = 1000000000000; // a big number since the disorder needs to be smaller than this.
+    best_fit_movern_disorder_map[basin_key] = -9999;
     for(int i = 0; i< n_movern; i++)
     {
       // check to see if this disorder is a minimum for this basin
       if (disorder_vecvec[i][basin_key] < min_disorder)
       {
         min_disorder = disorder_vecvec[i][basin_key];
-        best_fit_movern_disorder_map[basin_key] = movern[i]; 
+        best_fit_movern_disorder_map[basin_key] = movern[i];
       }
     }
   }
-  
+
 
   // open the file that contains the basin stats
   string filename_bstats = file_prefix+"_disorder_basinstats.csv";
@@ -6955,9 +6951,9 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
     stats_by_basin_out << endl;
   }
   stats_by_basin_out.close();
-  
-  
-  // Now if the use uncertainty flag is true, calculate the disorder statistics. 
+
+
+  // Now if the use uncertainty flag is true, calculate the disorder statistics.
   if (use_uncert)
   {
     // first initiate the vectors for holding the combination vecs.
@@ -6975,23 +6971,23 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
 
       // calculate chi
       float area_threshold = 0;
-  
+
       LSDRaster this_chi = FlowInfo.get_upslope_chi_from_all_baselevel_nodes(movern[i], A_0,
                                    area_threshold);
       update_chi_data_map(FlowInfo, this_chi);
-      
+
       // now loop through basins
       //for(int basin_key = 0; basin_key<1; basin_key++)
       for(int basin_key = 0; basin_key<n_basins; basin_key++)
       {
         cout << "Testing uncert the basin key is " << basin_key << endl;
         vector<float> disorder_stats = test_collinearity_by_basin_disorder_with_uncert(FlowInfo, basin_key);
-        
+
         // if this is the first m over n value, then initiate the vectors for this basin key
         if (i == 0)
         {
           lowest_disorder_for_basins[basin_key] = disorder_stats;
-          
+
           int n_combos_this_basin = int(disorder_stats.size());
           vector<float> best_fit_movern;
           for(int bf = 0; bf < n_combos_this_basin; bf++)
@@ -7006,7 +7002,7 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
           vector<float> existing_lowest_disorder = lowest_disorder_for_basins[basin_key];
           vector<float> existing_best_fit_movern = best_fit_movern_for_basins[basin_key];
           int n_combos_this_basin = int(disorder_stats.size());
-          
+
           for(int bf = 0; bf < n_combos_this_basin; bf++)
           {
             if (existing_lowest_disorder[bf] > disorder_stats[bf] )
@@ -7020,20 +7016,20 @@ void LSDChiTools::calculate_goodness_of_fit_collinearity_fxn_movern_with_dischar
         }
       }  // end basin loop
     }    // end m/n loop
-    
+
 
     // open the outfile
     string filename_fullstats = file_prefix+"_fullstats_disorder_uncert.csv";
     ofstream stats_by_basin_out;
     stats_by_basin_out.open(filename_fullstats.c_str());
-  
+
     stats_by_basin_out << "basin_key,N_combinations,minimum,first_quartile,median,third_quartile,maximum,mean,standard_deviation,standard_error,MAD, best_fit_for_all_tribs" << endl;
     stats_by_basin_out.precision(8);
     for(int basin_key = 0; basin_key<n_basins; basin_key++)
     {
       vector<float> these_movern = best_fit_movern_for_basins[basin_key];
       int n_combinations =  int(these_movern.size());
-      
+
       vector<float> these_stats = calculate_descriptive_stats(these_movern);
       stats_by_basin_out << basin_key << ",";
       stats_by_basin_out << n_combinations << ",";
@@ -7796,7 +7792,7 @@ int LSDChiTools::get_ending_node_of_source(LSDFlowInfo& FlowInfo,int source_key)
   int temp1, temp2, temp_node_index = starting_node_index, temp_node = node_sequence[starting_node_index];
   int n = node_sequence.size();
 
-  
+
 
   while(source_keys_map[temp_node] == source_key && temp_node_index < n)
   {
@@ -7805,7 +7801,7 @@ int LSDChiTools::get_ending_node_of_source(LSDFlowInfo& FlowInfo,int source_key)
     temp_node_index = node_indenter;
     FlowInfo.retrieve_receiver_information(node_sequence[temp_node_index], temp_node, temp1, temp2);
 
-    
+
 
   }
   int ending_node = temp_node;
@@ -9347,7 +9343,7 @@ void LSDChiTools::print_intersources_mchi_map( string filename)
   file_out_ << "source_key,receiving_source_key,m_chi,chi";
   file_out_ << endl;
 
- 
+
   for (map<int,int>::iterator alpaca = map_source_key_receiver.begin(); alpaca != map_source_key_receiver.end() ; alpaca++)
   {
     file_out_.precision(5);
@@ -9358,7 +9354,7 @@ void LSDChiTools::print_intersources_mchi_map( string filename)
                  << chi_data_map[alpaca->first];
     file_out_ << endl;
   }
-  
+
 
   file_out_.close();
 
