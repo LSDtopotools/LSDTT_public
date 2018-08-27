@@ -19,9 +19,9 @@ requirements:
 
 test:
   commands:
-    - LSDTT_BasicMetrics
-    - channel_extraction_tool
-    - chi_mapping_tool
+    - lsdtt-basic-metrics
+    - lsdtt-channel-extraction
+    - lsdtt-chi-mapping
 
 about:
   home: https://github.com/LSDtopotools/LSDTT_public
