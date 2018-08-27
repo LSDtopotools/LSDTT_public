@@ -70,10 +70,6 @@
 @date 30/08/2012
 */
 
-//-----------------------------------------------------------------
-//DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
-//-----------------------------------------------------------------
-
 #include <vector>
 #include "TNT/tnt.h"
 #include "LSDFlowInfo.hpp"
@@ -94,7 +90,7 @@ class LSDChannel: public LSDIndexChannel
   /// @author SMM
   /// @date 24/09/14
   LSDChannel()  {  cout << "I am an empty LSDChannel" << endl; }
-							
+
   /// @brief Creates an LSDChannel by copying from an IndexChannel.
   ///
   /// @details The starting node is upstream and the ending node is downstream.
@@ -159,7 +155,7 @@ class LSDChannel: public LSDIndexChannel
 	/// @param A_0 A_0 value.
 	/// @param FlowInfo LSDFlowInfo object.
 	/// @param Elevation_Raster Elevation LSDRaster object.
-	/// @param DA_raster Drainage area raster LSDRaster object	
+	/// @param DA_raster Drainage area raster LSDRaster object
   /// @author SMM
   /// @date 01/01/12
   LSDChannel(int StartNode, int EndNode, float downslope_chi,
@@ -219,7 +215,7 @@ class LSDChannel: public LSDIndexChannel
 
 	// access the data
 	// these are primarily used for fitting of the profiles
-	
+
 	/// @brief This function prints the channel to an LSDIndexRaster.
   /// @return Index raster of channel nodes
   /// @author FJC
@@ -246,13 +242,13 @@ class LSDChannel: public LSDIndexChannel
 	/// @param downslope_chi Downslope Chi value.
 	/// @param m_over_n m over n ratio.
 	/// @param A_0 A_0 value.
-	/// @param FlowAccum a raster of flow acucmulation. Usually this will be a drainage 
-	/// area but in some cases it will be discharge so orographic effects can be 
+	/// @param FlowAccum a raster of flow acucmulation. Usually this will be a drainage
+	/// area but in some cases it will be discharge so orographic effects can be
 	/// determined
-  /// @param FlowInfo LSDFlowInfo object.	
+  /// @param FlowInfo LSDFlowInfo object.
   /// @author SMM
   /// @date 24/09/14
-  void calculate_chi(float downslope_chi, float m_over_n, float A_0, 
+  void calculate_chi(float downslope_chi, float m_over_n, float A_0,
                               LSDRaster& FlowAccum, LSDFlowInfo& FlowInfo );
                               #
 	/// @brief Get chi value at channel node.
@@ -319,7 +315,7 @@ class LSDChannel: public LSDIndexChannel
 
   /// @brief This function loops through m_over_n looking for best fit segments.
   void find_best_fit_m_over_n_with_segments();
-  
+
   /// @brief This functions calculates channel heads based on chi segment fitting
   /// @param min_seg_length_for_channel_heads
   /// @param A_0
@@ -327,14 +323,14 @@ class LSDChannel: public LSDIndexChannel
   /// @param FlowInfo
   /// @author FC
   /// @date 25/09/13
-  int calculate_channel_heads(int min_seg_length_for_channel_heads, float A_0, 
+  int calculate_channel_heads(int min_seg_length_for_channel_heads, float A_0,
                                             float m_over_n, LSDFlowInfo& FlowInfo);
 
   /// @brief This function writes the channel to a csv file
   /// @param filename the filename of the channel (whithout the .csv)
   /// @author SMM
-  /// @date 24/09/14  
-  void write_channel_to_csv(string path, string filename, LSDRaster& flow_dist);  
+  /// @date 24/09/14
+  void write_channel_to_csv(string path, string filename, LSDRaster& flow_dist);
 
 	protected:
 
@@ -359,13 +355,13 @@ class LSDChannel: public LSDIndexChannel
                              LSDRaster& Elevation_Raster);
   void create_LSDC(int SJN, int EJN, float downslope_chi,
                              float m_over_n, float A_0, LSDFlowInfo& FlowInfo,
-                             LSDRaster& Elevation_Raster, LSDRaster& Drainage_Area_Raster);                              
+                             LSDRaster& Elevation_Raster, LSDRaster& Drainage_Area_Raster);
 	void create_LSDC(float downslope_chi, float m_over_n, float A_0,
 						LSDIndexChannel& InChann, LSDFlowInfo& FlowInfo,
                         LSDRaster& Elevation_Raster);
 
-                         
-                                                    
+
+
 };
 
 

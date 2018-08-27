@@ -67,11 +67,6 @@ contains a number of analysis tools built around drainage networks.
 @date 30/08/2012
 */
 
-//-----------------------------------------------------------------
-//DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
-//-----------------------------------------------------------------
-
-
 
 #ifndef LSDJunctionNetwork_H
 #define LSDJunctionNetwork_H

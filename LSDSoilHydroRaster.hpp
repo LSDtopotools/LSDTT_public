@@ -69,35 +69,6 @@ MASSIVE MERGE: Starting version 1.0.0 on 15/07/2013
 @date 16/07/2013
 */
 
-/**
-@mainpage
-This  is the documentation for Edinburgh Topographic Analysis Package (ETAP),
-incorporating LSDRaster.
-
-These pages will help you get started using this software.
-
-\image html ./logo.png
-
-
-Tools are included to:
-- Generate topographic metrics
-- Perform Chi analysis
-- And other important science stuff
-.
-
-@author Simon M. Mudd, University of Edinburgh
-@author David Milodowski, University of Edinburgh
-@author Martin D. Hurst, British Geological Survey
-@author Stuart W. D. Grieve, University of Edinburgh
-@author Fiona Clubb, University of Edinburgh
-
-*/
-
-//-----------------------------------------------------------------
-//DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
-//-----------------------------------------------------------------
-
-
 
 #ifndef LSDSoilHydroRaster_H
 #define LSDSoilHydroRaster_H

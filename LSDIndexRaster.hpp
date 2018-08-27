@@ -65,11 +65,6 @@
 @date 20/08/2012
 */
 
-//-----------------------------------------------------------------
-//DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
-//-----------------------------------------------------------------
-
-
 
 #ifndef LSDIndexRaster_H
 #define LSDIndexRaster_H
@@ -614,7 +609,7 @@ class LSDIndexRaster
   /// @param LSDRaster OtherRaster
   /// @return Nothing, change directly the value of the raster
   /// @author BG
-  /// @date 20/09/2017 
+  /// @date 20/09/2017
   void NoData_from_another_raster(LSDRaster& other_raster);
 
   protected:

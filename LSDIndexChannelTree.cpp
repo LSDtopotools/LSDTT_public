@@ -74,9 +74,6 @@
 //
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-//-----------------------------------------------------------------
-//DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
-//-----------------------------------------------------------------
 
 #include <vector>
 #include <string>
@@ -928,7 +925,7 @@ float LSDIndexChannelTree::search_for_best_fit_m_over_n(float A_0, int n_movern,
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=---=-=-=-=-=-=-=-=-=-=-=-=-
-// this function prints chi and elevation, along with flow distance and the 
+// this function prints chi and elevation, along with flow distance and the
 // number of the tributary it all goes to one file
 //
 // the file format is
@@ -982,7 +979,7 @@ void LSDIndexChannelTree::print_LSDChannels_from_tree(float m_over_n, float A_0,
 }
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=---=-=-=-=-=-=-=-=-=-=-=-=-
-// this function prints chi and elevation, along with flow distance and the 
+// this function prints chi and elevation, along with flow distance and the
 // number of the tributary, it all goes to one file
 //
 // the file format is
@@ -1052,7 +1049,7 @@ void LSDIndexChannelTree::print_LSDChannels_for_chi_network_ingestion(LSDFlowInf
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=---=-=-=-=-=-=-=-=-=-=-=-=-
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=---=-=-=-=-=-=-=-=-=-=-=-=-
-// This function prints a chan file for assimilation into the chi analysis, 
+// This function prints a chan file for assimilation into the chi analysis,
 // but in this cases uses a discharge rather than a drainage area
 //
 // the file format is
@@ -1247,7 +1244,7 @@ void LSDIndexChannelTree::convert_chan_file_for_ArcMap_ingestion(string fname, L
     this_discharge = Discharge.get_data_element(r,c);
     this_da = DrainageArea.get_data_element(r,c);
 
-    ArcChan_out << id << "," << x << "," << y << "," << ch << "," << rc 
+    ArcChan_out << id << "," << x << "," << y << "," << ch << "," << rc
                 << "," << norc << "," << n << "," << r << "," << c << ","
                 << fd << "," << elev << "," << this_da << "," << this_discharge << endl;
   }

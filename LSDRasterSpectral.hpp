@@ -66,12 +66,8 @@
     @date 02/04/2013
 */
 
-//-----------------------------------------------------------------
-//DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
-//-----------------------------------------------------------------
-
 #include <string>
-#include <vector>   
+#include <vector>
 #include <complex>
 
 #include "TNT/tnt.h"
@@ -187,7 +183,7 @@ public:
 
   /// @brief FINDS ROLLOVER FREQUENCY.
   ///
-  /// @details This function finds the rollover frequency in the power spectrum of a landscape, following Perron et al., 2008; Spectral Signatures of characteristic spatial scales and nonfractal structure in landscapes; Journal of Geophysical Research.  
+  /// @details This function finds the rollover frequency in the power spectrum of a landscape, following Perron et al., 2008; Spectral Signatures of characteristic spatial scales and nonfractal structure in landscapes; Journal of Geophysical Research.
   /// @param rollover_frequency
   /// @param rollover_beta fractal scaling of spectrum at frequencies above the rollover frequency
   /// @param sub_rollover_beta fractal scaling of spectrum at frequencies below the rollover frequency
@@ -195,19 +191,19 @@ public:
   /// @author David Milodowski
   /// @date 30/10/2014
   void find_rollover_frequency(float& rollover_frequency, float& rollover_beta,float& sub_rollover_beta, float log_bin_width);
-    
+
   /// @brief CALCULATE BACKGROUND SPECTRUM.
   ///
-  /// @details This function calculates the background spectrum, following Perron et al., 2008; Spectral Signatures of characteristic spatial scales and nonfractal structure in landscapes; Journal of Geophysical Research.  The background spectrum is produced by creating a number of fractal rasters with the same spectral power as the original dataset and averaging their spectra.  
+  /// @details This function calculates the background spectrum, following Perron et al., 2008; Spectral Signatures of characteristic spatial scales and nonfractal structure in landscapes; Journal of Geophysical Research.  The background spectrum is produced by creating a number of fractal rasters with the same spectral power as the original dataset and averaging their spectra.
   /// @param rollover_frequency
   /// @param beta fractal scaling
-  /// @param log_bin_width of the logarithmically spaced bins. For topography, suggest this is 0.1 to start.  
+  /// @param log_bin_width of the logarithmically spaced bins. For topography, suggest this is 0.1 to start.
   /// @param N_iterations The number of reference fractal rasters that are produced to create the background spectrum
   /// @param window_option 0 = unity window (default); 1 = Hann window (recommended); 2 = Hamming window
   /// @author David Milodowski
   /// @date 30/10/2014
   void calculate_background_spectrum(float rollover_frequency, float beta, float log_bin_width, int N_iterations, int window_option=0);
-    
+
   //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   // FAST FOURIER TRANSFORM MODULE
   //------------------------------------------------------------------------------
@@ -231,7 +227,7 @@ public:
   /// @date 18/12/2012
   void dfftw2D_inv(Array2D<float>& InputArrayReal, Array2D<float>& InputArrayImaginary,
        Array2D<float>& OutputArray, int transform_direction);
-                         
+
   /// @brief Computes the inverse fast fourier transform of a 2D discrete dataset.
   /// @param InputArrayComplex = Complex array of a 2D spectrum (real and imaginary parts)
   /// @param OutputArray = reconstructed DEM.
@@ -239,7 +235,7 @@ public:
   /// @author DAV
   /// @date 22/10/2014
   void dfftw2D_inv_complex(Array2D< complex<float> >& InputArrayComplex, Array2D<float>& OutputArray, int transform_direction);
-  
+
   /// @brief Detrend Data.
   ///
   /// @details Fit plane by least squares regression and use coefficients to determine local slope ax + by + c = z.
@@ -258,7 +254,7 @@ public:
   /// @param zeta_Hann2D Output windowed data.
   /// @param Hann2D Output Hann window.
   /// @author David Milodowski
-  /// @date 18/12/2012     
+  /// @date 18/12/2012
   void window_data_Hann2D(Array2D<float>& zeta_detrend, Array2D<float>& zeta_Hann2D, Array2D<float>& Hann2D);
   /// @brief Hamming Window Module.
   ///
@@ -267,10 +263,10 @@ public:
   /// @param zeta_Hamming2D Output windowed data.
   /// @param Hamming2D Output Hann window.
   /// @author David Milodowski
-  /// @date 30/10/2014   
+  /// @date 30/10/2014
   void window_data_Hamming2D(Array2D<float>& zeta_detrend, Array2D<float>& zeta_Hamming2D, Array2D<float>& Hamming2D);
   /// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=REDUNDANT=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    
+
   /// @brief WINDOW MODULE.
   ///
   /// @details This module applies a window to an input raster in order to limit spectral leakage in the Fourier transformation.  A number of windows are available and more can be added as required.  This function can replace the previous windowing functions.
@@ -281,11 +277,11 @@ public:
   /// @param input The input raster, usually a detrended raster
   /// @param output The output windowed raster.
   /// @param window A raster containing the window weights.
-  /// @param window_option An integer to select the desired window function (see details) 
+  /// @param window_option An integer to select the desired window function (see details)
   /// @author David Milodowski
   /// @date 30/10/2014
   void window_data(Array2D<float>& input, Array2D<float>& output, Array2D<float>& window, int window_option = 0);
-    
+
   /// @brief SHIFT ORIGIN OF SPECTRUM IN FOURIER DOMAIN.
   ///
   /// @details The output of the DFT algorithm must be rearranged to place the zero wavenumber element near the center of the array.
@@ -296,8 +292,8 @@ public:
   /// @author David Milodowski
   /// @date 18/12/2012
   void shift_spectrum(Array2D<float>& spectrum_real,  Array2D<float>& spectrum_imaginary,
-          Array2D<float>& spectrum_real_shift, Array2D<float>& spectrum_imaginary_shift);  
-                        
+          Array2D<float>& spectrum_real_shift, Array2D<float>& spectrum_imaginary_shift);
+
   /// @brief SHIFT ORIGIN OF SPECTRUM IN FOURIER DOMAIN.
   ///
   /// @details The output of the DFT algorithm must be rearranged to place the zero wavenumber element near the center of the array. This
@@ -305,9 +301,9 @@ public:
   /// @param spectrum_real
   /// @param spectrum_imaginary
   /// @author David Milodowski
-  /// @date 30/10/2014    
+  /// @date 30/10/2014
   void shift_spectrum(Array2D<float>& spectrum_real,  Array2D<float>& spectrum_imaginary);
-    
+
   /// @brief DE-SHIFT ORIGIN OF SPECTRUM.
   ///
   /// @details Inverse process of shift_spectrum() to return filtered spectrum to
@@ -330,7 +326,7 @@ public:
   /// @author David Milodowski
   /// @date 30/10/2014
   void shift_spectrum_inv(Array2D<float>& spectrum_real,  Array2D<float>& spectrum_imaginary);
-    
+
   /// @brief CALCULATE THE DFT PERIODOGRAM.
   ///
   /// @details Multiply fourier analysis output by complex conjugate and normalises.
@@ -339,7 +335,7 @@ public:
   /// @author David Milodowski
   /// @date 18/12/2012
   void calculate_2D_PSD(Array2D<float>& spectrum_real_shift, Array2D<float>& spectrum_imaginary_shift);
-    
+
   /// @brief SCALE SPECTRUM
   ///
   /// @details Scales the spectrum by 1/f^beta, where beta is the fractal scaling.
@@ -349,7 +345,7 @@ public:
   /// @author David Milodowski
   /// @date 30/10/2014
   void scale_spectrum(Array2D<float> SpectrumReal, Array2D<float> SpectrumIm,  float beta);
-    
+
   /// @brief GET RADIAL POWER SPECTRUM.
   ///
   /// @details Collapse 2D PSD into a radial PSD.
@@ -365,7 +361,7 @@ public:
   /// @author David Milodowski
   /// @date 18/12/2012
   void fftw2D_spectral_analysis(char* file_id, float LogBinWidth);
-    
+
   /// @brief FULL SPECTRAL ANALYSIS.
   ///
   /// @details This function is a wrapper function for the forward Fast Fourier Transform and subsequent analysis.  It is designed to replicate the analysis of emergent lengthscales from Perron et al., 2008; Spectral Signatures of characteristic spatial scales and nonfractal structure in landscapes; Journal of Geophysical Research.
@@ -410,7 +406,7 @@ public:
   void lowpass_filter(Array2D<float>& RawSpectrumReal, Array2D<float>& RawSpectrumImaginary,
           Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary,
           float f1, float f2);
-    
+
   /// @brief LOWPASS FILTER REMAINDER.
   ///
   /// @details Filter array to retain frequencies above f1 (the remainder from the highpass filter).  The filter edge is a radial gaussian function with a SD of |f2-f1|/3.
@@ -440,7 +436,7 @@ public:
   void highpass_filter(Array2D<float>& RawSpectrumReal, Array2D<float>& RawSpectrumImaginary,
            Array2D<float>& FilteredSpectrumReal, Array2D<float>& FilteredSpectrumImaginary,
            float f1, float f2);
-                         
+
   /// @brief HIGHPASS FILTER REMAINDER.
   ///
   /// @details Filter array to retaining frequencies below f2 (the remainder from the highpass filter).  The filter edge is a radial gaussian function with a SD of |f2-f1|/3.
@@ -563,7 +559,7 @@ public:
   void print_binned_spectrum(string output_id, float log_bin_width);
 
   /// @brief method to locate channel pixels adapted from Pelletier (2013).
-  /// 
+  ///
   /// @detail Isolate channelised portions of the landscape using an adapted method to that proposed
   /// by Pelletier, J. D. (2013), A robust, two-parameter method for the extraction of
   /// drainage networks from high-resolution digital elevation models (DEMs): Evaluation
@@ -575,7 +571,7 @@ public:
   ///
   /// @param a catchment area threshold for pruning
   /// @param a window radius for surface fitting from which curvature calculation is performed
-  /// @return LSDIndexRaster A binary raster where the pixel value is 1 where the input raster exceeded the defined threshold 
+  /// @return LSDIndexRaster A binary raster where the pixel value is 1 where the input raster exceeded the defined threshold
   /// @author DTM
   /// @date 10/07/2015
   LSDIndexRaster IsolateChannelsWienerQQ(float area_threshold, float window_radius, string q_q_filename);

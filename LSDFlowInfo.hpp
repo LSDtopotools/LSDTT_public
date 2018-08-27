@@ -67,11 +67,6 @@ It is the object that is used to generate contributing area, etc.
 @date 29/08/2012
 */
 
-//-----------------------------------------------------------------
-//DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
-//-----------------------------------------------------------------
-
-
 
 #ifndef LSDFlowInfo_H
 #define LSDFlowInfo_H

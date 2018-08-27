@@ -62,9 +62,6 @@
 @date 28/02/2013
 */
 
-//-----------------------------------------------------------------
-//DOCUMENTATION URL: http://www.geos.ed.ac.uk/~s0675405/LSD_Docs/
-//-----------------------------------------------------------------
 
 #include <vector>
 #include <string>
@@ -85,12 +82,12 @@ class LSDChiNetwork
     /// @param channel_network_fname Filename.
     LSDChiNetwork(string channel_network_fname)
                  { create( channel_network_fname ); }
-    
+
     LSDChiNetwork(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode, LSDRaster& Elevation,
                            LSDRaster& FlowDistance, LSDRaster& DrainageArea)
                  {create(FlowInfo, SourceNode, OutletNode, Elevation,
                          FlowDistance, DrainageArea); }
-                         
+
     LSDChiNetwork(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode, LSDRaster& Elevation,
                            LSDRaster& FlowDistance, LSDRaster& DrainageArea, LSDRaster& Chi)
                  {create(FlowInfo, SourceNode, OutletNode, Elevation,
@@ -151,7 +148,7 @@ class LSDChiNetwork
 
     /// @brief This function prints the details of all channels to a csv file that
     /// can be ingested by ArcMap.
-    /// @details It includes data from monte carlo fitting. 
+    /// @details It includes data from monte carlo fitting.
     /// @param fname Output filename, which has _for_Arc automatically appended.
     /// @author SMM
     /// @date 28/02/14
@@ -824,7 +821,7 @@ class LSDChiNetwork
     /// @author Fiona Clubb
     /// @date 03/09/2013
     Array2D<float> calculate_channel_heads(int min_seg_length_for_channel_heads);
-    
+
     /// @brief This gets the m_means for the channel network
     /// @return vector of vectors with m means
     /// @ author FJC
@@ -878,9 +875,9 @@ class LSDChiNetwork
     float DataResolution;
     ///No data value.
     int NoDataValue;
-    
+
     /// This boolean lets the routine know if it is to calculate chi
-    bool I_should_calculate_chi; 
+    bool I_should_calculate_chi;
 
     /// Node indices: used in conjunction with other LSD topographic tool objects and not necessary for standalone program.
     vector< vector<int> > node_indices;
@@ -946,7 +943,7 @@ class LSDChiNetwork
     void create(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode, LSDRaster& Elevation,
                            LSDRaster& FlowDistance, LSDRaster& DrainageArea);
     void create(LSDFlowInfo& FlowInfo, int SourceNode, int OutletNode, LSDRaster& Elevation,
-                           LSDRaster& FlowDistance, LSDRaster& DrainageArea, 
+                           LSDRaster& FlowDistance, LSDRaster& DrainageArea,
                            LSDRaster& Chi);
 };
 
