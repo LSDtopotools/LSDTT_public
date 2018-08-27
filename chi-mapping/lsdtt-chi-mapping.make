@@ -25,7 +25,7 @@ SOURCES=lsdtt-chi-mapping.cpp \
              ../LSDCRNParameters.cpp \
              ../LSDRasterMaker.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=lsdtt-chi-mapping.exe
+EXECUTABLE=lsdtt-chi-mapping
 
 all: $(SOURCES) $(EXECUTABLE)
 
