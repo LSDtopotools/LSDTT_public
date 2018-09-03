@@ -1,10 +1,10 @@
-# make with make -f channel_extraction_tool.make
+# make with make -f lsdtt_channel_extraction.make
 
 CC=g++
 CFLAGS=-c -Wall -O3
 OFLAGS = -Wall -O3
 LDFLAGS= -Wall
-SOURCES=channel_extraction_tool.cpp \
+SOURCES=lsdtt-channel-extraction.cpp \
          ../LSDIndexRaster.cpp \
          ../LSDRaster.cpp \
          ../LSDFlowInfo.cpp \
@@ -24,7 +24,7 @@ SOURCES=channel_extraction_tool.cpp \
          ../LSDShapeTools.cpp
 LIBS   = -lm -lstdc++ -lfftw3
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=channel_extraction_tool.exe
+EXECUTABLE=lsdtt-channel-extraction
 
 all: $(SOURCES) $(EXECUTABLE)
 

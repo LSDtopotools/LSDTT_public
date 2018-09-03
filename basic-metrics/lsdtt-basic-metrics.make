@@ -1,11 +1,11 @@
-# make with make -f LSDTT_BasicMetrics.make
+# make with make -f lsdtt_basic_metrics.make
 # This computes a variety of frequently used landscape metrics
 
 CC=g++
 CFLAGS=-c -Wall -O3
 OFLAGS = -Wall -O3
 LDFLAGS= -Wall
-SOURCES=LSDTT_BasicMetrics.cpp \
+SOURCES=lsdtt-basic-metrics.cpp \
          ../LSDIndexRaster.cpp \
          ../LSDRaster.cpp \
          ../LSDRasterSpectral.cpp \
@@ -26,7 +26,7 @@ SOURCES=LSDTT_BasicMetrics.cpp \
          ../LSDShapeTools.cpp
 LIBS   = -lm -lstdc++ -lfftw3
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=LSDTT_BasicMetrics.out
+EXECUTABLE=lsdtt-basic-metrics
 
 all: $(SOURCES) $(EXECUTABLE)
 

@@ -1,12 +1,12 @@
-# MuddPILEdriver.make 
-# makes the master MuddPILEdriver program. 
+# MuddPILEdriver.make
+# makes the master MuddPILEdriver program.
 # make with: make -f MuddPILEdriver.make
 
 CC = g++
 CFLAGS= -c -I../../boost_mtl_minimal -Wall -O3
 OFLAGS = -I../../boost_mtl_minimal -Wall -O3
 LDFLAGS= -Wall
-SOURCES = MuddPILEdriver.cpp \
+SOURCES = lsdtt-muddpile.cpp \
 		../LSDRasterSpectral.cpp \
 		../LSDIndexRaster.cpp \
 		../LSDShapeTools.cpp \
@@ -19,11 +19,10 @@ SOURCES = MuddPILEdriver.cpp \
 		../LSDParticleColumn.cpp \
     ../LSDParameterParser.cpp \
 		../LSDCRNParameters.cpp
-SCRIPTS = animate.py
 OBJ = $(SOURCES:.cpp=.o)
 #LIBS = -lfftw3 -g -O0 -D_GLIBCXX_DEBUG
 LIBS = -lfftw3 -Wwrite-strings
-EXEC = MuddPILEdriver.out
+EXEC = lsdtt-muddpile
 
 all: $(SOURCES) $(SCRIPTS) $(EXEC)
 

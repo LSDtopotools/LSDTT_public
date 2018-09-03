@@ -1,10 +1,10 @@
-# make with make -f chi_mapping_tool.make
+# make with make -f lsdtt_chi_mapping.make
 
 CC=g++
 CFLAGS=-c -Wall -O3
 OFLAGS = -Wall -O3
 LDFLAGS= -Wall
-SOURCES=chi_mapping_tool.cpp \
+SOURCES=lsdtt-chi-mapping.cpp \
              ../LSDMostLikelyPartitionsFinder.cpp \
              ../LSDIndexRaster.cpp \
              ../LSDRaster.cpp \
@@ -25,7 +25,7 @@ SOURCES=chi_mapping_tool.cpp \
              ../LSDCRNParameters.cpp \
              ../LSDRasterMaker.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=chi_mapping_tool.exe
+EXECUTABLE=lsdtt-chi-mapping
 
 all: $(SOURCES) $(EXECUTABLE)
 
@@ -34,6 +34,6 @@ $(EXECUTABLE): $(OBJECTS)
 
 .cpp.o:
 	$(CC) $(CFLAGS) $< -o $@
-	
+
 clean:
 	rm -f ../*.o *.o *.out *.exe

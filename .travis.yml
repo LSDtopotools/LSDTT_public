@@ -61,7 +61,7 @@ script:
   - wget https://github.com/LSDtopotools/RegressionData/raw/master/coweeta_output_TANCURV.bil
   - wget https://github.com/LSDtopotools/RegressionData/raw/master/coweeta_output_TANCURV.hdr
   - cd ..
-  - LSDTT_BasicMetrics fixtures/ coweeta.driver
+  - lsdtt-basic-metrics fixtures/ coweeta.driver
   - pytest -v
 
 after_success:

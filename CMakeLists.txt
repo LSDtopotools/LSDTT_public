@@ -43,9 +43,9 @@ set(LIB_HEADERS
 string(REGEX REPLACE "([^;]+).hpp" "\\1.cpp" LIB_SOURCES "${LIB_HEADERS}")
 
 set(EXE_SOURCES
-  Analysis_driver/LSDTT_BasicMetrics.cpp
-  driver_functions_ChannelExtraction/channel_extraction_tool.cpp
-  driver_functions_MuddChi2014/chi_mapping_tool.cpp
+  basic-metrics/lsdtt-basic-metrics.cpp
+  channel-extraction/lsdtt-channel-extraction.cpp
+  chi-mapping/lsdtt-chi-mapping.cpp
 )
 
 set(EXE_FILES)
