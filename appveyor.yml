@@ -1,0 +1,19 @@
+image: Visual Studio 2017
+
+platform:
+  - x64
+
+install:
+  - cmd: set PATH=C:\Miniconda3;C:\Miniconda3\Scripts;%PATH%
+  - cmd: conda --version
+  - cmd: conda config --set always_yes yes --set changeps1 no
+  - cmd: conda update -q conda
+  - cmd: conda install conda-build
+  - cmd: cd ..
+  - git clone -q https://github.com/LSDtopotools/LSDTT_public.git
+  - cmd: cd LSDTT_public/conda-recipe/
+  - cmd: echo "starting"
+  - cmd: echo " "%PYTHON%" --version " >> bld.bat
+  - cmd: conda build lsdtopotools -c conda-forge
+  # - cmd: conda create -n lsdtt lsdtopotools -c conda-forge --use-local
+  - cmd: echo "finished"
