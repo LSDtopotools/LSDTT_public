@@ -9,8 +9,6 @@ install:
   - cmd: conda config --set always_yes yes --set changeps1 no
   - cmd: conda update -q conda
   - cmd: conda install conda-build
-  - cmd: cd ..
-  - git clone -q https://github.com/LSDtopotools/LSDTT_public.git
   - cmd: cd LSDTT_public/conda-recipe/
   - cmd: echo "starting"
   - cmd: echo " "%PYTHON%" --version " >> bld.bat
