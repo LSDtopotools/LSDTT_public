@@ -4,6 +4,7 @@ platform:
   - x64
 
 install:
+  - cmd: choco install make
   - cmd: set PATH=C:\Miniconda3;C:\Miniconda3\Scripts;%PATH%
   - cmd: conda --version
   - cmd: conda config --set always_yes yes --set changeps1 no
