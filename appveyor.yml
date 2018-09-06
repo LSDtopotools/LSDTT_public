@@ -4,18 +4,16 @@ platform:
   - x64
 
 install:
-  - cmd: choco install make
+  #- cmd: choco install make
   - cmd: set PATH=C:\Miniconda3;C:\Miniconda3\Scripts;%PATH%
   - cmd: conda --version
   - cmd: conda config --set always_yes yes --set changeps1 no
   - cmd: conda update -q conda
   - cmd: conda install conda-build
   - cmd: cd conda-recipe/
-  - cmd: echo "starting"
-  # - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-  # - cmd: conda build lsdtopotools -c conda-forge
+  - cmd: conda build lsdtopotools -c conda-forge
   # - cmd: conda create -n lsdtt lsdtopotools -c conda-forge --use-local
-  # - cmd: echo "finished"
 
-on_finish:
-  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+# Use this to start interactive mode
+# on_finish:
+#   - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))

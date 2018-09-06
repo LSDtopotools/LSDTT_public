@@ -16,7 +16,8 @@ project(LSDTopoTools)
 
 # Build
 # =====
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-offsetof")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+# removed -Wno-invalid-offsetof so we can try to build with visual studio
 
 set(LIB_HEADERS
   LSDRaster.hpp
