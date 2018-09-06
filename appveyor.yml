@@ -12,6 +12,7 @@ install:
   - cmd: conda install conda-build
   - cmd: cd conda-recipe/
   - cmd: echo "starting"
+  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   - cmd: conda build lsdtopotools -c conda-forge
   # - cmd: conda create -n lsdtt lsdtopotools -c conda-forge --use-local
   - cmd: echo "finished"
