@@ -15,9 +15,9 @@ addons:
       - doxygen-gui
       - graphviz
 
-branches:
-  except:
-    - appveyor
+# branches:
+#   except:
+#     - appveyor
 
 # Use conda to install LSDTT and create a virual environment
 install:
