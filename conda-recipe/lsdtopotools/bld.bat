@@ -1,3 +1,5 @@
 cmake -DCMAKE_INSTALL_PREFIX=%PREFIX% %SRC_DIR% -DCMAKE_INSTALL_BINDIR=bin
 
-MSBuild %SRC_DIR%\ALL_BUILD.vcxproj
+where msbuild
+
+msbuild %SRC_DIR%\ALL_BUILD.vcxproj
